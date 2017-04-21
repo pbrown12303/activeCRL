@@ -8,24 +8,24 @@ import (
 )
 
 func TestNewElement(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	el1 := NewElement(&uOfD)
+	uOfD := NewUniverseOfDiscourse()
+	el1 := NewElement(uOfD)
 	if el1.GetId() == uuid.Nil {
 		t.Error("Element identifier not properly initialized")
 	}
 	if el1.GetVersion() != 0 {
 		t.Error("Element version not properly initialized")
 	}
-	if el1.GetOwnedBaseElements() == nil {
+	if el1.getOwnedBaseElements() == nil {
 		t.Error("Element ownedBaseElements not properly initialized")
 	}
 }
 
 func TestElementOwnership(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewElement(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewElement(uOfD)
+	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
 	}
@@ -41,10 +41,10 @@ func TestElementOwnership(t *testing.T) {
 }
 
 func TestElementMarshal(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewElement(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewElement(uOfD)
+	child.SetOwningElement(parent)
 
 	result, err := json.MarshalIndent(parent, "", "   ")
 	if err != nil {
@@ -53,8 +53,8 @@ func TestElementMarshal(t *testing.T) {
 
 	//	fmt.Printf("Encoded Parent \n%s \n", result)
 
-	var uOfD2 UniverseOfDiscourse
-	recoveredParent := RecoverElement(result, &uOfD2)
+	uOfD2 := NewUniverseOfDiscourse()
+	recoveredParent := RecoverElement(result, uOfD2)
 	if recoveredParent != nil {
 		//		Print(recoveredParent, "")
 	}
@@ -64,8 +64,8 @@ func TestElementMarshal(t *testing.T) {
 }
 
 func TestSetName(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
 	var testName string = "Test Name"
 	parent.SetName(testName)
 	if parent.GetName() != testName {
@@ -81,8 +81,8 @@ func TestSetName(t *testing.T) {
 }
 
 func TestSetDefinition(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
 	var testName string = "Test Name"
 	parent.SetDefinition(testName)
 	if parent.GetDefinition() != testName {
@@ -98,8 +98,8 @@ func TestSetDefinition(t *testing.T) {
 }
 
 func TestSetUri(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
 	var testName string = "Test Name"
 	parent.SetUri(testName)
 	if parent.GetUri() != testName {

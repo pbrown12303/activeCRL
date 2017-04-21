@@ -8,24 +8,24 @@ import (
 )
 
 func TestNewElementReference(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	el1 := NewElementReference(&uOfD)
+	uOfD := NewUniverseOfDiscourse()
+	el1 := NewElementReference(uOfD)
 	if el1.GetId() == uuid.Nil {
 		t.Error("Element identifier not properly initialized")
 	}
 	if el1.GetVersion() != 0 {
 		t.Error("Element version not properly initialized")
 	}
-	if el1.GetOwnedBaseElements() == nil {
+	if el1.getOwnedBaseElements() == nil {
 		t.Error("Element ownedBaseElements not properly initialized")
 	}
 }
 
 func TestElementReferenceOwnership(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewElementReference(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewElementReference(uOfD)
+	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
 	}
@@ -41,10 +41,10 @@ func TestElementReferenceOwnership(t *testing.T) {
 }
 
 func TestSetReferencedElement(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewElementReference(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewElementReference(uOfD)
+	child.SetOwningElement(parent)
 	if child.GetReferencedElement() != nil {
 		t.Error("ElementReference's referenced element not initialized to nil")
 	}
@@ -63,10 +63,10 @@ func TestSetReferencedElement(t *testing.T) {
 }
 
 func TestElementReferenceMarshal(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewElementReference(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewElementReference(uOfD)
+	child.SetOwningElement(parent)
 	child.SetReferencedElement(parent)
 
 	result, err := json.MarshalIndent(parent, "", "   ")
@@ -76,8 +76,8 @@ func TestElementReferenceMarshal(t *testing.T) {
 
 	//	fmt.Printf("Encoded Parent \n%s \n", result)
 
-	var uOfD2 UniverseOfDiscourse
-	recoveredParent := RecoverElement(result, &uOfD2)
+	uOfD2 := NewUniverseOfDiscourse()
+	recoveredParent := RecoverElement(result, uOfD2)
 	if recoveredParent != nil {
 		//		Print(recoveredParent, "")
 	}

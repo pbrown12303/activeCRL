@@ -8,6 +8,14 @@ import (
 )
 
 func Equivalent(be1 BaseElement, be2 BaseElement) bool {
+	//	be1.Lock()
+	//	defer be1.Unlock()
+	//	be2.Lock()
+	//	defer be2.Unlock()
+	return equivalent(be1, be2)
+}
+
+func equivalent(be1 BaseElement, be2 BaseElement) bool {
 	if reflect.TypeOf(be1) != reflect.TypeOf(be2) {
 		return false
 	}
@@ -42,6 +50,12 @@ func Equivalent(be1 BaseElement, be2 BaseElement) bool {
 }
 
 func Print(be BaseElement, prefix string) {
+	be.Lock()
+	defer be.Unlock()
+	printBe(be, prefix)
+}
+
+func printBe(be BaseElement, prefix string) {
 	if be == nil {
 		return
 	}
@@ -83,7 +97,7 @@ func RecoverElement(data []byte, uOfD *UniverseOfDiscourse) Element {
 		fmt.Printf("Error recovering Element: %s \n", err)
 		return nil
 	}
-	uOfD.setUniverseOfDiscourseRecursively(recoveredElement)
+	uOfD.SetUniverseOfDiscourseRecursively(recoveredElement)
 	restoreValueOwningElementFieldsRecursively(recoveredElement.(Element))
 	return recoveredElement.(Element)
 }
@@ -173,7 +187,7 @@ func unmarshalPolymorphicBaseElement(data []byte, result *BaseElement) error {
 }
 
 func restoreValueOwningElementFieldsRecursively(el Element) {
-	for _, child := range el.GetOwnedBaseElements() {
+	for _, child := range el.getOwnedBaseElements() {
 		switch child.(type) {
 		//@TODO add reference to case
 		case *element:

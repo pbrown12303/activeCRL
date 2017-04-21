@@ -8,24 +8,24 @@ import (
 )
 
 func TestNewLiteralReference(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	el1 := NewLiteralReference(&uOfD)
+	uOfD := NewUniverseOfDiscourse()
+	el1 := NewLiteralReference(uOfD)
 	if el1.GetId() == uuid.Nil {
 		t.Error("Element identifier not properly initialized")
 	}
 	if el1.GetVersion() != 0 {
 		t.Error("Element version not properly initialized")
 	}
-	if el1.GetOwnedBaseElements() == nil {
+	if el1.getOwnedBaseElements() == nil {
 		t.Error("Element ownedBaseElements not properly initialized")
 	}
 }
 
 func TestLiteralReferenceOwnership(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewLiteralReference(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewLiteralReference(uOfD)
+	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
 	}
@@ -41,11 +41,11 @@ func TestLiteralReferenceOwnership(t *testing.T) {
 }
 
 func TestSetReferencedLiteral(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewLiteralReference(&uOfD)
-	child.setOwningElement(parent)
-	literal := NewLiteral(&uOfD)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewLiteralReference(uOfD)
+	child.SetOwningElement(parent)
+	literal := NewLiteral(uOfD)
 	if child.GetReferencedLiteral() != nil {
 		t.Error("LiteralReference's referenced literal not initialized to nil")
 	}
@@ -64,11 +64,11 @@ func TestSetReferencedLiteral(t *testing.T) {
 }
 
 func TestLiteralReferenceMarshal(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewLiteralReference(&uOfD)
-	child.setOwningElement(parent)
-	literal := NewLiteral(&uOfD)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewLiteralReference(uOfD)
+	child.SetOwningElement(parent)
+	literal := NewLiteral(uOfD)
 	child.SetReferencedLiteral(literal)
 	//	fmt.Printf("Parent before encoding \n")
 	//	Print(parent, "   ")
@@ -80,8 +80,8 @@ func TestLiteralReferenceMarshal(t *testing.T) {
 
 	//	fmt.Printf("Encoded Parent \n%s \n", result)
 
-	var uOfD2 UniverseOfDiscourse
-	recoveredParent := RecoverElement(result, &uOfD2)
+	uOfD2 := NewUniverseOfDiscourse()
+	recoveredParent := RecoverElement(result, uOfD2)
 	if recoveredParent != nil {
 		//		Print(recoveredParent, "")
 	}

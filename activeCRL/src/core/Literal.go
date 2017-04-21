@@ -15,16 +15,24 @@ type literal struct {
 func NewLiteral(uOfD *UniverseOfDiscourse) Literal {
 	var lit literal
 	lit.initializeLiteral()
-	uOfD.addBaseElement(&lit)
+	uOfD.AddBaseElement(&lit)
 	return &lit
 }
 
 func (lPtr *literal) GetLiteralValue() string {
+	lPtr.Lock()
+	defer lPtr.Unlock()
+	return lPtr.getLiteralValue()
+}
+
+func (lPtr *literal) getLiteralValue() string {
 	return lPtr.literalValue
 }
 
 func (lPtr *literal) GetName() string {
-	return lPtr.GetLiteralValue()
+	lPtr.Lock()
+	defer lPtr.Unlock()
+	return lPtr.getLiteralValue()
 }
 
 func (lPtr *literal) initializeLiteral() {
@@ -41,6 +49,8 @@ func (lPtr *literal) isEquivalent(lit *literal) bool {
 }
 
 func (lPtr *literal) MarshalJSON() ([]byte, error) {
+	lPtr.Lock()
+	defer lPtr.Unlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(lPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -78,7 +88,19 @@ func (lPtr *literal) recoverLiteralFields(unmarshaledData *map[string]json.RawMe
 }
 
 func (lPtr *literal) SetLiteralValue(newValue string) {
+	lPtr.Lock()
+	defer lPtr.Unlock()
+	lPtr.setLiteralValue(newValue)
+}
+
+func (lPtr *literal) setLiteralValue(newValue string) {
 	lPtr.literalValue = newValue
+}
+
+func (lPtr *literal) SetOwningElement(el Element) {
+	lPtr.Lock()
+	defer lPtr.Unlock()
+	lPtr.setOwningElement(el)
 }
 
 func (lPtr *literal) setOwningElement(el Element) {
@@ -94,5 +116,6 @@ func (lPtr *literal) setOwningElement(el Element) {
 type Literal interface {
 	Value
 	GetLiteralValue() string
+	setLiteralValue(string)
 	SetLiteralValue(string)
 }

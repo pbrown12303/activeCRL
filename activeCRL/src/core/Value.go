@@ -12,6 +12,12 @@ type value struct {
 }
 
 func (vPtr *value) GetOwningElement() Element {
+	vPtr.Lock()
+	defer vPtr.Unlock()
+	return vPtr.getOwningElement()
+}
+
+func (vPtr *value) getOwningElement() Element {
 	return vPtr.owningElement
 }
 
@@ -30,7 +36,7 @@ func (vPtr *value) isEquivalent(be *value) bool {
 		Print(be.owningElement, "   ")
 		return false
 	}
-	if vPtr.owningElement != nil && be.owningElement != nil && vPtr.owningElement.GetId() != be.owningElement.GetId() {
+	if vPtr.owningElement != nil && be.owningElement != nil && vPtr.owningElement.getId() != be.owningElement.getId() {
 		fmt.Printf("Equivalence failed: Value's Owning Elements do not match - they have different identifiers\n")
 		fmt.Printf("First value's owner: \n")
 		Print(vPtr.owningElement, "   ")

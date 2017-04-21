@@ -8,24 +8,24 @@ import (
 )
 
 func TestNewRefinement(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	el1 := NewRefinement(&uOfD)
+	uOfD := NewUniverseOfDiscourse()
+	el1 := NewRefinement(uOfD)
 	if el1.GetId() == uuid.Nil {
 		t.Error("Refinement identifier not properly initialized")
 	}
 	if el1.GetVersion() != 0 {
 		t.Error("Refinement version not properly initialized")
 	}
-	if el1.GetOwnedBaseElements() == nil {
+	if el1.getOwnedBaseElements() == nil {
 		t.Error("Refinement ownedBaseElements not properly initialized")
 	}
 }
 
 func TestRefinementOwnership(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewRefinement(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewRefinement(uOfD)
+	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
 	}
@@ -41,11 +41,11 @@ func TestRefinementOwnership(t *testing.T) {
 }
 
 func TestSetAbstractElement(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewRefinement(&uOfD)
-	child.setOwningElement(parent)
-	abstractElement := NewElement(&uOfD)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewRefinement(uOfD)
+	child.SetOwningElement(parent)
+	abstractElement := NewElement(uOfD)
 	if child.GetAbstractElement() != nil {
 		t.Error("Refinement's abstract element not initialized to nil")
 	}
@@ -64,11 +64,11 @@ func TestSetAbstractElement(t *testing.T) {
 }
 
 func TestSetRefinedElement(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewRefinement(&uOfD)
-	child.setOwningElement(parent)
-	refinedElement := NewElement(&uOfD)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewRefinement(uOfD)
+	child.SetOwningElement(parent)
+	refinedElement := NewElement(uOfD)
 	if child.GetRefinedElement() != nil {
 		t.Error("Refinement's refined element not initialized to nil")
 	}
@@ -87,13 +87,13 @@ func TestSetRefinedElement(t *testing.T) {
 }
 
 func TestRefinementMarshal(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewRefinement(&uOfD)
-	child.setOwningElement(parent)
-	abstractElement := NewElement(&uOfD)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewRefinement(uOfD)
+	child.SetOwningElement(parent)
+	abstractElement := NewElement(uOfD)
 	child.SetAbstractElement(abstractElement)
-	refinedElement := NewElement(&uOfD)
+	refinedElement := NewElement(uOfD)
 	child.SetRefinedElement(refinedElement)
 
 	result, err := json.MarshalIndent(parent, "", "   ")
@@ -103,8 +103,8 @@ func TestRefinementMarshal(t *testing.T) {
 
 	//	fmt.Printf("Encoded Parent \n%s \n", result)
 
-	var uOfD2 UniverseOfDiscourse
-	recoveredParent := RecoverElement(result, &uOfD2)
+	uOfD2 := NewUniverseOfDiscourse()
+	recoveredParent := RecoverElement(result, uOfD2)
 	if recoveredParent != nil {
 		//		Print(recoveredParent, "")
 	}

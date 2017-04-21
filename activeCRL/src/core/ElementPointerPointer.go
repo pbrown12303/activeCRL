@@ -17,9 +17,18 @@ type elementPointerPointer struct {
 	elementPointerVersion int
 }
 
+func NewElementPointerPointer(uOfD *UniverseOfDiscourse) ElementPointerPointer {
+	var ep elementPointerPointer
+	ep.initializeElementPointerPointer()
+	uOfD.AddBaseElement(&ep)
+	return &ep
+}
+
 func (eppPtr *elementPointerPointer) GetElementPointer() ElementPointer {
-	if eppPtr.elementPointer == nil && eppPtr.GetElementPointerIdentifier() != uuid.Nil && eppPtr.uOfD != nil {
-		eppPtr.elementPointer = eppPtr.uOfD.getElementPointer(eppPtr.GetElementPointerIdentifier().String())
+	eppPtr.Lock()
+	defer eppPtr.Unlock()
+	if eppPtr.elementPointer == nil && eppPtr.getElementPointerIdentifier() != uuid.Nil && eppPtr.uOfD != nil {
+		eppPtr.elementPointer = eppPtr.uOfD.getElementPointer(eppPtr.getElementPointerIdentifier().String())
 	}
 	return eppPtr.elementPointer
 }
@@ -28,18 +37,23 @@ func (eppPtr *elementPointerPointer) GetName() string {
 	return "elementPointerPointer"
 }
 
-func NewElementPointerPointer(uOfD *UniverseOfDiscourse) ElementPointerPointer {
-	var ep elementPointerPointer
-	ep.initializeElementPointerPointer()
-	uOfD.addBaseElement(&ep)
-	return &ep
+func (eppPtr *elementPointerPointer) GetElementPointerIdentifier() uuid.UUID {
+	eppPtr.Lock()
+	defer eppPtr.Unlock()
+	return eppPtr.getElementPointerIdentifier()
 }
 
-func (eppPtr *elementPointerPointer) GetElementPointerIdentifier() uuid.UUID {
+func (eppPtr *elementPointerPointer) getElementPointerIdentifier() uuid.UUID {
 	return eppPtr.elementPointerId
 }
 
 func (eppPtr *elementPointerPointer) GetElementPointerVersion() int {
+	eppPtr.Lock()
+	defer eppPtr.Unlock()
+	return eppPtr.getElementPointerVersion()
+}
+
+func (eppPtr *elementPointerPointer) getElementPointerVersion() int {
 	return eppPtr.elementPointerVersion
 }
 
@@ -61,6 +75,8 @@ func (bePtr *elementPointerPointer) isEquivalent(be *elementPointerPointer) bool
 }
 
 func (elPtr *elementPointerPointer) MarshalJSON() ([]byte, error) {
+	elPtr.Lock()
+	defer elPtr.Unlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -116,16 +132,32 @@ func (ep *elementPointerPointer) recoverElementPointerPointerFields(unmarshaledD
 }
 
 func (eppPtr *elementPointerPointer) SetElementPointer(elementPointer ElementPointer) {
+	eppPtr.Lock()
+	defer eppPtr.Unlock()
+	if elementPointer != nil {
+		elementPointer.Lock()
+		defer elementPointer.Unlock()
+	}
+	eppPtr.setElementPointer(elementPointer)
+}
+
+func (eppPtr *elementPointerPointer) setElementPointer(elementPointer ElementPointer) {
 	if elementPointer != eppPtr.elementPointer {
 		eppPtr.elementPointer = elementPointer
 		if elementPointer != nil {
-			eppPtr.elementPointerId = elementPointer.GetId()
-			eppPtr.elementPointerVersion = elementPointer.GetVersion()
+			eppPtr.elementPointerId = elementPointer.getId()
+			eppPtr.elementPointerVersion = elementPointer.getVersion()
 		} else {
 			eppPtr.elementPointerId = uuid.Nil
 			eppPtr.elementPointerVersion = 0
 		}
 	}
+}
+
+func (eppPtr *elementPointerPointer) SetOwningElement(element Element) {
+	eppPtr.Lock()
+	defer eppPtr.Unlock()
+	eppPtr.setOwningElement(element)
 }
 
 func (eppPtr *elementPointerPointer) setOwningElement(element Element) {
@@ -145,5 +177,6 @@ type ElementPointerPointer interface {
 	GetElementPointer() ElementPointer
 	GetElementPointerIdentifier() uuid.UUID
 	GetElementPointerVersion() int
+	setElementPointer(ElementPointer)
 	SetElementPointer(ElementPointer)
 }

@@ -7,15 +7,15 @@ import (
 )
 
 func TestNewLiteral(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewLiteral(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewLiteral(uOfD)
+	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
 	}
 	var found bool = false
-	for key, _ := range parent.GetOwnedBaseElements() {
+	for key, _ := range parent.getOwnedBaseElements() {
 		if key == child.GetId().String() {
 			found = true
 		}
@@ -26,10 +26,10 @@ func TestNewLiteral(t *testing.T) {
 }
 
 func TestLiteralMarshal(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewLiteral(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewLiteral(uOfD)
+	child.SetOwningElement(parent)
 	var testString string = "Test String"
 	child.SetLiteralValue(testString)
 
@@ -40,8 +40,8 @@ func TestLiteralMarshal(t *testing.T) {
 
 	//	fmt.Printf("Encoded Parent \n%s \n", result)
 
-	var uOfD2 UniverseOfDiscourse
-	recoveredParent := RecoverElement(result, &uOfD2)
+	uOfD2 := NewUniverseOfDiscourse()
+	recoveredParent := RecoverElement(result, uOfD2)
 	if recoveredParent != nil {
 		//		Print(recoveredParent, "")
 	}

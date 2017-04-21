@@ -7,15 +7,15 @@ import (
 )
 
 func TestNewNameLiteralPointer(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewNameLiteralPointer(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewNameLiteralPointer(uOfD)
+	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
 	}
 	var found bool = false
-	for key, _ := range parent.GetOwnedBaseElements() {
+	for key, _ := range parent.getOwnedBaseElements() {
 		if key == child.GetId().String() {
 			found = true
 		}
@@ -29,15 +29,15 @@ func TestNewNameLiteralPointer(t *testing.T) {
 }
 
 func TestDefinitionNameLiteralPointer(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewDefinitionLiteralPointer(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewDefinitionLiteralPointer(uOfD)
+	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
 	}
 	var found bool = false
-	for key, _ := range parent.GetOwnedBaseElements() {
+	for key, _ := range parent.getOwnedBaseElements() {
 		if key == child.GetId().String() {
 			found = true
 		}
@@ -51,15 +51,15 @@ func TestDefinitionNameLiteralPointer(t *testing.T) {
 }
 
 func TestNewUriLiteralPointer(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewUriLiteralPointer(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewUriLiteralPointer(uOfD)
+	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
 	}
 	var found bool = false
-	for key, _ := range parent.GetOwnedBaseElements() {
+	for key, _ := range parent.getOwnedBaseElements() {
 		if key == child.GetId().String() {
 			found = true
 		}
@@ -73,15 +73,15 @@ func TestNewUriLiteralPointer(t *testing.T) {
 }
 
 func TestNewValueLiteralPointer(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewValueLiteralPointer(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewValueLiteralPointer(uOfD)
+	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
 	}
 	var found bool = false
-	for key, _ := range parent.GetOwnedBaseElements() {
+	for key, _ := range parent.getOwnedBaseElements() {
 		if key == child.GetId().String() {
 			found = true
 		}
@@ -95,12 +95,12 @@ func TestNewValueLiteralPointer(t *testing.T) {
 }
 
 func TestSetLiteral(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewNameLiteralPointer(&uOfD)
-	child.setOwningElement(parent)
-	literal := NewLiteral(&uOfD)
-	literal.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewNameLiteralPointer(uOfD)
+	child.SetOwningElement(parent)
+	literal := NewLiteral(uOfD)
+	literal.SetOwningElement(parent)
 	if child.GetLiteral() != nil {
 		t.Error("LiteralPointer's Literal not initially nil \n")
 	}
@@ -111,12 +111,12 @@ func TestSetLiteral(t *testing.T) {
 }
 
 func TestLiteralPointerMarshal(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewNameLiteralPointer(&uOfD)
-	child.setOwningElement(parent)
-	literal := NewLiteral(&uOfD)
-	literal.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewNameLiteralPointer(uOfD)
+	child.SetOwningElement(parent)
+	literal := NewLiteral(uOfD)
+	literal.SetOwningElement(parent)
 	child.SetLiteral(literal)
 
 	result, err := json.MarshalIndent(parent, "", "   ")
@@ -126,8 +126,8 @@ func TestLiteralPointerMarshal(t *testing.T) {
 
 	//	fmt.Printf("Encoded Parent \n%s \n", result)
 
-	var uOfD2 UniverseOfDiscourse
-	recoveredParent := RecoverElement(result, &uOfD2)
+	uOfD2 := NewUniverseOfDiscourse()
+	recoveredParent := RecoverElement(result, uOfD2)
 	if recoveredParent != nil {
 		//		Print(recoveredParent, "")
 	}

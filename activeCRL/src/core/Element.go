@@ -13,20 +13,24 @@ type element struct {
 	ownedBaseElements map[string]BaseElement
 }
 
+// NewElement() creates an initialized Element. No locking is required since the existence of
+// the element is unknown outside this routine
 func NewElement(uOfD *UniverseOfDiscourse) Element {
 	var el element
 	el.initializeElement()
-	uOfD.addBaseElement(&el)
+	uOfD.AddBaseElement(&el)
 	return &el
 }
 
 func (elPtr *element) addOwnedBaseElement(be BaseElement) {
-	if be != nil && be.GetId() != uuid.Nil {
-		elPtr.ownedBaseElements[be.GetId().String()] = be
+	if be != nil && be.getId() != uuid.Nil {
+		elPtr.ownedBaseElements[be.getId().String()] = be
 	}
 }
 
 func (elPtr *element) GetDefinition() string {
+	elPtr.Lock()
+	defer elPtr.Unlock()
 	nl := elPtr.getDefinitionLiteral()
 	if nl != nil {
 		return nl.GetLiteralValue()
@@ -43,7 +47,7 @@ func (elPtr *element) getDefinitionLiteral() Literal {
 }
 
 func (elPtr *element) getDefinitionLiteralPointer() LiteralPointer {
-	for _, be := range elPtr.GetOwnedBaseElements() {
+	for _, be := range elPtr.getOwnedBaseElements() {
 		switch be.(type) {
 		case *literalPointer:
 			if be.(*literalPointer).getLiteralPointerRole() == DEFINITION {
@@ -55,6 +59,8 @@ func (elPtr *element) getDefinitionLiteralPointer() LiteralPointer {
 }
 
 func (elPtr *element) GetName() string {
+	elPtr.Lock()
+	defer elPtr.Unlock()
 	nl := elPtr.getNameLiteral()
 	if nl != nil {
 		return nl.GetLiteralValue()
@@ -71,7 +77,7 @@ func (elPtr *element) getNameLiteral() Literal {
 }
 
 func (elPtr *element) getNameLiteralPointer() LiteralPointer {
-	for _, be := range elPtr.GetOwnedBaseElements() {
+	for _, be := range elPtr.getOwnedBaseElements() {
 		switch be.(type) {
 		case *literalPointer:
 			if be.(*literalPointer).getLiteralPointerRole() == NAME {
@@ -82,11 +88,17 @@ func (elPtr *element) getNameLiteralPointer() LiteralPointer {
 	return nil
 }
 
-func (elPtr *element) GetOwnedBaseElements() map[string]BaseElement {
+func (elPtr *element) getOwnedBaseElements() map[string]BaseElement {
 	return elPtr.ownedBaseElements
 }
 
 func (elPtr *element) GetOwningElement() Element {
+	elPtr.Lock()
+	defer elPtr.Unlock()
+	return elPtr.getOwningElement()
+}
+
+func (elPtr *element) getOwningElement() Element {
 	oep := elPtr.getOwningElementPointer()
 	if oep != nil {
 		return oep.GetElement()
@@ -95,7 +107,7 @@ func (elPtr *element) GetOwningElement() Element {
 }
 
 func (elPtr *element) getOwningElementPointer() ElementPointer {
-	for _, be := range elPtr.GetOwnedBaseElements() {
+	for _, be := range elPtr.getOwnedBaseElements() {
 		switch be.(type) {
 		case *elementPointer:
 			if be.(*elementPointer).getElementPointerRole() == OWNING_ELEMENT {
@@ -107,6 +119,8 @@ func (elPtr *element) getOwningElementPointer() ElementPointer {
 }
 
 func (elPtr *element) GetUri() string {
+	elPtr.Lock()
+	defer elPtr.Unlock()
 	nl := elPtr.getUriLiteral()
 	if nl != nil {
 		return nl.GetLiteralValue()
@@ -123,7 +137,7 @@ func (elPtr *element) getUriLiteral() Literal {
 }
 
 func (elPtr *element) getUriLiteralPointer() LiteralPointer {
-	for _, be := range elPtr.GetOwnedBaseElements() {
+	for _, be := range elPtr.getOwnedBaseElements() {
 		switch be.(type) {
 		case *literalPointer:
 			if be.(*literalPointer).getLiteralPointerRole() == URI {
@@ -164,6 +178,8 @@ func (bePtr *element) isEquivalent(be *element) bool {
 }
 
 func (elPtr *element) MarshalJSON() ([]byte, error) {
+	elPtr.Lock()
+	defer elPtr.Unlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -198,9 +214,9 @@ func (elPtr *element) printElement(prefix string) {
 	if printCount < 100 {
 		printCount++
 		elPtr.printBaseElement(prefix)
-		fmt.Printf("%sOwned Base Elements: count %d \n", prefix, len(elPtr.GetOwnedBaseElements()))
+		fmt.Printf("%sOwned Base Elements: count %d \n", prefix, len(elPtr.getOwnedBaseElements()))
 		extendedPrefix := prefix + "   "
-		for _, be := range elPtr.GetOwnedBaseElements() {
+		for _, be := range elPtr.getOwnedBaseElements() {
 			Print(be, extendedPrefix)
 		}
 	}
@@ -230,12 +246,28 @@ func (el *element) recoverElementFields(unmarshaledData *map[string]json.RawMess
 }
 
 func (elPtr *element) removeOwnedBaseElement(be BaseElement) {
-	if be != nil && be.GetId() != uuid.Nil {
-		delete(elPtr.ownedBaseElements, be.GetId().String())
+	if be != nil && be.getId() != uuid.Nil {
+		delete(elPtr.ownedBaseElements, be.getId().String())
 	}
 }
 
-func (elPtr *element) SetDefinition(name string) {
+func (elPtr *element) SetDefinition(definition string) {
+	elPtr.Lock()
+	defer elPtr.Unlock()
+	nl := elPtr.getDefinitionLiteral()
+	if nl != nil {
+		nl.Lock()
+		defer nl.Unlock()
+	}
+	nlp := elPtr.getDefinitionLiteralPointer()
+	if nlp != nil {
+		nlp.Lock()
+		defer nlp.Unlock()
+	}
+	elPtr.setDefinition(definition)
+}
+
+func (elPtr *element) setDefinition(definition string) {
 	nl := elPtr.getDefinitionLiteral()
 	if nl == nil {
 		nlp := elPtr.getDefinitionLiteralPointer()
@@ -245,12 +277,28 @@ func (elPtr *element) SetDefinition(name string) {
 		}
 		nl = NewLiteral(elPtr.getUniverseOfDiscourse())
 		nl.setOwningElement(elPtr)
-		nlp.SetLiteral(nl)
+		nlp.setLiteral(nl)
 	}
-	nl.SetLiteralValue(name)
+	nl.setLiteralValue(definition)
 }
 
 func (elPtr *element) SetName(name string) {
+	elPtr.Lock()
+	defer elPtr.Unlock()
+	nl := elPtr.getNameLiteral()
+	if nl != nil {
+		nl.Lock()
+		defer nl.Unlock()
+	}
+	nlp := elPtr.getNameLiteralPointer()
+	if nlp != nil {
+		nlp.Lock()
+		defer nlp.Unlock()
+	}
+	elPtr.setName(name)
+}
+
+func (elPtr *element) setName(name string) {
 	nl := elPtr.getNameLiteral()
 	if nl == nil {
 		nlp := elPtr.getNameLiteralPointer()
@@ -260,21 +308,67 @@ func (elPtr *element) SetName(name string) {
 		}
 		nl = NewLiteral(elPtr.getUniverseOfDiscourse())
 		nl.setOwningElement(elPtr)
-		nlp.SetLiteral(nl)
+		nlp.setLiteral(nl)
 	}
-	nl.SetLiteralValue(name)
+	nl.setLiteralValue(name)
 }
 
-func (elPtr *element) setOwningElement(owningElement Element) {
+// SetOwningElement() manages the owning element poiner belonging to this element.
+// There are potentially four objects involved: the parent, the old parent (if
+// there is one), the child (this element), and the owningElementPointer (oep).
+// Because of the complexity of the wiring, all involved objects are locked here and
+// the worker methods do not do any locking.
+func (elPtr *element) SetOwningElement(parent Element) {
+	elPtr.Lock()
+	defer elPtr.Unlock()
+	oldParent := elPtr.getOwningElement()
+	if oldParent == nil && parent == nil {
+		return // Nothing to do
+	} else if oldParent != nil && parent != nil && oldParent.getId() != parent.getId() {
+		return // Nothing to do
+	}
+	if oldParent != nil {
+		oldParent.Lock()
+		defer oldParent.Unlock()
+	}
+	if parent != nil {
+		parent.Lock()
+		defer parent.Unlock()
+	}
+	oep := elPtr.getOwningElementPointer()
+	if oep != nil {
+		oep.Lock()
+		defer oep.Unlock()
+	}
+	elPtr.setOwningElement(parent)
+}
+
+func (elPtr *element) setOwningElement(parent Element) {
 	oep := elPtr.getOwningElementPointer()
 	if oep == nil {
 		oep = NewOwningElementPointer(elPtr.uOfD)
 		oep.setOwningElement(elPtr)
 	}
-	oep.SetElement(owningElement)
+	oep.setElement(parent)
 }
 
-func (elPtr *element) SetUri(name string) {
+func (elPtr *element) SetUri(uri string) {
+	elPtr.Lock()
+	defer elPtr.Unlock()
+	nl := elPtr.getUriLiteral()
+	if nl != nil {
+		nl.Lock()
+		defer nl.Unlock()
+	}
+	nlp := elPtr.getUriLiteralPointer()
+	if nlp != nil {
+		nlp.Lock()
+		defer nlp.Unlock()
+	}
+	elPtr.setUri(uri)
+}
+
+func (elPtr *element) setUri(uri string) {
 	nl := elPtr.getUriLiteral()
 	if nl == nil {
 		nlp := elPtr.getUriLiteralPointer()
@@ -284,9 +378,9 @@ func (elPtr *element) SetUri(name string) {
 		}
 		nl = NewLiteral(elPtr.getUniverseOfDiscourse())
 		nl.setOwningElement(elPtr)
-		nlp.SetLiteral(nl)
+		nlp.setLiteral(nl)
 	}
-	nl.SetLiteralValue(name)
+	nl.setLiteralValue(uri)
 }
 
 type Element interface {
@@ -297,7 +391,7 @@ type Element interface {
 	getDefinitionLiteralPointer() LiteralPointer
 	getNameLiteral() Literal
 	getNameLiteralPointer() LiteralPointer
-	GetOwnedBaseElements() map[string]BaseElement
+	getOwnedBaseElements() map[string]BaseElement
 	getOwningElementPointer() ElementPointer
 	GetUri() string
 	getUriLiteral() Literal

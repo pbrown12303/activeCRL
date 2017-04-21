@@ -4,17 +4,28 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/satori/go.uuid"
 	"strconv"
+	"sync"
+
+	"github.com/satori/go.uuid"
 )
 
 type baseElement struct {
+	sync.Mutex
 	id      uuid.UUID
 	version int
 	uOfD    *UniverseOfDiscourse
 }
 
+// GetId locks the element, reads the id, and returns, releasing the lock
 func (bePtr *baseElement) GetId() uuid.UUID {
+	bePtr.Lock()
+	defer bePtr.Unlock()
+	return bePtr.getId()
+}
+
+// getId returns the id without locking
+func (bePtr *baseElement) getId() uuid.UUID {
 	return bePtr.id
 }
 
@@ -22,7 +33,15 @@ func (bePtr *baseElement) getUniverseOfDiscourse() *UniverseOfDiscourse {
 	return bePtr.uOfD
 }
 
+// GetVersion() locks the element and returns the version, releasing the lock
 func (bePtr *baseElement) GetVersion() int {
+	bePtr.Lock()
+	defer bePtr.Unlock()
+	return bePtr.getVersion()
+}
+
+// getVersion() returns the version withoug locking
+func (bePtr *baseElement) getVersion() int {
 	return bePtr.version
 }
 
@@ -90,11 +109,16 @@ func (bePtr *baseElement) setUniverseOfDiscourse(uOfD *UniverseOfDiscourse) {
 }
 
 type BaseElement interface {
+	getId() uuid.UUID
 	GetId() uuid.UUID
 	GetName() string
 	GetOwningElement() Element
 	getUniverseOfDiscourse() *UniverseOfDiscourse
+	getVersion() int
 	GetVersion() int
+	Lock()
 	setOwningElement(Element)
+	SetOwningElement(Element)
 	setUniverseOfDiscourse(*UniverseOfDiscourse)
+	Unlock()
 }

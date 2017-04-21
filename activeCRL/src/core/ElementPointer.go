@@ -28,13 +28,22 @@ type elementPointer struct {
 }
 
 func (epPtr *elementPointer) GetElement() Element {
-	if epPtr.element == nil && epPtr.GetElementIdentifier() != uuid.Nil && epPtr.uOfD != nil {
-		epPtr.element = epPtr.uOfD.getElement(epPtr.GetElementIdentifier().String())
+	epPtr.Lock()
+	defer epPtr.Unlock()
+	return epPtr.getElement()
+}
+
+// getElement() assumes that all relevant locking is being managed elsewhere
+func (epPtr *elementPointer) getElement() Element {
+	if epPtr.element == nil && epPtr.getElementIdentifier() != uuid.Nil && epPtr.uOfD != nil {
+		epPtr.element = epPtr.uOfD.getElement(epPtr.getElementIdentifier().String())
 	}
 	return epPtr.element
 }
 
 func (epPtr *elementPointer) GetName() string {
+	epPtr.Lock()
+	defer epPtr.Unlock()
 	switch epPtr.getElementPointerRole() {
 	case ABSTRACT_ELEMENT:
 		return "abstractElement"
@@ -52,7 +61,7 @@ func NewAbstractElementPointer(uOfD *UniverseOfDiscourse) ElementPointer {
 	var ep elementPointer
 	ep.initializeElementPointer()
 	ep.setElementPointerRole(ABSTRACT_ELEMENT)
-	uOfD.addBaseElement(&ep)
+	uOfD.AddBaseElement(&ep)
 	return &ep
 }
 
@@ -60,7 +69,7 @@ func NewRefinedElementPointer(uOfD *UniverseOfDiscourse) ElementPointer {
 	var ep elementPointer
 	ep.initializeElementPointer()
 	ep.setElementPointerRole(REFINED_ELEMENT)
-	uOfD.addBaseElement(&ep)
+	uOfD.AddBaseElement(&ep)
 	return &ep
 }
 
@@ -68,7 +77,7 @@ func NewOwningElementPointer(uOfD *UniverseOfDiscourse) ElementPointer {
 	var ep elementPointer
 	ep.initializeElementPointer()
 	ep.setElementPointerRole(OWNING_ELEMENT)
-	uOfD.addBaseElement(&ep)
+	uOfD.AddBaseElement(&ep)
 	return &ep
 }
 
@@ -76,11 +85,19 @@ func NewReferencedElementPointer(uOfD *UniverseOfDiscourse) ElementPointer {
 	var ep elementPointer
 	ep.initializeElementPointer()
 	ep.setElementPointerRole(REFERENCED_ELEMENT)
-	uOfD.addBaseElement(&ep)
+	uOfD.AddBaseElement(&ep)
 	return &ep
 }
 
+// GetElementIdentifier() locks the element pointer and returns the element identifier, releasing the lock in the process
 func (epPtr *elementPointer) GetElementIdentifier() uuid.UUID {
+	epPtr.Lock()
+	defer epPtr.Unlock()
+	return epPtr.getElementIdentifier()
+}
+
+// getElementIdentifier() returns the element identifier without locking
+func (epPtr *elementPointer) getElementIdentifier() uuid.UUID {
 	return epPtr.elementId
 }
 
@@ -114,6 +131,8 @@ func (bePtr *elementPointer) isEquivalent(be *elementPointer) bool {
 }
 
 func (elPtr *elementPointer) MarshalJSON() ([]byte, error) {
+	elPtr.Lock()
+	defer elPtr.Unlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -196,24 +215,58 @@ func (ep *elementPointer) recoverElementPointerFields(unmarshaledData *map[strin
 	return nil
 }
 
+// SetElement() establishes the element to which this pointer points. If this pointer
+// happens to be an OWNING_ELEMENT pointer, there is a side-effect in which this pointer's
+// owner is removed as a child from the old target element and added as a child to the new
+// target element. Locking must take this into account.
 func (epPtr *elementPointer) SetElement(element Element) {
+	epPtr.Lock()
+	defer epPtr.Unlock()
+	oldElement := epPtr.getElement()
+	if oldElement == nil && element == nil {
+		return // Nothing to do
+	} else if oldElement != nil && element != nil && oldElement.getId() == element.getId() {
+		return // Nothing to do
+	}
+	if element != nil {
+		element.Lock() // We need to lock the element to make sure it's version doesn't change during this operation
+		defer element.Unlock()
+	}
+	if epPtr.getElementPointerRole() == OWNING_ELEMENT {
+		// We have some additional unwiring and wiring to do in this case
+		if oldElement != nil {
+			oldElement.Lock()
+			defer oldElement.Unlock()
+		}
+		if epPtr.getOwningElement() != nil {
+			epPtr.getOwningElement().Lock()
+			defer epPtr.getOwningElement().Lock()
+		}
+	}
+	epPtr.setElement(element)
+}
+
+// setElement() is intended for internal use within the core. It assumes that all relevant
+// objects (parent, child, the element pointer itself) have already been locked. All of the
+// operations it invokes are also non-locking
+func (epPtr *elementPointer) setElement(element Element) {
 	if element != epPtr.element {
 		if epPtr.getElementPointerRole() == OWNING_ELEMENT {
-			if epPtr.element != nil && epPtr.GetOwningElement() != nil {
-				epPtr.element.removeOwnedBaseElement(epPtr.GetOwningElement())
+			if epPtr.element != nil && epPtr.getOwningElement() != nil {
+				epPtr.element.removeOwnedBaseElement(epPtr.getOwningElement())
 			}
 		}
 		epPtr.element = element
 		if element != nil {
-			epPtr.elementId = element.GetId()
-			epPtr.elementVersion = element.GetVersion()
+			epPtr.elementId = element.getId()
+			epPtr.elementVersion = element.getVersion()
 		} else {
 			epPtr.elementId = uuid.Nil
 			epPtr.elementVersion = 0
 		}
 		if epPtr.getElementPointerRole() == OWNING_ELEMENT {
-			if epPtr.element != nil && epPtr.GetOwningElement() != nil {
-				epPtr.element.addOwnedBaseElement(epPtr.GetOwningElement())
+			if epPtr.element != nil && epPtr.getOwningElement() != nil {
+				epPtr.element.addOwnedBaseElement(epPtr.getOwningElement())
 			}
 		}
 	}
@@ -223,23 +276,56 @@ func (epPtr *elementPointer) setElementPointerRole(role ElementPointerRole) {
 	epPtr.elementPointerRole = role
 }
 
+// SetOwningElement() actually manages relationships between a number of objects,
+// particularly when the pointer is the OWNING_ELEMENT pointer for its owner.
+// Because of the complex wiring between the objects, we have to lock all relevant
+// objects here and then use non-locking worker methods
+func (epPtr *elementPointer) SetOwningElement(newOwningElement Element) {
+	epPtr.Lock()
+	defer epPtr.Unlock()
+	oldOwningElement := epPtr.getOwningElement()
+	if oldOwningElement == nil && newOwningElement == nil {
+		return // Nothing to do
+	} else if oldOwningElement != nil && newOwningElement != nil && oldOwningElement.getId() == newOwningElement.getId() {
+		return // Nothing to do
+	}
+	if oldOwningElement != nil {
+		oldOwningElement.Lock()
+		defer oldOwningElement.Unlock()
+	}
+	if newOwningElement != nil {
+		newOwningElement.Lock()
+		defer newOwningElement.Unlock()
+	}
+	if epPtr.getElementPointerRole() == OWNING_ELEMENT {
+		// In this case the element being pointed to will also be impacted
+		if epPtr.getElement() != nil {
+			epPtr.getElement().Lock()
+			defer epPtr.getElement().Unlock()
+		}
+	}
+	epPtr.setOwningElement(newOwningElement)
+}
+
+// setOwningElement() is an internal function within the core. It assumes that
+// all relevant locking is being managed elsewhere.
 func (epPtr *elementPointer) setOwningElement(element Element) {
-	if element != epPtr.GetOwningElement() {
+	if element != epPtr.getOwningElement() {
 		if epPtr.getElementPointerRole() == OWNING_ELEMENT {
-			if epPtr.element != nil && epPtr.GetOwningElement() != nil {
-				epPtr.element.removeOwnedBaseElement(epPtr.GetOwningElement())
+			if epPtr.element != nil && epPtr.getOwningElement() != nil {
+				epPtr.element.removeOwnedBaseElement(epPtr.getOwningElement())
 			}
 		}
-		if epPtr.GetOwningElement() != nil {
-			epPtr.GetOwningElement().removeOwnedBaseElement(epPtr)
+		if epPtr.getOwningElement() != nil {
+			epPtr.getOwningElement().removeOwnedBaseElement(epPtr)
 		}
 		epPtr.owningElement = element
-		if epPtr.GetOwningElement() != nil {
-			epPtr.GetOwningElement().addOwnedBaseElement(epPtr)
+		if epPtr.getOwningElement() != nil {
+			epPtr.getOwningElement().addOwnedBaseElement(epPtr)
 		}
 		if epPtr.getElementPointerRole() == OWNING_ELEMENT {
-			if epPtr.element != nil && epPtr.GetOwningElement() != nil {
-				epPtr.element.addOwnedBaseElement(epPtr.GetOwningElement())
+			if epPtr.element != nil && epPtr.getOwningElement() != nil {
+				epPtr.element.addOwnedBaseElement(epPtr.getOwningElement())
 			}
 		}
 	}
@@ -250,5 +336,6 @@ type ElementPointer interface {
 	GetElement() Element
 	GetElementIdentifier() uuid.UUID
 	GetElementVersion() int
+	setElement(Element)
 	SetElement(Element)
 }

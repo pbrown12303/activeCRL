@@ -17,9 +17,22 @@ type literalPointerPointer struct {
 	literalPointerVersion int
 }
 
+func NewLiteralPointerPointer(uOfD *UniverseOfDiscourse) LiteralPointerPointer {
+	var ep literalPointerPointer
+	ep.initializeLiteralPointerPointer()
+	uOfD.AddBaseElement(&ep)
+	return &ep
+}
+
 func (pllPtr *literalPointerPointer) GetLiteralPointer() LiteralPointer {
-	if pllPtr.literalPointer == nil && pllPtr.GetLiteralPointerIdentifier() != uuid.Nil && pllPtr.uOfD != nil {
-		pllPtr.literalPointer = pllPtr.uOfD.getLiteralPointer(pllPtr.GetLiteralPointerIdentifier().String())
+	pllPtr.Lock()
+	defer pllPtr.Unlock()
+	return pllPtr.getLiteralPointer()
+}
+
+func (pllPtr *literalPointerPointer) getLiteralPointer() LiteralPointer {
+	if pllPtr.literalPointer == nil && pllPtr.getLiteralPointerIdentifier() != uuid.Nil && pllPtr.uOfD != nil {
+		pllPtr.literalPointer = pllPtr.uOfD.getLiteralPointer(pllPtr.getLiteralPointerIdentifier().String())
 	}
 	return pllPtr.literalPointer
 }
@@ -28,18 +41,23 @@ func (pllPtr *literalPointerPointer) GetName() string {
 	return "literalPointerPointer"
 }
 
-func NewLiteralPointerPointer(uOfD *UniverseOfDiscourse) LiteralPointerPointer {
-	var ep literalPointerPointer
-	ep.initializeLiteralPointerPointer()
-	uOfD.addBaseElement(&ep)
-	return &ep
+func (pllPtr *literalPointerPointer) GetLiteralPointerIdentifier() uuid.UUID {
+	pllPtr.Lock()
+	defer pllPtr.Unlock()
+	return pllPtr.getLiteralPointerIdentifier()
 }
 
-func (pllPtr *literalPointerPointer) GetLiteralPointerIdentifier() uuid.UUID {
+func (pllPtr *literalPointerPointer) getLiteralPointerIdentifier() uuid.UUID {
 	return pllPtr.literalPointerId
 }
 
 func (pllPtr *literalPointerPointer) GetLiteralPointerVersion() int {
+	pllPtr.Lock()
+	defer pllPtr.Unlock()
+	return pllPtr.getLiteralPointerVersion()
+}
+
+func (pllPtr *literalPointerPointer) getLiteralPointerVersion() int {
 	return pllPtr.literalPointerVersion
 }
 
@@ -61,6 +79,8 @@ func (bePtr *literalPointerPointer) isEquivalent(be *literalPointerPointer) bool
 }
 
 func (elPtr *literalPointerPointer) MarshalJSON() ([]byte, error) {
+	elPtr.Lock()
+	defer elPtr.Unlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -116,16 +136,32 @@ func (ep *literalPointerPointer) recoverLiteralPointerPointerFields(unmarshaledD
 }
 
 func (pllPtr *literalPointerPointer) SetLiteralPointer(literalPointer LiteralPointer) {
+	pllPtr.Lock()
+	defer pllPtr.Unlock()
+	if literalPointer != nil {
+		literalPointer.Lock()
+		defer literalPointer.Unlock()
+	}
+	pllPtr.setLiteralPointer(literalPointer)
+}
+
+func (pllPtr *literalPointerPointer) setLiteralPointer(literalPointer LiteralPointer) {
 	if literalPointer != pllPtr.literalPointer {
 		pllPtr.literalPointer = literalPointer
 		if literalPointer != nil {
-			pllPtr.literalPointerId = literalPointer.GetId()
-			pllPtr.literalPointerVersion = literalPointer.GetVersion()
+			pllPtr.literalPointerId = literalPointer.getId()
+			pllPtr.literalPointerVersion = literalPointer.getVersion()
 		} else {
 			pllPtr.literalPointerId = uuid.Nil
 			pllPtr.literalPointerVersion = 0
 		}
 	}
+}
+
+func (pllPtr *literalPointerPointer) SetOwningElement(element Element) {
+	pllPtr.Lock()
+	defer pllPtr.Unlock()
+	pllPtr.setOwningElement(element)
 }
 
 func (pllPtr *literalPointerPointer) setOwningElement(element Element) {
@@ -145,5 +181,6 @@ type LiteralPointerPointer interface {
 	GetLiteralPointer() LiteralPointer
 	GetLiteralPointerIdentifier() uuid.UUID
 	GetLiteralPointerVersion() int
+	setLiteralPointer(LiteralPointer)
 	SetLiteralPointer(LiteralPointer)
 }

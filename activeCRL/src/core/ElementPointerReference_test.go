@@ -8,24 +8,24 @@ import (
 )
 
 func TestNewElementPointerReference(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	el1 := NewElementPointerReference(&uOfD)
+	uOfD := NewUniverseOfDiscourse()
+	el1 := NewElementPointerReference(uOfD)
 	if el1.GetId() == uuid.Nil {
 		t.Error("Element identifier not properly initialized")
 	}
 	if el1.GetVersion() != 0 {
 		t.Error("Element version not properly initialized")
 	}
-	if el1.GetOwnedBaseElements() == nil {
+	if el1.getOwnedBaseElements() == nil {
 		t.Error("Element ownedBaseElements not properly initialized")
 	}
 }
 
 func TestElementPointerReferenceOwnership(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewElementPointerReference(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewElementPointerReference(uOfD)
+	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
 	}
@@ -41,14 +41,14 @@ func TestElementPointerReferenceOwnership(t *testing.T) {
 }
 
 func TestSetReferencedElementPointer(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewElementPointerReference(&uOfD)
-	child.setOwningElement(parent)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewElementPointerReference(uOfD)
+	child.SetOwningElement(parent)
 	if child.GetElementPointer() != nil {
 		t.Error("ElementPointerReference's element pointer not initialized to nil")
 	}
-	elementPointer := NewReferencedElementPointer(&uOfD)
+	elementPointer := NewReferencedElementPointer(uOfD)
 	child.SetElementPointer(elementPointer)
 	if child.GetElementPointer() == nil {
 		t.Error("ElementPointerReference's  element pointer is nil after assignment")
@@ -64,11 +64,11 @@ func TestSetReferencedElementPointer(t *testing.T) {
 }
 
 func TestElementPointerReferenceMarshal(t *testing.T) {
-	var uOfD UniverseOfDiscourse
-	parent := NewElement(&uOfD)
-	child := NewElementPointerReference(&uOfD)
-	child.setOwningElement(parent)
-	elementPointer := NewReferencedElementPointer(&uOfD)
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewElementPointerReference(uOfD)
+	child.SetOwningElement(parent)
+	elementPointer := NewReferencedElementPointer(uOfD)
 	child.SetElementPointer(elementPointer)
 
 	result, err := json.MarshalIndent(parent, "", "   ")
@@ -78,8 +78,8 @@ func TestElementPointerReferenceMarshal(t *testing.T) {
 
 	//	fmt.Printf("Encoded Parent \n%s \n", result)
 
-	var uOfD2 UniverseOfDiscourse
-	recoveredParent := RecoverElement(result, &uOfD2)
+	uOfD2 := NewUniverseOfDiscourse()
+	recoveredParent := RecoverElement(result, uOfD2)
 	if recoveredParent != nil {
 		//		Print(recoveredParent, "")
 	}

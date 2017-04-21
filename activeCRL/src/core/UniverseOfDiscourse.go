@@ -3,25 +3,67 @@ package core
 import (
 	"errors"
 	"log"
+	"sync"
+
+	"github.com/satori/go.uuid"
 )
 
 type UniverseOfDiscourse struct {
+	sync.Mutex
 	baseElementMap map[string]BaseElement
+}
+
+func NewUniverseOfDiscourse() *UniverseOfDiscourse {
+	var uOfD UniverseOfDiscourse
+	uOfD.baseElementMap = make(map[string]BaseElement)
+	return &uOfD
+}
+
+func (uOfDPtr *UniverseOfDiscourse) AddBaseElement(be BaseElement) error {
+	//	log.Printf("Locking UofD\n")
+	uOfDPtr.Lock()
+	defer uOfDPtr.Unlock()
+	return uOfDPtr.addBaseElement(be)
 }
 
 func (uOfDPtr *UniverseOfDiscourse) addBaseElement(be BaseElement) error {
 	if be == nil {
 		return errors.New("UniverseOfDiscource addBaseElement failed because base element was nil")
 	}
-	if uOfDPtr.baseElementMap[be.GetId().String()] != nil {
-		return errors.New("UniverseOfDiscource addBaseElement failed because UUID was already in map")
+	//	log.Printf("Locking %T: %s \n", be, be.getId().String())
+	//	log.Printf("BaseElement: %+v \n", be)
+	be.Lock()
+	defer be.Unlock()
+	//	log.Printf("Got the lock for %T: %s \n", be, be.getId().String())
+	if be.getId() == uuid.Nil {
+		return errors.New("UniverseOfDiscource addBaseElement failed because UUID was nil")
 	}
+	oldUOfD := be.getUniverseOfDiscourse()
+	if oldUOfD != nil {
+		if oldUOfD == uOfDPtr {
+			return nil
+		} else {
+			log.Printf("Locking old UofD\n")
+			oldUOfD.Lock()
+			defer oldUOfD.Unlock()
+			oldUOfD.removeBaseElement(be)
+		}
+	}
+	//	log.Printf("Adding be to UofD map")
+	uOfDPtr.baseElementMap[be.getId().String()] = be
+	//	log.Printf("Setting be's uOfD")
 	be.setUniverseOfDiscourse(uOfDPtr)
 	return nil
 }
 
 func (uOfDPtr *UniverseOfDiscourse) getBaseElement(id string) BaseElement {
 	return uOfDPtr.baseElementMap[id]
+}
+
+func (uOfDPtr *UniverseOfDiscourse) GetElement(id string) Element {
+	uOfDPtr.Lock()
+	defer uOfDPtr.Unlock()
+	return uOfDPtr.getElement(id)
 }
 
 func (uOfDPtr *UniverseOfDiscourse) getElement(id string) Element {
@@ -67,6 +109,16 @@ func (uOfDPtr *UniverseOfDiscourse) getRefinement(id string) Refinement {
 		return be.(Refinement)
 	}
 	return nil
+}
+
+func (uOfDPtr *UniverseOfDiscourse) removeBaseElement(be BaseElement) {
+	delete(uOfDPtr.baseElementMap, be.getId().String())
+}
+
+func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourseRecursively(be BaseElement) {
+	uOfDPtr.Lock()
+	defer uOfDPtr.Unlock()
+	uOfDPtr.setUniverseOfDiscourseRecursively(be)
 }
 
 func (uOfDPtr *UniverseOfDiscourse) setUniverseOfDiscourseRecursively(be BaseElement) {

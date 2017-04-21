@@ -8,7 +8,6 @@ import (
 
 func TestBaseElement(t *testing.T) {
 	var be baseElement
-
 	// Test id
 	if be.GetId() != uuid.Nil {
 		t.Error("baseElement identifier not nil before setting")
