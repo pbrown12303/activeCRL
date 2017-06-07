@@ -11,9 +11,14 @@ type value struct {
 	owningElement Element
 }
 
+func (vPtr *value) cloneAttributes(source value) {
+	vPtr.baseElement.cloneAttributes(source.baseElement)
+	vPtr.owningElement = source.owningElement
+}
+
 func (vPtr *value) GetOwningElement() Element {
-	vPtr.Lock()
-	defer vPtr.Unlock()
+	vPtr.traceableLock()
+	defer vPtr.traceableUnlock()
 	return vPtr.getOwningElement()
 }
 

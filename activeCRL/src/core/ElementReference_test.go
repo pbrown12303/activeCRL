@@ -85,3 +85,17 @@ func TestElementReferenceMarshal(t *testing.T) {
 		t.Error("Recovered parent not equivalent to original parent")
 	}
 }
+
+func TestElementReferenceClone(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewElementReference(uOfD)
+	child.SetOwningElement(parent)
+	child.SetReferencedElement(parent)
+	clone := child.(*elementReference).clone()
+	if !Equivalent(child, clone) {
+		t.Error("ElementReference clone failed")
+		Print(child, "   ")
+		Print(clone, "   ")
+	}
+}

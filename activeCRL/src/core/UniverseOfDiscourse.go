@@ -21,8 +21,8 @@ func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 
 func (uOfDPtr *UniverseOfDiscourse) AddBaseElement(be BaseElement) error {
 	//	log.Printf("Locking UofD\n")
-	uOfDPtr.Lock()
-	defer uOfDPtr.Unlock()
+	uOfDPtr.traceableLock()
+	defer uOfDPtr.traceableUnlock()
 	return uOfDPtr.addBaseElement(be)
 }
 
@@ -32,8 +32,8 @@ func (uOfDPtr *UniverseOfDiscourse) addBaseElement(be BaseElement) error {
 	}
 	//	log.Printf("Locking %T: %s \n", be, be.getId().String())
 	//	log.Printf("BaseElement: %+v \n", be)
-	be.Lock()
-	defer be.Unlock()
+	be.traceableLock()
+	defer be.traceableUnlock()
 	//	log.Printf("Got the lock for %T: %s \n", be, be.getId().String())
 	if be.getId() == uuid.Nil {
 		return errors.New("UniverseOfDiscource addBaseElement failed because UUID was nil")
@@ -44,8 +44,8 @@ func (uOfDPtr *UniverseOfDiscourse) addBaseElement(be BaseElement) error {
 			return nil
 		} else {
 			log.Printf("Locking old UofD\n")
-			oldUOfD.Lock()
-			defer oldUOfD.Unlock()
+			oldUOfD.traceableLock()
+			defer oldUOfD.traceableUnlock()
 			oldUOfD.removeBaseElement(be)
 		}
 	}
@@ -61,8 +61,8 @@ func (uOfDPtr *UniverseOfDiscourse) getBaseElement(id string) BaseElement {
 }
 
 func (uOfDPtr *UniverseOfDiscourse) GetElement(id string) Element {
-	uOfDPtr.Lock()
-	defer uOfDPtr.Unlock()
+	uOfDPtr.traceableLock()
+	defer uOfDPtr.traceableUnlock()
 	return uOfDPtr.getElement(id)
 }
 
@@ -116,8 +116,8 @@ func (uOfDPtr *UniverseOfDiscourse) removeBaseElement(be BaseElement) {
 }
 
 func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourseRecursively(be BaseElement) {
-	uOfDPtr.Lock()
-	defer uOfDPtr.Unlock()
+	uOfDPtr.traceableLock()
+	defer uOfDPtr.traceableUnlock()
 	uOfDPtr.setUniverseOfDiscourseRecursively(be)
 }
 
@@ -153,4 +153,18 @@ func (uOfDPtr *UniverseOfDiscourse) setUniverseOfDiscourseRecursively(be BaseEle
 	default:
 		log.Printf("UniverseOfDiscourse.setUniverseOfDiscourseRecursively is missing case for %T\n", be)
 	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) traceableLock() {
+	if traceLocks {
+		log.Printf("About to lock Universe of Discourse %p\n", uOfDPtr)
+	}
+	uOfDPtr.Lock()
+}
+
+func (uOfDPtr *UniverseOfDiscourse) traceableUnlock() {
+	if traceLocks {
+		log.Printf("About to unlock Universe of Discourse %p\n", uOfDPtr)
+	}
+	uOfDPtr.Unlock()
 }

@@ -113,3 +113,110 @@ func TestSetUri(t *testing.T) {
 
 	}
 }
+
+func TestVersionWithParentChange(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	oldParent := NewElement(uOfD)
+	newParent := NewElement(uOfD)
+	elementX := NewElement(uOfD)
+	elementX.SetOwningElement(oldParent)
+	oldParentInitialVersion := oldParent.GetVersion()
+	newParentInitialVersion := newParent.GetVersion()
+	elementXInitialVersion := elementX.GetVersion()
+	elementXOwnerPointer := elementX.getOwningElementPointer()
+	elementXOwnerPointerInitialVersion := elementXOwnerPointer.GetVersion()
+	elementXOwnerPointer.SetElement(newParent)
+	if elementX.GetOwningElement() != newParent {
+		t.Error("elementX Owner not changed properly")
+	}
+	if !(elementXOwnerPointer.GetVersion() > elementXOwnerPointerInitialVersion) {
+		t.Error("Owning element pointer version not incremented")
+	}
+	if !(elementX.GetVersion() > elementXInitialVersion) {
+		t.Error("elementX version not incremented")
+	}
+	if !(oldParent.GetVersion() > oldParentInitialVersion) {
+		t.Error("old parent version not incremented")
+	}
+	if !(newParent.GetVersion() > newParentInitialVersion) {
+		t.Error("new parent version not incremented")
+	}
+
+}
+
+func TestVersionWithParentChangeAndCommonGrandparent(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	grandparent := NewElement(uOfD)
+	grandparentPreviousVersion := grandparent.GetVersion()
+	oldParent := NewElement(uOfD)
+	oldParentPreviousVersion := oldParent.GetVersion()
+	oldParent.SetOwningElement(grandparent)
+	if !(grandparent.GetVersion() > grandparentPreviousVersion) {
+		t.Error("Grandparent version not incremented when old parent added as child")
+	}
+	grandparentPreviousVersion = grandparent.GetVersion()
+	if !(oldParent.GetVersion() > oldParentPreviousVersion) {
+		t.Error("Old parent version not incremented when added as child to grandparent")
+	}
+	oldParentPreviousVersion = oldParent.GetVersion()
+
+	newParent := NewElement(uOfD)
+	newParentPreviousVersion := newParent.GetVersion()
+	newParent.SetOwningElement(grandparent)
+	if !(grandparent.GetVersion() > grandparentPreviousVersion) {
+		t.Error("Grandparent version not incremented when new parent added as child")
+	}
+	grandparentPreviousVersion = grandparent.GetVersion()
+	if !(newParent.GetVersion() > newParentPreviousVersion) {
+		t.Error("New parent version not incremented when added as child to grandparent")
+	}
+	newParentPreviousVersion = newParent.GetVersion()
+
+	elementX := NewElement(uOfD)
+	elementXPreviousVersion := elementX.GetVersion()
+	elementX.SetOwningElement(oldParent)
+	if !(oldParent.GetVersion() > oldParentPreviousVersion) {
+		t.Error("Old parent version not incremented when elementX added as child")
+	}
+	oldParentPreviousVersion = oldParent.GetVersion()
+	if !(elementX.GetVersion() > elementXPreviousVersion) {
+		t.Error("elementX version not incremented when added as a child to oldParent")
+	}
+	elementXPreviousVersion = elementX.GetVersion()
+
+	elementXOwnerPointer := elementX.getOwningElementPointer()
+	elementXOwnerPointerInitialVersion := elementXOwnerPointer.GetVersion()
+	elementXOwnerPointer.SetElement(newParent)
+	if elementX.GetOwningElement() != newParent {
+		t.Error("elementX Owner not changed properly")
+	}
+	if !(elementXOwnerPointer.GetVersion() > elementXOwnerPointerInitialVersion) {
+		t.Error("Owning element pointer version not incremented")
+	}
+	if !(elementX.GetVersion() > elementXPreviousVersion) {
+		t.Error("elementX version not incremented when parent changed")
+	}
+	if !(oldParent.GetVersion() > oldParentPreviousVersion) {
+		t.Error("old parent version not incremented when elementX removed as child")
+	}
+	if !(newParent.GetVersion() > newParentPreviousVersion) {
+		t.Error("new parent version not incremented when elementX added as child")
+	}
+	if !(grandparent.GetVersion() > grandparentPreviousVersion) {
+		t.Error("Grandparent version not incremented when elementX parent changed to new parent")
+	}
+}
+
+func TestCloneElement(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	el := NewElement(uOfD)
+	el.SetName("E1")
+	el.SetUri("E1.testDomain.com")
+	el.SetDefinition("The definition of E1")
+	clone := el.(*element).clone()
+	if !Equivalent(el, clone) {
+		t.Error("Element clone failed")
+		Print(el, "   ")
+		Print(clone, "   ")
+	}
+}

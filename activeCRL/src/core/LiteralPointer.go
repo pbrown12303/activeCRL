@@ -27,19 +27,10 @@ type literalPointer struct {
 	literalPointerRole LiteralPointerRole
 }
 
-func (lpPtr *literalPointer) GetLiteral() Literal {
-	lpPtr.Lock()
-	defer lpPtr.Unlock()
-	if lpPtr.literal == nil && lpPtr.getLiteralIdentifier() != uuid.Nil && lpPtr.uOfD != nil {
-		lpPtr.literal = lpPtr.uOfD.getLiteral(lpPtr.getLiteralIdentifier().String())
-	}
-	return lpPtr.literal
-}
-
 func NewNameLiteralPointer(uOfD *UniverseOfDiscourse) LiteralPointer {
 	var lp literalPointer
 	lp.initializeLiteralPointer()
-	lp.setLiteralPointerRole(NAME)
+	lp.literalPointerRole = NAME
 	uOfD.AddBaseElement(&lp)
 	return &lp
 }
@@ -47,7 +38,7 @@ func NewNameLiteralPointer(uOfD *UniverseOfDiscourse) LiteralPointer {
 func NewDefinitionLiteralPointer(uOfD *UniverseOfDiscourse) LiteralPointer {
 	var lp literalPointer
 	lp.initializeLiteralPointer()
-	lp.setLiteralPointerRole(DEFINITION)
+	lp.literalPointerRole = DEFINITION
 	uOfD.AddBaseElement(&lp)
 	return &lp
 }
@@ -55,7 +46,7 @@ func NewDefinitionLiteralPointer(uOfD *UniverseOfDiscourse) LiteralPointer {
 func NewUriLiteralPointer(uOfD *UniverseOfDiscourse) LiteralPointer {
 	var lp literalPointer
 	lp.initializeLiteralPointer()
-	lp.setLiteralPointerRole(URI)
+	lp.literalPointerRole = URI
 	uOfD.AddBaseElement(&lp)
 	return &lp
 }
@@ -63,14 +54,54 @@ func NewUriLiteralPointer(uOfD *UniverseOfDiscourse) LiteralPointer {
 func NewValueLiteralPointer(uOfD *UniverseOfDiscourse) LiteralPointer {
 	var lp literalPointer
 	lp.initializeLiteralPointer()
-	lp.setLiteralPointerRole(VALUE)
+	lp.literalPointerRole = VALUE
 	uOfD.AddBaseElement(&lp)
 	return &lp
 }
 
+func (lpPtr *literalPointer) clone() *literalPointer {
+	var clone literalPointer
+	clone.cloneAttributes(*lpPtr)
+	return &clone
+}
+
+func (lpPtr *literalPointer) cloneAttributes(source literalPointer) {
+	lpPtr.pointer.cloneAttributes(source.pointer)
+	lpPtr.literal = source.literal
+	lpPtr.literalId = source.literalId
+	lpPtr.literalVersion = source.literalVersion
+	lpPtr.literalPointerRole = source.literalPointerRole
+}
+
+// GetLiteral() locks the literal pointer and the literal to which it points. If the literal
+// valaue is nil, it checks to see whether there is an identifier for it present and, if so,
+// attempts to find it using the uOfD. It then returns the result of calling the non-locking getLiteral()
+func (lpPtr *literalPointer) GetLiteral() Literal {
+	lpPtr.traceableLock()
+	defer lpPtr.traceableUnlock()
+	if lpPtr.literal == nil && lpPtr.getLiteralIdentifier() != uuid.Nil && lpPtr.uOfD != nil {
+		lpPtr.literal = lpPtr.uOfD.getLiteral(lpPtr.getLiteralIdentifier().String())
+	}
+	if lpPtr.literal != nil {
+		lpPtr.literal.traceableLock()
+		defer lpPtr.literal.traceableUnlock()
+	}
+	return lpPtr.getLiteral()
+}
+
+// getLiteral() is a non-locking internal function that simply returns the literal pointed to by this
+// literal pointer. If the literal value is nil, it checks to see whether there is an identifier for it present
+// and, if so, attemtps to find it using the uOfD.
+func (lpPtr *literalPointer) getLiteral() Literal {
+	if lpPtr.literal == nil && lpPtr.getLiteralIdentifier() != uuid.Nil && lpPtr.uOfD != nil {
+		lpPtr.literal = lpPtr.uOfD.getLiteral(lpPtr.getLiteralIdentifier().String())
+	}
+	return lpPtr.literal
+}
+
 func (lpPtr *literalPointer) GetLiteralIdentifier() uuid.UUID {
-	lpPtr.Lock()
-	defer lpPtr.Unlock()
+	lpPtr.traceableLock()
+	defer lpPtr.traceableUnlock()
 	return lpPtr.getLiteralIdentifier()
 }
 
@@ -83,8 +114,8 @@ func (lpPtr *literalPointer) getLiteralPointerRole() LiteralPointerRole {
 }
 
 func (lpPtr *literalPointer) GetLiteralVersion() int {
-	lpPtr.Lock()
-	defer lpPtr.Unlock()
+	lpPtr.traceableLock()
+	defer lpPtr.traceableUnlock()
 	return lpPtr.getLiteralVersion()
 }
 
@@ -128,8 +159,8 @@ func (bePtr *literalPointer) isEquivalent(be *literalPointer) bool {
 }
 
 func (elPtr *literalPointer) MarshalJSON() ([]byte, error) {
-	elPtr.Lock()
-	defer elPtr.Unlock()
+	elPtr.traceableLock()
+	defer elPtr.traceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -213,17 +244,18 @@ func (lp *literalPointer) recoverLiteralPointerFields(unmarshaledData *map[strin
 }
 
 func (lpPtr *literalPointer) SetLiteral(literal Literal) {
-	lpPtr.Lock()
-	defer lpPtr.Unlock()
+	lpPtr.traceableLock()
+	defer lpPtr.traceableUnlock()
 	if literal != nil {
-		literal.Lock()
-		defer literal.Unlock()
+		literal.traceableLock()
+		defer literal.traceableUnlock()
 	}
 	lpPtr.setLiteral(literal)
 }
 
 func (lpPtr *literalPointer) setLiteral(literal Literal) {
 	if literal != lpPtr.literal {
+		preChange(lpPtr)
 		lpPtr.literal = literal
 		if literal != nil {
 			lpPtr.literalId = literal.getId()
@@ -232,19 +264,16 @@ func (lpPtr *literalPointer) setLiteral(literal Literal) {
 			lpPtr.literalId = uuid.Nil
 			lpPtr.literalVersion = 0
 		}
+		postChange(lpPtr)
 	}
 }
 
-func (lpPtr *literalPointer) setLiteralPointerRole(role LiteralPointerRole) {
-	lpPtr.literalPointerRole = role
-}
-
 func (lpPtr *literalPointer) SetOwningElement(element Element) {
-	lpPtr.Lock()
-	defer lpPtr.Unlock()
+	lpPtr.traceableLock()
+	defer lpPtr.traceableUnlock()
 	if element != nil {
-		element.Lock()
-		defer element.Unlock()
+		element.traceableLock()
+		defer element.traceableUnlock()
 	}
 	lpPtr.setOwningElement(element)
 }
@@ -254,9 +283,23 @@ func (lpPtr *literalPointer) setOwningElement(element Element) {
 		if lpPtr.getOwningElement() != nil {
 			lpPtr.getOwningElement().removeOwnedBaseElement(lpPtr)
 		}
+
+		preChange(lpPtr)
 		lpPtr.owningElement = element
+		postChange(lpPtr)
+
 		if lpPtr.getOwningElement() != nil {
 			lpPtr.getOwningElement().addOwnedBaseElement(lpPtr)
+		}
+	}
+}
+
+// internalSetOwningElement() is an internal function used only in unmarshal
+func (lpPtr *literalPointer) internalSetOwningElement(element Element) {
+	if element != lpPtr.getOwningElement() {
+		lpPtr.owningElement = element
+		if lpPtr.getOwningElement() != nil {
+			lpPtr.getOwningElement().internalAddOwnedBaseElement(lpPtr)
 		}
 	}
 }
@@ -264,6 +307,7 @@ func (lpPtr *literalPointer) setOwningElement(element Element) {
 type LiteralPointer interface {
 	Pointer
 	GetLiteral() Literal
+	getLiteral() Literal
 	GetLiteralIdentifier() uuid.UUID
 	getLiteralPointerRole() LiteralPointerRole
 	GetLiteralVersion() int

@@ -48,5 +48,19 @@ func TestLiteralMarshal(t *testing.T) {
 	if !Equivalent(parent, recoveredParent) {
 		t.Error("Recovered parent not equivalent to original parent")
 	}
+}
 
+func TestLiteralClone(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewLiteral(uOfD)
+	child.SetOwningElement(parent)
+	var testString string = "Test String"
+	child.SetLiteralValue(testString)
+	clone := child.(*literal).clone()
+	if !Equivalent(child, clone) {
+		t.Error("Literal clone failed")
+		Print(child, "   ")
+		Print(clone, "   ")
+	}
 }

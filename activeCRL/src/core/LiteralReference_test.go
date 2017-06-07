@@ -89,3 +89,18 @@ func TestLiteralReferenceMarshal(t *testing.T) {
 		t.Error("Recovered parent not equivalent to original parent")
 	}
 }
+
+func TestLiteralReferenceClone(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewLiteralReference(uOfD)
+	child.SetOwningElement(parent)
+	literal := NewLiteral(uOfD)
+	child.SetReferencedLiteral(literal)
+	clone := child.(*literalReference).clone()
+	if !Equivalent(child, clone) {
+		Print(child, "   ")
+		Print(clone, "   ")
+		t.Error("Cloned LiteralReference not equivalent to original")
+	}
+}

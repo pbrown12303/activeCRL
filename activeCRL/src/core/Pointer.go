@@ -9,6 +9,10 @@ type pointer struct {
 	value
 }
 
+func (pPtr *pointer) cloneAttributes(source pointer) {
+	pPtr.value.cloneAttributes(source.value)
+}
+
 func (pPtr *pointer) initializePointer() {
 	pPtr.initializeValue()
 }

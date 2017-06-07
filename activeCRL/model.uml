@@ -33,6 +33,14 @@
         </ownedParameter>
       </ownedOperation>
     </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_YcS7cBojEeewrcBqMKkk4w" name="ElementPointerPointer">
+      <generalization xmi:type="uml:Generalization" xmi:id="_kjCDwBojEeewrcBqMKkk4w" general="_y7j7sBl3EeefauFNWH9QxQ"/>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_FaB-oBrXEeeaKeFUXAw-tw" name="elementPointer" type="_U4SpMBojEeewrcBqMKkk4w"/>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_T0hy0COqEee0S4niW-FsNA" name="elementPointerId" type="_5tt24Bl1EeefauFNWH9QxQ"/>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_X3nNwCOqEee0S4niW-FsNA" name="elementPointerVersion">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+      </ownedAttribute>
+    </packagedElement>
     <packagedElement xmi:type="uml:Class" xmi:id="_U4SpMBojEeewrcBqMKkk4w" name="ElementPointer">
       <generalization xmi:type="uml:Generalization" xmi:id="_hFF9QBojEeewrcBqMKkk4w" general="_y7j7sBl3EeefauFNWH9QxQ"/>
       <ownedAttribute xmi:type="uml:Property" xmi:id="_mwRAABrWEeeaKeFUXAw-tw" name="element" type="_PyU9kBl2EeefauFNWH9QxQ">
@@ -44,14 +52,6 @@
         <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
       </ownedAttribute>
       <ownedAttribute xmi:type="uml:Property" xmi:id="_9ayPEBulEeeSMqTegN5s4Q" name="elementPointerRole" type="_bKn8EBumEeeSMqTegN5s4Q"/>
-    </packagedElement>
-    <packagedElement xmi:type="uml:Class" xmi:id="_YcS7cBojEeewrcBqMKkk4w" name="ElementPointerPointer">
-      <generalization xmi:type="uml:Generalization" xmi:id="_kjCDwBojEeewrcBqMKkk4w" general="_y7j7sBl3EeefauFNWH9QxQ"/>
-      <ownedAttribute xmi:type="uml:Property" xmi:id="_FaB-oBrXEeeaKeFUXAw-tw" name="elementPointer" type="_U4SpMBojEeewrcBqMKkk4w"/>
-      <ownedAttribute xmi:type="uml:Property" xmi:id="_T0hy0COqEee0S4niW-FsNA" name="elementPointerId" type="_5tt24Bl1EeefauFNWH9QxQ"/>
-      <ownedAttribute xmi:type="uml:Property" xmi:id="_X3nNwCOqEee0S4niW-FsNA" name="elementPointerVersion">
-        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
-      </ownedAttribute>
     </packagedElement>
     <packagedElement xmi:type="uml:Class" xmi:id="_tTuRwBotEeewrcBqMKkk4w" name="ElementPointerReference">
       <generalization xmi:type="uml:Generalization" xmi:id="_v58GEBotEeewrcBqMKkk4w" general="_ZUTDEBl2EeefauFNWH9QxQ"/>
@@ -147,6 +147,18 @@
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_FaLSEBunEeeSMqTegN5s4Q" name="DEFINITION"/>
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_Hs3tcBunEeeSMqTegN5s4Q" name="URI"/>
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_JcNkIBunEeeSMqTegN5s4Q" name="VALUE"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Activity" xmi:id="_nxRyYEVaEeeZiusBDk83mQ" name="SetElement for ElementPointer which is an Owner Pointer" node="_UJYLcEVqEeeZiusBDk83mQ _yzvnAEVqEeeZiusBDk83mQ _BxCFsEVrEeeZiusBDk83mQ _KfS2UEVrEeeZiusBDk83mQ" group="_uPQicEVaEeeZiusBDk83mQ _qlQ78EVlEeeZiusBDk83mQ _1bMm4EVpEeeZiusBDk83mQ _Pb-oMEVqEeeZiusBDk83mQ">
+      <edge xmi:type="uml:ControlFlow" xmi:id="_4qZ4YEVqEeeZiusBDk83mQ" target="_yzvnAEVqEeeZiusBDk83mQ" source="_UJYLcEVqEeeZiusBDk83mQ"/>
+      <edge xmi:type="uml:ControlFlow" xmi:id="_HyyMwEVrEeeZiusBDk83mQ" target="_BxCFsEVrEeeZiusBDk83mQ" source="_yzvnAEVqEeeZiusBDk83mQ"/>
+      <group xmi:type="uml:ActivityPartition" xmi:id="_uPQicEVaEeeZiusBDk83mQ" name="Element Pointer" node="_yzvnAEVqEeeZiusBDk83mQ _BxCFsEVrEeeZiusBDk83mQ _KfS2UEVrEeeZiusBDk83mQ" represents="_U4SpMBojEeewrcBqMKkk4w"/>
+      <group xmi:type="uml:ActivityPartition" xmi:id="_qlQ78EVlEeeZiusBDk83mQ" name="current owner" represents="_PyU9kBl2EeefauFNWH9QxQ"/>
+      <group xmi:type="uml:ActivityPartition" xmi:id="_1bMm4EVpEeeZiusBDk83mQ" name="new owner" represents="_PyU9kBl2EeefauFNWH9QxQ"/>
+      <group xmi:type="uml:ActivityPartition" xmi:id="_Pb-oMEVqEeeZiusBDk83mQ" name="initiator" node="_UJYLcEVqEeeZiusBDk83mQ"/>
+      <node xmi:type="uml:OpaqueAction" xmi:id="_UJYLcEVqEeeZiusBDk83mQ" name="call SetElement(new owner)" outgoing="_4qZ4YEVqEeeZiusBDk83mQ" inPartition="_Pb-oMEVqEeeZiusBDk83mQ"/>
+      <node xmi:type="uml:OpaqueAction" xmi:id="_yzvnAEVqEeeZiusBDk83mQ" name="obtain locks" incoming="_4qZ4YEVqEeeZiusBDk83mQ" outgoing="_HyyMwEVrEeeZiusBDk83mQ" inPartition="_uPQicEVaEeeZiusBDk83mQ"/>
+      <node xmi:type="uml:DecisionNode" xmi:id="_BxCFsEVrEeeZiusBDk83mQ" name="current owner?" incoming="_HyyMwEVrEeeZiusBDk83mQ" inPartition="_uPQicEVaEeeZiusBDk83mQ"/>
+      <node xmi:type="uml:OpaqueAction" xmi:id="_KfS2UEVrEeeZiusBDk83mQ" name="call removeBaseElement()" inPartition="_uPQicEVaEeeZiusBDk83mQ"/>
     </packagedElement>
   </packagedElement>
   <packagedElement xmi:type="uml:Package" xmi:id="_ymeHYBl1EeefauFNWH9QxQ" name="ReferencedTypes">

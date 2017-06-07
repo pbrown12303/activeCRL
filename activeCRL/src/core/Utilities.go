@@ -8,10 +8,12 @@ import (
 )
 
 func Equivalent(be1 BaseElement, be2 BaseElement) bool {
-	//	be1.Lock()
-	//	defer be1.Unlock()
-	//	be2.Lock()
-	//	defer be2.Unlock()
+	be1.traceableLock()
+	defer be1.traceableUnlock()
+	if be2 != be1 {
+		be2.traceableLock()
+		defer be2.traceableUnlock()
+	}
 	return equivalent(be1, be2)
 }
 
@@ -50,8 +52,8 @@ func equivalent(be1 BaseElement, be2 BaseElement) bool {
 }
 
 func Print(be BaseElement, prefix string) {
-	be.Lock()
-	defer be.Unlock()
+	be.traceableLock()
+	defer be.traceableUnlock()
 	printBe(be, prefix)
 }
 
@@ -193,19 +195,19 @@ func restoreValueOwningElementFieldsRecursively(el Element) {
 		case *element:
 			restoreValueOwningElementFieldsRecursively(child.(*element))
 		case *elementPointer:
-			child.(*elementPointer).setOwningElement(el)
+			child.(*elementPointer).internalSetOwningElement(el)
 		case *elementPointerPointer:
-			child.(*elementPointerPointer).setOwningElement(el)
+			child.(*elementPointerPointer).internalSetOwningElement(el)
 		case *elementPointerReference:
 			restoreValueOwningElementFieldsRecursively(child.(*elementPointerReference))
 		case *elementReference:
 			restoreValueOwningElementFieldsRecursively(child.(*elementReference))
 		case *literal:
-			child.(*literal).setOwningElement(el)
+			child.(*literal).internalSetOwningElement(el)
 		case *literalPointer:
-			child.(*literalPointer).setOwningElement(el)
+			child.(*literalPointer).internalSetOwningElement(el)
 		case *literalPointerPointer:
-			child.(*literalPointerPointer).setOwningElement(el)
+			child.(*literalPointerPointer).internalSetOwningElement(el)
 		case *literalPointerReference:
 			restoreValueOwningElementFieldsRecursively(child.(*literalPointerReference))
 		case *literalReference:
@@ -217,3 +219,17 @@ func restoreValueOwningElementFieldsRecursively(el Element) {
 		}
 	}
 }
+
+func preChange(be BaseElement) {
+
+}
+
+func postChange(be BaseElement) {
+	be.internalIncrementVersion()
+	parent := be.getOwningElement()
+	if parent != nil {
+		parent.childChanged()
+	}
+}
+
+var traceLocks bool = false

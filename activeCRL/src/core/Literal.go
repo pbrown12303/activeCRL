@@ -19,9 +19,20 @@ func NewLiteral(uOfD *UniverseOfDiscourse) Literal {
 	return &lit
 }
 
+func (lPtr *literal) clone() *literal {
+	var clone literal
+	clone.cloneAttributes(*lPtr)
+	return &clone
+}
+
+func (lPtr *literal) cloneAttributes(source literal) {
+	lPtr.value.cloneAttributes(source.value)
+	lPtr.literalValue = source.literalValue
+}
+
 func (lPtr *literal) GetLiteralValue() string {
-	lPtr.Lock()
-	defer lPtr.Unlock()
+	lPtr.traceableLock()
+	defer lPtr.traceableUnlock()
 	return lPtr.getLiteralValue()
 }
 
@@ -30,8 +41,8 @@ func (lPtr *literal) getLiteralValue() string {
 }
 
 func (lPtr *literal) GetName() string {
-	lPtr.Lock()
-	defer lPtr.Unlock()
+	lPtr.traceableLock()
+	defer lPtr.traceableUnlock()
 	return lPtr.getLiteralValue()
 }
 
@@ -49,8 +60,8 @@ func (lPtr *literal) isEquivalent(lit *literal) bool {
 }
 
 func (lPtr *literal) MarshalJSON() ([]byte, error) {
-	lPtr.Lock()
-	defer lPtr.Unlock()
+	lPtr.traceableLock()
+	defer lPtr.traceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(lPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -88,34 +99,53 @@ func (lPtr *literal) recoverLiteralFields(unmarshaledData *map[string]json.RawMe
 }
 
 func (lPtr *literal) SetLiteralValue(newValue string) {
-	lPtr.Lock()
-	defer lPtr.Unlock()
+	lPtr.traceableLock()
+	defer lPtr.traceableUnlock()
 	lPtr.setLiteralValue(newValue)
 }
 
 func (lPtr *literal) setLiteralValue(newValue string) {
-	lPtr.literalValue = newValue
+	if lPtr.literalValue != newValue {
+		preChange(lPtr)
+		lPtr.literalValue = newValue
+		postChange(lPtr)
+	}
 }
 
 func (lPtr *literal) SetOwningElement(el Element) {
-	lPtr.Lock()
-	defer lPtr.Unlock()
+	lPtr.traceableLock()
+	defer lPtr.traceableUnlock()
 	lPtr.setOwningElement(el)
 }
 
 func (lPtr *literal) setOwningElement(el Element) {
-	if lPtr.owningElement != nil {
-		lPtr.owningElement.removeOwnedBaseElement(lPtr)
+	if lPtr.getOwningElement() != el {
+		if lPtr.owningElement != nil {
+			lPtr.owningElement.removeOwnedBaseElement(lPtr)
+		}
+
+		preChange(lPtr)
+		lPtr.owningElement = el
+		postChange(lPtr)
+
+		if lPtr.owningElement != nil {
+			lPtr.owningElement.addOwnedBaseElement(lPtr)
+		}
 	}
+}
+
+// internalSetOwningElement() is an internal function used only in unmarshal
+func (lPtr *literal) internalSetOwningElement(el Element) {
 	lPtr.owningElement = el
 	if lPtr.owningElement != nil {
-		lPtr.owningElement.addOwnedBaseElement(lPtr)
+		lPtr.owningElement.internalAddOwnedBaseElement(lPtr)
 	}
 }
 
 type Literal interface {
 	Value
 	GetLiteralValue() string
+	getLiteralValue() string
 	setLiteralValue(string)
 	SetLiteralValue(string)
 }
