@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/satori/go.uuid"
+	"log"
 	"reflect"
 )
 
@@ -55,6 +56,9 @@ func (elPtr *element) clone() *element {
 
 func (elPtr *element) cloneAttributes(source element) {
 	elPtr.baseElement.cloneAttributes(source.baseElement)
+	for key, _ := range elPtr.ownedBaseElements {
+		delete(elPtr.ownedBaseElements, key)
+	}
 	for key, value := range source.ownedBaseElements {
 		elPtr.ownedBaseElements[key] = value
 	}
@@ -265,20 +269,20 @@ func (elPtr *element) initializeElement() {
 // if the other element and its substructure are equivalent
 func (bePtr *element) isEquivalent(be *element) bool {
 	if len(bePtr.ownedBaseElements) != len(be.ownedBaseElements) {
-		fmt.Printf("Equivalence failed: Owned Base Elements lenght does not match \n")
+		log.Printf("Equivalence failed: Owned Base Elements lenght does not match \n")
 		return false
 	}
 	for key, value := range bePtr.ownedBaseElements {
 		beValue := be.ownedBaseElements[key]
 		if beValue == nil {
-			fmt.Printf("Equivalence failed: no value found for Owned Base Element key %s \n", key)
+			log.Printf("Equivalence failed: no value found for Owned Base Element key %s \n", key)
 			return false
 		}
 		if !Equivalent(value, beValue) {
-			fmt.Printf("Equivalence failed: values do not match for Owned Base Element key %s \n", key)
-			fmt.Printf("First element's value: \n")
+			log.Printf("Equivalence failed: values do not match for Owned Base Element key %s \n", key)
+			log.Printf("First element's value: \n")
 			Print(value, "   ")
-			fmt.Printf("Second element's value: \n")
+			log.Printf("Second element's value: \n")
 			Print(beValue, "   ")
 			return false
 		}
@@ -324,7 +328,7 @@ func (elPtr *element) printElement(prefix string) {
 	if printCount < 100 {
 		printCount++
 		elPtr.printBaseElement(prefix)
-		fmt.Printf("%sOwned Base Elements: count %d \n", prefix, len(elPtr.getOwnedBaseElements()))
+		log.Printf("%sOwned Base Elements: count %d \n", prefix, len(elPtr.getOwnedBaseElements()))
 		extendedPrefix := prefix + "   "
 		for _, be := range elPtr.getOwnedBaseElements() {
 			Print(be, extendedPrefix)
@@ -343,14 +347,14 @@ func (el *element) recoverElementFields(unmarshaledData *map[string]json.RawMess
 	var obeMap map[string]json.RawMessage
 	err = json.Unmarshal((*unmarshaledData)["OwnedBaseElements"], &obeMap)
 	if err != nil {
-		fmt.Printf("Recovery of Element.OwnedBaseElements failed\n")
+		log.Printf("Recovery of Element.OwnedBaseElements failed\n")
 		return err
 	}
 	for _, rawBe := range obeMap {
 		var recoveredBaseElement BaseElement
 		err = unmarshalPolymorphicBaseElement(rawBe, &recoveredBaseElement)
 		if err != nil {
-			fmt.Printf("Polymorphic Recovery of one Element.OwnedBaseElements failed\n")
+			log.Printf("Polymorphic Recovery of one Element.OwnedBaseElements failed\n")
 			return err
 		}
 		el.internalAddOwnedBaseElement(recoveredBaseElement)

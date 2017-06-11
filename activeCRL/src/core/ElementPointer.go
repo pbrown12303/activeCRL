@@ -343,7 +343,11 @@ func (epPtr *elementPointer) setOwningElement(element Element) {
 		if epPtr.getOwningElement() != nil {
 			epPtr.getOwningElement().removeOwnedBaseElement(epPtr)
 		}
+
+		preChange(epPtr)
 		epPtr.owningElement = element
+		postChange(epPtr)
+
 		if epPtr.getOwningElement() != nil {
 			epPtr.getOwningElement().addOwnedBaseElement(epPtr)
 		}

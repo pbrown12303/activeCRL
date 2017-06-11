@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"reflect"
 )
 
@@ -52,7 +53,7 @@ func (lPtr *literal) initializeLiteral() {
 
 func (lPtr *literal) isEquivalent(lit *literal) bool {
 	if lPtr.literalValue != lit.literalValue {
-		fmt.Printf("Literal values not equivalent - v1: %s v2: %s \n", lPtr.literalValue, lit.literalValue)
+		log.Printf("Literal values not equivalent - v1: %s v2: %s \n", lPtr.literalValue, lit.literalValue)
 		return false
 	}
 	var valuePtr *value = &lPtr.value
@@ -78,7 +79,7 @@ func (lPtr *literal) marshalLiteralFields(buffer *bytes.Buffer) error {
 
 func (lPtr *literal) printLiteral(prefix string) {
 	lPtr.printValue(prefix)
-	fmt.Printf("%sliteralValue: %s \n", prefix, lPtr.literalValue)
+	log.Printf("%sliteralValue: %s \n", prefix, lPtr.literalValue)
 }
 
 func (lPtr *literal) recoverLiteralFields(unmarshaledData *map[string]json.RawMessage) error {

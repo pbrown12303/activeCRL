@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"log"
+	"runtime/debug"
 	"sync"
 
 	"github.com/satori/go.uuid"
@@ -11,11 +12,17 @@ import (
 type UniverseOfDiscourse struct {
 	sync.Mutex
 	baseElementMap map[string]BaseElement
+	recordingUndo  bool
+	undoStack      undoStack
+	redoStack      undoStack
+	debugUndo      bool
 }
 
 func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	var uOfD UniverseOfDiscourse
 	uOfD.baseElementMap = make(map[string]BaseElement)
+	uOfD.recordingUndo = false
+	uOfD.debugUndo = false
 	return &uOfD
 }
 
@@ -23,6 +30,10 @@ func (uOfDPtr *UniverseOfDiscourse) AddBaseElement(be BaseElement) error {
 	//	log.Printf("Locking UofD\n")
 	uOfDPtr.traceableLock()
 	defer uOfDPtr.traceableUnlock()
+	if be != nil {
+		be.traceableLock()
+		defer be.traceableUnlock()
+	}
 	return uOfDPtr.addBaseElement(be)
 }
 
@@ -32,8 +43,6 @@ func (uOfDPtr *UniverseOfDiscourse) addBaseElement(be BaseElement) error {
 	}
 	//	log.Printf("Locking %T: %s \n", be, be.getId().String())
 	//	log.Printf("BaseElement: %+v \n", be)
-	be.traceableLock()
-	defer be.traceableUnlock()
 	//	log.Printf("Got the lock for %T: %s \n", be, be.getId().String())
 	if be.getId() == uuid.Nil {
 		return errors.New("UniverseOfDiscource addBaseElement failed because UUID was nil")
@@ -53,7 +62,19 @@ func (uOfDPtr *UniverseOfDiscourse) addBaseElement(be BaseElement) error {
 	uOfDPtr.baseElementMap[be.getId().String()] = be
 	//	log.Printf("Setting be's uOfD")
 	be.setUniverseOfDiscourse(uOfDPtr)
+	uOfDPtr.markNewBaseElement(be)
 	return nil
+}
+
+func (uOfDPtr *UniverseOfDiscourse) addBaseElementForUndo(be BaseElement) {
+	//	log.Printf("Locking UofD\n")
+	uOfDPtr.traceableLock()
+	defer uOfDPtr.traceableUnlock()
+	if be != nil {
+		be.traceableLock()
+		defer be.traceableUnlock()
+	}
+	uOfDPtr.baseElementMap[be.getId().String()] = be
 }
 
 func (uOfDPtr *UniverseOfDiscourse) getBaseElement(id string) BaseElement {
@@ -111,8 +132,138 @@ func (uOfDPtr *UniverseOfDiscourse) getRefinement(id string) Refinement {
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeBaseElement(be BaseElement) {
+func (uOfDPtr *UniverseOfDiscourse) markChangedBaseElement(changedElement BaseElement) {
+	if uOfDPtr.debugUndo == true {
+		debug.PrintStack()
+	}
+	clone := clone(changedElement)
+	if uOfDPtr.recordingUndo {
+		uOfDPtr.undoStack.Push(NewUndoRedoStackEntry(Change, clone, changedElement))
+	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) markNewBaseElement(be BaseElement) {
+	if uOfDPtr.debugUndo == true {
+		debug.PrintStack()
+	}
+	clone := clone(be)
+	if uOfDPtr.recordingUndo {
+		uOfDPtr.undoStack.Push(NewUndoRedoStackEntry(Creation, clone, be))
+	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) markRemovedBaseElement(be BaseElement) {
+	if uOfDPtr.debugUndo == true {
+		debug.PrintStack()
+	}
+	clone := clone(be)
+	if uOfDPtr.recordingUndo {
+		uOfDPtr.undoStack.Push(NewUndoRedoStackEntry(Deletion, clone, be))
+	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) markUndoPoint() {
+	if uOfDPtr.recordingUndo {
+		uOfDPtr.undoStack.Push(NewUndoRedoStackEntry(Marker, nil, nil))
+	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) redo() {
+	for len(uOfDPtr.redoStack) > 0 {
+		currentEntry := uOfDPtr.redoStack.Pop()
+		if currentEntry.changeType == Marker {
+			uOfDPtr.undoStack.Push(currentEntry)
+			return
+		} else if currentEntry.changeType == Creation {
+			uOfDPtr.undoStack.Push(currentEntry)
+			uOfDPtr.restoreState(currentEntry.priorState, currentEntry.changedElement)
+			// this was a new element
+			uOfDPtr.addBaseElementForUndo(currentEntry.changedElement)
+		} else if currentEntry.changeType == Deletion {
+			uOfDPtr.undoStack.Push(currentEntry)
+			uOfDPtr.restoreState(currentEntry.priorState, currentEntry.changedElement)
+			// this was an deleted element
+			uOfDPtr.removeBaseElementForUndo(currentEntry.changedElement)
+		} else {
+			clone := clone(currentEntry.changedElement)
+			undoEntry := NewUndoRedoStackEntry(Change, clone, currentEntry.changedElement)
+			uOfDPtr.restoreState(currentEntry.priorState, currentEntry.changedElement)
+			uOfDPtr.undoStack.Push(undoEntry)
+		}
+	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) RemoveBaseElement(be BaseElement) error {
+	//	log.Printf("Locking UofD\n")
+	uOfDPtr.traceableLock()
+	defer uOfDPtr.traceableUnlock()
+	if be != nil {
+		be.traceableLock()
+		defer be.traceableUnlock()
+	}
+	return uOfDPtr.removeBaseElement(be)
+}
+
+func (uOfDPtr *UniverseOfDiscourse) removeBaseElement(be BaseElement) error {
+	if be == nil {
+		return errors.New("UniverseOfDiscource removeBaseElement failed because base element was nil")
+	}
 	delete(uOfDPtr.baseElementMap, be.getId().String())
+	uOfDPtr.markRemovedBaseElement(be)
+	return nil
+}
+
+func (uOfDPtr *UniverseOfDiscourse) removeBaseElementForUndo(be BaseElement) {
+	//	log.Printf("Locking UofD\n")
+	uOfDPtr.traceableLock()
+	defer uOfDPtr.traceableUnlock()
+	if be != nil {
+		be.traceableLock()
+		defer be.traceableUnlock()
+	}
+	delete(uOfDPtr.baseElementMap, be.getId().String())
+}
+
+// restoreState is used as part of the undo process. It changes the currentState object
+// to have the priorState.
+func (uOfDPtr *UniverseOfDiscourse) restoreState(priorState BaseElement, currentState BaseElement) {
+	if uOfDPtr.debugUndo == true {
+		log.Printf("Restoring State")
+		log.Printf("   Current state:")
+		Print(currentState, "      ")
+		log.Printf("   Prior state")
+		Print(priorState, "      ")
+	}
+	switch currentState.(type) {
+	case *element:
+		currentState.(*element).cloneAttributes(*priorState.(*element))
+	case *elementPointer:
+		currentState.(*elementPointer).cloneAttributes(*priorState.(*elementPointer))
+	case *elementPointerPointer:
+		currentState.(*elementPointerPointer).cloneAttributes(*priorState.(*elementPointerPointer))
+	case *elementPointerReference:
+		currentState.(*elementPointerReference).cloneAttributes(*priorState.(*elementPointerReference))
+	case *elementReference:
+		currentState.(*elementReference).cloneAttributes(*priorState.(*elementReference))
+	case *literal:
+		currentState.(*literal).cloneAttributes(*priorState.(*literal))
+	case *literalPointer:
+		currentState.(*literalPointer).cloneAttributes(*priorState.(*literalPointer))
+	case *literalPointerPointer:
+		currentState.(*literalPointerPointer).cloneAttributes(*priorState.(*literalPointerPointer))
+	case *literalPointerReference:
+		currentState.(*literalPointerReference).cloneAttributes(*priorState.(*literalPointerReference))
+	case *literalReference:
+		currentState.(*literalReference).cloneAttributes(*priorState.(*literalReference))
+	case *refinement:
+		currentState.(*refinement).cloneAttributes(*priorState.(*refinement))
+	default:
+		log.Printf("restoreState called with unhandled type %T\n", currentState)
+	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) setRecordingUndo(newSetting bool) {
+	uOfDPtr.recordingUndo = newSetting
 }
 
 func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourseRecursively(be BaseElement) {
@@ -167,4 +318,33 @@ func (uOfDPtr *UniverseOfDiscourse) traceableUnlock() {
 		log.Printf("About to unlock Universe of Discourse %p\n", uOfDPtr)
 	}
 	uOfDPtr.Unlock()
+}
+
+func (uOfDPtr *UniverseOfDiscourse) undo() {
+	firstEntry := true
+	for len(uOfDPtr.undoStack) > 0 {
+		currentEntry := uOfDPtr.undoStack.Pop()
+		if currentEntry.changeType == Marker {
+			if firstEntry {
+				uOfDPtr.redoStack.Push(currentEntry)
+			} else {
+				// Put it back on the undo stack
+				uOfDPtr.undoStack.Push(currentEntry)
+				return
+			}
+		} else if currentEntry.changeType == Creation {
+			uOfDPtr.redoStack.Push(currentEntry)
+			uOfDPtr.removeBaseElementForUndo(currentEntry.changedElement)
+		} else if currentEntry.changeType == Deletion {
+			uOfDPtr.restoreState(currentEntry.priorState, currentEntry.changedElement)
+			uOfDPtr.redoStack.Push(currentEntry)
+			uOfDPtr.addBaseElementForUndo(currentEntry.changedElement)
+		} else if currentEntry.changeType == Change {
+			clone := clone(currentEntry.changedElement)
+			redoEntry := NewUndoRedoStackEntry(Change, clone, currentEntry.changedElement)
+			uOfDPtr.restoreState(currentEntry.priorState, currentEntry.changedElement)
+			uOfDPtr.redoStack.Push(redoEntry)
+		}
+		firstEntry = false
+	}
 }

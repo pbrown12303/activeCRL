@@ -52,16 +52,48 @@ func equivalent(be1 BaseElement, be2 BaseElement) bool {
 }
 
 func Print(be BaseElement, prefix string) {
-	be.traceableLock()
-	defer be.traceableUnlock()
+	if be != nil {
+		be.traceableLock()
+		defer be.traceableUnlock()
+	}
 	printBe(be, prefix)
+}
+
+func PrintUndoStack(s undoStack, stackName string) {
+	log.Printf("%s:", stackName)
+	for _, entry := range s {
+		var changeType string
+		switch entry.changeType {
+		case Creation:
+			{
+				changeType = "Creation"
+			}
+		case Deletion:
+			{
+				changeType = "Deletion"
+			}
+		case Change:
+			{
+				changeType = "Change"
+			}
+		case Marker:
+			{
+				changeType = "Marker"
+			}
+		}
+		log.Printf("   Change type: %s", changeType)
+		log.Printf("   Prior state:")
+		Print(entry.priorState, "      ")
+		//		log.Printf("   Changed element:")
+		//		Print(entry.changedElement, "      ")
+	}
 }
 
 func printBe(be BaseElement, prefix string) {
 	if be == nil {
 		return
 	}
-	fmt.Printf("%s%s: \n", prefix, reflect.TypeOf(be).String())
+	log.Printf("%s%s: \n", prefix, reflect.TypeOf(be).String())
 	switch be.(type) {
 	case *element:
 		be.(*element).printElement(prefix)
@@ -220,8 +252,39 @@ func restoreValueOwningElementFieldsRecursively(el Element) {
 	}
 }
 
-func preChange(be BaseElement) {
+func clone(be BaseElement) BaseElement {
+	switch be.(type) {
+	case *element:
+		return be.(*element).clone()
+	case *elementPointer:
+		return be.(*elementPointer).clone()
+	case *elementPointerPointer:
+		return be.(*elementPointerPointer).clone()
+	case *elementPointerReference:
+		return be.(*elementPointerReference).clone()
+	case *elementReference:
+		return be.(*elementReference).clone()
+	case *literal:
+		return be.(*literal).clone()
+	case *literalPointer:
+		return be.(*literalPointer).clone()
+	case *literalPointerPointer:
+		return be.(*literalPointerPointer).clone()
+	case *literalPointerReference:
+		return be.(*literalPointerReference).clone()
+	case *literalReference:
+		return be.(*literalReference).clone()
+	case *refinement:
+		return be.(*refinement).clone()
+	}
+	log.Printf("clone called with unhandled type %T\n", be)
+	return nil
+}
 
+func preChange(be BaseElement) {
+	if be != nil && be.getUniverseOfDiscourse().recordingUndo == true {
+		be.getUniverseOfDiscourse().markChangedBaseElement(be)
+	}
 }
 
 func postChange(be BaseElement) {
