@@ -128,11 +128,24 @@ func TestLiteralPointerMarshal(t *testing.T) {
 
 	uOfD2 := NewUniverseOfDiscourse()
 	recoveredParent := RecoverElement(result, uOfD2)
-	if recoveredParent != nil {
-		//		Print(recoveredParent, "")
-	}
 	if !Equivalent(parent, recoveredParent) {
 		t.Error("Recovered parent not equivalent to original parent")
+	}
+}
+
+func TestLiteralPointerClone(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewNameLiteralPointer(uOfD)
+	child.SetOwningElement(parent)
+	literal := NewLiteral(uOfD)
+	literal.SetOwningElement(parent)
+	child.SetLiteral(literal)
+	clone := child.(*literalPointer).clone()
+	if !Equivalent(child, clone) {
+		t.Error("LiteralPointer clone failed")
+		Print(child, "   ")
+		Print(clone, "   ")
 	}
 
 }

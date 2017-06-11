@@ -22,7 +22,7 @@ func TestBaseElement(t *testing.T) {
 	if be.GetVersion() != 0 {
 		t.Error("baseElement version not 0 before increment")
 	}
-	be.incrementVersion()
+	be.internalIncrementVersion()
 	if be.GetVersion() != 1 {
 		t.Error("baseElement version not 1 after increment")
 	}

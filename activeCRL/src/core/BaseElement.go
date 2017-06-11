@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 	"sync"
 
@@ -17,10 +18,16 @@ type baseElement struct {
 	uOfD    *UniverseOfDiscourse
 }
 
+func (bePtr *baseElement) cloneAttributes(source baseElement) {
+	bePtr.id = source.id
+	bePtr.version = source.version
+	bePtr.uOfD = source.uOfD
+}
+
 // GetId locks the element, reads the id, and returns, releasing the lock
 func (bePtr *baseElement) GetId() uuid.UUID {
-	bePtr.Lock()
-	defer bePtr.Unlock()
+	bePtr.traceableLock()
+	defer bePtr.traceableUnlock()
 	return bePtr.getId()
 }
 
@@ -33,10 +40,10 @@ func (bePtr *baseElement) getUniverseOfDiscourse() *UniverseOfDiscourse {
 	return bePtr.uOfD
 }
 
-// GetVersion() locks the element and returns the version, releasing the lock
+// GetVersion() Locks the element and returns the version, releasing the lock
 func (bePtr *baseElement) GetVersion() int {
-	bePtr.Lock()
-	defer bePtr.Unlock()
+	bePtr.traceableLock()
+	defer bePtr.traceableUnlock()
 	return bePtr.getVersion()
 }
 
@@ -45,21 +52,26 @@ func (bePtr *baseElement) getVersion() int {
 	return bePtr.version
 }
 
+// initializeBaseElement() initializes the uuid. Note that initialization does
+// not increment the version counter nor does it notify other objects that a change
+// has occurred.
 func (bePtr *baseElement) initializeBaseElement() {
 	bePtr.id = uuid.NewV4()
 }
 
-func (bePtr *baseElement) incrementVersion() {
+// internalIncrementVersion() increments the version counter. Note that it does not
+// notify other objects that a change has occurred.
+func (bePtr *baseElement) internalIncrementVersion() {
 	bePtr.version++
 }
 
 func (bePtr *baseElement) isEquivalent(be *baseElement) bool {
 	if bePtr.id != be.id {
-		fmt.Printf("Equivalence failed: ids do not match \n")
+		log.Printf("Equivalence failed: ids do not match \n")
 		return false
 	}
 	if bePtr.version != be.version {
-		fmt.Printf("Equivalence failed: versions do not match \n")
+		log.Printf("Equivalence failed: versions do not match \n")
 		return false
 	}
 	return true
@@ -72,8 +84,8 @@ func (elPtr *baseElement) marshalBaseElementFields(buffer *bytes.Buffer) error {
 }
 
 func (bePtr *baseElement) printBaseElement(prefix string) {
-	fmt.Printf("%sid: %s \n", prefix, bePtr.id.String())
-	fmt.Printf("%sversion %d \n", prefix, bePtr.version)
+	log.Printf("%sid: %s \n", prefix, bePtr.id.String())
+	log.Printf("%sversion %d \n", prefix, bePtr.version)
 }
 
 func (be *baseElement) recoverBaseElementFields(unmarshaledData *map[string]json.RawMessage) error {
@@ -81,44 +93,64 @@ func (be *baseElement) recoverBaseElementFields(unmarshaledData *map[string]json
 	var recoveredId string
 	err := json.Unmarshal((*unmarshaledData)["Id"], &recoveredId)
 	if err != nil {
-		fmt.Printf("Recovery of BaseElement.id as string failed\n")
+		log.Printf("Recovery of BaseElement.id as string failed\n")
 		return err
 	}
 	be.id, err = uuid.FromString(recoveredId)
 	if err != nil {
-		fmt.Printf("Conversion of string to uuid failed\n")
+		log.Printf("Conversion of string to uuid failed\n")
 		return err
 	}
 	// Version
 	var recoveredVersion string
 	err = json.Unmarshal((*unmarshaledData)["Version"], &recoveredVersion)
 	if err != nil {
-		fmt.Printf("Recovery of BaseElement.version failed\n")
+		log.Printf("Recovery of BaseElement.version failed\n")
 		return err
 	}
 	be.version, err = strconv.Atoi(recoveredVersion)
 	if err != nil {
-		fmt.Printf("Conversion of BaseElement.version failed\n")
+		log.Printf("Conversion of BaseElement.version failed\n")
 		return err
 	}
 	return nil
 }
 
+// setUniverseOfDiscourse() sets the uOfD of which this object is a member. Strictly
+// speaking, this is not an attribute of the baseElement, but rather a context in which
+// the baseElement is operating in which the baseElement may be able to locate other objects
+// by id.
 func (bePtr *baseElement) setUniverseOfDiscourse(uOfD *UniverseOfDiscourse) {
 	bePtr.uOfD = uOfD
+}
+
+func (bePtr *baseElement) traceableLock() {
+	if traceLocks {
+		log.Printf("About to lock Base Element %p\n", bePtr)
+	}
+	bePtr.Lock()
+}
+
+func (bePtr *baseElement) traceableUnlock() {
+	if traceLocks {
+		log.Printf("About to unlock Base Element %p\n", bePtr)
+	}
+	bePtr.Unlock()
 }
 
 type BaseElement interface {
 	getId() uuid.UUID
 	GetId() uuid.UUID
 	GetName() string
+	getOwningElement() Element
 	GetOwningElement() Element
 	getUniverseOfDiscourse() *UniverseOfDiscourse
 	getVersion() int
 	GetVersion() int
-	Lock()
+	internalIncrementVersion()
 	setOwningElement(Element)
 	SetOwningElement(Element)
 	setUniverseOfDiscourse(*UniverseOfDiscourse)
-	Unlock()
+	traceableLock()
+	traceableUnlock()
 }

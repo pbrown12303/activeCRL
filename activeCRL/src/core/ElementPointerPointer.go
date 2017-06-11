@@ -24,9 +24,29 @@ func NewElementPointerPointer(uOfD *UniverseOfDiscourse) ElementPointerPointer {
 	return &ep
 }
 
+func (eppPtr *elementPointerPointer) clone() *elementPointerPointer {
+	var clone elementPointerPointer
+	clone.cloneAttributes(*eppPtr)
+	return &clone
+}
+
+func (eppPtr *elementPointerPointer) cloneAttributes(source elementPointerPointer) {
+	eppPtr.pointer.cloneAttributes(source.pointer)
+	eppPtr.elementPointer = source.elementPointer
+	eppPtr.elementPointerId = source.elementPointerId
+	eppPtr.elementPointerVersion = source.elementPointerVersion
+}
+
 func (eppPtr *elementPointerPointer) GetElementPointer() ElementPointer {
-	eppPtr.Lock()
-	defer eppPtr.Unlock()
+	eppPtr.traceableLock()
+	defer eppPtr.traceableUnlock()
+	if eppPtr.elementPointer == nil && eppPtr.getElementPointerIdentifier() != uuid.Nil && eppPtr.uOfD != nil {
+		eppPtr.elementPointer = eppPtr.uOfD.getElementPointer(eppPtr.getElementPointerIdentifier().String())
+	}
+	return eppPtr.elementPointer
+}
+
+func (eppPtr *elementPointerPointer) getElementPointer() ElementPointer {
 	if eppPtr.elementPointer == nil && eppPtr.getElementPointerIdentifier() != uuid.Nil && eppPtr.uOfD != nil {
 		eppPtr.elementPointer = eppPtr.uOfD.getElementPointer(eppPtr.getElementPointerIdentifier().String())
 	}
@@ -38,8 +58,8 @@ func (eppPtr *elementPointerPointer) GetName() string {
 }
 
 func (eppPtr *elementPointerPointer) GetElementPointerIdentifier() uuid.UUID {
-	eppPtr.Lock()
-	defer eppPtr.Unlock()
+	eppPtr.traceableLock()
+	defer eppPtr.traceableUnlock()
 	return eppPtr.getElementPointerIdentifier()
 }
 
@@ -48,8 +68,8 @@ func (eppPtr *elementPointerPointer) getElementPointerIdentifier() uuid.UUID {
 }
 
 func (eppPtr *elementPointerPointer) GetElementPointerVersion() int {
-	eppPtr.Lock()
-	defer eppPtr.Unlock()
+	eppPtr.traceableLock()
+	defer eppPtr.traceableUnlock()
 	return eppPtr.getElementPointerVersion()
 }
 
@@ -75,8 +95,8 @@ func (bePtr *elementPointerPointer) isEquivalent(be *elementPointerPointer) bool
 }
 
 func (elPtr *elementPointerPointer) MarshalJSON() ([]byte, error) {
-	elPtr.Lock()
-	defer elPtr.Unlock()
+	elPtr.traceableLock()
+	defer elPtr.traceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -132,17 +152,18 @@ func (ep *elementPointerPointer) recoverElementPointerPointerFields(unmarshaledD
 }
 
 func (eppPtr *elementPointerPointer) SetElementPointer(elementPointer ElementPointer) {
-	eppPtr.Lock()
-	defer eppPtr.Unlock()
+	eppPtr.traceableLock()
+	defer eppPtr.traceableUnlock()
 	if elementPointer != nil {
-		elementPointer.Lock()
-		defer elementPointer.Unlock()
+		elementPointer.traceableLock()
+		defer elementPointer.traceableUnlock()
 	}
 	eppPtr.setElementPointer(elementPointer)
 }
 
 func (eppPtr *elementPointerPointer) setElementPointer(elementPointer ElementPointer) {
 	if elementPointer != eppPtr.elementPointer {
+		preChange(eppPtr)
 		eppPtr.elementPointer = elementPointer
 		if elementPointer != nil {
 			eppPtr.elementPointerId = elementPointer.getId()
@@ -151,23 +172,49 @@ func (eppPtr *elementPointerPointer) setElementPointer(elementPointer ElementPoi
 			eppPtr.elementPointerId = uuid.Nil
 			eppPtr.elementPointerVersion = 0
 		}
+		postChange(eppPtr)
 	}
 }
 
 func (eppPtr *elementPointerPointer) SetOwningElement(element Element) {
-	eppPtr.Lock()
-	defer eppPtr.Unlock()
-	eppPtr.setOwningElement(element)
+	eppPtr.traceableLock()
+	defer eppPtr.traceableUnlock()
+	currentOwner := eppPtr.getOwningElement()
+	if currentOwner != element {
+		if eppPtr.getOwningElement() != nil {
+			currentOwner.traceableLock()
+			defer currentOwner.traceableUnlock()
+		}
+		if element != nil {
+			element.traceableLock()
+			defer element.traceableUnlock()
+		}
+		eppPtr.setOwningElement(element)
+	}
 }
 
 func (eppPtr *elementPointerPointer) setOwningElement(element Element) {
-	if element != eppPtr.GetOwningElement() {
-		if eppPtr.GetOwningElement() != nil {
-			eppPtr.GetOwningElement().removeOwnedBaseElement(eppPtr)
+	if element != eppPtr.getOwningElement() {
+		if eppPtr.getOwningElement() != nil {
+			eppPtr.getOwningElement().removeOwnedBaseElement(eppPtr)
 		}
+
+		preChange(eppPtr)
+		eppPtr.owningElement = element
+		postChange(eppPtr)
+
+		if eppPtr.getOwningElement() != nil {
+			eppPtr.getOwningElement().addOwnedBaseElement(eppPtr)
+		}
+	}
+}
+
+// internalSetOwningElement() is an internal function used only in unmarshal
+func (eppPtr *elementPointerPointer) internalSetOwningElement(element Element) {
+	if element != eppPtr.GetOwningElement() {
 		eppPtr.owningElement = element
 		if eppPtr.GetOwningElement() != nil {
-			eppPtr.GetOwningElement().addOwnedBaseElement(eppPtr)
+			eppPtr.GetOwningElement().internalAddOwnedBaseElement(eppPtr)
 		}
 	}
 }
@@ -175,6 +222,7 @@ func (eppPtr *elementPointerPointer) setOwningElement(element Element) {
 type ElementPointerPointer interface {
 	Pointer
 	GetElementPointer() ElementPointer
+	getElementPointer() ElementPointer
 	GetElementPointerIdentifier() uuid.UUID
 	GetElementPointerVersion() int
 	setElementPointer(ElementPointer)

@@ -18,16 +18,27 @@ func NewRefinement(uOfD *UniverseOfDiscourse) Refinement {
 	return &el
 }
 
+func (rPtr *refinement) clone() *refinement {
+	var clone refinement
+	clone.ownedBaseElements = make(map[string]BaseElement)
+	clone.cloneAttributes(*rPtr)
+	return &clone
+}
+
+func (rPtr *refinement) cloneAttributes(source refinement) {
+	rPtr.element.cloneAttributes(source.element)
+}
+
 func (rPtr *refinement) GetAbstractElement() Element {
-	rPtr.Lock()
-	defer rPtr.Unlock()
+	rPtr.traceableLock()
+	defer rPtr.traceableUnlock()
 	return rPtr.getAbstractElement()
 }
 
 func (rPtr *refinement) getAbstractElement() Element {
 	rep := rPtr.getAbstractElementPointer()
 	if rep != nil {
-		return rep.GetElement()
+		return rep.getElement()
 	}
 	return nil
 }
@@ -45,15 +56,15 @@ func (rPtr *refinement) getAbstractElementPointer() ElementPointer {
 }
 
 func (rPtr *refinement) GetRefinedElement() Element {
-	rPtr.Lock()
-	defer rPtr.Unlock()
+	rPtr.traceableLock()
+	defer rPtr.traceableUnlock()
 	return rPtr.getRefinedElement()
 }
 
 func (rPtr *refinement) getRefinedElement() Element {
 	rep := rPtr.getRefinedElementPointer()
 	if rep != nil {
-		return rep.GetElement()
+		return rep.getElement()
 	}
 	return nil
 }
@@ -80,8 +91,8 @@ func (bePtr *refinement) isEquivalent(be *refinement) bool {
 }
 
 func (elPtr *refinement) MarshalJSON() ([]byte, error) {
-	elPtr.Lock()
-	defer elPtr.Unlock()
+	elPtr.traceableLock()
+	defer elPtr.traceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -103,32 +114,34 @@ func (el *refinement) recoverRefinementFields(unmarshaledData *map[string]json.R
 }
 
 func (rPtr *refinement) SetAbstractElement(el Element) {
-	rPtr.Lock()
-	defer rPtr.Unlock()
+	rPtr.traceableLock()
+	defer rPtr.traceableUnlock()
 	ep := rPtr.getAbstractElementPointer()
 	if ep != nil {
-		ep.Lock()
-		defer ep.Unlock()
+		ep.traceableLock()
+		defer ep.traceableUnlock()
 	}
 	if el != nil {
-		el.Lock()
-		defer el.Unlock()
+		el.traceableLock()
+		defer el.traceableUnlock()
 	}
 	rPtr.setAbstractElement(el)
 }
 
 func (rPtr *refinement) setAbstractElement(el Element) {
-	ep := rPtr.getAbstractElementPointer()
-	if ep == nil {
-		ep = NewAbstractElementPointer(rPtr.uOfD)
-		ep.setOwningElement(rPtr)
+	if rPtr.getAbstractElement() != el {
+		ep := rPtr.getAbstractElementPointer()
+		if ep == nil {
+			ep = NewAbstractElementPointer(rPtr.uOfD)
+			ep.setOwningElement(rPtr)
+		}
+		ep.setElement(el)
 	}
-	ep.setElement(el)
 }
 
 func (elPtr *refinement) SetOwningElement(parent Element) {
-	elPtr.Lock()
-	defer elPtr.Unlock()
+	elPtr.traceableLock()
+	defer elPtr.traceableUnlock()
 	oldParent := elPtr.getOwningElement()
 	if oldParent == nil && parent == nil {
 		return // Nothing to do
@@ -136,17 +149,17 @@ func (elPtr *refinement) SetOwningElement(parent Element) {
 		return // Nothing to do
 	}
 	if oldParent != nil {
-		oldParent.Lock()
-		defer oldParent.Unlock()
+		oldParent.traceableLock()
+		defer oldParent.traceableUnlock()
 	}
 	if parent != nil {
-		parent.Lock()
-		defer parent.Unlock()
+		parent.traceableLock()
+		defer parent.traceableUnlock()
 	}
 	oep := elPtr.getOwningElementPointer()
 	if oep != nil {
-		oep.Lock()
-		defer oep.Unlock()
+		oep.traceableLock()
+		defer oep.traceableUnlock()
 	}
 	elPtr.setOwningElement(parent)
 }
@@ -161,34 +174,38 @@ func (elPtr *refinement) setOwningElement(parent Element) {
 }
 
 func (rPtr *refinement) SetRefinedElement(el Element) {
-	rPtr.Lock()
-	defer rPtr.Unlock()
+	rPtr.traceableLock()
+	defer rPtr.traceableUnlock()
 	ep := rPtr.getRefinedElementPointer()
 	if ep != nil {
-		ep.Lock()
-		defer ep.Unlock()
+		ep.traceableLock()
+		defer ep.traceableUnlock()
 	}
 	if el != nil {
-		el.Lock()
-		defer el.Unlock()
+		el.traceableLock()
+		defer el.traceableUnlock()
 	}
 	rPtr.setRefinedElement(el)
 
 }
 
 func (rPtr *refinement) setRefinedElement(el Element) {
-	ep := rPtr.getRefinedElementPointer()
-	if ep == nil {
-		ep = NewRefinedElementPointer(rPtr.uOfD)
-		ep.setOwningElement(rPtr)
+	if rPtr.getRefinedElement() != el {
+		ep := rPtr.getRefinedElementPointer()
+		if ep == nil {
+			ep = NewRefinedElementPointer(rPtr.uOfD)
+			ep.setOwningElement(rPtr)
+		}
+		ep.setElement(el)
 	}
-	ep.setElement(el)
 }
 
 type Refinement interface {
 	Element
 	GetAbstractElement() Element
+	getAbstractElementPointer() ElementPointer
 	GetRefinedElement() Element
+	getRefinedElementPointer() ElementPointer
 	SetAbstractElement(Element)
 	SetRefinedElement(Element)
 }

@@ -112,3 +112,21 @@ func TestRefinementMarshal(t *testing.T) {
 		t.Error("Recovered parent not equivalent to original parent")
 	}
 }
+
+func TestRefinementClone(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewRefinement(uOfD)
+	child.SetOwningElement(parent)
+	abstractElement := NewElement(uOfD)
+	child.SetAbstractElement(abstractElement)
+	refinedElement := NewElement(uOfD)
+	child.SetRefinedElement(refinedElement)
+	clone := child.(*refinement).clone()
+	if !Equivalent(child, clone) {
+		Print(child, "   ")
+		Print(clone, "   ")
+		t.Error("Cloned Refinement not equivalent to original")
+	}
+
+}

@@ -9,6 +9,10 @@ type reference struct {
 	element
 }
 
+func (elPtr *reference) cloneAttributes(source reference) {
+	elPtr.element.cloneAttributes(source.element)
+}
+
 func (elPtr *reference) initializeReference() {
 	elPtr.initializeElement()
 }

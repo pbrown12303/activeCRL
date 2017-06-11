@@ -87,3 +87,18 @@ func TestLiteralPointerReferenceMarshal(t *testing.T) {
 		t.Error("Recovered parent not equivalent to original parent")
 	}
 }
+
+func TestLiteralPointerReferenceClone(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	parent := NewElement(uOfD)
+	child := NewLiteralPointerReference(uOfD)
+	child.SetOwningElement(parent)
+	literalPointer := NewValueLiteralPointer(uOfD)
+	child.SetLiteralPointer(literalPointer)
+	clone := child.(*literalPointerReference).clone()
+	if !Equivalent(child, clone) {
+		t.Error("LiteralPointerReference clone failed")
+		Print(child, "   ")
+		Print(clone, "   ")
+	}
+}

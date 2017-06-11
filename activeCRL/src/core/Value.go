@@ -3,7 +3,7 @@ package core
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"log"
 )
 
 type value struct {
@@ -11,9 +11,14 @@ type value struct {
 	owningElement Element
 }
 
+func (vPtr *value) cloneAttributes(source value) {
+	vPtr.baseElement.cloneAttributes(source.baseElement)
+	vPtr.owningElement = source.owningElement
+}
+
 func (vPtr *value) GetOwningElement() Element {
-	vPtr.Lock()
-	defer vPtr.Unlock()
+	vPtr.traceableLock()
+	defer vPtr.traceableUnlock()
 	return vPtr.getOwningElement()
 }
 
@@ -27,20 +32,20 @@ func (vPtr *value) initializeValue() {
 
 func (vPtr *value) isEquivalent(be *value) bool {
 	if (vPtr.owningElement == nil && be.owningElement != nil) || (vPtr.owningElement != nil && be.owningElement == nil) {
-		fmt.Printf("Equivalence failed: Value's Owning Elements do not match - one is nil and the other is not \n")
-		fmt.Printf("First value: %#v \n", vPtr)
-		fmt.Printf("First value's owner: \n")
+		log.Printf("Equivalence failed: Value's Owning Elements do not match - one is nil and the other is not \n")
+		log.Printf("First value: %#v \n", vPtr)
+		log.Printf("First value's owner: \n")
 		Print(vPtr.owningElement, "   ")
-		fmt.Printf("Second value: %#v \n", be)
-		fmt.Printf("Second value's owner: \n")
+		log.Printf("Second value: %#v \n", be)
+		log.Printf("Second value's owner: \n")
 		Print(be.owningElement, "   ")
 		return false
 	}
 	if vPtr.owningElement != nil && be.owningElement != nil && vPtr.owningElement.getId() != be.owningElement.getId() {
-		fmt.Printf("Equivalence failed: Value's Owning Elements do not match - they have different identifiers\n")
-		fmt.Printf("First value's owner: \n")
+		log.Printf("Equivalence failed: Value's Owning Elements do not match - they have different identifiers\n")
+		log.Printf("First value's owner: \n")
 		Print(vPtr.owningElement, "   ")
-		fmt.Printf("Second value's owner: \n")
+		log.Printf("Second value's owner: \n")
 		Print(be.owningElement, "   ")
 		return false
 	}
@@ -55,6 +60,11 @@ func (vPtr *value) marshalValueFields(buffer *bytes.Buffer) error {
 
 func (vPtr *value) printValue(prefix string) {
 	vPtr.printBaseElement(prefix)
+	if vPtr.getOwningElement() == nil {
+		log.Printf("%sowningElmentIdentifier: %s \n", prefix, "nil")
+	} else {
+		log.Printf("%sowningElmentIdentifier: %s \n", prefix, vPtr.owningElement.getId().String())
+	}
 }
 
 func (el *value) recoverValueFields(unmarshaledData *map[string]json.RawMessage) error {
