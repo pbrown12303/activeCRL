@@ -305,6 +305,18 @@ func (lpPtr *literalPointer) internalSetOwningElement(element Element) {
 	}
 }
 
+func (lpPtr *literalPointer) SetUri(uri string) {
+	lpPtr.traceableLock()
+	defer lpPtr.traceableUnlock()
+	lpPtr.setUri(uri)
+}
+
+func (lpPtr *literalPointer) setUri(uri string) {
+	preChange(lpPtr)
+	lpPtr.uri = uri
+	postChange(lpPtr)
+}
+
 type LiteralPointer interface {
 	Pointer
 	GetLiteral() Literal

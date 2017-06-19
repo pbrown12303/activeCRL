@@ -219,6 +219,18 @@ func (eppPtr *elementPointerPointer) internalSetOwningElement(element Element) {
 	}
 }
 
+func (epPtr *elementPointerPointer) SetUri(uri string) {
+	epPtr.traceableLock()
+	defer epPtr.traceableUnlock()
+	epPtr.setUri(uri)
+}
+
+func (epPtr *elementPointerPointer) setUri(uri string) {
+	preChange(epPtr)
+	epPtr.uri = uri
+	postChange(epPtr)
+}
+
 type ElementPointerPointer interface {
 	Pointer
 	GetElementPointer() ElementPointer

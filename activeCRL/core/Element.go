@@ -545,8 +545,8 @@ type Element interface {
 	getUriLiteralPointer() LiteralPointer
 	internalAddOwnedBaseElement(BaseElement)
 	internalRemoveOwnedBaseElement(BaseElement)
+	MarshalJSON() ([]byte, error)
 	removeOwnedBaseElement(BaseElement)
 	SetDefinition(string)
 	SetName(string)
-	SetUri(string)
 }

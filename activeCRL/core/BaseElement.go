@@ -125,14 +125,14 @@ func (bePtr *baseElement) setUniverseOfDiscourse(uOfD *UniverseOfDiscourse) {
 }
 
 func (bePtr *baseElement) traceableLock() {
-	if traceLocks {
+	if TraceLocks {
 		log.Printf("About to lock Base Element %p\n", bePtr)
 	}
 	bePtr.Lock()
 }
 
 func (bePtr *baseElement) traceableUnlock() {
-	if traceLocks {
+	if TraceLocks {
 		log.Printf("About to unlock Base Element %p\n", bePtr)
 	}
 	bePtr.Unlock()
@@ -145,12 +145,14 @@ type BaseElement interface {
 	getOwningElement() Element
 	GetOwningElement() Element
 	getUniverseOfDiscourse() *UniverseOfDiscourse
+	getUri() string
 	getVersion() int
 	GetVersion() int
 	internalIncrementVersion()
 	setOwningElement(Element)
 	SetOwningElement(Element)
 	setUniverseOfDiscourse(*UniverseOfDiscourse)
+	SetUri(string)
 	traceableLock()
 	traceableUnlock()
 }

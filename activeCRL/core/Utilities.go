@@ -52,10 +52,10 @@ func equivalent(be1 BaseElement, be2 BaseElement) bool {
 }
 
 func Print(be BaseElement, prefix string) {
-	if be != nil {
-		be.traceableLock()
-		defer be.traceableUnlock()
-	}
+	//	if be != nil {
+	//		be.traceableLock()
+	//		defer be.traceableUnlock()
+	//	}
 	printBe(be, prefix)
 }
 
@@ -123,6 +123,9 @@ func printBe(be BaseElement, prefix string) {
 }
 
 func RecoverElement(data []byte, uOfD *UniverseOfDiscourse) Element {
+	if len(data) == 0 {
+		return nil
+	}
 	var recoveredElement BaseElement
 	err := unmarshalPolymorphicBaseElement(data, &recoveredElement)
 	//	fmt.Printf("Recovered Element: \n")
@@ -295,4 +298,4 @@ func postChange(be BaseElement) {
 	}
 }
 
-var traceLocks bool = false
+var TraceLocks bool = false

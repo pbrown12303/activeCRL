@@ -4,6 +4,119 @@ import (
 	"testing"
 )
 
+func TestGetBaseElementWithUri(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+
+	// Element
+	element := NewElement(uOfD)
+	element.SetName("Element")
+	recoveredElement := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/Element")
+	if recoveredElement != nil {
+		t.Error("Wrong element returned for find Element by URI")
+	}
+	element.SetUri("http://activeCrl.com/core/Element")
+	recoveredElement = uOfD.GetBaseElementWithUri("http://activeCrl.com/core/Element")
+	if recoveredElement == nil {
+		t.Error("Did not find Element by URI")
+	}
+
+	// ElementPointer
+	elementPointer := NewReferencedElementPointer(uOfD)
+	elementPointer.SetUri("http://activeCrl.com/core/ElementPointer")
+	recoveredElementPointer := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/ElementPointer")
+	if recoveredElementPointer == nil {
+		t.Error("Did not find ElementPointer by URI")
+	}
+
+	// ElementPointerPointer
+	elementPointerPointer := NewElementPointerPointer(uOfD)
+	elementPointerPointer.SetUri("http://activeCrl.com/core/ElementPointerPointer")
+	recoveredElementPointerPointer := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/ElementPointerPointer")
+	if recoveredElementPointerPointer == nil {
+		t.Error("Did not find ElementPointerPointer by URI")
+	}
+
+	// ElementPointerReference
+	elementPointerReference := NewElementPointerReference(uOfD)
+	elementPointerReference.SetName("ElementReference")
+	elementPointerReference.SetUri("http://activeCrl.com/core/ElementPointerReference")
+	recoveredElementPointerReference := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/ElementPointerReference")
+	if recoveredElementPointerReference == nil {
+		t.Error("Did not find ElementPointerReference by URI")
+	}
+
+	// ElementReference
+	elementReference := NewElementReference(uOfD)
+	elementReference.SetName("ElementReference")
+	elementReference.SetUri("http://activeCrl.com/core/ElementReference")
+	recoveredElementReference := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/ElementReference")
+	if recoveredElementReference == nil {
+		t.Error("Did not find ElementReference by URI")
+	}
+
+	// Literal
+	literal := NewLiteral(uOfD)
+	literal.SetUri("http://activeCrl.com/core/Literal")
+	recoveredLiteral := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/Literal")
+	if recoveredLiteral == nil {
+		t.Error("Did not find Literal by URI")
+	}
+
+	// LiteralPointer
+	literalPointer := NewValueLiteralPointer(uOfD)
+	literalPointer.SetUri("http://activeCrl.com/core/LiteralPointer")
+	recoveredLiteralPointer := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/LiteralPointer")
+	if recoveredLiteralPointer == nil {
+		t.Error("Did not find LiteralPointer by URI")
+	}
+
+	// LiteralPointerPointer
+	literalPointerPointer := NewLiteralPointerPointer(uOfD)
+	literalPointerPointer.SetUri("http://activeCrl.com/core/LiteralPointerPointer")
+	recoveredLiteralPointerPointer := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/LiteralPointerPointer")
+	if recoveredLiteralPointerPointer == nil {
+		t.Error("Did not find LiteralPointerPointer by URI")
+	}
+
+	// LiteralPointerReference
+	literalPointerReference := NewLiteralPointerReference(uOfD)
+	literalPointerReference.SetName("LiteralReference")
+	literalPointerReference.SetUri("http://activeCrl.com/core/LiteralPointerReference")
+	recoveredLiteralPointerReference := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/LiteralPointerReference")
+	if recoveredLiteralPointerReference == nil {
+		t.Error("Did not find LiteralPointerReference by URI")
+	}
+
+	// LiteralReference
+	literalReference := NewLiteralReference(uOfD)
+	literalReference.SetName("LiteralReference")
+	literalReference.SetUri("http://activeCrl.com/core/LiteralReference")
+	recoveredLiteralReference := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/LiteralReference")
+	if recoveredLiteralReference == nil {
+		t.Error("Did not find LiteralReference by URI")
+	}
+
+	// Refinement
+	refinement := NewRefinement(uOfD)
+	refinement.SetName("Refinement")
+	refinement.SetUri("http://activeCrl.com/core/Refinement")
+	recoveredRefinement := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/Refinement")
+	if recoveredRefinement == nil {
+		t.Error("Did not find Refinement by URI")
+	}
+
+	// Child of element
+	child := NewElement(uOfD)
+	child.SetName("Child")
+	child.SetOwningElement(element)
+	child.SetUri("http://activeCrl.com/core/Element/Child")
+	recoveredChild := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/Element/Child")
+	if recoveredChild == nil {
+		t.Error("Did not find Child by URI")
+	}
+
+}
+
 func TestUndoRedoElementCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)

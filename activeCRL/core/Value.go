@@ -3,12 +3,14 @@ package core
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 )
 
 type value struct {
 	baseElement
 	owningElement Element
+	uri           string
 }
 
 func (vPtr *value) cloneAttributes(source value) {
@@ -24,6 +26,16 @@ func (vPtr *value) GetOwningElement() Element {
 
 func (vPtr *value) getOwningElement() Element {
 	return vPtr.owningElement
+}
+
+func (vPtr *value) GetUri() string {
+	vPtr.traceableLock()
+	defer vPtr.traceableUnlock()
+	return vPtr.getUri()
+}
+
+func (vPtr *value) getUri() string {
+	return vPtr.uri
 }
 
 func (vPtr *value) initializeValue() {
@@ -55,11 +67,13 @@ func (vPtr *value) isEquivalent(be *value) bool {
 
 func (vPtr *value) marshalValueFields(buffer *bytes.Buffer) error {
 	vPtr.baseElement.marshalBaseElementFields(buffer)
+	buffer.WriteString(fmt.Sprintf("\"Uri\":\"%s\",", vPtr.uri))
 	return nil
 }
 
 func (vPtr *value) printValue(prefix string) {
 	vPtr.printBaseElement(prefix)
+	log.Printf("%suri: %s \n", prefix, vPtr.getUri())
 	if vPtr.getOwningElement() == nil {
 		log.Printf("%sowningElmentIdentifier: %s \n", prefix, "nil")
 	} else {
@@ -68,6 +82,14 @@ func (vPtr *value) printValue(prefix string) {
 }
 
 func (el *value) recoverValueFields(unmarshaledData *map[string]json.RawMessage) error {
+	// Uri
+	var recoveredUri string
+	err := json.Unmarshal((*unmarshaledData)["Uri"], &recoveredUri)
+	if err != nil {
+		log.Printf("Recovery of Value.uri as string failed\n")
+		return err
+	}
+	el.uri = recoveredUri
 	return el.baseElement.recoverBaseElementFields(unmarshaledData)
 }
 

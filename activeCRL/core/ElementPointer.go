@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 
@@ -179,9 +180,9 @@ func (elPtr *elementPointer) marshalElementPointerFields(buffer *bytes.Buffer) e
 
 func (epPtr *elementPointer) printElementPointer(prefix string) {
 	epPtr.printPointer(prefix)
-	fmt.Printf("%sIndicated ElementID: %s \n", prefix, epPtr.elementId.String())
-	fmt.Printf("%sIndicated ElementVersion: %d \n", prefix, epPtr.elementVersion)
-	fmt.Printf("%sElementPointerRole: %d \n", prefix, epPtr.elementPointerRole)
+	log.Printf("%sIndicated ElementID: %s \n", prefix, epPtr.elementId.String())
+	log.Printf("%sIndicated ElementVersion: %d \n", prefix, epPtr.elementVersion)
+	log.Printf("%sElementPointerRole: %d \n", prefix, epPtr.elementPointerRole)
 }
 
 func (ep *elementPointer) recoverElementPointerFields(unmarshaledData *map[string]json.RawMessage) error {
@@ -374,6 +375,18 @@ func (epPtr *elementPointer) internalSetOwningElement(element Element) {
 			}
 		}
 	}
+}
+
+func (epPtr *elementPointer) SetUri(uri string) {
+	epPtr.traceableLock()
+	defer epPtr.traceableUnlock()
+	epPtr.setUri(uri)
+}
+
+func (epPtr *elementPointer) setUri(uri string) {
+	preChange(epPtr)
+	epPtr.uri = uri
+	postChange(epPtr)
 }
 
 type ElementPointer interface {

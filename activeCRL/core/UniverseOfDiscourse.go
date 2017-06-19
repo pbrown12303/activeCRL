@@ -9,18 +9,26 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+type elementPointerList *[]ElementPointer
+type elementPointerPointerList *[]ElementPointerPointer
+type literalPointerList *[]LiteralPointer
+type literalPointerPointerList *[]LiteralPointerPointer
+
 type UniverseOfDiscourse struct {
 	sync.Mutex
-	baseElementMap map[string]BaseElement
-	recordingUndo  bool
-	undoStack      undoStack
-	redoStack      undoStack
-	debugUndo      bool
+	baseElementMap            map[string]BaseElement
+	uriBaseElementMap         map[string]BaseElement
+	elementPointerListenerMap map[string]elementPointerList
+	recordingUndo             bool
+	undoStack                 undoStack
+	redoStack                 undoStack
+	debugUndo                 bool
 }
 
 func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	var uOfD UniverseOfDiscourse
 	uOfD.baseElementMap = make(map[string]BaseElement)
+	uOfD.uriBaseElementMap = make(map[string]BaseElement)
 	uOfD.recordingUndo = false
 	uOfD.debugUndo = false
 	return &uOfD
@@ -79,6 +87,23 @@ func (uOfDPtr *UniverseOfDiscourse) addBaseElementForUndo(be BaseElement) {
 
 func (uOfDPtr *UniverseOfDiscourse) getBaseElement(id string) BaseElement {
 	return uOfDPtr.baseElementMap[id]
+}
+
+func (uOfDPtr *UniverseOfDiscourse) GetBaseElementWithUri(uri string) BaseElement {
+	uOfDPtr.traceableLock()
+	defer uOfDPtr.traceableUnlock()
+	return uOfDPtr.getBaseElementWithUri(uri)
+}
+
+func (uOfDPtr *UniverseOfDiscourse) getBaseElementWithUri(uri string) BaseElement {
+	//	return uOfDPtr.uriBaseElementMap[uri]
+	// For now we just brute force it:
+	for _, be := range uOfDPtr.baseElementMap {
+		if be.getUri() == uri {
+			return be
+		}
+	}
+	return nil
 }
 
 func (uOfDPtr *UniverseOfDiscourse) GetElement(id string) Element {
@@ -262,6 +287,12 @@ func (uOfDPtr *UniverseOfDiscourse) restoreState(priorState BaseElement, current
 	}
 }
 
+func (uOfDPtr *UniverseOfDiscourse) SetRecordingUndo(newSetting bool) {
+	uOfDPtr.traceableLock()
+	defer uOfDPtr.traceableUnlock()
+	uOfDPtr.setRecordingUndo(newSetting)
+}
+
 func (uOfDPtr *UniverseOfDiscourse) setRecordingUndo(newSetting bool) {
 	uOfDPtr.recordingUndo = newSetting
 }
@@ -307,14 +338,14 @@ func (uOfDPtr *UniverseOfDiscourse) setUniverseOfDiscourseRecursively(be BaseEle
 }
 
 func (uOfDPtr *UniverseOfDiscourse) traceableLock() {
-	if traceLocks {
+	if TraceLocks {
 		log.Printf("About to lock Universe of Discourse %p\n", uOfDPtr)
 	}
 	uOfDPtr.Lock()
 }
 
 func (uOfDPtr *UniverseOfDiscourse) traceableUnlock() {
-	if traceLocks {
+	if TraceLocks {
 		log.Printf("About to unlock Universe of Discourse %p\n", uOfDPtr)
 	}
 	uOfDPtr.Unlock()
