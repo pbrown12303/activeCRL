@@ -8,8 +8,8 @@ import (
 
 func TestNewLiteral(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewLiteral(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewLiteral()
 	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
@@ -27,8 +27,8 @@ func TestNewLiteral(t *testing.T) {
 
 func TestLiteralMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewLiteral(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewLiteral()
 	child.SetOwningElement(parent)
 	var testString string = "Test String"
 	child.SetLiteralValue(testString)
@@ -52,8 +52,8 @@ func TestLiteralMarshal(t *testing.T) {
 
 func TestLiteralClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewLiteral(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewLiteral()
 	child.SetOwningElement(parent)
 	var testString string = "Test String"
 	child.SetLiteralValue(testString)

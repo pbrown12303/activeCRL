@@ -28,38 +28,6 @@ type literalPointer struct {
 	literalPointerRole LiteralPointerRole
 }
 
-func NewNameLiteralPointer(uOfD *UniverseOfDiscourse) LiteralPointer {
-	var lp literalPointer
-	lp.initializeLiteralPointer()
-	lp.literalPointerRole = NAME
-	uOfD.AddBaseElement(&lp)
-	return &lp
-}
-
-func NewDefinitionLiteralPointer(uOfD *UniverseOfDiscourse) LiteralPointer {
-	var lp literalPointer
-	lp.initializeLiteralPointer()
-	lp.literalPointerRole = DEFINITION
-	uOfD.AddBaseElement(&lp)
-	return &lp
-}
-
-func NewUriLiteralPointer(uOfD *UniverseOfDiscourse) LiteralPointer {
-	var lp literalPointer
-	lp.initializeLiteralPointer()
-	lp.literalPointerRole = URI
-	uOfD.AddBaseElement(&lp)
-	return &lp
-}
-
-func NewValueLiteralPointer(uOfD *UniverseOfDiscourse) LiteralPointer {
-	var lp literalPointer
-	lp.initializeLiteralPointer()
-	lp.literalPointerRole = VALUE
-	uOfD.AddBaseElement(&lp)
-	return &lp
-}
-
 func (lpPtr *literalPointer) clone() *literalPointer {
 	var clone literalPointer
 	clone.cloneAttributes(*lpPtr)

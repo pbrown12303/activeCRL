@@ -8,8 +8,8 @@ import (
 
 func TestNewLiteralPointerPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewLiteralPointerReference(uOfD)
-	child := NewLiteralPointerPointer(uOfD)
+	parent := uOfD.NewLiteralPointerReference()
+	child := uOfD.NewLiteralPointerPointer()
 	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
@@ -30,10 +30,10 @@ func TestNewLiteralPointerPointer(t *testing.T) {
 
 func TestSetLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewLiteralPointerReference(uOfD)
-	child := NewLiteralPointerPointer(uOfD)
+	parent := uOfD.NewLiteralPointerReference()
+	child := uOfD.NewLiteralPointerPointer()
 	child.SetOwningElement(parent)
-	literalPointer := NewValueLiteralPointer(uOfD)
+	literalPointer := uOfD.NewValueLiteralPointer()
 	literalPointer.SetOwningElement(parent)
 	if child.GetLiteralPointer() != nil {
 		t.Error("LiteralPointer's Literal not initially nil \n")
@@ -46,10 +46,10 @@ func TestSetLiteralPointer(t *testing.T) {
 
 func TestLiteralPointerPointerMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewLiteralPointerReference(uOfD)
-	child := NewLiteralPointerPointer(uOfD)
+	parent := uOfD.NewLiteralPointerReference()
+	child := uOfD.NewLiteralPointerPointer()
 	child.SetOwningElement(parent)
-	literalPointer := NewValueLiteralPointer(uOfD)
+	literalPointer := uOfD.NewValueLiteralPointer()
 	literalPointer.SetOwningElement(parent)
 	child.SetLiteralPointer(literalPointer)
 
@@ -69,10 +69,10 @@ func TestLiteralPointerPointerMarshal(t *testing.T) {
 
 func TestLiteralPointerPointerClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewLiteralPointerReference(uOfD)
-	child := NewLiteralPointerPointer(uOfD)
+	parent := uOfD.NewLiteralPointerReference()
+	child := uOfD.NewLiteralPointerPointer()
 	child.SetOwningElement(parent)
-	literalPointer := NewValueLiteralPointer(uOfD)
+	literalPointer := uOfD.NewValueLiteralPointer()
 	literalPointer.SetOwningElement(parent)
 	child.SetLiteralPointer(literalPointer)
 	clone := child.(*literalPointerPointer).clone()

@@ -17,13 +17,6 @@ type elementPointerPointer struct {
 	elementPointerVersion int
 }
 
-func NewElementPointerPointer(uOfD *UniverseOfDiscourse) ElementPointerPointer {
-	var ep elementPointerPointer
-	ep.initializeElementPointerPointer()
-	uOfD.AddBaseElement(&ep)
-	return &ep
-}
-
 func (eppPtr *elementPointerPointer) clone() *elementPointerPointer {
 	var clone elementPointerPointer
 	clone.cloneAttributes(*eppPtr)

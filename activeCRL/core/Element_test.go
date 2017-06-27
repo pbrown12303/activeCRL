@@ -9,7 +9,7 @@ import (
 
 func TestNewElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	el1 := NewElement(uOfD)
+	el1 := uOfD.NewElement()
 	if el1.GetId() == uuid.Nil {
 		t.Error("Element identifier not properly initialized")
 	}
@@ -23,8 +23,8 @@ func TestNewElement(t *testing.T) {
 
 func TestElementOwnership(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewElement(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewElement()
 	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
@@ -42,8 +42,8 @@ func TestElementOwnership(t *testing.T) {
 
 func TestElementMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewElement(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewElement()
 	child.SetOwningElement(parent)
 
 	result, err := json.MarshalIndent(parent, "", "   ")
@@ -65,7 +65,7 @@ func TestElementMarshal(t *testing.T) {
 
 func TestSetName(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
+	parent := uOfD.NewElement()
 	var testName string = "Test Name"
 	parent.SetName(testName)
 	if parent.GetName() != testName {
@@ -82,7 +82,7 @@ func TestSetName(t *testing.T) {
 
 func TestSetDefinition(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
+	parent := uOfD.NewElement()
 	var testName string = "Test Name"
 	parent.SetDefinition(testName)
 	if parent.GetDefinition() != testName {
@@ -99,7 +99,7 @@ func TestSetDefinition(t *testing.T) {
 
 func TestSetUri(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
+	parent := uOfD.NewElement()
 	var testName string = "Test Name"
 	parent.SetUri(testName)
 	if parent.GetUri() != testName {
@@ -116,9 +116,9 @@ func TestSetUri(t *testing.T) {
 
 func TestVersionWithParentChange(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	oldParent := NewElement(uOfD)
-	newParent := NewElement(uOfD)
-	elementX := NewElement(uOfD)
+	oldParent := uOfD.NewElement()
+	newParent := uOfD.NewElement()
+	elementX := uOfD.NewElement()
 	elementX.SetOwningElement(oldParent)
 	oldParentInitialVersion := oldParent.GetVersion()
 	newParentInitialVersion := newParent.GetVersion()
@@ -146,9 +146,9 @@ func TestVersionWithParentChange(t *testing.T) {
 
 func TestVersionWithParentChangeAndCommonGrandparent(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	grandparent := NewElement(uOfD)
+	grandparent := uOfD.NewElement()
 	grandparentPreviousVersion := grandparent.GetVersion()
-	oldParent := NewElement(uOfD)
+	oldParent := uOfD.NewElement()
 	oldParentPreviousVersion := oldParent.GetVersion()
 	oldParent.SetOwningElement(grandparent)
 	if !(grandparent.GetVersion() > grandparentPreviousVersion) {
@@ -160,7 +160,7 @@ func TestVersionWithParentChangeAndCommonGrandparent(t *testing.T) {
 	}
 	oldParentPreviousVersion = oldParent.GetVersion()
 
-	newParent := NewElement(uOfD)
+	newParent := uOfD.NewElement()
 	newParentPreviousVersion := newParent.GetVersion()
 	newParent.SetOwningElement(grandparent)
 	if !(grandparent.GetVersion() > grandparentPreviousVersion) {
@@ -172,7 +172,7 @@ func TestVersionWithParentChangeAndCommonGrandparent(t *testing.T) {
 	}
 	newParentPreviousVersion = newParent.GetVersion()
 
-	elementX := NewElement(uOfD)
+	elementX := uOfD.NewElement()
 	elementXPreviousVersion := elementX.GetVersion()
 	elementX.SetOwningElement(oldParent)
 	if !(oldParent.GetVersion() > oldParentPreviousVersion) {
@@ -209,7 +209,7 @@ func TestVersionWithParentChangeAndCommonGrandparent(t *testing.T) {
 
 func TestCloneElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	el := NewElement(uOfD)
+	el := uOfD.NewElement()
 	el.SetName("E1")
 	el.SetUri("E1.testDomain.com")
 	el.SetDefinition("The definition of E1")

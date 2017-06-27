@@ -9,7 +9,7 @@ import (
 
 func TestNewElementReference(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	el1 := NewElementReference(uOfD)
+	el1 := uOfD.NewElementReference()
 	if el1.GetId() == uuid.Nil {
 		t.Error("Element identifier not properly initialized")
 	}
@@ -23,8 +23,8 @@ func TestNewElementReference(t *testing.T) {
 
 func TestElementReferenceOwnership(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewElementReference(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewElementReference()
 	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
@@ -42,8 +42,8 @@ func TestElementReferenceOwnership(t *testing.T) {
 
 func TestSetReferencedElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewElementReference(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewElementReference()
 	child.SetOwningElement(parent)
 	if child.GetReferencedElement() != nil {
 		t.Error("ElementReference's referenced element not initialized to nil")
@@ -64,8 +64,8 @@ func TestSetReferencedElement(t *testing.T) {
 
 func TestElementReferenceMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewElementReference(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewElementReference()
 	child.SetOwningElement(parent)
 	child.SetReferencedElement(parent)
 
@@ -88,8 +88,8 @@ func TestElementReferenceMarshal(t *testing.T) {
 
 func TestElementReferenceClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewElementReference(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewElementReference()
 	child.SetOwningElement(parent)
 	child.SetReferencedElement(parent)
 	clone := child.(*elementReference).clone()

@@ -11,13 +11,6 @@ type literalReference struct {
 	reference
 }
 
-func NewLiteralReference(uOfD *UniverseOfDiscourse) LiteralReference {
-	var el literalReference
-	el.initializeLiteralReference()
-	uOfD.AddBaseElement(&el)
-	return &el
-}
-
 func (lrPtr *literalReference) clone() *literalReference {
 	var clone literalReference
 	clone.ownedBaseElements = make(map[string]BaseElement)
@@ -117,7 +110,7 @@ func (elPtr *literalReference) setOwningElement(parent Element) {
 	if elPtr.getOwningElement() != parent {
 		oep := elPtr.getOwningElementPointer()
 		if oep == nil {
-			oep = NewOwningElementPointer(elPtr.uOfD)
+			oep = elPtr.uOfD.NewOwningElementPointer()
 			oep.setOwningElement(elPtr)
 		}
 		oep.setElement(parent)
@@ -143,7 +136,7 @@ func (lrPtr *literalReference) setReferencedLiteral(el Literal) {
 	if lrPtr.getReferencedLiteral() != el {
 		ep := lrPtr.getReferencedLiteralPointer()
 		if ep == nil {
-			ep = NewValueLiteralPointer(lrPtr.uOfD)
+			ep = lrPtr.uOfD.NewValueLiteralPointer()
 			ep.setOwningElement(lrPtr)
 		}
 		ep.setLiteral(el)

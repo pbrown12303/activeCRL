@@ -11,13 +11,6 @@ type refinement struct {
 	element
 }
 
-func NewRefinement(uOfD *UniverseOfDiscourse) Refinement {
-	var el refinement
-	el.initializeRefinement()
-	uOfD.AddBaseElement(&el)
-	return &el
-}
-
 func (rPtr *refinement) clone() *refinement {
 	var clone refinement
 	clone.ownedBaseElements = make(map[string]BaseElement)
@@ -132,7 +125,7 @@ func (rPtr *refinement) setAbstractElement(el Element) {
 	if rPtr.getAbstractElement() != el {
 		ep := rPtr.getAbstractElementPointer()
 		if ep == nil {
-			ep = NewAbstractElementPointer(rPtr.uOfD)
+			ep = rPtr.uOfD.NewAbstractElementPointer()
 			ep.setOwningElement(rPtr)
 		}
 		ep.setElement(el)
@@ -167,7 +160,7 @@ func (elPtr *refinement) SetOwningElement(parent Element) {
 func (elPtr *refinement) setOwningElement(parent Element) {
 	oep := elPtr.getOwningElementPointer()
 	if oep == nil {
-		oep = NewOwningElementPointer(elPtr.uOfD)
+		oep = elPtr.uOfD.NewOwningElementPointer()
 		oep.setOwningElement(elPtr)
 	}
 	oep.setElement(parent)
@@ -193,7 +186,7 @@ func (rPtr *refinement) setRefinedElement(el Element) {
 	if rPtr.getRefinedElement() != el {
 		ep := rPtr.getRefinedElementPointer()
 		if ep == nil {
-			ep = NewRefinedElementPointer(rPtr.uOfD)
+			ep = rPtr.uOfD.NewRefinedElementPointer()
 			ep.setOwningElement(rPtr)
 		}
 		ep.setElement(el)

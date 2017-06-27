@@ -31,7 +31,7 @@ func updateRecoveredCore(recoveredElement core.Element, uOfD *core.UniverseOfDis
 	// Core
 	coreElement := recoveredElement
 	if coreElement == nil {
-		coreElement = core.NewElement(uOfD)
+		coreElement = uOfD.NewElement()
 		coreElement.SetName("Core")
 		coreElement.SetUri(core.CoreUri)
 	}
@@ -48,7 +48,7 @@ func updateRecoveredCore(recoveredElement core.Element, uOfD *core.UniverseOfDis
 		}
 	}
 	if element == nil {
-		element = core.NewElement(uOfD)
+		element = uOfD.NewElement()
 		element.SetOwningElement(coreElement)
 		element.SetName("Element")
 		element.SetUri(core.ElememtUri)
@@ -66,7 +66,7 @@ func updateRecoveredCore(recoveredElement core.Element, uOfD *core.UniverseOfDis
 		}
 	}
 	if elementPointer == nil {
-		elementPointer = core.NewReferencedElementPointer(uOfD)
+		elementPointer = uOfD.NewReferencedElementPointer()
 		elementPointer.SetOwningElement(coreElement)
 		elementPointer.SetUri(core.ElementPointerUri)
 	}
@@ -83,7 +83,7 @@ func updateRecoveredCore(recoveredElement core.Element, uOfD *core.UniverseOfDis
 		}
 	}
 	if elementPointerPointer == nil {
-		elementPointerPointer = core.NewElementPointerPointer(uOfD)
+		elementPointerPointer = uOfD.NewElementPointerPointer()
 		elementPointerPointer.SetOwningElement(coreElement)
 		elementPointerPointer.SetUri(core.ElementPointerPointerUri)
 	}
@@ -100,7 +100,7 @@ func updateRecoveredCore(recoveredElement core.Element, uOfD *core.UniverseOfDis
 		}
 	}
 	if elementPointerReference == nil {
-		elementPointerReference = core.NewElementPointerReference(uOfD)
+		elementPointerReference = uOfD.NewElementPointerReference()
 		elementPointerReference.SetOwningElement(coreElement)
 		elementPointerReference.SetName("ElementReference")
 		elementPointerReference.SetUri(core.ElementPointerReferenceUri)
@@ -118,7 +118,7 @@ func updateRecoveredCore(recoveredElement core.Element, uOfD *core.UniverseOfDis
 		}
 	}
 	if elementReference == nil {
-		elementReference = core.NewElementReference(uOfD)
+		elementReference = uOfD.NewElementReference()
 		elementReference.SetOwningElement(coreElement)
 		elementReference.SetName("ElementReference")
 		elementReference.SetUri(core.ElementReferenceUri)
@@ -136,7 +136,7 @@ func updateRecoveredCore(recoveredElement core.Element, uOfD *core.UniverseOfDis
 		}
 	}
 	if literal == nil {
-		literal = core.NewLiteral(uOfD)
+		literal = uOfD.NewLiteral()
 		literal.SetOwningElement(coreElement)
 		literal.SetUri(core.LiteralUri)
 	}
@@ -153,7 +153,7 @@ func updateRecoveredCore(recoveredElement core.Element, uOfD *core.UniverseOfDis
 		}
 	}
 	if literalPointer == nil {
-		literalPointer = core.NewValueLiteralPointer(uOfD)
+		literalPointer = uOfD.NewValueLiteralPointer()
 		literalPointer.SetOwningElement(coreElement)
 		literalPointer.SetUri(core.LiteralPointerUri)
 	}
@@ -170,7 +170,7 @@ func updateRecoveredCore(recoveredElement core.Element, uOfD *core.UniverseOfDis
 		}
 	}
 	if literalPointerPointer == nil {
-		literalPointerPointer = core.NewLiteralPointerPointer(uOfD)
+		literalPointerPointer = uOfD.NewLiteralPointerPointer()
 		literalPointerPointer.SetOwningElement(coreElement)
 		literalPointerPointer.SetUri(core.LiteralPointerPointerUri)
 	}
@@ -187,7 +187,7 @@ func updateRecoveredCore(recoveredElement core.Element, uOfD *core.UniverseOfDis
 		}
 	}
 	if literalPointerReference == nil {
-		literalPointerReference = core.NewLiteralPointerReference(uOfD)
+		literalPointerReference = uOfD.NewLiteralPointerReference()
 		literalPointerReference.SetOwningElement(coreElement)
 		literalPointerReference.SetName("LiteralReference")
 		literalPointerReference.SetUri(core.LiteralPointerReferenceUri)
@@ -205,7 +205,7 @@ func updateRecoveredCore(recoveredElement core.Element, uOfD *core.UniverseOfDis
 		}
 	}
 	if literalReference == nil {
-		literalReference = core.NewLiteralReference(uOfD)
+		literalReference = uOfD.NewLiteralReference()
 		literalReference.SetOwningElement(coreElement)
 		literalReference.SetName("LiteralReference")
 		literalReference.SetUri(core.LiteralReferenceUri)
@@ -223,7 +223,7 @@ func updateRecoveredCore(recoveredElement core.Element, uOfD *core.UniverseOfDis
 		}
 	}
 	if refinement == nil {
-		refinement = core.NewRefinement(uOfD)
+		refinement = uOfD.NewRefinement()
 		refinement.SetOwningElement(coreElement)
 		refinement.SetName("Refinement")
 		refinement.SetUri(core.RefinementUri)

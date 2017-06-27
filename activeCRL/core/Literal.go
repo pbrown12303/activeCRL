@@ -13,13 +13,6 @@ type literal struct {
 	literalValue string
 }
 
-func NewLiteral(uOfD *UniverseOfDiscourse) Literal {
-	var lit literal
-	lit.initializeLiteral()
-	uOfD.AddBaseElement(&lit)
-	return &lit
-}
-
 func (lPtr *literal) clone() *literal {
 	var clone literal
 	clone.cloneAttributes(*lPtr)

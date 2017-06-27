@@ -73,42 +73,6 @@ func (epPtr *elementPointer) GetName() string {
 	return ""
 }
 
-// NewAbstractElementPointer() creates and intitializes an elementPointer to play the role of an AbstractElementPointer
-func NewAbstractElementPointer(uOfD *UniverseOfDiscourse) ElementPointer {
-	var ep elementPointer
-	ep.initializeElementPointer()
-	ep.elementPointerRole = ABSTRACT_ELEMENT
-	uOfD.AddBaseElement(&ep)
-	return &ep
-}
-
-// NewRefinedElementPointer() creates and intitializes an elementPointer to play the role of an RefinedElementPointer
-func NewRefinedElementPointer(uOfD *UniverseOfDiscourse) ElementPointer {
-	var ep elementPointer
-	ep.initializeElementPointer()
-	ep.elementPointerRole = REFINED_ELEMENT
-	uOfD.AddBaseElement(&ep)
-	return &ep
-}
-
-// NewOwningElementPointer() creates and intitializes an elementPointer to play the role of an OwningElementPointer
-func NewOwningElementPointer(uOfD *UniverseOfDiscourse) ElementPointer {
-	var ep elementPointer
-	ep.initializeElementPointer()
-	ep.elementPointerRole = OWNING_ELEMENT
-	uOfD.AddBaseElement(&ep)
-	return &ep
-}
-
-// NewReferencedElementPointer() creates and intitializes an elementPointer to play the role of an ReferencedElementPointer
-func NewReferencedElementPointer(uOfD *UniverseOfDiscourse) ElementPointer {
-	var ep elementPointer
-	ep.initializeElementPointer()
-	ep.elementPointerRole = REFERENCED_ELEMENT
-	uOfD.AddBaseElement(&ep)
-	return &ep
-}
-
 // GetElementIdentifier() locks the element pointer and returns the element identifier, releasing the lock in the process
 func (epPtr *elementPointer) GetElementIdentifier() uuid.UUID {
 	epPtr.traceableLock()

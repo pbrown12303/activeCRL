@@ -14,15 +14,6 @@ type element struct {
 	ownedBaseElements map[string]BaseElement
 }
 
-// NewElement() creates an initialized Element. No locking is required since the existence of
-// the element is unknown outside this routine
-func NewElement(uOfD *UniverseOfDiscourse) Element {
-	var el element
-	el.initializeElement()
-	uOfD.AddBaseElement(&el)
-	return &el
-}
-
 // addOwnedBaseElement() adds the indicated base element as a child (owned)
 // base element of this object. Calling this method is considered a change to the element
 // and will result in monitors being notified of changes.
@@ -410,10 +401,10 @@ func (elPtr *element) setDefinition(definition string) {
 	if nl == nil {
 		nlp := elPtr.getDefinitionLiteralPointer()
 		if nlp == nil {
-			nlp = NewDefinitionLiteralPointer(elPtr.getUniverseOfDiscourse())
+			nlp = elPtr.getUniverseOfDiscourse().NewDefinitionLiteralPointer()
 			nlp.setOwningElement(elPtr)
 		}
-		nl = NewLiteral(elPtr.getUniverseOfDiscourse())
+		nl = elPtr.getUniverseOfDiscourse().NewLiteral()
 		nl.setOwningElement(elPtr)
 		nlp.setLiteral(nl)
 	}
@@ -445,10 +436,10 @@ func (elPtr *element) setName(name string) {
 	if nl == nil {
 		nlp := elPtr.getNameLiteralPointer()
 		if nlp == nil {
-			nlp = NewNameLiteralPointer(elPtr.getUniverseOfDiscourse())
+			nlp = elPtr.getUniverseOfDiscourse().NewNameLiteralPointer()
 			nlp.setOwningElement(elPtr)
 		}
-		nl = NewLiteral(elPtr.getUniverseOfDiscourse())
+		nl = elPtr.getUniverseOfDiscourse().NewLiteral()
 		nl.setOwningElement(elPtr)
 		nlp.setLiteral(nl)
 	}
@@ -492,7 +483,7 @@ func (elPtr *element) SetOwningElement(parent Element) {
 func (elPtr *element) setOwningElement(parent Element) {
 	oep := elPtr.getOwningElementPointer()
 	if oep == nil {
-		oep = NewOwningElementPointer(elPtr.uOfD)
+		oep = elPtr.uOfD.NewOwningElementPointer()
 		oep.setOwningElement(elPtr)
 	}
 	oep.setElement(parent)
@@ -519,10 +510,10 @@ func (elPtr *element) setUri(uri string) {
 	if nl == nil {
 		nlp := elPtr.getUriLiteralPointer()
 		if nlp == nil {
-			nlp = NewUriLiteralPointer(elPtr.getUniverseOfDiscourse())
+			nlp = elPtr.getUniverseOfDiscourse().NewUriLiteralPointer()
 			nlp.setOwningElement(elPtr)
 		}
-		nl = NewLiteral(elPtr.getUniverseOfDiscourse())
+		nl = elPtr.getUniverseOfDiscourse().NewLiteral()
 		nl.setOwningElement(elPtr)
 		nlp.setLiteral(nl)
 	}

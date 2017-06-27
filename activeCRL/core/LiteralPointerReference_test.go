@@ -9,7 +9,7 @@ import (
 
 func TestNewLiteralPointerReference(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	el1 := NewLiteralPointerReference(uOfD)
+	el1 := uOfD.NewLiteralPointerReference()
 	if el1.GetId() == uuid.Nil {
 		t.Error("Element identifier not properly initialized")
 	}
@@ -23,8 +23,8 @@ func TestNewLiteralPointerReference(t *testing.T) {
 
 func TestLiteralPointerReferenceOwnership(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewLiteralPointerReference(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewLiteralPointerReference()
 	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
@@ -42,13 +42,13 @@ func TestLiteralPointerReferenceOwnership(t *testing.T) {
 
 func TestSetReferencedLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewLiteralPointerReference(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewLiteralPointerReference()
 	child.SetOwningElement(parent)
 	if child.GetLiteralPointer() != nil {
 		t.Error("LiteralPointerReference's element pointer not initialized to nil")
 	}
-	literalPointer := NewValueLiteralPointer(uOfD)
+	literalPointer := uOfD.NewValueLiteralPointer()
 	child.SetLiteralPointer(literalPointer)
 	if child.GetLiteralPointer() == nil {
 		t.Error("LiteralPointerReference's  element pointer is nil after assignment")
@@ -65,10 +65,10 @@ func TestSetReferencedLiteralPointer(t *testing.T) {
 
 func TestLiteralPointerReferenceMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewLiteralPointerReference(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewLiteralPointerReference()
 	child.SetOwningElement(parent)
-	literalPointer := NewValueLiteralPointer(uOfD)
+	literalPointer := uOfD.NewValueLiteralPointer()
 	child.SetLiteralPointer(literalPointer)
 
 	result, err := json.MarshalIndent(parent, "", "   ")
@@ -90,10 +90,10 @@ func TestLiteralPointerReferenceMarshal(t *testing.T) {
 
 func TestLiteralPointerReferenceClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewLiteralPointerReference(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewLiteralPointerReference()
 	child.SetOwningElement(parent)
-	literalPointer := NewValueLiteralPointer(uOfD)
+	literalPointer := uOfD.NewValueLiteralPointer()
 	child.SetLiteralPointer(literalPointer)
 	clone := child.(*literalPointerReference).clone()
 	if !Equivalent(child, clone) {

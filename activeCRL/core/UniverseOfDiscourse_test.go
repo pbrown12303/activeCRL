@@ -8,7 +8,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 
 	// Element
-	element := NewElement(uOfD)
+	element := uOfD.NewElement()
 	element.SetName("Element")
 	recoveredElement := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/Element")
 	if recoveredElement != nil {
@@ -21,7 +21,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 	}
 
 	// ElementPointer
-	elementPointer := NewReferencedElementPointer(uOfD)
+	elementPointer := uOfD.NewReferencedElementPointer()
 	elementPointer.SetUri("http://activeCrl.com/core/ElementPointer")
 	recoveredElementPointer := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/ElementPointer")
 	if recoveredElementPointer == nil {
@@ -29,7 +29,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 	}
 
 	// ElementPointerPointer
-	elementPointerPointer := NewElementPointerPointer(uOfD)
+	elementPointerPointer := uOfD.NewElementPointerPointer()
 	elementPointerPointer.SetUri("http://activeCrl.com/core/ElementPointerPointer")
 	recoveredElementPointerPointer := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/ElementPointerPointer")
 	if recoveredElementPointerPointer == nil {
@@ -37,7 +37,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 	}
 
 	// ElementPointerReference
-	elementPointerReference := NewElementPointerReference(uOfD)
+	elementPointerReference := uOfD.NewElementPointerReference()
 	elementPointerReference.SetName("ElementReference")
 	elementPointerReference.SetUri("http://activeCrl.com/core/ElementPointerReference")
 	recoveredElementPointerReference := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/ElementPointerReference")
@@ -46,7 +46,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 	}
 
 	// ElementReference
-	elementReference := NewElementReference(uOfD)
+	elementReference := uOfD.NewElementReference()
 	elementReference.SetName("ElementReference")
 	elementReference.SetUri("http://activeCrl.com/core/ElementReference")
 	recoveredElementReference := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/ElementReference")
@@ -55,7 +55,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 	}
 
 	// Literal
-	literal := NewLiteral(uOfD)
+	literal := uOfD.NewLiteral()
 	literal.SetUri("http://activeCrl.com/core/Literal")
 	recoveredLiteral := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/Literal")
 	if recoveredLiteral == nil {
@@ -63,7 +63,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 	}
 
 	// LiteralPointer
-	literalPointer := NewValueLiteralPointer(uOfD)
+	literalPointer := uOfD.NewValueLiteralPointer()
 	literalPointer.SetUri("http://activeCrl.com/core/LiteralPointer")
 	recoveredLiteralPointer := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/LiteralPointer")
 	if recoveredLiteralPointer == nil {
@@ -71,7 +71,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 	}
 
 	// LiteralPointerPointer
-	literalPointerPointer := NewLiteralPointerPointer(uOfD)
+	literalPointerPointer := uOfD.NewLiteralPointerPointer()
 	literalPointerPointer.SetUri("http://activeCrl.com/core/LiteralPointerPointer")
 	recoveredLiteralPointerPointer := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/LiteralPointerPointer")
 	if recoveredLiteralPointerPointer == nil {
@@ -79,7 +79,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 	}
 
 	// LiteralPointerReference
-	literalPointerReference := NewLiteralPointerReference(uOfD)
+	literalPointerReference := uOfD.NewLiteralPointerReference()
 	literalPointerReference.SetName("LiteralReference")
 	literalPointerReference.SetUri("http://activeCrl.com/core/LiteralPointerReference")
 	recoveredLiteralPointerReference := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/LiteralPointerReference")
@@ -88,7 +88,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 	}
 
 	// LiteralReference
-	literalReference := NewLiteralReference(uOfD)
+	literalReference := uOfD.NewLiteralReference()
 	literalReference.SetName("LiteralReference")
 	literalReference.SetUri("http://activeCrl.com/core/LiteralReference")
 	recoveredLiteralReference := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/LiteralReference")
@@ -97,7 +97,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 	}
 
 	// Refinement
-	refinement := NewRefinement(uOfD)
+	refinement := uOfD.NewRefinement()
 	refinement.SetName("Refinement")
 	refinement.SetUri("http://activeCrl.com/core/Refinement")
 	recoveredRefinement := uOfD.GetBaseElementWithUri("http://activeCrl.com/core/Refinement")
@@ -106,7 +106,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 	}
 
 	// Child of element
-	child := NewElement(uOfD)
+	child := uOfD.NewElement()
 	child.SetName("Child")
 	child.SetOwningElement(element)
 	child.SetUri("http://activeCrl.com/core/Element/Child")
@@ -120,7 +120,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 func TestUndoRedoElementCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	e1 := NewElement(uOfD)
+	e1 := uOfD.NewElement()
 	if len(uOfD.undoStack) != 1 {
 		t.Error("Undo stack size incorrect after creating Element")
 	}
@@ -183,7 +183,7 @@ func TestUndoRedoElementCreation(t *testing.T) {
 func TestUndoRedoMarkUndoPoint(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	NewElement(uOfD)
+	uOfD.NewElement()
 	uOfD.markUndoPoint()
 	if len(uOfD.undoStack) != 2 {
 		t.Error("Undo stack size incorrect after marking undo point")
@@ -233,7 +233,7 @@ func TestUndoRedoMarkUndoPoint(t *testing.T) {
 func TestUndoRedoElementSetName(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	e1 := NewElement(uOfD)
+	e1 := uOfD.NewElement()
 	uOfD.markUndoPoint()
 	//	PrintUndoStack(uOfD.undoStack, "Undo stack after creating new element and marking undo point, before SetName")
 
@@ -374,7 +374,7 @@ func TestEmptyStackUndoAndRedo(t *testing.T) {
 func TestUndoRedoElementSetUri(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	e1 := NewElement(uOfD)
+	e1 := uOfD.NewElement()
 	uOfD.markUndoPoint()
 	//	PrintUndoStack(uOfD.undoStack, "Undo stack after creating new element and marking undo point, before SetUri")
 
@@ -480,7 +480,7 @@ func TestUndoRedoElementSetUri(t *testing.T) {
 func TestUndoRedoElementSetDefinition(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	e1 := NewElement(uOfD)
+	e1 := uOfD.NewElement()
 	uOfD.markUndoPoint()
 	//	PrintUndoStack(uOfD.undoStack, "Undo stack after creating new element and marking undo point, before SetDefinition")
 
@@ -586,7 +586,7 @@ func TestUndoRedoElementSetDefinition(t *testing.T) {
 func TestUndoRedoElementPointerCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	ep1 := NewReferencedElementPointer(uOfD)
+	ep1 := uOfD.NewReferencedElementPointer()
 	creationEntry := uOfD.undoStack.Peek()
 	if creationEntry.changeType != Creation {
 		t.Error("Creation entry change type incorrect")
@@ -631,8 +631,8 @@ func TestUndoRedoElementPointerCreation(t *testing.T) {
 func TestUndoRedoElementPointerSetOwningElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	e1 := NewElement(uOfD)
-	r1 := NewElementReference(uOfD)
+	e1 := uOfD.NewElement()
+	r1 := uOfD.NewElementReference()
 	uOfD.markUndoPoint()
 	r1.SetOwningElement(e1)
 	oep := r1.getOwningElementPointer()
@@ -692,7 +692,7 @@ func TestUndoRedoElementPointerSetOwningElement(t *testing.T) {
 func TestUndoRedoElementPointerPointerCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	epp1 := NewElementPointerPointer(uOfD)
+	epp1 := uOfD.NewElementPointerPointer()
 	creationEntry := uOfD.undoStack.Peek()
 	if creationEntry.changeType != Creation {
 		t.Error("Creation entry change type incorrect")
@@ -737,8 +737,8 @@ func TestUndoRedoElementPointerPointerCreation(t *testing.T) {
 func TestUndoRedoElementPointerPointerSetElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	ep1 := NewReferencedElementPointer(uOfD)
-	r1 := NewElementPointerReference(uOfD)
+	ep1 := uOfD.NewReferencedElementPointer()
+	r1 := uOfD.NewElementPointerReference()
 	uOfD.markUndoPoint()
 	r1.SetElementPointer(ep1)
 	rep := r1.getElementPointerPointer()
@@ -789,7 +789,7 @@ func TestUndoRedoElementPointerPointerSetElementPointer(t *testing.T) {
 func TestUndoRedoElementPointerReferenceCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	e1 := NewElementPointerReference(uOfD)
+	e1 := uOfD.NewElementPointerReference()
 	if len(uOfD.undoStack) != 1 {
 		t.Error("Undo stack size incorrect after creating Element")
 	}
@@ -852,7 +852,7 @@ func TestUndoRedoElementPointerReferenceCreation(t *testing.T) {
 func TestUndoRedoElementReferenceCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	e1 := NewElementReference(uOfD)
+	e1 := uOfD.NewElementReference()
 	if len(uOfD.undoStack) != 1 {
 		t.Error("Undo stack size incorrect after creating Element")
 	}
@@ -915,7 +915,7 @@ func TestUndoRedoElementReferenceCreation(t *testing.T) {
 func TestUndoRedoLiteralCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	l1 := NewLiteral(uOfD)
+	l1 := uOfD.NewLiteral()
 	if len(uOfD.undoStack) != 1 {
 		t.Error("Undo stack size incorrect after creating Element")
 	}
@@ -978,7 +978,7 @@ func TestUndoRedoLiteralCreation(t *testing.T) {
 func TestUndoRedoLiteralPointerCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	lp1 := NewNameLiteralPointer(uOfD)
+	lp1 := uOfD.NewNameLiteralPointer()
 	if len(uOfD.undoStack) != 1 {
 		t.Error("Undo stack size incorrect after creating Element")
 	}
@@ -1041,7 +1041,7 @@ func TestUndoRedoLiteralPointerCreation(t *testing.T) {
 func TestUndoRedoLiteralPointerPointerCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	lp1 := NewLiteralPointerPointer(uOfD)
+	lp1 := uOfD.NewLiteralPointerPointer()
 	if len(uOfD.undoStack) != 1 {
 		t.Error("Undo stack size incorrect after creating Element")
 	}
@@ -1104,8 +1104,8 @@ func TestUndoRedoLiteralPointerPointerCreation(t *testing.T) {
 func TestUndoRedoLiteralPointerPointerSetLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	lp1 := NewNameLiteralPointer(uOfD)
-	r1 := NewLiteralPointerReference(uOfD)
+	lp1 := uOfD.NewNameLiteralPointer()
+	r1 := uOfD.NewLiteralPointerReference()
 	uOfD.markUndoPoint()
 	r1.SetLiteralPointer(lp1)
 	rlp := r1.getLiteralPointerPointer()
@@ -1156,7 +1156,7 @@ func TestUndoRedoLiteralPointerPointerSetLiteralPointer(t *testing.T) {
 func TestUndoRedoLiteralReferenceCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	e1 := NewLiteralReference(uOfD)
+	e1 := uOfD.NewLiteralReference()
 	if len(uOfD.undoStack) != 1 {
 		t.Error("Undo stack size incorrect after creating Element")
 	}
@@ -1219,7 +1219,7 @@ func TestUndoRedoLiteralReferenceCreation(t *testing.T) {
 func TestUndoRedoRefinementCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	uOfD.setRecordingUndo(true)
-	e1 := NewRefinement(uOfD)
+	e1 := uOfD.NewRefinement()
 	if len(uOfD.undoStack) != 1 {
 		t.Error("Undo stack size incorrect after creating Element")
 	}

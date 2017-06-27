@@ -17,13 +17,6 @@ type literalPointerPointer struct {
 	literalPointerVersion int
 }
 
-func NewLiteralPointerPointer(uOfD *UniverseOfDiscourse) LiteralPointerPointer {
-	var ep literalPointerPointer
-	ep.initializeLiteralPointerPointer()
-	uOfD.AddBaseElement(&ep)
-	return &ep
-}
-
 func (pllPtr *literalPointerPointer) clone() *literalPointerPointer {
 	var clone literalPointerPointer
 	clone.cloneAttributes(*pllPtr)

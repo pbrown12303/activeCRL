@@ -16,19 +16,26 @@ type literalPointerPointerList *[]LiteralPointerPointer
 
 type UniverseOfDiscourse struct {
 	sync.Mutex
-	baseElementMap            map[string]BaseElement
-	uriBaseElementMap         map[string]BaseElement
-	elementPointerListenerMap map[string]elementPointerList
-	recordingUndo             bool
-	undoStack                 undoStack
-	redoStack                 undoStack
-	debugUndo                 bool
+	baseElementMap                   map[string]BaseElement
+	uriBaseElementMap                map[string]BaseElement
+	elementPointerListenerMap        map[string]elementPointerList
+	elementPointerPointerListenerMap map[string]elementPointerPointerList
+	literalPointerListenerMap        map[string]literalPointerList
+	literalPointerPointerListenerMap map[string]literalPointerPointerList
+	recordingUndo                    bool
+	undoStack                        undoStack
+	redoStack                        undoStack
+	debugUndo                        bool
 }
 
 func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	var uOfD UniverseOfDiscourse
 	uOfD.baseElementMap = make(map[string]BaseElement)
 	uOfD.uriBaseElementMap = make(map[string]BaseElement)
+	uOfD.elementPointerListenerMap = make(map[string]elementPointerList)
+	uOfD.elementPointerPointerListenerMap = make(map[string]elementPointerPointerList)
+	uOfD.literalPointerListenerMap = make(map[string]literalPointerList)
+	uOfD.literalPointerPointerListenerMap = make(map[string]literalPointerPointerList)
 	uOfD.recordingUndo = false
 	uOfD.debugUndo = false
 	return &uOfD
@@ -191,6 +198,139 @@ func (uOfDPtr *UniverseOfDiscourse) markUndoPoint() {
 	if uOfDPtr.recordingUndo {
 		uOfDPtr.undoStack.Push(NewUndoRedoStackEntry(Marker, nil, nil))
 	}
+}
+
+// NewElement() creates an initialized Element. No locking is required since the existence of
+// the element is unknown outside this routine
+func (uOfD *UniverseOfDiscourse) NewElement() Element {
+	var el element
+	el.initializeElement()
+	uOfD.AddBaseElement(&el)
+	return &el
+}
+
+// NewAbstractElementPointer() creates and intitializes an elementPointer to play the role of an AbstractElementPointer
+func (uOfD *UniverseOfDiscourse) NewAbstractElementPointer() ElementPointer {
+	var ep elementPointer
+	ep.initializeElementPointer()
+	ep.elementPointerRole = ABSTRACT_ELEMENT
+	uOfD.AddBaseElement(&ep)
+	return &ep
+}
+
+// NewRefinedElementPointer() creates and intitializes an elementPointer to play the role of an RefinedElementPointer
+func (uOfD *UniverseOfDiscourse) NewRefinedElementPointer() ElementPointer {
+	var ep elementPointer
+	ep.initializeElementPointer()
+	ep.elementPointerRole = REFINED_ELEMENT
+	uOfD.AddBaseElement(&ep)
+	return &ep
+}
+
+// NewOwningElementPointer() creates and intitializes an elementPointer to play the role of an OwningElementPointer
+func (uOfD *UniverseOfDiscourse) NewOwningElementPointer() ElementPointer {
+	var ep elementPointer
+	ep.initializeElementPointer()
+	ep.elementPointerRole = OWNING_ELEMENT
+	uOfD.AddBaseElement(&ep)
+	return &ep
+}
+
+// NewReferencedElementPointer() creates and intitializes an elementPointer to play the role of an ReferencedElementPointer
+func (uOfD *UniverseOfDiscourse) NewReferencedElementPointer() ElementPointer {
+	var ep elementPointer
+	ep.initializeElementPointer()
+	ep.elementPointerRole = REFERENCED_ELEMENT
+	uOfD.AddBaseElement(&ep)
+	return &ep
+}
+
+func (uOfD *UniverseOfDiscourse) NewElementPointerPointer() ElementPointerPointer {
+	var ep elementPointerPointer
+	ep.initializeElementPointerPointer()
+	uOfD.AddBaseElement(&ep)
+	return &ep
+}
+
+func (uOfD *UniverseOfDiscourse) NewElementPointerReference() ElementPointerReference {
+	var el elementPointerReference
+	el.initializeElementPointerReference()
+	uOfD.AddBaseElement(&el)
+	return &el
+}
+
+func (uOfD *UniverseOfDiscourse) NewElementReference() ElementReference {
+	var el elementReference
+	el.initializeElementReference()
+	uOfD.AddBaseElement(&el)
+	return &el
+}
+
+func (uOfD *UniverseOfDiscourse) NewLiteral() Literal {
+	var lit literal
+	lit.initializeLiteral()
+	uOfD.AddBaseElement(&lit)
+	return &lit
+}
+
+func (uOfD *UniverseOfDiscourse) NewNameLiteralPointer() LiteralPointer {
+	var lp literalPointer
+	lp.initializeLiteralPointer()
+	lp.literalPointerRole = NAME
+	uOfD.AddBaseElement(&lp)
+	return &lp
+}
+
+func (uOfD *UniverseOfDiscourse) NewDefinitionLiteralPointer() LiteralPointer {
+	var lp literalPointer
+	lp.initializeLiteralPointer()
+	lp.literalPointerRole = DEFINITION
+	uOfD.AddBaseElement(&lp)
+	return &lp
+}
+
+func (uOfD *UniverseOfDiscourse) NewUriLiteralPointer() LiteralPointer {
+	var lp literalPointer
+	lp.initializeLiteralPointer()
+	lp.literalPointerRole = URI
+	uOfD.AddBaseElement(&lp)
+	return &lp
+}
+
+func (uOfD *UniverseOfDiscourse) NewValueLiteralPointer() LiteralPointer {
+	var lp literalPointer
+	lp.initializeLiteralPointer()
+	lp.literalPointerRole = VALUE
+	uOfD.AddBaseElement(&lp)
+	return &lp
+}
+
+func (uOfD *UniverseOfDiscourse) NewLiteralPointerPointer() LiteralPointerPointer {
+	var ep literalPointerPointer
+	ep.initializeLiteralPointerPointer()
+	uOfD.AddBaseElement(&ep)
+	return &ep
+}
+
+func (uOfD *UniverseOfDiscourse) NewLiteralPointerReference() LiteralPointerReference {
+	var el literalPointerReference
+	el.initializeLiteralPointerReference()
+	uOfD.AddBaseElement(&el)
+	return &el
+}
+
+func (uOfD *UniverseOfDiscourse) NewLiteralReference() LiteralReference {
+	var el literalReference
+	el.initializeLiteralReference()
+	uOfD.AddBaseElement(&el)
+	return &el
+}
+
+func (uOfD *UniverseOfDiscourse) NewRefinement() Refinement {
+	var el refinement
+	el.initializeRefinement()
+	uOfD.AddBaseElement(&el)
+	return &el
 }
 
 func (uOfDPtr *UniverseOfDiscourse) redo() {

@@ -7,8 +7,8 @@ import (
 
 func TestNewOwningElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	owner := NewElement(uOfD)
-	oep := NewOwningElementPointer(uOfD)
+	owner := uOfD.NewElement()
+	oep := uOfD.NewOwningElementPointer()
 	oep.SetOwningElement(owner)
 	if oep.GetOwningElement() != owner {
 		t.Error("Owning element pointer's owner not set properly")
@@ -32,8 +32,8 @@ func TestNewOwningElementPointer(t *testing.T) {
 
 func TestReferencedElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	owner := NewElementReference(uOfD)
-	rep := NewReferencedElementPointer(uOfD)
+	owner := uOfD.NewElementReference()
+	rep := uOfD.NewReferencedElementPointer()
 	rep.SetOwningElement(owner)
 	if rep.GetOwningElement() != owner {
 		t.Error("Referenced element pointer's owner not set properly")
@@ -57,8 +57,8 @@ func TestReferencedElementPointer(t *testing.T) {
 
 func TestAbstractElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	owner := NewRefinement(uOfD)
-	aep := NewAbstractElementPointer(uOfD)
+	owner := uOfD.NewRefinement()
+	aep := uOfD.NewAbstractElementPointer()
 	aep.SetOwningElement(owner)
 	if aep.GetOwningElement() != owner {
 		t.Error("Abstract element pointer's owner not set properly")
@@ -82,8 +82,8 @@ func TestAbstractElementPointer(t *testing.T) {
 
 func TestRefinedElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	owner := NewRefinement(uOfD)
-	rep := NewRefinedElementPointer(uOfD)
+	owner := uOfD.NewRefinement()
+	rep := uOfD.NewRefinedElementPointer()
 	rep.SetOwningElement(owner)
 	if rep.GetOwningElement() != owner {
 		t.Error("Refined element pointer's owner not set properly")
@@ -107,10 +107,10 @@ func TestRefinedElementPointer(t *testing.T) {
 
 func TestSetElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	owner := NewElementReference(uOfD)
-	rep := NewReferencedElementPointer(uOfD)
+	owner := uOfD.NewElementReference()
+	rep := uOfD.NewReferencedElementPointer()
 	rep.SetOwningElement(owner)
-	target := NewElement(uOfD)
+	target := uOfD.NewElement()
 	target.SetOwningElement(owner)
 	rep.SetElement(target)
 	if rep.GetElement() != target {
@@ -124,10 +124,10 @@ func TestSetElement(t *testing.T) {
 
 func TestElementPointerMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	owner := NewElementReference(uOfD)
-	rep := NewReferencedElementPointer(uOfD)
+	owner := uOfD.NewElementReference()
+	rep := uOfD.NewReferencedElementPointer()
 	rep.SetOwningElement(owner)
-	target := NewElement(uOfD)
+	target := uOfD.NewElement()
 	target.SetOwningElement(owner)
 	rep.SetElement(target)
 
@@ -145,10 +145,10 @@ func TestElementPointerMarshal(t *testing.T) {
 
 func TestElementPointerClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	owner := NewElementReference(uOfD)
-	rep := NewReferencedElementPointer(uOfD)
+	owner := uOfD.NewElementReference()
+	rep := uOfD.NewReferencedElementPointer()
 	rep.SetOwningElement(owner)
-	target := NewElement(uOfD)
+	target := uOfD.NewElement()
 	target.SetOwningElement(owner)
 	rep.SetElement(target)
 

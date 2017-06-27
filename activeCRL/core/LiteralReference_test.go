@@ -9,7 +9,7 @@ import (
 
 func TestNewLiteralReference(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	el1 := NewLiteralReference(uOfD)
+	el1 := uOfD.NewLiteralReference()
 	if el1.GetId() == uuid.Nil {
 		t.Error("Element identifier not properly initialized")
 	}
@@ -23,8 +23,8 @@ func TestNewLiteralReference(t *testing.T) {
 
 func TestLiteralReferenceOwnership(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewLiteralReference(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewLiteralReference()
 	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
@@ -42,10 +42,10 @@ func TestLiteralReferenceOwnership(t *testing.T) {
 
 func TestSetReferencedLiteral(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewLiteralReference(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewLiteralReference()
 	child.SetOwningElement(parent)
-	literal := NewLiteral(uOfD)
+	literal := uOfD.NewLiteral()
 	if child.GetReferencedLiteral() != nil {
 		t.Error("LiteralReference's referenced literal not initialized to nil")
 	}
@@ -65,10 +65,10 @@ func TestSetReferencedLiteral(t *testing.T) {
 
 func TestLiteralReferenceMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewLiteralReference(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewLiteralReference()
 	child.SetOwningElement(parent)
-	literal := NewLiteral(uOfD)
+	literal := uOfD.NewLiteral()
 	child.SetReferencedLiteral(literal)
 	//	fmt.Printf("Parent before encoding \n")
 	//	Print(parent, "   ")
@@ -92,10 +92,10 @@ func TestLiteralReferenceMarshal(t *testing.T) {
 
 func TestLiteralReferenceClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewLiteralReference(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewLiteralReference()
 	child.SetOwningElement(parent)
-	literal := NewLiteral(uOfD)
+	literal := uOfD.NewLiteral()
 	child.SetReferencedLiteral(literal)
 	clone := child.(*literalReference).clone()
 	if !Equivalent(child, clone) {

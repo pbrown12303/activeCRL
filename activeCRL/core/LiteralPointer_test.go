@@ -8,8 +8,8 @@ import (
 
 func TestNewNameLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewNameLiteralPointer(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewNameLiteralPointer()
 	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
@@ -30,8 +30,8 @@ func TestNewNameLiteralPointer(t *testing.T) {
 
 func TestDefinitionNameLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewDefinitionLiteralPointer(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewDefinitionLiteralPointer()
 	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
@@ -52,8 +52,8 @@ func TestDefinitionNameLiteralPointer(t *testing.T) {
 
 func TestNewUriLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewUriLiteralPointer(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewUriLiteralPointer()
 	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
@@ -74,8 +74,8 @@ func TestNewUriLiteralPointer(t *testing.T) {
 
 func TestNewValueLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewValueLiteralPointer(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewValueLiteralPointer()
 	child.SetOwningElement(parent)
 	if child.GetOwningElement() != parent {
 		t.Error("Child's owner not set properly")
@@ -96,10 +96,10 @@ func TestNewValueLiteralPointer(t *testing.T) {
 
 func TestSetLiteral(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewNameLiteralPointer(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewNameLiteralPointer()
 	child.SetOwningElement(parent)
-	literal := NewLiteral(uOfD)
+	literal := uOfD.NewLiteral()
 	literal.SetOwningElement(parent)
 	if child.GetLiteral() != nil {
 		t.Error("LiteralPointer's Literal not initially nil \n")
@@ -112,10 +112,10 @@ func TestSetLiteral(t *testing.T) {
 
 func TestLiteralPointerMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewNameLiteralPointer(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewNameLiteralPointer()
 	child.SetOwningElement(parent)
-	literal := NewLiteral(uOfD)
+	literal := uOfD.NewLiteral()
 	literal.SetOwningElement(parent)
 	child.SetLiteral(literal)
 
@@ -135,10 +135,10 @@ func TestLiteralPointerMarshal(t *testing.T) {
 
 func TestLiteralPointerClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := NewElement(uOfD)
-	child := NewNameLiteralPointer(uOfD)
+	parent := uOfD.NewElement()
+	child := uOfD.NewNameLiteralPointer()
 	child.SetOwningElement(parent)
-	literal := NewLiteral(uOfD)
+	literal := uOfD.NewLiteral()
 	literal.SetOwningElement(parent)
 	child.SetLiteral(literal)
 	clone := child.(*literalPointer).clone()

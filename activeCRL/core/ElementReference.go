@@ -11,13 +11,6 @@ type elementReference struct {
 	reference
 }
 
-func NewElementReference(uOfD *UniverseOfDiscourse) ElementReference {
-	var el elementReference
-	el.initializeElementReference()
-	uOfD.AddBaseElement(&el)
-	return &el
-}
-
 func (erPtr *elementReference) clone() *elementReference {
 	var clone elementReference
 	clone.ownedBaseElements = make(map[string]BaseElement)
@@ -116,7 +109,7 @@ func (erPtr *elementReference) setOwningElement(owningElement Element) {
 	if erPtr.getOwningElement() != owningElement {
 		oep := erPtr.getOwningElementPointer()
 		if oep == nil {
-			oep = NewOwningElementPointer(erPtr.uOfD)
+			oep = erPtr.uOfD.NewOwningElementPointer()
 			oep.setOwningElement(erPtr)
 		}
 		oep.setElement(owningElement)
@@ -138,7 +131,7 @@ func (erPtr *elementReference) setReferencedElement(el Element) {
 	if erPtr.getReferencedElement() != el {
 		ep := erPtr.getReferencedElementPointer()
 		if ep == nil {
-			ep = NewReferencedElementPointer(erPtr.uOfD)
+			ep = erPtr.uOfD.NewReferencedElementPointer()
 			ep.setOwningElement(erPtr)
 		}
 		ep.setElement(el)
