@@ -2,7 +2,6 @@ package core
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"reflect"
 )
@@ -52,10 +51,6 @@ func equivalent(be1 BaseElement, be2 BaseElement) bool {
 }
 
 func Print(be BaseElement, prefix string) {
-	//	if be != nil {
-	//		be.traceableLock()
-	//		defer be.traceableUnlock()
-	//	}
 	printBe(be, prefix)
 }
 
@@ -120,23 +115,6 @@ func printBe(be BaseElement, prefix string) {
 	default:
 		log.Printf("No case for %T in Print \n", be)
 	}
-}
-
-func RecoverElement(data []byte, uOfD *UniverseOfDiscourse) Element {
-	if len(data) == 0 {
-		return nil
-	}
-	var recoveredElement BaseElement
-	err := unmarshalPolymorphicBaseElement(data, &recoveredElement)
-	//	fmt.Printf("Recovered Element: \n")
-	//	Print(recoveredElement, "   ")
-	if err != nil {
-		fmt.Printf("Error recovering Element: %s \n", err)
-		return nil
-	}
-	uOfD.SetUniverseOfDiscourseRecursively(recoveredElement)
-	restoreValueOwningElementFieldsRecursively(recoveredElement.(Element))
-	return recoveredElement.(Element)
 }
 
 func unmarshalPolymorphicBaseElement(data []byte, result *BaseElement) error {
@@ -282,20 +260,6 @@ func clone(be BaseElement) BaseElement {
 	}
 	log.Printf("clone called with unhandled type %T\n", be)
 	return nil
-}
-
-func preChange(be BaseElement) {
-	if be != nil && be.getUniverseOfDiscourse().recordingUndo == true {
-		be.getUniverseOfDiscourse().markChangedBaseElement(be)
-	}
-}
-
-func postChange(be BaseElement) {
-	be.internalIncrementVersion()
-	parent := be.getOwningElement()
-	if parent != nil {
-		parent.childChanged()
-	}
 }
 
 var TraceLocks bool = false

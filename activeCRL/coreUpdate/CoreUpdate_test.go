@@ -2,12 +2,12 @@ package main
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
-	"log"
+	//	"log"
 	"testing"
 )
 
 func TestUpdateCoreElement(t *testing.T) {
-	log.Printf("Entering TestUpdateCoreElement")
+	//	log.Printf("Entering TestUpdateCoreElement")
 	uOfD := core.NewUniverseOfDiscourse()
 	uOfD.SetRecordingUndo(false)
 	var emptyCore core.Element

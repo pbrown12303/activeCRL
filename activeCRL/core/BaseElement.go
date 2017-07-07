@@ -12,7 +12,7 @@ import (
 )
 
 type baseElement struct {
-	sync.Mutex
+	sync.RWMutex
 	id      uuid.UUID
 	version int
 	uOfD    *UniverseOfDiscourse
@@ -131,11 +131,25 @@ func (bePtr *baseElement) traceableLock() {
 	bePtr.Lock()
 }
 
+func (bePtr *baseElement) traceableRLock() {
+	if TraceLocks {
+		log.Printf("About to lock Base Element %p\n", bePtr)
+	}
+	bePtr.RLock()
+}
+
 func (bePtr *baseElement) traceableUnlock() {
 	if TraceLocks {
 		log.Printf("About to unlock Base Element %p\n", bePtr)
 	}
 	bePtr.Unlock()
+}
+
+func (bePtr *baseElement) traceableRUnlock() {
+	if TraceLocks {
+		log.Printf("About to unlock Base Element %p\n", bePtr)
+	}
+	bePtr.RUnlock()
 }
 
 type BaseElement interface {
@@ -145,6 +159,7 @@ type BaseElement interface {
 	getOwningElement() Element
 	GetOwningElement() Element
 	getUniverseOfDiscourse() *UniverseOfDiscourse
+	GetUri() string
 	getUri() string
 	getVersion() int
 	GetVersion() int

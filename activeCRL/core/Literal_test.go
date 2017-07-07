@@ -41,7 +41,7 @@ func TestLiteralMarshal(t *testing.T) {
 	//	fmt.Printf("Encoded Parent \n%s \n", result)
 
 	uOfD2 := NewUniverseOfDiscourse()
-	recoveredParent := RecoverElement(result, uOfD2)
+	recoveredParent := uOfD2.RecoverElement(result)
 	if recoveredParent != nil {
 		//		Print(recoveredParent, "")
 	}

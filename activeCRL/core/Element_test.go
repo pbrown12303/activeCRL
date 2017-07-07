@@ -54,7 +54,7 @@ func TestElementMarshal(t *testing.T) {
 	//	fmt.Printf("Encoded Parent \n%s \n", result)
 
 	uOfD2 := NewUniverseOfDiscourse()
-	recoveredParent := RecoverElement(result, uOfD2)
+	recoveredParent := uOfD2.RecoverElement(result)
 	if recoveredParent != nil {
 		//		Print(recoveredParent, "")
 	}
@@ -218,5 +218,151 @@ func TestCloneElement(t *testing.T) {
 		t.Error("Element clone failed")
 		Print(el, "   ")
 		Print(clone, "   ")
+	}
+}
+
+func TestGetImmediateAbstractions(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	refinedElement := uOfD.NewElement()
+	abstractions := refinedElement.getImmediateAbstractions()
+	if len(abstractions) != 0 {
+		t.Error("Abstractions length not 0\n")
+	}
+	abstractElement1 := uOfD.NewElement()
+	refinement1 := uOfD.NewRefinement()
+	refinement1.SetAbstractElement(abstractElement1)
+	refinement1.SetRefinedElement(refinedElement)
+	abstractions = refinedElement.getImmediateAbstractions()
+	if len(abstractions) != 1 {
+		t.Error("Abstractions length != 1")
+	}
+	if abstractions[0] != refinement1 {
+		t.Error("Abstractions first element not refinement1")
+	}
+	abstractElement2 := uOfD.NewElement()
+	refinement2 := uOfD.NewRefinement()
+	refinement2.SetAbstractElement(abstractElement2)
+	refinement2.SetRefinedElement(refinedElement)
+	abstractions = refinedElement.getImmediateAbstractions()
+	if len(abstractions) != 2 {
+		t.Error("Abstractions length != 2")
+	}
+	if abstractions[1] != refinement2 {
+		t.Error("Abstractions second element not refinement2")
+	}
+}
+
+func TestGetImmediateAbstractElements(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	refinedElement := uOfD.NewElement()
+	abstractElements := refinedElement.getImmediateAbstractElements()
+	if len(abstractElements) != 0 {
+		t.Error("AbstractElements length not 0\n")
+	}
+	abstractElement1 := uOfD.NewElement()
+	refinement1 := uOfD.NewRefinement()
+	refinement1.SetAbstractElement(abstractElement1)
+	refinement1.SetRefinedElement(refinedElement)
+	abstractElements = refinedElement.getImmediateAbstractElements()
+	if len(abstractElements) != 1 {
+		t.Error("AbstractElements length != 1")
+	}
+	if abstractElements[0] != abstractElement1 {
+		t.Error("AbstractElements first element not abstractElement1")
+	}
+	abstractElement2 := uOfD.NewElement()
+	refinement2 := uOfD.NewRefinement()
+	refinement2.SetAbstractElement(abstractElement2)
+	refinement2.SetRefinedElement(refinedElement)
+	abstractElements = refinedElement.getImmediateAbstractElements()
+	if len(abstractElements) != 2 {
+		t.Error("Abstractions length != 2")
+	}
+	if abstractElements[1] != abstractElement2 {
+		t.Error("AbstractElements second element not abstractElement2")
+	}
+}
+
+func TestGetAbstractElementsRecursively(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	refinedElement := uOfD.NewElement()
+	abstractElements := refinedElement.getAbstractElementsRecursively()
+	if len(abstractElements) != 0 {
+		t.Error("AbstractElements length not 0\n")
+	}
+	abstractElement1 := uOfD.NewElement()
+	refinement1 := uOfD.NewRefinement()
+	refinement1.SetAbstractElement(abstractElement1)
+	refinement1.SetRefinedElement(refinedElement)
+	abstractElements = refinedElement.getAbstractElementsRecursively()
+	if len(abstractElements) != 1 {
+		t.Error("AbstractElements length != 1")
+	}
+	if abstractElements[0] != abstractElement1 {
+		t.Error("AbstractElements first element not abstractElement1")
+	}
+	abstractElement2 := uOfD.NewElement()
+	refinement2 := uOfD.NewRefinement()
+	refinement2.SetAbstractElement(abstractElement2)
+	refinement2.SetRefinedElement(refinedElement)
+	abstractElements = refinedElement.getAbstractElementsRecursively()
+	if len(abstractElements) != 2 {
+		t.Error("Abstractions length != 2")
+	}
+	if abstractElements[1] != abstractElement2 {
+		t.Error("AbstractElements second element not abstractElement2")
+	}
+	abstractElement3 := uOfD.NewElement()
+	refinement3 := uOfD.NewRefinement()
+	refinement3.SetAbstractElement(abstractElement3)
+	refinement3.SetRefinedElement(abstractElement1)
+	abstractElements = refinedElement.getAbstractElementsRecursively()
+	if len(abstractElements) != 3 {
+		t.Error("Abstractions length != 3")
+	}
+	if abstractElements[2] != abstractElement3 {
+		t.Error("AbstractElements third element not abstractElement3")
+	}
+	abstractElement4 := uOfD.NewElement()
+	refinement4 := uOfD.NewRefinement()
+	refinement4.SetAbstractElement(abstractElement4)
+	refinement4.SetRefinedElement(abstractElement2)
+	abstractElements = refinedElement.getAbstractElementsRecursively()
+	if len(abstractElements) != 4 {
+		t.Error("Abstractions length != 4")
+	}
+	if abstractElements[3] != abstractElement4 {
+		t.Error("AbstractElements fourth element not abstractElement4")
+	}
+}
+
+func TestGetImmediateRefinements(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	abstractElement := uOfD.NewElement()
+	refinedElement1 := uOfD.NewElement()
+	refinedElement2 := uOfD.NewElement()
+	refinements := abstractElement.getImmediateRefinements()
+	if len(refinements) != 0 {
+		t.Error("Refinements length not 0\n")
+	}
+	refinement1 := uOfD.NewRefinement()
+	refinement1.SetAbstractElement(abstractElement)
+	refinement1.SetRefinedElement(refinedElement1)
+	refinements = abstractElement.getImmediateRefinements()
+	if len(refinements) != 1 {
+		t.Error("Refinements length != 1")
+	}
+	if refinements[0] != refinement1 {
+		t.Error("Refinements first element not refinement1")
+	}
+	refinement2 := uOfD.NewRefinement()
+	refinement2.SetAbstractElement(abstractElement)
+	refinement2.SetRefinedElement(refinedElement2)
+	refinements = abstractElement.getImmediateRefinements()
+	if len(refinements) != 2 {
+		t.Error("Refinements length != 2")
+	}
+	if refinements[1] != refinement2 {
+		t.Error("Refinements second element not refinement2")
 	}
 }

@@ -43,6 +43,15 @@ func (epPtr *elementPointer) cloneAttributes(source elementPointer) {
 
 }
 
+func (epPtr *elementPointer) elementChanged(notification *ChangeNotification) {
+	// Circular references need to be detected and curtailed, hence the isReferenced() call
+	if epPtr.GetOwningElement() != nil && notification.isReferenced(epPtr) == false {
+		newNotification := NewChangeNotification(epPtr, MODIFY, notification)
+		epPtr.GetOwningElement().childChanged(newNotification)
+	}
+
+}
+
 func (epPtr *elementPointer) GetElement() Element {
 	epPtr.traceableLock()
 	defer epPtr.traceableUnlock()
@@ -243,16 +252,22 @@ func (epPtr *elementPointer) setElement(element Element) {
 		}
 
 		// Now the actual change of the pointer
+		oldPtr := epPtr.element
 		preChange(epPtr)
+		if oldPtr != nil {
+			epPtr.uOfD.removeElementListener(oldPtr, epPtr)
+		}
 		epPtr.element = element
 		if element != nil {
 			epPtr.elementId = element.getId()
 			epPtr.elementVersion = element.getVersion()
+			epPtr.uOfD.addElementListener(element, epPtr)
 		} else {
 			epPtr.elementId = uuid.Nil
 			epPtr.elementVersion = 0
 		}
-		postChange(epPtr)
+		notification := NewChangeNotification(epPtr, MODIFY, nil)
+		postChange(epPtr, notification)
 
 		// If this is an owningElementPointer, some bookkeeping of the newOwner
 		if epPtr.getElementPointerRole() == OWNING_ELEMENT {
@@ -311,7 +326,8 @@ func (epPtr *elementPointer) setOwningElement(element Element) {
 
 		preChange(epPtr)
 		epPtr.owningElement = element
-		postChange(epPtr)
+		notification := NewChangeNotification(epPtr, MODIFY, nil)
+		postChange(epPtr, notification)
 
 		if epPtr.getOwningElement() != nil {
 			epPtr.getOwningElement().addOwnedBaseElement(epPtr)
@@ -350,11 +366,13 @@ func (epPtr *elementPointer) SetUri(uri string) {
 func (epPtr *elementPointer) setUri(uri string) {
 	preChange(epPtr)
 	epPtr.uri = uri
-	postChange(epPtr)
+	notification := NewChangeNotification(epPtr, MODIFY, nil)
+	postChange(epPtr, notification)
 }
 
 type ElementPointer interface {
 	Pointer
+	elementChanged(*ChangeNotification)
 	getElement() Element
 	GetElement() Element
 	GetElementIdentifier() uuid.UUID

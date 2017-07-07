@@ -59,7 +59,7 @@ func TestElementPointerPointerMarshal(t *testing.T) {
 	}
 
 	uOfD2 := NewUniverseOfDiscourse()
-	recoveredOwner := RecoverElement(result, uOfD2)
+	recoveredOwner := uOfD2.RecoverElement(result)
 	if !Equivalent(owner, recoveredOwner) {
 		t.Error("Recovered owner not equivalent to original owner")
 	}

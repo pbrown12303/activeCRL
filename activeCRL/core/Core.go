@@ -1,6 +1,8 @@
 package core
 
-import ()
+import (
+	"sync"
+)
 
 var CoreUri string = "http://activeCrl.com/core/Core"
 var ElememtUri string = "http://activeCrl.com/core/Element"
@@ -15,6 +17,48 @@ var LiteralPointerReferenceUri string = "http://activeCrl.com/core/LiteralPointe
 var LiteralReferenceUri string = "http://activeCrl.com/core/LiteralReference"
 var RefinementUri string = "http://activeCrl.com/core/Refinement"
 
-func GetCore(uOfD *UniverseOfDiscourse) Element {
-	return RecoverElement([]byte(serializedCore), uOfD)
+type crlExecutionFunction func(Element, *ChangeNotification)
+
+type functions map[string]crlExecutionFunction
+
+var coreSingleton *core
+
+func GetCore() *core {
+	if coreSingleton == nil {
+		coreSingleton = newCore()
+	}
+	return coreSingleton
+}
+
+type core struct {
+	sync.RWMutex
+	computeFunctions functions
+}
+
+func newCore() *core {
+	var newCore core
+	newCore.computeFunctions = make(map[string]crlExecutionFunction)
+	return &newCore
+}
+
+func init() {
+	coreSingleton = newCore()
+}
+
+func (c *core) findFunctions(element Element) []crlExecutionFunction {
+	var functions []crlExecutionFunction
+	if element == nil {
+		return functions
+	}
+	abstractions := element.getAbstractElementsRecursively()
+	for _, abstractElement := range abstractions {
+		uri := abstractElement.getUri()
+		if uri != "" {
+			f := c.computeFunctions[uri]
+			if f != nil {
+				functions = append(functions, f)
+			}
+		}
+	}
+	return functions
 }

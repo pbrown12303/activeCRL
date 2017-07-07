@@ -15,27 +15,27 @@ type literalPointerList *[]LiteralPointer
 type literalPointerPointerList *[]LiteralPointerPointer
 
 type UniverseOfDiscourse struct {
-	sync.Mutex
-	baseElementMap                   map[string]BaseElement
-	uriBaseElementMap                map[string]BaseElement
-	elementPointerListenerMap        map[string]elementPointerList
-	elementPointerPointerListenerMap map[string]elementPointerPointerList
-	literalPointerListenerMap        map[string]literalPointerList
-	literalPointerPointerListenerMap map[string]literalPointerPointerList
-	recordingUndo                    bool
-	undoStack                        undoStack
-	redoStack                        undoStack
-	debugUndo                        bool
+	sync.RWMutex
+	baseElementMap            map[string]BaseElement
+	uriBaseElementMap         map[string]BaseElement
+	elementListenerMap        map[string]elementPointerList
+	elementPointerListenerMap map[string]elementPointerPointerList
+	literalListenerMap        map[string]literalPointerList
+	literalPointerListenerMap map[string]literalPointerPointerList
+	recordingUndo             bool
+	undoStack                 undoStack
+	redoStack                 undoStack
+	debugUndo                 bool
 }
 
 func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	var uOfD UniverseOfDiscourse
 	uOfD.baseElementMap = make(map[string]BaseElement)
 	uOfD.uriBaseElementMap = make(map[string]BaseElement)
-	uOfD.elementPointerListenerMap = make(map[string]elementPointerList)
-	uOfD.elementPointerPointerListenerMap = make(map[string]elementPointerPointerList)
-	uOfD.literalPointerListenerMap = make(map[string]literalPointerList)
-	uOfD.literalPointerPointerListenerMap = make(map[string]literalPointerPointerList)
+	uOfD.elementListenerMap = make(map[string]elementPointerList)
+	uOfD.elementPointerListenerMap = make(map[string]elementPointerPointerList)
+	uOfD.literalListenerMap = make(map[string]literalPointerList)
+	uOfD.literalPointerListenerMap = make(map[string]literalPointerPointerList)
 	uOfD.recordingUndo = false
 	uOfD.debugUndo = false
 	return &uOfD
@@ -92,13 +92,109 @@ func (uOfDPtr *UniverseOfDiscourse) addBaseElementForUndo(be BaseElement) {
 	uOfDPtr.baseElementMap[be.getId().String()] = be
 }
 
+func (uOfDPtr *UniverseOfDiscourse) addElementListener(element Element, elementPointer ElementPointer) {
+	if element != nil {
+		elementId := element.getId().String()
+		currentList := uOfDPtr.elementListenerMap[elementId]
+		if currentList != nil && len(*currentList) > 0 {
+			for i := range *currentList {
+				if (*currentList)[i] == elementPointer {
+					// element is already in list
+					return
+				}
+			}
+		}
+		if currentList == nil {
+			var newList [1]ElementPointer
+			newList[0] = elementPointer
+			newSlice := newList[:]
+			uOfDPtr.elementListenerMap[elementId] = &newSlice
+		} else {
+			updatedList := append(*currentList, elementPointer)
+			uOfDPtr.elementListenerMap[elementId] = &updatedList
+		}
+	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) addElementPointerListener(elementPointer ElementPointer, elementPointerPointer ElementPointerPointer) {
+	if elementPointer != nil {
+		elementId := elementPointer.getId().String()
+		currentList := uOfDPtr.elementPointerListenerMap[elementId]
+		if currentList != nil && len(*currentList) > 0 {
+			for i := range *currentList {
+				if (*currentList)[i] == elementPointerPointer {
+					// elementPointer is already in list
+					return
+				}
+			}
+		}
+		if currentList == nil {
+			var newList [1]ElementPointerPointer
+			newList[0] = elementPointerPointer
+			newSlice := newList[:]
+			uOfDPtr.elementPointerListenerMap[elementId] = &newSlice
+		} else {
+			updatedList := append(*currentList, elementPointerPointer)
+			uOfDPtr.elementPointerListenerMap[elementId] = &updatedList
+		}
+	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) addLiteralListener(literal Literal, literalPointer LiteralPointer) {
+	if literal != nil {
+		literalId := literal.getId().String()
+		currentList := uOfDPtr.literalListenerMap[literalId]
+		if currentList != nil && len(*currentList) > 0 {
+			for i := range *currentList {
+				if (*currentList)[i] == literalPointer {
+					// literal is already in list
+					return
+				}
+			}
+		}
+		if currentList == nil {
+			var newList [1]LiteralPointer
+			newList[0] = literalPointer
+			newSlice := newList[:]
+			uOfDPtr.literalListenerMap[literalId] = &newSlice
+		} else {
+			updatedList := append(*currentList, literalPointer)
+			uOfDPtr.literalListenerMap[literalId] = &updatedList
+		}
+	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) addLiteralPointerListener(literalPointer LiteralPointer, literalPointerPointer LiteralPointerPointer) {
+	if literalPointer != nil {
+		literalId := literalPointer.getId().String()
+		currentList := uOfDPtr.literalPointerListenerMap[literalId]
+		if currentList != nil && len(*currentList) > 0 {
+			for i := range *currentList {
+				if (*currentList)[i] == literalPointerPointer {
+					// literalPointer is already in list
+					return
+				}
+			}
+		}
+		if currentList == nil {
+			var newList [1]LiteralPointerPointer
+			newList[0] = literalPointerPointer
+			newSlice := newList[:]
+			uOfDPtr.literalPointerListenerMap[literalId] = &newSlice
+		} else {
+			updatedList := append(*currentList, literalPointerPointer)
+			uOfDPtr.literalPointerListenerMap[literalId] = &updatedList
+		}
+	}
+}
+
 func (uOfDPtr *UniverseOfDiscourse) getBaseElement(id string) BaseElement {
 	return uOfDPtr.baseElementMap[id]
 }
 
 func (uOfDPtr *UniverseOfDiscourse) GetBaseElementWithUri(uri string) BaseElement {
-	uOfDPtr.traceableLock()
-	defer uOfDPtr.traceableUnlock()
+	uOfDPtr.traceableRLock()
+	defer uOfDPtr.traceableRUnlock()
 	return uOfDPtr.getBaseElementWithUri(uri)
 }
 
@@ -113,9 +209,13 @@ func (uOfDPtr *UniverseOfDiscourse) getBaseElementWithUri(uri string) BaseElemen
 	return nil
 }
 
+func (uOfD *UniverseOfDiscourse) GetCoreConceptSpace() Element {
+	return uOfD.RecoverElement([]byte(serializedCore))
+}
+
 func (uOfDPtr *UniverseOfDiscourse) GetElement(id string) Element {
-	uOfDPtr.traceableLock()
-	defer uOfDPtr.traceableUnlock()
+	uOfDPtr.traceableRLock()
+	defer uOfDPtr.traceableRUnlock()
 	return uOfDPtr.getElement(id)
 }
 
@@ -164,7 +264,11 @@ func (uOfDPtr *UniverseOfDiscourse) getRefinement(id string) Refinement {
 	return nil
 }
 
+// markChangedBaseElement() If undo is enabled, updates the undo stack.
+// This function locks the UniverseOfDiscourse
 func (uOfDPtr *UniverseOfDiscourse) markChangedBaseElement(changedElement BaseElement) {
+	uOfDPtr.traceableLock()
+	defer uOfDPtr.traceableUnlock()
 	if uOfDPtr.debugUndo == true {
 		debug.PrintStack()
 	}
@@ -174,6 +278,8 @@ func (uOfDPtr *UniverseOfDiscourse) markChangedBaseElement(changedElement BaseEl
 	}
 }
 
+// markNewBaseElement() If undo is enabled, updates the undo stack.
+// This function does not lock the UniverseOfDiscourse - the caller is expected to manage the locking
 func (uOfDPtr *UniverseOfDiscourse) markNewBaseElement(be BaseElement) {
 	if uOfDPtr.debugUndo == true {
 		debug.PrintStack()
@@ -184,7 +290,10 @@ func (uOfDPtr *UniverseOfDiscourse) markNewBaseElement(be BaseElement) {
 	}
 }
 
+// markNewBaseElement() If undo is enabled, updates the undo stack.
+// This function does not lock the UniverseOfDiscourse - the caller is expected to manage the locking
 func (uOfDPtr *UniverseOfDiscourse) markRemovedBaseElement(be BaseElement) {
+	// Caller is expected to manage locking
 	if uOfDPtr.debugUndo == true {
 		debug.PrintStack()
 	}
@@ -194,7 +303,11 @@ func (uOfDPtr *UniverseOfDiscourse) markRemovedBaseElement(be BaseElement) {
 	}
 }
 
+// markUndoPoint() If undo is enabled, puts a marker on the undo stack.
+// This function locks the UniverseOfDiscourse
 func (uOfDPtr *UniverseOfDiscourse) markUndoPoint() {
+	uOfDPtr.traceableLock()
+	defer uOfDPtr.traceableUnlock()
 	if uOfDPtr.recordingUndo {
 		uOfDPtr.undoStack.Push(NewUndoRedoStackEntry(Marker, nil, nil))
 	}
@@ -333,6 +446,39 @@ func (uOfD *UniverseOfDiscourse) NewRefinement() Refinement {
 	return &el
 }
 
+func (uOfDPtr *UniverseOfDiscourse) notifyElementListeners(notification *ChangeNotification) {
+	switch notification.changedObject.(type) {
+	case Element:
+		id := notification.changedObject.getId().String()
+		epl := uOfDPtr.elementListenerMap[id]
+		if epl != nil {
+			for _, elementPointer := range *epl {
+				// Must suppress circular notifications
+				if notification.isReferenced(elementPointer) == false {
+					propagateChange(elementPointer, notification)
+				}
+			}
+		}
+	}
+}
+
+func (uOfD *UniverseOfDiscourse) RecoverElement(data []byte) Element {
+	if len(data) == 0 {
+		return nil
+	}
+	var recoveredElement BaseElement
+	err := unmarshalPolymorphicBaseElement(data, &recoveredElement)
+	//	fmt.Printf("Recovered Element: \n")
+	//	Print(recoveredElement, "   ")
+	if err != nil {
+		log.Printf("Error recovering Element: %s \n", err)
+		return nil
+	}
+	uOfD.SetUniverseOfDiscourseRecursively(recoveredElement)
+	restoreValueOwningElementFieldsRecursively(recoveredElement.(Element))
+	return recoveredElement.(Element)
+}
+
 func (uOfDPtr *UniverseOfDiscourse) redo() {
 	for len(uOfDPtr.redoStack) > 0 {
 		currentEntry := uOfDPtr.redoStack.Pop()
@@ -387,6 +533,74 @@ func (uOfDPtr *UniverseOfDiscourse) removeBaseElementForUndo(be BaseElement) {
 		defer be.traceableUnlock()
 	}
 	delete(uOfDPtr.baseElementMap, be.getId().String())
+}
+
+func (uOfDPtr *UniverseOfDiscourse) removeElementListener(element Element, elementPointer ElementPointer) {
+	if element != nil {
+		elementId := element.getId().String()
+		currentList := uOfDPtr.elementListenerMap[elementId]
+		if currentList != nil && len(*currentList) > 0 {
+			for i := range *currentList {
+				if (*currentList)[i] == elementPointer {
+					copy((*currentList)[i:], (*currentList)[i+1:])
+					updatedList := (*currentList)[:len(*currentList)-1]
+					uOfDPtr.elementListenerMap[elementId] = &updatedList
+					return
+				}
+			}
+		}
+	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) removeElementPointerListener(elementPointer ElementPointer, elementPointerPointer ElementPointerPointer) {
+	if elementPointer != nil {
+		elementId := elementPointer.getId().String()
+		currentList := uOfDPtr.elementPointerListenerMap[elementId]
+		if currentList != nil && len(*currentList) > 0 {
+			for i := range *currentList {
+				if (*currentList)[i] == elementPointerPointer {
+					copy((*currentList)[i:], (*currentList)[i+1:])
+					updatedList := (*currentList)[:len(*currentList)-1]
+					uOfDPtr.elementPointerListenerMap[elementId] = &updatedList
+					return
+				}
+			}
+		}
+	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) removeLiteralListener(literal Literal, literalPointer LiteralPointer) {
+	if literal != nil {
+		literalId := literal.getId().String()
+		currentList := uOfDPtr.literalListenerMap[literalId]
+		if currentList != nil && len(*currentList) > 0 {
+			for i := range *currentList {
+				if (*currentList)[i] == literalPointer {
+					copy((*currentList)[i:], (*currentList)[i+1:])
+					updatedList := (*currentList)[:len(*currentList)-1]
+					uOfDPtr.literalListenerMap[literalId] = &updatedList
+					return
+				}
+			}
+		}
+	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) removeLiteralPointerListener(literalPointer LiteralPointer, literalPointerPointer LiteralPointerPointer) {
+	if literalPointer != nil {
+		elementId := literalPointer.getId().String()
+		currentList := uOfDPtr.literalPointerListenerMap[elementId]
+		if currentList != nil && len(*currentList) > 0 {
+			for i := range *currentList {
+				if (*currentList)[i] == literalPointerPointer {
+					copy((*currentList)[i:], (*currentList)[i+1:])
+					updatedList := (*currentList)[:len(*currentList)-1]
+					uOfDPtr.literalPointerListenerMap[elementId] = &updatedList
+					return
+				}
+			}
+		}
+	}
 }
 
 // restoreState is used as part of the undo process. It changes the currentState object
@@ -484,11 +698,25 @@ func (uOfDPtr *UniverseOfDiscourse) traceableLock() {
 	uOfDPtr.Lock()
 }
 
+func (uOfDPtr *UniverseOfDiscourse) traceableRLock() {
+	if TraceLocks {
+		log.Printf("About to lock Universe of Discourse %p\n", uOfDPtr)
+	}
+	uOfDPtr.RLock()
+}
+
 func (uOfDPtr *UniverseOfDiscourse) traceableUnlock() {
 	if TraceLocks {
 		log.Printf("About to unlock Universe of Discourse %p\n", uOfDPtr)
 	}
 	uOfDPtr.Unlock()
+}
+
+func (uOfDPtr *UniverseOfDiscourse) traceableRUnlock() {
+	if TraceLocks {
+		log.Printf("About to unlock Universe of Discourse %p\n", uOfDPtr)
+	}
+	uOfDPtr.RUnlock()
 }
 
 func (uOfDPtr *UniverseOfDiscourse) undo() {

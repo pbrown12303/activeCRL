@@ -20,22 +20,15 @@ type element struct {
 func (elPtr *element) addOwnedBaseElement(be BaseElement) {
 	preChange(elPtr)
 	elPtr.internalAddOwnedBaseElement(be)
-	postChange(elPtr)
-}
-
-// internalAddOwnedBaseElement() adds the indicated base element as a child (owned)
-// base element of this object. Calling this method is not considered a change to the element
-// and will not result in monitors being notified of changes.
-func (elPtr *element) internalAddOwnedBaseElement(be BaseElement) {
-	if be != nil && be.getId() != uuid.Nil {
-		elPtr.ownedBaseElements[be.getId().String()] = be
-	}
+	notification := NewChangeNotification(elPtr, ADD, nil)
+	postChange(elPtr, notification)
 }
 
 // childChanged() is used by ownedBaseElements to inform their parents when they have changed. It does no locking.
-func (elPtr *element) childChanged() {
+func (elPtr *element) childChanged(notification *ChangeNotification) {
 	preChange(elPtr)
-	postChange(elPtr)
+	newNotification := NewChangeNotification(elPtr, MODIFY, notification)
+	postChange(elPtr, newNotification)
 }
 
 func (elPtr *element) clone() *element {
@@ -53,6 +46,20 @@ func (elPtr *element) cloneAttributes(source element) {
 	for key, value := range source.ownedBaseElements {
 		elPtr.ownedBaseElements[key] = value
 	}
+}
+
+func (elPtr *element) getAbstractElementsRecursively() []Element {
+	abstractElements := elPtr.getImmediateAbstractElements()
+	var ancestors []Element
+	for _, element := range abstractElements {
+		for _, ancestor := range element.getAbstractElementsRecursively() {
+			ancestors = append(ancestors, ancestor)
+		}
+	}
+	for _, ancestor := range ancestors {
+		abstractElements = append(abstractElements, ancestor)
+	}
+	return abstractElements
 }
 
 // GetDefinition() is the public method to retrieve the definition. It locks the element and, if present, the definitionLiteralPointer
@@ -105,6 +112,45 @@ func (elPtr *element) getDefinitionLiteralPointer() LiteralPointer {
 		}
 	}
 	return nil
+}
+
+func (elPtr *element) getImmediateAbstractElements() []Element {
+	var abstractElements []Element
+	abstractions := elPtr.getImmediateAbstractions()
+	if abstractions != nil {
+		for _, abstraction := range abstractions {
+			if abstraction.getAbstractElement() != nil {
+				abstractElements = append(abstractElements, abstraction.getAbstractElement())
+			}
+		}
+	}
+	return abstractElements
+}
+
+func (elPtr *element) getImmediateAbstractions() []Refinement {
+	var abstractions []Refinement
+	ePtrs := elPtr.uOfD.elementListenerMap[elPtr.getId().String()]
+	if ePtrs != nil {
+		for _, ePtr := range *ePtrs {
+			if ePtr.getElementPointerRole() == REFINED_ELEMENT {
+				abstractions = append(abstractions, ePtr.getOwningElement().(Refinement))
+			}
+		}
+	}
+	return abstractions
+}
+
+func (elPtr *element) getImmediateRefinements() []Refinement {
+	var refinements []Refinement
+	ePtrs := elPtr.uOfD.elementListenerMap[elPtr.getId().String()]
+	if ePtrs != nil {
+		for _, ePtr := range *ePtrs {
+			if ePtr.getElementPointerRole() == ABSTRACT_ELEMENT {
+				refinements = append(refinements, ePtr.getOwningElement().(Refinement))
+			}
+		}
+	}
+	return refinements
 }
 
 // GetName() locks the element and, if they are not nil, the nameLiteralPointer and name literal. It then
@@ -256,6 +302,24 @@ func (elPtr *element) initializeElement() {
 	elPtr.ownedBaseElements = make(map[string]BaseElement)
 }
 
+// internalAddOwnedBaseElement() adds the indicated base element as a child (owned)
+// base element of this object. Calling this method is not considered a change to the element
+// and will not result in monitors being notified of changes.
+func (elPtr *element) internalAddOwnedBaseElement(be BaseElement) {
+	if be != nil && be.getId() != uuid.Nil {
+		elPtr.ownedBaseElements[be.getId().String()] = be
+	}
+}
+
+// internalRemoveOwnedBaseElement() removes the indicated baseElement from the ownedBaseElements
+// map. Note that this is not considered a change and that the version counter will not be incremented and
+// the monitors of this element will not be notified of the change.
+func (elPtr *element) internalRemoveOwnedBaseElement(be BaseElement) {
+	if be != nil && be.getId() != uuid.Nil {
+		delete(elPtr.ownedBaseElements, be.getId().String())
+	}
+}
+
 // isEquivalent is a non-locking function that compares this element against another to see
 // if the other element and its substructure are equivalent
 func (bePtr *element) isEquivalent(be *element) bool {
@@ -359,16 +423,8 @@ func (el *element) recoverElementFields(unmarshaledData *map[string]json.RawMess
 func (elPtr *element) removeOwnedBaseElement(be BaseElement) {
 	preChange(elPtr)
 	elPtr.internalRemoveOwnedBaseElement(be)
-	postChange(elPtr)
-}
-
-// internalRemoveOwnedBaseElement() removes the indicated baseElement from the ownedBaseElements
-// map. Note that this is not considered a change and that the version counter will not be incremented and
-// the monitors of this element will not be notified of the change.
-func (elPtr *element) internalRemoveOwnedBaseElement(be BaseElement) {
-	if be != nil && be.getId() != uuid.Nil {
-		delete(elPtr.ownedBaseElements, be.getId().String())
-	}
+	notification := NewChangeNotification(elPtr, REMOVE, nil)
+	postChange(elPtr, notification)
 }
 
 // SetDefinition() updates the literal containing the definition. If needed both the
@@ -523,15 +579,18 @@ func (elPtr *element) setUri(uri string) {
 type Element interface {
 	BaseElement
 	addOwnedBaseElement(BaseElement)
-	childChanged()
+	childChanged(*ChangeNotification)
+	getAbstractElementsRecursively() []Element
 	GetDefinition() string
 	getDefinitionLiteral() Literal
 	getDefinitionLiteralPointer() LiteralPointer
+	getImmediateAbstractElements() []Element
+	getImmediateAbstractions() []Refinement
+	getImmediateRefinements() []Refinement
 	getNameLiteral() Literal
 	getNameLiteralPointer() LiteralPointer
 	getOwnedBaseElements() map[string]BaseElement
 	getOwningElementPointer() ElementPointer
-	GetUri() string
 	getUriLiteral() Literal
 	getUriLiteralPointer() LiteralPointer
 	internalAddOwnedBaseElement(BaseElement)

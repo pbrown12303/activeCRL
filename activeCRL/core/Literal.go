@@ -102,7 +102,8 @@ func (lPtr *literal) setLiteralValue(newValue string) {
 	if lPtr.literalValue != newValue {
 		preChange(lPtr)
 		lPtr.literalValue = newValue
-		postChange(lPtr)
+		notification := NewChangeNotification(lPtr, MODIFY, nil)
+		postChange(lPtr, notification)
 	}
 }
 
@@ -120,7 +121,8 @@ func (lPtr *literal) setOwningElement(el Element) {
 
 		preChange(lPtr)
 		lPtr.owningElement = el
-		postChange(lPtr)
+		notification := NewChangeNotification(lPtr, MODIFY, nil)
+		postChange(lPtr, notification)
 
 		if lPtr.owningElement != nil {
 			lPtr.owningElement.addOwnedBaseElement(lPtr)
@@ -145,7 +147,8 @@ func (lPtr *literal) SetUri(uri string) {
 func (lPtr *literal) setUri(uri string) {
 	preChange(lPtr)
 	lPtr.uri = uri
-	postChange(lPtr)
+	notification := NewChangeNotification(lPtr, MODIFY, nil)
+	postChange(lPtr, notification)
 }
 
 type Literal interface {

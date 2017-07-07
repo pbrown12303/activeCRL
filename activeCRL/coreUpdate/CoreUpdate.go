@@ -15,7 +15,7 @@ var serializedCore string = `
 
 func main() {
 	uOfD := core.NewUniverseOfDiscourse()
-	recoveredElement := core.GetCore(uOfD)
+	recoveredElement := uOfD.GetCoreConceptSpace()
 	updatedCore := updateRecoveredCore(recoveredElement, uOfD)
 	if recoveredElement == nil || !core.Equivalent(recoveredElement, updatedCore) {
 		marshaledCore, err := updatedCore.MarshalJSON()

@@ -1278,3 +1278,119 @@ func TestUndoRedoRefinementCreation(t *testing.T) {
 		t.Error("Element not added to uOfD.baseElementMap after redo")
 	}
 }
+
+func TestAddElementListener(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	e1 := uOfD.NewElement()
+	ep := uOfD.NewReferencedElementPointer()
+	ep.SetElement(e1)
+	elm := uOfD.elementListenerMap[e1.GetId().String()]
+	if elm == nil {
+		t.Error("ElementListenerMap entry is nil")
+	} else {
+		if len(*elm) != 1 {
+			t.Error("ElementListenerMap entry length != 1")
+		} else {
+			if (*elm)[0] != ep {
+				t.Error("ElementListenerMap entry does not contain ElementPointer")
+			}
+		}
+	}
+	ep.SetElement(nil)
+	elm = uOfD.elementListenerMap[e1.GetId().String()]
+	if elm == nil {
+		t.Error("ElementListenerMap entry is nil after SetElement(nil)")
+	} else {
+		if len(*elm) != 0 {
+			t.Error("ElementListenerMap entry length != 0")
+		}
+	}
+
+}
+
+func TestAddElementPointerListener(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	ep := uOfD.NewReferencedElementPointer()
+	epp := uOfD.NewElementPointerPointer()
+	epp.SetElementPointer(ep)
+	elm := uOfD.elementPointerListenerMap[ep.GetId().String()]
+	if elm == nil {
+		t.Error("ElementPointerListenerMap entry is nil")
+	} else {
+		if len(*elm) != 1 {
+			t.Error("ElementPointerListenerMap entry length != 1")
+		} else {
+			if (*elm)[0] != epp {
+				t.Error("ElementPointerListenerMap entry does not contain ElementPointer")
+			}
+		}
+	}
+	epp.SetElementPointer(nil)
+	elm = uOfD.elementPointerListenerMap[ep.GetId().String()]
+	if elm == nil {
+		t.Error("ElementListenerMap entry is nil after SetElement(nil)")
+	} else {
+		if len(*elm) != 0 {
+			t.Error("ElementListenerMap entry length != 0")
+		}
+	}
+
+}
+
+func TestAddLiteralListener(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	e1 := uOfD.NewLiteral()
+	lp := uOfD.NewNameLiteralPointer()
+	lp.SetLiteral(e1)
+	elm := uOfD.literalListenerMap[e1.GetId().String()]
+	if elm == nil {
+		t.Error("LiteralListenerMap entry is nil")
+	} else {
+		if len(*elm) != 1 {
+			t.Error("LiteralListenerMap entry length != 1")
+		} else {
+			if (*elm)[0] != lp {
+				t.Error("LiteralListenerMap entry does not contain LiteralPointer")
+			}
+		}
+	}
+	lp.SetLiteral(nil)
+	elm = uOfD.literalListenerMap[e1.GetId().String()]
+	if elm == nil {
+		t.Error("LiteralListenerMap entry is nil after SetLiteral(nil)")
+	} else {
+		if len(*elm) != 0 {
+			t.Error("LiteralListenerMap entry length != 0")
+		}
+	}
+
+}
+
+func TestAddLiteralPointerListener(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	lp := uOfD.NewNameLiteralPointer()
+	lpp := uOfD.NewLiteralPointerPointer()
+	lpp.SetLiteralPointer(lp)
+	elm := uOfD.literalPointerListenerMap[lp.GetId().String()]
+	if elm == nil {
+		t.Error("LiteralPointerListenerMap entry is nil")
+	} else {
+		if len(*elm) != 1 {
+			t.Error("LiteralPointerListenerMap entry length != 1")
+		} else {
+			if (*elm)[0] != lpp {
+				t.Error("LiteralPointerListenerMap entry does not contain LiteralPointer")
+			}
+		}
+	}
+	lpp.SetLiteralPointer(nil)
+	elm = uOfD.literalPointerListenerMap[lp.GetId().String()]
+	if elm == nil {
+		t.Error("LiteralListenerMap entry is nil after SetLiteral(nil)")
+	} else {
+		if len(*elm) != 0 {
+			t.Error("LiteralListenerMap entry length != 0")
+		}
+	}
+
+}

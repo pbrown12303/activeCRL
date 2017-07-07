@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 
@@ -107,8 +108,8 @@ func (elPtr *elementPointerPointer) maarshalElementPointerPointerFields(buffer *
 
 func (eppPtr *elementPointerPointer) printElementPointerPointer(prefix string) {
 	eppPtr.printPointer(prefix)
-	fmt.Printf("%sIndicated ElementPointerID: %s \n", prefix, eppPtr.elementPointerId.String())
-	fmt.Printf("%sIndicated ElementPointerVersion: %d \n", prefix, eppPtr.elementPointerVersion)
+	log.Printf("%sIndicated ElementPointerID: %s \n", prefix, eppPtr.elementPointerId.String())
+	log.Printf("%sIndicated ElementPointerVersion: %d \n", prefix, eppPtr.elementPointerVersion)
 }
 
 func (ep *elementPointerPointer) recoverElementPointerPointerFields(unmarshaledData *map[string]json.RawMessage) error {
@@ -156,16 +157,22 @@ func (eppPtr *elementPointerPointer) SetElementPointer(elementPointer ElementPoi
 
 func (eppPtr *elementPointerPointer) setElementPointer(elementPointer ElementPointer) {
 	if elementPointer != eppPtr.elementPointer {
+
 		preChange(eppPtr)
+		if eppPtr.elementPointer != nil {
+			eppPtr.uOfD.removeElementPointerListener(eppPtr.elementPointer, eppPtr)
+		}
 		eppPtr.elementPointer = elementPointer
 		if elementPointer != nil {
 			eppPtr.elementPointerId = elementPointer.getId()
 			eppPtr.elementPointerVersion = elementPointer.getVersion()
+			eppPtr.uOfD.addElementPointerListener(elementPointer, eppPtr)
 		} else {
 			eppPtr.elementPointerId = uuid.Nil
 			eppPtr.elementPointerVersion = 0
 		}
-		postChange(eppPtr)
+		notification := NewChangeNotification(eppPtr, MODIFY, nil)
+		postChange(eppPtr, notification)
 	}
 }
 
@@ -194,7 +201,8 @@ func (eppPtr *elementPointerPointer) setOwningElement(element Element) {
 
 		preChange(eppPtr)
 		eppPtr.owningElement = element
-		postChange(eppPtr)
+		notification := NewChangeNotification(eppPtr, MODIFY, nil)
+		postChange(eppPtr, notification)
 
 		if eppPtr.getOwningElement() != nil {
 			eppPtr.getOwningElement().addOwnedBaseElement(eppPtr)
@@ -221,7 +229,8 @@ func (epPtr *elementPointerPointer) SetUri(uri string) {
 func (epPtr *elementPointerPointer) setUri(uri string) {
 	preChange(epPtr)
 	epPtr.uri = uri
-	postChange(epPtr)
+	notification := NewChangeNotification(epPtr, MODIFY, nil)
+	postChange(epPtr, notification)
 }
 
 type ElementPointerPointer interface {

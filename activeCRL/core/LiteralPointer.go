@@ -225,15 +225,20 @@ func (lpPtr *literalPointer) SetLiteral(literal Literal) {
 func (lpPtr *literalPointer) setLiteral(literal Literal) {
 	if literal != lpPtr.literal {
 		preChange(lpPtr)
+		if lpPtr.literal != nil {
+			lpPtr.uOfD.removeLiteralListener(lpPtr.literal, lpPtr)
+		}
 		lpPtr.literal = literal
 		if literal != nil {
 			lpPtr.literalId = literal.getId()
 			lpPtr.literalVersion = literal.getVersion()
+			lpPtr.uOfD.addLiteralListener(literal, lpPtr)
 		} else {
 			lpPtr.literalId = uuid.Nil
 			lpPtr.literalVersion = 0
 		}
-		postChange(lpPtr)
+		notification := NewChangeNotification(lpPtr, MODIFY, nil)
+		postChange(lpPtr, notification)
 	}
 }
 
@@ -255,7 +260,8 @@ func (lpPtr *literalPointer) setOwningElement(element Element) {
 
 		preChange(lpPtr)
 		lpPtr.owningElement = element
-		postChange(lpPtr)
+		notification := NewChangeNotification(lpPtr, MODIFY, nil)
+		postChange(lpPtr, notification)
 
 		if lpPtr.getOwningElement() != nil {
 			lpPtr.getOwningElement().addOwnedBaseElement(lpPtr)
@@ -282,7 +288,8 @@ func (lpPtr *literalPointer) SetUri(uri string) {
 func (lpPtr *literalPointer) setUri(uri string) {
 	preChange(lpPtr)
 	lpPtr.uri = uri
-	postChange(lpPtr)
+	notification := NewChangeNotification(lpPtr, MODIFY, nil)
+	postChange(lpPtr, notification)
 }
 
 type LiteralPointer interface {

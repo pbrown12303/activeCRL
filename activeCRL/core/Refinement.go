@@ -22,6 +22,17 @@ func (rPtr *refinement) cloneAttributes(source refinement) {
 	rPtr.element.cloneAttributes(source.element)
 }
 
+// childChanged() is used by ownedBaseElements to inform their parents when they have changed. It does no locking.
+func (rPtr *refinement) childChanged(notification *ChangeNotification) {
+	preChange(rPtr)
+	newNotification := NewChangeNotification(rPtr, MODIFY, notification)
+	refinedElement := rPtr.getRefinedElement()
+	if refinedElement != nil {
+		abstractionChanged(refinedElement, newNotification)
+	}
+	postChange(rPtr, newNotification)
+}
+
 func (rPtr *refinement) GetAbstractElement() Element {
 	rPtr.traceableLock()
 	defer rPtr.traceableUnlock()
@@ -195,8 +206,10 @@ func (rPtr *refinement) setRefinedElement(el Element) {
 
 type Refinement interface {
 	Element
+	getAbstractElement() Element
 	GetAbstractElement() Element
 	getAbstractElementPointer() ElementPointer
+	getRefinedElement() Element
 	GetRefinedElement() Element
 	getRefinedElementPointer() ElementPointer
 	SetAbstractElement(Element)
