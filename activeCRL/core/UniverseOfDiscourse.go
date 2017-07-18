@@ -9,6 +9,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+type baseElementPointerList *[]BaseElementPointer
 type elementPointerList *[]ElementPointer
 type elementPointerPointerList *[]ElementPointerPointer
 type literalPointerList *[]LiteralPointer
@@ -18,6 +19,7 @@ type UniverseOfDiscourse struct {
 	sync.RWMutex
 	baseElementMap            map[string]BaseElement
 	uriBaseElementMap         map[string]BaseElement
+	baseElementListenerMap    map[string]baseElementPointerList
 	elementListenerMap        map[string]elementPointerList
 	elementPointerListenerMap map[string]elementPointerPointerList
 	literalListenerMap        map[string]literalPointerList
@@ -32,6 +34,7 @@ func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	var uOfD UniverseOfDiscourse
 	uOfD.baseElementMap = make(map[string]BaseElement)
 	uOfD.uriBaseElementMap = make(map[string]BaseElement)
+	uOfD.baseElementListenerMap = make(map[string]baseElementPointerList)
 	uOfD.elementListenerMap = make(map[string]elementPointerList)
 	uOfD.elementPointerListenerMap = make(map[string]elementPointerPointerList)
 	uOfD.literalListenerMap = make(map[string]literalPointerList)
@@ -43,11 +46,11 @@ func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 
 func (uOfDPtr *UniverseOfDiscourse) AddBaseElement(be BaseElement) error {
 	//	log.Printf("Locking UofD\n")
-	uOfDPtr.traceableLock()
-	defer uOfDPtr.traceableUnlock()
+	uOfDPtr.TraceableLock()
+	defer uOfDPtr.TraceableUnlock()
 	if be != nil {
-		be.traceableLock()
-		defer be.traceableUnlock()
+		be.TraceableLock()
+		defer be.TraceableUnlock()
 	}
 	return uOfDPtr.addBaseElement(be)
 }
@@ -68,8 +71,8 @@ func (uOfDPtr *UniverseOfDiscourse) addBaseElement(be BaseElement) error {
 			return nil
 		} else {
 			log.Printf("Locking old UofD\n")
-			oldUOfD.traceableLock()
-			defer oldUOfD.traceableUnlock()
+			oldUOfD.TraceableLock()
+			defer oldUOfD.TraceableUnlock()
 			oldUOfD.removeBaseElement(be)
 		}
 	}
@@ -83,13 +86,37 @@ func (uOfDPtr *UniverseOfDiscourse) addBaseElement(be BaseElement) error {
 
 func (uOfDPtr *UniverseOfDiscourse) addBaseElementForUndo(be BaseElement) {
 	//	log.Printf("Locking UofD\n")
-	uOfDPtr.traceableLock()
-	defer uOfDPtr.traceableUnlock()
+	uOfDPtr.TraceableLock()
+	defer uOfDPtr.TraceableUnlock()
 	if be != nil {
-		be.traceableLock()
-		defer be.traceableUnlock()
+		be.TraceableLock()
+		defer be.TraceableUnlock()
 	}
 	uOfDPtr.baseElementMap[be.getId().String()] = be
+}
+
+func (uOfDPtr *UniverseOfDiscourse) addBaseElementListener(baseElement BaseElement, baseElementPointer BaseElementPointer) {
+	if baseElement != nil {
+		elementId := baseElement.getId().String()
+		currentList := uOfDPtr.baseElementListenerMap[elementId]
+		if currentList != nil && len(*currentList) > 0 {
+			for i := range *currentList {
+				if (*currentList)[i] == baseElementPointer {
+					// element is already in list
+					return
+				}
+			}
+		}
+		if currentList == nil {
+			var newList [1]BaseElementPointer
+			newList[0] = baseElementPointer
+			newSlice := newList[:]
+			uOfDPtr.baseElementListenerMap[elementId] = &newSlice
+		} else {
+			updatedList := append(*currentList, baseElementPointer)
+			uOfDPtr.baseElementListenerMap[elementId] = &updatedList
+		}
+	}
 }
 
 func (uOfDPtr *UniverseOfDiscourse) addElementListener(element Element, elementPointer ElementPointer) {
@@ -202,15 +229,21 @@ func (uOfDPtr *UniverseOfDiscourse) getBaseElementWithUri(uri string) BaseElemen
 	//	return uOfDPtr.uriBaseElementMap[uri]
 	// For now we just brute force it:
 	for _, be := range uOfDPtr.baseElementMap {
-		if be.getUri() == uri {
+		if be.GetUriNoLock() == uri {
 			return be
 		}
 	}
 	return nil
 }
 
-func (uOfD *UniverseOfDiscourse) GetCoreConceptSpace() Element {
-	return uOfD.RecoverElement([]byte(serializedCore))
+func (uOfDPtr *UniverseOfDiscourse) GetCoreConceptSpace() Element {
+	uOfDPtr.traceableRLock()
+	defer uOfDPtr.traceableRUnlock()
+	coreConceptSpace := uOfDPtr.getElementWithUri(CoreConceptSpaceUri)
+	if coreConceptSpace == nil {
+		coreConceptSpace = uOfDPtr.RecoverElement([]byte(serializedCore))
+	}
+	return coreConceptSpace
 }
 
 func (uOfDPtr *UniverseOfDiscourse) GetElement(id string) Element {
@@ -233,6 +266,50 @@ func (uOfDPtr *UniverseOfDiscourse) getElementPointer(id string) ElementPointer 
 	switch be.(type) {
 	case *elementPointer:
 		return be.(ElementPointer)
+	}
+	return nil
+}
+
+func (uOfDPtr *UniverseOfDiscourse) GetElementWithUri(uri string) Element {
+	uOfDPtr.traceableRLock()
+	defer uOfDPtr.traceableRUnlock()
+	return uOfDPtr.getElementWithUri(uri)
+}
+
+func (uOfDPtr *UniverseOfDiscourse) getElementWithUri(uri string) Element {
+	//	return uOfDPtr.uriBaseElementMap[uri]
+	// For now we just brute force it:
+	for _, be := range uOfDPtr.baseElementMap {
+		if be.GetUriNoLock() == uri {
+			switch be.(type) {
+			case Element:
+				return be.(Element)
+			default:
+				return nil
+			}
+		}
+	}
+	return nil
+}
+
+func (uOfDPtr *UniverseOfDiscourse) GetElementReferenceWithUri(uri string) ElementReference {
+	uOfDPtr.traceableRLock()
+	defer uOfDPtr.traceableRUnlock()
+	return uOfDPtr.getElementReferenceWithUri(uri)
+}
+
+func (uOfDPtr *UniverseOfDiscourse) getElementReferenceWithUri(uri string) ElementReference {
+	//	return uOfDPtr.uriBaseElementMap[uri]
+	// For now we just brute force it:
+	for _, be := range uOfDPtr.baseElementMap {
+		if be.GetUriNoLock() == uri {
+			switch be.(type) {
+			case ElementReference:
+				return be.(ElementReference)
+			default:
+				return nil
+			}
+		}
 	}
 	return nil
 }
@@ -267,8 +344,8 @@ func (uOfDPtr *UniverseOfDiscourse) getRefinement(id string) Refinement {
 // markChangedBaseElement() If undo is enabled, updates the undo stack.
 // This function locks the UniverseOfDiscourse
 func (uOfDPtr *UniverseOfDiscourse) markChangedBaseElement(changedElement BaseElement) {
-	uOfDPtr.traceableLock()
-	defer uOfDPtr.traceableUnlock()
+	uOfDPtr.TraceableLock()
+	defer uOfDPtr.TraceableUnlock()
 	if uOfDPtr.debugUndo == true {
 		debug.PrintStack()
 	}
@@ -306,8 +383,8 @@ func (uOfDPtr *UniverseOfDiscourse) markRemovedBaseElement(be BaseElement) {
 // markUndoPoint() If undo is enabled, puts a marker on the undo stack.
 // This function locks the UniverseOfDiscourse
 func (uOfDPtr *UniverseOfDiscourse) markUndoPoint() {
-	uOfDPtr.traceableLock()
-	defer uOfDPtr.traceableUnlock()
+	uOfDPtr.TraceableLock()
+	defer uOfDPtr.TraceableUnlock()
 	if uOfDPtr.recordingUndo {
 		uOfDPtr.undoStack.Push(NewUndoRedoStackEntry(Marker, nil, nil))
 	}
@@ -329,6 +406,21 @@ func (uOfD *UniverseOfDiscourse) NewAbstractElementPointer() ElementPointer {
 	ep.elementPointerRole = ABSTRACT_ELEMENT
 	uOfD.AddBaseElement(&ep)
 	return &ep
+}
+
+// NewBaseElementPointer() creates and intitializes an elementPointer to play the role of an AbstractElementPointer
+func (uOfD *UniverseOfDiscourse) NewBaseElementPointer() BaseElementPointer {
+	var ep baseElementPointer
+	ep.initializeBaseElementPointer()
+	uOfD.AddBaseElement(&ep)
+	return &ep
+}
+
+func (uOfD *UniverseOfDiscourse) NewBaseElementReference() BaseElementReference {
+	var el baseElementReference
+	el.initializeBaseElementReference()
+	uOfD.AddBaseElement(&el)
+	return &el
 }
 
 // NewRefinedElementPointer() creates and intitializes an elementPointer to play the role of an RefinedElementPointer
@@ -455,7 +547,8 @@ func (uOfDPtr *UniverseOfDiscourse) notifyElementListeners(notification *ChangeN
 			for _, elementPointer := range *epl {
 				// Must suppress circular notifications
 				if notification.isReferenced(elementPointer) == false {
-					propagateChange(elementPointer, notification)
+					newNotification := NewChangeNotification(elementPointer, MODIFY, notification)
+					propagateChange(elementPointer, newNotification)
 				}
 			}
 		}
@@ -463,6 +556,12 @@ func (uOfDPtr *UniverseOfDiscourse) notifyElementListeners(notification *ChangeN
 }
 
 func (uOfD *UniverseOfDiscourse) RecoverElement(data []byte) Element {
+	uOfD.TraceableLock()
+	defer uOfD.TraceableUnlock()
+	return uOfD.recoverElement(data)
+}
+
+func (uOfD *UniverseOfDiscourse) recoverElement(data []byte) Element {
 	if len(data) == 0 {
 		return nil
 	}
@@ -474,7 +573,7 @@ func (uOfD *UniverseOfDiscourse) RecoverElement(data []byte) Element {
 		log.Printf("Error recovering Element: %s \n", err)
 		return nil
 	}
-	uOfD.SetUniverseOfDiscourseRecursively(recoveredElement)
+	uOfD.setUniverseOfDiscourseRecursively(recoveredElement)
 	restoreValueOwningElementFieldsRecursively(recoveredElement.(Element))
 	return recoveredElement.(Element)
 }
@@ -506,11 +605,11 @@ func (uOfDPtr *UniverseOfDiscourse) redo() {
 
 func (uOfDPtr *UniverseOfDiscourse) RemoveBaseElement(be BaseElement) error {
 	//	log.Printf("Locking UofD\n")
-	uOfDPtr.traceableLock()
-	defer uOfDPtr.traceableUnlock()
+	uOfDPtr.TraceableLock()
+	defer uOfDPtr.TraceableUnlock()
 	if be != nil {
-		be.traceableLock()
-		defer be.traceableUnlock()
+		be.TraceableLock()
+		defer be.TraceableUnlock()
 	}
 	return uOfDPtr.removeBaseElement(be)
 }
@@ -526,13 +625,30 @@ func (uOfDPtr *UniverseOfDiscourse) removeBaseElement(be BaseElement) error {
 
 func (uOfDPtr *UniverseOfDiscourse) removeBaseElementForUndo(be BaseElement) {
 	//	log.Printf("Locking UofD\n")
-	uOfDPtr.traceableLock()
-	defer uOfDPtr.traceableUnlock()
+	uOfDPtr.TraceableLock()
+	defer uOfDPtr.TraceableUnlock()
 	if be != nil {
-		be.traceableLock()
-		defer be.traceableUnlock()
+		be.TraceableLock()
+		defer be.TraceableUnlock()
 	}
 	delete(uOfDPtr.baseElementMap, be.getId().String())
+}
+
+func (uOfDPtr *UniverseOfDiscourse) removeBaseElementListener(baseElement BaseElement, baseElementPointer BaseElementPointer) {
+	if baseElement != nil {
+		elementId := baseElement.getId().String()
+		currentList := uOfDPtr.baseElementListenerMap[elementId]
+		if currentList != nil && len(*currentList) > 0 {
+			for i := range *currentList {
+				if (*currentList)[i] == baseElementPointer {
+					copy((*currentList)[i:], (*currentList)[i+1:])
+					updatedList := (*currentList)[:len(*currentList)-1]
+					uOfDPtr.baseElementListenerMap[elementId] = &updatedList
+					return
+				}
+			}
+		}
+	}
 }
 
 func (uOfDPtr *UniverseOfDiscourse) removeElementListener(element Element, elementPointer ElementPointer) {
@@ -642,8 +758,8 @@ func (uOfDPtr *UniverseOfDiscourse) restoreState(priorState BaseElement, current
 }
 
 func (uOfDPtr *UniverseOfDiscourse) SetRecordingUndo(newSetting bool) {
-	uOfDPtr.traceableLock()
-	defer uOfDPtr.traceableUnlock()
+	uOfDPtr.TraceableLock()
+	defer uOfDPtr.TraceableUnlock()
 	uOfDPtr.setRecordingUndo(newSetting)
 }
 
@@ -652,14 +768,18 @@ func (uOfDPtr *UniverseOfDiscourse) setRecordingUndo(newSetting bool) {
 }
 
 func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourseRecursively(be BaseElement) {
-	uOfDPtr.traceableLock()
-	defer uOfDPtr.traceableUnlock()
+	uOfDPtr.TraceableLock()
+	defer uOfDPtr.TraceableUnlock()
 	uOfDPtr.setUniverseOfDiscourseRecursively(be)
 }
 
 func (uOfDPtr *UniverseOfDiscourse) setUniverseOfDiscourseRecursively(be BaseElement) {
 	uOfDPtr.addBaseElement(be)
 	switch be.(type) {
+	case *baseElementReference:
+		for _, child := range be.(*baseElementReference).ownedBaseElements {
+			uOfDPtr.setUniverseOfDiscourseRecursively(child)
+		}
 	case *element:
 		for _, child := range be.(*element).ownedBaseElements {
 			uOfDPtr.setUniverseOfDiscourseRecursively(child)
@@ -684,14 +804,14 @@ func (uOfDPtr *UniverseOfDiscourse) setUniverseOfDiscourseRecursively(be BaseEle
 		for _, child := range be.(*refinement).ownedBaseElements {
 			uOfDPtr.setUniverseOfDiscourseRecursively(child)
 		}
-	case *elementPointer, *elementPointerPointer, *literal, *literalPointer, *literalPointerPointer:
+	case *baseElementPointer, *elementPointer, *elementPointerPointer, *literal, *literalPointer, *literalPointerPointer:
 	// Do nothing
 	default:
 		log.Printf("UniverseOfDiscourse.setUniverseOfDiscourseRecursively is missing case for %T\n", be)
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) traceableLock() {
+func (uOfDPtr *UniverseOfDiscourse) TraceableLock() {
 	if TraceLocks {
 		log.Printf("About to lock Universe of Discourse %p\n", uOfDPtr)
 	}
@@ -705,7 +825,7 @@ func (uOfDPtr *UniverseOfDiscourse) traceableRLock() {
 	uOfDPtr.RLock()
 }
 
-func (uOfDPtr *UniverseOfDiscourse) traceableUnlock() {
+func (uOfDPtr *UniverseOfDiscourse) TraceableUnlock() {
 	if TraceLocks {
 		log.Printf("About to unlock Universe of Discourse %p\n", uOfDPtr)
 	}

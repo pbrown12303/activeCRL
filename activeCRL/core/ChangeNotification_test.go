@@ -10,6 +10,11 @@ var functionCalled bool
 var wg sync.WaitGroup
 
 func trialFunction(element Element, changeNotification *ChangeNotification) {
+	//	PrintMutex.Lock()
+	//	defer PrintMutex.Unlock()
+	//	log.Printf("Entering trialFunction\n")
+	//	Print(element, "+++")
+	//	PrintNotification(changeNotification)
 	defer wg.Done()
 	functionCalled = true
 }
@@ -18,7 +23,7 @@ func TestFunctionExecution(t *testing.T) {
 	functionCalled = false
 	uOfD := NewUniverseOfDiscourse()
 	uri := "FunctionAncestor"
-	GetCore().computeFunctions[uri] = trialFunction
+	GetCore().AddFunction(uri, trialFunction)
 	functionAncestor := uOfD.NewElement()
 	functionAncestor.SetUri(uri)
 	child := uOfD.NewElement()
@@ -26,9 +31,11 @@ func TestFunctionExecution(t *testing.T) {
 	refinement.SetAbstractElement(functionAncestor)
 
 	// SetRefinedElement should trigger the function
+	//	TraceChange = true
 	wg.Add(1)
 	refinement.SetRefinedElement(child)
 	wg.Wait()
+	TraceChange = false
 
 	if functionCalled == false {
 		t.Errorf("TrialFunction not called after abstraction created")

@@ -15,25 +15,23 @@ var serializedCore string = `
 
 func main() {
 	uOfD := core.NewUniverseOfDiscourse()
-	recoveredElement := uOfD.GetCoreConceptSpace()
-	updatedCore := updateRecoveredCore(recoveredElement, uOfD)
-	if recoveredElement == nil || !core.Equivalent(recoveredElement, updatedCore) {
-		marshaledCore, err := updatedCore.MarshalJSON()
-		if err == nil {
-			ioutil.WriteFile("Core.acrl", marshaledCore, os.ModePerm)
-			serializedCore := serializedCorePrefix + "`" + string(marshaledCore) + "`"
-			ioutil.WriteFile("./core/SerializedCore.go", []byte(serializedCore), os.ModePerm)
-		}
+	recoveredCore := uOfD.GetCoreConceptSpace()
+	updatedCore := updateRecoveredCore(recoveredCore, uOfD)
+	marshaledCore, err := updatedCore.MarshalJSON()
+	if err == nil {
+		ioutil.WriteFile("CoreConceptSpace.acrl", marshaledCore, os.ModePerm)
+		serializedCore := serializedCorePrefix + "`" + string(marshaledCore) + "`"
+		ioutil.WriteFile("./core/SerializedCore.go", []byte(serializedCore), os.ModePerm)
 	}
 }
 
-func updateRecoveredCore(recoveredElement core.Element, uOfD *core.UniverseOfDiscourse) core.Element {
+func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscourse) core.Element {
 	// Core
-	coreElement := recoveredElement
+	coreElement := recoveredCore
 	if coreElement == nil {
 		coreElement = uOfD.NewElement()
-		coreElement.SetName("Core")
-		coreElement.SetUri(core.CoreUri)
+		coreElement.SetName("CoreConceptSpace")
+		coreElement.SetUri(core.CoreConceptSpaceUri)
 	}
 
 	// Element

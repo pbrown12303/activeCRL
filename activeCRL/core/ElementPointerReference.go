@@ -23,12 +23,12 @@ func (eprPtr *elementPointerReference) cloneAttributes(source elementPointerRefe
 }
 
 func (eprPtr *elementPointerReference) GetElementPointer() ElementPointer {
-	eprPtr.traceableLock()
-	defer eprPtr.traceableUnlock()
+	eprPtr.TraceableLock()
+	defer eprPtr.TraceableUnlock()
 	rep := eprPtr.getElementPointerPointer()
 	if rep != nil {
-		rep.traceableLock()
-		defer rep.traceableUnlock()
+		rep.TraceableLock()
+		defer rep.TraceableUnlock()
 	}
 	return eprPtr.getElementPointer()
 }
@@ -61,8 +61,8 @@ func (bePtr *elementPointerReference) isEquivalent(be *elementPointerReference) 
 }
 
 func (elPtr *elementPointerReference) MarshalJSON() ([]byte, error) {
-	elPtr.traceableLock()
-	defer elPtr.traceableUnlock()
+	elPtr.TraceableLock()
+	defer elPtr.TraceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -84,8 +84,8 @@ func (el *elementPointerReference) recoverElementPointerReferenceFields(unmarsha
 }
 
 func (erPtr *elementPointerReference) SetOwningElement(parent Element) {
-	erPtr.traceableLock()
-	defer erPtr.traceableUnlock()
+	erPtr.TraceableLock()
+	defer erPtr.TraceableUnlock()
 	oldParent := erPtr.getOwningElement()
 	if oldParent == nil && parent == nil {
 		return // Nothing to do
@@ -93,39 +93,39 @@ func (erPtr *elementPointerReference) SetOwningElement(parent Element) {
 		return // Nothing to do
 	}
 	if oldParent != nil {
-		oldParent.traceableLock()
-		defer oldParent.traceableUnlock()
+		oldParent.TraceableLock()
+		defer oldParent.TraceableUnlock()
 	}
 	if parent != nil {
-		parent.traceableLock()
-		defer parent.traceableUnlock()
+		parent.TraceableLock()
+		defer parent.TraceableUnlock()
 	}
 	oep := erPtr.getOwningElementPointer()
 	if oep != nil {
-		oep.traceableLock()
-		defer oep.traceableUnlock()
+		oep.TraceableLock()
+		defer oep.TraceableUnlock()
 	}
-	erPtr.setOwningElement(parent)
+	erPtr.SetOwningElementNoLock(parent)
 }
 
-func (erPtr *elementPointerReference) setOwningElement(owningElement Element) {
+func (erPtr *elementPointerReference) SetOwningElementNoLock(owningElement Element) {
 	if erPtr.getOwningElement() != owningElement {
 		oep := erPtr.getOwningElementPointer()
 		if oep == nil {
 			oep = erPtr.uOfD.NewOwningElementPointer()
-			oep.setOwningElement(erPtr)
+			oep.SetOwningElementNoLock(erPtr)
 		}
 		oep.setElement(owningElement)
 	}
 }
 
 func (eprPtr *elementPointerReference) SetElementPointer(el ElementPointer) {
-	eprPtr.traceableLock()
-	defer eprPtr.traceableUnlock()
+	eprPtr.TraceableLock()
+	defer eprPtr.TraceableUnlock()
 	ep := eprPtr.getElementPointerPointer()
 	if ep != nil {
-		ep.traceableLock()
-		defer ep.traceableUnlock()
+		ep.TraceableLock()
+		defer ep.TraceableUnlock()
 	}
 	eprPtr.setElementPointer(el)
 }
@@ -135,7 +135,7 @@ func (eprPtr *elementPointerReference) setElementPointer(el ElementPointer) {
 		ep := eprPtr.getElementPointerPointer()
 		if ep == nil {
 			ep = eprPtr.uOfD.NewElementPointerPointer()
-			ep.setOwningElement(eprPtr)
+			ep.SetOwningElementNoLock(eprPtr)
 		}
 		ep.setElementPointer(el)
 	}

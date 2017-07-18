@@ -25,8 +25,8 @@ func (lPtr *literal) cloneAttributes(source literal) {
 }
 
 func (lPtr *literal) GetLiteralValue() string {
-	lPtr.traceableLock()
-	defer lPtr.traceableUnlock()
+	lPtr.TraceableLock()
+	defer lPtr.TraceableUnlock()
 	return lPtr.getLiteralValue()
 }
 
@@ -34,9 +34,9 @@ func (lPtr *literal) getLiteralValue() string {
 	return lPtr.literalValue
 }
 
-func (lPtr *literal) GetName() string {
-	lPtr.traceableLock()
-	defer lPtr.traceableUnlock()
+func (lPtr *literal) GetNameNoLock() string {
+	lPtr.TraceableLock()
+	defer lPtr.TraceableUnlock()
 	return lPtr.getLiteralValue()
 }
 
@@ -54,8 +54,8 @@ func (lPtr *literal) isEquivalent(lit *literal) bool {
 }
 
 func (lPtr *literal) MarshalJSON() ([]byte, error) {
-	lPtr.traceableLock()
-	defer lPtr.traceableUnlock()
+	lPtr.TraceableLock()
+	defer lPtr.TraceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(lPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -93,8 +93,8 @@ func (lPtr *literal) recoverLiteralFields(unmarshaledData *map[string]json.RawMe
 }
 
 func (lPtr *literal) SetLiteralValue(newValue string) {
-	lPtr.traceableLock()
-	defer lPtr.traceableUnlock()
+	lPtr.TraceableLock()
+	defer lPtr.TraceableUnlock()
 	lPtr.setLiteralValue(newValue)
 }
 
@@ -108,12 +108,12 @@ func (lPtr *literal) setLiteralValue(newValue string) {
 }
 
 func (lPtr *literal) SetOwningElement(el Element) {
-	lPtr.traceableLock()
-	defer lPtr.traceableUnlock()
-	lPtr.setOwningElement(el)
+	lPtr.TraceableLock()
+	defer lPtr.TraceableUnlock()
+	lPtr.SetOwningElementNoLock(el)
 }
 
-func (lPtr *literal) setOwningElement(el Element) {
+func (lPtr *literal) SetOwningElementNoLock(el Element) {
 	if lPtr.getOwningElement() != el {
 		if lPtr.owningElement != nil {
 			lPtr.owningElement.removeOwnedBaseElement(lPtr)
@@ -139,12 +139,12 @@ func (lPtr *literal) internalSetOwningElement(el Element) {
 }
 
 func (lPtr *literal) SetUri(uri string) {
-	lPtr.traceableLock()
-	defer lPtr.traceableUnlock()
-	lPtr.setUri(uri)
+	lPtr.TraceableLock()
+	defer lPtr.TraceableUnlock()
+	lPtr.SetUriNoLock(uri)
 }
 
-func (lPtr *literal) setUri(uri string) {
+func (lPtr *literal) SetUriNoLock(uri string) {
 	preChange(lPtr)
 	lPtr.uri = uri
 	notification := NewChangeNotification(lPtr, MODIFY, nil)

@@ -53,8 +53,8 @@ func (epPtr *elementPointer) elementChanged(notification *ChangeNotification) {
 }
 
 func (epPtr *elementPointer) GetElement() Element {
-	epPtr.traceableLock()
-	defer epPtr.traceableUnlock()
+	epPtr.TraceableLock()
+	defer epPtr.TraceableUnlock()
 	return epPtr.getElement()
 }
 
@@ -66,9 +66,9 @@ func (epPtr *elementPointer) getElement() Element {
 	return epPtr.element
 }
 
-func (epPtr *elementPointer) GetName() string {
-	epPtr.traceableLock()
-	defer epPtr.traceableUnlock()
+func (epPtr *elementPointer) GetNameNoLock() string {
+	epPtr.TraceableLock()
+	defer epPtr.TraceableUnlock()
 	switch epPtr.getElementPointerRole() {
 	case ABSTRACT_ELEMENT:
 		return "abstractElement"
@@ -84,8 +84,8 @@ func (epPtr *elementPointer) GetName() string {
 
 // GetElementIdentifier() locks the element pointer and returns the element identifier, releasing the lock in the process
 func (epPtr *elementPointer) GetElementIdentifier() uuid.UUID {
-	epPtr.traceableLock()
-	defer epPtr.traceableUnlock()
+	epPtr.TraceableLock()
+	defer epPtr.TraceableUnlock()
 	return epPtr.getElementIdentifier()
 }
 
@@ -124,8 +124,8 @@ func (bePtr *elementPointer) isEquivalent(be *elementPointer) bool {
 }
 
 func (elPtr *elementPointer) MarshalJSON() ([]byte, error) {
-	elPtr.traceableLock()
-	defer elPtr.traceableUnlock()
+	elPtr.TraceableLock()
+	defer elPtr.TraceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -155,7 +155,18 @@ func (epPtr *elementPointer) printElementPointer(prefix string) {
 	epPtr.printPointer(prefix)
 	log.Printf("%sIndicated ElementID: %s \n", prefix, epPtr.elementId.String())
 	log.Printf("%sIndicated ElementVersion: %d \n", prefix, epPtr.elementVersion)
-	log.Printf("%sElementPointerRole: %d \n", prefix, epPtr.elementPointerRole)
+	role := ""
+	switch epPtr.elementPointerRole {
+	case ABSTRACT_ELEMENT:
+		role = "ABSTRACT_ELEMENT"
+	case REFINED_ELEMENT:
+		role = "REFINED_ELEMENT"
+	case OWNING_ELEMENT:
+		role = "OWNING_ELEMENT"
+	case REFERENCED_ELEMENT:
+		role = "REFERENCED_ELEMENT"
+	}
+	log.Printf("%sElementPointerRole: %s \n", prefix, role)
 }
 
 func (ep *elementPointer) recoverElementPointerFields(unmarshaledData *map[string]json.RawMessage) error {
@@ -213,8 +224,8 @@ func (ep *elementPointer) recoverElementPointerFields(unmarshaledData *map[strin
 // owner is removed as a child from the old target element and added as a child to the new
 // target element. Locking must take this into account.
 func (epPtr *elementPointer) SetElement(element Element) {
-	epPtr.traceableLock()
-	defer epPtr.traceableUnlock()
+	epPtr.TraceableLock()
+	defer epPtr.TraceableUnlock()
 	oldElement := epPtr.getElement()
 	if oldElement == nil && element == nil {
 		return // Nothing to do
@@ -222,18 +233,18 @@ func (epPtr *elementPointer) SetElement(element Element) {
 		return // Nothing to do
 	}
 	if element != nil {
-		element.traceableLock() // We need to lock the element to make sure it's version doesn't change during this operation
-		defer element.traceableUnlock()
+		element.TraceableLock() // We need to lock the element to make sure it's version doesn't change during this operation
+		defer element.TraceableUnlock()
 	}
 	if epPtr.getElementPointerRole() == OWNING_ELEMENT {
 		// We have some additional unwiring and wiring to do in this case
 		if oldElement != nil {
-			oldElement.traceableLock()
-			defer oldElement.traceableUnlock()
+			oldElement.TraceableLock()
+			defer oldElement.TraceableUnlock()
 		}
 		if epPtr.getOwningElement() != nil {
-			epPtr.getOwningElement().traceableLock()
-			defer epPtr.getOwningElement().traceableUnlock()
+			epPtr.getOwningElement().TraceableLock()
+			defer epPtr.getOwningElement().TraceableUnlock()
 		}
 	}
 	epPtr.setElement(element)
@@ -283,8 +294,8 @@ func (epPtr *elementPointer) setElement(element Element) {
 // Because of the complex wiring between the objects, we have to lock all relevant
 // objects here and then use non-locking worker methods
 func (epPtr *elementPointer) SetOwningElement(newOwningElement Element) {
-	epPtr.traceableLock()
-	defer epPtr.traceableUnlock()
+	epPtr.TraceableLock()
+	defer epPtr.TraceableUnlock()
 	oldOwningElement := epPtr.getOwningElement()
 	if oldOwningElement == nil && newOwningElement == nil {
 		return // Nothing to do
@@ -292,27 +303,27 @@ func (epPtr *elementPointer) SetOwningElement(newOwningElement Element) {
 		return // Nothing to do
 	}
 	if oldOwningElement != nil {
-		oldOwningElement.traceableLock()
-		defer oldOwningElement.traceableUnlock()
+		oldOwningElement.TraceableLock()
+		defer oldOwningElement.TraceableUnlock()
 	}
 	if newOwningElement != nil {
-		newOwningElement.traceableLock()
-		defer newOwningElement.traceableUnlock()
+		newOwningElement.TraceableLock()
+		defer newOwningElement.TraceableUnlock()
 	}
 	if epPtr.getElementPointerRole() == OWNING_ELEMENT {
 		// In this case the element being pointed to will also be impacted
 		if epPtr.getElement() != nil {
-			epPtr.getElement().traceableLock()
-			defer epPtr.getElement().traceableUnlock()
+			epPtr.getElement().TraceableLock()
+			defer epPtr.getElement().TraceableUnlock()
 		}
 	}
-	epPtr.setOwningElement(newOwningElement)
+	epPtr.SetOwningElementNoLock(newOwningElement)
 }
 
-// setOwningElement() is a non-locking function that sets the ownership of the element pointer.
+// SetOwningElementNoLock() is a non-locking function that sets the ownership of the element pointer.
 // It adjusts the ownedBaseElement set of both the old and new owner. In addition, if it is an
 // owningElementPointer, it adjusts the ownedBaseElement set of the owner's owner.
-func (epPtr *elementPointer) setOwningElement(element Element) {
+func (epPtr *elementPointer) SetOwningElementNoLock(element Element) {
 	if element != epPtr.getOwningElement() {
 		if epPtr.getElementPointerRole() == OWNING_ELEMENT {
 			if epPtr.element != nil && epPtr.getOwningElement() != nil {
@@ -358,12 +369,12 @@ func (epPtr *elementPointer) internalSetOwningElement(element Element) {
 }
 
 func (epPtr *elementPointer) SetUri(uri string) {
-	epPtr.traceableLock()
-	defer epPtr.traceableUnlock()
-	epPtr.setUri(uri)
+	epPtr.TraceableLock()
+	defer epPtr.TraceableUnlock()
+	epPtr.SetUriNoLock(uri)
 }
 
-func (epPtr *elementPointer) setUri(uri string) {
+func (epPtr *elementPointer) SetUriNoLock(uri string) {
 	preChange(epPtr)
 	epPtr.uri = uri
 	notification := NewChangeNotification(epPtr, MODIFY, nil)

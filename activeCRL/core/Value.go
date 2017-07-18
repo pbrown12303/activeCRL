@@ -19,8 +19,8 @@ func (vPtr *value) cloneAttributes(source value) {
 }
 
 func (vPtr *value) GetOwningElement() Element {
-	vPtr.traceableLock()
-	defer vPtr.traceableUnlock()
+	vPtr.TraceableLock()
+	defer vPtr.TraceableUnlock()
 	return vPtr.getOwningElement()
 }
 
@@ -29,12 +29,12 @@ func (vPtr *value) getOwningElement() Element {
 }
 
 func (vPtr *value) GetUri() string {
-	vPtr.traceableLock()
-	defer vPtr.traceableUnlock()
-	return vPtr.getUri()
+	vPtr.TraceableLock()
+	defer vPtr.TraceableUnlock()
+	return vPtr.GetUriNoLock()
 }
 
-func (vPtr *value) getUri() string {
+func (vPtr *value) GetUriNoLock() string {
 	return vPtr.uri
 }
 
@@ -73,7 +73,7 @@ func (vPtr *value) marshalValueFields(buffer *bytes.Buffer) error {
 
 func (vPtr *value) printValue(prefix string) {
 	vPtr.printBaseElement(prefix)
-	log.Printf("%suri: %s \n", prefix, vPtr.getUri())
+	log.Printf("%suri: %s \n", prefix, vPtr.GetUriNoLock())
 	if vPtr.getOwningElement() == nil {
 		log.Printf("%sowningElmentIdentifier: %s \n", prefix, "nil")
 	} else {

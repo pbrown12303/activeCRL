@@ -26,8 +26,8 @@ func (bePtr *baseElement) cloneAttributes(source baseElement) {
 
 // GetId locks the element, reads the id, and returns, releasing the lock
 func (bePtr *baseElement) GetId() uuid.UUID {
-	bePtr.traceableLock()
-	defer bePtr.traceableUnlock()
+	bePtr.TraceableLock()
+	defer bePtr.TraceableUnlock()
 	return bePtr.getId()
 }
 
@@ -42,8 +42,8 @@ func (bePtr *baseElement) getUniverseOfDiscourse() *UniverseOfDiscourse {
 
 // GetVersion() Locks the element and returns the version, releasing the lock
 func (bePtr *baseElement) GetVersion() int {
-	bePtr.traceableLock()
-	defer bePtr.traceableUnlock()
+	bePtr.TraceableLock()
+	defer bePtr.TraceableUnlock()
 	return bePtr.getVersion()
 }
 
@@ -124,28 +124,28 @@ func (bePtr *baseElement) setUniverseOfDiscourse(uOfD *UniverseOfDiscourse) {
 	bePtr.uOfD = uOfD
 }
 
-func (bePtr *baseElement) traceableLock() {
+func (bePtr *baseElement) TraceableLock() {
 	if TraceLocks {
 		log.Printf("About to lock Base Element %p\n", bePtr)
 	}
 	bePtr.Lock()
 }
 
-func (bePtr *baseElement) traceableRLock() {
+func (bePtr *baseElement) TraceableRLock() {
 	if TraceLocks {
 		log.Printf("About to lock Base Element %p\n", bePtr)
 	}
 	bePtr.RLock()
 }
 
-func (bePtr *baseElement) traceableUnlock() {
+func (bePtr *baseElement) TraceableUnlock() {
 	if TraceLocks {
 		log.Printf("About to unlock Base Element %p\n", bePtr)
 	}
 	bePtr.Unlock()
 }
 
-func (bePtr *baseElement) traceableRUnlock() {
+func (bePtr *baseElement) TraceableRUnlock() {
 	if TraceLocks {
 		log.Printf("About to unlock Base Element %p\n", bePtr)
 	}
@@ -155,19 +155,20 @@ func (bePtr *baseElement) traceableRUnlock() {
 type BaseElement interface {
 	getId() uuid.UUID
 	GetId() uuid.UUID
-	GetName() string
+	GetNameNoLock() string
 	getOwningElement() Element
 	GetOwningElement() Element
 	getUniverseOfDiscourse() *UniverseOfDiscourse
 	GetUri() string
-	getUri() string
+	GetUriNoLock() string
 	getVersion() int
 	GetVersion() int
 	internalIncrementVersion()
-	setOwningElement(Element)
 	SetOwningElement(Element)
+	SetOwningElementNoLock(Element)
 	setUniverseOfDiscourse(*UniverseOfDiscourse)
 	SetUri(string)
-	traceableLock()
-	traceableUnlock()
+	SetUriNoLock(string)
+	TraceableLock()
+	TraceableUnlock()
 }

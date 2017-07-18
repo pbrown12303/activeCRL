@@ -31,8 +31,8 @@ func (pllPtr *literalPointerPointer) cloneAttributes(source literalPointerPointe
 }
 
 func (pllPtr *literalPointerPointer) GetLiteralPointer() LiteralPointer {
-	pllPtr.traceableLock()
-	defer pllPtr.traceableUnlock()
+	pllPtr.TraceableLock()
+	defer pllPtr.TraceableUnlock()
 	return pllPtr.getLiteralPointer()
 }
 
@@ -43,13 +43,13 @@ func (pllPtr *literalPointerPointer) getLiteralPointer() LiteralPointer {
 	return pllPtr.literalPointer
 }
 
-func (pllPtr *literalPointerPointer) GetName() string {
+func (pllPtr *literalPointerPointer) GetNameNoLock() string {
 	return "literalPointerPointer"
 }
 
 func (pllPtr *literalPointerPointer) GetLiteralPointerIdentifier() uuid.UUID {
-	pllPtr.traceableLock()
-	defer pllPtr.traceableUnlock()
+	pllPtr.TraceableLock()
+	defer pllPtr.TraceableUnlock()
 	return pllPtr.getLiteralPointerIdentifier()
 }
 
@@ -58,8 +58,8 @@ func (pllPtr *literalPointerPointer) getLiteralPointerIdentifier() uuid.UUID {
 }
 
 func (pllPtr *literalPointerPointer) GetLiteralPointerVersion() int {
-	pllPtr.traceableLock()
-	defer pllPtr.traceableUnlock()
+	pllPtr.TraceableLock()
+	defer pllPtr.TraceableUnlock()
 	return pllPtr.getLiteralPointerVersion()
 }
 
@@ -85,8 +85,8 @@ func (bePtr *literalPointerPointer) isEquivalent(be *literalPointerPointer) bool
 }
 
 func (elPtr *literalPointerPointer) MarshalJSON() ([]byte, error) {
-	elPtr.traceableLock()
-	defer elPtr.traceableUnlock()
+	elPtr.TraceableLock()
+	defer elPtr.TraceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -142,11 +142,11 @@ func (ep *literalPointerPointer) recoverLiteralPointerPointerFields(unmarshaledD
 }
 
 func (pllPtr *literalPointerPointer) SetLiteralPointer(literalPointer LiteralPointer) {
-	pllPtr.traceableLock()
-	defer pllPtr.traceableUnlock()
+	pllPtr.TraceableLock()
+	defer pllPtr.TraceableUnlock()
 	if literalPointer != nil {
-		literalPointer.traceableLock()
-		defer literalPointer.traceableUnlock()
+		literalPointer.TraceableLock()
+		defer literalPointer.TraceableUnlock()
 	}
 	pllPtr.setLiteralPointer(literalPointer)
 }
@@ -172,12 +172,12 @@ func (pllPtr *literalPointerPointer) setLiteralPointer(literalPointer LiteralPoi
 }
 
 func (pllPtr *literalPointerPointer) SetOwningElement(element Element) {
-	pllPtr.traceableLock()
-	defer pllPtr.traceableUnlock()
-	pllPtr.setOwningElement(element)
+	pllPtr.TraceableLock()
+	defer pllPtr.TraceableUnlock()
+	pllPtr.SetOwningElementNoLock(element)
 }
 
-func (pllPtr *literalPointerPointer) setOwningElement(element Element) {
+func (pllPtr *literalPointerPointer) SetOwningElementNoLock(element Element) {
 	if element != pllPtr.getOwningElement() {
 		if pllPtr.getOwningElement() != nil {
 			pllPtr.getOwningElement().removeOwnedBaseElement(pllPtr)
@@ -205,12 +205,12 @@ func (pllPtr *literalPointerPointer) internalSetOwningElement(element Element) {
 }
 
 func (lpPtr *literalPointerPointer) SetUri(uri string) {
-	lpPtr.traceableLock()
-	defer lpPtr.traceableUnlock()
-	lpPtr.setUri(uri)
+	lpPtr.TraceableLock()
+	defer lpPtr.TraceableUnlock()
+	lpPtr.SetUriNoLock(uri)
 }
 
-func (lpPtr *literalPointerPointer) setUri(uri string) {
+func (lpPtr *literalPointerPointer) SetUriNoLock(uri string) {
 	preChange(lpPtr)
 	lpPtr.uri = uri
 	notification := NewChangeNotification(lpPtr, MODIFY, nil)

@@ -18,7 +18,7 @@ func TestUpdateCoreElement(t *testing.T) {
 	if recoveredCore == nil {
 		t.Error("updateRecoveredCore returned empty element")
 	}
-	if recoveredCore.GetUri() != core.CoreUri {
+	if recoveredCore.GetUri() != core.CoreConceptSpaceUri {
 		t.Error("Core uri not set")
 	}
 	_, ok := recoveredCore.(core.Element)

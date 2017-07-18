@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-var CoreUri string = "http://activeCrl.com/core/Core"
+var CoreConceptSpaceUri string = "http://activeCrl.com/core/CoreConceptSpace"
 var ElememtUri string = "http://activeCrl.com/core/Element"
 var ElementPointerUri string = "http://activeCrl.com/core/ElementPointer"
 var ElementPointerPointerUri string = "http://activeCrl.com/core/ElementPointerPointer"
@@ -43,6 +43,11 @@ func newCore() *core {
 
 func init() {
 	coreSingleton = newCore()
+	TraceChange = false
+}
+
+func (c *core) AddFunction(uri string, function crlExecutionFunction) {
+	c.computeFunctions[uri] = function
 }
 
 func (c *core) findFunctions(element Element) []crlExecutionFunction {
@@ -50,9 +55,9 @@ func (c *core) findFunctions(element Element) []crlExecutionFunction {
 	if element == nil {
 		return functions
 	}
-	abstractions := element.getAbstractElementsRecursively()
+	abstractions := element.GetAbstractElementsRecursivelyNoLock()
 	for _, abstractElement := range abstractions {
-		uri := abstractElement.getUri()
+		uri := abstractElement.GetUriNoLock()
 		if uri != "" {
 			f := c.computeFunctions[uri]
 			if f != nil {

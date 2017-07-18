@@ -34,8 +34,8 @@ func (rPtr *refinement) childChanged(notification *ChangeNotification) {
 }
 
 func (rPtr *refinement) GetAbstractElement() Element {
-	rPtr.traceableLock()
-	defer rPtr.traceableUnlock()
+	rPtr.TraceableLock()
+	defer rPtr.TraceableUnlock()
 	return rPtr.getAbstractElement()
 }
 
@@ -60,8 +60,8 @@ func (rPtr *refinement) getAbstractElementPointer() ElementPointer {
 }
 
 func (rPtr *refinement) GetRefinedElement() Element {
-	rPtr.traceableLock()
-	defer rPtr.traceableUnlock()
+	rPtr.TraceableLock()
+	defer rPtr.TraceableUnlock()
 	return rPtr.getRefinedElement()
 }
 
@@ -95,8 +95,8 @@ func (bePtr *refinement) isEquivalent(be *refinement) bool {
 }
 
 func (elPtr *refinement) MarshalJSON() ([]byte, error) {
-	elPtr.traceableLock()
-	defer elPtr.traceableUnlock()
+	elPtr.TraceableLock()
+	defer elPtr.TraceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -118,16 +118,16 @@ func (el *refinement) recoverRefinementFields(unmarshaledData *map[string]json.R
 }
 
 func (rPtr *refinement) SetAbstractElement(el Element) {
-	rPtr.traceableLock()
-	defer rPtr.traceableUnlock()
+	rPtr.TraceableLock()
+	defer rPtr.TraceableUnlock()
 	ep := rPtr.getAbstractElementPointer()
 	if ep != nil {
-		ep.traceableLock()
-		defer ep.traceableUnlock()
+		ep.TraceableLock()
+		defer ep.TraceableUnlock()
 	}
 	if el != nil {
-		el.traceableLock()
-		defer el.traceableUnlock()
+		el.TraceableLock()
+		defer el.TraceableUnlock()
 	}
 	rPtr.setAbstractElement(el)
 }
@@ -137,15 +137,15 @@ func (rPtr *refinement) setAbstractElement(el Element) {
 		ep := rPtr.getAbstractElementPointer()
 		if ep == nil {
 			ep = rPtr.uOfD.NewAbstractElementPointer()
-			ep.setOwningElement(rPtr)
+			ep.SetOwningElementNoLock(rPtr)
 		}
 		ep.setElement(el)
 	}
 }
 
 func (elPtr *refinement) SetOwningElement(parent Element) {
-	elPtr.traceableLock()
-	defer elPtr.traceableUnlock()
+	elPtr.TraceableLock()
+	defer elPtr.TraceableUnlock()
 	oldParent := elPtr.getOwningElement()
 	if oldParent == nil && parent == nil {
 		return // Nothing to do
@@ -153,41 +153,41 @@ func (elPtr *refinement) SetOwningElement(parent Element) {
 		return // Nothing to do
 	}
 	if oldParent != nil {
-		oldParent.traceableLock()
-		defer oldParent.traceableUnlock()
+		oldParent.TraceableLock()
+		defer oldParent.TraceableUnlock()
 	}
 	if parent != nil {
-		parent.traceableLock()
-		defer parent.traceableUnlock()
+		parent.TraceableLock()
+		defer parent.TraceableUnlock()
 	}
 	oep := elPtr.getOwningElementPointer()
 	if oep != nil {
-		oep.traceableLock()
-		defer oep.traceableUnlock()
+		oep.TraceableLock()
+		defer oep.TraceableUnlock()
 	}
-	elPtr.setOwningElement(parent)
+	elPtr.SetOwningElementNoLock(parent)
 }
 
-func (elPtr *refinement) setOwningElement(parent Element) {
+func (elPtr *refinement) SetOwningElementNoLock(parent Element) {
 	oep := elPtr.getOwningElementPointer()
 	if oep == nil {
 		oep = elPtr.uOfD.NewOwningElementPointer()
-		oep.setOwningElement(elPtr)
+		oep.SetOwningElementNoLock(elPtr)
 	}
 	oep.setElement(parent)
 }
 
 func (rPtr *refinement) SetRefinedElement(el Element) {
-	rPtr.traceableLock()
-	defer rPtr.traceableUnlock()
+	rPtr.TraceableLock()
+	defer rPtr.TraceableUnlock()
 	ep := rPtr.getRefinedElementPointer()
 	if ep != nil {
-		ep.traceableLock()
-		defer ep.traceableUnlock()
+		ep.TraceableLock()
+		defer ep.TraceableUnlock()
 	}
 	if el != nil {
-		el.traceableLock()
-		defer el.traceableUnlock()
+		el.TraceableLock()
+		defer el.TraceableUnlock()
 	}
 	rPtr.setRefinedElement(el)
 
@@ -198,7 +198,7 @@ func (rPtr *refinement) setRefinedElement(el Element) {
 		ep := rPtr.getRefinedElementPointer()
 		if ep == nil {
 			ep = rPtr.uOfD.NewRefinedElementPointer()
-			ep.setOwningElement(rPtr)
+			ep.SetOwningElementNoLock(rPtr)
 		}
 		ep.setElement(el)
 	}

@@ -7,80 +7,78 @@ import (
 	"reflect"
 )
 
-type elementReference struct {
+type baseElementReference struct {
 	reference
 }
 
-func (erPtr *elementReference) clone() *elementReference {
-	var clone elementReference
+func (erPtr *baseElementReference) clone() *baseElementReference {
+	var clone baseElementReference
 	clone.ownedBaseElements = make(map[string]BaseElement)
 	clone.cloneAttributes(*erPtr)
 	return &clone
 }
 
-func (erPtr *elementReference) cloneAttributes(source elementReference) {
+func (erPtr *baseElementReference) cloneAttributes(source baseElementReference) {
 	erPtr.reference.cloneAttributes(source.reference)
 }
 
-func (erPtr *elementReference) GetReferencedElement() Element {
+func (erPtr *baseElementReference) GetBaseElement() BaseElement {
 	erPtr.TraceableLock()
 	defer erPtr.TraceableUnlock()
-	return erPtr.getReferencedElement()
+	return erPtr.getBaseElement()
 }
 
-func (erPtr *elementReference) getReferencedElement() Element {
-	rep := erPtr.getReferencedElementPointer()
+func (erPtr *baseElementReference) getBaseElement() BaseElement {
+	rep := erPtr.getBaseElementPointer()
 	if rep != nil {
-		return rep.getElement()
+		return rep.getBaseElement()
 	}
 	return nil
 }
 
-func (erPtr *elementReference) getReferencedElementPointer() ElementPointer {
+func (erPtr *baseElementReference) getBaseElementPointer() BaseElementPointer {
 	for _, be := range erPtr.getOwnedBaseElements() {
 		switch be.(type) {
-		case *elementPointer:
-			if be.(*elementPointer).getElementPointerRole() == REFERENCED_ELEMENT {
-				return be.(ElementPointer)
-			}
+		case *baseElementPointer:
+			return be.(BaseElementPointer)
 		}
 	}
 	return nil
 }
 
-func (elPtr *elementReference) initializeElementReference() {
+func (elPtr *baseElementReference) initializeBaseElementReference() {
 	elPtr.initializeReference()
 }
 
-func (bePtr *elementReference) isEquivalent(be *elementReference) bool {
+func (bePtr *baseElementReference) isEquivalent(be *baseElementReference) bool {
 	var referencePtr *reference = &bePtr.reference
 	return referencePtr.isEquivalent(&be.reference)
 }
 
-func (elPtr *elementReference) MarshalJSON() ([]byte, error) {
+func (elPtr *baseElementReference) MarshalJSON() ([]byte, error) {
 	elPtr.TraceableLock()
 	defer elPtr.TraceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
-	err := elPtr.marshalElementReferenceFields(buffer)
+	err := elPtr.marshalBaseElementReferenceFields(buffer)
 	buffer.WriteString("}")
 	return buffer.Bytes(), err
 }
 
-func (elPtr *elementReference) marshalElementReferenceFields(buffer *bytes.Buffer) error {
+func (elPtr *baseElementReference) marshalBaseElementReferenceFields(buffer *bytes.Buffer) error {
 	return elPtr.reference.marshalReferenceFields(buffer)
 }
 
-func (elPtr *elementReference) printElementReference(prefix string) {
+func (elPtr *baseElementReference) printBaseElementReference(prefix string) {
 	elPtr.printReference(prefix)
 }
 
-func (el *elementReference) recoverElementReferenceFields(unmarshaledData *map[string]json.RawMessage) error {
+func (el *baseElementReference) recoverBaseElementReferenceFields(unmarshaledData *map[string]json.RawMessage) error {
 	return el.reference.recoverReferenceFields(unmarshaledData)
 }
 
-func (erPtr *elementReference) SetOwningElement(parent Element) {
+func (erPtr *baseElementReference) SetOwningElement(parent Element) {
 	erPtr.TraceableLock()
 	defer erPtr.TraceableUnlock()
 	oldParent := erPtr.getOwningElement()
@@ -105,7 +103,7 @@ func (erPtr *elementReference) SetOwningElement(parent Element) {
 	erPtr.SetOwningElementNoLock(parent)
 }
 
-func (erPtr *elementReference) SetOwningElementNoLock(owningElement Element) {
+func (erPtr *baseElementReference) SetOwningElementNoLock(owningElement Element) {
 	if erPtr.getOwningElement() != owningElement {
 		oep := erPtr.getOwningElementPointer()
 		if oep == nil {
@@ -116,31 +114,31 @@ func (erPtr *elementReference) SetOwningElementNoLock(owningElement Element) {
 	}
 }
 
-func (erPtr *elementReference) SetReferencedElement(el Element) {
+func (erPtr *baseElementReference) SetBaseElement(el BaseElement) {
 	erPtr.TraceableLock()
 	defer erPtr.TraceableUnlock()
-	ep := erPtr.getReferencedElementPointer()
+	ep := erPtr.getBaseElementPointer()
 	if ep != nil {
 		ep.TraceableLock()
 		defer ep.TraceableUnlock()
 	}
-	erPtr.setReferencedElement(el)
+	erPtr.setBaseElement(el)
 }
 
-func (erPtr *elementReference) setReferencedElement(el Element) {
-	if erPtr.getReferencedElement() != el {
-		ep := erPtr.getReferencedElementPointer()
+func (erPtr *baseElementReference) setBaseElement(el BaseElement) {
+	if erPtr.getBaseElement() != el {
+		ep := erPtr.getBaseElementPointer()
 		if ep == nil {
-			ep = erPtr.uOfD.NewReferencedElementPointer()
+			ep = erPtr.uOfD.NewBaseElementPointer()
 			ep.SetOwningElementNoLock(erPtr)
 		}
-		ep.setElement(el)
+		ep.setBaseElement(el)
 	}
 }
 
-type ElementReference interface {
+type BaseElementReference interface {
 	Reference
-	GetReferencedElement() Element
-	getReferencedElementPointer() ElementPointer
-	SetReferencedElement(Element)
+	GetBaseElement() BaseElement
+	getBaseElementPointer() BaseElementPointer
+	SetBaseElement(BaseElement)
 }

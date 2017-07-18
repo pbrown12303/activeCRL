@@ -1,6 +1,10 @@
 package core
 
-import ()
+import (
+	"log"
+)
+
+var TraceChange bool
 
 type NatureOfChange int
 
@@ -24,6 +28,18 @@ func NewChangeNotification(baseElement BaseElement, natureOfChange NatureOfChang
 	return &notification
 }
 
+func (cnPtr *ChangeNotification) GetDepth() int {
+	return cnPtr.getDepth(0)
+}
+
+func (cnPtr *ChangeNotification) getDepth(currentDepth int) int {
+	newDepth := currentDepth + 1
+	if cnPtr.underlyingChange != nil {
+		return cnPtr.underlyingChange.getDepth(newDepth)
+	}
+	return newDepth
+}
+
 func (cnPtr *ChangeNotification) isReferenced(be BaseElement) bool {
 	if cnPtr.changedObject == be {
 		return true
@@ -36,8 +52,7 @@ func (cnPtr *ChangeNotification) isReferenced(be BaseElement) bool {
 // abstractionChanged() is used by refinements to inform their refinedElements when they have changed. It does no locking.
 func abstractionChanged(element Element, notification *ChangeNotification) {
 	preChange(element)
-	newNotification := NewChangeNotification(element, MODIFY, notification)
-	postChange(element, newNotification)
+	postChange(element, notification)
 }
 
 func preChange(be BaseElement) {
@@ -47,38 +62,46 @@ func preChange(be BaseElement) {
 }
 
 func postChange(be BaseElement, notification *ChangeNotification) {
-	be.internalIncrementVersion()
-	parent := be.getOwningElement()
-	newNotification := NewChangeNotification(be, MODIFY, notification)
-	switch be.(type) {
-	case Element:
-		for _, function := range GetCore().findFunctions(be.(Element)) {
-			go function(be.(Element), newNotification)
+	if TraceChange == true {
+		log.Printf("PostChange called")
+		PrintNotification(notification)
+	}
+	if notification.GetDepth() < 10 {
+		be.internalIncrementVersion()
+		parent := be.getOwningElement()
+		//		newNotification := NewChangeNotification(be, MODIFY, notification)
+		switch be.(type) {
+		case Element:
+			for _, function := range GetCore().findFunctions(be.(Element)) {
+				go function(be.(Element), notification)
+			}
 		}
-	}
-	if parent != nil {
-		parent.childChanged(newNotification)
-	}
-	switch be.(type) {
-	case Element:
-		be.getUniverseOfDiscourse().notifyElementListeners(newNotification)
+		if parent != nil {
+			parent.childChanged(notification)
+		}
+		switch be.(type) {
+		case Element:
+			be.getUniverseOfDiscourse().notifyElementListeners(notification)
+		}
 	}
 }
 
 func propagateChange(be BaseElement, notification *ChangeNotification) {
-	parent := be.getOwningElement()
-	newNotification := NewChangeNotification(be, MODIFY, notification)
-	switch be.(type) {
-	case Element:
-		for _, function := range GetCore().findFunctions(be.(Element)) {
-			go function(be.(Element), newNotification)
+	if notification.GetDepth() < 10 {
+		parent := be.getOwningElement()
+		//		newNotification := NewChangeNotification(be, MODIFY, notification)
+		switch be.(type) {
+		case Element:
+			for _, function := range GetCore().findFunctions(be.(Element)) {
+				go function(be.(Element), notification)
+			}
 		}
-	}
-	if parent != nil {
-		propagateChange(parent, newNotification)
-	}
-	switch be.(type) {
-	case Element:
-		be.getUniverseOfDiscourse().notifyElementListeners(newNotification)
+		if parent != nil {
+			propagateChange(parent, notification)
+		}
+		switch be.(type) {
+		case Element:
+			be.getUniverseOfDiscourse().notifyElementListeners(notification)
+		}
 	}
 }

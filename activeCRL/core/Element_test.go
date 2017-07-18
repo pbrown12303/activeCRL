@@ -38,6 +38,24 @@ func TestElementOwnership(t *testing.T) {
 	if child.getOwningElementPointer().GetElement() != parent {
 		t.Error("Child's owningElementPointer.getElement() != parent")
 	}
+	var found bool = false
+	for _, be := range parent.getOwnedBaseElements() {
+		if be.GetId() == child.GetId() {
+			found = true
+		}
+	}
+	if found == false {
+		t.Error("Parent does not contain child in getOwnedBaseElements()")
+	}
+	found = false
+	for _, be := range parent.GetOwnedBaseElements() {
+		if be.GetId() == child.GetId() {
+			found = true
+		}
+	}
+	if found == false {
+		t.Error("Parent does not contain child in GetOwnedBaseElements()")
+	}
 }
 
 func TestElementMarshal(t *testing.T) {
@@ -286,7 +304,7 @@ func TestGetImmediateAbstractElements(t *testing.T) {
 func TestGetAbstractElementsRecursively(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	refinedElement := uOfD.NewElement()
-	abstractElements := refinedElement.getAbstractElementsRecursively()
+	abstractElements := refinedElement.GetAbstractElementsRecursivelyNoLock()
 	if len(abstractElements) != 0 {
 		t.Error("AbstractElements length not 0\n")
 	}
@@ -294,7 +312,7 @@ func TestGetAbstractElementsRecursively(t *testing.T) {
 	refinement1 := uOfD.NewRefinement()
 	refinement1.SetAbstractElement(abstractElement1)
 	refinement1.SetRefinedElement(refinedElement)
-	abstractElements = refinedElement.getAbstractElementsRecursively()
+	abstractElements = refinedElement.GetAbstractElementsRecursivelyNoLock()
 	if len(abstractElements) != 1 {
 		t.Error("AbstractElements length != 1")
 	}
@@ -305,7 +323,7 @@ func TestGetAbstractElementsRecursively(t *testing.T) {
 	refinement2 := uOfD.NewRefinement()
 	refinement2.SetAbstractElement(abstractElement2)
 	refinement2.SetRefinedElement(refinedElement)
-	abstractElements = refinedElement.getAbstractElementsRecursively()
+	abstractElements = refinedElement.GetAbstractElementsRecursivelyNoLock()
 	if len(abstractElements) != 2 {
 		t.Error("Abstractions length != 2")
 	}
@@ -316,7 +334,7 @@ func TestGetAbstractElementsRecursively(t *testing.T) {
 	refinement3 := uOfD.NewRefinement()
 	refinement3.SetAbstractElement(abstractElement3)
 	refinement3.SetRefinedElement(abstractElement1)
-	abstractElements = refinedElement.getAbstractElementsRecursively()
+	abstractElements = refinedElement.GetAbstractElementsRecursivelyNoLock()
 	if len(abstractElements) != 3 {
 		t.Error("Abstractions length != 3")
 	}
@@ -327,7 +345,7 @@ func TestGetAbstractElementsRecursively(t *testing.T) {
 	refinement4 := uOfD.NewRefinement()
 	refinement4.SetAbstractElement(abstractElement4)
 	refinement4.SetRefinedElement(abstractElement2)
-	abstractElements = refinedElement.getAbstractElementsRecursively()
+	abstractElements = refinedElement.GetAbstractElementsRecursivelyNoLock()
 	if len(abstractElements) != 4 {
 		t.Error("Abstractions length != 4")
 	}
