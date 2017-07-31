@@ -7,23 +7,28 @@ import (
 )
 
 func TestUpdateCoreElement(t *testing.T) {
-	//	log.Printf("Entering TestUpdateCoreElement")
 	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(false)
 	var emptyCore core.Element
-	core.Print(emptyCore, "")
+	//	core.Print(emptyCore, "", hl)
 
 	//Core
-	recoveredCore := updateRecoveredCore(emptyCore, uOfD)
+	recoveredCore := updateRecoveredCore(emptyCore, uOfD, hl)
+	//	core.Print(recoveredCore, "", hl)
 	if recoveredCore == nil {
 		t.Error("updateRecoveredCore returned empty element")
 	}
-	if recoveredCore.GetUri() != core.CoreConceptSpaceUri {
+	if core.GetUri(recoveredCore, hl) != core.CoreConceptSpaceUri {
 		t.Error("Core uri not set")
 	}
 	_, ok := recoveredCore.(core.Element)
 	if !ok {
 		t.Error("Core is of wrong type")
+	}
+	if uOfD.GetBaseElementWithUri(core.CoreConceptSpaceUri) == nil {
+		t.Error("UofD uri index not updated")
 	}
 
 	recoveredBaseElement := uOfD.GetBaseElementWithUri(core.ElememtUri)
@@ -63,6 +68,9 @@ func TestUpdateCoreElement(t *testing.T) {
 	_, ok = recoveredBaseElement.(core.ElementPointerReference)
 	if !ok {
 		t.Error("ElementPointerReference is of wrong type")
+		core.Print(recoveredBaseElement, "", hl)
+		//		core.Print(recoveredCore, "", hl)
+		//		core.PrintUriIndex(uOfD, hl)
 	}
 
 	// ElementReference

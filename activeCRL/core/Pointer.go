@@ -17,9 +17,15 @@ func (pPtr *pointer) initializePointer() {
 	pPtr.initializeValue()
 }
 
-func (pPtr *pointer) isEquivalent(be *pointer) bool {
+func (pPtr *pointer) isEquivalent(be *pointer, hl *HeldLocks) bool {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(pPtr)
+	hl.LockBaseElement(be)
 	var valuePtr *value = &pPtr.value
-	return valuePtr.isEquivalent(&be.value)
+	return valuePtr.isEquivalent(&be.value, hl)
 }
 
 func (elPtr *pointer) marshalPointerFields(buffer *bytes.Buffer) error {
@@ -27,8 +33,8 @@ func (elPtr *pointer) marshalPointerFields(buffer *bytes.Buffer) error {
 	return err
 }
 
-func (pPtr *pointer) printPointer(prefix string) {
-	pPtr.printValue(prefix)
+func (pPtr *pointer) printPointer(prefix string, hl *HeldLocks) {
+	pPtr.printValue(prefix, hl)
 }
 
 func (el *pointer) recoverPointerFields(unmarshaledData *map[string]json.RawMessage) error {

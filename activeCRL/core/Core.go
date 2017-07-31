@@ -50,14 +50,14 @@ func (c *core) AddFunction(uri string, function crlExecutionFunction) {
 	c.computeFunctions[uri] = function
 }
 
-func (c *core) findFunctions(element Element) []crlExecutionFunction {
+func (c *core) findFunctions(element Element, hl *HeldLocks) []crlExecutionFunction {
 	var functions []crlExecutionFunction
 	if element == nil {
 		return functions
 	}
-	abstractions := element.GetAbstractElementsRecursivelyNoLock()
+	abstractions := element.GetAbstractElementsRecursively(hl)
 	for _, abstractElement := range abstractions {
-		uri := abstractElement.GetUriNoLock()
+		uri := GetUri(abstractElement, hl)
 		if uri != "" {
 			f := c.computeFunctions[uri]
 			if f != nil {

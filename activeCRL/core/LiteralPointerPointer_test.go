@@ -8,50 +8,56 @@ import (
 
 func TestNewLiteralPointerPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewLiteralPointerReference()
-	child := uOfD.NewLiteralPointerPointer()
-	child.SetOwningElement(parent)
-	if child.GetOwningElement() != parent {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewLiteralPointerReference(hl)
+	child := uOfD.NewLiteralPointerPointer(hl)
+	SetOwningElement(child, parent, hl)
+	if GetOwningElement(child, hl) != parent {
 		t.Error("Child's owner not set properly")
 	}
 	var found bool = false
-	for key, _ := range parent.getOwnedBaseElements() {
-		if key == child.GetId().String() {
+	for _, be := range parent.GetOwnedBaseElements(hl) {
+		if be.GetId(hl) == child.GetId(hl) {
 			found = true
 		}
 	}
 	if found == false {
 		t.Error("LiteralPointerPointer not found in parent's OwnedBaseElements \n")
 	}
-	if parent.getLiteralPointerPointer() != child {
+	if parent.getLiteralPointerPointer(hl) != child {
 		t.Error("LiteralPointerReference.GetLiteralPointer() did not return child")
 	}
 }
 
 func TestSetLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewLiteralPointerReference()
-	child := uOfD.NewLiteralPointerPointer()
-	child.SetOwningElement(parent)
-	literalPointer := uOfD.NewValueLiteralPointer()
-	literalPointer.SetOwningElement(parent)
-	if child.GetLiteralPointer() != nil {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewLiteralPointerReference(hl)
+	child := uOfD.NewLiteralPointerPointer(hl)
+	SetOwningElement(child, parent, hl)
+	literalPointer := uOfD.NewValueLiteralPointer(hl)
+	SetOwningElement(literalPointer, parent, hl)
+	if child.GetLiteralPointer(hl) != nil {
 		t.Error("LiteralPointer's Literal not initially nil \n")
 	}
-	child.SetLiteralPointer(literalPointer)
-	if child.GetLiteralPointer() != literalPointer {
+	child.SetLiteralPointer(literalPointer, hl)
+	if child.GetLiteralPointer(hl) != literalPointer {
 		t.Error("LiteralPointerPointer's LiteralPointer not properly set after assignment \n")
 	}
 }
 
 func TestLiteralPointerPointerMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewLiteralPointerReference()
-	child := uOfD.NewLiteralPointerPointer()
-	child.SetOwningElement(parent)
-	literalPointer := uOfD.NewValueLiteralPointer()
-	literalPointer.SetOwningElement(parent)
-	child.SetLiteralPointer(literalPointer)
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewLiteralPointerReference(hl)
+	child := uOfD.NewLiteralPointerPointer(hl)
+	SetOwningElement(child, parent, hl)
+	literalPointer := uOfD.NewValueLiteralPointer(hl)
+	SetOwningElement(literalPointer, parent, hl)
+	child.SetLiteralPointer(literalPointer, hl)
 
 	result, err := json.MarshalIndent(parent, "", "   ")
 	if err != nil {
@@ -62,24 +68,26 @@ func TestLiteralPointerPointerMarshal(t *testing.T) {
 
 	uOfD2 := NewUniverseOfDiscourse()
 	recoveredParent := uOfD2.RecoverElement(result)
-	if !Equivalent(parent, recoveredParent) {
+	if !Equivalent(parent, recoveredParent, hl) {
 		t.Error("Recovered parent not equivalent to original parent")
 	}
 }
 
 func TestLiteralPointerPointerClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewLiteralPointerReference()
-	child := uOfD.NewLiteralPointerPointer()
-	child.SetOwningElement(parent)
-	literalPointer := uOfD.NewValueLiteralPointer()
-	literalPointer.SetOwningElement(parent)
-	child.SetLiteralPointer(literalPointer)
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewLiteralPointerReference(hl)
+	child := uOfD.NewLiteralPointerPointer(hl)
+	SetOwningElement(child, parent, hl)
+	literalPointer := uOfD.NewValueLiteralPointer(hl)
+	SetOwningElement(literalPointer, parent, hl)
+	child.SetLiteralPointer(literalPointer, hl)
 	clone := child.(*literalPointerPointer).clone()
-	if !Equivalent(child, clone) {
+	if !Equivalent(child, clone, hl) {
 		t.Error("LiteralPointerPointer clone failed")
-		Print(child, "   ")
-		Print(clone, "   ")
+		Print(child, "   ", hl)
+		Print(clone, "   ", hl)
 	}
 
 }

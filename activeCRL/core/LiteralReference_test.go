@@ -9,67 +9,75 @@ import (
 
 func TestNewLiteralReference(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	el1 := uOfD.NewLiteralReference()
-	if el1.GetId() == uuid.Nil {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	el1 := uOfD.NewLiteralReference(hl)
+	if el1.GetId(hl) == uuid.Nil {
 		t.Error("Element identifier not properly initialized")
 	}
-	if el1.GetVersion() != 0 {
+	if el1.GetVersion(hl) != 0 {
 		t.Error("Element version not properly initialized")
 	}
-	if el1.getOwnedBaseElements() == nil {
+	if el1.GetOwnedBaseElements(hl) != nil {
 		t.Error("Element ownedBaseElements not properly initialized")
 	}
 }
 
 func TestLiteralReferenceOwnership(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewElement()
-	child := uOfD.NewLiteralReference()
-	child.SetOwningElement(parent)
-	if child.GetOwningElement() != parent {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewElement(hl)
+	child := uOfD.NewLiteralReference(hl)
+	SetOwningElement(child, parent, hl)
+	if child.GetOwningElement(hl) != parent {
 		t.Error("Child's owner not set properly")
 	}
-	if child.getOwningElementPointer() == nil {
+	if child.getOwningElementPointer(hl) == nil {
 		t.Error("Child's owningElementPointer not initialized properly")
 	}
-	if child.getOwningElementPointer().GetOwningElement().GetId() != child.GetId() {
+	if GetOwningElement(child.getOwningElementPointer(hl), hl).GetId(hl) != child.GetId(hl) {
 		t.Error("Child's owningElementPointer.getOwningElement() != child")
 	}
-	if child.getOwningElementPointer().GetElement() != parent {
+	if child.getOwningElementPointer(hl).GetElement(hl) != parent {
 		t.Error("Child's owningElementPointer.getElement() != parent")
 	}
 }
 
 func TestSetReferencedLiteral(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewElement()
-	child := uOfD.NewLiteralReference()
-	child.SetOwningElement(parent)
-	literal := uOfD.NewLiteral()
-	if child.GetReferencedLiteral() != nil {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewElement(hl)
+	child := uOfD.NewLiteralReference(hl)
+	SetOwningElement(child, parent, hl)
+	literal := uOfD.NewLiteral(hl)
+	if child.GetReferencedLiteral(hl) != nil {
 		t.Error("LiteralReference's referenced literal not initialized to nil")
 	}
-	child.SetReferencedLiteral(literal)
-	if child.GetReferencedLiteral() == nil {
+	child.SetReferencedLiteral(literal, hl)
+	if child.GetReferencedLiteral(hl) == nil {
 		t.Error("LiteralReference's referenced literal is nil after assignment")
-		Print(parent, "   ")
+		Print(parent, "   ", hl)
 	}
-	if child.GetReferencedLiteral() != nil && child.GetReferencedLiteral().GetId() != literal.GetId() {
+	if child.GetReferencedLiteral(hl) != nil && child.GetReferencedLiteral(hl).GetId(hl) != literal.GetId(hl) {
 		t.Error("LiteralReference's referenced literal not set properly")
 	}
-	child.SetReferencedLiteral(nil)
-	if child.GetReferencedLiteral() != nil {
+	child.SetReferencedLiteral(nil, hl)
+	if child.GetReferencedLiteral(hl) != nil {
 		t.Error("LiteralReference's referenced literal not nild properly")
 	}
 }
 
 func TestLiteralReferenceMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewElement()
-	child := uOfD.NewLiteralReference()
-	child.SetOwningElement(parent)
-	literal := uOfD.NewLiteral()
-	child.SetReferencedLiteral(literal)
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewElement(hl)
+	child := uOfD.NewLiteralReference(hl)
+	SetOwningElement(child, parent, hl)
+	literal := uOfD.NewLiteral(hl)
+	child.SetReferencedLiteral(literal, hl)
 	//	fmt.Printf("Parent before encoding \n")
 	//	Print(parent, "   ")
 
@@ -85,22 +93,24 @@ func TestLiteralReferenceMarshal(t *testing.T) {
 	if recoveredParent != nil {
 		//		Print(recoveredParent, "")
 	}
-	if !Equivalent(parent, recoveredParent) {
+	if !Equivalent(parent, recoveredParent, hl) {
 		t.Error("Recovered parent not equivalent to original parent")
 	}
 }
 
 func TestLiteralReferenceClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewElement()
-	child := uOfD.NewLiteralReference()
-	child.SetOwningElement(parent)
-	literal := uOfD.NewLiteral()
-	child.SetReferencedLiteral(literal)
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewElement(hl)
+	child := uOfD.NewLiteralReference(hl)
+	SetOwningElement(child, parent, hl)
+	literal := uOfD.NewLiteral(hl)
+	child.SetReferencedLiteral(literal, hl)
 	clone := child.(*literalReference).clone()
-	if !Equivalent(child, clone) {
-		Print(child, "   ")
-		Print(clone, "   ")
+	if !Equivalent(child, clone, hl) {
+		Print(child, "   ", hl)
+		Print(clone, "   ", hl)
 		t.Error("Cloned LiteralReference not equivalent to original")
 	}
 }

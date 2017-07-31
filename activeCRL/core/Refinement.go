@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	//	"log"
 	"reflect"
 )
 
@@ -22,36 +23,29 @@ func (rPtr *refinement) cloneAttributes(source refinement) {
 	rPtr.element.cloneAttributes(source.element)
 }
 
-// childChanged() is used by ownedBaseElements to inform their parents when they have changed. It does no locking.
-func (rPtr *refinement) childChanged(notification *ChangeNotification) {
-	preChange(rPtr)
-	newNotification := NewChangeNotification(rPtr, MODIFY, notification)
-	refinedElement := rPtr.getRefinedElement()
-	if refinedElement != nil {
-		abstractionChanged(refinedElement, newNotification)
+func (rPtr *refinement) GetAbstractElement(hl *HeldLocks) Element {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-	postChange(rPtr, newNotification)
-}
-
-func (rPtr *refinement) GetAbstractElement() Element {
-	rPtr.TraceableLock()
-	defer rPtr.TraceableUnlock()
-	return rPtr.getAbstractElement()
-}
-
-func (rPtr *refinement) getAbstractElement() Element {
-	rep := rPtr.getAbstractElementPointer()
+	hl.LockBaseElement(rPtr)
+	rep := rPtr.getAbstractElementPointer(hl)
 	if rep != nil {
-		return rep.getElement()
+		return rep.GetElement(hl)
 	}
 	return nil
 }
 
-func (rPtr *refinement) getAbstractElementPointer() ElementPointer {
-	for _, be := range rPtr.getOwnedBaseElements() {
+func (rPtr *refinement) getAbstractElementPointer(hl *HeldLocks) ElementPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(rPtr)
+	for _, be := range rPtr.ownedBaseElements {
 		switch be.(type) {
-		case *elementPointer:
-			if be.(*elementPointer).getElementPointerRole() == ABSTRACT_ELEMENT {
+		case ElementPointer:
+			if be.(ElementPointer).GetElementPointerRole(hl) == ABSTRACT_ELEMENT {
 				return be.(ElementPointer)
 			}
 		}
@@ -59,25 +53,29 @@ func (rPtr *refinement) getAbstractElementPointer() ElementPointer {
 	return nil
 }
 
-func (rPtr *refinement) GetRefinedElement() Element {
-	rPtr.TraceableLock()
-	defer rPtr.TraceableUnlock()
-	return rPtr.getRefinedElement()
-}
-
-func (rPtr *refinement) getRefinedElement() Element {
-	rep := rPtr.getRefinedElementPointer()
+func (rPtr *refinement) GetRefinedElement(hl *HeldLocks) Element {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(rPtr)
+	rep := rPtr.getRefinedElementPointer(hl)
 	if rep != nil {
-		return rep.getElement()
+		return rep.GetElement(hl)
 	}
 	return nil
 }
 
-func (rPtr *refinement) getRefinedElementPointer() ElementPointer {
-	for _, be := range rPtr.getOwnedBaseElements() {
+func (rPtr *refinement) getRefinedElementPointer(hl *HeldLocks) ElementPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(rPtr)
+	for _, be := range rPtr.ownedBaseElements {
 		switch be.(type) {
-		case *elementPointer:
-			if be.(*elementPointer).getElementPointerRole() == REFINED_ELEMENT {
+		case ElementPointer:
+			if be.(ElementPointer).GetElementPointerRole(hl) == REFINED_ELEMENT {
 				return be.(ElementPointer)
 			}
 		}
@@ -89,14 +87,17 @@ func (rPtr *refinement) initializeRefinement() {
 	rPtr.initializeElement()
 }
 
-func (bePtr *refinement) isEquivalent(be *refinement) bool {
+func (bePtr *refinement) isEquivalent(be *refinement, hl *HeldLocks) bool {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(bePtr)
 	var elementPtr *element = &bePtr.element
-	return elementPtr.isEquivalent(&be.element)
+	return elementPtr.isEquivalent(&be.element, hl)
 }
 
 func (elPtr *refinement) MarshalJSON() ([]byte, error) {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -109,109 +110,52 @@ func (elPtr *refinement) marshalRefinementFields(buffer *bytes.Buffer) error {
 	return elPtr.element.marshalElementFields(buffer)
 }
 
-func (elPtr *refinement) printRefinement(prefix string) {
-	elPtr.printElement(prefix)
+func (elPtr *refinement) printRefinement(prefix string, hl *HeldLocks) {
+	elPtr.printElement(prefix, hl)
 }
 
 func (el *refinement) recoverRefinementFields(unmarshaledData *map[string]json.RawMessage) error {
 	return el.element.recoverElementFields(unmarshaledData)
 }
 
-func (rPtr *refinement) SetAbstractElement(el Element) {
-	rPtr.TraceableLock()
-	defer rPtr.TraceableUnlock()
-	ep := rPtr.getAbstractElementPointer()
-	if ep != nil {
-		ep.TraceableLock()
-		defer ep.TraceableUnlock()
+func (rPtr *refinement) SetAbstractElement(el Element, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-	if el != nil {
-		el.TraceableLock()
-		defer el.TraceableUnlock()
-	}
-	rPtr.setAbstractElement(el)
-}
-
-func (rPtr *refinement) setAbstractElement(el Element) {
-	if rPtr.getAbstractElement() != el {
-		ep := rPtr.getAbstractElementPointer()
+	hl.LockBaseElement(rPtr)
+	if rPtr.GetAbstractElement(hl) != el {
+		ep := rPtr.getAbstractElementPointer(hl)
 		if ep == nil {
-			ep = rPtr.uOfD.NewAbstractElementPointer()
-			ep.SetOwningElementNoLock(rPtr)
+			ep = rPtr.uOfD.NewAbstractElementPointer(hl)
+			SetOwningElement(ep, rPtr, hl)
 		}
-		ep.setElement(el)
+		ep.SetElement(el, hl)
 	}
 }
 
-func (elPtr *refinement) SetOwningElement(parent Element) {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
-	oldParent := elPtr.getOwningElement()
-	if oldParent == nil && parent == nil {
-		return // Nothing to do
-	} else if oldParent != nil && parent != nil && oldParent.getId() != parent.getId() {
-		return // Nothing to do
+func (rPtr *refinement) SetRefinedElement(el Element, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-	if oldParent != nil {
-		oldParent.TraceableLock()
-		defer oldParent.TraceableUnlock()
-	}
-	if parent != nil {
-		parent.TraceableLock()
-		defer parent.TraceableUnlock()
-	}
-	oep := elPtr.getOwningElementPointer()
-	if oep != nil {
-		oep.TraceableLock()
-		defer oep.TraceableUnlock()
-	}
-	elPtr.SetOwningElementNoLock(parent)
-}
-
-func (elPtr *refinement) SetOwningElementNoLock(parent Element) {
-	oep := elPtr.getOwningElementPointer()
-	if oep == nil {
-		oep = elPtr.uOfD.NewOwningElementPointer()
-		oep.SetOwningElementNoLock(elPtr)
-	}
-	oep.setElement(parent)
-}
-
-func (rPtr *refinement) SetRefinedElement(el Element) {
-	rPtr.TraceableLock()
-	defer rPtr.TraceableUnlock()
-	ep := rPtr.getRefinedElementPointer()
-	if ep != nil {
-		ep.TraceableLock()
-		defer ep.TraceableUnlock()
-	}
-	if el != nil {
-		el.TraceableLock()
-		defer el.TraceableUnlock()
-	}
-	rPtr.setRefinedElement(el)
-
-}
-
-func (rPtr *refinement) setRefinedElement(el Element) {
-	if rPtr.getRefinedElement() != el {
-		ep := rPtr.getRefinedElementPointer()
+	hl.LockBaseElement(rPtr)
+	if rPtr.GetRefinedElement(hl) != el {
+		ep := rPtr.getRefinedElementPointer(hl)
 		if ep == nil {
-			ep = rPtr.uOfD.NewRefinedElementPointer()
-			ep.SetOwningElementNoLock(rPtr)
+			ep = rPtr.uOfD.NewRefinedElementPointer(hl)
+			SetOwningElement(ep, rPtr, hl)
 		}
-		ep.setElement(el)
+		ep.SetElement(el, hl)
 	}
 }
 
 type Refinement interface {
 	Element
-	getAbstractElement() Element
-	GetAbstractElement() Element
-	getAbstractElementPointer() ElementPointer
-	getRefinedElement() Element
-	GetRefinedElement() Element
-	getRefinedElementPointer() ElementPointer
-	SetAbstractElement(Element)
-	SetRefinedElement(Element)
+	GetAbstractElement(*HeldLocks) Element
+	getAbstractElementPointer(*HeldLocks) ElementPointer
+	GetRefinedElement(*HeldLocks) Element
+	getRefinedElementPointer(*HeldLocks) ElementPointer
+	SetAbstractElement(Element, *HeldLocks)
+	SetRefinedElement(Element, *HeldLocks)
 }

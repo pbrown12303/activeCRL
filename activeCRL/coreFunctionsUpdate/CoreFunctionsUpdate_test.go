@@ -7,22 +7,23 @@ import (
 	"testing"
 )
 
-func TestUpdateCoreElement(t *testing.T) {
+func TestUpdateCoreFunctions(t *testing.T) {
 	//	log.Printf("Entering TestUpdateCoreElement")
 	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(false)
 	var emptyCore core.Element
-	core.Print(emptyCore, "")
 
 	//Core
-	recoveredCore := updateRecoveredCoreFunctions(emptyCore, uOfD)
-	if recoveredCore == nil {
+	recoveredCoreFunctions := updateRecoveredCoreFunctions(emptyCore, uOfD, hl)
+	if recoveredCoreFunctions == nil {
 		t.Error("updateRecoveredCore returned empty element")
 	}
-	if recoveredCore.GetUri() != core.CoreConceptSpaceUri {
-		t.Error("Core uri not set")
+	if core.GetUri(recoveredCoreFunctions, hl) != coreFunctions.CoreFunctionsUri {
+		t.Error("CoreFunctions uri not set")
 	}
-	_, ok := recoveredCore.(core.Element)
+	_, ok := recoveredCoreFunctions.(core.Element)
 	if !ok {
 		t.Error("Core is of wrong type")
 	}
@@ -38,7 +39,7 @@ func TestUpdateCoreElement(t *testing.T) {
 	}
 
 	// CreatedElementReference
-	recoveredCreatedElementReference := core.GetChildElementReferenceWithUri(recoveredBaseElement.(core.Element), coreFunctions.CreatedElementReferenceUri)
+	recoveredCreatedElementReference := core.GetChildElementReferenceWithUri(recoveredBaseElement.(core.Element), coreFunctions.CreatedElementReferenceUri, hl)
 	if recoveredCreatedElementReference == nil {
 		t.Error("CreaedElementReference not found")
 	}

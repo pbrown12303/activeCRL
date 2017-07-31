@@ -15,10 +15,12 @@ var serializedCoreFunctions string = `
 
 func main() {
 	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
 	recoveredCoreFunctions := coreFunctions.GetCoreFunctionsConceptSpace(uOfD)
-	core.Print(recoveredCoreFunctions, "---")
-	updatedCoreFunctions := updateRecoveredCoreFunctions(recoveredCoreFunctions, uOfD)
-	core.Print(updatedCoreFunctions, "+++")
+	core.Print(recoveredCoreFunctions, "---", hl)
+	updatedCoreFunctions := updateRecoveredCoreFunctions(recoveredCoreFunctions, uOfD, hl)
+	core.Print(updatedCoreFunctions, "+++", hl)
 	marshaledCoreFunctions, err := updatedCoreFunctions.MarshalJSON()
 	if err == nil {
 		ioutil.WriteFile("CoreFunctions.acrl", marshaledCoreFunctions, os.ModePerm)
@@ -27,30 +29,30 @@ func main() {
 	}
 }
 
-func updateRecoveredCoreFunctions(recoveredCoreFunctions core.Element, uOfD *core.UniverseOfDiscourse) core.Element {
+func updateRecoveredCoreFunctions(recoveredCoreFunctions core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	// Core
 	coreFunctionsElement := recoveredCoreFunctions
 	if coreFunctionsElement == nil {
-		coreFunctionsElement = uOfD.NewElement()
-		coreFunctionsElement.SetName("CoreConceptSpace")
-		coreFunctionsElement.SetUri(core.CoreConceptSpaceUri)
+		coreFunctionsElement = uOfD.NewElement(hl)
+		core.SetName(coreFunctionsElement, "CoreFunctions", hl)
+		core.SetUri(coreFunctionsElement, coreFunctions.CoreFunctionsUri, hl)
 	}
 
 	// CreateElement
 	createElement := uOfD.GetElementWithUri(coreFunctions.CreateElememtUri)
 	if createElement == nil {
-		createElement = uOfD.NewElement()
-		createElement.SetOwningElement(coreFunctionsElement)
-		createElement.SetName("CreateElement")
-		createElement.SetUri(coreFunctions.CreateElememtUri)
+		createElement = uOfD.NewElement(hl)
+		core.SetOwningElement(createElement, coreFunctionsElement, hl)
+		core.SetName(createElement, "CreateElement", hl)
+		core.SetUri(createElement, coreFunctions.CreateElememtUri, hl)
 	}
 	// CreatedElementReference
-	createdElementReference := core.GetChildElementReferenceWithUri(createElement, coreFunctions.CreatedElementReferenceUri)
+	createdElementReference := core.GetChildElementReferenceWithUri(createElement, coreFunctions.CreatedElementReferenceUri, hl)
 	if createdElementReference == nil {
-		createdElementReference = uOfD.NewElementReference()
-		createdElementReference.SetOwningElement(createElement)
-		createdElementReference.SetName("CreatedElementReference")
-		createdElementReference.SetUri(coreFunctions.CreatedElementReferenceUri)
+		createdElementReference = uOfD.NewElementReference(hl)
+		core.SetOwningElement(createdElementReference, createElement, hl)
+		core.SetName(createdElementReference, "CreatedElementReference", hl)
+		core.SetUri(createdElementReference, coreFunctions.CreatedElementReferenceUri, hl)
 	}
 	return coreFunctionsElement
 }

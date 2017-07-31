@@ -2,244 +2,175 @@ package core
 
 import (
 	"errors"
-	"log"
-	"runtime/debug"
-	"sync"
-
 	"github.com/satori/go.uuid"
+	"log"
+	"sync"
 )
-
-type baseElementPointerList *[]BaseElementPointer
-type elementPointerList *[]ElementPointer
-type elementPointerPointerList *[]ElementPointerPointer
-type literalPointerList *[]LiteralPointer
-type literalPointerPointerList *[]LiteralPointerPointer
 
 type UniverseOfDiscourse struct {
 	sync.RWMutex
-	baseElementMap            map[string]BaseElement
-	uriBaseElementMap         map[string]BaseElement
-	baseElementListenerMap    map[string]baseElementPointerList
-	elementListenerMap        map[string]elementPointerList
-	elementPointerListenerMap map[string]elementPointerPointerList
-	literalListenerMap        map[string]literalPointerList
-	literalPointerListenerMap map[string]literalPointerPointerList
-	recordingUndo             bool
-	undoStack                 undoStack
-	redoStack                 undoStack
-	debugUndo                 bool
+	baseElementMap            *StringBaseElementMap
+	baseElementListenerMap    *StringBaseElementPointerListMap
+	elementListenerMap        *StringElementPointerListMap
+	elementPointerListenerMap *StringElementPointerPointerListMap
+	idUriMap                  *StringStringMap
+	literalListenerMap        *StringLiteralPointerListMap
+	literalPointerListenerMap *StringLiteralPointerPointerListMap
+	undoMgr                   *undoManager
+	uriBaseElementMap         *StringBaseElementMap
 }
 
 func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	var uOfD UniverseOfDiscourse
-	uOfD.baseElementMap = make(map[string]BaseElement)
-	uOfD.uriBaseElementMap = make(map[string]BaseElement)
-	uOfD.baseElementListenerMap = make(map[string]baseElementPointerList)
-	uOfD.elementListenerMap = make(map[string]elementPointerList)
-	uOfD.elementPointerListenerMap = make(map[string]elementPointerPointerList)
-	uOfD.literalListenerMap = make(map[string]literalPointerList)
-	uOfD.literalPointerListenerMap = make(map[string]literalPointerPointerList)
-	uOfD.recordingUndo = false
-	uOfD.debugUndo = false
+	uOfD.baseElementMap = NewStringBaseElementMap()
+	uOfD.baseElementListenerMap = NewStringBaseElementPointerListMap()
+	uOfD.elementListenerMap = NewStringElementPointerListMap()
+	uOfD.elementPointerListenerMap = NewStringElementPointerPointerListMap()
+	uOfD.idUriMap = NewStringStringMap()
+	uOfD.literalListenerMap = NewStringLiteralPointerListMap()
+	uOfD.literalPointerListenerMap = NewStringLiteralPointerPointerListMap()
+	uOfD.undoMgr = NewUndoManager()
+	uOfD.uriBaseElementMap = NewStringBaseElementMap()
+	uOfD.GetCoreConceptSpace()
 	return &uOfD
 }
 
-func (uOfDPtr *UniverseOfDiscourse) AddBaseElement(be BaseElement) error {
-	//	log.Printf("Locking UofD\n")
-	uOfDPtr.TraceableLock()
-	defer uOfDPtr.TraceableUnlock()
-	if be != nil {
-		be.TraceableLock()
-		defer be.TraceableUnlock()
-	}
-	return uOfDPtr.addBaseElement(be)
-}
-
-func (uOfDPtr *UniverseOfDiscourse) addBaseElement(be BaseElement) error {
+func (uOfDPtr *UniverseOfDiscourse) AddBaseElement(be BaseElement, hl *HeldLocks) error {
 	if be == nil {
-		return errors.New("UniverseOfDiscource addBaseElement failed because base element was nil")
+		return errors.New("UniverseOfDiscource addBaseElement() failed because base element was nil")
 	}
-	//	log.Printf("Locking %T: %s \n", be, be.getId().String())
-	//	log.Printf("BaseElement: %+v \n", be)
-	//	log.Printf("Got the lock for %T: %s \n", be, be.getId().String())
-	if be.getId() == uuid.Nil {
-		return errors.New("UniverseOfDiscource addBaseElement failed because UUID was nil")
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-	oldUOfD := be.getUniverseOfDiscourse()
-	if oldUOfD != nil {
-		if oldUOfD == uOfDPtr {
-			return nil
-		} else {
-			log.Printf("Locking old UofD\n")
-			oldUOfD.TraceableLock()
-			defer oldUOfD.TraceableUnlock()
-			oldUOfD.removeBaseElement(be)
-		}
+	if be.GetId(hl) == uuid.Nil {
+		return errors.New("UniverseOfDiscource addBaseElement() failed because UUID was nil")
 	}
-	//	log.Printf("Adding be to UofD map")
-	uOfDPtr.baseElementMap[be.getId().String()] = be
-	//	log.Printf("Setting be's uOfD")
-	be.setUniverseOfDiscourse(uOfDPtr)
-	uOfDPtr.markNewBaseElement(be)
+	hl.LockBaseElement(be)
+	be.setUniverseOfDiscourse(uOfDPtr, hl)
+	uOfDPtr.baseElementMap.SetEntry(be.GetId(hl).String(), be)
+	uri := GetUri(be, hl)
+	if uri != "" {
+		uOfDPtr.uriBaseElementMap.SetEntry(uri, be)
+		uOfDPtr.idUriMap.SetEntry(be.GetId(hl).String(), uri)
+	}
+	uOfDPtr.undoMgr.markNewBaseElement(be, hl)
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) addBaseElementForUndo(be BaseElement) {
-	//	log.Printf("Locking UofD\n")
-	uOfDPtr.TraceableLock()
-	defer uOfDPtr.TraceableUnlock()
+func (uOfDPtr *UniverseOfDiscourse) addBaseElementForUndo(be BaseElement, hl *HeldLocks) error {
+	if hl == nil {
+		return errors.New("UniverseOfDiscourse.addBaseElementForUndo() called with nil HeldLocks")
+	}
+	if be == nil {
+		return errors.New("UniverseOfDiscource addBaseElementForUndo() failed because base element was nil")
+	}
 	if be != nil {
-		be.TraceableLock()
-		defer be.TraceableUnlock()
+		hl.LockBaseElement(be)
 	}
-	uOfDPtr.baseElementMap[be.getId().String()] = be
+	//	log.Printf("Adding base element for undo, id: %s\n", be.GetIdNoLock().String())
+	uOfDPtr.baseElementMap.SetEntry(be.GetId(hl).String(), be)
+	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) addBaseElementListener(baseElement BaseElement, baseElementPointer BaseElementPointer) {
+func (uOfDPtr *UniverseOfDiscourse) addBaseElementListener(baseElement BaseElement, baseElementPointer BaseElementPointer, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(baseElement)
 	if baseElement != nil {
-		elementId := baseElement.getId().String()
-		currentList := uOfDPtr.baseElementListenerMap[elementId]
-		if currentList != nil && len(*currentList) > 0 {
-			for i := range *currentList {
-				if (*currentList)[i] == baseElementPointer {
-					// element is already in list
-					return
-				}
-			}
-		}
-		if currentList == nil {
-			var newList [1]BaseElementPointer
-			newList[0] = baseElementPointer
-			newSlice := newList[:]
-			uOfDPtr.baseElementListenerMap[elementId] = &newSlice
-		} else {
-			updatedList := append(*currentList, baseElementPointer)
-			uOfDPtr.baseElementListenerMap[elementId] = &updatedList
-		}
+		elementId := baseElement.GetId(hl).String()
+		uOfDPtr.baseElementListenerMap.AddEntry(elementId, baseElementPointer)
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) addElementListener(element Element, elementPointer ElementPointer) {
+func (uOfDPtr *UniverseOfDiscourse) addElementListener(element Element, elementPointer ElementPointer, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(element)
 	if element != nil {
-		elementId := element.getId().String()
-		currentList := uOfDPtr.elementListenerMap[elementId]
-		if currentList != nil && len(*currentList) > 0 {
-			for i := range *currentList {
-				if (*currentList)[i] == elementPointer {
-					// element is already in list
-					return
-				}
-			}
-		}
-		if currentList == nil {
-			var newList [1]ElementPointer
-			newList[0] = elementPointer
-			newSlice := newList[:]
-			uOfDPtr.elementListenerMap[elementId] = &newSlice
-		} else {
-			updatedList := append(*currentList, elementPointer)
-			uOfDPtr.elementListenerMap[elementId] = &updatedList
-		}
+		elementId := element.GetId(hl).String()
+		uOfDPtr.elementListenerMap.AddEntry(elementId, elementPointer)
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) addElementPointerListener(elementPointer ElementPointer, elementPointerPointer ElementPointerPointer) {
+func (uOfDPtr *UniverseOfDiscourse) addElementPointerListener(elementPointer ElementPointer, elementPointerPointer ElementPointerPointer, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elementPointer)
 	if elementPointer != nil {
-		elementId := elementPointer.getId().String()
-		currentList := uOfDPtr.elementPointerListenerMap[elementId]
-		if currentList != nil && len(*currentList) > 0 {
-			for i := range *currentList {
-				if (*currentList)[i] == elementPointerPointer {
-					// elementPointer is already in list
-					return
-				}
-			}
-		}
-		if currentList == nil {
-			var newList [1]ElementPointerPointer
-			newList[0] = elementPointerPointer
-			newSlice := newList[:]
-			uOfDPtr.elementPointerListenerMap[elementId] = &newSlice
-		} else {
-			updatedList := append(*currentList, elementPointerPointer)
-			uOfDPtr.elementPointerListenerMap[elementId] = &updatedList
-		}
+		elementId := elementPointer.GetId(hl).String()
+		uOfDPtr.elementPointerListenerMap.AddEntry(elementId, elementPointerPointer)
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) addLiteralListener(literal Literal, literalPointer LiteralPointer) {
+func (uOfDPtr *UniverseOfDiscourse) addLiteralListener(literal Literal, literalPointer LiteralPointer, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(literal)
 	if literal != nil {
-		literalId := literal.getId().String()
-		currentList := uOfDPtr.literalListenerMap[literalId]
-		if currentList != nil && len(*currentList) > 0 {
-			for i := range *currentList {
-				if (*currentList)[i] == literalPointer {
-					// literal is already in list
-					return
-				}
-			}
-		}
-		if currentList == nil {
-			var newList [1]LiteralPointer
-			newList[0] = literalPointer
-			newSlice := newList[:]
-			uOfDPtr.literalListenerMap[literalId] = &newSlice
-		} else {
-			updatedList := append(*currentList, literalPointer)
-			uOfDPtr.literalListenerMap[literalId] = &updatedList
-		}
+		literalId := literal.GetId(hl).String()
+		uOfDPtr.literalListenerMap.AddEntry(literalId, literalPointer)
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) addLiteralPointerListener(literalPointer LiteralPointer, literalPointerPointer LiteralPointerPointer) {
+func (uOfDPtr *UniverseOfDiscourse) addLiteralPointerListener(literalPointer LiteralPointer, literalPointerPointer LiteralPointerPointer, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(literalPointer)
 	if literalPointer != nil {
-		literalId := literalPointer.getId().String()
-		currentList := uOfDPtr.literalPointerListenerMap[literalId]
-		if currentList != nil && len(*currentList) > 0 {
-			for i := range *currentList {
-				if (*currentList)[i] == literalPointerPointer {
-					// literalPointer is already in list
-					return
+		literalId := literalPointer.GetId(hl).String()
+		uOfDPtr.literalPointerListenerMap.AddEntry(literalId, literalPointerPointer)
+	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) DeleteBaseElement(be BaseElement, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(be)
+	if be != nil {
+		//		log.Printf("About to delete BaseElement with id: %s\n", be.GetId(hl).String())
+		SetOwningElement(be, nil, hl)
+		uOfDPtr.removeBaseElement(be, hl)
+		switch be.(type) {
+		case Element:
+			epl := uOfDPtr.elementListenerMap.GetElementPointerList(be.GetId(hl).String())
+			if epl != nil {
+				for _, elementPointer := range *epl {
+					elementPointer.SetElement(nil, hl)
+				}
+				for _, child := range be.(Element).GetOwnedBaseElements(hl) {
+					uOfDPtr.DeleteBaseElement(child, hl)
 				}
 			}
-		}
-		if currentList == nil {
-			var newList [1]LiteralPointerPointer
-			newList[0] = literalPointerPointer
-			newSlice := newList[:]
-			uOfDPtr.literalPointerListenerMap[literalId] = &newSlice
-		} else {
-			updatedList := append(*currentList, literalPointerPointer)
-			uOfDPtr.literalPointerListenerMap[literalId] = &updatedList
+		case ElementPointer:
+		case Literal:
+		case LiteralPointer:
 		}
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) getBaseElement(id string) BaseElement {
-	return uOfDPtr.baseElementMap[id]
+func (uOfDPtr *UniverseOfDiscourse) GetBaseElement(id string) BaseElement {
+	return uOfDPtr.baseElementMap.GetEntry(id)
 }
 
 func (uOfDPtr *UniverseOfDiscourse) GetBaseElementWithUri(uri string) BaseElement {
-	uOfDPtr.traceableRLock()
-	defer uOfDPtr.traceableRUnlock()
-	return uOfDPtr.getBaseElementWithUri(uri)
-}
-
-func (uOfDPtr *UniverseOfDiscourse) getBaseElementWithUri(uri string) BaseElement {
-	//	return uOfDPtr.uriBaseElementMap[uri]
-	// For now we just brute force it:
-	for _, be := range uOfDPtr.baseElementMap {
-		if be.GetUriNoLock() == uri {
-			return be
-		}
-	}
-	return nil
+	return uOfDPtr.uriBaseElementMap.GetEntry(uri)
 }
 
 func (uOfDPtr *UniverseOfDiscourse) GetCoreConceptSpace() Element {
-	uOfDPtr.traceableRLock()
-	defer uOfDPtr.traceableRUnlock()
-	coreConceptSpace := uOfDPtr.getElementWithUri(CoreConceptSpaceUri)
+	coreConceptSpace := uOfDPtr.GetElementWithUri(CoreConceptSpaceUri)
 	if coreConceptSpace == nil {
 		coreConceptSpace = uOfDPtr.RecoverElement([]byte(serializedCore))
 	}
@@ -247,567 +178,460 @@ func (uOfDPtr *UniverseOfDiscourse) GetCoreConceptSpace() Element {
 }
 
 func (uOfDPtr *UniverseOfDiscourse) GetElement(id string) Element {
-	uOfDPtr.traceableRLock()
-	defer uOfDPtr.traceableRUnlock()
-	return uOfDPtr.getElement(id)
-}
-
-func (uOfDPtr *UniverseOfDiscourse) getElement(id string) Element {
-	be := uOfDPtr.baseElementMap[id]
+	// No locking required
+	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
-	case *element:
+	case Element:
 		return be.(Element)
 	}
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) getElementPointer(id string) ElementPointer {
-	be := uOfDPtr.baseElementMap[id]
+func (uOfDPtr *UniverseOfDiscourse) GetElementPointer(id string) ElementPointer {
+	// No locking required
+	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
-	case *elementPointer:
+	case ElementPointer:
 		return be.(ElementPointer)
 	}
 	return nil
 }
 
 func (uOfDPtr *UniverseOfDiscourse) GetElementWithUri(uri string) Element {
-	uOfDPtr.traceableRLock()
-	defer uOfDPtr.traceableRUnlock()
-	return uOfDPtr.getElementWithUri(uri)
-}
-
-func (uOfDPtr *UniverseOfDiscourse) getElementWithUri(uri string) Element {
-	//	return uOfDPtr.uriBaseElementMap[uri]
-	// For now we just brute force it:
-	for _, be := range uOfDPtr.baseElementMap {
-		if be.GetUriNoLock() == uri {
-			switch be.(type) {
-			case Element:
-				return be.(Element)
-			default:
-				return nil
-			}
-		}
+	be := uOfDPtr.GetBaseElementWithUri(uri)
+	switch be.(type) {
+	case Element:
+		return be.(Element)
 	}
 	return nil
 }
 
 func (uOfDPtr *UniverseOfDiscourse) GetElementReferenceWithUri(uri string) ElementReference {
-	uOfDPtr.traceableRLock()
-	defer uOfDPtr.traceableRUnlock()
-	return uOfDPtr.getElementReferenceWithUri(uri)
-}
-
-func (uOfDPtr *UniverseOfDiscourse) getElementReferenceWithUri(uri string) ElementReference {
-	//	return uOfDPtr.uriBaseElementMap[uri]
-	// For now we just brute force it:
-	for _, be := range uOfDPtr.baseElementMap {
-		if be.GetUriNoLock() == uri {
-			switch be.(type) {
-			case ElementReference:
-				return be.(ElementReference)
-			default:
-				return nil
-			}
-		}
+	be := uOfDPtr.GetBaseElementWithUri(uri)
+	switch be.(type) {
+	case ElementReference:
+		return be.(ElementReference)
 	}
 	return nil
 }
 
 func (uOfDPtr *UniverseOfDiscourse) getLiteral(id string) Literal {
-	be := uOfDPtr.baseElementMap[id]
+	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
-	case *literal:
+	case Literal:
 		return be.(Literal)
 	}
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) getLiteralPointer(id string) LiteralPointer {
-	be := uOfDPtr.baseElementMap[id]
+func (uOfDPtr *UniverseOfDiscourse) GetLiteralPointer(id string) LiteralPointer {
+	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
-	case *literalPointer:
+	case LiteralPointer:
 		return be.(LiteralPointer)
 	}
 	return nil
 }
 
 func (uOfDPtr *UniverseOfDiscourse) getRefinement(id string) Refinement {
-	be := uOfDPtr.baseElementMap[id]
+	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
-	case *refinement:
+	case Refinement:
 		return be.(Refinement)
 	}
 	return nil
 }
 
-// markChangedBaseElement() If undo is enabled, updates the undo stack.
-// This function locks the UniverseOfDiscourse
-func (uOfDPtr *UniverseOfDiscourse) markChangedBaseElement(changedElement BaseElement) {
-	uOfDPtr.TraceableLock()
-	defer uOfDPtr.TraceableUnlock()
-	if uOfDPtr.debugUndo == true {
-		debug.PrintStack()
-	}
-	clone := clone(changedElement)
-	if uOfDPtr.recordingUndo {
-		uOfDPtr.undoStack.Push(NewUndoRedoStackEntry(Change, clone, changedElement))
-	}
-}
-
-// markNewBaseElement() If undo is enabled, updates the undo stack.
-// This function does not lock the UniverseOfDiscourse - the caller is expected to manage the locking
-func (uOfDPtr *UniverseOfDiscourse) markNewBaseElement(be BaseElement) {
-	if uOfDPtr.debugUndo == true {
-		debug.PrintStack()
-	}
-	clone := clone(be)
-	if uOfDPtr.recordingUndo {
-		uOfDPtr.undoStack.Push(NewUndoRedoStackEntry(Creation, clone, be))
-	}
-}
-
-// markNewBaseElement() If undo is enabled, updates the undo stack.
-// This function does not lock the UniverseOfDiscourse - the caller is expected to manage the locking
-func (uOfDPtr *UniverseOfDiscourse) markRemovedBaseElement(be BaseElement) {
-	// Caller is expected to manage locking
-	if uOfDPtr.debugUndo == true {
-		debug.PrintStack()
-	}
-	clone := clone(be)
-	if uOfDPtr.recordingUndo {
-		uOfDPtr.undoStack.Push(NewUndoRedoStackEntry(Deletion, clone, be))
-	}
-}
-
-// markUndoPoint() If undo is enabled, puts a marker on the undo stack.
-// This function locks the UniverseOfDiscourse
-func (uOfDPtr *UniverseOfDiscourse) markUndoPoint() {
-	uOfDPtr.TraceableLock()
-	defer uOfDPtr.TraceableUnlock()
-	if uOfDPtr.recordingUndo {
-		uOfDPtr.undoStack.Push(NewUndoRedoStackEntry(Marker, nil, nil))
-	}
+func (uOfDPtr *UniverseOfDiscourse) MarkUndoPoint() {
+	uOfDPtr.undoMgr.MarkUndoPoint()
 }
 
 // NewElement() creates an initialized Element. No locking is required since the existence of
 // the element is unknown outside this routine
-func (uOfD *UniverseOfDiscourse) NewElement() Element {
+func (uOfD *UniverseOfDiscourse) NewElement(hl *HeldLocks) Element {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var el element
 	el.initializeElement()
-	uOfD.AddBaseElement(&el)
+	uOfD.AddBaseElement(&el, hl)
 	return &el
 }
 
 // NewAbstractElementPointer() creates and intitializes an elementPointer to play the role of an AbstractElementPointer
-func (uOfD *UniverseOfDiscourse) NewAbstractElementPointer() ElementPointer {
+func (uOfD *UniverseOfDiscourse) NewAbstractElementPointer(hl *HeldLocks) ElementPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var ep elementPointer
 	ep.initializeElementPointer()
 	ep.elementPointerRole = ABSTRACT_ELEMENT
-	uOfD.AddBaseElement(&ep)
+	uOfD.AddBaseElement(&ep, hl)
 	return &ep
 }
 
 // NewBaseElementPointer() creates and intitializes an elementPointer to play the role of an AbstractElementPointer
-func (uOfD *UniverseOfDiscourse) NewBaseElementPointer() BaseElementPointer {
+func (uOfD *UniverseOfDiscourse) NewBaseElementPointer(hl *HeldLocks) BaseElementPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var ep baseElementPointer
 	ep.initializeBaseElementPointer()
-	uOfD.AddBaseElement(&ep)
+	uOfD.AddBaseElement(&ep, hl)
 	return &ep
 }
 
-func (uOfD *UniverseOfDiscourse) NewBaseElementReference() BaseElementReference {
+func (uOfD *UniverseOfDiscourse) NewBaseElementReference(hl *HeldLocks) BaseElementReference {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var el baseElementReference
 	el.initializeBaseElementReference()
-	uOfD.AddBaseElement(&el)
+	uOfD.AddBaseElement(&el, hl)
 	return &el
 }
 
 // NewRefinedElementPointer() creates and intitializes an elementPointer to play the role of an RefinedElementPointer
-func (uOfD *UniverseOfDiscourse) NewRefinedElementPointer() ElementPointer {
+func (uOfD *UniverseOfDiscourse) NewRefinedElementPointer(hl *HeldLocks) ElementPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var ep elementPointer
 	ep.initializeElementPointer()
 	ep.elementPointerRole = REFINED_ELEMENT
-	uOfD.AddBaseElement(&ep)
+	uOfD.AddBaseElement(&ep, hl)
 	return &ep
 }
 
 // NewOwningElementPointer() creates and intitializes an elementPointer to play the role of an OwningElementPointer
-func (uOfD *UniverseOfDiscourse) NewOwningElementPointer() ElementPointer {
+func (uOfD *UniverseOfDiscourse) NewOwningElementPointer(hl *HeldLocks) ElementPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var ep elementPointer
 	ep.initializeElementPointer()
 	ep.elementPointerRole = OWNING_ELEMENT
-	uOfD.AddBaseElement(&ep)
+	uOfD.AddBaseElement(&ep, hl)
 	return &ep
 }
 
 // NewReferencedElementPointer() creates and intitializes an elementPointer to play the role of an ReferencedElementPointer
-func (uOfD *UniverseOfDiscourse) NewReferencedElementPointer() ElementPointer {
+func (uOfD *UniverseOfDiscourse) NewReferencedElementPointer(hl *HeldLocks) ElementPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var ep elementPointer
 	ep.initializeElementPointer()
 	ep.elementPointerRole = REFERENCED_ELEMENT
-	uOfD.AddBaseElement(&ep)
+	uOfD.AddBaseElement(&ep, hl)
 	return &ep
 }
 
-func (uOfD *UniverseOfDiscourse) NewElementPointerPointer() ElementPointerPointer {
+func (uOfD *UniverseOfDiscourse) NewElementPointerPointer(hl *HeldLocks) ElementPointerPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var ep elementPointerPointer
 	ep.initializeElementPointerPointer()
-	uOfD.AddBaseElement(&ep)
+	uOfD.AddBaseElement(&ep, hl)
 	return &ep
 }
 
-func (uOfD *UniverseOfDiscourse) NewElementPointerReference() ElementPointerReference {
+func (uOfD *UniverseOfDiscourse) NewElementPointerReference(hl *HeldLocks) ElementPointerReference {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var el elementPointerReference
 	el.initializeElementPointerReference()
-	uOfD.AddBaseElement(&el)
+	uOfD.AddBaseElement(&el, hl)
 	return &el
 }
 
-func (uOfD *UniverseOfDiscourse) NewElementReference() ElementReference {
+func (uOfD *UniverseOfDiscourse) NewElementReference(hl *HeldLocks) ElementReference {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var el elementReference
 	el.initializeElementReference()
-	uOfD.AddBaseElement(&el)
+	uOfD.AddBaseElement(&el, hl)
 	return &el
 }
 
-func (uOfD *UniverseOfDiscourse) NewLiteral() Literal {
+func (uOfD *UniverseOfDiscourse) NewLiteral(hl *HeldLocks) Literal {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var lit literal
 	lit.initializeLiteral()
-	uOfD.AddBaseElement(&lit)
+	uOfD.AddBaseElement(&lit, hl)
 	return &lit
 }
 
-func (uOfD *UniverseOfDiscourse) NewNameLiteralPointer() LiteralPointer {
+func (uOfD *UniverseOfDiscourse) NewNameLiteralPointer(hl *HeldLocks) LiteralPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var lp literalPointer
 	lp.initializeLiteralPointer()
 	lp.literalPointerRole = NAME
-	uOfD.AddBaseElement(&lp)
+	uOfD.AddBaseElement(&lp, hl)
 	return &lp
 }
 
-func (uOfD *UniverseOfDiscourse) NewDefinitionLiteralPointer() LiteralPointer {
+func (uOfD *UniverseOfDiscourse) NewDefinitionLiteralPointer(hl *HeldLocks) LiteralPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var lp literalPointer
 	lp.initializeLiteralPointer()
 	lp.literalPointerRole = DEFINITION
-	uOfD.AddBaseElement(&lp)
+	uOfD.AddBaseElement(&lp, hl)
 	return &lp
 }
 
-func (uOfD *UniverseOfDiscourse) NewUriLiteralPointer() LiteralPointer {
+func (uOfD *UniverseOfDiscourse) NewUriLiteralPointer(hl *HeldLocks) LiteralPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var lp literalPointer
 	lp.initializeLiteralPointer()
 	lp.literalPointerRole = URI
-	uOfD.AddBaseElement(&lp)
+	uOfD.AddBaseElement(&lp, hl)
 	return &lp
 }
 
-func (uOfD *UniverseOfDiscourse) NewValueLiteralPointer() LiteralPointer {
+func (uOfD *UniverseOfDiscourse) NewValueLiteralPointer(hl *HeldLocks) LiteralPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var lp literalPointer
 	lp.initializeLiteralPointer()
 	lp.literalPointerRole = VALUE
-	uOfD.AddBaseElement(&lp)
+	uOfD.AddBaseElement(&lp, hl)
 	return &lp
 }
 
-func (uOfD *UniverseOfDiscourse) NewLiteralPointerPointer() LiteralPointerPointer {
+func (uOfD *UniverseOfDiscourse) NewLiteralPointerPointer(hl *HeldLocks) LiteralPointerPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var ep literalPointerPointer
 	ep.initializeLiteralPointerPointer()
-	uOfD.AddBaseElement(&ep)
+	uOfD.AddBaseElement(&ep, hl)
 	return &ep
 }
 
-func (uOfD *UniverseOfDiscourse) NewLiteralPointerReference() LiteralPointerReference {
+func (uOfD *UniverseOfDiscourse) NewLiteralPointerReference(hl *HeldLocks) LiteralPointerReference {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var el literalPointerReference
 	el.initializeLiteralPointerReference()
-	uOfD.AddBaseElement(&el)
+	uOfD.AddBaseElement(&el, hl)
 	return &el
 }
 
-func (uOfD *UniverseOfDiscourse) NewLiteralReference() LiteralReference {
+func (uOfD *UniverseOfDiscourse) NewLiteralReference(hl *HeldLocks) LiteralReference {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var el literalReference
 	el.initializeLiteralReference()
-	uOfD.AddBaseElement(&el)
+	uOfD.AddBaseElement(&el, hl)
 	return &el
 }
 
-func (uOfD *UniverseOfDiscourse) NewRefinement() Refinement {
+func (uOfD *UniverseOfDiscourse) NewRefinement(hl *HeldLocks) Refinement {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	var el refinement
 	el.initializeRefinement()
-	uOfD.AddBaseElement(&el)
+	uOfD.AddBaseElement(&el, hl)
 	return &el
 }
 
-func (uOfDPtr *UniverseOfDiscourse) notifyElementListeners(notification *ChangeNotification) {
+func (uOfDPtr *UniverseOfDiscourse) notifyElementListeners(notification *ChangeNotification, hl *HeldLocks) error {
+	if hl == nil {
+		return errors.New("UniverseOfDiscourse.notifyElementListeners() called with nil HeldLocks")
+	}
 	switch notification.changedObject.(type) {
 	case Element:
-		id := notification.changedObject.getId().String()
-		epl := uOfDPtr.elementListenerMap[id]
+		id := notification.changedObject.GetId(hl).String()
+		epl := uOfDPtr.elementListenerMap.GetElementPointerList(id)
 		if epl != nil {
 			for _, elementPointer := range *epl {
 				// Must suppress circular notifications
 				if notification.isReferenced(elementPointer) == false {
 					newNotification := NewChangeNotification(elementPointer, MODIFY, notification)
-					propagateChange(elementPointer, newNotification)
+					propagateChange(elementPointer, newNotification, hl)
 				}
 			}
 		}
 	}
+	return nil
 }
 
 func (uOfD *UniverseOfDiscourse) RecoverElement(data []byte) Element {
-	uOfD.TraceableLock()
-	defer uOfD.TraceableUnlock()
-	return uOfD.recoverElement(data)
-}
-
-func (uOfD *UniverseOfDiscourse) recoverElement(data []byte) Element {
 	if len(data) == 0 {
 		return nil
 	}
 	var recoveredElement BaseElement
 	err := unmarshalPolymorphicBaseElement(data, &recoveredElement)
-	//	fmt.Printf("Recovered Element: \n")
-	//	Print(recoveredElement, "   ")
 	if err != nil {
 		log.Printf("Error recovering Element: %s \n", err)
 		return nil
 	}
-	uOfD.setUniverseOfDiscourseRecursively(recoveredElement)
-	restoreValueOwningElementFieldsRecursively(recoveredElement.(Element))
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	uOfD.SetUniverseOfDiscourseRecursively(recoveredElement, hl)
+	restoreValueOwningElementFieldsRecursively(recoveredElement.(Element), hl)
+	uOfD.restoreUriIndexRecursively(recoveredElement, hl)
 	return recoveredElement.(Element)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) redo() {
-	for len(uOfDPtr.redoStack) > 0 {
-		currentEntry := uOfDPtr.redoStack.Pop()
-		if currentEntry.changeType == Marker {
-			uOfDPtr.undoStack.Push(currentEntry)
-			return
-		} else if currentEntry.changeType == Creation {
-			uOfDPtr.undoStack.Push(currentEntry)
-			uOfDPtr.restoreState(currentEntry.priorState, currentEntry.changedElement)
-			// this was a new element
-			uOfDPtr.addBaseElementForUndo(currentEntry.changedElement)
-		} else if currentEntry.changeType == Deletion {
-			uOfDPtr.undoStack.Push(currentEntry)
-			uOfDPtr.restoreState(currentEntry.priorState, currentEntry.changedElement)
-			// this was an deleted element
-			uOfDPtr.removeBaseElementForUndo(currentEntry.changedElement)
-		} else {
-			clone := clone(currentEntry.changedElement)
-			undoEntry := NewUndoRedoStackEntry(Change, clone, currentEntry.changedElement)
-			uOfDPtr.restoreState(currentEntry.priorState, currentEntry.changedElement)
-			uOfDPtr.undoStack.Push(undoEntry)
-		}
+func (uOfDPtr *UniverseOfDiscourse) Redo(hl *HeldLocks) {
+	if hl == nil {
+		hl := NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
+	uOfDPtr.undoMgr.redo(uOfDPtr, hl)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) RemoveBaseElement(be BaseElement) error {
-	//	log.Printf("Locking UofD\n")
-	uOfDPtr.TraceableLock()
-	defer uOfDPtr.TraceableUnlock()
-	if be != nil {
-		be.TraceableLock()
-		defer be.TraceableUnlock()
+func (uOfDPtr *UniverseOfDiscourse) removeBaseElement(be BaseElement, hl *HeldLocks) error {
+	if hl == nil {
+		return errors.New("UniverseOfDiscourse.removeBaseElement called with nil HeldLocks")
 	}
-	return uOfDPtr.removeBaseElement(be)
-}
-
-func (uOfDPtr *UniverseOfDiscourse) removeBaseElement(be BaseElement) error {
 	if be == nil {
 		return errors.New("UniverseOfDiscource removeBaseElement failed because base element was nil")
 	}
-	delete(uOfDPtr.baseElementMap, be.getId().String())
-	uOfDPtr.markRemovedBaseElement(be)
+	hl.LockBaseElement(be)
+	uOfDPtr.baseElementMap.DeleteEntry(be.GetId(hl).String())
+	url := GetUri(be, hl)
+	if url != "" {
+		uOfDPtr.uriBaseElementMap.DeleteEntry(url)
+		uOfDPtr.idUriMap.DeleteEntry(be.GetId(hl).String())
+	}
+	uOfDPtr.undoMgr.markRemovedBaseElement(be, hl)
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeBaseElementForUndo(be BaseElement) {
-	//	log.Printf("Locking UofD\n")
-	uOfDPtr.TraceableLock()
-	defer uOfDPtr.TraceableUnlock()
+func (uOfDPtr *UniverseOfDiscourse) removeBaseElementForUndo(be BaseElement, hl *HeldLocks) {
 	if be != nil {
-		be.TraceableLock()
-		defer be.TraceableUnlock()
+		hl.LockBaseElement(be)
+		//	log.Printf("Removing base element for undo, id: %s\n", be.GetIdNoLock().String())
+		uOfDPtr.baseElementMap.DeleteEntry(be.GetId(hl).String())
 	}
-	delete(uOfDPtr.baseElementMap, be.getId().String())
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeBaseElementListener(baseElement BaseElement, baseElementPointer BaseElementPointer) {
+func (uOfDPtr *UniverseOfDiscourse) removeBaseElementListener(baseElement BaseElement, baseElementPointer BaseElementPointer, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	if baseElement != nil {
-		elementId := baseElement.getId().String()
-		currentList := uOfDPtr.baseElementListenerMap[elementId]
-		if currentList != nil && len(*currentList) > 0 {
-			for i := range *currentList {
-				if (*currentList)[i] == baseElementPointer {
-					copy((*currentList)[i:], (*currentList)[i+1:])
-					updatedList := (*currentList)[:len(*currentList)-1]
-					uOfDPtr.baseElementListenerMap[elementId] = &updatedList
-					return
-				}
-			}
-		}
+		elementId := baseElement.GetId(hl).String()
+		uOfDPtr.baseElementListenerMap.RemoveEntry(elementId, baseElementPointer)
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeElementListener(element Element, elementPointer ElementPointer) {
+func (uOfDPtr *UniverseOfDiscourse) removeElementListener(element Element, elementPointer ElementPointer, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	if element != nil {
-		elementId := element.getId().String()
-		currentList := uOfDPtr.elementListenerMap[elementId]
-		if currentList != nil && len(*currentList) > 0 {
-			for i := range *currentList {
-				if (*currentList)[i] == elementPointer {
-					copy((*currentList)[i:], (*currentList)[i+1:])
-					updatedList := (*currentList)[:len(*currentList)-1]
-					uOfDPtr.elementListenerMap[elementId] = &updatedList
-					return
-				}
-			}
-		}
+		elementId := element.GetId(hl).String()
+		uOfDPtr.elementListenerMap.RemoveEntry(elementId, elementPointer)
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeElementPointerListener(elementPointer ElementPointer, elementPointerPointer ElementPointerPointer) {
+func (uOfDPtr *UniverseOfDiscourse) removeElementPointerListener(elementPointer ElementPointer, elementPointerPointer ElementPointerPointer, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	if elementPointer != nil {
-		elementId := elementPointer.getId().String()
-		currentList := uOfDPtr.elementPointerListenerMap[elementId]
-		if currentList != nil && len(*currentList) > 0 {
-			for i := range *currentList {
-				if (*currentList)[i] == elementPointerPointer {
-					copy((*currentList)[i:], (*currentList)[i+1:])
-					updatedList := (*currentList)[:len(*currentList)-1]
-					uOfDPtr.elementPointerListenerMap[elementId] = &updatedList
-					return
-				}
-			}
-		}
+		elementId := elementPointer.GetId(hl).String()
+		uOfDPtr.elementPointerListenerMap.RemoveEntry(elementId, elementPointerPointer)
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeLiteralListener(literal Literal, literalPointer LiteralPointer) {
+func (uOfDPtr *UniverseOfDiscourse) removeLiteralListener(literal Literal, literalPointer LiteralPointer, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	if literal != nil {
-		literalId := literal.getId().String()
-		currentList := uOfDPtr.literalListenerMap[literalId]
-		if currentList != nil && len(*currentList) > 0 {
-			for i := range *currentList {
-				if (*currentList)[i] == literalPointer {
-					copy((*currentList)[i:], (*currentList)[i+1:])
-					updatedList := (*currentList)[:len(*currentList)-1]
-					uOfDPtr.literalListenerMap[literalId] = &updatedList
-					return
-				}
-			}
-		}
+		literalId := literal.GetId(hl).String()
+		uOfDPtr.literalListenerMap.RemoveEntry(literalId, literalPointer)
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeLiteralPointerListener(literalPointer LiteralPointer, literalPointerPointer LiteralPointerPointer) {
+func (uOfDPtr *UniverseOfDiscourse) removeLiteralPointerListener(literalPointer LiteralPointer, literalPointerPointer LiteralPointerPointer, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	if literalPointer != nil {
-		elementId := literalPointer.getId().String()
-		currentList := uOfDPtr.literalPointerListenerMap[elementId]
-		if currentList != nil && len(*currentList) > 0 {
-			for i := range *currentList {
-				if (*currentList)[i] == literalPointerPointer {
-					copy((*currentList)[i:], (*currentList)[i+1:])
-					updatedList := (*currentList)[:len(*currentList)-1]
-					uOfDPtr.literalPointerListenerMap[elementId] = &updatedList
-					return
-				}
-			}
-		}
+		elementId := literalPointer.GetId(hl).String()
+		uOfDPtr.literalPointerListenerMap.RemoveEntry(elementId, literalPointerPointer)
 	}
 }
 
-// restoreState is used as part of the undo process. It changes the currentState object
-// to have the priorState.
-func (uOfDPtr *UniverseOfDiscourse) restoreState(priorState BaseElement, currentState BaseElement) {
-	if uOfDPtr.debugUndo == true {
-		log.Printf("Restoring State")
-		log.Printf("   Current state:")
-		Print(currentState, "      ")
-		log.Printf("   Prior state")
-		Print(priorState, "      ")
+func (uOfDPtr *UniverseOfDiscourse) restoreUriIndexRecursively(be BaseElement, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-	switch currentState.(type) {
-	case *element:
-		currentState.(*element).cloneAttributes(*priorState.(*element))
-	case *elementPointer:
-		currentState.(*elementPointer).cloneAttributes(*priorState.(*elementPointer))
-	case *elementPointerPointer:
-		currentState.(*elementPointerPointer).cloneAttributes(*priorState.(*elementPointerPointer))
-	case *elementPointerReference:
-		currentState.(*elementPointerReference).cloneAttributes(*priorState.(*elementPointerReference))
-	case *elementReference:
-		currentState.(*elementReference).cloneAttributes(*priorState.(*elementReference))
-	case *literal:
-		currentState.(*literal).cloneAttributes(*priorState.(*literal))
-	case *literalPointer:
-		currentState.(*literalPointer).cloneAttributes(*priorState.(*literalPointer))
-	case *literalPointerPointer:
-		currentState.(*literalPointerPointer).cloneAttributes(*priorState.(*literalPointerPointer))
-	case *literalPointerReference:
-		currentState.(*literalPointerReference).cloneAttributes(*priorState.(*literalPointerReference))
-	case *literalReference:
-		currentState.(*literalReference).cloneAttributes(*priorState.(*literalReference))
-	case *refinement:
-		currentState.(*refinement).cloneAttributes(*priorState.(*refinement))
-	default:
-		log.Printf("restoreState called with unhandled type %T\n", currentState)
+	uri := GetUri(be, hl)
+	if uri != "" {
+		uOfDPtr.uriBaseElementMap.SetEntry(uri, be)
+		uOfDPtr.idUriMap.SetEntry(be.GetId(hl).String(), uri)
+	}
+
+	switch be.(type) {
+	case Element:
+		for _, child := range be.(Element).GetOwnedBaseElements(hl) {
+			uOfDPtr.restoreUriIndexRecursively(child, hl)
+		}
 	}
 }
 
 func (uOfDPtr *UniverseOfDiscourse) SetRecordingUndo(newSetting bool) {
-	uOfDPtr.TraceableLock()
-	defer uOfDPtr.TraceableUnlock()
-	uOfDPtr.setRecordingUndo(newSetting)
+	uOfDPtr.undoMgr.setRecordingUndo(newSetting)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) setRecordingUndo(newSetting bool) {
-	uOfDPtr.recordingUndo = newSetting
-}
-
-func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourseRecursively(be BaseElement) {
-	uOfDPtr.TraceableLock()
-	defer uOfDPtr.TraceableUnlock()
-	uOfDPtr.setUniverseOfDiscourseRecursively(be)
-}
-
-func (uOfDPtr *UniverseOfDiscourse) setUniverseOfDiscourseRecursively(be BaseElement) {
-	uOfDPtr.addBaseElement(be)
+func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourseRecursively(be BaseElement, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	uOfDPtr.AddBaseElement(be, hl)
 	switch be.(type) {
-	case *baseElementReference:
-		for _, child := range be.(*baseElementReference).ownedBaseElements {
-			uOfDPtr.setUniverseOfDiscourseRecursively(child)
+	case Element:
+		for _, child := range be.(Element).GetOwnedBaseElements(hl) {
+			uOfDPtr.SetUniverseOfDiscourseRecursively(child, hl)
 		}
-	case *element:
-		for _, child := range be.(*element).ownedBaseElements {
-			uOfDPtr.setUniverseOfDiscourseRecursively(child)
-		}
-	case *elementPointerReference:
-		for _, child := range be.(*elementPointerReference).ownedBaseElements {
-			uOfDPtr.setUniverseOfDiscourseRecursively(child)
-		}
-	case *elementReference:
-		for _, child := range be.(*elementReference).ownedBaseElements {
-			uOfDPtr.setUniverseOfDiscourseRecursively(child)
-		}
-	case *literalPointerReference:
-		for _, child := range be.(*literalPointerReference).ownedBaseElements {
-			uOfDPtr.setUniverseOfDiscourseRecursively(child)
-		}
-	case *literalReference:
-		for _, child := range be.(*literalReference).ownedBaseElements {
-			uOfDPtr.setUniverseOfDiscourseRecursively(child)
-		}
-	case *refinement:
-		for _, child := range be.(*refinement).ownedBaseElements {
-			uOfDPtr.setUniverseOfDiscourseRecursively(child)
-		}
-	case *baseElementPointer, *elementPointer, *elementPointerPointer, *literal, *literalPointer, *literalPointerPointer:
-	// Do nothing
-	default:
-		log.Printf("UniverseOfDiscourse.setUniverseOfDiscourseRecursively is missing case for %T\n", be)
 	}
 }
 
@@ -818,13 +642,6 @@ func (uOfDPtr *UniverseOfDiscourse) TraceableLock() {
 	uOfDPtr.Lock()
 }
 
-func (uOfDPtr *UniverseOfDiscourse) traceableRLock() {
-	if TraceLocks {
-		log.Printf("About to lock Universe of Discourse %p\n", uOfDPtr)
-	}
-	uOfDPtr.RLock()
-}
-
 func (uOfDPtr *UniverseOfDiscourse) TraceableUnlock() {
 	if TraceLocks {
 		log.Printf("About to unlock Universe of Discourse %p\n", uOfDPtr)
@@ -832,38 +649,10 @@ func (uOfDPtr *UniverseOfDiscourse) TraceableUnlock() {
 	uOfDPtr.Unlock()
 }
 
-func (uOfDPtr *UniverseOfDiscourse) traceableRUnlock() {
-	if TraceLocks {
-		log.Printf("About to unlock Universe of Discourse %p\n", uOfDPtr)
+func (uOfDPtr *UniverseOfDiscourse) Undo(hl *HeldLocks) {
+	if hl == nil {
+		hl := NewHeldLocks()
+		hl.ReleaseLocks()
 	}
-	uOfDPtr.RUnlock()
-}
-
-func (uOfDPtr *UniverseOfDiscourse) undo() {
-	firstEntry := true
-	for len(uOfDPtr.undoStack) > 0 {
-		currentEntry := uOfDPtr.undoStack.Pop()
-		if currentEntry.changeType == Marker {
-			if firstEntry {
-				uOfDPtr.redoStack.Push(currentEntry)
-			} else {
-				// Put it back on the undo stack
-				uOfDPtr.undoStack.Push(currentEntry)
-				return
-			}
-		} else if currentEntry.changeType == Creation {
-			uOfDPtr.redoStack.Push(currentEntry)
-			uOfDPtr.removeBaseElementForUndo(currentEntry.changedElement)
-		} else if currentEntry.changeType == Deletion {
-			uOfDPtr.restoreState(currentEntry.priorState, currentEntry.changedElement)
-			uOfDPtr.redoStack.Push(currentEntry)
-			uOfDPtr.addBaseElementForUndo(currentEntry.changedElement)
-		} else if currentEntry.changeType == Change {
-			clone := clone(currentEntry.changedElement)
-			redoEntry := NewUndoRedoStackEntry(Change, clone, currentEntry.changedElement)
-			uOfDPtr.restoreState(currentEntry.priorState, currentEntry.changedElement)
-			uOfDPtr.redoStack.Push(redoEntry)
-		}
-		firstEntry = false
-	}
+	uOfDPtr.undoMgr.undo(uOfDPtr, hl)
 }

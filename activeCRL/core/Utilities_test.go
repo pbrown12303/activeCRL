@@ -6,37 +6,71 @@ import (
 
 func TestEquivalence(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewElement()
-	child := uOfD.NewElement()
-	child.SetOwningElement(parent)
-	if Equivalent(parent, parent) != true {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewElement(hl)
+	child := uOfD.NewElement(hl)
+	SetOwningElement(child, parent, hl)
+	if Equivalent(parent, parent, hl) != true {
 		t.Errorf("Equivalence test failed")
 	}
 }
 
-func TestGetChildWithAncestorUri(t *testing.T) {
+func TestGetChildElementWithAncestorUri(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewElement()
-	child := uOfD.NewElement()
-	child.SetOwningElement(parent)
-	ancestor := uOfD.NewElement()
-	refinement := uOfD.NewRefinement()
-	refinement.SetAbstractElement(ancestor)
-	refinement.SetRefinedElement(child)
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewElement(hl)
+	child := uOfD.NewElement(hl)
+	SetOwningElement(child, parent, hl)
+	ancestor := uOfD.NewElement(hl)
+	refinement := uOfD.NewRefinement(hl)
+	refinement.SetAbstractElement(ancestor, hl)
+	refinement.SetRefinedElement(child, hl)
 	uri := "testingUri"
-	foundChild := GetChildElementWithAncestorUri(parent, uri)
+	foundChild := GetChildElementWithAncestorUri(parent, uri, hl)
 	if foundChild != nil {
 		t.Errorf("Child found when it should not have been")
 	}
-	ancestor.SetUri(uri)
-	if len(child.GetAbstractElementsRecursivelyNoLock()) != 1 {
+	SetUri(ancestor, uri, hl)
+	if len(child.GetAbstractElementsRecursively(hl)) != 1 {
 		t.Errorf("Ancestor set size != 1")
 	}
-	foundAncestor := child.GetAbstractElementsRecursivelyNoLock()[0]
-	if foundAncestor.GetUri() != uri {
+	foundAncestor := child.GetAbstractElementsRecursively(hl)[0]
+	if GetUri(foundAncestor, hl) != uri {
 		t.Errorf("Ancestor uri not set")
 	}
-	foundChild = GetChildElementWithAncestorUri(parent, uri)
+	foundChild = GetChildElementWithAncestorUri(parent, uri, hl)
+	if foundChild == nil {
+		t.Errorf("Child not found")
+	}
+}
+
+func TestGetChildElementReferenceWithAncestorUri(t *testing.T) {
+	uOfD := NewUniverseOfDiscourse()
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewElement(hl)
+	child := uOfD.NewElementReference(hl)
+	SetOwningElement(child, parent, hl)
+	ancestor := uOfD.NewElementReference(hl)
+	refinement := uOfD.NewRefinement(hl)
+	refinement.SetAbstractElement(ancestor, hl)
+	refinement.SetRefinedElement(child, hl)
+	uri := "testingUri"
+	foundChild := GetChildElementReferenceWithAncestorUri(parent, uri, hl)
+	if foundChild != nil {
+		t.Errorf("Child found when it should not have been")
+	}
+	SetUri(ancestor, uri, hl)
+	if len(child.GetAbstractElementsRecursively(hl)) != 1 {
+		t.Errorf("Ancestor set size != 1")
+	}
+	foundAncestor := child.GetAbstractElementsRecursively(hl)[0]
+	if GetUri(foundAncestor, hl) != uri {
+		t.Errorf("Ancestor uri not set")
+	}
+	foundChild = GetChildElementReferenceWithAncestorUri(parent, uri, hl)
 	if foundChild == nil {
 		t.Errorf("Child not found")
 	}
@@ -44,16 +78,18 @@ func TestGetChildWithAncestorUri(t *testing.T) {
 
 func TestGetChildElementWithURI(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewElement()
-	child := uOfD.NewElement()
-	child.SetOwningElement(parent)
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewElement(hl)
+	child := uOfD.NewElement(hl)
+	SetOwningElement(child, parent, hl)
 	uri := "testingUri"
-	foundChild := GetChildElementWithUri(parent, uri)
+	foundChild := GetChildElementWithUri(parent, uri, hl)
 	if foundChild != nil {
 		t.Errorf("Child found when it should not have been")
 	}
-	child.SetUri(uri)
-	foundChild = GetChildElementWithUri(parent, uri)
+	SetUri(child, uri, hl)
+	foundChild = GetChildElementWithUri(parent, uri, hl)
 	if foundChild == nil {
 		t.Errorf("Child not found")
 	}
@@ -61,16 +97,18 @@ func TestGetChildElementWithURI(t *testing.T) {
 
 func TestGetChildElementReferenceWithURI(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewElement()
-	child := uOfD.NewElementReference()
-	child.SetOwningElement(parent)
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewElement(hl)
+	child := uOfD.NewElementReference(hl)
+	SetOwningElement(child, parent, hl)
 	uri := "testingUri"
-	foundChild := GetChildElementReferenceWithUri(parent, uri)
+	foundChild := GetChildElementReferenceWithUri(parent, uri, hl)
 	if foundChild != nil {
 		t.Errorf("Child found when it should not have been")
 	}
-	child.SetUri(uri)
-	foundChild = GetChildElementReferenceWithUri(parent, uri)
+	SetUri(child, uri, hl)
+	foundChild = GetChildElementReferenceWithUri(parent, uri, hl)
 	if foundChild == nil {
 		t.Errorf("Child not found")
 	}

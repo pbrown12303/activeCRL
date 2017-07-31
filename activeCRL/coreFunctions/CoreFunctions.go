@@ -2,12 +2,12 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
-	//	"log"
+	"log"
 )
 
 var CoreFunctionsUri string = "http://activeCrl.com/coreFunctions/CoreFunctions"
-var CreateElememtUri string = "http://activeCrl.com/core/CreateElement"
-var CreatedElementReferenceUri = "http://activeCrl.com/core/CreatedElementReference"
+var CreateElememtUri string = "http://activeCrl.com/coreFunctions/CreateElement"
+var CreatedElementReferenceUri = "http://activeCrl.com/coreFunctions/CreatedElementReference"
 var CreateElementPointerUri string = "http://activeCrl.com/coreFunctions/CreateElementPointer"
 var CreateElementPointerPointerUri string = "http://activeCrl.com/coreFunctions/CreateElementPointerPointer"
 var CreateElementPointerReferenceUri string = "http://activeCrl.com/coreFunctions/CreateElementPointerReference"
@@ -23,11 +23,14 @@ func GetCoreFunctionsConceptSpace(uOfD *core.UniverseOfDiscourse) core.Element {
 	coreFunctionsConceptSpace := uOfD.GetElementWithUri(CoreFunctionsUri)
 	if coreFunctionsConceptSpace == nil {
 		coreFunctionsConceptSpace = uOfD.RecoverElement([]byte(serializedCoreFunctions))
+		if coreFunctionsConceptSpace == nil {
+			log.Printf("Recovery of CoreFunctions failed")
+		}
 	}
 	return coreFunctionsConceptSpace
 }
 
 func init() {
+	//	log.Printf("About to initialize CoreFunctions")
 	core.GetCore().AddFunction(CreateElememtUri, createElement)
-
 }

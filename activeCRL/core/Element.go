@@ -17,18 +17,29 @@ type element struct {
 // addOwnedBaseElement() adds the indicated base element as a child (owned)
 // base element of this object. Calling this method is considered a change to the element
 // and will result in monitors being notified of changes.
-func (elPtr *element) addOwnedBaseElement(be BaseElement) {
-	preChange(elPtr)
-	elPtr.internalAddOwnedBaseElement(be)
+func addOwnedBaseElement(elPtr Element, be BaseElement, hl *HeldLocks) {
+	preChange(elPtr, hl)
+	elPtr.internalAddOwnedBaseElement(be, hl)
 	notification := NewChangeNotification(elPtr, ADD, nil)
-	postChange(elPtr, notification)
+	postChange(elPtr, notification, hl)
 }
 
 // childChanged() is used by ownedBaseElements to inform their parents when they have changed. It does no locking.
-func (elPtr *element) childChanged(notification *ChangeNotification) {
-	preChange(elPtr)
-	newNotification := NewChangeNotification(elPtr, MODIFY, notification)
-	postChange(elPtr, newNotification)
+func childChanged(el Element, notification *ChangeNotification, hl *HeldLocks) {
+	if TraceChange == true {
+		log.Printf("childChanges called")
+		PrintNotification(notification, hl)
+	}
+	preChange(el, hl)
+	newNotification := NewChangeNotification(el, MODIFY, notification)
+	switch el.(type) {
+	case Refinement:
+		refinedElement := el.(Refinement).GetRefinedElement(hl)
+		if refinedElement != nil {
+			abstractionChanged(refinedElement, newNotification, hl)
+		}
+	}
+	postChange(el, newNotification, hl)
 }
 
 func (elPtr *element) clone() *element {
@@ -48,12 +59,17 @@ func (elPtr *element) cloneAttributes(source element) {
 	}
 }
 
-// GetAbstractElementsRecursivelyNoLock() is a non-locking element that returns all of the elements abstractions
-func (elPtr *element) GetAbstractElementsRecursivelyNoLock() []Element {
-	abstractElements := elPtr.getImmediateAbstractElements()
+// GetAbstractElementsRecursivelyNoLock() returns all of the elements abstractions
+func (elPtr *element) GetAbstractElementsRecursively(hl *HeldLocks) []Element {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
+	abstractElements := elPtr.getImmediateAbstractElements(hl)
 	var ancestors []Element
 	for _, element := range abstractElements {
-		for _, ancestor := range element.GetAbstractElementsRecursivelyNoLock() {
+		for _, ancestor := range element.GetAbstractElementsRecursively(hl) {
 			ancestors = append(ancestors, ancestor)
 		}
 	}
@@ -63,51 +79,45 @@ func (elPtr *element) GetAbstractElementsRecursivelyNoLock() []Element {
 	return abstractElements
 }
 
-// GetDefinition() is the public method to retrieve the definition. It locks the element and, if present, the definitionLiteralPointer
-// and the literal. It then calls the non-locking getDefinition()
-func (elPtr *element) GetDefinition() string {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
-	nlp := elPtr.getDefinitionLiteralPointer()
-	if nlp != nil {
-		nlp.TraceableLock()
-		defer nlp.TraceableUnlock()
+func (elPtr *element) GetDefinition(hl *HeldLocks) string {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-	nl := elPtr.getDefinitionLiteral()
-	if nl != nil {
-		nl.TraceableLock()
-		defer nl.TraceableUnlock()
-	}
-	return elPtr.getDefinition()
-}
-
-// getDefinition() is an internal method that actually gets the name. If there is a definitionLiteralPointer that
-// points to a literal, it returns the value of the literal. Otherwise it returns the empty string. This method does
-// no locking.
-func (elPtr *element) getDefinition() string {
-	nlp := elPtr.getDefinitionLiteralPointer()
+	hl.LockBaseElement(elPtr)
+	nlp := elPtr.getDefinitionLiteralPointer(hl)
 	if nlp != nil {
-		nl := nlp.getLiteral()
+		nl := nlp.GetLiteral(hl)
 		if nl != nil {
-			return nl.getLiteralValue()
+			return nl.GetLiteralValue(hl)
 		}
 	}
 	return ""
 }
 
-func (elPtr *element) getDefinitionLiteral() Literal {
-	nlp := elPtr.getDefinitionLiteralPointer()
+func (elPtr *element) getDefinitionLiteral(hl *HeldLocks) Literal {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
+	nlp := elPtr.getDefinitionLiteralPointer(hl)
 	if nlp != nil {
-		return nlp.getLiteral()
+		return nlp.GetLiteral(hl)
 	}
 	return nil
 }
 
-func (elPtr *element) getDefinitionLiteralPointer() LiteralPointer {
-	for _, be := range elPtr.getOwnedBaseElements() {
+func (elPtr *element) getDefinitionLiteralPointer(hl *HeldLocks) LiteralPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
+	for _, be := range elPtr.ownedBaseElements {
 		switch be.(type) {
-		case *literalPointer:
-			if be.(*literalPointer).getLiteralPointerRole() == DEFINITION {
+		case LiteralPointer:
+			if be.(LiteralPointer).GetLiteralPointerRole(hl) == DEFINITION {
 				return be.(LiteralPointer)
 			}
 		}
@@ -115,88 +125,83 @@ func (elPtr *element) getDefinitionLiteralPointer() LiteralPointer {
 	return nil
 }
 
-func (elPtr *element) getImmediateAbstractElements() []Element {
+func (elPtr *element) getImmediateAbstractElements(hl *HeldLocks) []Element {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
 	var abstractElements []Element
-	abstractions := elPtr.getImmediateAbstractions()
+	abstractions := elPtr.getImmediateAbstractions(hl)
 	if abstractions != nil {
 		for _, abstraction := range abstractions {
-			if abstraction.getAbstractElement() != nil {
-				abstractElements = append(abstractElements, abstraction.getAbstractElement())
+			if abstraction.GetAbstractElement(hl) != nil {
+				abstractElements = append(abstractElements, abstraction.GetAbstractElement(hl))
 			}
 		}
 	}
 	return abstractElements
 }
 
-func (elPtr *element) getImmediateAbstractions() []Refinement {
+func (elPtr *element) getImmediateAbstractions(hl *HeldLocks) []Refinement {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
 	var abstractions []Refinement
-	ePtrs := elPtr.uOfD.elementListenerMap[elPtr.getId().String()]
+	ePtrs := elPtr.uOfD.elementListenerMap.GetElementPointerList(elPtr.GetId(hl).String())
 	if ePtrs != nil {
 		for _, ePtr := range *ePtrs {
-			if ePtr.getElementPointerRole() == REFINED_ELEMENT {
-				abstractions = append(abstractions, ePtr.getOwningElement().(Refinement))
+			if ePtr.GetElementPointerRole(hl) == REFINED_ELEMENT {
+				abstractions = append(abstractions, GetOwningElement(ePtr, hl).(Refinement))
 			}
 		}
 	}
 	return abstractions
 }
 
-func (elPtr *element) getImmediateRefinements() []Refinement {
+func (elPtr *element) getImmediateRefinements(hl *HeldLocks) []Refinement {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
 	var refinements []Refinement
-	ePtrs := elPtr.uOfD.elementListenerMap[elPtr.getId().String()]
+	ePtrs := elPtr.uOfD.elementListenerMap.GetElementPointerList(elPtr.GetId(hl).String())
 	if ePtrs != nil {
 		for _, ePtr := range *ePtrs {
-			if ePtr.getElementPointerRole() == ABSTRACT_ELEMENT {
-				refinements = append(refinements, ePtr.getOwningElement().(Refinement))
+			if ePtr.GetElementPointerRole(hl) == ABSTRACT_ELEMENT {
+				refinements = append(refinements, GetOwningElement(ePtr, hl).(Refinement))
 			}
 		}
 	}
 	return refinements
 }
 
-// GetName() locks the element and, if they are not nil, the nameLiteralPointer and name literal. It then
-// returns the result of calling the non-locking GetNameNoLock()
-func (elPtr *element) GetName() string {
-	elPtr.TraceableRLock()
-	defer elPtr.TraceableRUnlock()
-	nlp := elPtr.getNameLiteralPointer()
+func (elPtr *element) getNameLiteral(hl *HeldLocks) Literal {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
+	nlp := elPtr.getNameLiteralPointer(hl)
 	if nlp != nil {
-		nlp.TraceableLock()
-		defer nlp.TraceableUnlock()
-	}
-	nl := elPtr.getNameLiteral()
-	if nl != nil {
-		nl.TraceableLock()
-		defer nl.TraceableUnlock()
-	}
-	return elPtr.GetNameNoLock()
-}
-
-// GetNameNoLock() is a non-locking function that returns the name string.
-func (elPtr *element) GetNameNoLock() string {
-	nl := elPtr.getNameLiteral()
-	if nl != nil {
-		return nl.getLiteralValue()
-	}
-	return ""
-}
-
-// getNameLiteral() is a non-locking function that returns the name literal or nil if there is none.
-func (elPtr *element) getNameLiteral() Literal {
-	nlp := elPtr.getNameLiteralPointer()
-	if nlp != nil {
-		return nlp.getLiteral()
+		return nlp.GetLiteral(hl)
 	}
 	return nil
 }
 
-// getNameLiteralPointer() is a non-locking function that walks the ownedBaseElements set and returns
-// the first member that is a literalPointer with the role set to NAME
-func (elPtr *element) getNameLiteralPointer() LiteralPointer {
-	for _, be := range elPtr.getOwnedBaseElements() {
+func (elPtr *element) getNameLiteralPointer(hl *HeldLocks) LiteralPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
+	for _, be := range elPtr.GetOwnedBaseElements(hl) {
 		switch be.(type) {
-		case *literalPointer:
-			if be.(*literalPointer).getLiteralPointerRole() == NAME {
+		case LiteralPointer:
+			if be.(LiteralPointer).GetLiteralPointerRole(hl) == NAME {
 				return be.(LiteralPointer)
 			}
 		}
@@ -204,13 +209,12 @@ func (elPtr *element) getNameLiteralPointer() LiteralPointer {
 	return nil
 }
 
-// getOwnedBaseElements() is a non-locking function that returns the element's ownedBaseElements map.
-func (elPtr *element) getOwnedBaseElements() map[string]BaseElement {
-	return elPtr.ownedBaseElements
-}
-
-// GetOwnedBaseElements() is a non-locking function that returns an array containing the ownedBaseElements
-func (elPtr *element) GetOwnedBaseElements() []BaseElement {
+func (elPtr *element) GetOwnedBaseElements(hl *HeldLocks) []BaseElement {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
 	var obe []BaseElement
 	for _, be := range elPtr.ownedBaseElements {
 		obe = append(obe, be)
@@ -218,9 +222,12 @@ func (elPtr *element) GetOwnedBaseElements() []BaseElement {
 	return obe
 }
 
-// GetOwnedElementsNoLock() is a non-locking function that returns an array containing the
-// Elements belonging to ownedBaseElements
-func (elPtr *element) GetOwnedElementsNoLock() []Element {
+func (elPtr *element) GetOwnedElements(hl *HeldLocks) []Element {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
 	var obe []Element
 	for _, be := range elPtr.ownedBaseElements {
 		switch be.(type) {
@@ -231,35 +238,29 @@ func (elPtr *element) GetOwnedElementsNoLock() []Element {
 	return obe
 }
 
-// GetOwningElement is a locking function that locks the element and, if present, the owningElementPointer. It then
-// returns the value of the non-locking getOwningElement()
-func (elPtr *element) GetOwningElement() Element {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
-	oep := elPtr.getOwningElementPointer()
-	if oep != nil {
-		oep.TraceableLock()
-		defer oep.TraceableUnlock()
+func (elPtr *element) GetOwningElement(hl *HeldLocks) Element {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-	return elPtr.getOwningElement()
-}
-
-// getOwningElement() is a non-locking function that uses the owningElementPointer to locate the owningElement and return it.
-func (elPtr *element) getOwningElement() Element {
-	oep := elPtr.getOwningElementPointer()
+	hl.LockBaseElement(elPtr)
+	oep := elPtr.getOwningElementPointer(hl)
 	if oep != nil {
-		return oep.getElement()
+		return oep.GetElement(hl)
 	}
 	return nil
 }
 
-// getOwningElementPointer() is a non-locking function that walks the ownedBaseElements and returns the first
-// elementPointer whose role is set to OWNING_ELEMENT
-func (elPtr *element) getOwningElementPointer() ElementPointer {
-	for _, be := range elPtr.getOwnedBaseElements() {
+func (elPtr *element) getOwningElementPointer(hl *HeldLocks) ElementPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
+	for _, be := range elPtr.ownedBaseElements {
 		switch be.(type) {
 		case *elementPointer:
-			if be.(*elementPointer).getElementPointerRole() == OWNING_ELEMENT {
+			if be.(ElementPointer).GetElementPointerRole(hl) == OWNING_ELEMENT {
 				return be.(ElementPointer)
 			}
 		}
@@ -267,61 +268,42 @@ func (elPtr *element) getOwningElementPointer() ElementPointer {
 	return nil
 }
 
-// GetUniverseOfDiscourse() is a locking function that returns a pointer to the UniverseOfDiscourse to which this element belongs
-func (elPtr *element) GetUniverseOfDiscourse() *UniverseOfDiscourse {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
-	return elPtr.GetUniverseOfDiscourseNoLock()
-}
-
-// GetUniverseOfDiscourseNoLock() is a non-locking function that returns a pointer to the UniverseOfDiscourse to which this element belongs
-func (elPtr *element) GetUniverseOfDiscourseNoLock() *UniverseOfDiscourse {
-	return elPtr.uOfD
-}
-
-// GetUri() is a locking function that locks the element and, if present, the uriLiteralPointer and uriLiteral. It then
-// returns the result of the non-locking GetUriNoLock()
-func (elPtr *element) GetUri() string {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
-	ulp := elPtr.getUriLiteralPointer()
-	if ulp != nil {
-		ulp.TraceableLock()
-		defer ulp.TraceableUnlock()
+func (elPtr *element) GetUri(hl *HeldLocks) string {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-	ul := elPtr.getUriLiteral()
+	hl.LockBaseElement(elPtr)
+	ul := elPtr.getUriLiteral(hl)
 	if ul != nil {
-		ul.TraceableLock()
-		ul.TraceableUnlock()
-	}
-	return elPtr.GetUriNoLock()
-}
-
-// GetUriNoLock() is a non-locking function that uses the uriLiteralPointer to locate the uriLiteral and return its string value.
-func (elPtr *element) GetUriNoLock() string {
-	ul := elPtr.getUriLiteral()
-	if ul != nil {
-		return ul.GetLiteralValue()
+		return ul.GetLiteralValue(hl)
 	}
 	return ""
 }
 
-// getUriLiteral() is a non-locking function that uses the uriLiteralPointer to locate and return the uriLiteral.
-func (elPtr *element) getUriLiteral() Literal {
-	nlp := elPtr.getUriLiteralPointer()
+func (elPtr *element) getUriLiteral(hl *HeldLocks) Literal {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
+	nlp := elPtr.getUriLiteralPointer(hl)
 	if nlp != nil {
-		return nlp.getLiteral()
+		return nlp.GetLiteral(hl)
 	}
 	return nil
 }
 
-// getUriLiteralPointer() is a non-locking function that walks the element's ownedBaseElements and returns the first
-// literalPointer whose role is URI
-func (elPtr *element) getUriLiteralPointer() LiteralPointer {
-	for _, be := range elPtr.getOwnedBaseElements() {
+func (elPtr *element) getUriLiteralPointer(hl *HeldLocks) LiteralPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
+	for _, be := range elPtr.ownedBaseElements {
 		switch be.(type) {
-		case *literalPointer:
-			if be.(*literalPointer).getLiteralPointerRole() == URI {
+		case LiteralPointer:
+			if be.(LiteralPointer).GetLiteralPointerRole(hl) == URI {
 				return be.(LiteralPointer)
 			}
 		}
@@ -340,24 +322,40 @@ func (elPtr *element) initializeElement() {
 // internalAddOwnedBaseElement() adds the indicated base element as a child (owned)
 // base element of this object. Calling this method is not considered a change to the element
 // and will not result in monitors being notified of changes.
-func (elPtr *element) internalAddOwnedBaseElement(be BaseElement) {
-	if be != nil && be.getId() != uuid.Nil {
-		elPtr.ownedBaseElements[be.getId().String()] = be
+func (elPtr *element) internalAddOwnedBaseElement(be BaseElement, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
+	if be != nil && be.GetId(hl) != uuid.Nil {
+		elPtr.ownedBaseElements[be.GetId(hl).String()] = be
 	}
 }
 
 // internalRemoveOwnedBaseElement() removes the indicated baseElement from the ownedBaseElements
 // map. Note that this is not considered a change and that the version counter will not be incremented and
 // the monitors of this element will not be notified of the change.
-func (elPtr *element) internalRemoveOwnedBaseElement(be BaseElement) {
-	if be != nil && be.getId() != uuid.Nil {
-		delete(elPtr.ownedBaseElements, be.getId().String())
+func (elPtr *element) internalRemoveOwnedBaseElement(be BaseElement, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
+	if be != nil && be.GetId(hl) != uuid.Nil {
+		delete(elPtr.ownedBaseElements, be.GetId(hl).String())
 	}
 }
 
 // isEquivalent is a non-locking function that compares this element against another to see
 // if the other element and its substructure are equivalent
-func (bePtr *element) isEquivalent(be *element) bool {
+func (bePtr *element) isEquivalent(be *element, hl *HeldLocks) bool {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(bePtr)
+	hl.LockBaseElement(be)
 	if len(bePtr.ownedBaseElements) != len(be.ownedBaseElements) {
 		//		log.Printf("Equivalence failed: Owned Base Elements lenght does not match \n")
 		return false
@@ -368,7 +366,7 @@ func (bePtr *element) isEquivalent(be *element) bool {
 			//			log.Printf("Equivalence failed: no value found for Owned Base Element key %s \n", key)
 			return false
 		}
-		if !Equivalent(value, beValue) {
+		if !Equivalent(value, beValue, hl) {
 			//			log.Printf("Equivalence failed: values do not match for Owned Base Element key %s \n", key)
 			//			log.Printf("First element's value: \n")
 			//			Print(value, "   ")
@@ -378,12 +376,19 @@ func (bePtr *element) isEquivalent(be *element) bool {
 		}
 	}
 	var baseElementPtr *baseElement = &bePtr.baseElement
-	return baseElementPtr.isEquivalent(&be.baseElement)
+	return baseElementPtr.isEquivalent(&be.baseElement, hl)
+}
+
+func (ePtr *element) IsOwnedBaseElement(be BaseElement, hl *HeldLocks) bool {
+	for key, _ := range ePtr.ownedBaseElements {
+		if key == be.GetId(hl).String() {
+			return true
+		}
+	}
+	return false
 }
 
 func (elPtr *element) MarshalJSON() ([]byte, error) {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -412,17 +417,22 @@ func (elPtr *element) marshalElementFields(buffer *bytes.Buffer) error {
 	return nil
 }
 
-var printCount int = 0
-
-func (elPtr *element) printElement(prefix string) {
-	if printCount < 100 {
-		printCount++
-		elPtr.printBaseElement(prefix)
-		log.Printf("%sOwned Base Elements: count %d \n", prefix, len(elPtr.getOwnedBaseElements()))
-		extendedPrefix := prefix + "   "
-		for _, be := range elPtr.getOwnedBaseElements() {
-			Print(be, extendedPrefix)
-		}
+func (elPtr *element) printElement(prefix string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(elPtr)
+	// We use the prefix lenth to curtail infinite recursion - circular ownership
+	if len(prefix) > 300 {
+		log.Printf("Prefix length exceeds 300")
+		return
+	}
+	elPtr.printBaseElement(prefix, hl)
+	log.Printf("%s  Owned Base Elements: count %d \n", prefix, len(elPtr.ownedBaseElements))
+	extendedPrefix := prefix + "   "
+	for _, be := range elPtr.ownedBaseElements {
+		Print(be, extendedPrefix, hl)
 	}
 }
 
@@ -447,7 +457,7 @@ func (el *element) recoverElementFields(unmarshaledData *map[string]json.RawMess
 			log.Printf("Polymorphic Recovery of one Element.OwnedBaseElements failed\n")
 			return err
 		}
-		el.internalAddOwnedBaseElement(recoveredBaseElement)
+		el.internalAddOwnedBaseElement(recoveredBaseElement, nil)
 	}
 	return nil
 }
@@ -455,189 +465,74 @@ func (el *element) recoverElementFields(unmarshaledData *map[string]json.RawMess
 // removeOwnedBaseElement() removes the indicated baseElement from the ownedBaseElements
 // map. Note that this is considered a change and that the version counter will be incremented and
 // the monitors of this element will be notified of the change.
-func (elPtr *element) removeOwnedBaseElement(be BaseElement) {
-	preChange(elPtr)
-	elPtr.internalRemoveOwnedBaseElement(be)
+func removeOwnedBaseElement(elPtr Element, be BaseElement, hl *HeldLocks) {
+	preChange(elPtr, hl)
+	elPtr.internalRemoveOwnedBaseElement(be, hl)
 	notification := NewChangeNotification(elPtr, REMOVE, nil)
-	postChange(elPtr, notification)
-}
-
-// SetDefinition() updates the literal containing the definition. If needed both the
-// literal and the literalPointer pointing to it are created. This method locks the element,
-// and, indirectly, increments the version and notifies monitors of the change.
-//
-func (elPtr *element) SetDefinition(definition string) {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
-	nl := elPtr.getDefinitionLiteral()
-	if nl != nil {
-		nl.TraceableLock()
-		defer nl.TraceableUnlock()
-	}
-	nlp := elPtr.getDefinitionLiteralPointer()
-	if nlp != nil {
-		nlp.TraceableLock()
-		defer nlp.TraceableUnlock()
-	}
-	elPtr.setDefinition(definition)
-}
-
-// setDefinition() updates the literal containing the definition. If needed, both the
-// literal and the literalPointer pointing to it are created. This method does not lock the element.
-// It does not directly increment the version and notify monitors of the change. It is making changes to
-// subordinate objects, i.e. the definition literal and definition literal pointer. These objects will, in turn
-// notify the element (their parent) of the change.
-func (elPtr *element) setDefinition(definition string) {
-	nl := elPtr.getDefinitionLiteral()
-	if nl == nil {
-		nlp := elPtr.getDefinitionLiteralPointer()
-		if nlp == nil {
-			nlp = elPtr.getUniverseOfDiscourse().NewDefinitionLiteralPointer()
-			nlp.SetOwningElementNoLock(elPtr)
-		}
-		nl = elPtr.getUniverseOfDiscourse().NewLiteral()
-		nl.SetOwningElementNoLock(elPtr)
-		nlp.setLiteral(nl)
-	}
-	nl.setLiteralValue(definition)
-}
-
-// SetName() is a locking function that locks the element and, if present, the nameLiteralPointer and nameLiteral. It
-// then calls the non-locking SetNameNoLock() to actually set the name value.
-func (elPtr *element) SetName(name string) {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
-	nl := elPtr.getNameLiteral()
-	if nl != nil {
-		nl.TraceableLock()
-		defer nl.TraceableUnlock()
-	}
-	nlp := elPtr.getNameLiteralPointer()
-	if nlp != nil {
-		nlp.TraceableLock()
-		defer nlp.TraceableUnlock()
-	}
-	elPtr.SetNameNoLock(name)
-}
-
-// SetNameNoLock() is a non-locking function that checks for the existence of the nameLiteralPointer and nameLiteral, creating
-// them if necessary. It then sets the value of the nameLiteral to the indicated string.
-func (elPtr *element) SetNameNoLock(name string) {
-	nl := elPtr.getNameLiteral()
-	if nl == nil {
-		nlp := elPtr.getNameLiteralPointer()
-		if nlp == nil {
-			nlp = elPtr.getUniverseOfDiscourse().NewNameLiteralPointer()
-			nlp.SetOwningElementNoLock(elPtr)
-		}
-		nl = elPtr.getUniverseOfDiscourse().NewLiteral()
-		nl.SetOwningElementNoLock(elPtr)
-		nlp.setLiteral(nl)
-	}
-	nl.setLiteralValue(name)
-}
-
-// SetOwningElement() manages the owning element poiner belonging to this element.
-// There are potentially four objects involved: the parent, the old parent (if
-// there is one), the child (this element), and the owningElementPointer (oep).
-// Because of the complexity of the wiring, all involved objects are locked here and
-// the worker methods do not do any locking.
-func (elPtr *element) SetOwningElement(parent Element) {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
-	oldParent := elPtr.getOwningElement()
-	if oldParent == nil && parent == nil {
-		return // Nothing to do
-	} else if oldParent != nil && parent != nil && oldParent.getId() != parent.getId() {
-		return // Nothing to do
-	}
-	if oldParent != nil {
-		oldParent.TraceableLock()
-		defer oldParent.TraceableUnlock()
-	}
-	if parent != nil {
-		parent.TraceableLock()
-		defer parent.TraceableUnlock()
-	}
-	oep := elPtr.getOwningElementPointer()
-	if oep != nil {
-		oep.TraceableLock()
-		defer oep.TraceableUnlock()
-	}
-	elPtr.SetOwningElementNoLock(parent)
-}
-
-// SetOwningElementNoLock() is a non-locking function that checks for the existence of the owningElementPointer, creating
-// it if necessary. It then sets the owningElementPointer to point to the indicated element. Note that a side-effect
-// of this action increments the version numbers of the owningElementPointer, this element, old and new owningElements, and all their
-// owners, recureively.
-func (elPtr *element) SetOwningElementNoLock(parent Element) {
-	oep := elPtr.getOwningElementPointer()
-	if oep == nil {
-		oep = elPtr.uOfD.NewOwningElementPointer()
-		oep.SetOwningElementNoLock(elPtr)
-	}
-	oep.setElement(parent)
-}
-
-func (elPtr *element) SetUri(uri string) {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
-	nl := elPtr.getUriLiteral()
-	if nl != nil {
-		nl.TraceableLock()
-		defer nl.TraceableUnlock()
-	}
-	nlp := elPtr.getUriLiteralPointer()
-	if nlp != nil {
-		nlp.TraceableLock()
-		defer nlp.TraceableUnlock()
-	}
-	elPtr.SetUriNoLock(uri)
-}
-
-func (elPtr *element) SetUriNoLock(uri string) {
-	nl := elPtr.getUriLiteral()
-	if nl == nil {
-		nlp := elPtr.getUriLiteralPointer()
-		if nlp == nil {
-			nlp = elPtr.getUniverseOfDiscourse().NewUriLiteralPointer()
-			nlp.SetOwningElementNoLock(elPtr)
-		}
-		nl = elPtr.getUniverseOfDiscourse().NewLiteral()
-		nl.SetOwningElementNoLock(elPtr)
-		nlp.setLiteral(nl)
-	}
-	nl.setLiteralValue(uri)
+	postChange(elPtr, notification, hl)
 }
 
 type Element interface {
 	BaseElement
-	addOwnedBaseElement(BaseElement)
-	childChanged(*ChangeNotification)
-	GetAbstractElementsRecursivelyNoLock() []Element
-	GetDefinition() string
-	getDefinitionLiteral() Literal
-	getDefinitionLiteralPointer() LiteralPointer
-	getImmediateAbstractElements() []Element
-	getImmediateAbstractions() []Refinement
-	getImmediateRefinements() []Refinement
-	GetName() string
-	getNameLiteral() Literal
-	getNameLiteralPointer() LiteralPointer
-	getOwnedBaseElements() map[string]BaseElement
-	GetOwnedBaseElements() []BaseElement
-	GetOwnedElementsNoLock() []Element
-	getOwningElementPointer() ElementPointer
-	GetUniverseOfDiscourse() *UniverseOfDiscourse
-	GetUniverseOfDiscourseNoLock() *UniverseOfDiscourse
-	getUriLiteral() Literal
-	getUriLiteralPointer() LiteralPointer
-	internalAddOwnedBaseElement(BaseElement)
-	internalRemoveOwnedBaseElement(BaseElement)
+	GetAbstractElementsRecursively(*HeldLocks) []Element
+	GetDefinition(*HeldLocks) string
+	getDefinitionLiteral(*HeldLocks) Literal
+	getDefinitionLiteralPointer(*HeldLocks) LiteralPointer
+	getImmediateAbstractElements(*HeldLocks) []Element
+	getImmediateAbstractions(*HeldLocks) []Refinement
+	getImmediateRefinements(*HeldLocks) []Refinement
+	getNameLiteral(*HeldLocks) Literal
+	getNameLiteralPointer(*HeldLocks) LiteralPointer
+	GetOwnedBaseElements(*HeldLocks) []BaseElement
+	GetOwnedElements(*HeldLocks) []Element
+	GetOwningElement(*HeldLocks) Element
+	getOwningElementPointer(*HeldLocks) ElementPointer
+	getUriLiteral(*HeldLocks) Literal
+	getUriLiteralPointer(*HeldLocks) LiteralPointer
+	internalAddOwnedBaseElement(BaseElement, *HeldLocks)
+	internalRemoveOwnedBaseElement(BaseElement, *HeldLocks)
+	IsOwnedBaseElement(BaseElement, *HeldLocks) bool
 	MarshalJSON() ([]byte, error)
-	removeOwnedBaseElement(BaseElement)
-	SetDefinition(string)
-	SetName(string)
-	SetNameNoLock(string)
+	//	SetDefinition(string, *HeldLocks)
+	//	SetName(string, *HeldLocks)
+}
+
+func SetDefinition(el Element, definition string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(el)
+	nl := el.getDefinitionLiteral(hl)
+	if nl == nil {
+		nlp := el.getDefinitionLiteralPointer(hl)
+		if nlp == nil {
+			nlp = el.GetUniverseOfDiscourse(hl).NewDefinitionLiteralPointer(hl)
+			SetOwningElement(nlp, el, hl)
+		}
+		nl = el.GetUniverseOfDiscourse(hl).NewLiteral(hl)
+		SetOwningElement(nl, el, hl)
+		nlp.SetLiteral(nl, hl)
+	}
+	nl.SetLiteralValue(definition, hl)
+}
+
+func SetName(el Element, name string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(el)
+	nl := el.getNameLiteral(hl)
+	if nl == nil {
+		nlp := el.getNameLiteralPointer(hl)
+		if nlp == nil {
+			nlp = el.GetUniverseOfDiscourse(hl).NewNameLiteralPointer(hl)
+			SetOwningElement(nlp, el, hl)
+		}
+		nl = el.GetUniverseOfDiscourse(hl).NewLiteral(hl)
+		SetOwningElement(nl, el, hl)
+		nlp.SetLiteral(nl, hl)
+	}
+	nl.SetLiteralValue(name, hl)
 }

@@ -24,38 +24,43 @@ func (lPtr *literal) cloneAttributes(source literal) {
 	lPtr.literalValue = source.literalValue
 }
 
-func (lPtr *literal) GetLiteralValue() string {
-	lPtr.TraceableLock()
-	defer lPtr.TraceableUnlock()
-	return lPtr.getLiteralValue()
-}
-
-func (lPtr *literal) getLiteralValue() string {
+func (lPtr *literal) GetLiteralValue(hl *HeldLocks) string {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lPtr)
 	return lPtr.literalValue
 }
 
-func (lPtr *literal) GetNameNoLock() string {
-	lPtr.TraceableLock()
-	defer lPtr.TraceableUnlock()
-	return lPtr.getLiteralValue()
+func (lPtr *literal) getName(hl *HeldLocks) string {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lPtr)
+	return lPtr.GetLiteralValue(hl)
 }
 
 func (lPtr *literal) initializeLiteral() {
 	lPtr.initializeValue()
 }
 
-func (lPtr *literal) isEquivalent(lit *literal) bool {
+func (lPtr *literal) isEquivalent(lit *literal, hl *HeldLocks) bool {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lPtr)
 	if lPtr.literalValue != lit.literalValue {
 		log.Printf("Literal values not equivalent - v1: %s v2: %s \n", lPtr.literalValue, lit.literalValue)
 		return false
 	}
 	var valuePtr *value = &lPtr.value
-	return valuePtr.isEquivalent(&lit.value)
+	return valuePtr.isEquivalent(&lit.value, hl)
 }
 
 func (lPtr *literal) MarshalJSON() ([]byte, error) {
-	lPtr.TraceableLock()
-	defer lPtr.TraceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(lPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -70,9 +75,19 @@ func (lPtr *literal) marshalLiteralFields(buffer *bytes.Buffer) error {
 	return nil
 }
 
-func (lPtr *literal) printLiteral(prefix string) {
-	lPtr.printValue(prefix)
-	log.Printf("%sliteralValue: %s \n", prefix, lPtr.literalValue)
+func (lPtr *literal) printLiteral(prefix string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lPtr)
+	lPtr.printValue(prefix, hl)
+	log.Printf("%s  literalValue: %s \n", prefix, lPtr.literalValue)
+	owningElementType := ""
+	if lPtr.owningElement != nil {
+		owningElementType = reflect.TypeOf(lPtr.owningElement).String()
+	}
+	log.Printf("%s  owningElementType: %s \n", prefix, owningElementType)
 }
 
 func (lPtr *literal) recoverLiteralFields(unmarshaledData *map[string]json.RawMessage) error {
@@ -92,69 +107,71 @@ func (lPtr *literal) recoverLiteralFields(unmarshaledData *map[string]json.RawMe
 	return nil
 }
 
-func (lPtr *literal) SetLiteralValue(newValue string) {
-	lPtr.TraceableLock()
-	defer lPtr.TraceableUnlock()
-	lPtr.setLiteralValue(newValue)
-}
-
-func (lPtr *literal) setLiteralValue(newValue string) {
+func (lPtr *literal) SetLiteralValue(newValue string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lPtr)
 	if lPtr.literalValue != newValue {
-		preChange(lPtr)
+		preChange(lPtr, hl)
 		lPtr.literalValue = newValue
 		notification := NewChangeNotification(lPtr, MODIFY, nil)
-		postChange(lPtr, notification)
+		postChange(lPtr, notification, hl)
 	}
 }
 
-func (lPtr *literal) SetOwningElement(el Element) {
-	lPtr.TraceableLock()
-	defer lPtr.TraceableUnlock()
-	lPtr.SetOwningElementNoLock(el)
-}
-
-func (lPtr *literal) SetOwningElementNoLock(el Element) {
-	if lPtr.getOwningElement() != el {
+func (lPtr *literal) SetOwningElement(el Element, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lPtr)
+	if lPtr.owningElement != el {
 		if lPtr.owningElement != nil {
-			lPtr.owningElement.removeOwnedBaseElement(lPtr)
+			removeOwnedBaseElement(lPtr.owningElement, lPtr, hl)
 		}
 
-		preChange(lPtr)
+		preChange(lPtr, hl)
 		lPtr.owningElement = el
 		notification := NewChangeNotification(lPtr, MODIFY, nil)
-		postChange(lPtr, notification)
+		postChange(lPtr, notification, hl)
 
 		if lPtr.owningElement != nil {
-			lPtr.owningElement.addOwnedBaseElement(lPtr)
+			addOwnedBaseElement(lPtr.owningElement, lPtr, hl)
 		}
 	}
 }
 
 // internalSetOwningElement() is an internal function used only in unmarshal
-func (lPtr *literal) internalSetOwningElement(el Element) {
+func (lPtr *literal) internalSetOwningElement(el Element, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lPtr)
 	lPtr.owningElement = el
 	if lPtr.owningElement != nil {
-		lPtr.owningElement.internalAddOwnedBaseElement(lPtr)
+		lPtr.owningElement.internalAddOwnedBaseElement(lPtr, hl)
 	}
 }
 
-func (lPtr *literal) SetUri(uri string) {
-	lPtr.TraceableLock()
-	defer lPtr.TraceableUnlock()
-	lPtr.SetUriNoLock(uri)
-}
-
-func (lPtr *literal) SetUriNoLock(uri string) {
-	preChange(lPtr)
-	lPtr.uri = uri
-	notification := NewChangeNotification(lPtr, MODIFY, nil)
-	postChange(lPtr, notification)
+func (lPtr *literal) SetUri(uri string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lPtr)
+	if uri != lPtr.uri {
+		preChange(lPtr, hl)
+		lPtr.uri = uri
+		notification := NewChangeNotification(lPtr, MODIFY, nil)
+		postChange(lPtr, notification, hl)
+	}
 }
 
 type Literal interface {
 	Value
-	GetLiteralValue() string
-	getLiteralValue() string
-	setLiteralValue(string)
-	SetLiteralValue(string)
+	GetLiteralValue(*HeldLocks) string
+	SetLiteralValue(string, *HeldLocks)
 }

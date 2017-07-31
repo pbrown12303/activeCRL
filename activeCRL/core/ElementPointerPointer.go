@@ -31,43 +31,38 @@ func (eppPtr *elementPointerPointer) cloneAttributes(source elementPointerPointe
 	eppPtr.elementPointerVersion = source.elementPointerVersion
 }
 
-func (eppPtr *elementPointerPointer) GetElementPointer() ElementPointer {
-	eppPtr.TraceableLock()
-	defer eppPtr.TraceableUnlock()
-	if eppPtr.elementPointer == nil && eppPtr.getElementPointerIdentifier() != uuid.Nil && eppPtr.uOfD != nil {
-		eppPtr.elementPointer = eppPtr.uOfD.getElementPointer(eppPtr.getElementPointerIdentifier().String())
+func (eppPtr *elementPointerPointer) GetElementPointer(hl *HeldLocks) ElementPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(eppPtr)
+	if eppPtr.elementPointer == nil && eppPtr.GetElementPointerIdentifier(hl) != uuid.Nil && eppPtr.uOfD != nil {
+		eppPtr.elementPointer = eppPtr.uOfD.GetElementPointer(eppPtr.GetElementPointerIdentifier(hl).String())
 	}
 	return eppPtr.elementPointer
 }
 
-func (eppPtr *elementPointerPointer) getElementPointer() ElementPointer {
-	if eppPtr.elementPointer == nil && eppPtr.getElementPointerIdentifier() != uuid.Nil && eppPtr.uOfD != nil {
-		eppPtr.elementPointer = eppPtr.uOfD.getElementPointer(eppPtr.getElementPointerIdentifier().String())
-	}
-	return eppPtr.elementPointer
-}
-
-func (eppPtr *elementPointerPointer) GetNameNoLock() string {
+func (eppPtr *elementPointerPointer) getName(hl *HeldLocks) string {
+	// No locking required - it's a constant
 	return "elementPointerPointer"
 }
 
-func (eppPtr *elementPointerPointer) GetElementPointerIdentifier() uuid.UUID {
-	eppPtr.TraceableLock()
-	defer eppPtr.TraceableUnlock()
-	return eppPtr.getElementPointerIdentifier()
-}
-
-func (eppPtr *elementPointerPointer) getElementPointerIdentifier() uuid.UUID {
+func (eppPtr *elementPointerPointer) GetElementPointerIdentifier(hl *HeldLocks) uuid.UUID {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(eppPtr)
 	return eppPtr.elementPointerId
 }
 
-func (eppPtr *elementPointerPointer) GetElementPointerVersion() int {
-	eppPtr.TraceableLock()
-	defer eppPtr.TraceableUnlock()
-	return eppPtr.getElementPointerVersion()
-}
-
-func (eppPtr *elementPointerPointer) getElementPointerVersion() int {
+func (eppPtr *elementPointerPointer) GetElementPointerVersion(hl *HeldLocks) int {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(eppPtr)
 	return eppPtr.elementPointerVersion
 }
 
@@ -75,7 +70,12 @@ func (eppPtr *elementPointerPointer) initializeElementPointerPointer() {
 	eppPtr.initializePointer()
 }
 
-func (bePtr *elementPointerPointer) isEquivalent(be *elementPointerPointer) bool {
+func (bePtr *elementPointerPointer) isEquivalent(be *elementPointerPointer, hl *HeldLocks) bool {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(bePtr)
 	if bePtr.elementPointerId != be.elementPointerId {
 		fmt.Printf("Equivalence failed: indicated elementPointerPointer ids do not match \n")
 		return false
@@ -85,12 +85,10 @@ func (bePtr *elementPointerPointer) isEquivalent(be *elementPointerPointer) bool
 		return false
 	}
 	var pointerPtr *pointer = &bePtr.pointer
-	return pointerPtr.isEquivalent(&be.pointer)
+	return pointerPtr.isEquivalent(&be.pointer, hl)
 }
 
 func (elPtr *elementPointerPointer) MarshalJSON() ([]byte, error) {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -106,10 +104,15 @@ func (elPtr *elementPointerPointer) maarshalElementPointerPointerFields(buffer *
 	return err
 }
 
-func (eppPtr *elementPointerPointer) printElementPointerPointer(prefix string) {
-	eppPtr.printPointer(prefix)
-	log.Printf("%sIndicated ElementPointerID: %s \n", prefix, eppPtr.elementPointerId.String())
-	log.Printf("%sIndicated ElementPointerVersion: %d \n", prefix, eppPtr.elementPointerVersion)
+func (eppPtr *elementPointerPointer) printElementPointerPointer(prefix string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(eppPtr)
+	eppPtr.printPointer(prefix, hl)
+	log.Printf("%s  Indicated ElementPointerID: %s \n", prefix, eppPtr.elementPointerId.String())
+	log.Printf("%s  Indicated ElementPointerVersion: %d \n", prefix, eppPtr.elementPointerVersion)
 }
 
 func (ep *elementPointerPointer) recoverElementPointerPointerFields(unmarshaledData *map[string]json.RawMessage) error {
@@ -145,100 +148,85 @@ func (ep *elementPointerPointer) recoverElementPointerPointerFields(unmarshaledD
 	return nil
 }
 
-func (eppPtr *elementPointerPointer) SetElementPointer(elementPointer ElementPointer) {
-	eppPtr.TraceableLock()
-	defer eppPtr.TraceableUnlock()
-	if elementPointer != nil {
-		elementPointer.TraceableLock()
-		defer elementPointer.TraceableUnlock()
+func (eppPtr *elementPointerPointer) SetElementPointer(elementPointer ElementPointer, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-	eppPtr.setElementPointer(elementPointer)
-}
-
-func (eppPtr *elementPointerPointer) setElementPointer(elementPointer ElementPointer) {
+	hl.LockBaseElement(eppPtr)
 	if elementPointer != eppPtr.elementPointer {
-
-		preChange(eppPtr)
+		preChange(eppPtr, hl)
 		if eppPtr.elementPointer != nil {
-			eppPtr.uOfD.removeElementPointerListener(eppPtr.elementPointer, eppPtr)
+			eppPtr.uOfD.removeElementPointerListener(eppPtr.elementPointer, eppPtr, hl)
 		}
 		eppPtr.elementPointer = elementPointer
 		if elementPointer != nil {
-			eppPtr.elementPointerId = elementPointer.getId()
-			eppPtr.elementPointerVersion = elementPointer.getVersion()
-			eppPtr.uOfD.addElementPointerListener(elementPointer, eppPtr)
+			eppPtr.elementPointerId = elementPointer.GetId(hl)
+			eppPtr.elementPointerVersion = elementPointer.GetVersion(hl)
+			eppPtr.uOfD.addElementPointerListener(elementPointer, eppPtr, hl)
 		} else {
 			eppPtr.elementPointerId = uuid.Nil
 			eppPtr.elementPointerVersion = 0
 		}
 		notification := NewChangeNotification(eppPtr, MODIFY, nil)
-		postChange(eppPtr, notification)
+		postChange(eppPtr, notification, hl)
 	}
 }
 
-func (eppPtr *elementPointerPointer) SetOwningElement(element Element) {
-	eppPtr.TraceableLock()
-	defer eppPtr.TraceableUnlock()
-	currentOwner := eppPtr.getOwningElement()
-	if currentOwner != element {
-		if eppPtr.getOwningElement() != nil {
-			currentOwner.TraceableLock()
-			defer currentOwner.TraceableUnlock()
-		}
-		if element != nil {
-			element.TraceableLock()
-			defer element.TraceableUnlock()
-		}
-		eppPtr.SetOwningElementNoLock(element)
+func (eppPtr *elementPointerPointer) SetOwningElement(element Element, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-}
-
-func (eppPtr *elementPointerPointer) SetOwningElementNoLock(element Element) {
-	if element != eppPtr.getOwningElement() {
-		if eppPtr.getOwningElement() != nil {
-			eppPtr.getOwningElement().removeOwnedBaseElement(eppPtr)
+	hl.LockBaseElement(eppPtr)
+	oldOwningElement := eppPtr.getOwningElement(hl)
+	if element != oldOwningElement {
+		if oldOwningElement != nil {
+			removeOwnedBaseElement(oldOwningElement, eppPtr, hl)
 		}
 
-		preChange(eppPtr)
+		preChange(eppPtr, hl)
 		eppPtr.owningElement = element
 		notification := NewChangeNotification(eppPtr, MODIFY, nil)
-		postChange(eppPtr, notification)
+		postChange(eppPtr, notification, hl)
 
-		if eppPtr.getOwningElement() != nil {
-			eppPtr.getOwningElement().addOwnedBaseElement(eppPtr)
+		if element != nil {
+			addOwnedBaseElement(element, eppPtr, hl)
 		}
 	}
 }
 
 // internalSetOwningElement() is an internal function used only in unmarshal
-func (eppPtr *elementPointerPointer) internalSetOwningElement(element Element) {
-	if element != eppPtr.GetOwningElement() {
+func (eppPtr *elementPointerPointer) internalSetOwningElement(element Element, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(eppPtr)
+	if element != eppPtr.getOwningElement(hl) {
 		eppPtr.owningElement = element
-		if eppPtr.GetOwningElement() != nil {
-			eppPtr.GetOwningElement().internalAddOwnedBaseElement(eppPtr)
+		if eppPtr.getOwningElement(hl) != nil {
+			eppPtr.getOwningElement(hl).internalAddOwnedBaseElement(eppPtr, hl)
 		}
 	}
 }
 
-func (epPtr *elementPointerPointer) SetUri(uri string) {
-	epPtr.TraceableLock()
-	defer epPtr.TraceableUnlock()
-	epPtr.SetUriNoLock(uri)
-}
-
-func (epPtr *elementPointerPointer) SetUriNoLock(uri string) {
-	preChange(epPtr)
+func (epPtr *elementPointerPointer) SetUri(uri string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(epPtr)
+	preChange(epPtr, hl)
 	epPtr.uri = uri
 	notification := NewChangeNotification(epPtr, MODIFY, nil)
-	postChange(epPtr, notification)
+	postChange(epPtr, notification, hl)
 }
 
 type ElementPointerPointer interface {
 	Pointer
-	GetElementPointer() ElementPointer
-	getElementPointer() ElementPointer
-	GetElementPointerIdentifier() uuid.UUID
-	GetElementPointerVersion() int
-	setElementPointer(ElementPointer)
-	SetElementPointer(ElementPointer)
+	GetElementPointer(*HeldLocks) ElementPointer
+	GetElementPointerIdentifier(*HeldLocks) uuid.UUID
+	GetElementPointerVersion(*HeldLocks) int
+	SetElementPointer(ElementPointer, *HeldLocks)
 }

@@ -13,67 +13,66 @@ type printMutexStruct struct {
 
 var PrintMutex printMutexStruct
 
-func Equivalent(be1 BaseElement, be2 BaseElement) bool {
-	be1.TraceableLock()
-	defer be1.TraceableUnlock()
-	if be2 != be1 {
-		be2.TraceableLock()
-		defer be2.TraceableUnlock()
+func Equivalent(be1 BaseElement, be2 BaseElement, hl *HeldLocks) bool {
+	if hl == nil {
+		hl := NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-	return equivalent(be1, be2)
+	hl.LockBaseElement(be1)
+	if be2 != be1 {
+		hl.LockBaseElement(be2)
+	}
+	return equivalent(be1, be2, hl)
 }
 
-func equivalent(be1 BaseElement, be2 BaseElement) bool {
+func equivalent(be1 BaseElement, be2 BaseElement, hl *HeldLocks) bool {
 	if reflect.TypeOf(be1) != reflect.TypeOf(be2) {
 		return false
 	}
 	switch be1.(type) {
 	case *baseElementPointer:
-		return be1.(*baseElementPointer).isEquivalent(be2.(*baseElementPointer))
+		return be1.(*baseElementPointer).isEquivalent(be2.(*baseElementPointer), hl)
 	case *baseElementReference:
-		return be1.(*baseElementReference).isEquivalent(be2.(*baseElementReference))
+		return be1.(*baseElementReference).isEquivalent(be2.(*baseElementReference), hl)
 	case *element:
-		return be1.(*element).isEquivalent(be2.(*element))
+		return be1.(*element).isEquivalent(be2.(*element), hl)
 	case *elementPointer:
-		return be1.(*elementPointer).isEquivalent(be2.(*elementPointer))
+		return be1.(*elementPointer).isEquivalent(be2.(*elementPointer), hl)
 	case *elementPointerPointer:
-		return be1.(*elementPointerPointer).isEquivalent(be2.(*elementPointerPointer))
+		return be1.(*elementPointerPointer).isEquivalent(be2.(*elementPointerPointer), hl)
 	case *elementPointerReference:
-		return be1.(*elementPointerReference).isEquivalent(be2.(*elementPointerReference))
+		return be1.(*elementPointerReference).isEquivalent(be2.(*elementPointerReference), hl)
 	case *elementReference:
-		return be1.(*elementReference).isEquivalent(be2.(*elementReference))
+		return be1.(*elementReference).isEquivalent(be2.(*elementReference), hl)
 	case *literal:
-		return be1.(*literal).isEquivalent(be2.(*literal))
+		return be1.(*literal).isEquivalent(be2.(*literal), hl)
 	case *literalPointer:
-		return be1.(*literalPointer).isEquivalent(be2.(*literalPointer))
+		return be1.(*literalPointer).isEquivalent(be2.(*literalPointer), hl)
 	case *literalPointerPointer:
-		return be1.(*literalPointerPointer).isEquivalent(be2.(*literalPointerPointer))
+		return be1.(*literalPointerPointer).isEquivalent(be2.(*literalPointerPointer), hl)
 	case *literalPointerReference:
-		return be1.(*literalPointerReference).isEquivalent(be2.(*literalPointerReference))
+		return be1.(*literalPointerReference).isEquivalent(be2.(*literalPointerReference), hl)
 	case *literalReference:
-		return be1.(*literalReference).isEquivalent(be2.(*literalReference))
+		return be1.(*literalReference).isEquivalent(be2.(*literalReference), hl)
 	case *refinement:
-		return be1.(*refinement).isEquivalent(be2.(*refinement))
+		return be1.(*refinement).isEquivalent(be2.(*refinement), hl)
 	default:
 		log.Printf("Equivalent default case entered for object: \n")
-		Print(be1, "   ")
+		Print(be1, "   ", hl)
 	}
 	return false
 }
 
 // GetChildWithUri() is a locking function that returns the first child with the indicated
 // uri
-func GetChildWithUri(element Element, uri string) BaseElement {
-	element.TraceableLock()
-	defer element.TraceableUnlock()
-	return GetChildWithUriNoLock(element, uri)
-}
-
-// GetChildWithUriNoLock() is a non-locking function that returns the first child with the indicated
-// uri
-func GetChildWithUriNoLock(element Element, uri string) BaseElement {
-	for _, child := range element.getOwnedBaseElements() {
-		if child.GetUri() == uri {
+func GetChildWithUri(element Element, uri string, hl *HeldLocks) BaseElement {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(element)
+	for _, child := range element.GetOwnedBaseElements(hl) {
+		if GetUri(child, hl) == uri {
 			return child
 		}
 	}
@@ -82,18 +81,15 @@ func GetChildWithUriNoLock(element Element, uri string) BaseElement {
 
 // GetChildElementWithAncestorUri() is a locking function that returns the first child that has a refinement ancestor
 // with the indicated uri
-func GetChildElementWithAncestorUri(element Element, uri string) Element {
-	element.TraceableLock()
-	defer element.TraceableUnlock()
-	return GetChildElementWithAncestorUriNoLock(element, uri)
-}
-
-// GetChildElementWithAncestorUriNoLock() is a non-locking function that returns the first child that has a refinement
-// ancestor with the indicated uri
-func GetChildElementWithAncestorUriNoLock(element Element, uri string) Element {
-	for _, child := range element.GetOwnedElementsNoLock() {
-		for _, ancestor := range child.GetAbstractElementsRecursivelyNoLock() {
-			if ancestor.GetUri() == uri {
+func GetChildElementWithAncestorUri(element Element, uri string, hl *HeldLocks) Element {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(element)
+	for _, child := range element.GetOwnedElements(hl) {
+		for _, ancestor := range child.GetAbstractElementsRecursively(hl) {
+			if GetUri(ancestor, hl) == uri {
 				return child
 			}
 		}
@@ -103,16 +99,13 @@ func GetChildElementWithAncestorUriNoLock(element Element, uri string) Element {
 
 // GetChildElementWithUri() is a locking function that returns the first child with the indicated
 // uri if that child is an element
-func GetChildElementWithUri(element Element, uri string) Element {
-	element.TraceableLock()
-	defer element.TraceableUnlock()
-	return GetChildElementWithUriNoLock(element, uri)
-}
-
-// GetChildElementWithUriNoLock() is a non-locking function that returns the first child with the indicated
-// uri if that child is an element
-func GetChildElementWithUriNoLock(element Element, uri string) Element {
-	be := GetChildWithUriNoLock(element, uri)
+func GetChildElementWithUri(element Element, uri string, hl *HeldLocks) Element {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(element)
+	be := GetChildWithUri(element, uri, hl)
 	if be != nil {
 		switch be.(type) {
 		case Element:
@@ -124,16 +117,13 @@ func GetChildElementWithUriNoLock(element Element, uri string) Element {
 
 // GetChildElementReferenceWithUri() is a locking function that returns the first child
 // element reference with the indicated uri
-func GetChildElementReferenceWithUri(element Element, uri string) ElementReference {
-	element.TraceableLock()
-	defer element.TraceableUnlock()
-	return GetChildElementReferenceWithUriNoLock(element, uri)
-}
-
-// GetChildElementReferenceWithUriNoLock() is a non-locking function that returns the first child
-// element reference with the indicated uri
-func GetChildElementReferenceWithUriNoLock(element Element, uri string) ElementReference {
-	be := GetChildWithUriNoLock(element, uri)
+func GetChildElementReferenceWithUri(element Element, uri string, hl *HeldLocks) ElementReference {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(element)
+	be := GetChildWithUri(element, uri, hl)
 	if be != nil {
 		switch be.(type) {
 		case ElementReference:
@@ -145,16 +135,13 @@ func GetChildElementReferenceWithUriNoLock(element Element, uri string) ElementR
 
 // GetChildElementReferenceWithAncestorUri() is a locking function that returns the first child
 // element reference with an ancestor having the indicated uri
-func GetChildElementReferenceWithAncestorUri(element Element, uri string) ElementReference {
-	element.TraceableLock()
-	defer element.TraceableUnlock()
-	return GetChildElementReferenceWithUriNoLock(element, uri)
-}
-
-// GetChildElementReferenceWithAncestorUriNoLock() is a non-locking function that returns the first child
-// element reference with the indicated uri
-func GetChildElementReferenceWithAncestorUriNoLock(element Element, uri string) ElementReference {
-	be := GetChildElementWithAncestorUriNoLock(element, uri)
+func GetChildElementReferenceWithAncestorUri(element Element, uri string, hl *HeldLocks) ElementReference {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(element)
+	be := GetChildElementWithAncestorUri(element, uri, hl)
 	if be != nil {
 		switch be.(type) {
 		case ElementReference:
@@ -164,15 +151,27 @@ func GetChildElementReferenceWithAncestorUriNoLock(element Element, uri string) 
 	return nil
 }
 
-func Print(be BaseElement, prefix string) {
-	printBe(be, prefix)
+func Print(be BaseElement, prefix string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	printBe(be, prefix, hl)
 }
 
-func PrintNotification(notification *ChangeNotification) {
-	printNotification(notification, "")
+func PrintNotification(notification *ChangeNotification, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	printNotification(notification, "", hl)
 }
 
-func printNotification(notification *ChangeNotification, prefix string) {
+func printNotification(notification *ChangeNotification, prefix string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
 	notificationType := ""
 	switch notification.natureOfChange {
 	case ADD:
@@ -183,13 +182,15 @@ func printNotification(notification *ChangeNotification, prefix string) {
 		notificationType = "Remove"
 	}
 	log.Printf("%s%s: \n", prefix, notificationType)
-	Print(notification.changedObject, prefix+"   ")
+	Print(notification.changedObject, prefix+"   ", hl)
 	if notification.underlyingChange != nil {
-		printNotification(notification.underlyingChange, prefix+"      ")
+		printNotification(notification.underlyingChange, prefix+"      ", hl)
 	}
 }
 
 func PrintUndoStack(s undoStack, stackName string) {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
 	log.Printf("%s:", stackName)
 	for _, entry := range s {
 		var changeType string
@@ -213,47 +214,60 @@ func PrintUndoStack(s undoStack, stackName string) {
 		}
 		log.Printf("   Change type: %s", changeType)
 		log.Printf("   Prior state:")
-		Print(entry.priorState, "      ")
+		Print(entry.priorState, "      ", hl)
 		//		log.Printf("   Changed element:")
 		//		Print(entry.changedElement, "      ")
 	}
 }
 
-func printBe(be BaseElement, prefix string) {
+func printBe(be BaseElement, prefix string, hl *HeldLocks) {
 	if be == nil {
 		return
 	}
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(be)
 	log.Printf("%s%s: \n", prefix, reflect.TypeOf(be).String())
 	switch be.(type) {
 	case *baseElementPointer:
-		be.(*baseElementPointer).printBaseElementPointer(prefix)
+		be.(*baseElementPointer).printBaseElementPointer(prefix, hl)
 	case *baseElementReference:
-		be.(*baseElementReference).printBaseElementReference(prefix)
+		be.(*baseElementReference).printBaseElementReference(prefix, hl)
 	case *element:
-		be.(*element).printElement(prefix)
+		be.(*element).printElement(prefix, hl)
 	case *elementPointer:
-		be.(*elementPointer).printElementPointer(prefix)
+		be.(*elementPointer).printElementPointer(prefix, hl)
 	case *elementPointerPointer:
-		be.(*elementPointerPointer).printElementPointerPointer(prefix)
+		be.(*elementPointerPointer).printElementPointerPointer(prefix, hl)
 	case *elementPointerReference:
-		be.(*elementPointerReference).printElementPointerReference(prefix)
+		be.(*elementPointerReference).printElementPointerReference(prefix, hl)
 	case *elementReference:
-		be.(*elementReference).printElementReference(prefix)
+		be.(*elementReference).printElementReference(prefix, hl)
 	case *literal:
-		be.(*literal).printLiteral(prefix)
+		be.(*literal).printLiteral(prefix, hl)
 	case *literalPointer:
-		be.(*literalPointer).printLiteralPointer(prefix)
+		be.(*literalPointer).printLiteralPointer(prefix, hl)
 	case *literalPointerPointer:
-		be.(*literalPointerPointer).printLiteralPointerPointer(prefix)
+		be.(*literalPointerPointer).printLiteralPointerPointer(prefix, hl)
 	case *literalPointerReference:
-		be.(*literalPointerReference).printLiteralPointerReference(prefix)
+		be.(*literalPointerReference).printLiteralPointerReference(prefix, hl)
 	case *literalReference:
-		be.(*literalReference).printLiteralReference(prefix)
+		be.(*literalReference).printLiteralReference(prefix, hl)
 	case *refinement:
-		be.(*refinement).printRefinement(prefix)
+		be.(*refinement).printRefinement(prefix, hl)
 	default:
 		log.Printf("No case for %T in Print \n", be)
 	}
+}
+
+func PrintUriIndex(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	uOfD.uriBaseElementMap.Print(hl)
 }
 
 func unmarshalPolymorphicBaseElement(data []byte, result *BaseElement) error {
@@ -354,36 +368,40 @@ func unmarshalPolymorphicBaseElement(data []byte, result *BaseElement) error {
 	return err
 }
 
-func restoreValueOwningElementFieldsRecursively(el Element) {
-	for _, child := range el.getOwnedBaseElements() {
+func restoreValueOwningElementFieldsRecursively(el Element, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	for _, child := range el.GetOwnedBaseElements(hl) {
 		switch child.(type) {
 		//@TODO add reference to case
 		case *baseElementPointer:
-			child.(*baseElementPointer).internalSetOwningElement(el)
+			child.(*baseElementPointer).internalSetOwningElement(el, hl)
 		case *baseElementReference:
-			restoreValueOwningElementFieldsRecursively(child.(*baseElementReference))
+			restoreValueOwningElementFieldsRecursively(child.(*baseElementReference), hl)
 		case *element:
-			restoreValueOwningElementFieldsRecursively(child.(*element))
+			restoreValueOwningElementFieldsRecursively(child.(*element), hl)
 		case *elementPointer:
-			child.(*elementPointer).internalSetOwningElement(el)
+			child.(*elementPointer).internalSetOwningElement(el, hl)
 		case *elementPointerPointer:
-			child.(*elementPointerPointer).internalSetOwningElement(el)
+			child.(*elementPointerPointer).internalSetOwningElement(el, hl)
 		case *elementPointerReference:
-			restoreValueOwningElementFieldsRecursively(child.(*elementPointerReference))
+			restoreValueOwningElementFieldsRecursively(child.(*elementPointerReference), hl)
 		case *elementReference:
-			restoreValueOwningElementFieldsRecursively(child.(*elementReference))
+			restoreValueOwningElementFieldsRecursively(child.(*elementReference), hl)
 		case *literal:
-			child.(*literal).internalSetOwningElement(el)
+			child.(*literal).internalSetOwningElement(el, hl)
 		case *literalPointer:
-			child.(*literalPointer).internalSetOwningElement(el)
+			child.(*literalPointer).internalSetOwningElement(el, hl)
 		case *literalPointerPointer:
-			child.(*literalPointerPointer).internalSetOwningElement(el)
+			child.(*literalPointerPointer).internalSetOwningElement(el, hl)
 		case *literalPointerReference:
-			restoreValueOwningElementFieldsRecursively(child.(*literalPointerReference))
+			restoreValueOwningElementFieldsRecursively(child.(*literalPointerReference), hl)
 		case *literalReference:
-			restoreValueOwningElementFieldsRecursively(child.(*literalReference))
+			restoreValueOwningElementFieldsRecursively(child.(*literalReference), hl)
 		case *refinement:
-			restoreValueOwningElementFieldsRecursively(child.(*refinement))
+			restoreValueOwningElementFieldsRecursively(child.(*refinement), hl)
 		default:
 			log.Printf("No case for %T in restoreValueOwningElementFieldsRecursively \n", child)
 		}

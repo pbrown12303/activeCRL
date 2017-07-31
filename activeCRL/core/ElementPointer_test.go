@@ -7,129 +7,141 @@ import (
 
 func TestNewOwningElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	owner := uOfD.NewElement()
-	oep := uOfD.NewOwningElementPointer()
-	oep.SetOwningElement(owner)
-	if oep.GetOwningElement() != owner {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	owner := uOfD.NewElement(hl)
+	oep := uOfD.NewOwningElementPointer(hl)
+	SetOwningElement(oep, owner, hl)
+	if GetOwningElement(oep, hl) != owner {
 		t.Error("Owning element pointer's owner not set properly")
 	}
 	var found bool = false
-	for key, _ := range owner.getOwnedBaseElements() {
-		if key == oep.GetId().String() {
+	for _, be := range owner.GetOwnedBaseElements(hl) {
+		if be.GetId(hl) == oep.GetId(hl) {
 			found = true
 		}
 	}
 	if found == false {
 		t.Error("Owning Element Pointer not found in parent's OwnedBaseElements \n")
 	}
-	if oep.getElementPointerRole() != OWNING_ELEMENT {
+	if oep.GetElementPointerRole(hl) != OWNING_ELEMENT {
 		t.Error("Owning Element Pointer role not OWNING_ELEMENT \n")
 	}
-	if owner.getOwningElementPointer() != oep {
+	if owner.getOwningElementPointer(hl) != oep {
 		t.Error("Owner.getOwningElementPointer() did not return Owning Element Pointer")
 	}
 }
 
 func TestReferencedElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	owner := uOfD.NewElementReference()
-	rep := uOfD.NewReferencedElementPointer()
-	rep.SetOwningElement(owner)
-	if rep.GetOwningElement() != owner {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	owner := uOfD.NewElementReference(hl)
+	rep := uOfD.NewReferencedElementPointer(hl)
+	SetOwningElement(rep, owner, hl)
+	if GetOwningElement(rep, hl) != owner {
 		t.Error("Referenced element pointer's owner not set properly")
 	}
 	var found bool = false
-	for key, _ := range owner.getOwnedBaseElements() {
-		if key == rep.GetId().String() {
+	for _, be := range owner.GetOwnedBaseElements(hl) {
+		if be.GetId(hl) == rep.GetId(hl) {
 			found = true
 		}
 	}
 	if found == false {
 		t.Error("Referenced Element Pointer not found in parent's OwnedBaseElements \n")
 	}
-	if rep.getElementPointerRole() != REFERENCED_ELEMENT {
+	if rep.GetElementPointerRole(hl) != REFERENCED_ELEMENT {
 		t.Error("Referenced Element Pointer role not REFERENCED_ELEMENT \n")
 	}
-	if owner.getReferencedElementPointer() != rep {
+	if owner.getReferencedElementPointer(hl) != rep {
 		t.Error("Owner.getReferencedElementPointer() did not return Referenced Element Pointer")
 	}
 }
 
 func TestAbstractElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	owner := uOfD.NewRefinement()
-	aep := uOfD.NewAbstractElementPointer()
-	aep.SetOwningElement(owner)
-	if aep.GetOwningElement() != owner {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	owner := uOfD.NewRefinement(hl)
+	aep := uOfD.NewAbstractElementPointer(hl)
+	SetOwningElement(aep, owner, hl)
+	if GetOwningElement(aep, hl) != owner {
 		t.Error("Abstract element pointer's owner not set properly")
 	}
 	var found bool = false
-	for key, _ := range owner.getOwnedBaseElements() {
-		if key == aep.GetId().String() {
+	for _, be := range owner.GetOwnedBaseElements(hl) {
+		if be.GetId(hl) == aep.GetId(hl) {
 			found = true
 		}
 	}
 	if found == false {
 		t.Error("Abstract Element Pointer not found in parent's OwnedBaseElements \n")
 	}
-	if aep.getElementPointerRole() != ABSTRACT_ELEMENT {
+	if aep.GetElementPointerRole(hl) != ABSTRACT_ELEMENT {
 		t.Error("Abstract Element Pointer role not ABSTRACT_ELEMENT \n")
 	}
-	if owner.getAbstractElementPointer() != aep {
+	if owner.getAbstractElementPointer(hl) != aep {
 		t.Error("Owner.getAbstractElementPointer() did not return Abstract Element Pointer")
 	}
 }
 
 func TestRefinedElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	owner := uOfD.NewRefinement()
-	rep := uOfD.NewRefinedElementPointer()
-	rep.SetOwningElement(owner)
-	if rep.GetOwningElement() != owner {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	owner := uOfD.NewRefinement(hl)
+	rep := uOfD.NewRefinedElementPointer(hl)
+	SetOwningElement(rep, owner, hl)
+	if GetOwningElement(rep, hl) != owner {
 		t.Error("Refined element pointer's owner not set properly")
 	}
 	var found bool = false
-	for key, _ := range owner.getOwnedBaseElements() {
-		if key == rep.GetId().String() {
+	for _, be := range owner.GetOwnedBaseElements(hl) {
+		if be.GetId(hl) == rep.GetId(hl) {
 			found = true
 		}
 	}
 	if found == false {
 		t.Error("Refined Element Pointer not found in parent's OwnedBaseElements \n")
 	}
-	if rep.getElementPointerRole() != REFINED_ELEMENT {
+	if rep.GetElementPointerRole(hl) != REFINED_ELEMENT {
 		t.Error("Refined Element Pointer role not REFINED_ELEMENT \n")
 	}
-	if owner.getRefinedElementPointer() != rep {
+	if owner.getRefinedElementPointer(hl) != rep {
 		t.Error("Owner.getRefinedElementPointer() did not return Abstract Element Pointer")
 	}
 }
 
 func TestSetElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	owner := uOfD.NewElementReference()
-	rep := uOfD.NewReferencedElementPointer()
-	rep.SetOwningElement(owner)
-	target := uOfD.NewElement()
-	target.SetOwningElement(owner)
-	rep.SetElement(target)
-	if rep.GetElement() != target {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	owner := uOfD.NewElementReference(hl)
+	rep := uOfD.NewReferencedElementPointer(hl)
+	SetOwningElement(rep, owner, hl)
+	target := uOfD.NewElement(hl)
+	SetOwningElement(target, owner, hl)
+	rep.SetElement(target, hl)
+	if rep.GetElement(hl) != target {
 		t.Error("ReferencedElementPointer SetElement(target) did not work")
 	}
-	rep.SetElement(nil)
-	if rep.GetElement() != nil {
+	rep.SetElement(nil, hl)
+	if rep.GetElement(hl) != nil {
 		t.Error("ReferencedElementPointer SetElement(nil) did not work")
 	}
 }
 
 func TestElementPointerMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	owner := uOfD.NewElementReference()
-	rep := uOfD.NewReferencedElementPointer()
-	rep.SetOwningElement(owner)
-	target := uOfD.NewElement()
-	target.SetOwningElement(owner)
-	rep.SetElement(target)
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	owner := uOfD.NewElementReference(hl)
+	rep := uOfD.NewReferencedElementPointer(hl)
+	SetOwningElement(rep, owner, hl)
+	target := uOfD.NewElement(hl)
+	SetOwningElement(target, owner, hl)
+	rep.SetElement(target, hl)
 
 	result, err := json.MarshalIndent(owner, "", "   ")
 	if err != nil {
@@ -138,25 +150,27 @@ func TestElementPointerMarshal(t *testing.T) {
 
 	uOfD2 := NewUniverseOfDiscourse()
 	recoveredOwner := uOfD2.RecoverElement(result)
-	if !Equivalent(owner, recoveredOwner) {
+	if !Equivalent(owner, recoveredOwner, hl) {
 		t.Error("Recovered owner not equivalent to original owner")
 	}
 }
 
 func TestElementPointerClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	owner := uOfD.NewElementReference()
-	rep := uOfD.NewReferencedElementPointer()
-	rep.SetOwningElement(owner)
-	target := uOfD.NewElement()
-	target.SetOwningElement(owner)
-	rep.SetElement(target)
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	owner := uOfD.NewElementReference(hl)
+	rep := uOfD.NewReferencedElementPointer(hl)
+	SetOwningElement(rep, owner, hl)
+	target := uOfD.NewElement(hl)
+	SetOwningElement(target, owner, hl)
+	rep.SetElement(target, hl)
 
 	clone := rep.(*elementPointer).clone()
-	if !Equivalent(rep, clone) {
+	if !Equivalent(rep, clone, hl) {
 		t.Error("ElementPointer clone failed")
-		Print(rep, "   ")
-		Print(clone, "   ")
+		Print(rep, "   ", hl)
+		Print(clone, "   ", hl)
 	}
 
 }

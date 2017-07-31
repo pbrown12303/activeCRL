@@ -45,55 +45,52 @@ func (lpPtr *literalPointer) cloneAttributes(source literalPointer) {
 // GetLiteral() locks the literal pointer and the literal to which it points. If the literal
 // valaue is nil, it checks to see whether there is an identifier for it present and, if so,
 // attempts to find it using the uOfD. It then returns the result of calling the non-locking getLiteral()
-func (lpPtr *literalPointer) GetLiteral() Literal {
-	lpPtr.TraceableLock()
-	defer lpPtr.TraceableUnlock()
-	if lpPtr.literal == nil && lpPtr.getLiteralIdentifier() != uuid.Nil && lpPtr.uOfD != nil {
-		lpPtr.literal = lpPtr.uOfD.getLiteral(lpPtr.getLiteralIdentifier().String())
+func (lpPtr *literalPointer) GetLiteral(hl *HeldLocks) Literal {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-	if lpPtr.literal != nil {
-		lpPtr.literal.TraceableLock()
-		defer lpPtr.literal.TraceableUnlock()
-	}
-	return lpPtr.getLiteral()
-}
-
-// getLiteral() is a non-locking internal function that simply returns the literal pointed to by this
-// literal pointer. If the literal value is nil, it checks to see whether there is an identifier for it present
-// and, if so, attemtps to find it using the uOfD.
-func (lpPtr *literalPointer) getLiteral() Literal {
-	if lpPtr.literal == nil && lpPtr.getLiteralIdentifier() != uuid.Nil && lpPtr.uOfD != nil {
-		lpPtr.literal = lpPtr.uOfD.getLiteral(lpPtr.getLiteralIdentifier().String())
+	hl.LockBaseElement(lpPtr)
+	if lpPtr.literal == nil && lpPtr.GetLiteralIdentifier(hl) != uuid.Nil && lpPtr.uOfD != nil {
+		lpPtr.literal = lpPtr.uOfD.getLiteral(lpPtr.GetLiteralIdentifier(hl).String())
 	}
 	return lpPtr.literal
 }
 
-func (lpPtr *literalPointer) GetLiteralIdentifier() uuid.UUID {
-	lpPtr.TraceableLock()
-	defer lpPtr.TraceableUnlock()
-	return lpPtr.getLiteralIdentifier()
-}
-
-func (lpPtr *literalPointer) getLiteralIdentifier() uuid.UUID {
+func (lpPtr *literalPointer) GetLiteralIdentifier(hl *HeldLocks) uuid.UUID {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lpPtr)
 	return lpPtr.literalId
 }
 
-func (lpPtr *literalPointer) getLiteralPointerRole() LiteralPointerRole {
+func (lpPtr *literalPointer) GetLiteralPointerRole(hl *HeldLocks) LiteralPointerRole {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lpPtr)
 	return lpPtr.literalPointerRole
 }
 
-func (lpPtr *literalPointer) GetLiteralVersion() int {
-	lpPtr.TraceableLock()
-	defer lpPtr.TraceableUnlock()
-	return lpPtr.getLiteralVersion()
-}
-
-func (lpPtr *literalPointer) getLiteralVersion() int {
+func (lpPtr *literalPointer) GetLiteralVersion(hl *HeldLocks) int {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lpPtr)
 	return lpPtr.literalVersion
 }
 
-func (lpPtr *literalPointer) GetNameNoLock() string {
-	switch lpPtr.getLiteralPointerRole() {
+func (lpPtr *literalPointer) getName(hl *HeldLocks) string {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lpPtr)
+	switch lpPtr.GetLiteralPointerRole(hl) {
 	case NAME:
 		return "name"
 	case DEFINITION:
@@ -110,7 +107,13 @@ func (lpPtr *literalPointer) initializeLiteralPointer() {
 	lpPtr.initializePointer()
 }
 
-func (bePtr *literalPointer) isEquivalent(be *literalPointer) bool {
+func (bePtr *literalPointer) isEquivalent(be *literalPointer, hl *HeldLocks) bool {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(bePtr)
+	hl.LockBaseElement(be)
 	if bePtr.literalId != be.literalId {
 		log.Printf("Equivalence failed: indicated literal ids do not match \n")
 		return false
@@ -124,12 +127,10 @@ func (bePtr *literalPointer) isEquivalent(be *literalPointer) bool {
 		return false
 	}
 	var pointerPtr *pointer = &bePtr.pointer
-	return pointerPtr.isEquivalent(&be.pointer)
+	return pointerPtr.isEquivalent(&be.pointer, hl)
 }
 
 func (elPtr *literalPointer) MarshalJSON() ([]byte, error) {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -155,11 +156,26 @@ func (elPtr *literalPointer) marshalLiteralPointerFields(buffer *bytes.Buffer) e
 	return err
 }
 
-func (lpPtr *literalPointer) printLiteralPointer(prefix string) {
-	lpPtr.printPointer(prefix)
-	log.Printf("%sIndicated LiteralId: %s \n", prefix, lpPtr.literalId.String())
-	log.Printf("%sIndicated LiteralVersion: %d \n", prefix, lpPtr.literalVersion)
-	log.Printf("%sLiteralPointerRole: %d \n", prefix, lpPtr.literalPointerRole)
+func (lpPtr *literalPointer) printLiteralPointer(prefix string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	lpPtr.printPointer(prefix, hl)
+	log.Printf("%s  Indicated LiteralId: %s \n", prefix, lpPtr.literalId.String())
+	log.Printf("%s  Indicated LiteralVersion: %d \n", prefix, lpPtr.literalVersion)
+	role := ""
+	switch lpPtr.literalPointerRole {
+	case VALUE:
+		role = "VALUE"
+	case URI:
+		role = "URI"
+	case NAME:
+		role = "NAME"
+	case DEFINITION:
+		role = "DEFINITION"
+	}
+	log.Printf("%s  LiteralPointerRole: %s \n", prefix, role)
 }
 
 func (lp *literalPointer) recoverLiteralPointerFields(unmarshaledData *map[string]json.RawMessage) error {
@@ -212,93 +228,86 @@ func (lp *literalPointer) recoverLiteralPointerFields(unmarshaledData *map[strin
 	return nil
 }
 
-func (lpPtr *literalPointer) SetLiteral(literal Literal) {
-	lpPtr.TraceableLock()
-	defer lpPtr.TraceableUnlock()
-	if literal != nil {
-		literal.TraceableLock()
-		defer literal.TraceableUnlock()
+func (lpPtr *literalPointer) SetLiteral(literal Literal, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-	lpPtr.setLiteral(literal)
-}
-
-func (lpPtr *literalPointer) setLiteral(literal Literal) {
+	hl.LockBaseElement(lpPtr)
 	if literal != lpPtr.literal {
-		preChange(lpPtr)
+		preChange(lpPtr, hl)
 		if lpPtr.literal != nil {
-			lpPtr.uOfD.removeLiteralListener(lpPtr.literal, lpPtr)
+			lpPtr.uOfD.removeLiteralListener(lpPtr.literal, lpPtr, hl)
 		}
 		lpPtr.literal = literal
 		if literal != nil {
-			lpPtr.literalId = literal.getId()
-			lpPtr.literalVersion = literal.getVersion()
-			lpPtr.uOfD.addLiteralListener(literal, lpPtr)
+			lpPtr.literalId = literal.GetId(hl)
+			lpPtr.literalVersion = literal.GetVersion(hl)
+			lpPtr.uOfD.addLiteralListener(literal, lpPtr, hl)
 		} else {
 			lpPtr.literalId = uuid.Nil
 			lpPtr.literalVersion = 0
 		}
 		notification := NewChangeNotification(lpPtr, MODIFY, nil)
-		postChange(lpPtr, notification)
+		postChange(lpPtr, notification, hl)
 	}
 }
 
-func (lpPtr *literalPointer) SetOwningElement(element Element) {
-	lpPtr.TraceableLock()
-	defer lpPtr.TraceableUnlock()
-	if element != nil {
-		element.TraceableLock()
-		defer element.TraceableUnlock()
+func (lpPtr *literalPointer) SetOwningElement(element Element, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-	lpPtr.SetOwningElementNoLock(element)
-}
-
-func (lpPtr *literalPointer) SetOwningElementNoLock(element Element) {
-	if element != lpPtr.getOwningElement() {
-		if lpPtr.getOwningElement() != nil {
-			lpPtr.getOwningElement().removeOwnedBaseElement(lpPtr)
+	hl.LockBaseElement(lpPtr)
+	if element != lpPtr.owningElement {
+		if lpPtr.owningElement != nil {
+			removeOwnedBaseElement(lpPtr.owningElement, lpPtr, hl)
 		}
 
-		preChange(lpPtr)
+		preChange(lpPtr, hl)
 		lpPtr.owningElement = element
 		notification := NewChangeNotification(lpPtr, MODIFY, nil)
-		postChange(lpPtr, notification)
+		postChange(lpPtr, notification, hl)
 
-		if lpPtr.getOwningElement() != nil {
-			lpPtr.getOwningElement().addOwnedBaseElement(lpPtr)
+		if lpPtr.owningElement != nil {
+			addOwnedBaseElement(lpPtr.owningElement, lpPtr, hl)
 		}
 	}
 }
 
 // internalSetOwningElement() is an internal function used only in unmarshal
-func (lpPtr *literalPointer) internalSetOwningElement(element Element) {
-	if element != lpPtr.getOwningElement() {
+func (lpPtr *literalPointer) internalSetOwningElement(element Element, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lpPtr)
+	if element != lpPtr.getOwningElement(hl) {
 		lpPtr.owningElement = element
-		if lpPtr.getOwningElement() != nil {
-			lpPtr.getOwningElement().internalAddOwnedBaseElement(lpPtr)
+		if lpPtr.getOwningElement(hl) != nil {
+			lpPtr.getOwningElement(hl).internalAddOwnedBaseElement(lpPtr, hl)
 		}
 	}
 }
 
-func (lpPtr *literalPointer) SetUri(uri string) {
-	lpPtr.TraceableLock()
-	defer lpPtr.TraceableUnlock()
-	lpPtr.SetUriNoLock(uri)
-}
-
-func (lpPtr *literalPointer) SetUriNoLock(uri string) {
-	preChange(lpPtr)
-	lpPtr.uri = uri
-	notification := NewChangeNotification(lpPtr, MODIFY, nil)
-	postChange(lpPtr, notification)
+func (lpPtr *literalPointer) SetUri(uri string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	if uri != lpPtr.uri {
+		preChange(lpPtr, hl)
+		lpPtr.uri = uri
+		notification := NewChangeNotification(lpPtr, MODIFY, nil)
+		postChange(lpPtr, notification, hl)
+	}
 }
 
 type LiteralPointer interface {
 	Pointer
-	GetLiteral() Literal
-	getLiteral() Literal
-	GetLiteralIdentifier() uuid.UUID
-	getLiteralPointerRole() LiteralPointerRole
-	GetLiteralVersion() int
-	setLiteral(Literal)
-	SetLiteral(Literal)
+	GetLiteral(*HeldLocks) Literal
+	GetLiteralIdentifier(*HeldLocks) uuid.UUID
+	GetLiteralPointerRole(*HeldLocks) LiteralPointerRole
+	GetLiteralVersion(*HeldLocks) int
+	SetLiteral(Literal, *HeldLocks)
 }

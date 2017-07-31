@@ -13,7 +13,7 @@ import (
 
 type baseElementPointer struct {
 	pointer
-	baseElement        BaseElement
+	baseEl             BaseElement
 	baseElementId      uuid.UUID
 	baseElementVersion int
 }
@@ -26,52 +26,49 @@ func (bepPtr *baseElementPointer) clone() *baseElementPointer {
 
 func (bepPtr *baseElementPointer) cloneAttributes(source baseElementPointer) {
 	bepPtr.pointer.cloneAttributes(source.pointer)
-	bepPtr.baseElement = source.baseElement
+	bepPtr.baseEl = source.baseEl
 	bepPtr.baseElementId = source.baseElementId
 	bepPtr.baseElementVersion = source.baseElementVersion
 }
 
-func (bepPtr *baseElementPointer) baseElementChanged(notification *ChangeNotification) {
+func (bepPtr *baseElementPointer) baseElementChanged(notification *ChangeNotification, hl *HeldLocks) {
 	// Circular references need to be detected and curtailed, hence the isReferenced() call
-	if bepPtr.GetOwningElement() != nil && notification.isReferenced(bepPtr) == false {
+	if bepPtr.getOwningElement(hl) != nil && notification.isReferenced(bepPtr) == false {
 		newNotification := NewChangeNotification(bepPtr, MODIFY, notification)
-		bepPtr.GetOwningElement().childChanged(newNotification)
+		childChanged(bepPtr.getOwningElement(hl), newNotification, hl)
 	}
 
 }
 
-func (bepPtr *baseElementPointer) GetBaseElement() BaseElement {
-	bepPtr.TraceableLock()
-	defer bepPtr.TraceableUnlock()
-	return bepPtr.getBaseElement()
-}
-
-// getElement() assumes that all relevant locking is being managed elsewhere
-func (bepPtr *baseElementPointer) getBaseElement() BaseElement {
-	if bepPtr.baseElement == nil && bepPtr.getBaseElementIdentifier() != uuid.Nil && bepPtr.uOfD != nil {
-		bepPtr.baseElement = bepPtr.uOfD.getBaseElement(bepPtr.getBaseElementIdentifier().String())
+func (bepPtr *baseElementPointer) GetBaseElement(hl *HeldLocks) BaseElement {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-	return bepPtr.baseElement
+	hl.LockBaseElement(&bepPtr.pointer.baseElement)
+	if bepPtr.baseEl == nil && bepPtr.GetBaseElementIdentifier(hl) != uuid.Nil && bepPtr.uOfD != nil {
+		bepPtr.baseEl = bepPtr.uOfD.GetBaseElement(bepPtr.GetBaseElementIdentifier(hl).String())
+	}
+	return bepPtr.baseEl
 }
 
-// GetNameNoLock() is a non-locking function that returns the name
-func (bepPtr *baseElementPointer) GetNameNoLock() string {
+func (bepPtr *baseElementPointer) getName(hl *HeldLocks) string {
+	// No need to lock - this is a constant
 	return "baseElementPointer"
 }
 
 // GetBaseElementIdentifier() locks the vase element pointer and returns the base element identifier, releasing the lock in the process
-func (bepPtr *baseElementPointer) GetBaseElementIdentifier() uuid.UUID {
-	bepPtr.TraceableLock()
-	defer bepPtr.TraceableUnlock()
-	return bepPtr.getBaseElementIdentifier()
-}
-
-// getBaseElementIdentifier() returns the base element identifier without locking
-func (bepPtr *baseElementPointer) getBaseElementIdentifier() uuid.UUID {
+func (bepPtr *baseElementPointer) GetBaseElementIdentifier(hl *HeldLocks) uuid.UUID {
+	if hl != nil {
+		hl.LockBaseElement(&bepPtr.pointer.baseElement)
+	}
 	return bepPtr.baseElementId
 }
 
-func (bepPtr *baseElementPointer) GetBaseElementVersion() int {
+func (bepPtr *baseElementPointer) GetBaseElementVersion(hl *HeldLocks) int {
+	if hl != nil {
+		hl.LockBaseElement(bepPtr)
+	}
 	return bepPtr.baseElementVersion
 }
 
@@ -79,7 +76,13 @@ func (bepPtr *baseElementPointer) initializeBaseElementPointer() {
 	bepPtr.initializePointer()
 }
 
-func (bePtr *baseElementPointer) isEquivalent(be *baseElementPointer) bool {
+func (bePtr *baseElementPointer) isEquivalent(be *baseElementPointer, hl *HeldLocks) bool {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(bePtr)
+	hl.LockBaseElement(be)
 	if bePtr.baseElementId != be.baseElementId {
 		fmt.Printf("Equivalence failed: indicated base element ids do not match \n")
 		return false
@@ -89,12 +92,10 @@ func (bePtr *baseElementPointer) isEquivalent(be *baseElementPointer) bool {
 		return false
 	}
 	var pointerPtr *pointer = &bePtr.pointer
-	return pointerPtr.isEquivalent(&be.pointer)
+	return pointerPtr.isEquivalent(&be.pointer, hl)
 }
 
 func (elPtr *baseElementPointer) MarshalJSON() ([]byte, error) {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
 	buffer.WriteString(fmt.Sprintf("\"Type\":\"%s\",", typeName))
@@ -110,8 +111,13 @@ func (elPtr *baseElementPointer) marshalBaseElementPointerFields(buffer *bytes.B
 	return err
 }
 
-func (bepPtr *baseElementPointer) printBaseElementPointer(prefix string) {
-	bepPtr.printPointer(prefix)
+func (bepPtr *baseElementPointer) printBaseElementPointer(prefix string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(bepPtr)
+	bepPtr.printPointer(prefix, hl)
 	log.Printf("%sIndicated BaseElementID: %s \n", prefix, bepPtr.baseElementId.String())
 	log.Printf("%sIndicated BaseElementVersion: %d \n", prefix, bepPtr.baseElementVersion)
 }
@@ -152,123 +158,92 @@ func (ep *baseElementPointer) recoverBaseElementPointerFields(unmarshaledData *m
 // SetBaseElement() establishes the element to which this pointer points. If this pointer
 // happens to be an OWNING_ELEMENT pointer, there is a side-effect in which this pointer's
 // owner is removed as a child from the old target element and added as a child to the new
-// target element. Locking must take this into account.
-func (bepPtr *baseElementPointer) SetBaseElement(baseElement BaseElement) {
-	bepPtr.TraceableLock()
-	defer bepPtr.TraceableUnlock()
-	oldBaseElement := bepPtr.getBaseElement()
-	if oldBaseElement == nil && baseElement == nil {
+// target element.
+func (bepPtr *baseElementPointer) SetBaseElement(newBaseElement BaseElement, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(&bepPtr.baseElement)
+	oldBaseElement := bepPtr.baseEl
+	if oldBaseElement == nil && newBaseElement == nil {
 		return // Nothing to do
-	} else if oldBaseElement != nil && baseElement != nil && oldBaseElement.getId() == baseElement.getId() {
+	} else if oldBaseElement != nil && newBaseElement != nil && oldBaseElement.GetId(hl) == newBaseElement.GetId(hl) {
 		return // Nothing to do
 	}
-	if baseElement != nil {
-		baseElement.TraceableLock() // We need to lock the element to make sure it's version doesn't change during this operation
-		defer baseElement.TraceableUnlock()
+	if newBaseElement != nil {
+		hl.LockBaseElement(newBaseElement)
 	}
-	bepPtr.setBaseElement(baseElement)
+	preChange(bepPtr, hl)
+	if oldBaseElement != nil {
+		bepPtr.uOfD.removeBaseElementListener(oldBaseElement, bepPtr, hl)
+	}
+	bepPtr.baseEl = newBaseElement
+	if newBaseElement != nil {
+		bepPtr.baseElementId = newBaseElement.GetId(hl)
+		bepPtr.baseElementVersion = newBaseElement.GetVersion(hl)
+		bepPtr.uOfD.addBaseElementListener(newBaseElement, bepPtr, hl)
+	} else {
+		bepPtr.baseElementId = uuid.Nil
+		bepPtr.baseElementVersion = 0
+	}
+	notification := NewChangeNotification(bepPtr, MODIFY, nil)
+	postChange(bepPtr, notification, hl)
 }
 
-// setBaseElement() is intended for internal use within the core. It assumes that all relevant
-// objects (parent, child, the element pointer itself) have already been locked. All of the
-// operations it invokes are also non-locking
-func (bepPtr *baseElementPointer) setBaseElement(baseElement BaseElement) {
-	if baseElement != bepPtr.baseElement {
-		oldPtr := bepPtr.baseElement
-		preChange(bepPtr)
-		if oldPtr != nil {
-			bepPtr.uOfD.removeBaseElementListener(oldPtr, bepPtr)
-		}
-		bepPtr.baseElement = baseElement
-		if baseElement != nil {
-			bepPtr.baseElementId = baseElement.getId()
-			bepPtr.baseElementVersion = baseElement.getVersion()
-			bepPtr.uOfD.addBaseElementListener(baseElement, bepPtr)
-		} else {
-			bepPtr.baseElementId = uuid.Nil
-			bepPtr.baseElementVersion = 0
-		}
-		notification := NewChangeNotification(bepPtr, MODIFY, nil)
-		postChange(bepPtr, notification)
+func (bepPtr *baseElementPointer) SetOwningElement(newOwningElement Element, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-}
-
-// SetOwningElement() actually manages relationships between a number of objects,
-// particularly when the pointer is the OWNING_ELEMENT pointer for its owner.
-// Because of the complex wiring between the objects, we have to lock all relevant
-// objects here and then use non-locking worker methods
-func (bepPtr *baseElementPointer) SetOwningElement(newOwningElement Element) {
-	bepPtr.TraceableLock()
-	defer bepPtr.TraceableUnlock()
-	oldOwningElement := bepPtr.getOwningElement()
+	hl.LockBaseElement(bepPtr)
+	oldOwningElement := bepPtr.getOwningElement(hl)
 	if oldOwningElement == nil && newOwningElement == nil {
 		return // Nothing to do
-	} else if oldOwningElement != nil && newOwningElement != nil && oldOwningElement.getId() == newOwningElement.getId() {
+	} else if oldOwningElement != nil && newOwningElement != nil && oldOwningElement.GetId(hl) == newOwningElement.GetId(hl) {
 		return // Nothing to do
 	}
-	if oldOwningElement != nil {
-		oldOwningElement.TraceableLock()
-		defer oldOwningElement.TraceableUnlock()
+	if bepPtr.getOwningElement(hl) != nil {
+		removeOwnedBaseElement(bepPtr.getOwningElement(hl), bepPtr, hl)
 	}
-	if newOwningElement != nil {
-		newOwningElement.TraceableLock()
-		defer newOwningElement.TraceableUnlock()
-	}
-	bepPtr.SetOwningElementNoLock(newOwningElement)
-}
 
-// SetOwningElementNoLock() is a non-locking function that sets the ownership of the element pointer.
-// It adjusts the ownedBaseElement set of both the old and new owner. In addition, if it is an
-// owningElementPointer, it adjusts the ownedBaseElement set of the owner's owner.
-func (bepPtr *baseElementPointer) SetOwningElementNoLock(element Element) {
-	if element != bepPtr.getOwningElement() {
+	preChange(bepPtr, hl)
+	bepPtr.owningElement = newOwningElement
+	notification := NewChangeNotification(bepPtr, MODIFY, nil)
+	postChange(bepPtr, notification, hl)
 
-		if bepPtr.getOwningElement() != nil {
-			bepPtr.getOwningElement().removeOwnedBaseElement(bepPtr)
-		}
-
-		preChange(bepPtr)
-		bepPtr.owningElement = element
-		notification := NewChangeNotification(bepPtr, MODIFY, nil)
-		postChange(bepPtr, notification)
-
-		if bepPtr.getOwningElement() != nil {
-			bepPtr.getOwningElement().addOwnedBaseElement(bepPtr)
-		}
-
+	if bepPtr.getOwningElement(hl) != nil {
+		addOwnedBaseElement(bepPtr.getOwningElement(hl), bepPtr, hl)
 	}
 }
 
 // internalSetOwningElement() is an internal function used only when unmarshaling.
-func (bepPtr *baseElementPointer) internalSetOwningElement(element Element) {
-	if element != bepPtr.getOwningElement() {
+func (bepPtr *baseElementPointer) internalSetOwningElement(element Element, hl *HeldLocks) {
+	if element != bepPtr.getOwningElement(hl) {
 		bepPtr.owningElement = element
-		if bepPtr.getOwningElement() != nil {
-			bepPtr.getOwningElement().internalAddOwnedBaseElement(bepPtr)
+		if bepPtr.getOwningElement(hl) != nil {
+			bepPtr.getOwningElement(hl).internalAddOwnedBaseElement(bepPtr, hl)
 		}
 	}
 }
 
-func (bepPtr *baseElementPointer) SetUri(uri string) {
-	bepPtr.TraceableLock()
-	defer bepPtr.TraceableUnlock()
-	bepPtr.SetUriNoLock(uri)
-}
-
-func (bepPtr *baseElementPointer) SetUriNoLock(uri string) {
-	preChange(bepPtr)
+func (bepPtr *baseElementPointer) SetUri(uri string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(bepPtr)
+	preChange(bepPtr, hl)
 	bepPtr.uri = uri
 	notification := NewChangeNotification(bepPtr, MODIFY, nil)
-	postChange(bepPtr, notification)
+	postChange(bepPtr, notification, hl)
 }
 
 type BaseElementPointer interface {
 	Pointer
-	baseElementChanged(*ChangeNotification)
-	getBaseElement() BaseElement
-	GetBaseElement() BaseElement
-	GetBaseElementIdentifier() uuid.UUID
-	GetBaseElementVersion() int
-	setBaseElement(BaseElement)
-	SetBaseElement(BaseElement)
+	baseElementChanged(*ChangeNotification, *HeldLocks)
+	GetBaseElement(*HeldLocks) BaseElement
+	GetBaseElementIdentifier(*HeldLocks) uuid.UUID
+	GetBaseElementVersion(*HeldLocks) int
+	SetBaseElement(BaseElement, *HeldLocks)
 }

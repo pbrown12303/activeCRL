@@ -22,25 +22,29 @@ func (lrPtr *literalReference) cloneAttributes(source literalReference) {
 	lrPtr.reference.cloneAttributes(source.reference)
 }
 
-func (lrPtr *literalReference) GetReferencedLiteral() Literal {
-	lrPtr.TraceableLock()
-	defer lrPtr.TraceableUnlock()
-	return lrPtr.getReferencedLiteral()
-}
-
-func (lrPtr *literalReference) getReferencedLiteral() Literal {
-	rep := lrPtr.getReferencedLiteralPointer()
+func (lrPtr *literalReference) GetReferencedLiteral(hl *HeldLocks) Literal {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lrPtr)
+	rep := lrPtr.getReferencedLiteralPointer(hl)
 	if rep != nil {
-		return rep.getLiteral()
+		return rep.GetLiteral(hl)
 	}
 	return nil
 }
 
-func (lrPtr *literalReference) getReferencedLiteralPointer() LiteralPointer {
-	for _, be := range lrPtr.getOwnedBaseElements() {
+func (lrPtr *literalReference) getReferencedLiteralPointer(hl *HeldLocks) LiteralPointer {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lrPtr)
+	for _, be := range lrPtr.ownedBaseElements {
 		switch be.(type) {
-		case *literalPointer:
-			if be.(*literalPointer).getLiteralPointerRole() == VALUE {
+		case LiteralPointer:
+			if be.(LiteralPointer).GetLiteralPointerRole(hl) == VALUE {
 				return be.(LiteralPointer)
 			}
 		}
@@ -52,14 +56,18 @@ func (elPtr *literalReference) initializeLiteralReference() {
 	elPtr.initializeReference()
 }
 
-func (bePtr *literalReference) isEquivalent(be *literalReference) bool {
+func (bePtr *literalReference) isEquivalent(be *literalReference, hl *HeldLocks) bool {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(bePtr)
+	hl.LockBaseElement(be)
 	var elementPtr *element = &bePtr.element
-	return elementPtr.isEquivalent(&be.element)
+	return elementPtr.isEquivalent(&be.element, hl)
 }
 
 func (elPtr *literalReference) MarshalJSON() ([]byte, error) {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
 	//	fmt.Printf("MarshalJSON called on Literal Reference \n")
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
@@ -73,78 +81,52 @@ func (elPtr *literalReference) marshalLiteralReferenceFields(buffer *bytes.Buffe
 	return elPtr.element.marshalElementFields(buffer)
 }
 
-func (elPtr *literalReference) printLiteralReference(prefix string) {
-	elPtr.printElement(prefix)
+func (elPtr *literalReference) printLiteralReference(prefix string, hl *HeldLocks) {
+	elPtr.printElement(prefix, hl)
 }
 
 func (el *literalReference) recoverLiteralReferenceFields(unmarshaledData *map[string]json.RawMessage) error {
 	return el.element.recoverElementFields(unmarshaledData)
 }
 
-func (elPtr *literalReference) SetOwningElement(parent Element) {
-	elPtr.TraceableLock()
-	defer elPtr.TraceableUnlock()
-	oldParent := elPtr.getOwningElement()
-	if oldParent == nil && parent == nil {
-		return // Nothing to do
-	} else if oldParent != nil && parent != nil && oldParent.getId() != parent.getId() {
-		return // Nothing to do
-	}
-	if oldParent != nil {
-		oldParent.TraceableLock()
-		defer oldParent.TraceableUnlock()
-	}
-	if parent != nil {
-		parent.TraceableLock()
-		defer parent.TraceableUnlock()
-	}
-	oep := elPtr.getOwningElementPointer()
-	if oep != nil {
-		oep.TraceableLock()
-		defer oep.TraceableUnlock()
-	}
-	elPtr.SetOwningElementNoLock(parent)
-}
+//func (elPtr *literalReference) SetOwningElement(parent Element, hl *HeldLocks) {
+//	if hl == nil {
+//		hl = NewHeldLocks()
+//		defer hl.ReleaseLocks()
+//	}
+//	hl.LockBaseElement(elPtr)
+//	oldParent := elPtr.GetOwningElement(hl)
+//	if oldParent == nil && parent == nil {
+//		return // Nothing to do
+//	} else if oldParent != nil && parent != nil && oldParent.GetId(hl) == parent.GetId(hl) {
+//		return // Nothing to do
+//	}
+//	oep := elPtr.getOwningElementPointer(hl)
+//	if oep == nil {
+//		oep = elPtr.uOfD.NewOwningElementPointer(hl)
+//		oep.SetOwningElement(elPtr, hl)
+//	}
+//	oep.SetElement(parent, hl)
+//}
 
-func (elPtr *literalReference) SetOwningElementNoLock(parent Element) {
-	if elPtr.getOwningElement() != parent {
-		oep := elPtr.getOwningElementPointer()
-		if oep == nil {
-			oep = elPtr.uOfD.NewOwningElementPointer()
-			oep.SetOwningElementNoLock(elPtr)
-		}
-		oep.setElement(parent)
+func (lrPtr *literalReference) SetReferencedLiteral(el Literal, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
 	}
-}
-
-func (lrPtr *literalReference) SetReferencedLiteral(el Literal) {
-	lrPtr.TraceableLock()
-	defer lrPtr.TraceableUnlock()
-	ep := lrPtr.getReferencedLiteralPointer()
-	if ep != nil {
-		ep.TraceableLock()
-		defer ep.TraceableUnlock()
-	}
-	if el != nil {
-		el.TraceableLock()
-		defer el.TraceableUnlock()
-	}
-	lrPtr.setReferencedLiteral(el)
-}
-
-func (lrPtr *literalReference) setReferencedLiteral(el Literal) {
-	if lrPtr.getReferencedLiteral() != el {
-		ep := lrPtr.getReferencedLiteralPointer()
+	hl.LockBaseElement(lrPtr)
+	if lrPtr.GetReferencedLiteral(hl) != el {
+		ep := lrPtr.getReferencedLiteralPointer(hl)
 		if ep == nil {
-			ep = lrPtr.uOfD.NewValueLiteralPointer()
-			ep.SetOwningElementNoLock(lrPtr)
+			ep = lrPtr.uOfD.NewValueLiteralPointer(hl)
+			SetOwningElement(ep, lrPtr, hl)
 		}
-		ep.setLiteral(el)
+		ep.SetLiteral(el, hl)
 	}
 }
 
 type LiteralReference interface {
 	Reference
-	GetReferencedLiteral() Literal
-	SetReferencedLiteral(Literal)
+	GetReferencedLiteral(*HeldLocks) Literal
+	SetReferencedLiteral(Literal, *HeldLocks)
 }

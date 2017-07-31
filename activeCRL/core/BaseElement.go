@@ -12,7 +12,7 @@ import (
 )
 
 type baseElement struct {
-	sync.RWMutex
+	sync.Mutex
 	id      uuid.UUID
 	version int
 	uOfD    *UniverseOfDiscourse
@@ -24,31 +24,30 @@ func (bePtr *baseElement) cloneAttributes(source baseElement) {
 	bePtr.uOfD = source.uOfD
 }
 
-// GetId locks the element, reads the id, and returns, releasing the lock
-func (bePtr *baseElement) GetId() uuid.UUID {
-	bePtr.TraceableLock()
-	defer bePtr.TraceableUnlock()
-	return bePtr.getId()
-}
-
-// getId returns the id without locking
-func (bePtr *baseElement) getId() uuid.UUID {
+func (bePtr *baseElement) GetId(hl *HeldLocks) uuid.UUID {
+	if hl != nil {
+		hl.LockBaseElement(bePtr)
+	}
 	return bePtr.id
 }
 
-func (bePtr *baseElement) getUniverseOfDiscourse() *UniverseOfDiscourse {
+func (bePtr *baseElement) getIdNoLock() uuid.UUID {
+	return bePtr.id
+}
+
+func (bePtr *baseElement) GetUniverseOfDiscourse(hl *HeldLocks) *UniverseOfDiscourse {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(bePtr)
 	return bePtr.uOfD
 }
 
-// GetVersion() Locks the element and returns the version, releasing the lock
-func (bePtr *baseElement) GetVersion() int {
-	bePtr.TraceableLock()
-	defer bePtr.TraceableUnlock()
-	return bePtr.getVersion()
-}
-
-// getVersion() returns the version withoug locking
-func (bePtr *baseElement) getVersion() int {
+func (bePtr *baseElement) GetVersion(hl *HeldLocks) int {
+	if hl != nil {
+		hl.LockBaseElement(bePtr)
+	}
 	return bePtr.version
 }
 
@@ -65,7 +64,13 @@ func (bePtr *baseElement) internalIncrementVersion() {
 	bePtr.version++
 }
 
-func (bePtr *baseElement) isEquivalent(be *baseElement) bool {
+func (bePtr *baseElement) isEquivalent(be *baseElement, hl *HeldLocks) bool {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(bePtr)
+	hl.LockBaseElement(be)
 	if bePtr.id != be.id {
 		log.Printf("Equivalence failed: ids do not match \n")
 		return false
@@ -83,9 +88,14 @@ func (elPtr *baseElement) marshalBaseElementFields(buffer *bytes.Buffer) error {
 	return nil
 }
 
-func (bePtr *baseElement) printBaseElement(prefix string) {
-	log.Printf("%sid: %s \n", prefix, bePtr.id.String())
-	log.Printf("%sversion %d \n", prefix, bePtr.version)
+func (bePtr *baseElement) printBaseElement(prefix string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(bePtr)
+	log.Printf("%s  id: %s \n", prefix, bePtr.id.String())
+	log.Printf("%s  version %d \n", prefix, bePtr.version)
 }
 
 func (be *baseElement) recoverBaseElementFields(unmarshaledData *map[string]json.RawMessage) error {
@@ -120,7 +130,12 @@ func (be *baseElement) recoverBaseElementFields(unmarshaledData *map[string]json
 // speaking, this is not an attribute of the baseElement, but rather a context in which
 // the baseElement is operating in which the baseElement may be able to locate other objects
 // by id.
-func (bePtr *baseElement) setUniverseOfDiscourse(uOfD *UniverseOfDiscourse) {
+func (bePtr *baseElement) setUniverseOfDiscourse(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(bePtr)
 	bePtr.uOfD = uOfD
 }
 
@@ -131,13 +146,6 @@ func (bePtr *baseElement) TraceableLock() {
 	bePtr.Lock()
 }
 
-func (bePtr *baseElement) TraceableRLock() {
-	if TraceLocks {
-		log.Printf("About to lock Base Element %p\n", bePtr)
-	}
-	bePtr.RLock()
-}
-
 func (bePtr *baseElement) TraceableUnlock() {
 	if TraceLocks {
 		log.Printf("About to unlock Base Element %p\n", bePtr)
@@ -145,30 +153,153 @@ func (bePtr *baseElement) TraceableUnlock() {
 	bePtr.Unlock()
 }
 
-func (bePtr *baseElement) TraceableRUnlock() {
-	if TraceLocks {
-		log.Printf("About to unlock Base Element %p\n", bePtr)
-	}
-	bePtr.RUnlock()
-}
-
 type BaseElement interface {
-	getId() uuid.UUID
-	GetId() uuid.UUID
-	GetNameNoLock() string
-	getOwningElement() Element
-	GetOwningElement() Element
-	getUniverseOfDiscourse() *UniverseOfDiscourse
-	GetUri() string
-	GetUriNoLock() string
-	getVersion() int
-	GetVersion() int
+	GetId(*HeldLocks) uuid.UUID
+	getIdNoLock() uuid.UUID
+	GetUniverseOfDiscourse(*HeldLocks) *UniverseOfDiscourse
+	GetVersion(*HeldLocks) int
 	internalIncrementVersion()
-	SetOwningElement(Element)
-	SetOwningElementNoLock(Element)
-	setUniverseOfDiscourse(*UniverseOfDiscourse)
-	SetUri(string)
-	SetUriNoLock(string)
+	setUniverseOfDiscourse(*UniverseOfDiscourse, *HeldLocks)
 	TraceableLock()
 	TraceableUnlock()
+}
+
+func GetName(be BaseElement, hl *HeldLocks) string {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(be)
+	switch be.(type) {
+	case Value:
+		val := be.(Value)
+		return val.getName(hl)
+	case Element:
+		el := be.(Element)
+		nl := el.getNameLiteral(hl)
+		if nl != nil {
+			return nl.GetLiteralValue(hl)
+		}
+	}
+	return ""
+}
+
+func GetOwningElement(be BaseElement, hl *HeldLocks) Element {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(be)
+	switch be.(type) {
+	case Value:
+		return be.(Value).getOwningElement(hl)
+	case Element:
+		oep := be.(Element).getOwningElementPointer(hl)
+		if oep != nil {
+			return oep.GetElement(hl)
+		}
+	}
+	return nil
+}
+
+func GetUri(be BaseElement, hl *HeldLocks) string {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(be)
+	switch be.(type) {
+	case Value:
+		val := be.(Value)
+		return val.getUri(hl)
+	case Element:
+		el := be.(Element)
+		nl := el.getUriLiteral(hl)
+		if nl != nil {
+			return nl.GetLiteralValue(hl)
+		}
+
+	}
+	return ""
+}
+
+func SetOwningElement(be BaseElement, parent Element, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(be)
+	switch be.(type) {
+	case Element:
+		elPtr := be.(Element)
+		oldParent := elPtr.GetOwningElement(hl)
+		if oldParent == nil && parent == nil {
+			return // Nothing to do
+		} else if oldParent != nil && parent != nil && oldParent.GetId(hl) != parent.GetId(hl) {
+			return // Nothing to do
+		}
+		oep := elPtr.getOwningElementPointer(hl)
+		if oep == nil {
+			oep = elPtr.GetUniverseOfDiscourse(hl).NewOwningElementPointer(hl)
+			//			log.Printf("In case Element of SetOwningElement, created OwningElementPointer and about to call SetOwningElement")
+			SetOwningElement(oep, elPtr, hl)
+		}
+		oep.SetElement(parent, hl)
+	case Value:
+		//		log.Printf("In case Value of SetOwningElement")
+		//		Print(be, "", hl)
+		//		Print(parent, "", hl)
+		val := be.(Value)
+		oldOwningElement := val.getOwningElement(hl)
+		if oldOwningElement == nil && parent == nil {
+			return // Nothing to do
+		} else if oldOwningElement != nil && parent != nil && oldOwningElement.GetId(hl) == parent.GetId(hl) {
+			return // Nothing to do
+		}
+		if val.getOwningElement(hl) != nil {
+			removeOwnedBaseElement(val.getOwningElement(hl), val, hl)
+		}
+		preChange(val, hl)
+		val.setOwningElement(parent, hl)
+		notification := NewChangeNotification(val, MODIFY, nil)
+		postChange(val, notification, hl)
+
+		if val.getOwningElement(hl) != nil {
+			//			log.Printf("In case Value of SetOwningElement about to call addOwnedBaseElement")
+			addOwnedBaseElement(val.getOwningElement(hl), val, hl)
+		}
+
+	}
+}
+
+func SetUri(be BaseElement, uri string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(be)
+	switch be.(type) {
+	case Element:
+		el := be.(Element)
+		nl := el.getUriLiteral(hl)
+		if nl != nil {
+			hl.LockBaseElement(nl)
+		} else {
+			nlp := el.getUriLiteralPointer(hl)
+			if nlp == nil {
+				nlp = be.GetUniverseOfDiscourse(hl).NewUriLiteralPointer(hl)
+				SetOwningElement(nlp, el, hl)
+			}
+			nl = be.GetUniverseOfDiscourse(hl).NewLiteral(hl)
+			SetOwningElement(nl, el, hl)
+			nlp.SetLiteral(nl, hl)
+		}
+		nl.SetLiteralValue(uri, hl)
+	case Value:
+		preChange(be, hl)
+		be.(Value).SetUri(uri, hl)
+		notification := NewChangeNotification(be, MODIFY, nil)
+		postChange(be, notification, hl)
+
+	}
 }

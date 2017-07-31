@@ -15,8 +15,10 @@ var serializedCore string = `
 
 func main() {
 	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
 	recoveredCore := uOfD.GetCoreConceptSpace()
-	updatedCore := updateRecoveredCore(recoveredCore, uOfD)
+	updatedCore := updateRecoveredCore(recoveredCore, uOfD, hl)
 	marshaledCore, err := updatedCore.MarshalJSON()
 	if err == nil {
 		ioutil.WriteFile("CoreConceptSpace.acrl", marshaledCore, os.ModePerm)
@@ -25,13 +27,13 @@ func main() {
 	}
 }
 
-func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscourse) core.Element {
+func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	// Core
 	coreElement := recoveredCore
 	if coreElement == nil {
-		coreElement = uOfD.NewElement()
-		coreElement.SetName("CoreConceptSpace")
-		coreElement.SetUri(core.CoreConceptSpaceUri)
+		coreElement = uOfD.NewElement(hl)
+		core.SetName(coreElement, "CoreConceptSpace", hl)
+		core.SetUri(coreElement, core.CoreConceptSpaceUri, hl)
 	}
 
 	// Element
@@ -46,10 +48,10 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		}
 	}
 	if element == nil {
-		element = uOfD.NewElement()
-		element.SetOwningElement(coreElement)
-		element.SetName("Element")
-		element.SetUri(core.ElememtUri)
+		element = uOfD.NewElement(hl)
+		core.SetOwningElement(element, coreElement, hl)
+		core.SetName(element, "Element", hl)
+		core.SetUri(element, core.ElememtUri, hl)
 	}
 
 	// ElementPointer
@@ -64,9 +66,9 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		}
 	}
 	if elementPointer == nil {
-		elementPointer = uOfD.NewReferencedElementPointer()
-		elementPointer.SetOwningElement(coreElement)
-		elementPointer.SetUri(core.ElementPointerUri)
+		elementPointer = uOfD.NewReferencedElementPointer(hl)
+		core.SetOwningElement(elementPointer, coreElement, hl)
+		elementPointer.SetUri(core.ElementPointerUri, hl)
 	}
 
 	// ElementPointerPointer
@@ -81,9 +83,9 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		}
 	}
 	if elementPointerPointer == nil {
-		elementPointerPointer = uOfD.NewElementPointerPointer()
-		elementPointerPointer.SetOwningElement(coreElement)
-		elementPointerPointer.SetUri(core.ElementPointerPointerUri)
+		elementPointerPointer = uOfD.NewElementPointerPointer(hl)
+		core.SetOwningElement(elementPointerPointer, coreElement, hl)
+		elementPointerPointer.SetUri(core.ElementPointerPointerUri, hl)
 	}
 
 	// ElementPointerReference
@@ -98,10 +100,10 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		}
 	}
 	if elementPointerReference == nil {
-		elementPointerReference = uOfD.NewElementPointerReference()
-		elementPointerReference.SetOwningElement(coreElement)
-		elementPointerReference.SetName("ElementReference")
-		elementPointerReference.SetUri(core.ElementPointerReferenceUri)
+		elementPointerReference = uOfD.NewElementPointerReference(hl)
+		core.SetOwningElement(elementPointerReference, coreElement, hl)
+		core.SetName(elementPointerReference, "ElementReference", hl)
+		core.SetUri(elementPointerReference, core.ElementPointerReferenceUri, hl)
 	}
 
 	// ElementReference
@@ -116,10 +118,10 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		}
 	}
 	if elementReference == nil {
-		elementReference = uOfD.NewElementReference()
-		elementReference.SetOwningElement(coreElement)
-		elementReference.SetName("ElementReference")
-		elementReference.SetUri(core.ElementReferenceUri)
+		elementReference = uOfD.NewElementReference(hl)
+		core.SetOwningElement(elementReference, coreElement, hl)
+		core.SetName(elementReference, "ElementReference", hl)
+		core.SetUri(elementReference, core.ElementReferenceUri, hl)
 	}
 
 	// Literal
@@ -134,9 +136,9 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		}
 	}
 	if literal == nil {
-		literal = uOfD.NewLiteral()
-		literal.SetOwningElement(coreElement)
-		literal.SetUri(core.LiteralUri)
+		literal = uOfD.NewLiteral(hl)
+		core.SetOwningElement(literal, coreElement, hl)
+		literal.SetUri(core.LiteralUri, hl)
 	}
 
 	// LiteralPointer
@@ -151,9 +153,9 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		}
 	}
 	if literalPointer == nil {
-		literalPointer = uOfD.NewValueLiteralPointer()
-		literalPointer.SetOwningElement(coreElement)
-		literalPointer.SetUri(core.LiteralPointerUri)
+		literalPointer = uOfD.NewValueLiteralPointer(hl)
+		core.SetOwningElement(literalPointer, coreElement, hl)
+		literalPointer.SetUri(core.LiteralPointerUri, hl)
 	}
 
 	// LiteralPointerPointer
@@ -168,9 +170,9 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		}
 	}
 	if literalPointerPointer == nil {
-		literalPointerPointer = uOfD.NewLiteralPointerPointer()
-		literalPointerPointer.SetOwningElement(coreElement)
-		literalPointerPointer.SetUri(core.LiteralPointerPointerUri)
+		literalPointerPointer = uOfD.NewLiteralPointerPointer(hl)
+		core.SetOwningElement(literalPointerPointer, coreElement, hl)
+		literalPointerPointer.SetUri(core.LiteralPointerPointerUri, hl)
 	}
 
 	// LiteralPointerReference
@@ -185,10 +187,10 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		}
 	}
 	if literalPointerReference == nil {
-		literalPointerReference = uOfD.NewLiteralPointerReference()
-		literalPointerReference.SetOwningElement(coreElement)
-		literalPointerReference.SetName("LiteralReference")
-		literalPointerReference.SetUri(core.LiteralPointerReferenceUri)
+		literalPointerReference = uOfD.NewLiteralPointerReference(hl)
+		core.SetOwningElement(literalPointerReference, coreElement, hl)
+		core.SetName(literalPointerReference, "LiteralReference", hl)
+		core.SetUri(literalPointerReference, core.LiteralPointerReferenceUri, hl)
 	}
 
 	// LiteralReference
@@ -203,10 +205,10 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		}
 	}
 	if literalReference == nil {
-		literalReference = uOfD.NewLiteralReference()
-		literalReference.SetOwningElement(coreElement)
-		literalReference.SetName("LiteralReference")
-		literalReference.SetUri(core.LiteralReferenceUri)
+		literalReference = uOfD.NewLiteralReference(hl)
+		core.SetOwningElement(literalReference, coreElement, hl)
+		core.SetName(literalReference, "LiteralReference", hl)
+		core.SetUri(literalReference, core.LiteralReferenceUri, hl)
 	}
 
 	// Refinement
@@ -221,10 +223,10 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		}
 	}
 	if refinement == nil {
-		refinement = uOfD.NewRefinement()
-		refinement.SetOwningElement(coreElement)
-		refinement.SetName("Refinement")
-		refinement.SetUri(core.RefinementUri)
+		refinement = uOfD.NewRefinement(hl)
+		core.SetOwningElement(refinement, coreElement, hl)
+		core.SetName(refinement, "Refinement", hl)
+		core.SetUri(refinement, core.RefinementUri, hl)
 	}
 	return coreElement
 }

@@ -9,65 +9,73 @@ import (
 
 func TestNewElementReference(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	el1 := uOfD.NewElementReference()
-	if el1.GetId() == uuid.Nil {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	el1 := uOfD.NewElementReference(hl)
+	if el1.GetId(hl) == uuid.Nil {
 		t.Error("Element identifier not properly initialized")
 	}
-	if el1.GetVersion() != 0 {
+	if el1.GetVersion(hl) != 0 {
 		t.Error("Element version not properly initialized")
 	}
-	if el1.getOwnedBaseElements() == nil {
+	if el1.GetOwnedBaseElements(hl) != nil {
 		t.Error("Element ownedBaseElements not properly initialized")
 	}
 }
 
 func TestElementReferenceOwnership(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewElement()
-	child := uOfD.NewElementReference()
-	child.SetOwningElement(parent)
-	if child.GetOwningElement() != parent {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewElement(hl)
+	child := uOfD.NewElementReference(hl)
+	SetOwningElement(child, parent, hl)
+	if child.GetOwningElement(hl) != parent {
 		t.Error("Child's owner not set properly")
 	}
-	if child.getOwningElementPointer() == nil {
+	if child.getOwningElementPointer(hl) == nil {
 		t.Error("Child's owningElementPointer not initialized properly")
 	}
-	if child.getOwningElementPointer().GetOwningElement().GetId() != child.GetId() {
+	if GetOwningElement(child.getOwningElementPointer(hl), hl).GetId(hl) != child.GetId(hl) {
 		t.Error("Child's owningElementPointer.getOwningElement() != child")
 	}
-	if child.getOwningElementPointer().GetElement() != parent {
+	if child.getOwningElementPointer(hl).GetElement(hl) != parent {
 		t.Error("Child's owningElementPointer.getElement() != parent")
 	}
 }
 
 func TestSetReferencedElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewElement()
-	child := uOfD.NewElementReference()
-	child.SetOwningElement(parent)
-	if child.GetReferencedElement() != nil {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewElement(hl)
+	child := uOfD.NewElementReference(hl)
+	SetOwningElement(child, parent, hl)
+	if child.GetReferencedElement(hl) != nil {
 		t.Error("ElementReference's referenced element not initialized to nil")
 	}
-	child.SetReferencedElement(parent)
-	if child.GetReferencedElement() == nil {
+	child.SetReferencedElement(parent, hl)
+	if child.GetReferencedElement(hl) == nil {
 		t.Error("ElementReference's referenced element is nil after assignment")
-		Print(parent, "   ")
+		Print(parent, "   ", hl)
 	}
-	if child.GetReferencedElement() != nil && child.GetReferencedElement().GetId() != parent.GetId() {
+	if child.GetReferencedElement(hl) != nil && child.GetReferencedElement(hl).GetId(hl) != parent.GetId(hl) {
 		t.Error("ElementReference's referenced element not set properly")
 	}
-	child.SetReferencedElement(nil)
-	if child.GetReferencedElement() != nil {
+	child.SetReferencedElement(nil, hl)
+	if child.GetReferencedElement(hl) != nil {
 		t.Error("ElementReference's referenced element not nild properly")
 	}
 }
 
 func TestElementReferenceMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewElement()
-	child := uOfD.NewElementReference()
-	child.SetOwningElement(parent)
-	child.SetReferencedElement(parent)
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewElement(hl)
+	child := uOfD.NewElementReference(hl)
+	SetOwningElement(child, parent, hl)
+	child.SetReferencedElement(parent, hl)
 
 	result, err := json.MarshalIndent(parent, "", "   ")
 	if err != nil {
@@ -81,21 +89,23 @@ func TestElementReferenceMarshal(t *testing.T) {
 	if recoveredParent != nil {
 		//		Print(recoveredParent, "")
 	}
-	if !Equivalent(parent, recoveredParent) {
+	if !Equivalent(parent, recoveredParent, hl) {
 		t.Error("Recovered parent not equivalent to original parent")
 	}
 }
 
 func TestElementReferenceClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	parent := uOfD.NewElement()
-	child := uOfD.NewElementReference()
-	child.SetOwningElement(parent)
-	child.SetReferencedElement(parent)
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	parent := uOfD.NewElement(hl)
+	child := uOfD.NewElementReference(hl)
+	SetOwningElement(child, parent, hl)
+	child.SetReferencedElement(parent, hl)
 	clone := child.(*elementReference).clone()
-	if !Equivalent(child, clone) {
+	if !Equivalent(child, clone, hl) {
 		t.Error("ElementReference clone failed")
-		Print(child, "   ")
-		Print(clone, "   ")
+		Print(child, "   ", hl)
+		Print(clone, "   ", hl)
 	}
 }
