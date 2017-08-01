@@ -24,7 +24,7 @@ func TestNewElementPointerPointer(t *testing.T) {
 	if found == false {
 		t.Error("Element Pointer Pointer not found in parent's OwnedBaseElements \n")
 	}
-	if owner.getElementPointerPointer(hl) != epp {
+	if owner.GetElementPointerPointer(hl) != epp {
 		t.Error("Owner.getElementPointerPointer() did not return Referenced Element Pointer")
 	}
 }

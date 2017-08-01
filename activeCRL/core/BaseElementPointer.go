@@ -227,7 +227,7 @@ func (bepPtr *baseElementPointer) internalSetOwningElement(element Element, hl *
 	}
 }
 
-func (bepPtr *baseElementPointer) SetUri(uri string, hl *HeldLocks) {
+func (bepPtr *baseElementPointer) setUri(uri string, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()

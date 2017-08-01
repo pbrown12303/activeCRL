@@ -28,14 +28,14 @@ func (eprPtr *elementPointerReference) GetElementPointer(hl *HeldLocks) ElementP
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(eprPtr)
-	rep := eprPtr.getElementPointerPointer(hl)
+	rep := eprPtr.GetElementPointerPointer(hl)
 	if rep != nil {
 		return rep.GetElementPointer(hl)
 	}
 	return nil
 }
 
-func (eprPtr *elementPointerReference) getElementPointerPointer(hl *HeldLocks) ElementPointerPointer {
+func (eprPtr *elementPointerReference) GetElementPointerPointer(hl *HeldLocks) ElementPointerPointer {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -86,28 +86,6 @@ func (el *elementPointerReference) recoverElementPointerReferenceFields(unmarsha
 	return el.reference.recoverReferenceFields(unmarshaledData)
 }
 
-//func (erPtr *elementPointerReference) SetOwningElement(parent Element, hl *HeldLocks) {
-//	if hl == nil {
-//		hl = NewHeldLocks()
-//		defer hl.ReleaseLocks()
-//	}
-//	hl.LockBaseElement(erPtr)
-//	oldParent := erPtr.GetOwningElement(hl)
-//	if oldParent == nil && parent == nil {
-//		return // Nothing to do
-//	} else if oldParent != nil && parent != nil && oldParent.GetId(hl) != parent.GetId(hl) {
-//		return // Nothing to do
-//	}
-//	if oldParent != parent {
-//		oep := erPtr.getOwningElementPointer(hl)
-//		if oep == nil {
-//			oep = erPtr.uOfD.NewOwningElementPointer(hl)
-//			oep.SetOwningElement(erPtr, hl)
-//		}
-//		oep.SetElement(parent, hl)
-//	}
-//}
-
 func (eprPtr *elementPointerReference) SetElementPointer(el ElementPointer, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks()
@@ -115,7 +93,7 @@ func (eprPtr *elementPointerReference) SetElementPointer(el ElementPointer, hl *
 	}
 	hl.LockBaseElement(eprPtr)
 	if eprPtr.GetElementPointer(hl) != el {
-		ep := eprPtr.getElementPointerPointer(hl)
+		ep := eprPtr.GetElementPointerPointer(hl)
 		if ep == nil {
 			ep = eprPtr.uOfD.NewElementPointerPointer(hl)
 			SetOwningElement(ep, eprPtr, hl)
@@ -127,6 +105,6 @@ func (eprPtr *elementPointerReference) SetElementPointer(el ElementPointer, hl *
 type ElementPointerReference interface {
 	Reference
 	GetElementPointer(*HeldLocks) ElementPointer
-	getElementPointerPointer(*HeldLocks) ElementPointerPointer
+	GetElementPointerPointer(*HeldLocks) ElementPointerPointer
 	SetElementPointer(ElementPointer, *HeldLocks)
 }

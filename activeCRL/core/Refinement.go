@@ -29,14 +29,14 @@ func (rPtr *refinement) GetAbstractElement(hl *HeldLocks) Element {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(rPtr)
-	rep := rPtr.getAbstractElementPointer(hl)
+	rep := rPtr.GetAbstractElementPointer(hl)
 	if rep != nil {
 		return rep.GetElement(hl)
 	}
 	return nil
 }
 
-func (rPtr *refinement) getAbstractElementPointer(hl *HeldLocks) ElementPointer {
+func (rPtr *refinement) GetAbstractElementPointer(hl *HeldLocks) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -59,14 +59,14 @@ func (rPtr *refinement) GetRefinedElement(hl *HeldLocks) Element {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(rPtr)
-	rep := rPtr.getRefinedElementPointer(hl)
+	rep := rPtr.GetRefinedElementPointer(hl)
 	if rep != nil {
 		return rep.GetElement(hl)
 	}
 	return nil
 }
 
-func (rPtr *refinement) getRefinedElementPointer(hl *HeldLocks) ElementPointer {
+func (rPtr *refinement) GetRefinedElementPointer(hl *HeldLocks) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -125,7 +125,7 @@ func (rPtr *refinement) SetAbstractElement(el Element, hl *HeldLocks) {
 	}
 	hl.LockBaseElement(rPtr)
 	if rPtr.GetAbstractElement(hl) != el {
-		ep := rPtr.getAbstractElementPointer(hl)
+		ep := rPtr.GetAbstractElementPointer(hl)
 		if ep == nil {
 			ep = rPtr.uOfD.NewAbstractElementPointer(hl)
 			SetOwningElement(ep, rPtr, hl)
@@ -141,7 +141,7 @@ func (rPtr *refinement) SetRefinedElement(el Element, hl *HeldLocks) {
 	}
 	hl.LockBaseElement(rPtr)
 	if rPtr.GetRefinedElement(hl) != el {
-		ep := rPtr.getRefinedElementPointer(hl)
+		ep := rPtr.GetRefinedElementPointer(hl)
 		if ep == nil {
 			ep = rPtr.uOfD.NewRefinedElementPointer(hl)
 			SetOwningElement(ep, rPtr, hl)
@@ -153,9 +153,9 @@ func (rPtr *refinement) SetRefinedElement(el Element, hl *HeldLocks) {
 type Refinement interface {
 	Element
 	GetAbstractElement(*HeldLocks) Element
-	getAbstractElementPointer(*HeldLocks) ElementPointer
+	GetAbstractElementPointer(*HeldLocks) ElementPointer
 	GetRefinedElement(*HeldLocks) Element
-	getRefinedElementPointer(*HeldLocks) ElementPointer
+	GetRefinedElementPointer(*HeldLocks) ElementPointer
 	SetAbstractElement(Element, *HeldLocks)
 	SetRefinedElement(Element, *HeldLocks)
 }

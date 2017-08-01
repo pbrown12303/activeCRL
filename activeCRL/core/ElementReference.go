@@ -28,14 +28,14 @@ func (erPtr *elementReference) GetReferencedElement(hl *HeldLocks) Element {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(erPtr)
-	rep := erPtr.getReferencedElementPointer(hl)
+	rep := erPtr.GetReferencedElementPointer(hl)
 	if rep != nil {
 		return rep.GetElement(hl)
 	}
 	return nil
 }
 
-func (erPtr *elementReference) getReferencedElementPointer(hl *HeldLocks) ElementPointer {
+func (erPtr *elementReference) GetReferencedElementPointer(hl *HeldLocks) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -88,26 +88,6 @@ func (el *elementReference) recoverElementReferenceFields(unmarshaledData *map[s
 	return el.reference.recoverReferenceFields(unmarshaledData)
 }
 
-//func (erPtr *elementReference) SetOwningElement(parent Element, hl *HeldLocks) {
-//	if hl == nil {
-//		hl = NewHeldLocks()
-//		defer hl.ReleaseLocks()
-//	}
-//	hl.LockBaseElement(erPtr)
-//	oldParent := erPtr.GetOwningElement(hl)
-//	if oldParent == nil && parent == nil {
-//		return // Nothing to do
-//	} else if oldParent != nil && parent != nil && oldParent.GetId(hl) == parent.GetId(hl) {
-//		return // Nothing to do
-//	}
-//	oep := erPtr.getOwningElementPointer(hl)
-//	if oep == nil {
-//		oep = erPtr.uOfD.NewOwningElementPointer(hl)
-//		oep.SetOwningElement(erPtr, hl)
-//	}
-//	oep.SetElement(parent, hl)
-//}
-
 func (erPtr *elementReference) SetReferencedElement(el Element, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks()
@@ -115,7 +95,7 @@ func (erPtr *elementReference) SetReferencedElement(el Element, hl *HeldLocks) {
 	}
 	hl.LockBaseElement(erPtr)
 	if erPtr.GetReferencedElement(hl) != el {
-		ep := erPtr.getReferencedElementPointer(hl)
+		ep := erPtr.GetReferencedElementPointer(hl)
 		if ep == nil {
 			ep = erPtr.uOfD.NewReferencedElementPointer(hl)
 			SetOwningElement(ep, erPtr, hl)
@@ -127,6 +107,6 @@ func (erPtr *elementReference) SetReferencedElement(el Element, hl *HeldLocks) {
 type ElementReference interface {
 	Reference
 	GetReferencedElement(*HeldLocks) Element
-	getReferencedElementPointer(*HeldLocks) ElementPointer
+	GetReferencedElementPointer(*HeldLocks) ElementPointer
 	SetReferencedElement(Element, *HeldLocks)
 }

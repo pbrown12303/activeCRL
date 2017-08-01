@@ -35,13 +35,13 @@ func TestBaseElementReferenceOwnership(t *testing.T) {
 	if child.GetOwningElement(hl) != parent {
 		t.Error("Child's owner not set properly")
 	}
-	if child.getOwningElementPointer(hl) == nil {
+	if child.GetOwningElementPointer(hl) == nil {
 		t.Error("Child's owningElementPointer not initialized properly")
 	}
-	if GetOwningElement(child.getOwningElementPointer(hl), hl).GetId(hl) != child.GetId(hl) {
+	if GetOwningElement(child.GetOwningElementPointer(hl), hl).GetId(hl) != child.GetId(hl) {
 		t.Error("Child's owningElementPointer.getOwningElement() != child")
 	}
-	if child.getOwningElementPointer(hl).GetElement(hl) != parent {
+	if child.GetOwningElementPointer(hl).GetElement(hl) != parent {
 		t.Error("Child's owningElementPointer.getElement() != parent")
 	}
 }

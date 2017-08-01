@@ -33,13 +33,13 @@ func TestElementOwnership(t *testing.T) {
 	if child.GetOwningElement(hl) != parent {
 		t.Error("Child's owner not set properly")
 	}
-	if child.getOwningElementPointer(hl) == nil {
+	if child.GetOwningElementPointer(hl) == nil {
 		t.Error("Child's owningElementPointer not initialized properly")
 	}
-	if GetOwningElement(child.getOwningElementPointer(hl), hl) != child {
+	if GetOwningElement(child.GetOwningElementPointer(hl), hl) != child {
 		t.Error("Child's owningElementPointer.getOwningElement() != child")
 	}
-	if child.getOwningElementPointer(hl).GetElement(hl) != parent {
+	if child.GetOwningElementPointer(hl).GetElement(hl) != parent {
 		t.Error("Child's owningElementPointer.getElement() != parent")
 	}
 	var found bool = false
@@ -90,10 +90,10 @@ func TestElementMarshal(t *testing.T) {
 	if GetUri(recoveredParent, hl) != testUri {
 		t.Error("Recovered test uri incorrect")
 	}
-	if recoveredParent.getNameLiteral(hl).getOwningElement(hl) != recoveredParent {
+	if recoveredParent.GetNameLiteral(hl).getOwningElement(hl) != recoveredParent {
 		t.Error("Recovered NameLiteral owning element not restored properly")
 	}
-	if recoveredParent.getUriLiteral(hl).getOwningElement(hl) != recoveredParent {
+	if recoveredParent.GetUriLiteral(hl).getOwningElement(hl) != recoveredParent {
 		t.Error("Recovered UriLiteral owning element not restored properly")
 	}
 }
@@ -108,10 +108,10 @@ func TestSetName(t *testing.T) {
 	if GetName(parent, hl) != testName {
 		t.Error("GetName() value not equal to assigned name")
 	}
-	if parent.getNameLiteral(hl) == nil {
+	if parent.GetNameLiteral(hl) == nil {
 		t.Error("getNameLiteral() is nil after name assigned")
 	}
-	if parent.getNameLiteralPointer(hl) == nil {
+	if parent.GetNameLiteralPointer(hl) == nil {
 		t.Error("getNameLiteralPointer() is nil after name assigned")
 
 	}
@@ -127,10 +127,10 @@ func TestSetDefinition(t *testing.T) {
 	if parent.GetDefinition(hl) != testName {
 		t.Error("GetName() value not equal to assigned name")
 	}
-	if parent.getDefinitionLiteral(hl) == nil {
+	if parent.GetDefinitionLiteral(hl) == nil {
 		t.Error("getNameLiteral() is nil after name assigned")
 	}
-	if parent.getDefinitionLiteralPointer(hl) == nil {
+	if parent.GetDefinitionLiteralPointer(hl) == nil {
 		t.Error("getNameLiteralPointer() is nil after name assigned")
 
 	}
@@ -146,10 +146,10 @@ func TestSetUri(t *testing.T) {
 	if GetUri(parent, hl) != testName {
 		t.Error("GetName() value not equal to assigned name")
 	}
-	if parent.getUriLiteral(hl) == nil {
+	if parent.GetUriLiteral(hl) == nil {
 		t.Error("getNameLiteral() is nil after name assigned")
 	}
-	if parent.getUriLiteralPointer(hl) == nil {
+	if parent.GetUriLiteralPointer(hl) == nil {
 		t.Error("getNameLiteralPointer() is nil after name assigned")
 
 	}
@@ -166,7 +166,7 @@ func TestVersionWithParentChange(t *testing.T) {
 	oldParentInitialVersion := oldParent.GetVersion(hl)
 	newParentInitialVersion := newParent.GetVersion(hl)
 	elementXInitialVersion := elementX.GetVersion(hl)
-	elementXOwnerPointer := elementX.getOwningElementPointer(hl)
+	elementXOwnerPointer := elementX.GetOwningElementPointer(hl)
 	elementXOwnerPointerInitialVersion := elementXOwnerPointer.GetVersion(hl)
 	elementXOwnerPointer.SetElement(newParent, hl)
 	if elementX.GetOwningElement(hl) != newParent {
@@ -229,7 +229,7 @@ func TestVersionWithParentChangeAndCommonGrandparent(t *testing.T) {
 	}
 	elementXPreviousVersion = elementX.GetVersion(hl)
 
-	elementXOwnerPointer := elementX.getOwningElementPointer(hl)
+	elementXOwnerPointer := elementX.GetOwningElementPointer(hl)
 	elementXOwnerPointerInitialVersion := elementXOwnerPointer.GetVersion(hl)
 	elementXOwnerPointer.SetElement(newParent, hl)
 	if elementX.GetOwningElement(hl) != newParent {

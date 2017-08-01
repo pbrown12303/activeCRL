@@ -25,7 +25,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 
 	// ElementPointer
 	elementPointer := uOfD.NewReferencedElementPointer(hl)
-	elementPointer.SetUri("http://activeCrl.com/test/ElementPointer", hl)
+	SetUri(elementPointer, "http://activeCrl.com/test/ElementPointer", hl)
 	recoveredElementPointer := uOfD.GetBaseElementWithUri("http://activeCrl.com/test/ElementPointer")
 	if recoveredElementPointer == nil {
 		t.Error("Did not find ElementPointer by URI")
@@ -33,7 +33,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 
 	// ElementPointerPointer
 	elementPointerPointer := uOfD.NewElementPointerPointer(hl)
-	elementPointerPointer.SetUri("http://activeCrl.com/test/ElementPointerPointer", hl)
+	SetUri(elementPointerPointer, "http://activeCrl.com/test/ElementPointerPointer", hl)
 	recoveredElementPointerPointer := uOfD.GetBaseElementWithUri("http://activeCrl.com/test/ElementPointerPointer")
 	if recoveredElementPointerPointer == nil {
 		t.Error("Did not find ElementPointerPointer by URI")
@@ -59,7 +59,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 
 	// Literal
 	literal := uOfD.NewLiteral(hl)
-	literal.SetUri("http://activeCrl.com/test/Literal", hl)
+	SetUri(literal, "http://activeCrl.com/test/Literal", hl)
 	recoveredLiteral := uOfD.GetBaseElementWithUri("http://activeCrl.com/test/Literal")
 	if recoveredLiteral == nil {
 		t.Error("Did not find Literal by URI")
@@ -67,7 +67,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 
 	// LiteralPointer
 	literalPointer := uOfD.NewValueLiteralPointer(hl)
-	literalPointer.SetUri("http://activeCrl.com/test/LiteralPointer", hl)
+	SetUri(literalPointer, "http://activeCrl.com/test/LiteralPointer", hl)
 	recoveredLiteralPointer := uOfD.GetBaseElementWithUri("http://activeCrl.com/test/LiteralPointer")
 	if recoveredLiteralPointer == nil {
 		t.Error("Did not find LiteralPointer by URI")
@@ -75,7 +75,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 
 	// LiteralPointerPointer
 	literalPointerPointer := uOfD.NewLiteralPointerPointer(hl)
-	literalPointerPointer.SetUri("http://activeCrl.com/test/LiteralPointerPointer", hl)
+	SetUri(literalPointerPointer, "http://activeCrl.com/test/LiteralPointerPointer", hl)
 	recoveredLiteralPointerPointer := uOfD.GetBaseElementWithUri("http://activeCrl.com/test/LiteralPointerPointer")
 	if recoveredLiteralPointerPointer == nil {
 		t.Error("Did not find LiteralPointerPointer by URI")

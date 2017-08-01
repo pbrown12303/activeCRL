@@ -85,7 +85,7 @@ func (elPtr *element) GetDefinition(hl *HeldLocks) string {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
-	nlp := elPtr.getDefinitionLiteralPointer(hl)
+	nlp := elPtr.GetDefinitionLiteralPointer(hl)
 	if nlp != nil {
 		nl := nlp.GetLiteral(hl)
 		if nl != nil {
@@ -95,20 +95,20 @@ func (elPtr *element) GetDefinition(hl *HeldLocks) string {
 	return ""
 }
 
-func (elPtr *element) getDefinitionLiteral(hl *HeldLocks) Literal {
+func (elPtr *element) GetDefinitionLiteral(hl *HeldLocks) Literal {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
-	nlp := elPtr.getDefinitionLiteralPointer(hl)
+	nlp := elPtr.GetDefinitionLiteralPointer(hl)
 	if nlp != nil {
 		return nlp.GetLiteral(hl)
 	}
 	return nil
 }
 
-func (elPtr *element) getDefinitionLiteralPointer(hl *HeldLocks) LiteralPointer {
+func (elPtr *element) GetDefinitionLiteralPointer(hl *HeldLocks) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -179,20 +179,20 @@ func (elPtr *element) getImmediateRefinements(hl *HeldLocks) []Refinement {
 	return refinements
 }
 
-func (elPtr *element) getNameLiteral(hl *HeldLocks) Literal {
+func (elPtr *element) GetNameLiteral(hl *HeldLocks) Literal {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
-	nlp := elPtr.getNameLiteralPointer(hl)
+	nlp := elPtr.GetNameLiteralPointer(hl)
 	if nlp != nil {
 		return nlp.GetLiteral(hl)
 	}
 	return nil
 }
 
-func (elPtr *element) getNameLiteralPointer(hl *HeldLocks) LiteralPointer {
+func (elPtr *element) GetNameLiteralPointer(hl *HeldLocks) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -244,14 +244,14 @@ func (elPtr *element) GetOwningElement(hl *HeldLocks) Element {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
-	oep := elPtr.getOwningElementPointer(hl)
+	oep := elPtr.GetOwningElementPointer(hl)
 	if oep != nil {
 		return oep.GetElement(hl)
 	}
 	return nil
 }
 
-func (elPtr *element) getOwningElementPointer(hl *HeldLocks) ElementPointer {
+func (elPtr *element) GetOwningElementPointer(hl *HeldLocks) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -274,27 +274,27 @@ func (elPtr *element) GetUri(hl *HeldLocks) string {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
-	ul := elPtr.getUriLiteral(hl)
+	ul := elPtr.GetUriLiteral(hl)
 	if ul != nil {
 		return ul.GetLiteralValue(hl)
 	}
 	return ""
 }
 
-func (elPtr *element) getUriLiteral(hl *HeldLocks) Literal {
+func (elPtr *element) GetUriLiteral(hl *HeldLocks) Literal {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
-	nlp := elPtr.getUriLiteralPointer(hl)
+	nlp := elPtr.GetUriLiteralPointer(hl)
 	if nlp != nil {
 		return nlp.GetLiteral(hl)
 	}
 	return nil
 }
 
-func (elPtr *element) getUriLiteralPointer(hl *HeldLocks) LiteralPointer {
+func (elPtr *element) GetUriLiteralPointer(hl *HeldLocks) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -476,25 +476,23 @@ type Element interface {
 	BaseElement
 	GetAbstractElementsRecursively(*HeldLocks) []Element
 	GetDefinition(*HeldLocks) string
-	getDefinitionLiteral(*HeldLocks) Literal
-	getDefinitionLiteralPointer(*HeldLocks) LiteralPointer
+	GetDefinitionLiteral(*HeldLocks) Literal
+	GetDefinitionLiteralPointer(*HeldLocks) LiteralPointer
 	getImmediateAbstractElements(*HeldLocks) []Element
 	getImmediateAbstractions(*HeldLocks) []Refinement
 	getImmediateRefinements(*HeldLocks) []Refinement
-	getNameLiteral(*HeldLocks) Literal
-	getNameLiteralPointer(*HeldLocks) LiteralPointer
+	GetNameLiteral(*HeldLocks) Literal
+	GetNameLiteralPointer(*HeldLocks) LiteralPointer
 	GetOwnedBaseElements(*HeldLocks) []BaseElement
 	GetOwnedElements(*HeldLocks) []Element
 	GetOwningElement(*HeldLocks) Element
-	getOwningElementPointer(*HeldLocks) ElementPointer
-	getUriLiteral(*HeldLocks) Literal
-	getUriLiteralPointer(*HeldLocks) LiteralPointer
+	GetOwningElementPointer(*HeldLocks) ElementPointer
+	GetUriLiteral(*HeldLocks) Literal
+	GetUriLiteralPointer(*HeldLocks) LiteralPointer
 	internalAddOwnedBaseElement(BaseElement, *HeldLocks)
 	internalRemoveOwnedBaseElement(BaseElement, *HeldLocks)
 	IsOwnedBaseElement(BaseElement, *HeldLocks) bool
 	MarshalJSON() ([]byte, error)
-	//	SetDefinition(string, *HeldLocks)
-	//	SetName(string, *HeldLocks)
 }
 
 func SetDefinition(el Element, definition string, hl *HeldLocks) {
@@ -503,9 +501,9 @@ func SetDefinition(el Element, definition string, hl *HeldLocks) {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(el)
-	nl := el.getDefinitionLiteral(hl)
+	nl := el.GetDefinitionLiteral(hl)
 	if nl == nil {
-		nlp := el.getDefinitionLiteralPointer(hl)
+		nlp := el.GetDefinitionLiteralPointer(hl)
 		if nlp == nil {
 			nlp = el.GetUniverseOfDiscourse(hl).NewDefinitionLiteralPointer(hl)
 			SetOwningElement(nlp, el, hl)
@@ -523,9 +521,9 @@ func SetName(el Element, name string, hl *HeldLocks) {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(el)
-	nl := el.getNameLiteral(hl)
+	nl := el.GetNameLiteral(hl)
 	if nl == nil {
-		nlp := el.getNameLiteralPointer(hl)
+		nlp := el.GetNameLiteralPointer(hl)
 		if nlp == nil {
 			nlp = el.GetUniverseOfDiscourse(hl).NewNameLiteralPointer(hl)
 			SetOwningElement(nlp, el, hl)

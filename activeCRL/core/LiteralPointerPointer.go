@@ -212,7 +212,7 @@ func (pllPtr *literalPointerPointer) internalSetOwningElement(element Element, h
 	}
 }
 
-func (lpPtr *literalPointerPointer) SetUri(uri string, hl *HeldLocks) {
+func (lpPtr *literalPointerPointer) setUri(uri string, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()

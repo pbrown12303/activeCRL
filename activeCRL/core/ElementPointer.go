@@ -355,7 +355,7 @@ func (epPtr *elementPointer) internalSetOwningElement(element Element, hl *HeldL
 	}
 }
 
-func (epPtr *elementPointer) SetUri(uri string, hl *HeldLocks) {
+func (epPtr *elementPointer) setUri(uri string, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()

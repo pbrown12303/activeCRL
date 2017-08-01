@@ -176,7 +176,7 @@ func GetName(be BaseElement, hl *HeldLocks) string {
 		return val.getName(hl)
 	case Element:
 		el := be.(Element)
-		nl := el.getNameLiteral(hl)
+		nl := el.GetNameLiteral(hl)
 		if nl != nil {
 			return nl.GetLiteralValue(hl)
 		}
@@ -194,7 +194,7 @@ func GetOwningElement(be BaseElement, hl *HeldLocks) Element {
 	case Value:
 		return be.(Value).getOwningElement(hl)
 	case Element:
-		oep := be.(Element).getOwningElementPointer(hl)
+		oep := be.(Element).GetOwningElementPointer(hl)
 		if oep != nil {
 			return oep.GetElement(hl)
 		}
@@ -214,7 +214,7 @@ func GetUri(be BaseElement, hl *HeldLocks) string {
 		return val.getUri(hl)
 	case Element:
 		el := be.(Element)
-		nl := el.getUriLiteral(hl)
+		nl := el.GetUriLiteral(hl)
 		if nl != nil {
 			return nl.GetLiteralValue(hl)
 		}
@@ -238,7 +238,7 @@ func SetOwningElement(be BaseElement, parent Element, hl *HeldLocks) {
 		} else if oldParent != nil && parent != nil && oldParent.GetId(hl) != parent.GetId(hl) {
 			return // Nothing to do
 		}
-		oep := elPtr.getOwningElementPointer(hl)
+		oep := elPtr.GetOwningElementPointer(hl)
 		if oep == nil {
 			oep = elPtr.GetUniverseOfDiscourse(hl).NewOwningElementPointer(hl)
 			//			log.Printf("In case Element of SetOwningElement, created OwningElementPointer and about to call SetOwningElement")
@@ -281,11 +281,11 @@ func SetUri(be BaseElement, uri string, hl *HeldLocks) {
 	switch be.(type) {
 	case Element:
 		el := be.(Element)
-		nl := el.getUriLiteral(hl)
+		nl := el.GetUriLiteral(hl)
 		if nl != nil {
 			hl.LockBaseElement(nl)
 		} else {
-			nlp := el.getUriLiteralPointer(hl)
+			nlp := el.GetUriLiteralPointer(hl)
 			if nlp == nil {
 				nlp = be.GetUniverseOfDiscourse(hl).NewUriLiteralPointer(hl)
 				SetOwningElement(nlp, el, hl)
@@ -297,7 +297,7 @@ func SetUri(be BaseElement, uri string, hl *HeldLocks) {
 		nl.SetLiteralValue(uri, hl)
 	case Value:
 		preChange(be, hl)
-		be.(Value).SetUri(uri, hl)
+		be.(Value).setUri(uri, hl)
 		notification := NewChangeNotification(be, MODIFY, nil)
 		postChange(be, notification, hl)
 

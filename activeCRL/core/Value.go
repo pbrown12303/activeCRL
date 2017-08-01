@@ -117,5 +117,5 @@ type Value interface {
 	getOwningElement(*HeldLocks) Element
 	getUri(*HeldLocks) string
 	setOwningElement(Element, *HeldLocks)
-	SetUri(string, *HeldLocks)
+	setUri(string, *HeldLocks)
 }

@@ -36,8 +36,44 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		core.SetUri(coreElement, core.CoreConceptSpaceUri, hl)
 	}
 
+	// BaseElementPointer
+	var baseElementPointer core.BaseElementPointer
+	re := uOfD.GetBaseElementWithUri(core.BaseElementPointerUri)
+	if re != nil {
+		var ok bool
+		baseElementPointer, ok = re.(core.BaseElementPointer)
+		if !ok {
+			log.Printf("Recovered object not of type BaseElementPointer with url %s\n", core.BaseElementPointerUri)
+			core.Print(re, "", hl)
+			return nil
+		}
+	}
+	if baseElementPointer == nil {
+		baseElementPointer = uOfD.NewBaseElementPointer(hl)
+		core.SetOwningElement(baseElementPointer, coreElement, hl)
+		core.SetUri(baseElementPointer, core.BaseElementPointerUri, hl)
+	}
+
+	// BaseElementReference
+	var baseElementReference core.BaseElementReference
+	re = uOfD.GetBaseElementWithUri(core.BaseElementReferenceUri)
+	if re != nil {
+		var ok bool
+		baseElementReference, ok = re.(core.BaseElementReference)
+		if !ok {
+			log.Printf("Recovered object not of type ElementReference with url %s\n", core.BaseElementReferenceUri)
+			return nil
+		}
+	}
+	if baseElementReference == nil {
+		baseElementReference = uOfD.NewBaseElementReference(hl)
+		core.SetOwningElement(baseElementReference, coreElement, hl)
+		core.SetName(baseElementReference, "BaseElementReference", hl)
+		core.SetUri(baseElementReference, core.BaseElementReferenceUri, hl)
+	}
+
 	// Element
-	re := uOfD.GetBaseElementWithUri(core.ElememtUri)
+	re = uOfD.GetBaseElementWithUri(core.ElememtUri)
 	var element core.Element
 	if re != nil {
 		var ok bool
@@ -62,13 +98,15 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		elementPointer, ok = re.(core.ElementPointer)
 		if !ok {
 			log.Printf("Recovered object not of type ElementPointer with url http://activeCrl.com/core/ElementPointer")
-			return nil
+			core.Print(re, "", hl)
+			uOfD.DeleteBaseElement(re, hl)
+			re = nil
 		}
 	}
 	if elementPointer == nil {
 		elementPointer = uOfD.NewReferencedElementPointer(hl)
 		core.SetOwningElement(elementPointer, coreElement, hl)
-		elementPointer.SetUri(core.ElementPointerUri, hl)
+		core.SetUri(elementPointer, core.ElementPointerUri, hl)
 	}
 
 	// ElementPointerPointer
@@ -85,7 +123,7 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 	if elementPointerPointer == nil {
 		elementPointerPointer = uOfD.NewElementPointerPointer(hl)
 		core.SetOwningElement(elementPointerPointer, coreElement, hl)
-		elementPointerPointer.SetUri(core.ElementPointerPointerUri, hl)
+		core.SetUri(elementPointerPointer, core.ElementPointerPointerUri, hl)
 	}
 
 	// ElementPointerReference
@@ -104,6 +142,108 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		core.SetOwningElement(elementPointerReference, coreElement, hl)
 		core.SetName(elementPointerReference, "ElementReference", hl)
 		core.SetUri(elementPointerReference, core.ElementPointerReferenceUri, hl)
+	}
+
+	// ElementPointerRole and values
+	var elementPointerRole core.Element
+	re = uOfD.GetBaseElementWithUri(core.ElementPointerRoleUri)
+	if re != nil {
+		var ok bool
+		elementPointerRole, ok = re.(core.Element)
+		if !ok {
+			log.Printf("Recovered object not of type Element with url http://activeCrl.com/core/ElementPointerRole")
+			return nil
+		}
+	}
+	if elementPointerRole == nil {
+		elementPointerRole = uOfD.NewElement(hl)
+		core.SetOwningElement(elementPointerRole, coreElement, hl)
+		core.SetName(elementPointerRole, "ElementPointerRole", hl)
+		core.SetUri(elementPointerRole, core.ElementPointerRoleUri, hl)
+	}
+
+	var abstractElement core.Element
+	re = uOfD.GetBaseElementWithUri(core.ReferencedElementUri)
+	if re != nil {
+		var ok bool
+		abstractElement, ok = re.(core.Element)
+		if !ok {
+			log.Printf("Recovered object not of type Element with url %s\n", core.AbstractElementUri)
+			return nil
+		}
+	}
+	if abstractElement == nil {
+		abstractElement = uOfD.NewElement(hl)
+		core.SetOwningElement(abstractElement, coreElement, hl)
+		core.SetName(abstractElement, "AbstractElementRole", hl)
+		core.SetUri(abstractElement, core.AbstractElementUri, hl)
+		refinement := uOfD.NewRefinement(hl)
+		core.SetOwningElement(refinement, abstractElement, hl)
+		refinement.SetAbstractElement(elementPointerRole, hl)
+		refinement.SetRefinedElement(abstractElement, hl)
+	}
+
+	var refinedElement core.Element
+	re = uOfD.GetBaseElementWithUri(core.RefinedElementUri)
+	if re != nil {
+		var ok bool
+		refinedElement, ok = re.(core.Element)
+		if !ok {
+			log.Printf("Recovered object not of type Element with url %s\n", core.RefinedElementUri)
+			return nil
+		}
+	}
+	if refinedElement == nil {
+		refinedElement = uOfD.NewElement(hl)
+		core.SetOwningElement(refinedElement, coreElement, hl)
+		core.SetName(refinedElement, "RefinedElementRole", hl)
+		core.SetUri(refinedElement, core.RefinedElementUri, hl)
+		refinement := uOfD.NewRefinement(hl)
+		core.SetOwningElement(refinement, refinedElement, hl)
+		refinement.SetAbstractElement(elementPointerRole, hl)
+		refinement.SetRefinedElement(refinedElement, hl)
+	}
+
+	var owningElement core.Element
+	re = uOfD.GetBaseElementWithUri(core.OwningElementUri)
+	if re != nil {
+		var ok bool
+		owningElement, ok = re.(core.Element)
+		if !ok {
+			log.Printf("Recovered object not of type Element with url %s\n", core.OwningElementUri)
+			return nil
+		}
+	}
+	if owningElement == nil {
+		owningElement = uOfD.NewElement(hl)
+		core.SetOwningElement(owningElement, coreElement, hl)
+		core.SetName(owningElement, "OwningElementRole", hl)
+		core.SetUri(owningElement, core.OwningElementUri, hl)
+		refinement := uOfD.NewRefinement(hl)
+		core.SetOwningElement(refinement, owningElement, hl)
+		refinement.SetAbstractElement(elementPointerRole, hl)
+		refinement.SetRefinedElement(owningElement, hl)
+	}
+
+	var referencedElement core.Element
+	re = uOfD.GetBaseElementWithUri(core.ReferencedElementUri)
+	if re != nil {
+		var ok bool
+		referencedElement, ok = re.(core.Element)
+		if !ok {
+			log.Printf("Recovered object not of type Element with url %s\n", core.RefinedElementUri)
+			return nil
+		}
+	}
+	if referencedElement == nil {
+		referencedElement = uOfD.NewElement(hl)
+		core.SetOwningElement(referencedElement, coreElement, hl)
+		core.SetName(referencedElement, "ReferencedElementRole", hl)
+		core.SetUri(referencedElement, core.ReferencedElementUri, hl)
+		refinement := uOfD.NewRefinement(hl)
+		core.SetOwningElement(refinement, referencedElement, hl)
+		refinement.SetAbstractElement(elementPointerRole, hl)
+		refinement.SetRefinedElement(referencedElement, hl)
 	}
 
 	// ElementReference
@@ -138,7 +278,7 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 	if literal == nil {
 		literal = uOfD.NewLiteral(hl)
 		core.SetOwningElement(literal, coreElement, hl)
-		literal.SetUri(core.LiteralUri, hl)
+		core.SetUri(literal, core.LiteralUri, hl)
 	}
 
 	// LiteralPointer
@@ -155,7 +295,7 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 	if literalPointer == nil {
 		literalPointer = uOfD.NewValueLiteralPointer(hl)
 		core.SetOwningElement(literalPointer, coreElement, hl)
-		literalPointer.SetUri(core.LiteralPointerUri, hl)
+		core.SetUri(literalPointer, core.LiteralPointerUri, hl)
 	}
 
 	// LiteralPointerPointer
@@ -172,7 +312,7 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 	if literalPointerPointer == nil {
 		literalPointerPointer = uOfD.NewLiteralPointerPointer(hl)
 		core.SetOwningElement(literalPointerPointer, coreElement, hl)
-		literalPointerPointer.SetUri(core.LiteralPointerPointerUri, hl)
+		core.SetUri(literalPointerPointer, core.LiteralPointerPointerUri, hl)
 	}
 
 	// LiteralPointerReference
@@ -191,6 +331,108 @@ func updateRecoveredCore(recoveredCore core.Element, uOfD *core.UniverseOfDiscou
 		core.SetOwningElement(literalPointerReference, coreElement, hl)
 		core.SetName(literalPointerReference, "LiteralReference", hl)
 		core.SetUri(literalPointerReference, core.LiteralPointerReferenceUri, hl)
+	}
+
+	// LiteralPointerRole and values
+	var literalPointerRole core.Element
+	re = uOfD.GetBaseElementWithUri(core.LiteralPointerRoleUri)
+	if re != nil {
+		var ok bool
+		literalPointerRole, ok = re.(core.Element)
+		if !ok {
+			log.Printf("Recovered object not of type Element with url %s\n", core.LiteralPointerRoleUri)
+			return nil
+		}
+	}
+	if literalPointerRole == nil {
+		literalPointerRole = uOfD.NewElement(hl)
+		core.SetOwningElement(literalPointerRole, coreElement, hl)
+		core.SetName(literalPointerRole, "LiteralPointerRole", hl)
+		core.SetUri(literalPointerRole, core.LiteralPointerRoleUri, hl)
+	}
+
+	var name core.Element
+	re = uOfD.GetBaseElementWithUri(core.NameUri)
+	if re != nil {
+		var ok bool
+		name, ok = re.(core.Element)
+		if !ok {
+			log.Printf("Recovered object not of type Element with url %s\n", core.NameUri)
+			return nil
+		}
+	}
+	if name == nil {
+		name = uOfD.NewElement(hl)
+		core.SetOwningElement(name, literalPointerRole, hl)
+		core.SetName(name, "Name", hl)
+		core.SetUri(name, core.NameUri, hl)
+		refinement := uOfD.NewRefinement(hl)
+		core.SetOwningElement(refinement, name, hl)
+		refinement.SetAbstractElement(literalPointerRole, hl)
+		refinement.SetRefinedElement(name, hl)
+	}
+
+	var definition core.Element
+	re = uOfD.GetBaseElementWithUri(core.DefinitionUri)
+	if re != nil {
+		var ok bool
+		definition, ok = re.(core.Element)
+		if !ok {
+			log.Printf("Recovered object not of type Element with url %s\n", core.DefinitionUri)
+			return nil
+		}
+	}
+	if definition == nil {
+		definition = uOfD.NewElement(hl)
+		core.SetOwningElement(definition, literalPointerRole, hl)
+		core.SetName(definition, "Definition", hl)
+		core.SetUri(definition, core.DefinitionUri, hl)
+		refinement := uOfD.NewRefinement(hl)
+		core.SetOwningElement(refinement, definition, hl)
+		refinement.SetAbstractElement(literalPointerRole, hl)
+		refinement.SetRefinedElement(definition, hl)
+	}
+
+	var uri core.Element
+	re = uOfD.GetBaseElementWithUri(core.UriUri)
+	if re != nil {
+		var ok bool
+		uri, ok = re.(core.Element)
+		if !ok {
+			log.Printf("Recovered object not of type Element with url %s\n", core.UriUri)
+			return nil
+		}
+	}
+	if uri == nil {
+		uri = uOfD.NewElement(hl)
+		core.SetOwningElement(uri, literalPointerRole, hl)
+		core.SetName(uri, "Uri", hl)
+		core.SetUri(uri, core.UriUri, hl)
+		refinement := uOfD.NewRefinement(hl)
+		core.SetOwningElement(refinement, uri, hl)
+		refinement.SetAbstractElement(literalPointerRole, hl)
+		refinement.SetRefinedElement(uri, hl)
+	}
+
+	var value core.Element
+	re = uOfD.GetBaseElementWithUri(core.ValueUri)
+	if re != nil {
+		var ok bool
+		value, ok = re.(core.Element)
+		if !ok {
+			log.Printf("Recovered object not of type Element with url %s\n", core.ValueUri)
+			return nil
+		}
+	}
+	if value == nil {
+		value = uOfD.NewElement(hl)
+		core.SetOwningElement(value, literalPointerRole, hl)
+		core.SetName(value, "Value", hl)
+		core.SetUri(value, core.ValueUri, hl)
+		refinement := uOfD.NewRefinement(hl)
+		core.SetOwningElement(refinement, value, hl)
+		refinement.SetAbstractElement(literalPointerRole, hl)
+		refinement.SetRefinedElement(value, hl)
 	}
 
 	// LiteralReference

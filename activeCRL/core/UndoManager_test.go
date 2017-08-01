@@ -145,10 +145,10 @@ func TestUndoRedoElementSetName(t *testing.T) {
 	if GetName(e1, hl) != "" {
 		t.Error("Name not initially empty string")
 	}
-	if e1.getNameLiteralPointer(hl) != nil {
+	if e1.GetNameLiteralPointer(hl) != nil {
 		t.Error("Name literal pointer not initially nil")
 	}
-	if e1.getNameLiteral(hl) != nil {
+	if e1.GetNameLiteral(hl) != nil {
 		t.Error("Name literal not initially nil")
 	}
 
@@ -158,8 +158,8 @@ func TestUndoRedoElementSetName(t *testing.T) {
 	SetName(e1, testName, hl)
 	//	uOfD.debugUndo = false
 	undoStackSizeAfterSetName := len(uOfD.undoMgr.undoStack)
-	nameLiteralPointer := e1.getNameLiteralPointer(hl)
-	nameLiteral := e1.getNameLiteral(hl)
+	nameLiteralPointer := e1.GetNameLiteralPointer(hl)
+	nameLiteral := e1.GetNameLiteral(hl)
 	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) == nil {
 		t.Error("Name literal pointer not in baseElementMap")
 	}
@@ -186,10 +186,10 @@ func TestUndoRedoElementSetName(t *testing.T) {
 	if GetName(e1, hl) != "" {
 		t.Error("Undo did not remove name")
 	}
-	if e1.getNameLiteralPointer(hl) != nil {
+	if e1.GetNameLiteralPointer(hl) != nil {
 		t.Error("Undo did not remove name literal pointer")
 	}
-	if e1.getNameLiteral(hl) != nil {
+	if e1.GetNameLiteral(hl) != nil {
 		t.Error("Undo did not remove name literal")
 	}
 	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) != nil {
@@ -215,10 +215,10 @@ func TestUndoRedoElementSetName(t *testing.T) {
 	if GetName(e1, hl) != testName {
 		t.Error("Redo did not restore name")
 	}
-	if e1.getNameLiteralPointer(hl) != nameLiteralPointer {
+	if e1.GetNameLiteralPointer(hl) != nameLiteralPointer {
 		t.Error("Redo did not restore name literal pointer")
 	}
-	if e1.getNameLiteral(hl) != nameLiteral {
+	if e1.GetNameLiteral(hl) != nameLiteral {
 		t.Error("Redo did not restore name literal")
 	}
 	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) == nil {
@@ -242,10 +242,10 @@ func TestUndoRedoElementSetName(t *testing.T) {
 	if GetName(e1, hl) != testName {
 		t.Error("Double undo/redo did not restore name")
 	}
-	if e1.getNameLiteralPointer(hl) != nameLiteralPointer {
+	if e1.GetNameLiteralPointer(hl) != nameLiteralPointer {
 		t.Error("Double undo/redo did not restore name literal pointer")
 	}
-	if e1.getNameLiteral(hl) != nameLiteral {
+	if e1.GetNameLiteral(hl) != nameLiteral {
 		t.Error("Double undo/redo did not restore name literal")
 	}
 	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) == nil {
@@ -406,10 +406,10 @@ func TestUndoRedoElementSetUri(t *testing.T) {
 	if GetUri(e1, hl) != "" {
 		t.Error("Uri not initially empty string")
 	}
-	if e1.getUriLiteralPointer(hl) != nil {
+	if e1.GetUriLiteralPointer(hl) != nil {
 		t.Error("Uri literal pointer not initially nil")
 	}
-	if e1.getUriLiteral(hl) != nil {
+	if e1.GetUriLiteral(hl) != nil {
 		t.Error("Uri literal not initially nil")
 	}
 
@@ -419,8 +419,8 @@ func TestUndoRedoElementSetUri(t *testing.T) {
 	SetUri(e1, testUri, hl)
 	//	uOfD.debugUndo = false
 	undoStackSizeAfterSetUri := len(uOfD.undoMgr.undoStack)
-	nameLiteralPointer := e1.getUriLiteralPointer(hl)
-	nameLiteral := e1.getUriLiteral(hl)
+	nameLiteralPointer := e1.GetUriLiteralPointer(hl)
+	nameLiteral := e1.GetUriLiteral(hl)
 	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) == nil {
 		t.Error("Uri literal pointer not in baseElementMap")
 	}
@@ -447,10 +447,10 @@ func TestUndoRedoElementSetUri(t *testing.T) {
 	if GetUri(e1, hl) != "" {
 		t.Error("Undo did not remove name")
 	}
-	if e1.getUriLiteralPointer(hl) != nil {
+	if e1.GetUriLiteralPointer(hl) != nil {
 		t.Error("Undo did not remove name literal pointer")
 	}
-	if e1.getUriLiteral(hl) != nil {
+	if e1.GetUriLiteral(hl) != nil {
 		t.Error("Undo did not remove name literal")
 	}
 	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) != nil {
@@ -476,10 +476,10 @@ func TestUndoRedoElementSetUri(t *testing.T) {
 	if GetUri(e1, hl) != testUri {
 		t.Error("Redo did not restore name")
 	}
-	if e1.getUriLiteralPointer(hl) != nameLiteralPointer {
+	if e1.GetUriLiteralPointer(hl) != nameLiteralPointer {
 		t.Error("Redo did not restore name literal pointer")
 	}
-	if e1.getUriLiteral(hl) != nameLiteral {
+	if e1.GetUriLiteral(hl) != nameLiteral {
 		t.Error("Redo did not restore name literal")
 	}
 	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) == nil {
@@ -514,10 +514,10 @@ func TestUndoRedoElementSetDefinition(t *testing.T) {
 	if e1.GetDefinition(hl) != "" {
 		t.Error("Definition not initially empty string")
 	}
-	if e1.getDefinitionLiteralPointer(hl) != nil {
+	if e1.GetDefinitionLiteralPointer(hl) != nil {
 		t.Error("Definition literal pointer not initially nil")
 	}
-	if e1.getDefinitionLiteral(hl) != nil {
+	if e1.GetDefinitionLiteral(hl) != nil {
 		t.Error("Definition literal not initially nil")
 	}
 
@@ -527,8 +527,8 @@ func TestUndoRedoElementSetDefinition(t *testing.T) {
 	SetDefinition(e1, testDefinition, hl)
 	//	uOfD.debugUndo = false
 	undoStackSizeAfterSetDefinition := len(uOfD.undoMgr.undoStack)
-	nameLiteralPointer := e1.getDefinitionLiteralPointer(hl)
-	nameLiteral := e1.getDefinitionLiteral(hl)
+	nameLiteralPointer := e1.GetDefinitionLiteralPointer(hl)
+	nameLiteral := e1.GetDefinitionLiteral(hl)
 	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) == nil {
 		t.Error("Definition literal pointer not in baseElementMap")
 	}
@@ -555,10 +555,10 @@ func TestUndoRedoElementSetDefinition(t *testing.T) {
 	if e1.GetDefinition(hl) != "" {
 		t.Error("Undo did not remove name")
 	}
-	if e1.getDefinitionLiteralPointer(hl) != nil {
+	if e1.GetDefinitionLiteralPointer(hl) != nil {
 		t.Error("Undo did not remove name literal pointer")
 	}
-	if e1.getDefinitionLiteral(hl) != nil {
+	if e1.GetDefinitionLiteral(hl) != nil {
 		t.Error("Undo did not remove name literal")
 	}
 	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) != nil {
@@ -584,10 +584,10 @@ func TestUndoRedoElementSetDefinition(t *testing.T) {
 	if e1.GetDefinition(hl) != testDefinition {
 		t.Error("Redo did not restore name")
 	}
-	if e1.getDefinitionLiteralPointer(hl) != nameLiteralPointer {
+	if e1.GetDefinitionLiteralPointer(hl) != nameLiteralPointer {
 		t.Error("Redo did not restore name literal pointer")
 	}
-	if e1.getDefinitionLiteral(hl) != nameLiteral {
+	if e1.GetDefinitionLiteral(hl) != nameLiteral {
 		t.Error("Redo did not restore name literal")
 	}
 	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) == nil {
@@ -654,7 +654,7 @@ func TestUndoRedoElementPointerSetOwningElement(t *testing.T) {
 	r1 := uOfD.NewElementReference(hl)
 	uOfD.MarkUndoPoint()
 	SetOwningElement(r1, e1, hl)
-	oep := r1.getOwningElementPointer(hl)
+	oep := r1.GetOwningElementPointer(hl)
 	if oep == nil {
 		t.Error("Owning element pointer is nil")
 	}
@@ -673,7 +673,7 @@ func TestUndoRedoElementPointerSetOwningElement(t *testing.T) {
 
 	// Undo
 	uOfD.Undo(hl)
-	if r1.getOwningElementPointer(hl) != nil {
+	if r1.GetOwningElementPointer(hl) != nil {
 		t.Error("Owning element pointer is not nil")
 	}
 	if GetOwningElement(oep, hl) != nil {
@@ -691,7 +691,7 @@ func TestUndoRedoElementPointerSetOwningElement(t *testing.T) {
 
 	// Redo
 	uOfD.Redo(hl)
-	if r1.getOwningElementPointer(hl) == nil {
+	if r1.GetOwningElementPointer(hl) == nil {
 		t.Error("Owning element pointer is nil")
 	}
 	if GetOwningElement(oep, hl).GetId(hl) != r1.GetId(hl) {
@@ -764,7 +764,7 @@ func TestUndoRedoElementPointerPointerSetElementPointer(t *testing.T) {
 	r1 := uOfD.NewElementPointerReference(hl)
 	uOfD.MarkUndoPoint()
 	r1.SetElementPointer(ep1, hl)
-	rep := r1.getElementPointerPointer(hl)
+	rep := r1.GetElementPointerPointer(hl)
 	if rep == nil {
 		t.Error("Referenced element pointer is nil")
 	}
@@ -780,7 +780,7 @@ func TestUndoRedoElementPointerPointerSetElementPointer(t *testing.T) {
 
 	// Undo
 	uOfD.Undo(hl)
-	if r1.getElementPointerPointer(hl) != nil {
+	if r1.GetElementPointerPointer(hl) != nil {
 		t.Error("Referenced element pointer is not nil")
 	}
 	if GetOwningElement(rep, hl) != nil {
@@ -795,7 +795,7 @@ func TestUndoRedoElementPointerPointerSetElementPointer(t *testing.T) {
 
 	// Redo
 	uOfD.Redo(hl)
-	if r1.getElementPointerPointer(hl) == nil {
+	if r1.GetElementPointerPointer(hl) == nil {
 		t.Error("Referenced element pointer is nil")
 	}
 	if GetOwningElement(rep, hl).GetId(hl) != r1.GetId(hl) {
@@ -1143,7 +1143,7 @@ func TestUndoRedoLiteralPointerPointerSetLiteralPointer(t *testing.T) {
 	r1 := uOfD.NewLiteralPointerReference(hl)
 	uOfD.MarkUndoPoint()
 	r1.SetLiteralPointer(lp1, hl)
-	rlp := r1.getLiteralPointerPointer(hl)
+	rlp := r1.GetLiteralPointerPointer(hl)
 	if rlp == nil {
 		t.Error("Referenced element pointer is nil")
 	}
@@ -1159,7 +1159,7 @@ func TestUndoRedoLiteralPointerPointerSetLiteralPointer(t *testing.T) {
 
 	// Undo
 	uOfD.Undo(hl)
-	if r1.getLiteralPointerPointer(hl) != nil {
+	if r1.GetLiteralPointerPointer(hl) != nil {
 		t.Error("Referenced literal pointer is not nil")
 	}
 	if GetOwningElement(rlp, hl) != nil {
@@ -1174,7 +1174,7 @@ func TestUndoRedoLiteralPointerPointerSetLiteralPointer(t *testing.T) {
 
 	// Redo
 	uOfD.Redo(hl)
-	if r1.getLiteralPointerPointer(hl) == nil {
+	if r1.GetLiteralPointerPointer(hl) == nil {
 		t.Error("Literal pointer pointer is nil")
 	}
 	if GetOwningElement(rlp, hl).GetId(hl) != r1.GetId(hl) {

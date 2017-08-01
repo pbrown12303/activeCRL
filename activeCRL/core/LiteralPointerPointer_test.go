@@ -25,7 +25,7 @@ func TestNewLiteralPointerPointer(t *testing.T) {
 	if found == false {
 		t.Error("LiteralPointerPointer not found in parent's OwnedBaseElements \n")
 	}
-	if parent.getLiteralPointerPointer(hl) != child {
+	if parent.GetLiteralPointerPointer(hl) != child {
 		t.Error("LiteralPointerReference.GetLiteralPointer() did not return child")
 	}
 }

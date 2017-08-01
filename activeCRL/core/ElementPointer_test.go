@@ -27,7 +27,7 @@ func TestNewOwningElementPointer(t *testing.T) {
 	if oep.GetElementPointerRole(hl) != OWNING_ELEMENT {
 		t.Error("Owning Element Pointer role not OWNING_ELEMENT \n")
 	}
-	if owner.getOwningElementPointer(hl) != oep {
+	if owner.GetOwningElementPointer(hl) != oep {
 		t.Error("Owner.getOwningElementPointer() did not return Owning Element Pointer")
 	}
 }
@@ -54,7 +54,7 @@ func TestReferencedElementPointer(t *testing.T) {
 	if rep.GetElementPointerRole(hl) != REFERENCED_ELEMENT {
 		t.Error("Referenced Element Pointer role not REFERENCED_ELEMENT \n")
 	}
-	if owner.getReferencedElementPointer(hl) != rep {
+	if owner.GetReferencedElementPointer(hl) != rep {
 		t.Error("Owner.getReferencedElementPointer() did not return Referenced Element Pointer")
 	}
 }
@@ -81,7 +81,7 @@ func TestAbstractElementPointer(t *testing.T) {
 	if aep.GetElementPointerRole(hl) != ABSTRACT_ELEMENT {
 		t.Error("Abstract Element Pointer role not ABSTRACT_ELEMENT \n")
 	}
-	if owner.getAbstractElementPointer(hl) != aep {
+	if owner.GetAbstractElementPointer(hl) != aep {
 		t.Error("Owner.getAbstractElementPointer() did not return Abstract Element Pointer")
 	}
 }
@@ -108,7 +108,7 @@ func TestRefinedElementPointer(t *testing.T) {
 	if rep.GetElementPointerRole(hl) != REFINED_ELEMENT {
 		t.Error("Refined Element Pointer role not REFINED_ELEMENT \n")
 	}
-	if owner.getRefinedElementPointer(hl) != rep {
+	if owner.GetRefinedElementPointer(hl) != rep {
 		t.Error("Owner.getRefinedElementPointer() did not return Abstract Element Pointer")
 	}
 }

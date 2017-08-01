@@ -156,7 +156,7 @@ func (lPtr *literal) internalSetOwningElement(el Element, hl *HeldLocks) {
 	}
 }
 
-func (lPtr *literal) SetUri(uri string, hl *HeldLocks) {
+func (lPtr *literal) setUri(uri string, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
