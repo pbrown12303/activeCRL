@@ -18,9 +18,9 @@ func main() {
 	hl := core.NewHeldLocks()
 	defer hl.ReleaseLocks()
 	recoveredCoreFunctions := coreFunctions.GetCoreFunctionsConceptSpace(uOfD)
-	core.Print(recoveredCoreFunctions, "---", hl)
+	//	core.Print(recoveredCoreFunctions, "---", hl)
 	updatedCoreFunctions := updateRecoveredCoreFunctions(recoveredCoreFunctions, uOfD, hl)
-	core.Print(updatedCoreFunctions, "+++", hl)
+	//	core.Print(updatedCoreFunctions, "+++", hl)
 	marshaledCoreFunctions, err := updatedCoreFunctions.MarshalJSON()
 	if err == nil {
 		ioutil.WriteFile("CoreFunctions.acrl", marshaledCoreFunctions, os.ModePerm)
@@ -38,21 +38,8 @@ func updateRecoveredCoreFunctions(recoveredCoreFunctions core.Element, uOfD *cor
 		core.SetUri(coreFunctionsElement, coreFunctions.CoreFunctionsUri, hl)
 	}
 
-	// CreateElement
-	createElement := uOfD.GetElementWithUri(coreFunctions.CreateElememtUri)
-	if createElement == nil {
-		createElement = uOfD.NewElement(hl)
-		core.SetOwningElement(createElement, coreFunctionsElement, hl)
-		core.SetName(createElement, "CreateElement", hl)
-		core.SetUri(createElement, coreFunctions.CreateElememtUri, hl)
-	}
-	// CreatedElementReference
-	createdElementReference := core.GetChildElementReferenceWithUri(createElement, coreFunctions.CreatedElementReferenceUri, hl)
-	if createdElementReference == nil {
-		createdElementReference = uOfD.NewElementReference(hl)
-		core.SetOwningElement(createdElementReference, createElement, hl)
-		core.SetName(createdElementReference, "CreatedElementReference", hl)
-		core.SetUri(createdElementReference, coreFunctions.CreatedElementReferenceUri, hl)
-	}
+	coreFunctions.UpdateRecoveredCoreBaseElementFunctions(coreFunctionsElement, uOfD, hl)
+	coreFunctions.UpdateRecoveredCoreElementFunctions(coreFunctionsElement, uOfD, hl)
+
 	return coreFunctionsElement
 }

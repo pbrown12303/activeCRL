@@ -32,7 +32,7 @@ func TestBaseElementReferenceOwnership(t *testing.T) {
 	SetOwningElement(child, parent, hl)
 	//	Print(parent, "", hl)
 	//	Print(child, "", hl)
-	if child.GetOwningElement(hl) != parent {
+	if GetOwningElement(child, hl) != parent {
 		t.Error("Child's owner not set properly")
 	}
 	if child.GetOwningElementPointer(hl) == nil {
@@ -53,19 +53,19 @@ func TestReferenceSetBaseElement(t *testing.T) {
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewBaseElementReference(hl)
 	SetOwningElement(child, parent, hl)
-	if child.GetBaseElement(hl) != nil {
+	if child.GetReferencedBaseElement(hl) != nil {
 		t.Error("BaseElementReference's base element not initialized to nil")
 	}
-	child.SetBaseElement(parent, hl)
-	if child.GetBaseElement(hl) == nil {
+	child.SetReferencedBaseElement(parent, hl)
+	if child.GetReferencedBaseElement(hl) == nil {
 		t.Error("BaseElementReference's base element is nil after assignment")
 		Print(parent, "   ", hl)
 	}
-	if child.GetBaseElement(hl) != nil && child.GetBaseElement(hl).GetId(hl) != parent.GetId(hl) {
+	if child.GetReferencedBaseElement(hl) != nil && child.GetReferencedBaseElement(hl).GetId(hl) != parent.GetId(hl) {
 		t.Error("BaseElementReference's base element not set properly")
 	}
-	child.SetBaseElement(nil, hl)
-	if child.GetBaseElement(hl) != nil {
+	child.SetReferencedBaseElement(nil, hl)
+	if child.GetReferencedBaseElement(hl) != nil {
 		t.Error("BaseElementReference's base element not nild properly")
 	}
 }
@@ -77,7 +77,7 @@ func TestBaseElementReferenceMarshal(t *testing.T) {
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewBaseElementReference(hl)
 	SetOwningElement(child, parent, hl)
-	child.SetBaseElement(parent, hl)
+	child.SetReferencedBaseElement(parent, hl)
 
 	result, err := json.MarshalIndent(parent, "", "   ")
 	if err != nil {
@@ -103,7 +103,7 @@ func TestBaseElementReferenceClone(t *testing.T) {
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewBaseElementReference(hl)
 	SetOwningElement(child, parent, hl)
-	child.SetBaseElement(parent, hl)
+	child.SetReferencedBaseElement(parent, hl)
 	clone := child.(*baseElementReference).clone()
 	if !Equivalent(child, clone, hl) {
 		t.Error("ElementReference clone failed")

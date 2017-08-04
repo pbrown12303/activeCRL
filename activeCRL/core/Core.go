@@ -62,7 +62,11 @@ func (c *core) AddFunction(uri string, function crlExecutionFunction) {
 	c.computeFunctions[uri] = function
 }
 
-func (c *core) findFunctions(element Element, hl *HeldLocks) []crlExecutionFunction {
+func (c *core) GetFunction(uri string) crlExecutionFunction {
+	return c.computeFunctions[uri]
+}
+
+func (c *core) FindFunctions(element Element, hl *HeldLocks) []crlExecutionFunction {
 	var functions []crlExecutionFunction
 	if element == nil {
 		return functions

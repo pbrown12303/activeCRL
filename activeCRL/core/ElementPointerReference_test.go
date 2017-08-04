@@ -30,7 +30,7 @@ func TestElementPointerReferenceOwnership(t *testing.T) {
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementPointerReference(hl)
 	SetOwningElement(child, parent, hl)
-	if child.GetOwningElement(hl) != parent {
+	if GetOwningElement(child, hl) != parent {
 		t.Error("Child's owner not set properly")
 	}
 	if child.GetOwningElementPointer(hl) == nil {
@@ -51,20 +51,20 @@ func TestSetReferencedElementPointer(t *testing.T) {
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementPointerReference(hl)
 	SetOwningElement(child, parent, hl)
-	if child.GetElementPointer(hl) != nil {
+	if child.GetReferencedElementPointer(hl) != nil {
 		t.Error("ElementPointerReference's element pointer not initialized to nil")
 	}
 	elementPointer := uOfD.NewReferencedElementPointer(hl)
-	child.SetElementPointer(elementPointer, hl)
-	if child.GetElementPointer(hl) == nil {
+	child.SetReferencedElementPointer(elementPointer, hl)
+	if child.GetReferencedElementPointer(hl) == nil {
 		t.Error("ElementPointerReference's  element pointer is nil after assignment")
 		Print(elementPointer, "   ", hl)
 	}
-	if child.GetElementPointer(hl) != nil && child.GetElementPointer(hl).GetId(hl) != elementPointer.GetId(hl) {
+	if child.GetReferencedElementPointer(hl) != nil && child.GetReferencedElementPointer(hl).GetId(hl) != elementPointer.GetId(hl) {
 		t.Error("ElementPointerReference's  element pointer not set properly")
 	}
-	child.SetElementPointer(nil, hl)
-	if child.GetElementPointer(hl) != nil {
+	child.SetReferencedElementPointer(nil, hl)
+	if child.GetReferencedElementPointer(hl) != nil {
 		t.Error("ElementPointerReference's  element pointer not nild properly")
 	}
 }
@@ -77,7 +77,7 @@ func TestElementPointerReferenceMarshal(t *testing.T) {
 	child := uOfD.NewElementPointerReference(hl)
 	SetOwningElement(child, parent, hl)
 	elementPointer := uOfD.NewReferencedElementPointer(hl)
-	child.SetElementPointer(elementPointer, hl)
+	child.SetReferencedElementPointer(elementPointer, hl)
 
 	result, err := json.MarshalIndent(parent, "", "   ")
 	if err != nil {
@@ -104,7 +104,7 @@ func TestElementPointerReferenceClone(t *testing.T) {
 	child := uOfD.NewElementPointerReference(hl)
 	SetOwningElement(child, parent, hl)
 	elementPointer := uOfD.NewReferencedElementPointer(hl)
-	child.SetElementPointer(elementPointer, hl)
+	child.SetReferencedElementPointer(elementPointer, hl)
 
 	clone := child.(*elementPointerReference).clone()
 	if !Equivalent(child, clone, hl) {

@@ -12,6 +12,71 @@ type printMutexStruct struct {
 }
 
 var PrintMutex printMutexStruct
+var TraceLocks bool = false
+
+func clone(be BaseElement) BaseElement {
+	switch be.(type) {
+	case *baseElementPointer:
+		return be.(*baseElementPointer).clone()
+	case *baseElementReference:
+		return be.(*baseElementReference).clone()
+	case *element:
+		return be.(*element).clone()
+	case *elementPointer:
+		return be.(*elementPointer).clone()
+	case *elementPointerPointer:
+		return be.(*elementPointerPointer).clone()
+	case *elementPointerReference:
+		return be.(*elementPointerReference).clone()
+	case *elementReference:
+		return be.(*elementReference).clone()
+	case *literal:
+		return be.(*literal).clone()
+	case *literalPointer:
+		return be.(*literalPointer).clone()
+	case *literalPointerPointer:
+		return be.(*literalPointerPointer).clone()
+	case *literalPointerReference:
+		return be.(*literalPointerReference).clone()
+	case *literalReference:
+		return be.(*literalReference).clone()
+	case *refinement:
+		return be.(*refinement).clone()
+	}
+	log.Printf("clone called with unhandled type %T\n", be)
+	return nil
+}
+
+// CreateReplicateAsRefinement() replicates the indicated Element and all of its descendent Elements
+// except that descendant Refinements are not replicated.
+// For each replicated Element, a Refinement is created with the abstractElement being the original and the refinedElement
+// being the replica. The root replicated element is returned.
+func CreateReplicateAsRefinement(original Element, hl *HeldLocks) Element {
+	if hl == nil {
+		hl := NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	uOfD := original.GetUniverseOfDiscourse(hl)
+	var replicate Element
+	switch original.(type) {
+	case BaseElementReference:
+		replicate = uOfD.NewBaseElementReference(hl)
+	case ElementPointerReference:
+		replicate = uOfD.NewElementPointerReference(hl)
+	case ElementReference:
+		replicate = uOfD.NewElementReference(hl)
+	case LiteralPointerReference:
+		replicate = uOfD.NewLiteralPointerReference(hl)
+	case LiteralReference:
+		replicate = uOfD.NewLiteralReference(hl)
+	case Refinement:
+		replicate = uOfD.NewRefinement(hl)
+	case Element:
+		replicate = uOfD.NewElement(hl)
+	}
+	ReplicateAsRefinement(original, replicate, hl)
+	return replicate
+}
 
 func Equivalent(be1 BaseElement, be2 BaseElement, hl *HeldLocks) bool {
 	if hl == nil {
@@ -63,17 +128,17 @@ func equivalent(be1 BaseElement, be2 BaseElement, hl *HeldLocks) bool {
 	return false
 }
 
-// GetChildWithUri() is a locking function that returns the first child with the indicated
-// uri
-func GetChildWithUri(element Element, uri string, hl *HeldLocks) BaseElement {
+func GetChildBaseElementReferenceWithAncestorUri(element Element, uri string, hl *HeldLocks) BaseElementReference {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(element)
-	for _, child := range element.GetOwnedBaseElements(hl) {
-		if GetUri(child, hl) == uri {
-			return child
+	be := GetChildElementWithAncestorUri(element, uri, hl)
+	if be != nil {
+		switch be.(type) {
+		case BaseElementReference:
+			return be.(BaseElementReference)
 		}
 	}
 	return nil
@@ -92,6 +157,22 @@ func GetChildElementWithAncestorUri(element Element, uri string, hl *HeldLocks) 
 			if GetUri(ancestor, hl) == uri {
 				return child
 			}
+		}
+	}
+	return nil
+}
+
+func GetChildBaseElementReferenceWithUri(element Element, uri string, hl *HeldLocks) BaseElementReference {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(element)
+	be := GetChildWithUri(element, uri, hl)
+	if be != nil {
+		switch be.(type) {
+		case BaseElementReference:
+			return be.(BaseElementReference)
 		}
 	}
 	return nil
@@ -133,8 +214,6 @@ func GetChildElementReferenceWithUri(element Element, uri string, hl *HeldLocks)
 	return nil
 }
 
-// GetChildElementReferenceWithAncestorUri() is a locking function that returns the first child
-// element reference with an ancestor having the indicated uri
 func GetChildElementReferenceWithAncestorUri(element Element, uri string, hl *HeldLocks) ElementReference {
 	if hl == nil {
 		hl = NewHeldLocks()
@@ -146,6 +225,54 @@ func GetChildElementReferenceWithAncestorUri(element Element, uri string, hl *He
 		switch be.(type) {
 		case ElementReference:
 			return be.(ElementReference)
+		}
+	}
+	return nil
+}
+
+func GetChildLiteralReferenceWithAncestorUri(element Element, uri string, hl *HeldLocks) LiteralReference {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(element)
+	be := GetChildElementWithAncestorUri(element, uri, hl)
+	if be != nil {
+		switch be.(type) {
+		case LiteralReference:
+			return be.(LiteralReference)
+		}
+	}
+	return nil
+}
+
+func GetChildLiteralReferenceWithUri(element Element, uri string, hl *HeldLocks) LiteralReference {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(element)
+	be := GetChildWithUri(element, uri, hl)
+	if be != nil {
+		switch be.(type) {
+		case LiteralReference:
+			return be.(LiteralReference)
+		}
+	}
+	return nil
+}
+
+// GetChildWithUri() is a locking function that returns the first child with the indicated
+// uri
+func GetChildWithUri(element Element, uri string, hl *HeldLocks) BaseElement {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(element)
+	for _, child := range element.GetOwnedBaseElements(hl) {
+		if GetUri(child, hl) == uri {
+			return child
 		}
 	}
 	return nil
@@ -229,7 +356,7 @@ func printBe(be BaseElement, prefix string, hl *HeldLocks) {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(be)
-	log.Printf("%s%s: \n", prefix, reflect.TypeOf(be).String())
+	log.Printf("%s%s: %p\n", prefix, reflect.TypeOf(be).String(), be)
 	switch be.(type) {
 	case *baseElementPointer:
 		be.(*baseElementPointer).printBaseElementPointer(prefix, hl)
@@ -268,6 +395,103 @@ func PrintUriIndex(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
 		defer hl.ReleaseLocks()
 	}
 	uOfD.uriBaseElementMap.Print(hl)
+}
+
+// ReplicateAsRefinement() replicates the structure of the original in the replicate, ignoring
+// Refinements and Values. The name from each original element is copied into the name of the
+// corresponding replicate element. This function is idempotent: if applied to an existing structure,
+// Elements of that structure that have existing Refinement relationships with original Elements
+// will not be re-created.
+func ReplicateAsRefinement(original Element, replicate Element, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(original)
+	hl.LockBaseElement(replicate)
+	uOfD := replicate.GetUniverseOfDiscourse(hl)
+
+	SetName(replicate, GetName(original, hl), hl)
+	if replicate.IsRefinementOf(original, hl) == false {
+		refinement := uOfD.NewRefinement(hl)
+		SetOwningElement(refinement, replicate, hl)
+		refinement.SetAbstractElement(original, hl)
+		refinement.SetRefinedElement(replicate, hl)
+	}
+
+	for _, originalChild := range original.GetOwnedElements(hl) {
+		var replicateChild Element
+		for _, currentChild := range replicate.GetOwnedElements(hl) {
+			for _, currentChildAncestor := range currentChild.GetAbstractElementsRecursively(hl) {
+				if currentChildAncestor == originalChild {
+					replicateChild = currentChild
+				}
+			}
+		}
+		if replicateChild == nil {
+			switch originalChild.(type) {
+			case BaseElementReference:
+				replicateChild = uOfD.NewBaseElementReference(hl)
+			case ElementPointerReference:
+				replicateChild = uOfD.NewElementPointerReference(hl)
+			case ElementReference:
+				replicateChild = uOfD.NewElementReference(hl)
+			case LiteralPointerReference:
+				replicateChild = uOfD.NewLiteralPointerReference(hl)
+			case LiteralReference:
+				replicateChild = uOfD.NewLiteralReference(hl)
+			case Element:
+				replicateChild = uOfD.NewElement(hl)
+			}
+			SetOwningElement(replicateChild, replicate, hl)
+			refinement := uOfD.NewRefinement(hl)
+			SetOwningElement(refinement, replicateChild, hl)
+			refinement.SetAbstractElement(originalChild, hl)
+			refinement.SetRefinedElement(replicateChild, hl)
+			SetName(replicateChild, GetName(originalChild, hl), hl)
+		}
+	}
+
+}
+
+func restoreValueOwningElementFieldsRecursively(el Element, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	for _, child := range el.GetOwnedBaseElements(hl) {
+		switch child.(type) {
+		//@TODO add reference to case
+		case *baseElementPointer:
+			child.(*baseElementPointer).internalSetOwningElement(el, hl)
+		case *baseElementReference:
+			restoreValueOwningElementFieldsRecursively(child.(*baseElementReference), hl)
+		case *element:
+			restoreValueOwningElementFieldsRecursively(child.(*element), hl)
+		case *elementPointer:
+			child.(*elementPointer).internalSetOwningElement(el, hl)
+		case *elementPointerPointer:
+			child.(*elementPointerPointer).internalSetOwningElement(el, hl)
+		case *elementPointerReference:
+			restoreValueOwningElementFieldsRecursively(child.(*elementPointerReference), hl)
+		case *elementReference:
+			restoreValueOwningElementFieldsRecursively(child.(*elementReference), hl)
+		case *literal:
+			child.(*literal).internalSetOwningElement(el, hl)
+		case *literalPointer:
+			child.(*literalPointer).internalSetOwningElement(el, hl)
+		case *literalPointerPointer:
+			child.(*literalPointerPointer).internalSetOwningElement(el, hl)
+		case *literalPointerReference:
+			restoreValueOwningElementFieldsRecursively(child.(*literalPointerReference), hl)
+		case *literalReference:
+			restoreValueOwningElementFieldsRecursively(child.(*literalReference), hl)
+		case *refinement:
+			restoreValueOwningElementFieldsRecursively(child.(*refinement), hl)
+		default:
+			log.Printf("No case for %T in restoreValueOwningElementFieldsRecursively \n", child)
+		}
+	}
 }
 
 func unmarshalPolymorphicBaseElement(data []byte, result *BaseElement) error {
@@ -367,78 +591,3 @@ func unmarshalPolymorphicBaseElement(data []byte, result *BaseElement) error {
 	}
 	return err
 }
-
-func restoreValueOwningElementFieldsRecursively(el Element, hl *HeldLocks) {
-	if hl == nil {
-		hl = NewHeldLocks()
-		defer hl.ReleaseLocks()
-	}
-	for _, child := range el.GetOwnedBaseElements(hl) {
-		switch child.(type) {
-		//@TODO add reference to case
-		case *baseElementPointer:
-			child.(*baseElementPointer).internalSetOwningElement(el, hl)
-		case *baseElementReference:
-			restoreValueOwningElementFieldsRecursively(child.(*baseElementReference), hl)
-		case *element:
-			restoreValueOwningElementFieldsRecursively(child.(*element), hl)
-		case *elementPointer:
-			child.(*elementPointer).internalSetOwningElement(el, hl)
-		case *elementPointerPointer:
-			child.(*elementPointerPointer).internalSetOwningElement(el, hl)
-		case *elementPointerReference:
-			restoreValueOwningElementFieldsRecursively(child.(*elementPointerReference), hl)
-		case *elementReference:
-			restoreValueOwningElementFieldsRecursively(child.(*elementReference), hl)
-		case *literal:
-			child.(*literal).internalSetOwningElement(el, hl)
-		case *literalPointer:
-			child.(*literalPointer).internalSetOwningElement(el, hl)
-		case *literalPointerPointer:
-			child.(*literalPointerPointer).internalSetOwningElement(el, hl)
-		case *literalPointerReference:
-			restoreValueOwningElementFieldsRecursively(child.(*literalPointerReference), hl)
-		case *literalReference:
-			restoreValueOwningElementFieldsRecursively(child.(*literalReference), hl)
-		case *refinement:
-			restoreValueOwningElementFieldsRecursively(child.(*refinement), hl)
-		default:
-			log.Printf("No case for %T in restoreValueOwningElementFieldsRecursively \n", child)
-		}
-	}
-}
-
-func clone(be BaseElement) BaseElement {
-	switch be.(type) {
-	case *baseElementPointer:
-		return be.(*baseElementPointer).clone()
-	case *baseElementReference:
-		return be.(*baseElementReference).clone()
-	case *element:
-		return be.(*element).clone()
-	case *elementPointer:
-		return be.(*elementPointer).clone()
-	case *elementPointerPointer:
-		return be.(*elementPointerPointer).clone()
-	case *elementPointerReference:
-		return be.(*elementPointerReference).clone()
-	case *elementReference:
-		return be.(*elementReference).clone()
-	case *literal:
-		return be.(*literal).clone()
-	case *literalPointer:
-		return be.(*literalPointer).clone()
-	case *literalPointerPointer:
-		return be.(*literalPointerPointer).clone()
-	case *literalPointerReference:
-		return be.(*literalPointerReference).clone()
-	case *literalReference:
-		return be.(*literalReference).clone()
-	case *refinement:
-		return be.(*refinement).clone()
-	}
-	log.Printf("clone called with unhandled type %T\n", be)
-	return nil
-}
-
-var TraceLocks bool = false

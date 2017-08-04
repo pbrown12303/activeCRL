@@ -37,8 +37,8 @@ func (pllPtr *literalPointerPointer) GetLiteralPointer(hl *HeldLocks) LiteralPoi
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(pllPtr)
-	if pllPtr.literalPointer == nil && pllPtr.GetLiteralPointerIdentifier(hl) != uuid.Nil && pllPtr.uOfD != nil {
-		pllPtr.literalPointer = pllPtr.uOfD.GetLiteralPointer(pllPtr.GetLiteralPointerIdentifier(hl).String())
+	if pllPtr.literalPointer == nil && pllPtr.GetLiteralPointerId(hl) != uuid.Nil && pllPtr.uOfD != nil {
+		pllPtr.literalPointer = pllPtr.uOfD.GetLiteralPointer(pllPtr.GetLiteralPointerId(hl).String())
 	}
 	return pllPtr.literalPointer
 }
@@ -48,7 +48,7 @@ func (pllPtr *literalPointerPointer) getName(hl *HeldLocks) string {
 	return "literalPointerPointer"
 }
 
-func (pllPtr *literalPointerPointer) GetLiteralPointerIdentifier(hl *HeldLocks) uuid.UUID {
+func (pllPtr *literalPointerPointer) GetLiteralPointerId(hl *HeldLocks) uuid.UUID {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -227,7 +227,7 @@ func (lpPtr *literalPointerPointer) setUri(uri string, hl *HeldLocks) {
 type LiteralPointerPointer interface {
 	Pointer
 	GetLiteralPointer(*HeldLocks) LiteralPointer
-	GetLiteralPointerIdentifier(*HeldLocks) uuid.UUID
+	GetLiteralPointerId(*HeldLocks) uuid.UUID
 	GetLiteralPointerVersion(*HeldLocks) int
 	SetLiteralPointer(LiteralPointer, *HeldLocks)
 }

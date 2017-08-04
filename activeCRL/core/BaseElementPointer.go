@@ -46,8 +46,8 @@ func (bepPtr *baseElementPointer) GetBaseElement(hl *HeldLocks) BaseElement {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(&bepPtr.pointer.baseElement)
-	if bepPtr.baseEl == nil && bepPtr.GetBaseElementIdentifier(hl) != uuid.Nil && bepPtr.uOfD != nil {
-		bepPtr.baseEl = bepPtr.uOfD.GetBaseElement(bepPtr.GetBaseElementIdentifier(hl).String())
+	if bepPtr.baseEl == nil && bepPtr.GetBaseElementId(hl) != uuid.Nil && bepPtr.uOfD != nil {
+		bepPtr.baseEl = bepPtr.uOfD.GetBaseElement(bepPtr.GetBaseElementId(hl).String())
 	}
 	return bepPtr.baseEl
 }
@@ -58,7 +58,7 @@ func (bepPtr *baseElementPointer) getName(hl *HeldLocks) string {
 }
 
 // GetBaseElementIdentifier() locks the vase element pointer and returns the base element identifier, releasing the lock in the process
-func (bepPtr *baseElementPointer) GetBaseElementIdentifier(hl *HeldLocks) uuid.UUID {
+func (bepPtr *baseElementPointer) GetBaseElementId(hl *HeldLocks) uuid.UUID {
 	if hl != nil {
 		hl.LockBaseElement(&bepPtr.pointer.baseElement)
 	}
@@ -118,8 +118,8 @@ func (bepPtr *baseElementPointer) printBaseElementPointer(prefix string, hl *Hel
 	}
 	hl.LockBaseElement(bepPtr)
 	bepPtr.printPointer(prefix, hl)
-	log.Printf("%sIndicated BaseElementID: %s \n", prefix, bepPtr.baseElementId.String())
-	log.Printf("%sIndicated BaseElementVersion: %d \n", prefix, bepPtr.baseElementVersion)
+	log.Printf("%s  Indicated BaseElementID: %s \n", prefix, bepPtr.baseElementId.String())
+	log.Printf("%s  Indicated BaseElementVersion: %d \n", prefix, bepPtr.baseElementVersion)
 }
 
 func (ep *baseElementPointer) recoverBaseElementPointerFields(unmarshaledData *map[string]json.RawMessage) error {
@@ -243,7 +243,7 @@ type BaseElementPointer interface {
 	Pointer
 	baseElementChanged(*ChangeNotification, *HeldLocks)
 	GetBaseElement(*HeldLocks) BaseElement
-	GetBaseElementIdentifier(*HeldLocks) uuid.UUID
+	GetBaseElementId(*HeldLocks) uuid.UUID
 	GetBaseElementVersion(*HeldLocks) int
 	SetBaseElement(BaseElement, *HeldLocks)
 }

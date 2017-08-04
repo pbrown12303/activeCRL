@@ -51,13 +51,13 @@ func (lpPtr *literalPointer) GetLiteral(hl *HeldLocks) Literal {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lpPtr)
-	if lpPtr.literal == nil && lpPtr.GetLiteralIdentifier(hl) != uuid.Nil && lpPtr.uOfD != nil {
-		lpPtr.literal = lpPtr.uOfD.getLiteral(lpPtr.GetLiteralIdentifier(hl).String())
+	if lpPtr.literal == nil && lpPtr.GetLiteralId(hl) != uuid.Nil && lpPtr.uOfD != nil {
+		lpPtr.literal = lpPtr.uOfD.getLiteral(lpPtr.GetLiteralId(hl).String())
 	}
 	return lpPtr.literal
 }
 
-func (lpPtr *literalPointer) GetLiteralIdentifier(hl *HeldLocks) uuid.UUID {
+func (lpPtr *literalPointer) GetLiteralId(hl *HeldLocks) uuid.UUID {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -306,7 +306,7 @@ func (lpPtr *literalPointer) setUri(uri string, hl *HeldLocks) {
 type LiteralPointer interface {
 	Pointer
 	GetLiteral(*HeldLocks) Literal
-	GetLiteralIdentifier(*HeldLocks) uuid.UUID
+	GetLiteralId(*HeldLocks) uuid.UUID
 	GetLiteralPointerRole(*HeldLocks) LiteralPointerRole
 	GetLiteralVersion(*HeldLocks) int
 	SetLiteral(Literal, *HeldLocks)

@@ -24,7 +24,7 @@ func TestBaseElementPointer(t *testing.T) {
 	if found == false {
 		t.Error("Base Element Pointer not found in parent's OwnedBaseElements \n")
 	}
-	if owner.getBaseElementPointer(hl) != rep {
+	if owner.GetBaseElementPointer(hl) != rep {
 		t.Error("Owner.getBaseElementPointer() did not return Base Element Pointer")
 	}
 }

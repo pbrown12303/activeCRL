@@ -41,12 +41,6 @@ func (sbeMap *StringElementPointerListMap) AddEntry(key string, value ElementPoi
 	}
 }
 
-func (sbeMap *StringElementPointerListMap) GetElementPointerList(key string) elementPointerList {
-	sbeMap.TraceableLock()
-	defer sbeMap.TraceableUnlock()
-	return sbeMap.elementPointerListMap[key]
-}
-
 func (sbeMap *StringElementPointerListMap) RemoveEntry(key string, entry ElementPointer) {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()

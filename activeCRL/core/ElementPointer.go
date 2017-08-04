@@ -63,8 +63,8 @@ func (epPtr *elementPointer) GetElement(hl *HeldLocks) Element {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)
-	if epPtr.element == nil && epPtr.GetElementIdentifier(hl) != uuid.Nil && epPtr.uOfD != nil {
-		epPtr.element = epPtr.uOfD.GetElement(epPtr.GetElementIdentifier(hl).String())
+	if epPtr.element == nil && epPtr.GetElementId(hl) != uuid.Nil && epPtr.uOfD != nil {
+		epPtr.element = epPtr.uOfD.GetElement(epPtr.GetElementId(hl).String())
 	}
 	return epPtr.element
 }
@@ -89,7 +89,7 @@ func (epPtr *elementPointer) getName(hl *HeldLocks) string {
 }
 
 // GetElementIdentifier() locks the element pointer and returns the element identifier, releasing the lock in the process
-func (epPtr *elementPointer) GetElementIdentifier(hl *HeldLocks) uuid.UUID {
+func (epPtr *elementPointer) GetElementId(hl *HeldLocks) uuid.UUID {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -371,7 +371,7 @@ type ElementPointer interface {
 	Pointer
 	elementChanged(*ChangeNotification, *HeldLocks)
 	GetElement(*HeldLocks) Element
-	GetElementIdentifier(*HeldLocks) uuid.UUID
+	GetElementId(*HeldLocks) uuid.UUID
 	GetElementPointerRole(*HeldLocks) ElementPointerRole
 	GetElementVersion(*HeldLocks) int
 	SetElement(Element, *HeldLocks)

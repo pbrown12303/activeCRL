@@ -30,7 +30,7 @@ func TestElementReferenceOwnership(t *testing.T) {
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementReference(hl)
 	SetOwningElement(child, parent, hl)
-	if child.GetOwningElement(hl) != parent {
+	if GetOwningElement(child, hl) != parent {
 		t.Error("Child's owner not set properly")
 	}
 	if child.GetOwningElementPointer(hl) == nil {

@@ -22,20 +22,20 @@ func (erPtr *baseElementReference) cloneAttributes(source baseElementReference) 
 	erPtr.reference.cloneAttributes(source.reference)
 }
 
-func (erPtr *baseElementReference) GetBaseElement(hl *HeldLocks) BaseElement {
+func (erPtr *baseElementReference) GetReferencedBaseElement(hl *HeldLocks) BaseElement {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(erPtr)
-	rep := erPtr.getBaseElementPointer(hl)
+	rep := erPtr.GetBaseElementPointer(hl)
 	if rep != nil {
 		return rep.GetBaseElement(hl)
 	}
 	return nil
 }
 
-func (erPtr *baseElementReference) getBaseElementPointer(hl *HeldLocks) BaseElementPointer {
+func (erPtr *baseElementReference) GetBaseElementPointer(hl *HeldLocks) BaseElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -114,14 +114,14 @@ func (el *baseElementReference) recoverBaseElementReferenceFields(unmarshaledDat
 //	oep.SetElement(parent, hl)
 //}
 
-func (erPtr *baseElementReference) SetBaseElement(el BaseElement, hl *HeldLocks) {
+func (erPtr *baseElementReference) SetReferencedBaseElement(el BaseElement, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(erPtr)
-	if erPtr.GetBaseElement(hl) != el {
-		ep := erPtr.getBaseElementPointer(hl)
+	if erPtr.GetReferencedBaseElement(hl) != el {
+		ep := erPtr.GetBaseElementPointer(hl)
 		if ep == nil {
 			ep = erPtr.uOfD.NewBaseElementPointer(hl)
 			SetOwningElement(ep, erPtr, hl)
@@ -132,7 +132,7 @@ func (erPtr *baseElementReference) SetBaseElement(el BaseElement, hl *HeldLocks)
 
 type BaseElementReference interface {
 	Reference
-	GetBaseElement(*HeldLocks) BaseElement
-	getBaseElementPointer(*HeldLocks) BaseElementPointer
-	SetBaseElement(BaseElement, *HeldLocks)
+	GetReferencedBaseElement(*HeldLocks) BaseElement
+	GetBaseElementPointer(*HeldLocks) BaseElementPointer
+	SetReferencedBaseElement(BaseElement, *HeldLocks)
 }

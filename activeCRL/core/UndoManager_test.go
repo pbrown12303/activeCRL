@@ -763,7 +763,7 @@ func TestUndoRedoElementPointerPointerSetElementPointer(t *testing.T) {
 	ep1 := uOfD.NewReferencedElementPointer(hl)
 	r1 := uOfD.NewElementPointerReference(hl)
 	uOfD.MarkUndoPoint()
-	r1.SetElementPointer(ep1, hl)
+	r1.SetReferencedElementPointer(ep1, hl)
 	rep := r1.GetElementPointerPointer(hl)
 	if rep == nil {
 		t.Error("Referenced element pointer is nil")
@@ -1142,7 +1142,7 @@ func TestUndoRedoLiteralPointerPointerSetLiteralPointer(t *testing.T) {
 	lp1 := uOfD.NewNameLiteralPointer(hl)
 	r1 := uOfD.NewLiteralPointerReference(hl)
 	uOfD.MarkUndoPoint()
-	r1.SetLiteralPointer(lp1, hl)
+	r1.SetReferencedLiteralPointer(lp1, hl)
 	rlp := r1.GetLiteralPointerPointer(hl)
 	if rlp == nil {
 		t.Error("Referenced element pointer is nil")

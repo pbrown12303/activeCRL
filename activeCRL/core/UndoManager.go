@@ -131,6 +131,10 @@ func (undoMgr *undoManager) restoreState(priorState BaseElement, currentState Ba
 		Print(priorState, "      ", hl)
 	}
 	switch currentState.(type) {
+	case *baseElementPointer:
+		currentState.(*baseElementPointer).cloneAttributes(*priorState.(*baseElementPointer))
+	case *baseElementReference:
+		currentState.(*baseElementReference).cloneAttributes(*priorState.(*baseElementReference))
 	case *element:
 		currentState.(*element).cloneAttributes(*priorState.(*element))
 	case *elementPointer:
@@ -156,6 +160,12 @@ func (undoMgr *undoManager) restoreState(priorState BaseElement, currentState Ba
 	default:
 		log.Printf("restoreState called with unhandled type %T\n", currentState)
 	}
+}
+
+func (undoMgr *undoManager) setDebugUndo(newSetting bool) {
+	undoMgr.TraceableLock()
+	defer undoMgr.TraceableUnlock()
+	undoMgr.debugUndo = newSetting
 }
 
 func (undoMgr *undoManager) setRecordingUndo(newSetting bool) {

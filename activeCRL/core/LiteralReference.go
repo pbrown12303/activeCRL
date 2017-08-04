@@ -89,26 +89,6 @@ func (el *literalReference) recoverLiteralReferenceFields(unmarshaledData *map[s
 	return el.element.recoverElementFields(unmarshaledData)
 }
 
-//func (elPtr *literalReference) SetOwningElement(parent Element, hl *HeldLocks) {
-//	if hl == nil {
-//		hl = NewHeldLocks()
-//		defer hl.ReleaseLocks()
-//	}
-//	hl.LockBaseElement(elPtr)
-//	oldParent := elPtr.GetOwningElement(hl)
-//	if oldParent == nil && parent == nil {
-//		return // Nothing to do
-//	} else if oldParent != nil && parent != nil && oldParent.GetId(hl) == parent.GetId(hl) {
-//		return // Nothing to do
-//	}
-//	oep := elPtr.getOwningElementPointer(hl)
-//	if oep == nil {
-//		oep = elPtr.uOfD.NewOwningElementPointer(hl)
-//		oep.SetOwningElement(elPtr, hl)
-//	}
-//	oep.SetElement(parent, hl)
-//}
-
 func (lrPtr *literalReference) SetReferencedLiteral(el Literal, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks()

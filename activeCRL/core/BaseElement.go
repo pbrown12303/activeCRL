@@ -185,6 +185,9 @@ func GetName(be BaseElement, hl *HeldLocks) string {
 }
 
 func GetOwningElement(be BaseElement, hl *HeldLocks) Element {
+	if be == nil {
+		return nil
+	}
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -232,7 +235,7 @@ func SetOwningElement(be BaseElement, parent Element, hl *HeldLocks) {
 	switch be.(type) {
 	case Element:
 		elPtr := be.(Element)
-		oldParent := elPtr.GetOwningElement(hl)
+		oldParent := GetOwningElement(elPtr, hl)
 		if oldParent == nil && parent == nil {
 			return // Nothing to do
 		} else if oldParent != nil && parent != nil && oldParent.GetId(hl) != parent.GetId(hl) {

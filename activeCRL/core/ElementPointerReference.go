@@ -22,7 +22,7 @@ func (eprPtr *elementPointerReference) cloneAttributes(source elementPointerRefe
 	eprPtr.reference.cloneAttributes(source.reference)
 }
 
-func (eprPtr *elementPointerReference) GetElementPointer(hl *HeldLocks) ElementPointer {
+func (eprPtr *elementPointerReference) GetReferencedElementPointer(hl *HeldLocks) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -86,13 +86,13 @@ func (el *elementPointerReference) recoverElementPointerReferenceFields(unmarsha
 	return el.reference.recoverReferenceFields(unmarshaledData)
 }
 
-func (eprPtr *elementPointerReference) SetElementPointer(el ElementPointer, hl *HeldLocks) {
+func (eprPtr *elementPointerReference) SetReferencedElementPointer(el ElementPointer, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(eprPtr)
-	if eprPtr.GetElementPointer(hl) != el {
+	if eprPtr.GetReferencedElementPointer(hl) != el {
 		ep := eprPtr.GetElementPointerPointer(hl)
 		if ep == nil {
 			ep = eprPtr.uOfD.NewElementPointerPointer(hl)
@@ -104,7 +104,7 @@ func (eprPtr *elementPointerReference) SetElementPointer(el ElementPointer, hl *
 
 type ElementPointerReference interface {
 	Reference
-	GetElementPointer(*HeldLocks) ElementPointer
+	GetReferencedElementPointer(*HeldLocks) ElementPointer
 	GetElementPointerPointer(*HeldLocks) ElementPointerPointer
-	SetElementPointer(ElementPointer, *HeldLocks)
+	SetReferencedElementPointer(ElementPointer, *HeldLocks)
 }

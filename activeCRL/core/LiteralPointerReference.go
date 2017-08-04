@@ -22,7 +22,7 @@ func (lprPtr *literalPointerReference) cloneAttributes(source literalPointerRefe
 	lprPtr.reference.cloneAttributes(source.reference)
 }
 
-func (lprPtr *literalPointerReference) GetLiteralPointer(hl *HeldLocks) LiteralPointer {
+func (lprPtr *literalPointerReference) GetReferencedLiteralPointer(hl *HeldLocks) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -106,13 +106,13 @@ func (el *literalPointerReference) recoverLiteralPointerReferenceFields(unmarsha
 //	oep.SetElement(parent, hl)
 //}
 
-func (lprPtr *literalPointerReference) SetLiteralPointer(lp LiteralPointer, hl *HeldLocks) {
+func (lprPtr *literalPointerReference) SetReferencedLiteralPointer(lp LiteralPointer, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lprPtr)
-	if lprPtr.GetLiteralPointer(hl) != lp {
+	if lprPtr.GetReferencedLiteralPointer(hl) != lp {
 		ep := lprPtr.GetLiteralPointerPointer(hl)
 		if ep == nil {
 			ep = lprPtr.uOfD.NewLiteralPointerPointer(hl)
@@ -124,7 +124,7 @@ func (lprPtr *literalPointerReference) SetLiteralPointer(lp LiteralPointer, hl *
 
 type LiteralPointerReference interface {
 	Reference
-	GetLiteralPointer(*HeldLocks) LiteralPointer
+	GetReferencedLiteralPointer(*HeldLocks) LiteralPointer
 	GetLiteralPointerPointer(*HeldLocks) LiteralPointerPointer
-	SetLiteralPointer(LiteralPointer, *HeldLocks)
+	SetReferencedLiteralPointer(LiteralPointer, *HeldLocks)
 }

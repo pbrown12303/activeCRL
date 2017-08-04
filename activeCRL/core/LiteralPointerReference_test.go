@@ -30,7 +30,7 @@ func TestLiteralPointerReferenceOwnership(t *testing.T) {
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewLiteralPointerReference(hl)
 	SetOwningElement(child, parent, hl)
-	if child.GetOwningElement(hl) != parent {
+	if GetOwningElement(child, hl) != parent {
 		t.Error("Child's owner not set properly")
 	}
 	if child.GetOwningElementPointer(hl) == nil {
@@ -51,20 +51,20 @@ func TestSetReferencedLiteralPointer(t *testing.T) {
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewLiteralPointerReference(hl)
 	SetOwningElement(child, parent, hl)
-	if child.GetLiteralPointer(hl) != nil {
+	if child.GetReferencedLiteralPointer(hl) != nil {
 		t.Error("LiteralPointerReference's element pointer not initialized to nil")
 	}
 	literalPointer := uOfD.NewValueLiteralPointer(hl)
-	child.SetLiteralPointer(literalPointer, hl)
-	if child.GetLiteralPointer(hl) == nil {
+	child.SetReferencedLiteralPointer(literalPointer, hl)
+	if child.GetReferencedLiteralPointer(hl) == nil {
 		t.Error("LiteralPointerReference's  element pointer is nil after assignment")
 		Print(literalPointer, "   ", hl)
 	}
-	if child.GetLiteralPointer(hl) != nil && child.GetLiteralPointer(hl).GetId(hl) != literalPointer.GetId(hl) {
+	if child.GetReferencedLiteralPointer(hl) != nil && child.GetReferencedLiteralPointer(hl).GetId(hl) != literalPointer.GetId(hl) {
 		t.Error("LiteralPointerReference's  element pointer not set properly")
 	}
-	child.SetLiteralPointer(nil, hl)
-	if child.GetLiteralPointer(hl) != nil {
+	child.SetReferencedLiteralPointer(nil, hl)
+	if child.GetReferencedLiteralPointer(hl) != nil {
 		t.Error("LiteralPointerReference's  element pointer not nild properly")
 	}
 }
@@ -77,7 +77,7 @@ func TestLiteralPointerReferenceMarshal(t *testing.T) {
 	child := uOfD.NewLiteralPointerReference(hl)
 	SetOwningElement(child, parent, hl)
 	literalPointer := uOfD.NewValueLiteralPointer(hl)
-	child.SetLiteralPointer(literalPointer, hl)
+	child.SetReferencedLiteralPointer(literalPointer, hl)
 
 	result, err := json.MarshalIndent(parent, "", "   ")
 	if err != nil {
@@ -104,7 +104,7 @@ func TestLiteralPointerReferenceClone(t *testing.T) {
 	child := uOfD.NewLiteralPointerReference(hl)
 	SetOwningElement(child, parent, hl)
 	literalPointer := uOfD.NewValueLiteralPointer(hl)
-	child.SetLiteralPointer(literalPointer, hl)
+	child.SetReferencedLiteralPointer(literalPointer, hl)
 	clone := child.(*literalPointerReference).clone()
 	if !Equivalent(child, clone, hl) {
 		t.Error("LiteralPointerReference clone failed")

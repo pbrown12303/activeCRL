@@ -37,8 +37,8 @@ func (eppPtr *elementPointerPointer) GetElementPointer(hl *HeldLocks) ElementPoi
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(eppPtr)
-	if eppPtr.elementPointer == nil && eppPtr.GetElementPointerIdentifier(hl) != uuid.Nil && eppPtr.uOfD != nil {
-		eppPtr.elementPointer = eppPtr.uOfD.GetElementPointer(eppPtr.GetElementPointerIdentifier(hl).String())
+	if eppPtr.elementPointer == nil && eppPtr.GetElementPointerId(hl) != uuid.Nil && eppPtr.uOfD != nil {
+		eppPtr.elementPointer = eppPtr.uOfD.GetElementPointer(eppPtr.GetElementPointerId(hl).String())
 	}
 	return eppPtr.elementPointer
 }
@@ -48,7 +48,7 @@ func (eppPtr *elementPointerPointer) getName(hl *HeldLocks) string {
 	return "elementPointerPointer"
 }
 
-func (eppPtr *elementPointerPointer) GetElementPointerIdentifier(hl *HeldLocks) uuid.UUID {
+func (eppPtr *elementPointerPointer) GetElementPointerId(hl *HeldLocks) uuid.UUID {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -226,7 +226,7 @@ func (epPtr *elementPointerPointer) setUri(uri string, hl *HeldLocks) {
 type ElementPointerPointer interface {
 	Pointer
 	GetElementPointer(*HeldLocks) ElementPointer
-	GetElementPointerIdentifier(*HeldLocks) uuid.UUID
+	GetElementPointerId(*HeldLocks) uuid.UUID
 	GetElementPointerVersion(*HeldLocks) int
 	SetElementPointer(ElementPointer, *HeldLocks)
 }

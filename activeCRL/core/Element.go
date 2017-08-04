@@ -150,7 +150,7 @@ func (elPtr *element) getImmediateAbstractions(hl *HeldLocks) []Refinement {
 	}
 	hl.LockBaseElement(elPtr)
 	var abstractions []Refinement
-	ePtrs := elPtr.uOfD.elementListenerMap.GetElementPointerList(elPtr.GetId(hl).String())
+	ePtrs := elPtr.uOfD.elementListenerMap.GetEntry(elPtr.GetId(hl).String())
 	if ePtrs != nil {
 		for _, ePtr := range *ePtrs {
 			if ePtr.GetElementPointerRole(hl) == REFINED_ELEMENT {
@@ -168,7 +168,7 @@ func (elPtr *element) getImmediateRefinements(hl *HeldLocks) []Refinement {
 	}
 	hl.LockBaseElement(elPtr)
 	var refinements []Refinement
-	ePtrs := elPtr.uOfD.elementListenerMap.GetElementPointerList(elPtr.GetId(hl).String())
+	ePtrs := elPtr.uOfD.elementListenerMap.GetEntry(elPtr.GetId(hl).String())
 	if ePtrs != nil {
 		for _, ePtr := range *ePtrs {
 			if ePtr.GetElementPointerRole(hl) == ABSTRACT_ELEMENT {
@@ -238,18 +238,18 @@ func (elPtr *element) GetOwnedElements(hl *HeldLocks) []Element {
 	return obe
 }
 
-func (elPtr *element) GetOwningElement(hl *HeldLocks) Element {
-	if hl == nil {
-		hl = NewHeldLocks()
-		defer hl.ReleaseLocks()
-	}
-	hl.LockBaseElement(elPtr)
-	oep := elPtr.GetOwningElementPointer(hl)
-	if oep != nil {
-		return oep.GetElement(hl)
-	}
-	return nil
-}
+//func (elPtr *element) GetOwningElement(hl *HeldLocks) Element {
+//	if hl == nil {
+//		hl = NewHeldLocks()
+//		defer hl.ReleaseLocks()
+//	}
+//	hl.LockBaseElement(elPtr)
+//	oep := elPtr.GetOwningElementPointer(hl)
+//	if oep != nil {
+//		return oep.GetElement(hl)
+//	}
+//	return nil
+//}
 
 func (elPtr *element) GetOwningElementPointer(hl *HeldLocks) ElementPointer {
 	if hl == nil {
@@ -388,6 +388,15 @@ func (ePtr *element) IsOwnedBaseElement(be BaseElement, hl *HeldLocks) bool {
 	return false
 }
 
+func (elPtr *element) IsRefinementOf(el Element, hl *HeldLocks) bool {
+	for _, abstractElement := range elPtr.GetAbstractElementsRecursively(hl) {
+		if el == abstractElement {
+			return true
+		}
+	}
+	return false
+}
+
 func (elPtr *element) MarshalJSON() ([]byte, error) {
 	buffer := bytes.NewBufferString("{")
 	typeName := reflect.TypeOf(elPtr).String()
@@ -485,13 +494,14 @@ type Element interface {
 	GetNameLiteralPointer(*HeldLocks) LiteralPointer
 	GetOwnedBaseElements(*HeldLocks) []BaseElement
 	GetOwnedElements(*HeldLocks) []Element
-	GetOwningElement(*HeldLocks) Element
+	//	GetOwningElement(*HeldLocks) Element
 	GetOwningElementPointer(*HeldLocks) ElementPointer
 	GetUriLiteral(*HeldLocks) Literal
 	GetUriLiteralPointer(*HeldLocks) LiteralPointer
 	internalAddOwnedBaseElement(BaseElement, *HeldLocks)
 	internalRemoveOwnedBaseElement(BaseElement, *HeldLocks)
 	IsOwnedBaseElement(BaseElement, *HeldLocks) bool
+	IsRefinementOf(Element, *HeldLocks) bool
 	MarshalJSON() ([]byte, error)
 }
 

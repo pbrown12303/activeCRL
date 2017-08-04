@@ -32,7 +32,7 @@ func TestCreateElementFunction(t *testing.T) {
 
 	refinementInstance.SetRefinedElement(createElementInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(1 * time.Second)
+	time.Sleep(10000000 * time.Nanosecond)
 
 	// Check the results
 	//	log.Printf("Original instance:")

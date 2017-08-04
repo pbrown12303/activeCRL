@@ -1,0 +1,462 @@
+package coreFunctions
+
+import (
+	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	//	"log"
+	"strconv"
+	"testing"
+	"time"
+)
+
+func TestDelete(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	GetCoreFunctionsConceptSpace(uOfD)
+	//	cfcs := GetCoreFunctionsConceptSpace(uOfD)
+	//	core.Print(cfcs, "cfcs: ", hl)
+
+	deleteFunction := core.GetCore().GetFunction(BaseElementDeleteUri)
+	if deleteFunction == nil {
+		t.Errorf("Delete function not registered with core")
+	}
+
+	// Get Ancestor
+	del := uOfD.GetElementWithUri(BaseElementDeleteUri)
+	if del == nil {
+		t.Errorf("Delete function representation not found")
+	}
+
+	// Create the instance
+	replicate := core.CreateReplicateAsRefinement(del, hl)
+	//	core.Print(replicate, "In TestDelete, replicate: ", hl)
+
+	replicateFunctions := core.GetCore().FindFunctions(replicate, hl)
+	if len(replicateFunctions) != 1 {
+		t.Errorf("Function not found associated with replicate")
+	}
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	// Now check the replications
+	if replicate.IsRefinementOf(del, hl) != true {
+		t.Errorf("Replicate is not refinement of Delete()")
+	}
+	targetReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementDeleteTargetReferenceUri, hl)
+	if targetReference == nil {
+		t.Errorf("TargetReference child not found")
+	}
+
+	targetElement := uOfD.NewElement(hl)
+	targetElementId := targetElement.GetId(hl).String()
+	if uOfD.GetBaseElement(targetElementId) != targetElement {
+		t.Error("TargetElement not created successfully")
+	}
+
+	uOfD.MarkUndoPoint()
+
+	// Set the targetReference, release the locks, and check for successful deletion
+	// The setting of the target reference should trigger the deletion of the target reference
+	targetReference.SetReferencedBaseElement(targetElement, hl)
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	if uOfD.GetBaseElement(targetElementId) != nil {
+		t.Error("TargetElement not deleted successfully")
+	}
+	if targetReference.GetReferencedBaseElement(hl) != nil {
+		t.Error("TargetReference.ReferencedBaseElement not nil after deletion")
+	}
+
+	// Test Undo
+	uOfD.Undo(hl)
+
+	if uOfD.GetBaseElement(targetElementId) != targetElement {
+		t.Error("TargetElement deletion not undone successfully")
+	}
+	if targetReference.GetReferencedBaseElement(hl) != nil {
+		t.Error("TargetReference.ReferencedBaseElement not nil after undo")
+	}
+
+	uOfD.Redo(hl)
+	if uOfD.GetBaseElement(targetElementId) != nil {
+		t.Error("TargetElement not redone successfully")
+	}
+	if targetReference.GetReferencedBaseElement(hl) != nil {
+		t.Error("TargetReference.ReferencedBaseElement not nil after redo")
+	}
+
+}
+
+func TestGetId(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	GetCoreFunctionsConceptSpace(uOfD)
+
+	// Get Ancestor
+	getId := uOfD.GetElementWithUri(BaseElementGetIdUri)
+	if getId == nil {
+		t.Errorf("GetId function representation not found")
+	}
+
+	// Create the instance
+	replicate := core.CreateReplicateAsRefinement(getId, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	// Now check the replication
+	if replicate.IsRefinementOf(getId, hl) != true {
+		t.Errorf("Replicate is not refinement of GetId()")
+	}
+	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetIdSourceReferenceUri, hl)
+	if sourceReference == nil {
+		t.Errorf("SourceReference child not found")
+	}
+	targetReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementGetIdTargetLiteralReferenceUri, hl)
+	if targetReference == nil {
+		t.Errorf("TargetReference child not found")
+	}
+
+	// Now test literal update functionality
+	source := uOfD.NewElement(hl)
+	sourceName := "SourceName"
+	core.SetName(source, sourceName, hl)
+	sourceReference.SetReferencedBaseElement(source, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	hl.LockBaseElement(replicate)
+	targetLiteral := targetReference.GetReferencedLiteral(hl)
+	if targetLiteral == nil {
+		t.Errorf("Target literal not found")
+	} else {
+		if targetLiteral.GetLiteralValue(hl) != sourceName {
+			t.Errorf("Target literal value incorrect")
+		}
+	}
+}
+
+func TestGetName(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	GetCoreFunctionsConceptSpace(uOfD)
+
+	// Get Ancestor
+	getName := uOfD.GetElementWithUri(BaseElementGetNameUri)
+	if getName == nil {
+		t.Errorf("GetName function representation not found")
+	}
+
+	// Create the instance
+	replicate := core.CreateReplicateAsRefinement(getName, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	// Now check the replication
+	if replicate.IsRefinementOf(getName, hl) != true {
+		t.Errorf("Replicate is not refinement of GetName()")
+	}
+	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetNameSourceReferenceUri, hl)
+	if sourceReference == nil {
+		t.Errorf("SourceReference child not found")
+	}
+	targetReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementGetNameTargetLiteralReferenceUri, hl)
+	if targetReference == nil {
+		t.Errorf("TargetReference child not found")
+	}
+
+	// Now test literal update functionality
+	source := uOfD.NewElement(hl)
+	sourceName := "SourceName"
+	core.SetName(source, sourceName, hl)
+	sourceReference.SetReferencedBaseElement(source, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	hl.LockBaseElement(replicate)
+	targetLiteral := targetReference.GetReferencedLiteral(hl)
+	if targetLiteral == nil {
+		t.Errorf("Target literal not found")
+	} else {
+		if targetLiteral.GetLiteralValue(hl) != sourceName {
+			t.Errorf("Target literal value incorrect")
+		}
+	}
+}
+
+func TestGetOwningElement(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	GetCoreFunctionsConceptSpace(uOfD)
+
+	// Get Ancestor
+	getOwningElement := uOfD.GetElementWithUri(BaseElementGetOwningElementUri)
+	if getOwningElement == nil {
+		t.Errorf("GetOwningElement function representation not found")
+	}
+
+	// Create the instance
+	replicate := core.CreateReplicateAsRefinement(getOwningElement, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	// Now check the replication
+	if replicate.IsRefinementOf(getOwningElement, hl) != true {
+		t.Errorf("Replicate is not refinement of GetOwningElement()")
+	}
+	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetOwningElementSourceReferenceUri, hl)
+	if sourceReference == nil {
+		t.Errorf("SourceReference child not found")
+	}
+	targetReference := core.GetChildElementReferenceWithAncestorUri(replicate, BaseElementGetOwningElementTargetElementReferenceUri, hl)
+	if targetReference == nil {
+		t.Errorf("TargetReference child not found")
+	}
+
+	// Now test target reference update functionality
+	parent := uOfD.NewElement(hl)
+	source := uOfD.NewElement(hl)
+	core.SetOwningElement(source, parent, hl)
+	sourceReference.SetReferencedBaseElement(source, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	hl.LockBaseElement(replicate)
+	targetElement := targetReference.GetReferencedElement(hl)
+	if targetElement == nil {
+		t.Errorf("Target element not found")
+	} else {
+		if targetElement != parent {
+			t.Errorf("Target element value incorrect")
+		}
+	}
+}
+
+func TestGetUri(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	GetCoreFunctionsConceptSpace(uOfD)
+
+	// Get Ancestor
+	getUri := uOfD.GetElementWithUri(BaseElementGetUriUri)
+	if getUri == nil {
+		t.Errorf("GetUri function representation not found")
+	}
+
+	// Create the instance
+	replicate := core.CreateReplicateAsRefinement(getUri, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	// Now check the replication
+	if replicate.IsRefinementOf(getUri, hl) != true {
+		t.Errorf("Replicate is not refinement of GetUri()")
+	}
+	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetUriSourceReferenceUri, hl)
+	if sourceReference == nil {
+		t.Errorf("SourceReference child not found")
+	}
+	targetReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementGetUriTargetLiteralReferenceUri, hl)
+	if targetReference == nil {
+		t.Errorf("TargetReference child not found")
+	}
+
+	// Now test literal update functionality
+	source := uOfD.NewElement(hl)
+	sourceName := "SourceName"
+	core.SetName(source, sourceName, hl)
+	sourceReference.SetReferencedBaseElement(source, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	hl.LockBaseElement(replicate)
+	targetLiteral := targetReference.GetReferencedLiteral(hl)
+	if targetLiteral == nil {
+		t.Errorf("Target literal not found")
+	} else {
+		if targetLiteral.GetLiteralValue(hl) != sourceName {
+			t.Errorf("Target literal value incorrect")
+		}
+	}
+}
+
+func TestGetVersion(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	GetCoreFunctionsConceptSpace(uOfD)
+
+	// Get Ancestor
+	getVersion := uOfD.GetElementWithUri(BaseElementGetVersionUri)
+	if getVersion == nil {
+		t.Errorf("GetVersion function representation not found")
+	}
+
+	// Create the instance
+	replicate := core.CreateReplicateAsRefinement(getVersion, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	// Now check the replication
+	if replicate.IsRefinementOf(getVersion, hl) != true {
+		t.Errorf("Replicate is not refinement of GetVersion()")
+	}
+	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetVersionSourceReferenceUri, hl)
+	if sourceReference == nil {
+		t.Errorf("SourceReference child not found")
+	}
+	targetReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementGetVersionTargetLiteralReferenceUri, hl)
+	if targetReference == nil {
+		t.Errorf("TargetReference child not found")
+	}
+
+	// Now test literal update functionality
+	source := uOfD.NewElement(hl)
+	sourceName := "SourceName"
+	core.SetName(source, sourceName, hl)
+	sourceReference.SetReferencedBaseElement(source, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	hl.LockBaseElement(replicate)
+	targetLiteral := targetReference.GetReferencedLiteral(hl)
+	if targetLiteral == nil {
+		t.Errorf("Target literal not found")
+	} else {
+		if targetLiteral.GetLiteralValue(hl) != strconv.Itoa(source.GetVersion(hl)) {
+			t.Errorf("Target literal value incorrect")
+		}
+	}
+}
+
+func TestSetOwningElement(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	GetCoreFunctionsConceptSpace(uOfD)
+
+	// Get Ancestor
+	setOwningElement := uOfD.GetElementWithUri(BaseElementSetOwningElementUri)
+	if setOwningElement == nil {
+		t.Errorf("SetOwningElement function representation not found")
+	}
+
+	// Create the instance
+	replicate := core.CreateReplicateAsRefinement(setOwningElement, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	// Now check the replication
+	if replicate.IsRefinementOf(setOwningElement, hl) != true {
+		t.Errorf("Replicate is not refinement of SetOwningElement()")
+	}
+	owningElementReference := core.GetChildElementReferenceWithAncestorUri(replicate, BaseElementSetOwningElementOwningElementReferenceUri, hl)
+	if owningElementReference == nil {
+		t.Errorf("OwningElementReference child not found")
+	}
+	targetReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementSetOwningElementTargetBaseElementReferenceUri, hl)
+	if targetReference == nil {
+		t.Errorf("TargetReference child not found")
+	}
+
+	// Now test target reference update functionality
+	parent := uOfD.NewElement(hl)
+	target := uOfD.NewElement(hl)
+	targetReference.SetReferencedBaseElement(target, hl)
+	owningElementReference.SetReferencedElement(parent, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	hl.LockBaseElement(replicate)
+	if core.GetOwningElement(target, hl) != parent {
+		t.Errorf("Target owner not set properly")
+	}
+}
+
+func TestSetUri(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	GetCoreFunctionsConceptSpace(uOfD)
+
+	// Get Ancestor
+	setUri := uOfD.GetElementWithUri(BaseElementSetUriUri)
+	if setUri == nil {
+		t.Errorf("SetUri function representation not found")
+	}
+
+	// Create the instance
+	replicate := core.CreateReplicateAsRefinement(setUri, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	// Now check the replication
+	if replicate.IsRefinementOf(setUri, hl) != true {
+		t.Errorf("Replicate is not refinement of SetUri()")
+	}
+	uriReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementSetUriUriReferenceUri, hl)
+	if uriReference == nil {
+		t.Errorf("UriReference child not found")
+	}
+	targetReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementSetUriTargetBaseElementReferenceUri, hl)
+	if targetReference == nil {
+		t.Errorf("TargetReference child not found")
+	}
+
+	// Now test target reference update functionality
+	uriLiteral := uOfD.NewLiteral(hl)
+	uri := "TestUri"
+	uriLiteral.SetLiteralValue(uri, hl)
+	uriReference.SetReferencedLiteral(uriLiteral, hl)
+	target := uOfD.NewElement(hl)
+	targetReference.SetReferencedBaseElement(target, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	hl.LockBaseElement(replicate)
+	if core.GetUri(target, hl) != uri {
+		t.Errorf("Uri not set properly")
+	}
+}

@@ -88,7 +88,7 @@ func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks)
 		// Initiate function execution
 		switch be.(type) {
 		case Element:
-			for _, function := range GetCore().findFunctions(be.(Element), hl) {
+			for _, function := range GetCore().FindFunctions(be.(Element), hl) {
 				go function(be.(Element), notification)
 			}
 		}
@@ -115,7 +115,7 @@ func propagateChange(be BaseElement, notification *ChangeNotification, hl *HeldL
 		//		newNotification := NewChangeNotification(be, MODIFY, notification)
 		switch be.(type) {
 		case Element:
-			for _, function := range GetCore().findFunctions(be.(Element), hl) {
+			for _, function := range GetCore().FindFunctions(be.(Element), hl) {
 				go function(be.(Element), notification)
 			}
 		}

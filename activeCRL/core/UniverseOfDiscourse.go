@@ -143,9 +143,16 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteBaseElement(be BaseElement, hl *HeldLo
 		//		log.Printf("About to delete BaseElement with id: %s\n", be.GetId(hl).String())
 		SetOwningElement(be, nil, hl)
 		uOfDPtr.removeBaseElement(be, hl)
+		beId := be.GetId(hl).String()
+		bepl := uOfDPtr.baseElementListenerMap.GetEntry(beId)
+		if bepl != nil {
+			for _, bep := range *bepl {
+				bep.SetBaseElement(nil, hl)
+			}
+		}
 		switch be.(type) {
 		case Element:
-			epl := uOfDPtr.elementListenerMap.GetElementPointerList(be.GetId(hl).String())
+			epl := uOfDPtr.elementListenerMap.GetEntry(beId)
 			if epl != nil {
 				for _, elementPointer := range *epl {
 					elementPointer.SetElement(nil, hl)
@@ -477,7 +484,7 @@ func (uOfDPtr *UniverseOfDiscourse) notifyElementListeners(notification *ChangeN
 	switch notification.changedObject.(type) {
 	case Element:
 		id := notification.changedObject.GetId(hl).String()
-		epl := uOfDPtr.elementListenerMap.GetElementPointerList(id)
+		epl := uOfDPtr.elementListenerMap.GetEntry(id)
 		if epl != nil {
 			for _, elementPointer := range *epl {
 				// Must suppress circular notifications
@@ -615,6 +622,10 @@ func (uOfDPtr *UniverseOfDiscourse) restoreUriIndexRecursively(be BaseElement, h
 			uOfDPtr.restoreUriIndexRecursively(child, hl)
 		}
 	}
+}
+
+func (uOfDPtr *UniverseOfDiscourse) SetDebugUndo(newSetting bool) {
+	uOfDPtr.undoMgr.setDebugUndo(newSetting)
 }
 
 func (uOfDPtr *UniverseOfDiscourse) SetRecordingUndo(newSetting bool) {
