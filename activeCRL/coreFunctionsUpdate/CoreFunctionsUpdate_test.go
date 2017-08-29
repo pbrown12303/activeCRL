@@ -29,7 +29,7 @@ func TestUpdateCoreFunctions(t *testing.T) {
 	}
 
 	// CreateElement
-	recoveredBaseElement := uOfD.GetBaseElementWithUri(coreFunctions.CreateElememtUri)
+	recoveredBaseElement := uOfD.GetBaseElementWithUri(coreFunctions.ElementCreateUri)
 	if recoveredBaseElement == nil {
 		t.Error("CreateElement not found")
 	}
@@ -39,7 +39,7 @@ func TestUpdateCoreFunctions(t *testing.T) {
 	}
 
 	// CreatedElementReference
-	recoveredCreatedElementReference := core.GetChildElementReferenceWithUri(recoveredBaseElement.(core.Element), coreFunctions.CreatedElementReferenceUri, hl)
+	recoveredCreatedElementReference := core.GetChildElementReferenceWithUri(recoveredBaseElement.(core.Element), coreFunctions.ElementCreateCreatedElementReferenceUri, hl)
 	if recoveredCreatedElementReference == nil {
 		t.Error("CreaedElementReference not found")
 	}

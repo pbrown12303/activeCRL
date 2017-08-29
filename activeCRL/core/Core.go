@@ -1,6 +1,7 @@
 package core
 
 import (
+	"log"
 	"sync"
 )
 
@@ -28,6 +29,8 @@ var UriUri string = "http://activeCrl.com/core/LiteralPointerRole/Uri"
 var ValueUri string = "http://activeCrl.com/core/LiteralPointerRole/Value"
 var LiteralReferenceUri string = "http://activeCrl.com/core/LiteralReference"
 var RefinementUri string = "http://activeCrl.com/core/Refinement"
+
+var AdHocTrace bool = false
 
 type crlExecutionFunction func(Element, *ChangeNotification)
 
@@ -67,6 +70,9 @@ func (c *core) GetFunction(uri string) crlExecutionFunction {
 }
 
 func (c *core) FindFunctions(element Element, hl *HeldLocks) []crlExecutionFunction {
+	if AdHocTrace == true {
+		Print(element, "Finding functions for: ", hl)
+	}
 	var functions []crlExecutionFunction
 	if element == nil {
 		return functions
@@ -74,6 +80,9 @@ func (c *core) FindFunctions(element Element, hl *HeldLocks) []crlExecutionFunct
 	abstractions := element.GetAbstractElementsRecursively(hl)
 	for _, abstractElement := range abstractions {
 		uri := GetUri(abstractElement, hl)
+		if AdHocTrace == true {
+			log.Printf("AbstractElement URI: %s\n", uri)
+		}
 		if uri != "" {
 			f := c.computeFunctions[uri]
 			if f != nil {
@@ -82,4 +91,10 @@ func (c *core) FindFunctions(element Element, hl *HeldLocks) []crlExecutionFunct
 		}
 	}
 	return functions
+}
+
+func (c *core) PrintFunctions() {
+	for k, v := range c.computeFunctions {
+		log.Printf("Key: %s Value: %p\n", k, v)
+	}
 }

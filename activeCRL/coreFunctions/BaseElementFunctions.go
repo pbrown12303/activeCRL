@@ -288,7 +288,7 @@ func UpdateRecoveredCoreBaseElementFunctions(coreFunctionsElement core.Element, 
 	del := uOfD.GetElementWithUri(BaseElementDeleteUri)
 	if del == nil {
 		del = uOfD.NewElement(hl)
-		core.SetName(del, "GetId", hl)
+		core.SetName(del, "Delete", hl)
 		core.SetOwningElement(del, coreFunctionsElement, hl)
 		core.SetUri(del, BaseElementDeleteUri, hl)
 	}

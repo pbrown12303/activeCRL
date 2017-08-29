@@ -53,7 +53,11 @@ func (undoMgr *undoManager) markNewBaseElement(be BaseElement, hl *HeldLocks) er
 	}
 	clone := clone(be)
 	if undoMgr.recordingUndo {
-		undoMgr.undoStack.Push(NewUndoRedoStackEntry(Creation, clone, be))
+		stackEntry := NewUndoRedoStackEntry(Creation, clone, be)
+		if undoMgr.debugUndo == true {
+			PrintStackEntry(stackEntry, hl)
+		}
+		undoMgr.undoStack.Push(stackEntry)
 	}
 	return nil
 }
@@ -83,6 +87,65 @@ func (undoMgr *undoManager) MarkUndoPoint() {
 	if undoMgr.recordingUndo {
 		undoMgr.undoStack.Push(NewUndoRedoStackEntry(Marker, nil, nil))
 	}
+}
+
+func PrintUndoStack(s undoStack, stackName string) {
+	hl := NewHeldLocks()
+	defer hl.ReleaseLocks()
+	log.Printf("%s:", stackName)
+	for _, entry := range s {
+		var changeType string
+		switch entry.changeType {
+		case Creation:
+			{
+				changeType = "Creation"
+			}
+		case Deletion:
+			{
+				changeType = "Deletion"
+			}
+		case Change:
+			{
+				changeType = "Change"
+			}
+		case Marker:
+			{
+				changeType = "Marker"
+			}
+		}
+		log.Printf("   Change type: %s", changeType)
+		log.Printf("   Prior state:")
+		Print(entry.priorState, "      ", hl)
+		log.Printf("   Changed element:")
+		Print(entry.changedElement, "      ", hl)
+	}
+}
+
+func PrintStackEntry(entry *undoRedoStackEntry, hl *HeldLocks) {
+	var changeType string
+	switch entry.changeType {
+	case Creation:
+		{
+			changeType = "Creation"
+		}
+	case Deletion:
+		{
+			changeType = "Deletion"
+		}
+	case Change:
+		{
+			changeType = "Change"
+		}
+	case Marker:
+		{
+			changeType = "Marker"
+		}
+	}
+	log.Printf("   Change type: %s", changeType)
+	log.Printf("   Prior state:")
+	Print(entry.priorState, "      ", hl)
+	log.Printf("   Changed element:")
+	Print(entry.changedElement, "      ", hl)
 }
 
 func (undoMgr *undoManager) redo(uOfD *UniverseOfDiscourse, hl *HeldLocks) {

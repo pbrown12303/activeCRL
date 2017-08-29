@@ -4,20 +4,20 @@ import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 )
 
-var CreateElememtUri string = CoreFunctionsPrefix + "CreateElement"
-var CreatedElementReferenceUri = CoreFunctionsPrefix + "CreatedElementReference"
+var ElementCreateUri string = CoreFunctionsPrefix + "Element/Create"
+var ElementCreateCreatedElementReferenceUri = CoreFunctionsPrefix + "Element/Create/CreatedElementReference"
 
 func createElement(element core.Element, changeNotification *core.ChangeNotification) {
 	hl := core.NewHeldLocks()
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(element)
 	uOfD := element.GetUniverseOfDiscourse(hl)
-	createdElementReference := core.GetChildElementReferenceWithAncestorUri(element, CreatedElementReferenceUri, hl)
+	createdElementReference := core.GetChildElementReferenceWithAncestorUri(element, ElementCreateCreatedElementReferenceUri, hl)
 	if createdElementReference == nil {
 		createdElementReference = uOfD.NewElementReference(hl)
 		core.SetOwningElement(createdElementReference, element, hl)
 		core.SetName(createdElementReference, "CreatedElementReference", hl)
-		rootCreatedElementReference := uOfD.GetElementReferenceWithUri(CreatedElementReferenceUri)
+		rootCreatedElementReference := uOfD.GetElementReferenceWithUri(ElementCreateCreatedElementReferenceUri)
 		refinement := uOfD.NewRefinement(hl)
 		core.SetOwningElement(refinement, createdElementReference, hl)
 		refinement.SetRefinedElement(createdElementReference, hl)
@@ -33,24 +33,24 @@ func createElement(element core.Element, changeNotification *core.ChangeNotifica
 func UpdateRecoveredCoreElementFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// CreateElement
-	createElement := uOfD.GetElementWithUri(CreateElememtUri)
+	createElement := uOfD.GetElementWithUri(ElementCreateUri)
 	if createElement == nil {
 		createElement = uOfD.NewElement(hl)
 		core.SetOwningElement(createElement, coreFunctionsElement, hl)
 		core.SetName(createElement, "CreateElement", hl)
-		core.SetUri(createElement, CreateElememtUri, hl)
+		core.SetUri(createElement, ElementCreateUri, hl)
 	}
 	// CreatedElementReference
-	createdElementReference := core.GetChildElementReferenceWithUri(createElement, CreatedElementReferenceUri, hl)
+	createdElementReference := core.GetChildElementReferenceWithUri(createElement, ElementCreateCreatedElementReferenceUri, hl)
 	if createdElementReference == nil {
 		createdElementReference = uOfD.NewElementReference(hl)
 		core.SetOwningElement(createdElementReference, createElement, hl)
 		core.SetName(createdElementReference, "CreatedElementReference", hl)
-		core.SetUri(createdElementReference, CreatedElementReferenceUri, hl)
+		core.SetUri(createdElementReference, ElementCreateCreatedElementReferenceUri, hl)
 	}
 
 }
 
 func elementFunctionsInit() {
-	core.GetCore().AddFunction(CreateElememtUri, createElement)
+	core.GetCore().AddFunction(ElementCreateUri, createElement)
 }

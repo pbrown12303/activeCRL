@@ -8,6 +8,7 @@ import (
 )
 
 func TestCreateElementFunction(t *testing.T) {
+	//	core.AdHocTrace = true
 	uOfD := core.NewUniverseOfDiscourse()
 	hl := core.NewHeldLocks()
 	defer hl.ReleaseLocks()
@@ -15,11 +16,12 @@ func TestCreateElementFunction(t *testing.T) {
 	GetCoreFunctionsConceptSpace(uOfD)
 
 	// Get the reference elements
-	createElement := uOfD.GetElementWithUri(CreateElememtUri)
+	createElement := uOfD.GetElementWithUri(ElementCreateUri)
+	core.Print(createElement, "CreateElement: ", hl)
 	if createElement == nil {
 		t.Error("CreateElement not found")
 	}
-	createdElementReference := uOfD.GetElementReferenceWithUri(CreatedElementReferenceUri)
+	createdElementReference := uOfD.GetElementReferenceWithUri(ElementCreateCreatedElementReferenceUri)
 	if createdElementReference == nil {
 		t.Error("CreatedElementReference not found")
 	}
@@ -38,7 +40,7 @@ func TestCreateElementFunction(t *testing.T) {
 	//	log.Printf("Original instance:")
 	//	core.Print(createElementInstance, "...", hl)
 
-	foundReference := core.GetChildElementReferenceWithAncestorUri(createElementInstance, CreatedElementReferenceUri, hl)
+	foundReference := core.GetChildElementReferenceWithAncestorUri(createElementInstance, ElementCreateCreatedElementReferenceUri, hl)
 	foundReferenceIdentifier := ""
 	var createdElement core.Element
 	createdElementIdentifier := ""
@@ -76,7 +78,7 @@ func TestCreateElementFunction(t *testing.T) {
 	if redoneReference == nil {
 		t.Error("Reference creation not redone")
 	} else {
-		if core.GetChildElementReferenceWithAncestorUri(redoneInstance, CreatedElementReferenceUri, hl) != redoneReference {
+		if core.GetChildElementReferenceWithAncestorUri(redoneInstance, ElementCreateCreatedElementReferenceUri, hl) != redoneReference {
 			t.Error("Reference not restored as child of function instance")
 		}
 		redoneCreatedElement := uOfD.GetElement(createdElementIdentifier)
@@ -88,4 +90,6 @@ func TestCreateElementFunction(t *testing.T) {
 			}
 		}
 	}
+	//	core.AdHocTrace = false
+
 }

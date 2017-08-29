@@ -68,7 +68,10 @@ func (uOfDPtr *UniverseOfDiscourse) addBaseElementForUndo(be BaseElement, hl *He
 	if be != nil {
 		hl.LockBaseElement(be)
 	}
-	//	log.Printf("Adding base element for undo, id: %s\n", be.GetIdNoLock().String())
+	if uOfDPtr.undoMgr.debugUndo == true {
+		log.Printf("Adding base element for undo, id: %s\n", be.GetId(hl).String())
+		Print(be, "AddedBaseElement: ", hl)
+	}
 	uOfDPtr.baseElementMap.SetEntry(be.GetId(hl).String(), be)
 	return nil
 }
@@ -170,6 +173,15 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteBaseElement(be BaseElement, hl *HeldLo
 
 func (uOfDPtr *UniverseOfDiscourse) GetBaseElement(id string) BaseElement {
 	return uOfDPtr.baseElementMap.GetEntry(id)
+}
+
+func (uOfDPtr *UniverseOfDiscourse) GetBaseElementReferenceWithUri(uri string) BaseElementReference {
+	be := uOfDPtr.GetBaseElementWithUri(uri)
+	switch be.(type) {
+	case BaseElementReference:
+		return be.(BaseElementReference)
+	}
+	return nil
 }
 
 func (uOfDPtr *UniverseOfDiscourse) GetBaseElementWithUri(uri string) BaseElement {
@@ -545,7 +557,10 @@ func (uOfDPtr *UniverseOfDiscourse) removeBaseElement(be BaseElement, hl *HeldLo
 func (uOfDPtr *UniverseOfDiscourse) removeBaseElementForUndo(be BaseElement, hl *HeldLocks) {
 	if be != nil {
 		hl.LockBaseElement(be)
-		//	log.Printf("Removing base element for undo, id: %s\n", be.GetIdNoLock().String())
+		if uOfDPtr.undoMgr.debugUndo == true {
+			log.Printf("Removing base element for undo, id: %s\n", be.GetId(hl).String())
+			Print(be, "RemovedBaseElement: ", hl)
+		}
 		uOfDPtr.baseElementMap.DeleteEntry(be.GetId(hl).String())
 	}
 }

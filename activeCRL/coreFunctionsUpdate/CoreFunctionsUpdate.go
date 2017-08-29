@@ -39,6 +39,8 @@ func updateRecoveredCoreFunctions(recoveredCoreFunctions core.Element, uOfD *cor
 	}
 
 	coreFunctions.UpdateRecoveredCoreBaseElementFunctions(coreFunctionsElement, uOfD, hl)
+	coreFunctions.UpdateRecoveredCoreBaseElementPointerFunctions(coreFunctionsElement, uOfD, hl)
+	coreFunctions.UpdateRecoveredCoreBaseElementReferenceFunctions(coreFunctionsElement, uOfD, hl)
 	coreFunctions.UpdateRecoveredCoreElementFunctions(coreFunctionsElement, uOfD, hl)
 
 	return coreFunctionsElement

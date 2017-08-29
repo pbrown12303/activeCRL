@@ -21,5 +21,7 @@ func GetCoreFunctionsConceptSpace(uOfD *core.UniverseOfDiscourse) core.Element {
 
 func init() {
 	baseElementFunctionsInit()
+	baseElementPointerFunctionsInit()
+	baseElementReferenceFunctionsInit()
 	elementFunctionsInit()
 }

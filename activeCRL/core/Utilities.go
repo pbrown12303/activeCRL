@@ -315,38 +315,6 @@ func printNotification(notification *ChangeNotification, prefix string, hl *Held
 	}
 }
 
-func PrintUndoStack(s undoStack, stackName string) {
-	hl := NewHeldLocks()
-	defer hl.ReleaseLocks()
-	log.Printf("%s:", stackName)
-	for _, entry := range s {
-		var changeType string
-		switch entry.changeType {
-		case Creation:
-			{
-				changeType = "Creation"
-			}
-		case Deletion:
-			{
-				changeType = "Deletion"
-			}
-		case Change:
-			{
-				changeType = "Change"
-			}
-		case Marker:
-			{
-				changeType = "Marker"
-			}
-		}
-		log.Printf("   Change type: %s", changeType)
-		log.Printf("   Prior state:")
-		Print(entry.priorState, "      ", hl)
-		//		log.Printf("   Changed element:")
-		//		Print(entry.changedElement, "      ")
-	}
-}
-
 func printBe(be BaseElement, prefix string, hl *HeldLocks) {
 	if be == nil {
 		return
@@ -395,6 +363,14 @@ func PrintUriIndex(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
 		defer hl.ReleaseLocks()
 	}
 	uOfD.uriBaseElementMap.Print(hl)
+}
+
+func PrintUriIndexJustIdentifiers(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	uOfD.uriBaseElementMap.PrintJustIdentifiers(hl)
 }
 
 // ReplicateAsRefinement() replicates the structure of the original in the replicate, ignoring
@@ -449,6 +425,10 @@ func ReplicateAsRefinement(original Element, replicate Element, hl *HeldLocks) {
 			refinement.SetAbstractElement(originalChild, hl)
 			refinement.SetRefinedElement(replicateChild, hl)
 			SetName(replicateChild, GetName(originalChild, hl), hl)
+		}
+		switch originalChild.(type) {
+		case Element:
+			ReplicateAsRefinement(originalChild.(Element), replicateChild.(Element), hl)
 		}
 	}
 
