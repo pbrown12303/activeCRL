@@ -2,9 +2,12 @@ package core
 
 import (
 	"log"
+	//	"time"
 )
 
 var TraceChange bool
+var notificationsLimit int
+var notificationsCount int
 
 type NatureOfChange int
 
@@ -28,6 +31,13 @@ func NewChangeNotification(baseElement BaseElement, natureOfChange NatureOfChang
 	return &notification
 }
 
+// LimitNotifications() is provided as a debugging aid. It limits the number of change notifications allowed.
+// A value of 0 is unlimited.
+func LimitNotifications(limit int) {
+	notificationsLimit = limit
+	notificationsCount = 0
+}
+
 func (cnPtr *ChangeNotification) GetDepth() int {
 	return cnPtr.getDepth(0)
 }
@@ -49,6 +59,17 @@ func (cnPtr *ChangeNotification) isReferenced(be BaseElement) bool {
 	return false
 }
 
+func (cnPtr *ChangeNotification) getReferencingChangeNotification(be BaseElement) *ChangeNotification {
+	if cnPtr.changedObject == be {
+		return cnPtr
+	} else {
+		if cnPtr.underlyingChange != nil {
+			return cnPtr.underlyingChange.getReferencingChangeNotification(be)
+		}
+	}
+	return nil
+}
+
 // abstractionChanged() is used by refinements to inform their refinedElements when they have changed. It does no locking.
 func abstractionChanged(element Element, notification *ChangeNotification, hl *HeldLocks) {
 	preChange(element, hl)
@@ -62,69 +83,96 @@ func preChange(be BaseElement, hl *HeldLocks) {
 }
 
 func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
-	if TraceChange == true {
-		log.Printf("PostChange called")
-		PrintNotification(notification, hl)
+	if notificationsLimit > 0 {
+		if notificationsCount > notificationsLimit {
+			return
+		}
+		notificationsCount++
 	}
-	if notification.GetDepth() < 10 {
-		uOfD := be.GetUniverseOfDiscourse(hl)
-		// Increment the version
-		be.internalIncrementVersion()
-		// Update uri indices
-		id := be.GetId(hl).String()
-		oldUri := uOfD.idUriMap.GetEntry(id)
-		newUri := GetUri(be, hl)
-		if oldUri != newUri {
-			if oldUri != "" {
-				uOfD.uriBaseElementMap.DeleteEntry(oldUri)
-			}
-			if newUri == "" {
-				uOfD.idUriMap.DeleteEntry(id)
-			} else {
-				uOfD.idUriMap.SetEntry(id, newUri)
-				uOfD.uriBaseElementMap.SetEntry(newUri, be)
-			}
+	uOfD := be.GetUniverseOfDiscourse(hl)
+	// Increment the version
+	be.internalIncrementVersion()
+	// Update uri indices
+	id := be.GetId(hl).String()
+	oldUri := uOfD.idUriMap.GetEntry(id)
+	newUri := GetUri(be, hl)
+	if oldUri != newUri {
+		if oldUri != "" {
+			uOfD.uriBaseElementMap.DeleteEntry(oldUri)
 		}
-		// Initiate function execution
-		switch be.(type) {
-		case Element:
-			for _, function := range GetCore().FindFunctions(be.(Element), hl) {
-				go function(be.(Element), notification)
-			}
-		}
-		// Notify parents of change
-		parent := GetOwningElement(be, hl)
-		if parent != nil {
-			childChanged(parent, notification, hl)
-		}
-		// Notify listeners
-		switch be.(type) {
-		case Element:
-			uOfD.notifyElementListeners(notification, hl)
+		if newUri == "" {
+			uOfD.idUriMap.DeleteEntry(id)
+		} else {
+			uOfD.idUriMap.SetEntry(id, newUri)
+			uOfD.uriBaseElementMap.SetEntry(newUri, be)
 		}
 	}
-	if TraceChange == true {
-		log.Printf("At end of PostChange, changed object:")
-		Print(notification.changedObject, "", hl)
+	// Initiate function execution
+	switch be.(type) {
+	case Element:
+		for _, labeledFunction := range GetCore().FindFunctions(be.(Element), notification, hl) {
+			if TraceChange == true {
+				log.Printf("PostChange calling function, URI: %s", labeledFunction.label)
+				//				time.Sleep(10000000 * time.Nanosecond)
+				Print(be, labeledFunction.label+" Target: ", hl)
+				//				time.Sleep(10000000 * time.Nanosecond)
+				//				for _, abstraction := range be.(Element).getImmediateAbstractions(hl) {
+				//					Print(abstraction, labeledFunction.label+" Abstraction: ", hl)
+				//					//					time.Sleep(10000000 * time.Nanosecond)
+				//				}
+				PrintNotification(notification, "Notification: ", hl)
+				//				time.Sleep(1000000 * time.Nanosecond)
+			}
+			go labeledFunction.function(be.(Element), notification)
+		}
+	}
+	// Notify parents of change
+	parent := GetOwningElement(be, hl)
+	if parent != nil {
+		childChanged(parent, notification, hl)
+	}
+	// Notify listeners
+	switch be.(type) {
+	case Element:
+		uOfD.notifyElementListeners(notification, hl)
 	}
 }
 
 func propagateChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
-	if notification.GetDepth() < 10 {
-		parent := GetOwningElement(be, hl)
-		//		newNotification := NewChangeNotification(be, MODIFY, notification)
-		switch be.(type) {
-		case Element:
-			for _, function := range GetCore().FindFunctions(be.(Element), hl) {
-				go function(be.(Element), notification)
+	if notificationsLimit > 0 {
+		if notificationsCount > notificationsLimit {
+			return
+		}
+		notificationsCount++
+	}
+	parent := GetOwningElement(be, hl)
+	switch be.(type) {
+	case Element:
+		for _, labeledFunction := range GetCore().FindFunctions(be.(Element), notification, hl) {
+			if TraceChange == true {
+				log.Printf("PropagateChange calling function, URI: %s", labeledFunction.label)
+				//				time.Sleep(10000000 * time.Nanosecond)
+				Print(be, labeledFunction.label+" Target: ", hl)
+				//				time.Sleep(100000000 * time.Nanosecond)
+				//				for _, abstraction := range be.(Element).getImmediateAbstractions(hl) {
+				//					Print(abstraction, labeledFunction.label+" Abstraction: ", hl)
+				//					//					time.Sleep(10000000 * time.Nanosecond)
+				//				}
+				PrintNotification(notification, "Notification: ", hl)
+				//				time.Sleep(10000000 * time.Nanosecond)
 			}
+			go labeledFunction.function(be.(Element), notification)
 		}
-		if parent != nil {
-			propagateChange(parent, notification, hl)
-		}
-		switch be.(type) {
-		case Element:
-			be.GetUniverseOfDiscourse(hl).notifyElementListeners(notification, hl)
-		}
+	case ElementPointer:
+		ep := be.(ElementPointer)
+		target := notification.changedObject
+		ep.setElementVersion(target.GetVersion(hl), hl)
+	}
+	if parent != nil {
+		propagateChange(parent, notification, hl)
+	}
+	switch be.(type) {
+	case Element:
+		be.GetUniverseOfDiscourse(hl).notifyElementListeners(notification, hl)
 	}
 }

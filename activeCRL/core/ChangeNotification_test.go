@@ -10,11 +10,6 @@ var functionCalled bool
 var wg sync.WaitGroup
 
 func trialFunction(element Element, changeNotification *ChangeNotification) {
-	//	PrintMutex.Lock()
-	//	defer PrintMutex.Unlock()
-	//	log.Printf("Entering trialFunction\n")
-	//	Print(element, "+++")
-	//	PrintNotification(changeNotification)
 	defer wg.Done()
 	functionCalled = true
 }

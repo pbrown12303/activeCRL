@@ -126,6 +126,12 @@ func TestSetElement(t *testing.T) {
 	if rep.GetElement(hl) != target {
 		t.Error("ReferencedElementPointer SetElement(target) did not work")
 	}
+	if rep.GetElementId(hl) != target.GetId(hl) {
+		t.Error("ReferencedElementPointer GetElementId() returns wrong value after SetElement()")
+	}
+	if rep.GetElementVersion(hl) != target.GetVersion(hl) {
+		t.Error("ReferencedElementPointer GetElementVersion() returns wrong value after SetElement()")
+	}
 	rep.SetElement(nil, hl)
 	if rep.GetElement(hl) != nil {
 		t.Error("ReferencedElementPointer SetElement(nil) did not work")

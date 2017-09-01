@@ -3,6 +3,7 @@ package core
 import (
 	"log"
 	"sync"
+	//	"time"
 )
 
 var CoreConceptSpaceUri string = "http://activeCrl.com/core/CoreConceptSpace"
@@ -36,22 +37,27 @@ type crlExecutionFunction func(Element, *ChangeNotification)
 
 type functions map[string]crlExecutionFunction
 
-var coreSingleton *core
+type labeledFunction struct {
+	function crlExecutionFunction
+	label    string
+}
 
-func GetCore() *core {
+var coreSingleton *coreConceptSpace
+
+func GetCore() *coreConceptSpace {
 	if coreSingleton == nil {
 		coreSingleton = newCore()
 	}
 	return coreSingleton
 }
 
-type core struct {
+type coreConceptSpace struct {
 	sync.RWMutex
 	computeFunctions functions
 }
 
-func newCore() *core {
-	var newCore core
+func newCore() *coreConceptSpace {
+	var newCore coreConceptSpace
 	newCore.computeFunctions = make(map[string]crlExecutionFunction)
 	return &newCore
 }
@@ -59,41 +65,40 @@ func newCore() *core {
 func init() {
 	coreSingleton = newCore()
 	TraceChange = false
+	notificationsLimit = 0
+	notificationsCount = 0
 }
 
-func (c *core) AddFunction(uri string, function crlExecutionFunction) {
+func (c *coreConceptSpace) AddFunction(uri string, function crlExecutionFunction) {
 	c.computeFunctions[uri] = function
 }
 
-func (c *core) GetFunction(uri string) crlExecutionFunction {
+func (c *coreConceptSpace) GetFunction(uri string) crlExecutionFunction {
 	return c.computeFunctions[uri]
 }
 
-func (c *core) FindFunctions(element Element, hl *HeldLocks) []crlExecutionFunction {
-	if AdHocTrace == true {
-		Print(element, "Finding functions for: ", hl)
-	}
-	var functions []crlExecutionFunction
+func (c *coreConceptSpace) FindFunctions(element Element, notification *ChangeNotification, hl *HeldLocks) []*labeledFunction {
+	var labeledFunctions []*labeledFunction
 	if element == nil {
-		return functions
+		return labeledFunctions
 	}
 	abstractions := element.GetAbstractElementsRecursively(hl)
 	for _, abstractElement := range abstractions {
 		uri := GetUri(abstractElement, hl)
-		if AdHocTrace == true {
-			log.Printf("AbstractElement URI: %s\n", uri)
-		}
 		if uri != "" {
 			f := c.computeFunctions[uri]
 			if f != nil {
-				functions = append(functions, f)
+				var entry labeledFunction
+				entry.function = f
+				entry.label = uri
+				labeledFunctions = append(labeledFunctions, &entry)
 			}
 		}
 	}
-	return functions
+	return labeledFunctions
 }
 
-func (c *core) PrintFunctions() {
+func (c *coreConceptSpace) PrintFunctions() {
 	for k, v := range c.computeFunctions {
 		log.Printf("Key: %s Value: %p\n", k, v)
 	}

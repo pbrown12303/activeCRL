@@ -292,6 +292,17 @@ func (epPtr *elementPointer) SetElement(element Element, hl *HeldLocks) {
 	}
 }
 
+// setElementVersion() is an internal function used as part of change propagation. Id does
+// not trigger any notifications
+func (epPtr *elementPointer) setElementVersion(newVersion int, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(epPtr)
+	epPtr.elementVersion = newVersion
+}
+
 // SetOwningElement() actually manages relationships between a number of objects,
 // particularly when the pointer is the OWNING_ELEMENT pointer for its owner.
 // Because of the complex wiring between the objects, we have to lock all relevant
@@ -375,4 +386,5 @@ type ElementPointer interface {
 	GetElementPointerRole(*HeldLocks) ElementPointerRole
 	GetElementVersion(*HeldLocks) int
 	SetElement(Element, *HeldLocks)
+	setElementVersion(int, *HeldLocks)
 }

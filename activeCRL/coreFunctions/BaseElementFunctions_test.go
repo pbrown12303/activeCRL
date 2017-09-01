@@ -32,7 +32,7 @@ func TestDelete(t *testing.T) {
 	replicate := core.CreateReplicateAsRefinement(del, hl)
 	//	core.Print(replicate, "In TestDelete, replicate: ", hl)
 
-	replicateFunctions := core.GetCore().FindFunctions(replicate, hl)
+	replicateFunctions := core.GetCore().FindFunctions(replicate, nil, hl)
 	if len(replicateFunctions) != 1 {
 		t.Errorf("Function not found associated with replicate")
 	}

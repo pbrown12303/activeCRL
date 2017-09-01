@@ -286,15 +286,7 @@ func Print(be BaseElement, prefix string, hl *HeldLocks) {
 	printBe(be, prefix, hl)
 }
 
-func PrintNotification(notification *ChangeNotification, hl *HeldLocks) {
-	if hl == nil {
-		hl = NewHeldLocks()
-		defer hl.ReleaseLocks()
-	}
-	printNotification(notification, "", hl)
-}
-
-func printNotification(notification *ChangeNotification, prefix string, hl *HeldLocks) {
+func PrintNotification(notification *ChangeNotification, prefix string, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -309,10 +301,16 @@ func printNotification(notification *ChangeNotification, prefix string, hl *Held
 		notificationType = "Remove"
 	}
 	log.Printf("%s%s: \n", prefix, notificationType)
-	Print(notification.changedObject, prefix+"   ", hl)
-	if notification.underlyingChange != nil {
-		printNotification(notification.underlyingChange, prefix+"      ", hl)
+	if notification.changedObject == nil {
+		log.Printf(prefix + "Changed object is nil")
+	} else {
+		log.Printf(prefix + "Changed object is not nil")
+		Print(notification.changedObject, prefix+"   ", hl)
 	}
+	if notification.underlyingChange != nil {
+		PrintNotification(notification.underlyingChange, prefix+"      ", hl)
+	}
+	log.Printf(prefix + "End of notification")
 }
 
 func printBe(be BaseElement, prefix string, hl *HeldLocks) {
@@ -489,7 +487,6 @@ func unmarshalPolymorphicBaseElement(data []byte, result *BaseElement) error {
 		*result = &recoveredBaseElementPointer
 		err = recoveredBaseElementPointer.recoverBaseElementPointerFields(&unmarshaledData)
 	case "*core.baseElementReference":
-		//		fmt.Printf("Switch choice *core.baseElementReference \n")
 		var recoveredBaseElementReference baseElementReference
 		recoveredBaseElementReference.ownedBaseElements = make(map[string]BaseElement)
 		*result = &recoveredBaseElementReference

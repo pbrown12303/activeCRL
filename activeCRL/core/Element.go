@@ -27,16 +27,20 @@ func addOwnedBaseElement(elPtr Element, be BaseElement, hl *HeldLocks) {
 // childChanged() is used by ownedBaseElements to inform their parents when they have changed. It does no locking.
 func childChanged(el Element, notification *ChangeNotification, hl *HeldLocks) {
 	if TraceChange == true {
-		log.Printf("childChanges called")
-		PrintNotification(notification, hl)
+		log.Printf("childChanged called on Element %s \n", el.GetId(hl).String())
+		PrintNotification(notification, "ChildChanged Incoming Notification: ", hl)
 	}
 	preChange(el, hl)
 	newNotification := NewChangeNotification(el, MODIFY, notification)
 	switch el.(type) {
 	case Refinement:
 		refinedElement := el.(Refinement).GetRefinedElement(hl)
+		refinedElementPointer := el.(Refinement).GetRefinedElementPointer(hl)
 		if refinedElement != nil {
-			abstractionChanged(refinedElement, newNotification, hl)
+			cn := notification.getReferencingChangeNotification(refinedElementPointer)
+			if cn != nil && cn.underlyingChange == nil {
+				abstractionChanged(refinedElement, newNotification, hl)
+			}
 		}
 	}
 	postChange(el, newNotification, hl)

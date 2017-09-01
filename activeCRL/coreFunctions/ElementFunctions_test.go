@@ -8,7 +8,6 @@ import (
 )
 
 func TestCreateElementFunction(t *testing.T) {
-	//	core.AdHocTrace = true
 	uOfD := core.NewUniverseOfDiscourse()
 	hl := core.NewHeldLocks()
 	defer hl.ReleaseLocks()
@@ -16,10 +15,9 @@ func TestCreateElementFunction(t *testing.T) {
 	GetCoreFunctionsConceptSpace(uOfD)
 
 	// Get the reference elements
-	createElement := uOfD.GetElementWithUri(ElementCreateUri)
-	core.Print(createElement, "CreateElement: ", hl)
-	if createElement == nil {
-		t.Error("CreateElement not found")
+	createElementFunction := uOfD.GetElementWithUri(ElementCreateUri)
+	if createElementFunction == nil {
+		t.Error("CreateElement Function not found")
 	}
 	createdElementReference := uOfD.GetElementReferenceWithUri(ElementCreateCreatedElementReferenceUri)
 	if createdElementReference == nil {
@@ -30,7 +28,7 @@ func TestCreateElementFunction(t *testing.T) {
 	createElementInstance := uOfD.NewElement(hl)
 	createElementInstanceIdentifier := createElementInstance.GetId(hl).String()
 	refinementInstance := uOfD.NewRefinement(hl)
-	refinementInstance.SetAbstractElement(createElement, hl)
+	refinementInstance.SetAbstractElement(createElementFunction, hl)
 
 	refinementInstance.SetRefinedElement(createElementInstance, hl)
 	hl.ReleaseLocks()
@@ -90,6 +88,6 @@ func TestCreateElementFunction(t *testing.T) {
 			}
 		}
 	}
-	//	core.AdHocTrace = false
+	core.AdHocTrace = false
 
 }
