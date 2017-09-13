@@ -42,6 +42,16 @@ func updateRecoveredCoreFunctions(recoveredCoreFunctions core.Element, uOfD *cor
 	coreFunctions.UpdateRecoveredCoreBaseElementPointerFunctions(coreFunctionsElement, uOfD, hl)
 	coreFunctions.UpdateRecoveredCoreBaseElementReferenceFunctions(coreFunctionsElement, uOfD, hl)
 	coreFunctions.UpdateRecoveredCoreElementFunctions(coreFunctionsElement, uOfD, hl)
+	coreFunctions.UpdateRecoveredCoreElementPointerFunctions(coreFunctionsElement, uOfD, hl)
+	coreFunctions.UpdateRecoveredCoreElementPointerPointerFunctions(coreFunctionsElement, uOfD, hl)
+	coreFunctions.UpdateRecoveredCoreElementPointerReferenceFunctions(coreFunctionsElement, uOfD, hl)
+	coreFunctions.UpdateRecoveredCoreElementReferenceFunctions(coreFunctionsElement, uOfD, hl)
+	coreFunctions.UpdateRecoveredCoreLiteralFunctions(coreFunctionsElement, uOfD, hl)
+	coreFunctions.UpdateRecoveredCoreLiteralPointerFunctions(coreFunctionsElement, uOfD, hl)
+	coreFunctions.UpdateRecoveredCoreLiteralPointerPointerFunctions(coreFunctionsElement, uOfD, hl)
+	coreFunctions.UpdateRecoveredCoreLiteralPointerReferenceFunctions(coreFunctionsElement, uOfD, hl)
+	coreFunctions.UpdateRecoveredCoreLiteralReferenceFunctions(coreFunctionsElement, uOfD, hl)
+	coreFunctions.UpdateRecoveredCoreRefinementFunctions(coreFunctionsElement, uOfD, hl)
 
 	return coreFunctionsElement
 }

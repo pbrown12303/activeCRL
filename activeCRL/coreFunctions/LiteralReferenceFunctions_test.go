@@ -1,0 +1,260 @@
+package coreFunctions
+
+import (
+	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	//	"log"
+	"testing"
+	"time"
+)
+
+func TestCreateLiteralReferenceFunction(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	GetCoreFunctionsConceptSpace(uOfD)
+
+	// Get the reference elements
+	createLiteralReference := uOfD.GetElementWithUri(LiteralReferenceCreateUri)
+	if createLiteralReference == nil {
+		t.Error("CreateLiteralReference not found")
+	}
+	createdLiteralReferenceRef := uOfD.GetElementReferenceWithUri(LiteralReferenceCreateCreatedLiteralReferenceRefUri)
+	if createdLiteralReferenceRef == nil {
+		t.Error("CreatedLiteralReferenceRef not found")
+		core.Print(createLiteralReference, "CreateLiteralReference: ", hl)
+	}
+
+	createLiteralReferenceInstance := uOfD.NewElement(hl)
+	createLiteralReferenceInstanceIdentifier := createLiteralReferenceInstance.GetId(hl).String()
+	refinementInstance := uOfD.NewRefinement(hl)
+	refinementInstance.SetAbstractElement(createLiteralReference, hl)
+
+	refinementInstance.SetRefinedElement(createLiteralReferenceInstance, hl)
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	foundLiteralReferenceRef := core.GetChildElementReferenceWithAncestorUri(createLiteralReferenceInstance, LiteralReferenceCreateCreatedLiteralReferenceRefUri, hl)
+	foundLiteralReferenceRefIdentifier := ""
+	var createdLiteralReference core.LiteralReference
+	createdLiteralReferenceIdentifier := ""
+	if foundLiteralReferenceRef == nil {
+		t.Error("LiteralReferenceRef not created")
+	} else {
+		foundLiteralReferenceRefIdentifier = foundLiteralReferenceRef.GetId(hl).String()
+		foundLiteralReference := foundLiteralReferenceRef.GetReferencedElement(hl)
+		if foundLiteralReference == nil {
+			t.Error("LiteralReference not created")
+		} else {
+			switch foundLiteralReference.(type) {
+			case core.LiteralReference:
+				createdLiteralReference = foundLiteralReference.(core.LiteralReference)
+				createdLiteralReferenceIdentifier = createdLiteralReference.GetId(hl).String()
+			default:
+				t.Error("Created object of wrong type")
+			}
+		}
+	}
+	if createdLiteralReference == nil {
+		t.Error("createdLiteralReference is nil")
+	}
+	newlyCreatedLiteral := uOfD.GetBaseElement(createdLiteralReferenceIdentifier)
+	if newlyCreatedLiteral == nil {
+		t.Error("Created object not in UofD")
+	}
+
+	// Now undo
+	uOfD.Undo(hl)
+	if uOfD.GetElement(createLiteralReferenceInstanceIdentifier) != nil {
+		t.Error("Element creation not undone")
+	}
+	if uOfD.GetElement(foundLiteralReferenceRefIdentifier) != nil {
+		t.Error("Element creation not undone")
+	}
+
+	// Now Redo
+	uOfD.Redo(hl)
+	redoneInstance := uOfD.GetElement(createLiteralReferenceInstanceIdentifier)
+	if redoneInstance == nil {
+		t.Error("Element creation not redone")
+	}
+	redoneLiteralReferenceRef := uOfD.GetElement(foundLiteralReferenceRefIdentifier)
+	if redoneLiteralReferenceRef == nil {
+		t.Error("Reference creation not redone")
+	} else {
+		if core.GetChildElementReferenceWithAncestorUri(redoneInstance, LiteralReferenceCreateCreatedLiteralReferenceRefUri, hl) != redoneLiteralReferenceRef {
+			t.Error("Reference not restored as child of function instance")
+		}
+		redoneCreatedLiteralReference := uOfD.GetBaseElement(createdLiteralReferenceIdentifier)
+		if redoneCreatedLiteralReference == nil {
+			t.Error("Created literal not redone")
+		} else {
+			if redoneLiteralReferenceRef.(core.ElementReference).GetReferencedElement(hl) != redoneCreatedLiteralReference {
+				t.Error("Reference pointer to created literal not restored")
+			}
+		}
+	}
+}
+
+func TestLiteralReferenceGetLiteralPointer(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	GetCoreFunctionsConceptSpace(uOfD)
+
+	// Get Ancestor
+	getLiteralPointer := uOfD.GetElementWithUri(LiteralReferenceGetLiteralPointerUri)
+	if getLiteralPointer == nil {
+		t.Errorf("GetLiteralPointer function representation not found")
+	}
+
+	// Create the instance
+	replicate := core.CreateReplicateAsRefinement(getLiteralPointer, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	// Now check the replication
+	if replicate.IsRefinementOf(getLiteralPointer, hl) != true {
+		t.Errorf("Replicate is not refinement of GetLiteralPointer()")
+	}
+	sourceLiteralReferenceRef := core.GetChildElementReferenceWithAncestorUri(replicate, LiteralReferenceGetLiteralPointerSourceLiteralReferenceRefUri, hl)
+	if sourceLiteralReferenceRef == nil {
+		t.Errorf("sourceLiteralReferenceRef child not found")
+	}
+	indicatedLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(replicate, LiteralReferenceGetLiteralPointerIndicatedLiteralPointerRefUri, hl)
+	if indicatedLiteralPointerRef == nil {
+		t.Errorf("indicatedLiteralPointerRef child not found")
+	}
+
+	// Now test target reference update functionality
+	sourceLiteralReference := uOfD.NewLiteralReference(hl)
+	dummyLiteral := uOfD.NewLiteral(hl)
+	sourceLiteralReference.SetReferencedLiteral(dummyLiteral, hl)
+	sourceLiteralReferenceRef.SetReferencedElement(sourceLiteralReference, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	hl.LockBaseElement(replicate)
+	targetReferencedLiteralPointer := indicatedLiteralPointerRef.GetReferencedLiteralPointer(hl)
+	if targetReferencedLiteralPointer == nil {
+		t.Errorf("Target ReferencedElementPointer not found")
+		core.Print(sourceLiteralReferenceRef, "SourceReference: ", hl)
+		core.Print(indicatedLiteralPointerRef, "TargetReference: ", hl)
+	} else {
+		if targetReferencedLiteralPointer != sourceLiteralReference.GetLiteralPointer(hl) {
+			t.Errorf("Target ElementPointer value incorrect")
+		}
+	}
+}
+
+func TestGetReferencedLiteral(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	GetCoreFunctionsConceptSpace(uOfD)
+
+	// Get Ancestor
+	getReferencedLiteral := uOfD.GetElementWithUri(LiteralReferenceGetReferencedLiteralUri)
+	if getReferencedLiteral == nil {
+		t.Errorf("GetReferencedLiteral function representation not found")
+	}
+
+	// Create the instance
+	replicate := core.CreateReplicateAsRefinement(getReferencedLiteral, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	// Now check the replication
+	if replicate.IsRefinementOf(getReferencedLiteral, hl) != true {
+		t.Errorf("Replicate is not refinement of GetReferencedLiteral()")
+	}
+	sourceLiteralReferenceRef := core.GetChildElementReferenceWithAncestorUri(replicate, LiteralReferenceGetReferencedLiteralSourceLiteralReferenceRefUri, hl)
+	if sourceLiteralReferenceRef == nil {
+		t.Errorf("sourceLiteralReferenceRef child not found")
+	}
+	indicatedLiteralRef := core.GetChildLiteralReferenceWithAncestorUri(replicate, LiteralReferenceGetReferencedLiteralIndicatedLiteralRefUri, hl)
+	if indicatedLiteralRef == nil {
+		t.Errorf("indicatedLiteralRef child not found")
+	}
+
+	// Now test target reference update functionality
+	sourceLiteralReference := uOfD.NewLiteralReference(hl)
+	dummyLiteral := uOfD.NewLiteral(hl)
+	sourceLiteralReference.SetReferencedLiteral(dummyLiteral, hl)
+	sourceLiteralReferenceRef.SetReferencedElement(sourceLiteralReference, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	hl.LockBaseElement(replicate)
+	targetLiteral := indicatedLiteralRef.GetReferencedLiteral(hl)
+	if targetLiteral == nil {
+		t.Errorf("Target element pointer not found")
+		core.Print(sourceLiteralReferenceRef, "SourceReference: ", hl)
+		core.Print(indicatedLiteralRef, "TargetReference: ", hl)
+	} else {
+		if targetLiteral != sourceLiteralReference.GetReferencedLiteral(hl) {
+			t.Errorf("Target element pointer value incorrect")
+		}
+	}
+}
+
+func TestSetReferencedLiteral(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	hl := core.NewHeldLocks()
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	GetCoreFunctionsConceptSpace(uOfD)
+
+	// Get Ancestor
+	setReferencedLiteral := uOfD.GetElementWithUri(LiteralReferenceSetReferencedLiteralUri)
+	if setReferencedLiteral == nil {
+		t.Errorf("SetReferencedLiteral function representation not found")
+	}
+
+	// Create the instance
+	replicate := core.CreateReplicateAsRefinement(setReferencedLiteral, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	// Now check the replication
+	if replicate.IsRefinementOf(setReferencedLiteral, hl) != true {
+		t.Errorf("Replicate is not refinement of SetReferencedLiteral()")
+	}
+	sourceLiteralRef := core.GetChildLiteralReferenceWithAncestorUri(replicate, LiteralReferenceSetReferencedLiteralSourceLiteralRefUri, hl)
+	if sourceLiteralRef == nil {
+		t.Errorf("SourceLiteralRef child not found")
+	}
+	modifiedLiteralReferenceRef := core.GetChildElementReferenceWithAncestorUri(replicate, LiteralReferenceSetReferencedLiteralModifiedLiteralReferenceRefUri, hl)
+	if modifiedLiteralReferenceRef == nil {
+		t.Errorf("TargetReference child not found")
+	}
+
+	// Now test target reference update functionality
+	sourceLiteral := uOfD.NewLiteral(hl)
+	targetLiteralReference := uOfD.NewLiteralReference(hl)
+	modifiedLiteralReferenceRef.SetReferencedElement(targetLiteralReference, hl)
+	sourceLiteralRef.SetReferencedLiteral(sourceLiteral, hl)
+
+	// Locks must be released to allow function to execute
+	hl.ReleaseLocks()
+	time.Sleep(10000000 * time.Nanosecond)
+
+	hl.LockBaseElement(replicate)
+	if targetLiteralReference.GetReferencedLiteral(hl) != sourceLiteral {
+		t.Errorf("LiteralReference value not set")
+		core.Print(sourceLiteralRef, "ElementRef: ", hl)
+		core.Print(modifiedLiteralReferenceRef, "TargetReference: ", hl)
+	}
+}

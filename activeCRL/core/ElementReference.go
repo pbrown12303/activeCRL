@@ -28,14 +28,14 @@ func (erPtr *elementReference) GetReferencedElement(hl *HeldLocks) Element {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(erPtr)
-	rep := erPtr.GetReferencedElementPointer(hl)
+	rep := erPtr.GetElementPointer(hl)
 	if rep != nil {
 		return rep.GetElement(hl)
 	}
 	return nil
 }
 
-func (erPtr *elementReference) GetReferencedElementPointer(hl *HeldLocks) ElementPointer {
+func (erPtr *elementReference) GetElementPointer(hl *HeldLocks) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -95,7 +95,7 @@ func (erPtr *elementReference) SetReferencedElement(el Element, hl *HeldLocks) {
 	}
 	hl.LockBaseElement(erPtr)
 	if erPtr.GetReferencedElement(hl) != el {
-		ep := erPtr.GetReferencedElementPointer(hl)
+		ep := erPtr.GetElementPointer(hl)
 		if ep == nil {
 			ep = erPtr.uOfD.NewReferencedElementPointer(hl)
 			SetOwningElement(ep, erPtr, hl)
@@ -107,6 +107,6 @@ func (erPtr *elementReference) SetReferencedElement(el Element, hl *HeldLocks) {
 type ElementReference interface {
 	Reference
 	GetReferencedElement(*HeldLocks) Element
-	GetReferencedElementPointer(*HeldLocks) ElementPointer
+	GetElementPointer(*HeldLocks) ElementPointer
 	SetReferencedElement(Element, *HeldLocks)
 }

@@ -39,7 +39,7 @@ func TestUpdateCoreFunctions(t *testing.T) {
 	}
 
 	// CreatedElementReference
-	recoveredCreatedElementReference := core.GetChildElementReferenceWithUri(recoveredBaseElement.(core.Element), coreFunctions.ElementCreateCreatedElementReferenceUri, hl)
+	recoveredCreatedElementReference := core.GetChildElementReferenceWithUri(recoveredBaseElement.(core.Element), coreFunctions.ElementCreateCreatedElementRefUri, hl)
 	if recoveredCreatedElementReference == nil {
 		t.Error("CreaedElementReference not found")
 	}

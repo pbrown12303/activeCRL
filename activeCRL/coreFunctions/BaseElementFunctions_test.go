@@ -45,7 +45,7 @@ func TestDelete(t *testing.T) {
 	if replicate.IsRefinementOf(del, hl) != true {
 		t.Errorf("Replicate is not refinement of Delete()")
 	}
-	targetReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementDeleteTargetReferenceUri, hl)
+	targetReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementDeleteDeletedElementRefUri, hl)
 	if targetReference == nil {
 		t.Errorf("TargetReference child not found")
 	}
@@ -115,11 +115,11 @@ func TestGetId(t *testing.T) {
 	if replicate.IsRefinementOf(getId, hl) != true {
 		t.Errorf("Replicate is not refinement of GetId()")
 	}
-	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetIdSourceReferenceUri, hl)
+	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetIdSourceBaseElementRefUri, hl)
 	if sourceReference == nil {
 		t.Errorf("SourceReference child not found")
 	}
-	targetReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementGetIdTargetLiteralReferenceUri, hl)
+	targetReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementGetIdCreatedLiteralRefUri, hl)
 	if targetReference == nil {
 		t.Errorf("TargetReference child not found")
 	}
@@ -169,11 +169,11 @@ func TestGetName(t *testing.T) {
 	if replicate.IsRefinementOf(getName, hl) != true {
 		t.Errorf("Replicate is not refinement of GetName()")
 	}
-	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetNameSourceReferenceUri, hl)
+	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetNameSourceBaseElementRefUri, hl)
 	if sourceReference == nil {
 		t.Errorf("SourceReference child not found")
 	}
-	targetReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementGetNameTargetLiteralReferenceUri, hl)
+	targetReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementGetNameCreatedLiteralRefUri, hl)
 	if targetReference == nil {
 		t.Errorf("TargetReference child not found")
 	}
@@ -223,11 +223,11 @@ func TestGetOwningElement(t *testing.T) {
 	if replicate.IsRefinementOf(getOwningElement, hl) != true {
 		t.Errorf("Replicate is not refinement of GetOwningElement()")
 	}
-	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetOwningElementSourceReferenceUri, hl)
+	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetOwningElementSourceBaseElementRefUri, hl)
 	if sourceReference == nil {
 		t.Errorf("SourceReference child not found")
 	}
-	targetReference := core.GetChildElementReferenceWithAncestorUri(replicate, BaseElementGetOwningElementTargetElementReferenceUri, hl)
+	targetReference := core.GetChildElementReferenceWithAncestorUri(replicate, BaseElementGetOwningElementOwningElementRefUri, hl)
 	if targetReference == nil {
 		t.Errorf("TargetReference child not found")
 	}
@@ -277,11 +277,11 @@ func TestGetUri(t *testing.T) {
 	if replicate.IsRefinementOf(getUri, hl) != true {
 		t.Errorf("Replicate is not refinement of GetUri()")
 	}
-	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetUriSourceReferenceUri, hl)
+	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetUriSourceBaseElementRefUri, hl)
 	if sourceReference == nil {
 		t.Errorf("SourceReference child not found")
 	}
-	targetReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementGetUriTargetLiteralReferenceUri, hl)
+	targetReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementGetUriCreatedLiteralRefUri, hl)
 	if targetReference == nil {
 		t.Errorf("TargetReference child not found")
 	}
@@ -331,11 +331,11 @@ func TestGetVersion(t *testing.T) {
 	if replicate.IsRefinementOf(getVersion, hl) != true {
 		t.Errorf("Replicate is not refinement of GetVersion()")
 	}
-	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetVersionSourceReferenceUri, hl)
+	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetVersionSourceBaseElementRefUri, hl)
 	if sourceReference == nil {
 		t.Errorf("SourceReference child not found")
 	}
-	targetReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementGetVersionTargetLiteralReferenceUri, hl)
+	targetReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementGetVersionCreatedLiteralRefUri, hl)
 	if targetReference == nil {
 		t.Errorf("TargetReference child not found")
 	}
@@ -385,11 +385,11 @@ func TestSetOwningElement(t *testing.T) {
 	if replicate.IsRefinementOf(setOwningElement, hl) != true {
 		t.Errorf("Replicate is not refinement of SetOwningElement()")
 	}
-	owningElementReference := core.GetChildElementReferenceWithAncestorUri(replicate, BaseElementSetOwningElementOwningElementReferenceUri, hl)
+	owningElementReference := core.GetChildElementReferenceWithAncestorUri(replicate, BaseElementSetOwningElementOwningElementRefUri, hl)
 	if owningElementReference == nil {
 		t.Errorf("OwningElementReference child not found")
 	}
-	targetReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementSetOwningElementTargetBaseElementReferenceUri, hl)
+	targetReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementSetOwningElementModifiedBaseElementRefUri, hl)
 	if targetReference == nil {
 		t.Errorf("TargetReference child not found")
 	}
@@ -434,11 +434,11 @@ func TestSetUri(t *testing.T) {
 	if replicate.IsRefinementOf(setUri, hl) != true {
 		t.Errorf("Replicate is not refinement of SetUri()")
 	}
-	uriReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementSetUriUriReferenceUri, hl)
+	uriReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementSetUriSourceUriRefUri, hl)
 	if uriReference == nil {
 		t.Errorf("UriReference child not found")
 	}
-	targetReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementSetUriTargetBaseElementReferenceUri, hl)
+	targetReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementSetUriModifiedBaseElementRefUri, hl)
 	if targetReference == nil {
 		t.Errorf("TargetReference child not found")
 	}

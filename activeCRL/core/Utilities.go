@@ -196,6 +196,40 @@ func GetChildElementWithUri(element Element, uri string, hl *HeldLocks) Element 
 	return nil
 }
 
+func GetChildElementPointerReferenceWithAncestorUri(element Element, uri string, hl *HeldLocks) ElementPointerReference {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(element)
+	be := GetChildElementWithAncestorUri(element, uri, hl)
+	if be != nil {
+		switch be.(type) {
+		case ElementPointerReference:
+			return be.(ElementPointerReference)
+		}
+	}
+	return nil
+}
+
+// GetChildElementPointerReferenceWithUri() is a locking function that returns the first child
+// element pointer reference with the indicated uri
+func GetChildElementPointerReferenceWithUri(element Element, uri string, hl *HeldLocks) ElementPointerReference {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(element)
+	be := GetChildWithUri(element, uri, hl)
+	if be != nil {
+		switch be.(type) {
+		case ElementPointerReference:
+			return be.(ElementPointerReference)
+		}
+	}
+	return nil
+}
+
 // GetChildElementReferenceWithUri() is a locking function that returns the first child
 // element reference with the indicated uri
 func GetChildElementReferenceWithUri(element Element, uri string, hl *HeldLocks) ElementReference {
@@ -225,6 +259,38 @@ func GetChildElementReferenceWithAncestorUri(element Element, uri string, hl *He
 		switch be.(type) {
 		case ElementReference:
 			return be.(ElementReference)
+		}
+	}
+	return nil
+}
+
+func GetChildLiteralPointerReferenceWithAncestorUri(element Element, uri string, hl *HeldLocks) LiteralPointerReference {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(element)
+	be := GetChildElementWithAncestorUri(element, uri, hl)
+	if be != nil {
+		switch be.(type) {
+		case LiteralPointerReference:
+			return be.(LiteralPointerReference)
+		}
+	}
+	return nil
+}
+
+func GetChildLiteralPointerReferenceWithUri(element Element, uri string, hl *HeldLocks) LiteralPointerReference {
+	if hl == nil {
+		hl = NewHeldLocks()
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(element)
+	be := GetChildWithUri(element, uri, hl)
+	if be != nil {
+		switch be.(type) {
+		case LiteralPointerReference:
+			return be.(LiteralPointerReference)
 		}
 	}
 	return nil

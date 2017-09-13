@@ -20,6 +20,21 @@ const (
 	REFERENCED_ELEMENT
 )
 
+func (epr ElementPointerRole) RoleToString() string {
+	role := ""
+	switch epr {
+	case ABSTRACT_ELEMENT:
+		role = "ABSTRACT_ELEMENT"
+	case REFINED_ELEMENT:
+		role = "REFINED_ELEMENT"
+	case OWNING_ELEMENT:
+		role = "OWNING_ELEMENT"
+	case REFERENCED_ELEMENT:
+		role = "REFERENCED_ELEMENT"
+	}
+	return role
+}
+
 type elementPointer struct {
 	pointer
 	element            Element

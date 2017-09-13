@@ -20,6 +20,21 @@ const (
 	VALUE
 )
 
+func (lpr LiteralPointerRole) RoleToString() string {
+	role := ""
+	switch lpr {
+	case NAME:
+		role = "NAME"
+	case DEFINITION:
+		role = "DEFINITION"
+	case URI:
+		role = "URI"
+	case VALUE:
+		role = "VALUE"
+	}
+	return role
+}
+
 type literalPointer struct {
 	pointer
 	literal            Literal
@@ -52,7 +67,7 @@ func (lpPtr *literalPointer) GetLiteral(hl *HeldLocks) Literal {
 	}
 	hl.LockBaseElement(lpPtr)
 	if lpPtr.literal == nil && lpPtr.GetLiteralId(hl) != uuid.Nil && lpPtr.uOfD != nil {
-		lpPtr.literal = lpPtr.uOfD.getLiteral(lpPtr.GetLiteralId(hl).String())
+		lpPtr.literal = lpPtr.uOfD.GetLiteral(lpPtr.GetLiteralId(hl).String())
 	}
 	return lpPtr.literal
 }

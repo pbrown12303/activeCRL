@@ -28,14 +28,14 @@ func (lrPtr *literalReference) GetReferencedLiteral(hl *HeldLocks) Literal {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lrPtr)
-	rep := lrPtr.GetReferencedLiteralPointer(hl)
+	rep := lrPtr.GetLiteralPointer(hl)
 	if rep != nil {
 		return rep.GetLiteral(hl)
 	}
 	return nil
 }
 
-func (lrPtr *literalReference) GetReferencedLiteralPointer(hl *HeldLocks) LiteralPointer {
+func (lrPtr *literalReference) GetLiteralPointer(hl *HeldLocks) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks()
 		defer hl.ReleaseLocks()
@@ -96,7 +96,7 @@ func (lrPtr *literalReference) SetReferencedLiteral(el Literal, hl *HeldLocks) {
 	}
 	hl.LockBaseElement(lrPtr)
 	if lrPtr.GetReferencedLiteral(hl) != el {
-		ep := lrPtr.GetReferencedLiteralPointer(hl)
+		ep := lrPtr.GetLiteralPointer(hl)
 		if ep == nil {
 			ep = lrPtr.uOfD.NewValueLiteralPointer(hl)
 			SetOwningElement(ep, lrPtr, hl)
@@ -108,6 +108,6 @@ func (lrPtr *literalReference) SetReferencedLiteral(el Literal, hl *HeldLocks) {
 type LiteralReference interface {
 	Reference
 	GetReferencedLiteral(*HeldLocks) Literal
-	GetReferencedLiteralPointer(*HeldLocks) LiteralPointer
+	GetLiteralPointer(*HeldLocks) LiteralPointer
 	SetReferencedLiteral(Literal, *HeldLocks)
 }

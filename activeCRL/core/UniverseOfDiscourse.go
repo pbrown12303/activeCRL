@@ -225,6 +225,15 @@ func (uOfDPtr *UniverseOfDiscourse) GetElementWithUri(uri string) Element {
 	return nil
 }
 
+func (uOfDPtr *UniverseOfDiscourse) GetElementPointerReferenceWithUri(uri string) ElementPointerReference {
+	be := uOfDPtr.GetBaseElementWithUri(uri)
+	switch be.(type) {
+	case ElementPointerReference:
+		return be.(ElementPointerReference)
+	}
+	return nil
+}
+
 func (uOfDPtr *UniverseOfDiscourse) GetElementReferenceWithUri(uri string) ElementReference {
 	be := uOfDPtr.GetBaseElementWithUri(uri)
 	switch be.(type) {
@@ -234,8 +243,17 @@ func (uOfDPtr *UniverseOfDiscourse) GetElementReferenceWithUri(uri string) Eleme
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) getLiteral(id string) Literal {
+func (uOfDPtr *UniverseOfDiscourse) GetLiteral(id string) Literal {
 	be := uOfDPtr.baseElementMap.GetEntry(id)
+	switch be.(type) {
+	case Literal:
+		return be.(Literal)
+	}
+	return nil
+}
+
+func (uOfDPtr *UniverseOfDiscourse) GetLiteralWithUri(uri string) Literal {
+	be := uOfDPtr.GetBaseElementWithUri(uri)
 	switch be.(type) {
 	case Literal:
 		return be.(Literal)
@@ -248,6 +266,24 @@ func (uOfDPtr *UniverseOfDiscourse) GetLiteralPointer(id string) LiteralPointer 
 	switch be.(type) {
 	case LiteralPointer:
 		return be.(LiteralPointer)
+	}
+	return nil
+}
+
+func (uOfDPtr *UniverseOfDiscourse) GetLiteralReferenceWithUri(uri string) LiteralReference {
+	be := uOfDPtr.GetBaseElementWithUri(uri)
+	switch be.(type) {
+	case LiteralReference:
+		return be.(LiteralReference)
+	}
+	return nil
+}
+
+func (uOfDPtr *UniverseOfDiscourse) GetLiteralPointerReferenceWithUri(uri string) LiteralPointerReference {
+	be := uOfDPtr.GetBaseElementWithUri(uri)
+	switch be.(type) {
+	case LiteralPointerReference:
+		return be.(LiteralPointerReference)
 	}
 	return nil
 }

@@ -54,8 +54,8 @@ func TestReferencedElementPointer(t *testing.T) {
 	if rep.GetElementPointerRole(hl) != REFERENCED_ELEMENT {
 		t.Error("Referenced Element Pointer role not REFERENCED_ELEMENT \n")
 	}
-	if owner.GetReferencedElementPointer(hl) != rep {
-		t.Error("Owner.getReferencedElementPointer() did not return Referenced Element Pointer")
+	if owner.GetElementPointer(hl) != rep {
+		t.Error("Owner.getElementPointer() did not return Element Pointer")
 	}
 }
 
