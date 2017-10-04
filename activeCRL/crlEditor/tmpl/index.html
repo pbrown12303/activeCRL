@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>CRL Editor</title>
+<link rel="stylesheet" 	href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+<link rel="stylesheet" 	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+<!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script> -->
+<script src="/js/jstree.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script>
+	$(function() {
+		// 6 create an instance when the DOM is ready
+		$('#uOfD').jstree({'core' : { 'check_callback' : true }});
+		// 7 bind to events triggered on the tree
+		$('#uOfD').on("changed.jstree", function(e, data) {
+			console.log(data.selected);
+		});
+	});
+</script>
+<script src="/js/crlEditor.js"></script>
+
+
+</head>
+
+<body>
+    <input id="name" type="text" value="" placeholder="What is your name ?" autofocus/>
+    <span id="output"></span>
+    <script> logEntry() </script>
+    <script> addCallback() </script>
+	<div class="container">
+		<div class="dropdown">
+			<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+				File 
+				<span class="caret"></span>
+			</button>
+			<ul class="dropdown-menu">
+				<li><a href='javascript:logEntry("Open")'> Open Tree Root </a> </li>
+				<li><a href='javascript:logEntry("Close")'> Close Tree Root </a></li>
+				<li><a href="#">JavaScript</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-xs-4 col-sm-3 col-md-3 col-lg-2"
+				style="background-color: #f5ecb1;">
+				<h4>Universe of Discourse</h4>
+				<div id="uOfD">
+					<!-- in this example the tree is populated from inline HTML -->
+					<ul>
+						<li>Root node 1
+							<ul>
+								<li id="child_node_1">Child node 1</li>
+								<li>Child node 2</li>
+							</ul>
+						</li>
+						<li>Root node 2</li>
+					</ul>
+
+
+				</div>
+			</div>
+			<div class="col-xs-8 col-sm-3 col-md-9 col-lg-10"
+				style="background-color: #704a38;">Diagram</div>
+		</div>
+	</div>
+</body>
+</html>

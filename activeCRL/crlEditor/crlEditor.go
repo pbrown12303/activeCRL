@@ -13,7 +13,9 @@ type Page struct {
 	Body  []byte
 }
 
-var templates = template.Must(template.ParseFiles("crlEditor/tmpl/edit.html", "crlEditor/tmpl/view.html"))
+var ROOT string = "../src/github.com/pbrown12303/activeCRL/activeCRL/"
+
+var templates = template.Must(template.ParseFiles(ROOT+"crlEditor/tmpl/edit.html", ROOT+"crlEditor/tmpl/view.html", ROOT+"crlEditor/tmpl/index.html"))
 var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 
 func editHandler(w http.ResponseWriter, r *http.Request, title string) {
@@ -24,8 +26,16 @@ func editHandler(w http.ResponseWriter, r *http.Request, title string) {
 	renderTemplate(w, "edit", p)
 }
 
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	p, err := loadPage("index")
+	if err != nil {
+		p = &Page{Title: "CRL Editor"}
+	}
+	renderTemplate(w, "index", p)
+}
+
 func loadPage(title string) (*Page, error) {
-	filename := "crlEditor/data/" + title + ".txt"
+	filename := ROOT + "crlEditor/data/" + title + ".txt"
 	body, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -47,9 +57,11 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 }
 
 func main() {
+	http.HandleFunc("/index/", indexHandler)
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
+	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir(ROOT+"crlEditor/js"))))
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -61,7 +73,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 }
 
 func (p *Page) save() error {
-	filename := "crlEditor/data/" + p.Title + ".txt"
+	filename := ROOT + "crlEditor/data/" + p.Title + ".txt"
 	return ioutil.WriteFile(filename, p.Body, 0600)
 }
 
