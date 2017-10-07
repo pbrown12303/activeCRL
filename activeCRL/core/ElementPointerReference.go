@@ -24,7 +24,7 @@ func (eprPtr *elementPointerReference) cloneAttributes(source elementPointerRefe
 
 func (eprPtr *elementPointerReference) GetReferencedElementPointer(hl *HeldLocks) ElementPointer {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(eprPtr)
@@ -37,7 +37,7 @@ func (eprPtr *elementPointerReference) GetReferencedElementPointer(hl *HeldLocks
 
 func (eprPtr *elementPointerReference) GetElementPointerPointer(hl *HeldLocks) ElementPointerPointer {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(eprPtr)
@@ -56,7 +56,7 @@ func (elPtr *elementPointerReference) initializeElementPointerReference() {
 
 func (bePtr *elementPointerReference) isEquivalent(be *elementPointerReference, hl *HeldLocks) bool {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
@@ -88,7 +88,7 @@ func (el *elementPointerReference) recoverElementPointerReferenceFields(unmarsha
 
 func (eprPtr *elementPointerReference) SetReferencedElementPointer(el ElementPointer, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(eprPtr)

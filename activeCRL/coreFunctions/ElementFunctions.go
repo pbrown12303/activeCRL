@@ -3,6 +3,7 @@ package coreFunctions
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"log"
+	"sync"
 )
 
 var ElementFunctionsUri string = CoreFunctionsPrefix + "ElementFunctions"
@@ -46,8 +47,8 @@ var ElementSetNameUri string = CoreFunctionsPrefix + "Element/SetName"
 var ElementSetNameSourceLiteralRefUri string = CoreFunctionsPrefix + "Element/SetName/SourceLiteralRef"
 var ElementSetNameModifiedElementRefUri string = CoreFunctionsPrefix + "Element/SetName/ModifiedElementRef"
 
-func createElement(element core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func createElement(element core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(element)
 	uOfD := element.GetUniverseOfDiscourse(hl)
@@ -69,8 +70,8 @@ func createElement(element core.Element, changeNotification *core.ChangeNotifica
 	}
 }
 
-func getDefinition(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getDefinition(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -111,8 +112,8 @@ func getDefinition(replicate core.Element, changeNotification *core.ChangeNotifi
 	}
 }
 
-func getDefinitionLiteral(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getDefinitionLiteral(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -147,8 +148,8 @@ func getDefinitionLiteral(replicate core.Element, changeNotification *core.Chang
 	}
 }
 
-func getDefinitionLiteralPointer(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getDefinitionLiteralPointer(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -183,8 +184,8 @@ func getDefinitionLiteralPointer(replicate core.Element, changeNotification *cor
 	}
 }
 
-func getNameLiteral(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getNameLiteral(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -219,8 +220,8 @@ func getNameLiteral(replicate core.Element, changeNotification *core.ChangeNotif
 	}
 }
 
-func getNameLiteralPointer(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getNameLiteralPointer(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -255,8 +256,8 @@ func getNameLiteralPointer(replicate core.Element, changeNotification *core.Chan
 	}
 }
 
-func getUriLiteral(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getUriLiteral(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -291,8 +292,8 @@ func getUriLiteral(replicate core.Element, changeNotification *core.ChangeNotifi
 	}
 }
 
-func getUriLiteralPointer(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getUriLiteralPointer(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -328,8 +329,8 @@ func getUriLiteralPointer(replicate core.Element, changeNotification *core.Chang
 
 }
 
-func setDefinition(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func setDefinition(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -356,8 +357,8 @@ func setDefinition(replicate core.Element, changeNotification *core.ChangeNotifi
 	}
 }
 
-func setName(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func setName(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)

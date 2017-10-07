@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	//	"fmt"
 	"github.com/satori/go.uuid"
+	"sync"
 	"testing"
 )
 
 func TestNewRefinement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	el1 := uOfD.NewRefinement(hl)
 	if el1.GetId(hl) == uuid.Nil {
@@ -25,7 +27,8 @@ func TestNewRefinement(t *testing.T) {
 
 func TestRefinementOwnership(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewRefinement(hl)
@@ -46,7 +49,8 @@ func TestRefinementOwnership(t *testing.T) {
 
 func TestSetAbstractElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewRefinement(hl)
@@ -71,7 +75,8 @@ func TestSetAbstractElement(t *testing.T) {
 
 func TestSetRefinedElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewRefinement(hl)
@@ -96,7 +101,8 @@ func TestSetRefinedElement(t *testing.T) {
 
 func TestRefinementMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewRefinement(hl)
@@ -125,7 +131,8 @@ func TestRefinementMarshal(t *testing.T) {
 
 func TestRefinementClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewRefinement(hl)

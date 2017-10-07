@@ -4,13 +4,15 @@ import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	//	"log"
 	"strconv"
+	"sync"
 	"testing"
-	"time"
+	//	"time"
 )
 
 func TestCreateBaseElementPointerFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -33,7 +35,7 @@ func TestCreateBaseElementPointerFunction(t *testing.T) {
 
 	refinementInstance.SetRefinedElement(createBaseElementPointerInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	foundReference := core.GetChildBaseElementReferenceWithAncestorUri(createBaseElementPointerInstance, BaseElementPointerCreateCreatedBaseElementPointerRefUri, hl)
 	foundReferenceIdentifier := ""
@@ -102,7 +104,8 @@ func TestCreateBaseElementPointerFunction(t *testing.T) {
 
 func TestGetBaseElement(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -118,7 +121,7 @@ func TestGetBaseElement(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Now check the replication
 	if replicate.IsRefinementOf(getBaseElement, hl) != true {
@@ -141,7 +144,7 @@ func TestGetBaseElement(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	hl.LockBaseElement(replicate)
 	targetBaseElement := targetReference.GetReferencedBaseElement(hl)
@@ -158,7 +161,8 @@ func TestGetBaseElement(t *testing.T) {
 
 func TestGetBaseElementId(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -174,7 +178,7 @@ func TestGetBaseElementId(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Now check the replication
 	if replicate.IsRefinementOf(getBaseElementId, hl) != true {
@@ -199,7 +203,7 @@ func TestGetBaseElementId(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	hl.LockBaseElement(replicate)
 	targetLiteral := targetReference.GetReferencedLiteral(hl)
@@ -214,7 +218,8 @@ func TestGetBaseElementId(t *testing.T) {
 
 func TestGetBaseElementVersion(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -230,7 +235,7 @@ func TestGetBaseElementVersion(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Now check the replication
 	if replicate.IsRefinementOf(getBaseElementVersion, hl) != true {
@@ -255,7 +260,7 @@ func TestGetBaseElementVersion(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	hl.LockBaseElement(replicate)
 	targetLiteral := targetReference.GetReferencedLiteral(hl)
@@ -270,7 +275,8 @@ func TestGetBaseElementVersion(t *testing.T) {
 
 func TestSetBaseElement(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -286,7 +292,7 @@ func TestSetBaseElement(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Now check the replication
 	if replicate.IsRefinementOf(setBaseElement, hl) != true {
@@ -309,7 +315,7 @@ func TestSetBaseElement(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	hl.LockBaseElement(replicate)
 	if targetBaseElementPointer.GetBaseElement(hl) != sourceBaseElement {

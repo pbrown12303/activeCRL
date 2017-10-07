@@ -3,12 +3,14 @@ package core
 import (
 	"encoding/json"
 	//	"fmt"
+	"sync"
 	"testing"
 )
 
 func TestNewLiteralPointerPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewLiteralPointerReference(hl)
 	child := uOfD.NewLiteralPointerPointer(hl)
@@ -32,7 +34,8 @@ func TestNewLiteralPointerPointer(t *testing.T) {
 
 func TestSetLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewLiteralPointerReference(hl)
 	child := uOfD.NewLiteralPointerPointer(hl)
@@ -50,7 +53,8 @@ func TestSetLiteralPointer(t *testing.T) {
 
 func TestLiteralPointerPointerMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewLiteralPointerReference(hl)
 	child := uOfD.NewLiteralPointerPointer(hl)
@@ -75,7 +79,8 @@ func TestLiteralPointerPointerMarshal(t *testing.T) {
 
 func TestLiteralPointerPointerClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewLiteralPointerReference(hl)
 	child := uOfD.NewLiteralPointerPointer(hl)

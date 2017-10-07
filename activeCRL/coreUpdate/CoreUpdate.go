@@ -15,7 +15,7 @@ var serializedCore string = `
 
 func main() {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	hl := core.NewHeldLocks(nil)
 	defer hl.ReleaseLocks()
 	recoveredCore := uOfD.GetCoreConceptSpace()
 	updatedCore := updateRecoveredCore(recoveredCore, uOfD, hl)

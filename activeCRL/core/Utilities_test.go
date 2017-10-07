@@ -1,12 +1,14 @@
 package core
 
 import (
+	"sync"
 	"testing"
 )
 
 func TestEquivalence(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElement(hl)
@@ -18,7 +20,8 @@ func TestEquivalence(t *testing.T) {
 
 func TestGetChildElementWithAncestorUri(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElement(hl)
@@ -48,7 +51,8 @@ func TestGetChildElementWithAncestorUri(t *testing.T) {
 
 func TestGetChildElementReferenceWithAncestorUri(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementReference(hl)
@@ -78,7 +82,8 @@ func TestGetChildElementReferenceWithAncestorUri(t *testing.T) {
 
 func TestGetChildElementWithURI(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElement(hl)
@@ -97,7 +102,8 @@ func TestGetChildElementWithURI(t *testing.T) {
 
 func TestGetChildElementReferenceWithURI(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementReference(hl)
@@ -116,7 +122,8 @@ func TestGetChildElementReferenceWithURI(t *testing.T) {
 
 func TestReplicateAsRefinement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 
 	// Create original

@@ -70,6 +70,33 @@ func (cnPtr *ChangeNotification) getReferencingChangeNotification(be BaseElement
 	return nil
 }
 
+func (notification *ChangeNotification) Print(prefix string, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks(nil)
+		defer hl.ReleaseLocks()
+	}
+	notificationType := ""
+	switch notification.natureOfChange {
+	case ADD:
+		notificationType = "Add"
+	case MODIFY:
+		notificationType = "Modify"
+	case REMOVE:
+		notificationType = "Remove"
+	}
+	log.Printf("%s%s: \n", prefix, notificationType)
+	if notification.changedObject == nil {
+		log.Printf(prefix + "Changed object is nil")
+	} else {
+		log.Printf(prefix + "Changed object is not nil")
+		Print(notification.changedObject, prefix+"   ", hl)
+	}
+	if notification.underlyingChange != nil {
+		notification.underlyingChange.Print(prefix+"      ", hl)
+	}
+	log.Printf(prefix + "End of notification")
+}
+
 // abstractionChanged() is used by refinements to inform their refinedElements when they have changed. It does no locking.
 func abstractionChanged(element Element, notification *ChangeNotification, hl *HeldLocks) {
 	preChange(element, hl)
@@ -120,10 +147,10 @@ func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks)
 				//					Print(abstraction, labeledFunction.label+" Abstraction: ", hl)
 				//					//					time.Sleep(10000000 * time.Nanosecond)
 				//				}
-				PrintNotification(notification, "Notification: ", hl)
+				notification.Print("Notification: ", hl)
 				//				time.Sleep(1000000 * time.Nanosecond)
 			}
-			go labeledFunction.function(be.(Element), notification)
+			hl.functionCallManager.AddFunctionCall(labeledFunction, be.(Element), notification)
 		}
 	}
 	// Notify parents of change
@@ -158,10 +185,10 @@ func propagateChange(be BaseElement, notification *ChangeNotification, hl *HeldL
 				//					Print(abstraction, labeledFunction.label+" Abstraction: ", hl)
 				//					//					time.Sleep(10000000 * time.Nanosecond)
 				//				}
-				PrintNotification(notification, "Notification: ", hl)
+				notification.Print("Notification: ", hl)
 				//				time.Sleep(10000000 * time.Nanosecond)
 			}
-			go labeledFunction.function(be.(Element), notification)
+			hl.functionCallManager.AddFunctionCall(labeledFunction, be.(Element), notification)
 		}
 	case ElementPointer:
 		ep := be.(ElementPointer)

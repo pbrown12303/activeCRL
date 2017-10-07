@@ -3,6 +3,7 @@ package coreFunctions
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"log"
+	"sync"
 )
 
 var LiteralReferenceFunctionsUri string = CoreFunctionsPrefix + "LiteralReferenceFunctions"
@@ -22,8 +23,8 @@ var LiteralReferenceSetReferencedLiteralUri string = CoreFunctionsPrefix + "Lite
 var LiteralReferenceSetReferencedLiteralSourceLiteralRefUri string = CoreFunctionsPrefix + "LiteralReference/SetReferencedLiteral/SourceLiteralRef"
 var LiteralReferenceSetReferencedLiteralModifiedLiteralReferenceRefUri string = CoreFunctionsPrefix + "LiteralReference/SetReferencedLiteral/ModifiedLiteralReferenceRef"
 
-func literalReferenceCreateLiteralReference(element core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func literalReferenceCreateLiteralReference(element core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(element)
 
@@ -46,8 +47,8 @@ func literalReferenceCreateLiteralReference(element core.Element, changeNotifica
 	}
 }
 
-func literalReferenceGetReferencedLiteral(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func literalReferenceGetReferencedLiteral(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -87,8 +88,8 @@ func literalReferenceGetReferencedLiteral(replicate core.Element, changeNotifica
 	}
 }
 
-func literalReferenceGetLiteralPointer(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func literalReferenceGetLiteralPointer(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -130,8 +131,8 @@ func literalReferenceGetLiteralPointer(replicate core.Element, changeNotificatio
 	}
 }
 
-func literalReferenceSetReferencedLiteral(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func literalReferenceSetReferencedLiteral(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)

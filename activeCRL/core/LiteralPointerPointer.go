@@ -33,7 +33,7 @@ func (pllPtr *literalPointerPointer) cloneAttributes(source literalPointerPointe
 
 func (pllPtr *literalPointerPointer) GetLiteralPointer(hl *HeldLocks) LiteralPointer {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(pllPtr)
@@ -50,7 +50,7 @@ func (pllPtr *literalPointerPointer) getName(hl *HeldLocks) string {
 
 func (pllPtr *literalPointerPointer) GetLiteralPointerId(hl *HeldLocks) uuid.UUID {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(pllPtr)
@@ -59,7 +59,7 @@ func (pllPtr *literalPointerPointer) GetLiteralPointerId(hl *HeldLocks) uuid.UUI
 
 func (pllPtr *literalPointerPointer) GetLiteralPointerVersion(hl *HeldLocks) int {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(pllPtr)
@@ -72,7 +72,7 @@ func (pllPtr *literalPointerPointer) initializeLiteralPointerPointer() {
 
 func (bePtr *literalPointerPointer) isEquivalent(be *literalPointerPointer, hl *HeldLocks) bool {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
@@ -107,7 +107,7 @@ func (elPtr *literalPointerPointer) maarshalLiteralPointerPointerFields(buffer *
 
 func (pllPtr *literalPointerPointer) printLiteralPointerPointer(prefix string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(pllPtr)
@@ -151,7 +151,7 @@ func (ep *literalPointerPointer) recoverLiteralPointerPointerFields(unmarshaledD
 
 func (pllPtr *literalPointerPointer) SetLiteralPointer(literalPointer LiteralPointer, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(pllPtr)
@@ -176,7 +176,7 @@ func (pllPtr *literalPointerPointer) SetLiteralPointer(literalPointer LiteralPoi
 
 func (pllPtr *literalPointerPointer) SetOwningElement(element Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(pllPtr)
@@ -200,7 +200,7 @@ func (pllPtr *literalPointerPointer) SetOwningElement(element Element, hl *HeldL
 // internalSetOwningElement() is an internal function used only in unmarshal
 func (pllPtr *literalPointerPointer) internalSetOwningElement(element Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(pllPtr)
@@ -214,7 +214,7 @@ func (pllPtr *literalPointerPointer) internalSetOwningElement(element Element, h
 
 func (lpPtr *literalPointerPointer) setUri(uri string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lpPtr)

@@ -3,12 +3,14 @@ package main
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	//	"log"
+	"sync"
 	"testing"
 )
 
 func TestUpdateCoreElement(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(false)
 	var emptyCore core.Element

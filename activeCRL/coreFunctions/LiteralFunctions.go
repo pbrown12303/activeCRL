@@ -3,6 +3,7 @@ package coreFunctions
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"log"
+	"sync"
 )
 
 var LiteralFunctionsUri string = CoreFunctionsPrefix + "LiteralFunctions"
@@ -18,8 +19,8 @@ var LiteralSetLiteralValueUri string = CoreFunctionsPrefix + "Literal/SetLiteral
 var LiteralSetLiteralValueSourceLiteralRefUri string = CoreFunctionsPrefix + "Literal/SetLiteralValue/SourceLiteralRef"
 var LiteralSetLiteralValueModifiedLiteralRefUri string = CoreFunctionsPrefix + "Literal/SetLiteralValue/ModifiedLiteralRef"
 
-func createLiteral(element core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func createLiteral(element core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(element)
 	uOfD := element.GetUniverseOfDiscourse(hl)
@@ -41,8 +42,8 @@ func createLiteral(element core.Element, changeNotification *core.ChangeNotifica
 	}
 }
 
-func getLiteralValue(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getLiteralValue(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -83,8 +84,8 @@ func getLiteralValue(replicate core.Element, changeNotification *core.ChangeNoti
 	}
 }
 
-func setLiteralValue(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func setLiteralValue(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)

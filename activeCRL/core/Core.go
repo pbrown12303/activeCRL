@@ -33,7 +33,7 @@ var RefinementUri string = "http://activeCrl.com/core/Refinement"
 
 var AdHocTrace bool = false
 
-type crlExecutionFunction func(Element, *ChangeNotification)
+type crlExecutionFunction func(Element, []*ChangeNotification, *sync.WaitGroup)
 
 type functions map[string]crlExecutionFunction
 

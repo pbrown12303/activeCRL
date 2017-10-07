@@ -24,7 +24,7 @@ func (lprPtr *literalPointerReference) cloneAttributes(source literalPointerRefe
 
 func (lprPtr *literalPointerReference) GetReferencedLiteralPointer(hl *HeldLocks) LiteralPointer {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lprPtr)
@@ -37,7 +37,7 @@ func (lprPtr *literalPointerReference) GetReferencedLiteralPointer(hl *HeldLocks
 
 func (lprPtr *literalPointerReference) GetLiteralPointerPointer(hl *HeldLocks) LiteralPointerPointer {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lprPtr)
@@ -56,7 +56,7 @@ func (elPtr *literalPointerReference) initializeLiteralPointerReference() {
 
 func (bePtr *literalPointerReference) isEquivalent(be *literalPointerReference, hl *HeldLocks) bool {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
@@ -88,7 +88,7 @@ func (el *literalPointerReference) recoverLiteralPointerReferenceFields(unmarsha
 
 //func (elPtr *literalPointerReference) SetOwningElement(parent Element, hl *HeldLocks) {
 //	if hl == nil {
-//		hl = NewHeldLocks()
+//		hl = NewHeldLocks(nil)
 //		defer hl.ReleaseLocks()
 //	}
 //	hl.LockBaseElement(elPtr)
@@ -108,7 +108,7 @@ func (el *literalPointerReference) recoverLiteralPointerReferenceFields(unmarsha
 
 func (lprPtr *literalPointerReference) SetReferencedLiteralPointer(lp LiteralPointer, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lprPtr)

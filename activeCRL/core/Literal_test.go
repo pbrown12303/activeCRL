@@ -3,12 +3,14 @@ package core
 import (
 	"encoding/json"
 	//	"fmt"
+	"sync"
 	"testing"
 )
 
 func TestNewLiteral(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewLiteral(hl)
@@ -29,7 +31,8 @@ func TestNewLiteral(t *testing.T) {
 
 func TestLiteralMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewLiteral(hl)
@@ -56,7 +59,8 @@ func TestLiteralMarshal(t *testing.T) {
 
 func TestLiteralClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewLiteral(hl)

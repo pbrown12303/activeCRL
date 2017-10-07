@@ -90,7 +90,7 @@ func (undoMgr *undoManager) MarkUndoPoint() {
 }
 
 func PrintUndoStack(s undoStack, stackName string) {
-	hl := NewHeldLocks()
+	hl := NewHeldLocks(nil)
 	defer hl.ReleaseLocks()
 	log.Printf("%s:", stackName)
 	for _, entry := range s {
@@ -152,7 +152,7 @@ func (undoMgr *undoManager) redo(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	for len(undoMgr.redoStack) > 0 {
@@ -183,7 +183,7 @@ func (undoMgr *undoManager) redo(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
 // to have the priorState.
 func (undoMgr *undoManager) restoreState(priorState BaseElement, currentState BaseElement, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	if undoMgr.debugUndo == true {

@@ -25,7 +25,7 @@ func (rPtr *refinement) cloneAttributes(source refinement) {
 
 func (rPtr *refinement) GetAbstractElement(hl *HeldLocks) Element {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(rPtr)
@@ -38,7 +38,7 @@ func (rPtr *refinement) GetAbstractElement(hl *HeldLocks) Element {
 
 func (rPtr *refinement) GetAbstractElementPointer(hl *HeldLocks) ElementPointer {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(rPtr)
@@ -55,7 +55,7 @@ func (rPtr *refinement) GetAbstractElementPointer(hl *HeldLocks) ElementPointer 
 
 func (rPtr *refinement) GetRefinedElement(hl *HeldLocks) Element {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(rPtr)
@@ -68,7 +68,7 @@ func (rPtr *refinement) GetRefinedElement(hl *HeldLocks) Element {
 
 func (rPtr *refinement) GetRefinedElementPointer(hl *HeldLocks) ElementPointer {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(rPtr)
@@ -89,7 +89,7 @@ func (rPtr *refinement) initializeRefinement() {
 
 func (bePtr *refinement) isEquivalent(be *refinement, hl *HeldLocks) bool {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
@@ -120,7 +120,7 @@ func (el *refinement) recoverRefinementFields(unmarshaledData *map[string]json.R
 
 func (rPtr *refinement) SetAbstractElement(el Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(rPtr)
@@ -136,7 +136,7 @@ func (rPtr *refinement) SetAbstractElement(el Element, hl *HeldLocks) {
 
 func (rPtr *refinement) SetRefinedElement(el Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(rPtr)

@@ -42,7 +42,7 @@ func (bepPtr *baseElementPointer) baseElementChanged(notification *ChangeNotific
 
 func (bepPtr *baseElementPointer) GetBaseElement(hl *HeldLocks) BaseElement {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(&bepPtr.pointer.baseElement)
@@ -78,7 +78,7 @@ func (bepPtr *baseElementPointer) initializeBaseElementPointer() {
 
 func (bePtr *baseElementPointer) isEquivalent(be *baseElementPointer, hl *HeldLocks) bool {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
@@ -113,7 +113,7 @@ func (elPtr *baseElementPointer) marshalBaseElementPointerFields(buffer *bytes.B
 
 func (bepPtr *baseElementPointer) printBaseElementPointer(prefix string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bepPtr)
@@ -161,7 +161,7 @@ func (ep *baseElementPointer) recoverBaseElementPointerFields(unmarshaledData *m
 // target element.
 func (bepPtr *baseElementPointer) SetBaseElement(newBaseElement BaseElement, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(&bepPtr.baseElement)
@@ -193,7 +193,7 @@ func (bepPtr *baseElementPointer) SetBaseElement(newBaseElement BaseElement, hl 
 
 func (bepPtr *baseElementPointer) SetOwningElement(newOwningElement Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bepPtr)
@@ -229,7 +229,7 @@ func (bepPtr *baseElementPointer) internalSetOwningElement(element Element, hl *
 
 func (bepPtr *baseElementPointer) setUri(uri string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bepPtr)

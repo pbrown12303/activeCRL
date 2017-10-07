@@ -37,7 +37,7 @@ func (bePtr *baseElement) getIdNoLock() uuid.UUID {
 
 func (bePtr *baseElement) GetUniverseOfDiscourse(hl *HeldLocks) *UniverseOfDiscourse {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
@@ -66,7 +66,7 @@ func (bePtr *baseElement) internalIncrementVersion() {
 
 func (bePtr *baseElement) isEquivalent(be *baseElement, hl *HeldLocks) bool {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
@@ -90,7 +90,7 @@ func (elPtr *baseElement) marshalBaseElementFields(buffer *bytes.Buffer) error {
 
 func (bePtr *baseElement) printBaseElement(prefix string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
@@ -132,7 +132,7 @@ func (be *baseElement) recoverBaseElementFields(unmarshaledData *map[string]json
 // by id.
 func (bePtr *baseElement) setUniverseOfDiscourse(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
@@ -166,7 +166,7 @@ type BaseElement interface {
 
 func GetName(be BaseElement, hl *HeldLocks) string {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(be)
@@ -189,7 +189,7 @@ func GetOwningElement(be BaseElement, hl *HeldLocks) Element {
 		return nil
 	}
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(be)
@@ -207,7 +207,7 @@ func GetOwningElement(be BaseElement, hl *HeldLocks) Element {
 
 func GetUri(be BaseElement, hl *HeldLocks) string {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(be)
@@ -228,7 +228,7 @@ func GetUri(be BaseElement, hl *HeldLocks) string {
 
 func SetOwningElement(be BaseElement, parent Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(be)
@@ -277,7 +277,7 @@ func SetOwningElement(be BaseElement, parent Element, hl *HeldLocks) {
 
 func SetUri(be BaseElement, uri string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(be)

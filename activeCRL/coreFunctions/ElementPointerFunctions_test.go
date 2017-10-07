@@ -4,13 +4,15 @@ import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	//	"log"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
 
 func TestCreateAbstractElementPointerFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -95,7 +97,8 @@ func TestCreateAbstractElementPointerFunction(t *testing.T) {
 
 func TestCreateRefinedElementPointerFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -186,8 +189,8 @@ func TestCreateRefinedElementPointerFunction(t *testing.T) {
 
 func TestCreateOwningElementPointerFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
-	defer hl.ReleaseLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
 
@@ -277,7 +280,8 @@ func TestCreateOwningElementPointerFunction(t *testing.T) {
 
 func TestCreateReferencedElementPointerFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -368,7 +372,8 @@ func TestCreateReferencedElementPointerFunction(t *testing.T) {
 
 func TestGetElement(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -424,7 +429,8 @@ func TestGetElement(t *testing.T) {
 
 func TestGetElementId(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -480,7 +486,8 @@ func TestGetElementId(t *testing.T) {
 
 func TestGetElementVersion(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -536,7 +543,8 @@ func TestGetElementVersion(t *testing.T) {
 
 func TestSetElement(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)

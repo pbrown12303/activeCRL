@@ -18,7 +18,7 @@ func (elPtr *reference) initializeReference() {
 }
 func (bePtr *reference) isEquivalent(be *reference, hl *HeldLocks) bool {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)

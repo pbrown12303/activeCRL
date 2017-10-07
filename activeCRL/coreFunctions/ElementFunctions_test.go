@@ -3,13 +3,15 @@ package coreFunctions
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	//	"log"
+	"sync"
 	"testing"
-	"time"
+	//	"time"
 )
 
 func TestCreateElementFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -32,7 +34,7 @@ func TestCreateElementFunction(t *testing.T) {
 
 	refinementInstance.SetRefinedElement(createElementInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Check the results
 	//	log.Printf("Original instance:")
@@ -92,7 +94,8 @@ func TestCreateElementFunction(t *testing.T) {
 
 func TestGetDefinition(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -117,7 +120,7 @@ func TestGetDefinition(t *testing.T) {
 	refinementInstance.SetAbstractElement(getDefinitionFunction, hl)
 	refinementInstance.SetRefinedElement(getDefinitionInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Check the results
 	foundSourceElementRef := core.GetChildElementReferenceWithAncestorUri(getDefinitionInstance, ElementGetDefinitionSourceElementRefUri, hl)
@@ -135,7 +138,7 @@ func TestGetDefinition(t *testing.T) {
 	core.SetDefinition(sourceElement, sourceDefinition, hl)
 	foundSourceElementRef.SetReferencedElement(sourceElement, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	createdLiteral := foundCreatedLiteralRef.GetReferencedLiteral(hl)
 	if createdLiteral == nil {
@@ -151,7 +154,8 @@ func TestGetDefinition(t *testing.T) {
 
 func TestGetDefinitionLiteral(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -176,7 +180,7 @@ func TestGetDefinitionLiteral(t *testing.T) {
 	refinementInstance.SetAbstractElement(getDefinitionFunction, hl)
 	refinementInstance.SetRefinedElement(getDefinitionInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Check the results
 	foundSourceElementRef := core.GetChildElementReferenceWithAncestorUri(getDefinitionInstance, ElementGetDefinitionLiteralSourceElementRefUri, hl)
@@ -195,7 +199,7 @@ func TestGetDefinitionLiteral(t *testing.T) {
 	sourceDefinitionLiteral := sourceElement.GetDefinitionLiteral(hl)
 	foundSourceElementRef.SetReferencedElement(sourceElement, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	indicatedLiteral := foundIndicatedLiteralRef.GetReferencedLiteral(hl)
 	if indicatedLiteral != sourceDefinitionLiteral {
@@ -207,7 +211,8 @@ func TestGetDefinitionLiteral(t *testing.T) {
 
 func TestGetDefinitionLiteralPointer(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -232,7 +237,7 @@ func TestGetDefinitionLiteralPointer(t *testing.T) {
 	refinementInstance.SetAbstractElement(getDefinitionFunction, hl)
 	refinementInstance.SetRefinedElement(getDefinitionInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Check the results
 	foundSourceElementRef := core.GetChildElementReferenceWithAncestorUri(getDefinitionInstance, ElementGetDefinitionLiteralPointerSourceElementRefUri, hl)
@@ -251,7 +256,7 @@ func TestGetDefinitionLiteralPointer(t *testing.T) {
 	sourceDefinitionLiteralPointer := sourceElement.GetDefinitionLiteralPointer(hl)
 	foundSourceElementRef.SetReferencedElement(sourceElement, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	indicatedLiteralPointer := foundIndicatedLiteralPointerRef.GetReferencedLiteralPointer(hl)
 	if indicatedLiteralPointer != sourceDefinitionLiteralPointer {
@@ -263,7 +268,8 @@ func TestGetDefinitionLiteralPointer(t *testing.T) {
 
 func TestGetNameLiteral(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -288,7 +294,7 @@ func TestGetNameLiteral(t *testing.T) {
 	refinementInstance.SetAbstractElement(getNameFunction, hl)
 	refinementInstance.SetRefinedElement(getNameInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Check the results
 	foundSourceElementRef := core.GetChildElementReferenceWithAncestorUri(getNameInstance, ElementGetNameLiteralSourceElementRefUri, hl)
@@ -307,7 +313,7 @@ func TestGetNameLiteral(t *testing.T) {
 	sourceNameLiteral := sourceElement.GetNameLiteral(hl)
 	foundSourceElementRef.SetReferencedElement(sourceElement, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	indicatedLiteral := foundIndicatedLiteralRef.GetReferencedLiteral(hl)
 	if indicatedLiteral != sourceNameLiteral {
@@ -319,7 +325,8 @@ func TestGetNameLiteral(t *testing.T) {
 
 func TestGetNameLiteralPointer(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -344,7 +351,7 @@ func TestGetNameLiteralPointer(t *testing.T) {
 	refinementInstance.SetAbstractElement(getNameFunction, hl)
 	refinementInstance.SetRefinedElement(getNameInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Check the results
 	foundSourceElementRef := core.GetChildElementReferenceWithAncestorUri(getNameInstance, ElementGetNameLiteralPointerSourceElementRefUri, hl)
@@ -363,7 +370,7 @@ func TestGetNameLiteralPointer(t *testing.T) {
 	sourceNameLiteralPointer := sourceElement.GetNameLiteralPointer(hl)
 	foundSourceElementRef.SetReferencedElement(sourceElement, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	indicatedLiteralPointer := foundIndicatedLiteralPointerRef.GetReferencedLiteralPointer(hl)
 	if indicatedLiteralPointer != sourceNameLiteralPointer {
@@ -375,7 +382,8 @@ func TestGetNameLiteralPointer(t *testing.T) {
 
 func TestGetUriLiteral(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -400,7 +408,7 @@ func TestGetUriLiteral(t *testing.T) {
 	refinementInstance.SetAbstractElement(getUriFunction, hl)
 	refinementInstance.SetRefinedElement(getUriInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Check the results
 	foundSourceElementRef := core.GetChildElementReferenceWithAncestorUri(getUriInstance, ElementGetUriLiteralSourceElementRefUri, hl)
@@ -419,7 +427,7 @@ func TestGetUriLiteral(t *testing.T) {
 	sourceUriLiteral := sourceElement.GetUriLiteral(hl)
 	foundSourceElementRef.SetReferencedElement(sourceElement, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	indicatedLiteral := foundIndicatedLiteralRef.GetReferencedLiteral(hl)
 	if indicatedLiteral != sourceUriLiteral {
@@ -431,7 +439,8 @@ func TestGetUriLiteral(t *testing.T) {
 
 func TestGetUriLiteralPointer(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -456,7 +465,7 @@ func TestGetUriLiteralPointer(t *testing.T) {
 	refinementInstance.SetAbstractElement(getUriFunction, hl)
 	refinementInstance.SetRefinedElement(getUriInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Check the results
 	foundSourceElementRef := core.GetChildElementReferenceWithAncestorUri(getUriInstance, ElementGetUriLiteralPointerSourceElementRefUri, hl)
@@ -475,7 +484,7 @@ func TestGetUriLiteralPointer(t *testing.T) {
 	sourceUriLiteralPointer := sourceElement.GetUriLiteralPointer(hl)
 	foundSourceElementRef.SetReferencedElement(sourceElement, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	indicatedLiteralPointer := foundIndicatedLiteralPointerRef.GetReferencedLiteralPointer(hl)
 	if indicatedLiteralPointer != sourceUriLiteralPointer {
@@ -487,7 +496,8 @@ func TestGetUriLiteralPointer(t *testing.T) {
 
 func TestSetDefinition(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -503,7 +513,7 @@ func TestSetDefinition(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Now check the replication
 	if replicate.IsRefinementOf(setDefinition, hl) != true {
@@ -529,7 +539,7 @@ func TestSetDefinition(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	hl.LockBaseElement(replicate)
 	if modifiedElement.GetDefinition(hl) != uri {
@@ -539,7 +549,8 @@ func TestSetDefinition(t *testing.T) {
 
 func TestSetName(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -555,7 +566,7 @@ func TestSetName(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Now check the replication
 	if replicate.IsRefinementOf(setName, hl) != true {
@@ -581,7 +592,7 @@ func TestSetName(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	hl.LockBaseElement(replicate)
 	if core.GetName(modifiedElement, hl) != name {

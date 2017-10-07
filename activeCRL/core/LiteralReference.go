@@ -24,7 +24,7 @@ func (lrPtr *literalReference) cloneAttributes(source literalReference) {
 
 func (lrPtr *literalReference) GetReferencedLiteral(hl *HeldLocks) Literal {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lrPtr)
@@ -37,7 +37,7 @@ func (lrPtr *literalReference) GetReferencedLiteral(hl *HeldLocks) Literal {
 
 func (lrPtr *literalReference) GetLiteralPointer(hl *HeldLocks) LiteralPointer {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lrPtr)
@@ -58,7 +58,7 @@ func (elPtr *literalReference) initializeLiteralReference() {
 
 func (bePtr *literalReference) isEquivalent(be *literalReference, hl *HeldLocks) bool {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
@@ -91,7 +91,7 @@ func (el *literalReference) recoverLiteralReferenceFields(unmarshaledData *map[s
 
 func (lrPtr *literalReference) SetReferencedLiteral(el Literal, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lrPtr)

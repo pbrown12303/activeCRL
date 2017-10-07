@@ -6,12 +6,20 @@ import (
 
 type HeldLocks struct {
 	sync.Mutex
-	beLocks []BaseElement
+	beLocks             []BaseElement
+	waitGroup           *sync.WaitGroup
+	functionCallManager *FunctionCallManager
 }
 
-func NewHeldLocks() *HeldLocks {
+func NewHeldLocks(wg *sync.WaitGroup) *HeldLocks {
 	var hl HeldLocks
+	hl.waitGroup = wg
+	hl.functionCallManager = NewFunctionCallManager()
 	return &hl
+}
+
+func (hlPtr *HeldLocks) GetWaitGroup() *sync.WaitGroup {
+	return hlPtr.waitGroup
 }
 
 func (hlPtr *HeldLocks) LockBaseElement(be BaseElement) {
@@ -36,4 +44,5 @@ func (hlPtr *HeldLocks) ReleaseLocks() {
 		be.TraceableUnlock()
 	}
 	hlPtr.beLocks = nil
+	hlPtr.functionCallManager.ExecuteFunctions(hlPtr.waitGroup)
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"log"
 	"strconv"
+	"sync"
 )
 
 var ElementPointerFunctionsUri string = CoreFunctionsPrefix + "ElementPointerFunctions"
@@ -40,9 +41,9 @@ var ElementPointerSetElementUri string = CoreFunctionsPrefix + "ElementPointer/S
 var ElementPointerSetElementElementRefUri string = CoreFunctionsPrefix + "ElementPointer/SetElement/ElementRef"
 var ElementPointerSetElementModifiedElementPointerRefUri string = CoreFunctionsPrefix + "ElementPointer/SetElement/ModifiedElementPointerRef"
 
-func createAbstractElementPointer(element core.Element, changeNotification *core.ChangeNotification) {
+func createAbstractElementPointer(element core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
 	//	log.Printf("In createAbstractElementPointer")
-	hl := core.NewHeldLocks()
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(element)
 	uOfD := element.GetUniverseOfDiscourse(hl)
@@ -64,9 +65,9 @@ func createAbstractElementPointer(element core.Element, changeNotification *core
 	}
 }
 
-func createRefinedElementPointer(element core.Element, changeNotification *core.ChangeNotification) {
+func createRefinedElementPointer(element core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
 	//	log.Printf("In createRefinedElementPointer")
-	hl := core.NewHeldLocks()
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(element)
 	uOfD := element.GetUniverseOfDiscourse(hl)
@@ -88,9 +89,9 @@ func createRefinedElementPointer(element core.Element, changeNotification *core.
 	}
 }
 
-func createOwningElementPointer(element core.Element, changeNotification *core.ChangeNotification) {
+func createOwningElementPointer(element core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
 	//	log.Printf("In createOwningElementPointer")
-	hl := core.NewHeldLocks()
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(element)
 	uOfD := element.GetUniverseOfDiscourse(hl)
@@ -112,9 +113,9 @@ func createOwningElementPointer(element core.Element, changeNotification *core.C
 	}
 }
 
-func createReferencedElementPointer(element core.Element, changeNotification *core.ChangeNotification) {
+func createReferencedElementPointer(element core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
 	//	log.Printf("In createReferencedElementPointer")
-	hl := core.NewHeldLocks()
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(element)
 	uOfD := element.GetUniverseOfDiscourse(hl)
@@ -136,8 +137,8 @@ func createReferencedElementPointer(element core.Element, changeNotification *co
 	}
 }
 
-func getElement(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getElement(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -168,8 +169,8 @@ func getElement(replicate core.Element, changeNotification *core.ChangeNotificat
 	}
 }
 
-func getElementId(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getElementId(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -202,8 +203,8 @@ func getElementId(replicate core.Element, changeNotification *core.ChangeNotific
 	}
 }
 
-func getElementPointerRole(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getElementPointerRole(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -237,8 +238,8 @@ func getElementPointerRole(replicate core.Element, changeNotification *core.Chan
 	}
 }
 
-func getElementVersion(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getElementVersion(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -272,8 +273,8 @@ func getElementVersion(replicate core.Element, changeNotification *core.ChangeNo
 	}
 }
 
-func setElement(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func setElement(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)

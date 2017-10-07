@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"github.com/satori/go.uuid"
 	//	"log"
+	"sync"
 	"testing"
 )
 
 func TestCloneElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	el := uOfD.NewElement(hl)
 	SetName(el, "E1", hl)
@@ -25,7 +27,8 @@ func TestCloneElement(t *testing.T) {
 
 func TestElementMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElement(hl)
@@ -61,7 +64,8 @@ func TestElementMarshal(t *testing.T) {
 
 func TestElementOwnership(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElement(hl)
@@ -100,7 +104,8 @@ func TestElementOwnership(t *testing.T) {
 
 func TestGetAbstractElementsRecursively(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	refinedElement := uOfD.NewElement(hl)
 	abstractElements := refinedElement.GetAbstractElementsRecursively(hl)
@@ -155,7 +160,8 @@ func TestGetAbstractElementsRecursively(t *testing.T) {
 
 func TestGetImmediateAbstractElements(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	refinedElement := uOfD.NewElement(hl)
 	abstractElements := refinedElement.getImmediateAbstractElements(hl)
@@ -188,7 +194,8 @@ func TestGetImmediateAbstractElements(t *testing.T) {
 
 func TestGetImmediateAbstractions(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	refinedElement := uOfD.NewElement(hl)
 	abstractions := refinedElement.getImmediateAbstractions(hl)
@@ -221,7 +228,8 @@ func TestGetImmediateAbstractions(t *testing.T) {
 
 func TestGetImmediateRefinements(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	abstractElement := uOfD.NewElement(hl)
 	refinedElement1 := uOfD.NewElement(hl)
@@ -254,7 +262,8 @@ func TestGetImmediateRefinements(t *testing.T) {
 
 func TestIsRefinementOf(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	abstraction1 := uOfD.NewElement(hl)
 	abstraction2 := uOfD.NewElementReference(hl)
@@ -278,7 +287,8 @@ func TestIsRefinementOf(t *testing.T) {
 
 func TestNewElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	el1 := uOfD.NewElement(hl)
 	if el1.GetId(hl) == uuid.Nil {
@@ -294,7 +304,8 @@ func TestNewElement(t *testing.T) {
 
 func TestSetDefinition(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	var testName string = "Test Name"
@@ -313,7 +324,8 @@ func TestSetDefinition(t *testing.T) {
 
 func TestSetName(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	var testName string = "Test Name"
@@ -332,7 +344,8 @@ func TestSetName(t *testing.T) {
 
 func TestSetUri(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	var testName string = "Test Name"
@@ -351,7 +364,8 @@ func TestSetUri(t *testing.T) {
 
 func TestVersionWithParentChange(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	oldParent := uOfD.NewElement(hl)
 	newParent := uOfD.NewElement(hl)
@@ -383,7 +397,8 @@ func TestVersionWithParentChange(t *testing.T) {
 
 func TestVersionWithParentChangeAndCommonGrandparent(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	grandparent := uOfD.NewElement(hl)
 	grandparentPreviousVersion := grandparent.GetVersion(hl)

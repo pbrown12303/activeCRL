@@ -53,7 +53,7 @@ func clone(be BaseElement) BaseElement {
 // being the replica. The root replicated element is returned.
 func CreateReplicateAsRefinement(original Element, hl *HeldLocks) Element {
 	if hl == nil {
-		hl := NewHeldLocks()
+		hl := NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	uOfD := original.GetUniverseOfDiscourse(hl)
@@ -80,7 +80,7 @@ func CreateReplicateAsRefinement(original Element, hl *HeldLocks) Element {
 
 func Equivalent(be1 BaseElement, be2 BaseElement, hl *HeldLocks) bool {
 	if hl == nil {
-		hl := NewHeldLocks()
+		hl := NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(be1)
@@ -130,7 +130,7 @@ func equivalent(be1 BaseElement, be2 BaseElement, hl *HeldLocks) bool {
 
 func GetChildBaseElementReferenceWithAncestorUri(element Element, uri string, hl *HeldLocks) BaseElementReference {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(element)
@@ -148,7 +148,7 @@ func GetChildBaseElementReferenceWithAncestorUri(element Element, uri string, hl
 // with the indicated uri
 func GetChildElementWithAncestorUri(element Element, uri string, hl *HeldLocks) Element {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(element)
@@ -164,7 +164,7 @@ func GetChildElementWithAncestorUri(element Element, uri string, hl *HeldLocks) 
 
 func GetChildBaseElementReferenceWithUri(element Element, uri string, hl *HeldLocks) BaseElementReference {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(element)
@@ -182,7 +182,7 @@ func GetChildBaseElementReferenceWithUri(element Element, uri string, hl *HeldLo
 // uri if that child is an element
 func GetChildElementWithUri(element Element, uri string, hl *HeldLocks) Element {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(element)
@@ -198,7 +198,7 @@ func GetChildElementWithUri(element Element, uri string, hl *HeldLocks) Element 
 
 func GetChildElementPointerReferenceWithAncestorUri(element Element, uri string, hl *HeldLocks) ElementPointerReference {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(element)
@@ -216,7 +216,7 @@ func GetChildElementPointerReferenceWithAncestorUri(element Element, uri string,
 // element pointer reference with the indicated uri
 func GetChildElementPointerReferenceWithUri(element Element, uri string, hl *HeldLocks) ElementPointerReference {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(element)
@@ -234,7 +234,7 @@ func GetChildElementPointerReferenceWithUri(element Element, uri string, hl *Hel
 // element reference with the indicated uri
 func GetChildElementReferenceWithUri(element Element, uri string, hl *HeldLocks) ElementReference {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(element)
@@ -250,7 +250,7 @@ func GetChildElementReferenceWithUri(element Element, uri string, hl *HeldLocks)
 
 func GetChildElementReferenceWithAncestorUri(element Element, uri string, hl *HeldLocks) ElementReference {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(element)
@@ -266,7 +266,7 @@ func GetChildElementReferenceWithAncestorUri(element Element, uri string, hl *He
 
 func GetChildLiteralPointerReferenceWithAncestorUri(element Element, uri string, hl *HeldLocks) LiteralPointerReference {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(element)
@@ -282,7 +282,7 @@ func GetChildLiteralPointerReferenceWithAncestorUri(element Element, uri string,
 
 func GetChildLiteralPointerReferenceWithUri(element Element, uri string, hl *HeldLocks) LiteralPointerReference {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(element)
@@ -298,7 +298,7 @@ func GetChildLiteralPointerReferenceWithUri(element Element, uri string, hl *Hel
 
 func GetChildLiteralReferenceWithAncestorUri(element Element, uri string, hl *HeldLocks) LiteralReference {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(element)
@@ -314,7 +314,7 @@ func GetChildLiteralReferenceWithAncestorUri(element Element, uri string, hl *He
 
 func GetChildLiteralReferenceWithUri(element Element, uri string, hl *HeldLocks) LiteralReference {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(element)
@@ -332,7 +332,7 @@ func GetChildLiteralReferenceWithUri(element Element, uri string, hl *HeldLocks)
 // uri
 func GetChildWithUri(element Element, uri string, hl *HeldLocks) BaseElement {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(element)
@@ -346,37 +346,10 @@ func GetChildWithUri(element Element, uri string, hl *HeldLocks) BaseElement {
 
 func Print(be BaseElement, prefix string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	printBe(be, prefix, hl)
-}
-
-func PrintNotification(notification *ChangeNotification, prefix string, hl *HeldLocks) {
-	if hl == nil {
-		hl = NewHeldLocks()
-		defer hl.ReleaseLocks()
-	}
-	notificationType := ""
-	switch notification.natureOfChange {
-	case ADD:
-		notificationType = "Add"
-	case MODIFY:
-		notificationType = "Modify"
-	case REMOVE:
-		notificationType = "Remove"
-	}
-	log.Printf("%s%s: \n", prefix, notificationType)
-	if notification.changedObject == nil {
-		log.Printf(prefix + "Changed object is nil")
-	} else {
-		log.Printf(prefix + "Changed object is not nil")
-		Print(notification.changedObject, prefix+"   ", hl)
-	}
-	if notification.underlyingChange != nil {
-		PrintNotification(notification.underlyingChange, prefix+"      ", hl)
-	}
-	log.Printf(prefix + "End of notification")
 }
 
 func printBe(be BaseElement, prefix string, hl *HeldLocks) {
@@ -384,7 +357,7 @@ func printBe(be BaseElement, prefix string, hl *HeldLocks) {
 		return
 	}
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(be)
@@ -423,7 +396,7 @@ func printBe(be BaseElement, prefix string, hl *HeldLocks) {
 
 func PrintUriIndex(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	uOfD.uriBaseElementMap.Print(hl)
@@ -431,7 +404,7 @@ func PrintUriIndex(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
 
 func PrintUriIndexJustIdentifiers(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	uOfD.uriBaseElementMap.PrintJustIdentifiers(hl)
@@ -444,7 +417,7 @@ func PrintUriIndexJustIdentifiers(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
 // will not be re-created.
 func ReplicateAsRefinement(original Element, replicate Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(original)
@@ -500,7 +473,7 @@ func ReplicateAsRefinement(original Element, replicate Element, hl *HeldLocks) {
 
 func restoreValueOwningElementFieldsRecursively(el Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	for _, child := range el.GetOwnedBaseElements(hl) {

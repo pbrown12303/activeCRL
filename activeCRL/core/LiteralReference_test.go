@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	//	"fmt"
 	"github.com/satori/go.uuid"
+	"sync"
 	"testing"
 )
 
 func TestNewLiteralReference(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	el1 := uOfD.NewLiteralReference(hl)
 	if el1.GetId(hl) == uuid.Nil {
@@ -25,7 +27,8 @@ func TestNewLiteralReference(t *testing.T) {
 
 func TestLiteralReferenceOwnership(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewLiteralReference(hl)
@@ -46,7 +49,8 @@ func TestLiteralReferenceOwnership(t *testing.T) {
 
 func TestSetReferencedLiteral(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewLiteralReference(hl)
@@ -71,7 +75,8 @@ func TestSetReferencedLiteral(t *testing.T) {
 
 func TestLiteralReferenceMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewLiteralReference(hl)
@@ -100,7 +105,8 @@ func TestLiteralReferenceMarshal(t *testing.T) {
 
 func TestLiteralReferenceClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewLiteralReference(hl)

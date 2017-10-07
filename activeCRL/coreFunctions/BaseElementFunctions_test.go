@@ -4,13 +4,15 @@ import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	//	"log"
 	"strconv"
+	"sync"
 	"testing"
-	"time"
+	//	"time"
 )
 
 func TestDelete(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -39,7 +41,8 @@ func TestDelete(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	//	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replications
 	if replicate.IsRefinementOf(del, hl) != true {
@@ -62,7 +65,8 @@ func TestDelete(t *testing.T) {
 	// The setting of the target reference should trigger the deletion of the target reference
 	targetReference.SetReferencedBaseElement(targetElement, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	//	time.Sleep(10000000 * time.Nanosecond)
 
 	if uOfD.GetBaseElement(targetElementId) != nil {
 		t.Error("TargetElement not deleted successfully")
@@ -93,7 +97,8 @@ func TestDelete(t *testing.T) {
 
 func TestGetId(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -109,7 +114,8 @@ func TestGetId(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	//	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
 	if replicate.IsRefinementOf(getId, hl) != true {
@@ -132,7 +138,8 @@ func TestGetId(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	//	time.Sleep(10000000 * time.Nanosecond)
 
 	hl.LockBaseElement(replicate)
 	targetLiteral := targetReference.GetReferencedLiteral(hl)
@@ -147,7 +154,8 @@ func TestGetId(t *testing.T) {
 
 func TestGetName(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -163,7 +171,8 @@ func TestGetName(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	//	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
 	if replicate.IsRefinementOf(getName, hl) != true {
@@ -186,7 +195,8 @@ func TestGetName(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	// time.Sleep(10000000 * time.Nanosecond)
 
 	hl.LockBaseElement(replicate)
 	targetLiteral := targetReference.GetReferencedLiteral(hl)
@@ -201,7 +211,8 @@ func TestGetName(t *testing.T) {
 
 func TestGetOwningElement(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -217,7 +228,8 @@ func TestGetOwningElement(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	//	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
 	if replicate.IsRefinementOf(getOwningElement, hl) != true {
@@ -240,7 +252,8 @@ func TestGetOwningElement(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	//	time.Sleep(10000000 * time.Nanosecond)
 
 	hl.LockBaseElement(replicate)
 	targetElement := targetReference.GetReferencedElement(hl)
@@ -255,7 +268,8 @@ func TestGetOwningElement(t *testing.T) {
 
 func TestGetUri(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -271,7 +285,8 @@ func TestGetUri(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	//	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
 	if replicate.IsRefinementOf(getUri, hl) != true {
@@ -294,7 +309,8 @@ func TestGetUri(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	// time.Sleep(10000000 * time.Nanosecond)
 
 	hl.LockBaseElement(replicate)
 	targetLiteral := targetReference.GetReferencedLiteral(hl)
@@ -309,7 +325,8 @@ func TestGetUri(t *testing.T) {
 
 func TestGetVersion(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -325,7 +342,8 @@ func TestGetVersion(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	// time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
 	if replicate.IsRefinementOf(getVersion, hl) != true {
@@ -348,7 +366,8 @@ func TestGetVersion(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	// time.Sleep(10000000 * time.Nanosecond)
 
 	hl.LockBaseElement(replicate)
 	targetLiteral := targetReference.GetReferencedLiteral(hl)
@@ -363,7 +382,8 @@ func TestGetVersion(t *testing.T) {
 
 func TestSetOwningElement(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -379,7 +399,8 @@ func TestSetOwningElement(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	// time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
 	if replicate.IsRefinementOf(setOwningElement, hl) != true {
@@ -402,7 +423,8 @@ func TestSetOwningElement(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	// time.Sleep(10000000 * time.Nanosecond)
 
 	hl.LockBaseElement(replicate)
 	if core.GetOwningElement(target, hl) != parent {
@@ -412,7 +434,8 @@ func TestSetOwningElement(t *testing.T) {
 
 func TestSetUri(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -428,7 +451,8 @@ func TestSetUri(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	// time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
 	if replicate.IsRefinementOf(setUri, hl) != true {
@@ -453,7 +477,8 @@ func TestSetUri(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
+	// time.Sleep(10000000 * time.Nanosecond)
 
 	hl.LockBaseElement(replicate)
 	if core.GetUri(target, hl) != uri {

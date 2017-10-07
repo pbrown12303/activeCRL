@@ -3,6 +3,7 @@ package coreFunctions
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"log"
+	"sync"
 )
 
 var ElementReferenceFunctionsUri string = CoreFunctionsPrefix + "ElementReferenceFunctions"
@@ -22,8 +23,8 @@ var ElementReferenceSetReferencedElementUri string = CoreFunctionsPrefix + "Elem
 var ElementReferenceSetReferencedElementSourceElementRefUri string = CoreFunctionsPrefix + "ElementReference/SetReferencedElement/SourceElementRef"
 var ElementReferenceSetReferencedElementModifiedElementReferenceRefUri string = CoreFunctionsPrefix + "ElementReference/SetReferencedElement/ModifiedElementReferenceRef"
 
-func elementReferenceCreateElementReference(element core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func elementReferenceCreateElementReference(element core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(element)
 
@@ -46,8 +47,8 @@ func elementReferenceCreateElementReference(element core.Element, changeNotifica
 	}
 }
 
-func elementReferenceGetReferencedElement(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func elementReferenceGetReferencedElement(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -87,8 +88,8 @@ func elementReferenceGetReferencedElement(replicate core.Element, changeNotifica
 	}
 }
 
-func elementReferenceGetElementPointer(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func elementReferenceGetElementPointer(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -129,8 +130,8 @@ func elementReferenceGetElementPointer(replicate core.Element, changeNotificatio
 	}
 }
 
-func elementReferenceSetReferencedElement(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func elementReferenceSetReferencedElement(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)

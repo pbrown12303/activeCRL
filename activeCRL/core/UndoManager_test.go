@@ -1,12 +1,14 @@
 package core
 
 import (
+	"sync"
 	"testing"
 )
 
 func TestUndoRedoElementCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	e1 := uOfD.NewElement(hl)
@@ -71,7 +73,8 @@ func TestUndoRedoElementCreation(t *testing.T) {
 
 func TestUndoRedoMarkUndoPoint(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	uOfD.NewElement(hl)
@@ -123,7 +126,8 @@ func TestUndoRedoMarkUndoPoint(t *testing.T) {
 
 func TestUndoRedoElementSetName(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	e1 := uOfD.NewElement(hl)
@@ -258,7 +262,8 @@ func TestUndoRedoElementSetName(t *testing.T) {
 
 func TestUndoRedoElementSetOwner(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	parent := uOfD.NewElement(hl)
@@ -289,7 +294,8 @@ func TestUndoRedoElementSetOwner(t *testing.T) {
 
 func TestUndoRedoReferenceAndReferencedElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	parent := uOfD.NewElement(hl)
@@ -334,7 +340,8 @@ func TestUndoRedoReferenceAndReferencedElement(t *testing.T) {
 
 func TestUndoRedoDeleteReferenceAndReferencedElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	parent := uOfD.NewElement(hl)
@@ -384,7 +391,8 @@ func TestEmptyStackUndoAndRedo(t *testing.T) {
 
 func TestUndoRedoElementSetUri(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	e1 := uOfD.NewElement(hl)
@@ -492,7 +500,8 @@ func TestUndoRedoElementSetUri(t *testing.T) {
 
 func TestUndoRedoElementSetDefinition(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	e1 := uOfD.NewElement(hl)
@@ -600,7 +609,8 @@ func TestUndoRedoElementSetDefinition(t *testing.T) {
 
 func TestUndoRedoElementPointerCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	ep1 := uOfD.NewReferencedElementPointer(hl)
@@ -647,7 +657,8 @@ func TestUndoRedoElementPointerCreation(t *testing.T) {
 
 func TestUndoRedoElementPointerSetOwningElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	e1 := uOfD.NewElement(hl)
@@ -710,7 +721,8 @@ func TestUndoRedoElementPointerSetOwningElement(t *testing.T) {
 
 func TestUndoRedoElementPointerPointerCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	epp1 := uOfD.NewElementPointerPointer(hl)
@@ -757,7 +769,8 @@ func TestUndoRedoElementPointerPointerCreation(t *testing.T) {
 
 func TestUndoRedoElementPointerPointerSetElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	ep1 := uOfD.NewReferencedElementPointer(hl)
@@ -811,7 +824,8 @@ func TestUndoRedoElementPointerPointerSetElementPointer(t *testing.T) {
 
 func TestUndoRedoElementPointerReferenceCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	e1 := uOfD.NewElementPointerReference(hl)
@@ -876,7 +890,8 @@ func TestUndoRedoElementPointerReferenceCreation(t *testing.T) {
 
 func TestUndoRedoElementReferenceCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	e1 := uOfD.NewElementReference(hl)
@@ -941,7 +956,8 @@ func TestUndoRedoElementReferenceCreation(t *testing.T) {
 
 func TestUndoRedoLiteralCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	l1 := uOfD.NewLiteral(hl)
@@ -1006,7 +1022,8 @@ func TestUndoRedoLiteralCreation(t *testing.T) {
 
 func TestUndoRedoLiteralPointerCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	lp1 := uOfD.NewNameLiteralPointer(hl)
@@ -1071,7 +1088,8 @@ func TestUndoRedoLiteralPointerCreation(t *testing.T) {
 
 func TestUndoRedoLiteralPointerPointerCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	lp1 := uOfD.NewLiteralPointerPointer(hl)
@@ -1136,7 +1154,8 @@ func TestUndoRedoLiteralPointerPointerCreation(t *testing.T) {
 
 func TestUndoRedoLiteralPointerPointerSetLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	lp1 := uOfD.NewNameLiteralPointer(hl)
@@ -1190,7 +1209,8 @@ func TestUndoRedoLiteralPointerPointerSetLiteralPointer(t *testing.T) {
 
 func TestUndoRedoLiteralReferenceCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	e1 := uOfD.NewLiteralReference(hl)
@@ -1255,7 +1275,8 @@ func TestUndoRedoLiteralReferenceCreation(t *testing.T) {
 
 func TestUndoRedoRefinementCreation(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	e1 := uOfD.NewRefinement(hl)

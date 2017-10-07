@@ -4,13 +4,15 @@ import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	//	"log"
 	"strconv"
+	"sync"
 	"testing"
-	"time"
+	//	"time"
 )
 
 func TestCreateNameLiteralPointerFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -32,7 +34,7 @@ func TestCreateNameLiteralPointerFunction(t *testing.T) {
 	refinementInstance.SetAbstractElement(createNameLiteralPointer, hl)
 	refinementInstance.SetRefinedElement(createLiteralPointerInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	foundLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(createLiteralPointerInstance, LiteralPointerCreateNameLiteralPointerCreatedLiteralPointerRefUri, hl)
 	foundLiteralPointerRefIdentifier := ""
@@ -95,7 +97,8 @@ func TestCreateNameLiteralPointerFunction(t *testing.T) {
 
 func TestCreateDefinitionLiteralPointerFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -117,7 +120,7 @@ func TestCreateDefinitionLiteralPointerFunction(t *testing.T) {
 	refinementInstance.SetAbstractElement(createDefinitionLiteralPointer, hl)
 	refinementInstance.SetRefinedElement(createLiteralPointerInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	foundLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(createLiteralPointerInstance, LiteralPointerCreateDefinitionLiteralPointerCreatedLiteralPointerRefUri, hl)
 	foundLiteralPointerRefIdentifier := ""
@@ -180,7 +183,8 @@ func TestCreateDefinitionLiteralPointerFunction(t *testing.T) {
 
 func TestCreateUriLiteralPointerFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -202,7 +206,7 @@ func TestCreateUriLiteralPointerFunction(t *testing.T) {
 	refinementInstance.SetAbstractElement(createUriLiteralPointer, hl)
 	refinementInstance.SetRefinedElement(createLiteralPointerInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	foundLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(createLiteralPointerInstance, LiteralPointerCreateUriLiteralPointerCreatedLiteralPointerRefUri, hl)
 	foundLiteralPointerRefIdentifier := ""
@@ -265,7 +269,8 @@ func TestCreateUriLiteralPointerFunction(t *testing.T) {
 
 func TestCreateValueLiteralPointerFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -287,7 +292,7 @@ func TestCreateValueLiteralPointerFunction(t *testing.T) {
 	refinementInstance.SetAbstractElement(createValueLiteralPointer, hl)
 	refinementInstance.SetRefinedElement(createLiteralPointerInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	foundLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(createLiteralPointerInstance, LiteralPointerCreateValueLiteralPointerCreatedLiteralPointerRefUri, hl)
 	foundLiteralPointerRefIdentifier := ""
@@ -350,7 +355,8 @@ func TestCreateValueLiteralPointerFunction(t *testing.T) {
 
 func TestGetLiteral(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -366,7 +372,7 @@ func TestGetLiteral(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Now check the replication
 	if replicate.IsRefinementOf(getElement, hl) != true {
@@ -389,7 +395,7 @@ func TestGetLiteral(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	hl.LockBaseElement(replicate)
 	indicatedLiteral := indicatedLiteralRef.GetReferencedLiteral(hl)
@@ -406,7 +412,8 @@ func TestGetLiteral(t *testing.T) {
 
 func TestGetLiteralId(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -422,7 +429,7 @@ func TestGetLiteralId(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Now check the replication
 	if replicate.IsRefinementOf(getElementId, hl) != true {
@@ -447,7 +454,7 @@ func TestGetLiteralId(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	hl.LockBaseElement(replicate)
 	targetLiteral := createdLiteralRef.GetReferencedLiteral(hl)
@@ -462,7 +469,8 @@ func TestGetLiteralId(t *testing.T) {
 
 func TestGetLiteralVersion(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -478,7 +486,7 @@ func TestGetLiteralVersion(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Now check the replication
 	if replicate.IsRefinementOf(getElementVersion, hl) != true {
@@ -503,7 +511,7 @@ func TestGetLiteralVersion(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	hl.LockBaseElement(replicate)
 	targetLiteral := createdLiteralRef.GetReferencedLiteral(hl)
@@ -518,7 +526,8 @@ func TestGetLiteralVersion(t *testing.T) {
 
 func TestSetLiteral(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -534,7 +543,7 @@ func TestSetLiteral(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Now check the replication
 	if replicate.IsRefinementOf(setElement, hl) != true {
@@ -557,7 +566,7 @@ func TestSetLiteral(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	hl.LockBaseElement(replicate)
 	if modifiedLiteralPointer.GetLiteral(hl) != sourceLiteral {

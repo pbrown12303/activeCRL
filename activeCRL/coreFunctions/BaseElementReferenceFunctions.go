@@ -3,6 +3,7 @@ package coreFunctions
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"log"
+	"sync"
 )
 
 var BaseElementReferenceFunctionsUri string = CoreFunctionsPrefix + "BaseElementReferenceFunctions"
@@ -22,8 +23,8 @@ var BaseElementReferenceSetReferencedBaseElementUri string = CoreFunctionsPrefix
 var BaseElementReferenceSetReferencedBaseElementSourceBaseElementRefUri string = CoreFunctionsPrefix + "BaseElementReference/SetReferencedBaseElement/SourceBaseElementRef"
 var BaseElementReferenceSetReferencedBaseElementModifiedBaseElementReferenceRefUri string = CoreFunctionsPrefix + "BaseElementReference/SetReferencedBaseElement/ModifiedBaseElementReferenceRef"
 
-func createBaseElementReference(element core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func createBaseElementReference(element core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(element)
 
@@ -46,8 +47,8 @@ func createBaseElementReference(element core.Element, changeNotification *core.C
 	}
 }
 
-func getBaseElementPointer(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getBaseElementPointer(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -88,8 +89,8 @@ func getBaseElementPointer(replicate core.Element, changeNotification *core.Chan
 	}
 }
 
-func getReferencedBaseElement(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getReferencedBaseElement(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -130,8 +131,8 @@ func getReferencedBaseElement(replicate core.Element, changeNotification *core.C
 	}
 }
 
-func setReferencedBaseElement(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func setReferencedBaseElement(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)

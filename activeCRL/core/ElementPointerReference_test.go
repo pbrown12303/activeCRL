@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	//	"fmt"
 	"github.com/satori/go.uuid"
+	"sync"
 	"testing"
 )
 
 func TestNewElementPointerReference(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	el1 := uOfD.NewElementPointerReference(hl)
 	if el1.GetId(hl) == uuid.Nil {
@@ -25,7 +27,8 @@ func TestNewElementPointerReference(t *testing.T) {
 
 func TestElementPointerReferenceOwnership(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementPointerReference(hl)
@@ -46,7 +49,8 @@ func TestElementPointerReferenceOwnership(t *testing.T) {
 
 func TestSetReferencedElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementPointerReference(hl)
@@ -71,7 +75,8 @@ func TestSetReferencedElementPointer(t *testing.T) {
 
 func TestElementPointerReferenceMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementPointerReference(hl)
@@ -98,7 +103,8 @@ func TestElementPointerReferenceMarshal(t *testing.T) {
 
 func TestElementPointerReferenceClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementPointerReference(hl)

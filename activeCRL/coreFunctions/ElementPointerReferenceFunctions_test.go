@@ -3,13 +3,15 @@ package coreFunctions
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	//	"log"
+	"sync"
 	"testing"
-	"time"
+	//	"time"
 )
 
 func TestCreateElementPointerReferenceFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -32,7 +34,7 @@ func TestCreateElementPointerReferenceFunction(t *testing.T) {
 
 	refinementInstance.SetRefinedElement(createElementPointerReferenceInstance, hl)
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	foundElementPointerReferenceRef := core.GetChildElementReferenceWithAncestorUri(createElementPointerReferenceInstance, ElementPointerReferenceCreateCreatedElementPointerReferenceRefUri, hl)
 	foundElementPointerReferenceRefIdentifier := ""
@@ -98,7 +100,8 @@ func TestCreateElementPointerReferenceFunction(t *testing.T) {
 
 func TestGetElementPointerPointer(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -114,7 +117,7 @@ func TestGetElementPointerPointer(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Now check the replication
 	if replicate.IsRefinementOf(getElementPointerPointer, hl) != true {
@@ -137,7 +140,7 @@ func TestGetElementPointerPointer(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	hl.LockBaseElement(replicate)
 	targetElementPointerPointer := indicatedElementPointerPointerRef.GetReferencedBaseElement(hl)
@@ -154,7 +157,8 @@ func TestGetElementPointerPointer(t *testing.T) {
 
 func TestGetReferencedElementPointer(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -170,7 +174,7 @@ func TestGetReferencedElementPointer(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Now check the replication
 	if replicate.IsRefinementOf(getReferencedElementPointer, hl) != true {
@@ -193,7 +197,7 @@ func TestGetReferencedElementPointer(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	hl.LockBaseElement(replicate)
 	targetElementPointer := indicatedElementPointerRef.GetReferencedElementPointer(hl)
@@ -210,7 +214,8 @@ func TestGetReferencedElementPointer(t *testing.T) {
 
 func TestSetReferencedElementPointer(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
 	GetCoreFunctionsConceptSpace(uOfD)
@@ -226,7 +231,7 @@ func TestSetReferencedElementPointer(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	// Now check the replication
 	if replicate.IsRefinementOf(setReferencedElementPointer, hl) != true {
@@ -249,7 +254,7 @@ func TestSetReferencedElementPointer(t *testing.T) {
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
-	time.Sleep(10000000 * time.Nanosecond)
+	wg.Wait()
 
 	hl.LockBaseElement(replicate)
 	if targetElementPointerReference.GetReferencedElementPointer(hl) != sourceElementPointer {

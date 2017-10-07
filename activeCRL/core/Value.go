@@ -20,7 +20,7 @@ func (vPtr *value) cloneAttributes(source value) {
 
 func (vPtr *value) getOwningElement(hl *HeldLocks) Element {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(vPtr)
@@ -29,7 +29,7 @@ func (vPtr *value) getOwningElement(hl *HeldLocks) Element {
 
 func (vPtr *value) getUri(hl *HeldLocks) string {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(vPtr)
@@ -42,7 +42,7 @@ func (vPtr *value) initializeValue() {
 
 func (vPtr *value) isEquivalent(be *value, hl *HeldLocks) bool {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(vPtr)
@@ -77,7 +77,7 @@ func (vPtr *value) marshalValueFields(buffer *bytes.Buffer) error {
 
 func (vPtr *value) printValue(prefix string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(vPtr)
@@ -104,7 +104,7 @@ func (el *value) recoverValueFields(unmarshaledData *map[string]json.RawMessage)
 
 func (el *value) setOwningElement(oe Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(el)

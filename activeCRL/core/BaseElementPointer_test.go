@@ -2,12 +2,14 @@ package core
 
 import (
 	"encoding/json"
+	"sync"
 	"testing"
 )
 
 func TestBaseElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewBaseElementReference(hl)
 	rep := uOfD.NewBaseElementPointer(hl)
@@ -31,7 +33,8 @@ func TestBaseElementPointer(t *testing.T) {
 
 func TestSetBaseElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewBaseElementReference(hl)
 	rep := uOfD.NewBaseElementPointer(hl)
@@ -50,7 +53,8 @@ func TestSetBaseElement(t *testing.T) {
 
 func TestBaseElementPointerMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewBaseElementReference(hl)
 	rep := uOfD.NewBaseElementPointer(hl)
@@ -73,7 +77,8 @@ func TestBaseElementPointerMarshal(t *testing.T) {
 
 func TestBaseElementPointerClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewBaseElementReference(hl)
 	rep := uOfD.NewBaseElementPointer(hl)

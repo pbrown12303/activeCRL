@@ -4,6 +4,7 @@ import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"log"
 	"strconv"
+	"sync"
 )
 
 var BaseElementFunctionsUri string = CoreFunctionsPrefix + "BaseElement"
@@ -39,8 +40,8 @@ var BaseElementSetUriUri string = CoreFunctionsPrefix + "BaseElement/SetUri"
 var BaseElementSetUriSourceUriRefUri string = CoreFunctionsPrefix + "BaseElement/SetUri/SourceUriRef"
 var BaseElementSetUriModifiedBaseElementRefUri string = CoreFunctionsPrefix + "BaseElement/SetUri/ModifiedBaseElementRef"
 
-func del(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func del(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -61,8 +62,8 @@ func del(replicate core.Element, changeNotification *core.ChangeNotification) {
 
 }
 
-func getId(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getId(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -95,8 +96,8 @@ func getId(replicate core.Element, changeNotification *core.ChangeNotification) 
 	}
 }
 
-func getName(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getName(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -129,8 +130,8 @@ func getName(replicate core.Element, changeNotification *core.ChangeNotification
 	}
 }
 
-func getOwningElement(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getOwningElement(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -158,8 +159,8 @@ func getOwningElement(replicate core.Element, changeNotification *core.ChangeNot
 	}
 }
 
-func getUri(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getUri(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -192,8 +193,8 @@ func getUri(replicate core.Element, changeNotification *core.ChangeNotification)
 	}
 }
 
-func getVersion(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getVersion(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -227,8 +228,8 @@ func getVersion(replicate core.Element, changeNotification *core.ChangeNotificat
 	}
 }
 
-func setOwningElement(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func setOwningElement(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -255,8 +256,8 @@ func setOwningElement(replicate core.Element, changeNotification *core.ChangeNot
 	}
 }
 
-func setUri(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func setUri(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)

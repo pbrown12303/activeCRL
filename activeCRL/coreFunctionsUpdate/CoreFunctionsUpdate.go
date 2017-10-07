@@ -15,7 +15,7 @@ var serializedCoreFunctions string = `
 
 func main() {
 	uOfD := core.NewUniverseOfDiscourse()
-	hl := core.NewHeldLocks()
+	hl := core.NewHeldLocks(nil)
 	defer hl.ReleaseLocks()
 	recoveredCoreFunctions := coreFunctions.GetCoreFunctionsConceptSpace(uOfD)
 	//	core.Print(recoveredCoreFunctions, "---", hl)

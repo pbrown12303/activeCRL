@@ -3,12 +3,14 @@ package core
 import (
 	"encoding/json"
 	//	"fmt"
+	"sync"
 	"testing"
 )
 
 func TestNewNameLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewNameLiteralPointer(hl)
@@ -32,7 +34,8 @@ func TestNewNameLiteralPointer(t *testing.T) {
 
 func TestDefinitionNameLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewDefinitionLiteralPointer(hl)
@@ -56,7 +59,8 @@ func TestDefinitionNameLiteralPointer(t *testing.T) {
 
 func TestNewUriLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewUriLiteralPointer(hl)
@@ -80,7 +84,8 @@ func TestNewUriLiteralPointer(t *testing.T) {
 
 func TestNewValueLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewValueLiteralPointer(hl)
@@ -104,7 +109,8 @@ func TestNewValueLiteralPointer(t *testing.T) {
 
 func TestSetLiteral(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewNameLiteralPointer(hl)
@@ -122,7 +128,8 @@ func TestSetLiteral(t *testing.T) {
 
 func TestLiteralPointerMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewNameLiteralPointer(hl)
@@ -147,7 +154,8 @@ func TestLiteralPointerMarshal(t *testing.T) {
 
 func TestLiteralPointerClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewNameLiteralPointer(hl)

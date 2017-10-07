@@ -2,12 +2,14 @@ package core
 
 import (
 	"encoding/json"
+	"sync"
 	"testing"
 )
 
 func TestNewElementPointerPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewElementPointerReference(hl)
 	epp := uOfD.NewElementPointerPointer(hl)
@@ -31,7 +33,8 @@ func TestNewElementPointerPointer(t *testing.T) {
 
 func TestSetElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewElementPointerReference(hl)
 	epp := uOfD.NewElementPointerPointer(hl)
@@ -50,7 +53,8 @@ func TestSetElementPointer(t *testing.T) {
 
 func TestElementPointerPointerMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewElementPointerReference(hl)
 	epp := uOfD.NewElementPointerPointer(hl)
@@ -73,7 +77,8 @@ func TestElementPointerPointerMarshal(t *testing.T) {
 
 func TestElementPointerPointerClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewElementPointerReference(hl)
 	epp := uOfD.NewElementPointerPointer(hl)

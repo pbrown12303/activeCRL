@@ -4,6 +4,7 @@ import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"log"
 	"strconv"
+	"sync"
 )
 
 var LiteralPointerPointerFunctionsUri string = CoreFunctionsPrefix + "LiteralPointerPointerFunctions"
@@ -27,9 +28,9 @@ var LiteralPointerPointerSetLiteralPointerUri string = CoreFunctionsPrefix + "Li
 var LiteralPointerPointerSetLiteralPointerLiteralPointerRefUri string = CoreFunctionsPrefix + "LiteralPointerPointer/SetLiteralPointer/LiteralPointerRef"
 var LiteralPointerPointerSetLiteralPointerModifiedLiteralPointerPointerRefUri string = CoreFunctionsPrefix + "LiteralPointerPointer/SetLiteralPointer/ModifiedLiteralPointerPointerRef"
 
-func createLiteralPointerPointer(element core.Element, changeNotification *core.ChangeNotification) {
+func createLiteralPointerPointer(element core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
 	//	log.Printf("In createLiteralPointerPointer")
-	hl := core.NewHeldLocks()
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(element)
 	uOfD := element.GetUniverseOfDiscourse(hl)
@@ -59,8 +60,8 @@ func createLiteralPointerPointer(element core.Element, changeNotification *core.
 	}
 }
 
-func getLiteralPointer(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getLiteralPointer(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -96,8 +97,8 @@ func getLiteralPointer(replicate core.Element, changeNotification *core.ChangeNo
 	}
 }
 
-func getLiteralPointerId(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getLiteralPointerId(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -137,8 +138,8 @@ func getLiteralPointerId(replicate core.Element, changeNotification *core.Change
 	}
 }
 
-func getLiteralPointerVersion(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func getLiteralPointerVersion(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -179,8 +180,8 @@ func getLiteralPointerVersion(replicate core.Element, changeNotification *core.C
 	}
 }
 
-func setLiteralPointer(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func setLiteralPointer(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)

@@ -1,12 +1,14 @@
 package core
 
 import (
+	"sync"
 	"testing"
 )
 
 func TestGetBaseElementWithUri(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 
 	// Element
@@ -122,7 +124,8 @@ func TestGetBaseElementWithUri(t *testing.T) {
 
 func TestAddElementListener(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	e1 := uOfD.NewElement(hl)
 	ep := uOfD.NewReferencedElementPointer(hl)
@@ -153,7 +156,8 @@ func TestAddElementListener(t *testing.T) {
 
 func TestAddElementPointerListener(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	ep := uOfD.NewReferencedElementPointer(hl)
 	epp := uOfD.NewElementPointerPointer(hl)
@@ -184,7 +188,8 @@ func TestAddElementPointerListener(t *testing.T) {
 
 func TestAddLiteralListener(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	e1 := uOfD.NewLiteral(hl)
 	lp := uOfD.NewNameLiteralPointer(hl)
@@ -215,7 +220,8 @@ func TestAddLiteralListener(t *testing.T) {
 
 func TestAddLiteralPointerListener(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	lp := uOfD.NewNameLiteralPointer(hl)
 	lpp := uOfD.NewLiteralPointerPointer(hl)

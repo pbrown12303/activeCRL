@@ -1,13 +1,15 @@
 package core
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/satori/go.uuid"
 )
 
 func TestBaseElement(t *testing.T) {
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	var be baseElement
 	// Test id
@@ -32,7 +34,8 @@ func TestBaseElement(t *testing.T) {
 }
 
 func TestGetUri(t *testing.T) {
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse()
 	e1 := uOfD.NewElement(hl)

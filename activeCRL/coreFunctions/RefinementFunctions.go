@@ -3,6 +3,7 @@ package coreFunctions
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"log"
+	"sync"
 )
 
 var RefinementFunctionsUri string = CoreFunctionsPrefix + "RefinementFunctions"
@@ -34,8 +35,8 @@ var RefinementSetRefinedElementUri string = CoreFunctionsPrefix + "Refinement/Se
 var RefinementSetRefinedElementSourceElementRefUri string = CoreFunctionsPrefix + "Refinement/SetRefinedElement/SourceElementRef"
 var RefinementSetRefinedElementModifiedRefinementRefUri string = CoreFunctionsPrefix + "Refinement/SetRefinedElement/ModifiedRefinementRef"
 
-func refinementCreateRefinement(element core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func refinementCreateRefinement(element core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(element)
 
@@ -58,8 +59,8 @@ func refinementCreateRefinement(element core.Element, changeNotification *core.C
 	}
 }
 
-func refinementGetAbstractElement(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func refinementGetAbstractElement(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -99,8 +100,8 @@ func refinementGetAbstractElement(replicate core.Element, changeNotification *co
 	}
 }
 
-func refinementGetAbstractElementPointer(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func refinementGetAbstractElementPointer(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -141,8 +142,8 @@ func refinementGetAbstractElementPointer(replicate core.Element, changeNotificat
 	}
 }
 
-func refinementGetRefinedElement(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func refinementGetRefinedElement(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -182,8 +183,8 @@ func refinementGetRefinedElement(replicate core.Element, changeNotification *cor
 	}
 }
 
-func refinementGetRefinedElementPointer(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func refinementGetRefinedElementPointer(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -224,8 +225,8 @@ func refinementGetRefinedElementPointer(replicate core.Element, changeNotificati
 	}
 }
 
-func refinementSetAbstractElement(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func refinementSetAbstractElement(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
@@ -267,8 +268,8 @@ func refinementSetAbstractElement(replicate core.Element, changeNotification *co
 	}
 }
 
-func refinementSetRefinedElement(replicate core.Element, changeNotification *core.ChangeNotification) {
-	hl := core.NewHeldLocks()
+func refinementSetRefinedElement(replicate core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
+	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)

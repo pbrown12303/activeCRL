@@ -6,6 +6,7 @@ package main
 import (
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/jquery"
+	//	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/activeCRL/crlEditor/jsTree"
 	"log"
 )
@@ -20,6 +21,10 @@ const (
 )
 
 func main() {
+
+	//	uOfD := core.NewUniverseOfDiscourse()
+
+	// *** EXPERIMENTAL CODE BELOW THIS LINE **************************************************************
 
 	//show jQuery Version on console:
 	print("Your current jQuery version is: " + jQuery().Jquery)
@@ -55,6 +60,8 @@ func main() {
 	})
 
 }
+
+// *** EXPERIMENTAL CODE BELOW THIS LINE **************************************************************
 
 func newJQuery(args ...interface{}) jquery.JQuery {
 	return jquery.NewJQuery(args...)

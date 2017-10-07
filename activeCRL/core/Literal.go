@@ -26,7 +26,7 @@ func (lPtr *literal) cloneAttributes(source literal) {
 
 func (lPtr *literal) GetLiteralValue(hl *HeldLocks) string {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lPtr)
@@ -35,7 +35,7 @@ func (lPtr *literal) GetLiteralValue(hl *HeldLocks) string {
 
 func (lPtr *literal) getName(hl *HeldLocks) string {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lPtr)
@@ -48,7 +48,7 @@ func (lPtr *literal) initializeLiteral() {
 
 func (lPtr *literal) isEquivalent(lit *literal, hl *HeldLocks) bool {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lPtr)
@@ -77,7 +77,7 @@ func (lPtr *literal) marshalLiteralFields(buffer *bytes.Buffer) error {
 
 func (lPtr *literal) printLiteral(prefix string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lPtr)
@@ -109,7 +109,7 @@ func (lPtr *literal) recoverLiteralFields(unmarshaledData *map[string]json.RawMe
 
 func (lPtr *literal) SetLiteralValue(newValue string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lPtr)
@@ -123,7 +123,7 @@ func (lPtr *literal) SetLiteralValue(newValue string, hl *HeldLocks) {
 
 func (lPtr *literal) SetOwningElement(el Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lPtr)
@@ -146,7 +146,7 @@ func (lPtr *literal) SetOwningElement(el Element, hl *HeldLocks) {
 // internalSetOwningElement() is an internal function used only in unmarshal
 func (lPtr *literal) internalSetOwningElement(el Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lPtr)
@@ -158,7 +158,7 @@ func (lPtr *literal) internalSetOwningElement(el Element, hl *HeldLocks) {
 
 func (lPtr *literal) setUri(uri string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lPtr)

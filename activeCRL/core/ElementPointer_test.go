@@ -2,12 +2,14 @@ package core
 
 import (
 	"encoding/json"
+	"sync"
 	"testing"
 )
 
 func TestNewOwningElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewElement(hl)
 	oep := uOfD.NewOwningElementPointer(hl)
@@ -34,7 +36,8 @@ func TestNewOwningElementPointer(t *testing.T) {
 
 func TestReferencedElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewElementReference(hl)
 	rep := uOfD.NewReferencedElementPointer(hl)
@@ -61,7 +64,8 @@ func TestReferencedElementPointer(t *testing.T) {
 
 func TestAbstractElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewRefinement(hl)
 	aep := uOfD.NewAbstractElementPointer(hl)
@@ -88,7 +92,8 @@ func TestAbstractElementPointer(t *testing.T) {
 
 func TestRefinedElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewRefinement(hl)
 	rep := uOfD.NewRefinedElementPointer(hl)
@@ -115,7 +120,8 @@ func TestRefinedElementPointer(t *testing.T) {
 
 func TestSetElement(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewElementReference(hl)
 	rep := uOfD.NewReferencedElementPointer(hl)
@@ -140,7 +146,8 @@ func TestSetElement(t *testing.T) {
 
 func TestElementPointerMarshal(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewElementReference(hl)
 	rep := uOfD.NewReferencedElementPointer(hl)
@@ -163,7 +170,8 @@ func TestElementPointerMarshal(t *testing.T) {
 
 func TestElementPointerClone(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	owner := uOfD.NewElementReference(hl)
 	rep := uOfD.NewReferencedElementPointer(hl)

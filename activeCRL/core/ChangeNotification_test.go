@@ -9,13 +9,14 @@ import (
 var functionCalled bool
 var wg sync.WaitGroup
 
-func trialFunction(element Element, changeNotification *ChangeNotification) {
+func trialFunction(element Element, changeNotifications []*ChangeNotification, wg *sync.WaitGroup) {
 	defer wg.Done()
 	functionCalled = true
 }
 
 func TesFunctionExecution(t *testing.T) {
-	hl := NewHeldLocks()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	functionCalled = false
 	uOfD := NewUniverseOfDiscourse()
@@ -29,10 +30,10 @@ func TesFunctionExecution(t *testing.T) {
 
 	// SetRefinedElement should trigger the function
 	//	TraceChange = true
-	wg.Add(1)
+	//	wg.Add(1)
 	refinement.SetRefinedElement(child, hl)
 	wg.Wait()
-	TraceChange = false
+	//	TraceChange = false
 
 	if functionCalled == false {
 		t.Errorf("TrialFunction not called after abstraction created")
@@ -40,7 +41,7 @@ func TesFunctionExecution(t *testing.T) {
 
 	// Now test to see if SetName() also triggers the function
 	// The SetName() call is going to result in six change notification function calls
-	wg.Add(6)
+	//	wg.Add(6)
 	functionCalled = false
 	SetName(child, "Child", hl)
 	wg.Wait()

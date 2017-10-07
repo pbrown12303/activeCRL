@@ -19,7 +19,7 @@ func (pPtr *pointer) initializePointer() {
 
 func (pPtr *pointer) isEquivalent(be *pointer, hl *HeldLocks) bool {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(pPtr)

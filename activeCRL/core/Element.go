@@ -28,7 +28,7 @@ func addOwnedBaseElement(elPtr Element, be BaseElement, hl *HeldLocks) {
 func childChanged(el Element, notification *ChangeNotification, hl *HeldLocks) {
 	if TraceChange == true {
 		log.Printf("childChanged called on Element %s \n", el.GetId(hl).String())
-		PrintNotification(notification, "ChildChanged Incoming Notification: ", hl)
+		notification.Print("ChildChanged Incoming Notification: ", hl)
 	}
 	preChange(el, hl)
 	newNotification := NewChangeNotification(el, MODIFY, notification)
@@ -66,7 +66,7 @@ func (elPtr *element) cloneAttributes(source element) {
 // GetAbstractElementsRecursivelyNoLock() returns all of the elements abstractions
 func (elPtr *element) GetAbstractElementsRecursively(hl *HeldLocks) []Element {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -85,7 +85,7 @@ func (elPtr *element) GetAbstractElementsRecursively(hl *HeldLocks) []Element {
 
 func (elPtr *element) GetDefinition(hl *HeldLocks) string {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -101,7 +101,7 @@ func (elPtr *element) GetDefinition(hl *HeldLocks) string {
 
 func (elPtr *element) GetDefinitionLiteral(hl *HeldLocks) Literal {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -114,7 +114,7 @@ func (elPtr *element) GetDefinitionLiteral(hl *HeldLocks) Literal {
 
 func (elPtr *element) GetDefinitionLiteralPointer(hl *HeldLocks) LiteralPointer {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -131,7 +131,7 @@ func (elPtr *element) GetDefinitionLiteralPointer(hl *HeldLocks) LiteralPointer 
 
 func (elPtr *element) getImmediateAbstractElements(hl *HeldLocks) []Element {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -149,7 +149,7 @@ func (elPtr *element) getImmediateAbstractElements(hl *HeldLocks) []Element {
 
 func (elPtr *element) getImmediateAbstractions(hl *HeldLocks) []Refinement {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -167,7 +167,7 @@ func (elPtr *element) getImmediateAbstractions(hl *HeldLocks) []Refinement {
 
 func (elPtr *element) getImmediateRefinements(hl *HeldLocks) []Refinement {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -185,7 +185,7 @@ func (elPtr *element) getImmediateRefinements(hl *HeldLocks) []Refinement {
 
 func (elPtr *element) GetNameLiteral(hl *HeldLocks) Literal {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -198,7 +198,7 @@ func (elPtr *element) GetNameLiteral(hl *HeldLocks) Literal {
 
 func (elPtr *element) GetNameLiteralPointer(hl *HeldLocks) LiteralPointer {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -215,7 +215,7 @@ func (elPtr *element) GetNameLiteralPointer(hl *HeldLocks) LiteralPointer {
 
 func (elPtr *element) GetOwnedBaseElements(hl *HeldLocks) []BaseElement {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -228,7 +228,7 @@ func (elPtr *element) GetOwnedBaseElements(hl *HeldLocks) []BaseElement {
 
 func (elPtr *element) GetOwnedElements(hl *HeldLocks) []Element {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -244,7 +244,7 @@ func (elPtr *element) GetOwnedElements(hl *HeldLocks) []Element {
 
 //func (elPtr *element) GetOwningElement(hl *HeldLocks) Element {
 //	if hl == nil {
-//		hl = NewHeldLocks()
+//		hl = NewHeldLocks(nil)
 //		defer hl.ReleaseLocks()
 //	}
 //	hl.LockBaseElement(elPtr)
@@ -257,7 +257,7 @@ func (elPtr *element) GetOwnedElements(hl *HeldLocks) []Element {
 
 func (elPtr *element) GetOwningElementPointer(hl *HeldLocks) ElementPointer {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -274,7 +274,7 @@ func (elPtr *element) GetOwningElementPointer(hl *HeldLocks) ElementPointer {
 
 func (elPtr *element) GetUri(hl *HeldLocks) string {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -287,7 +287,7 @@ func (elPtr *element) GetUri(hl *HeldLocks) string {
 
 func (elPtr *element) GetUriLiteral(hl *HeldLocks) Literal {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -300,7 +300,7 @@ func (elPtr *element) GetUriLiteral(hl *HeldLocks) Literal {
 
 func (elPtr *element) GetUriLiteralPointer(hl *HeldLocks) LiteralPointer {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -328,7 +328,7 @@ func (elPtr *element) initializeElement() {
 // and will not result in monitors being notified of changes.
 func (elPtr *element) internalAddOwnedBaseElement(be BaseElement, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -342,7 +342,7 @@ func (elPtr *element) internalAddOwnedBaseElement(be BaseElement, hl *HeldLocks)
 // the monitors of this element will not be notified of the change.
 func (elPtr *element) internalRemoveOwnedBaseElement(be BaseElement, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -355,7 +355,7 @@ func (elPtr *element) internalRemoveOwnedBaseElement(be BaseElement, hl *HeldLoc
 // if the other element and its substructure are equivalent
 func (bePtr *element) isEquivalent(be *element, hl *HeldLocks) bool {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
@@ -432,7 +432,7 @@ func (elPtr *element) marshalElementFields(buffer *bytes.Buffer) error {
 
 func (elPtr *element) printElement(prefix string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
@@ -511,7 +511,7 @@ type Element interface {
 
 func SetDefinition(el Element, definition string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(el)
@@ -531,7 +531,7 @@ func SetDefinition(el Element, definition string, hl *HeldLocks) {
 
 func SetName(el Element, name string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(el)

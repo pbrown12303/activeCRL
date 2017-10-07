@@ -60,7 +60,7 @@ func (epPtr *elementPointer) cloneAttributes(source elementPointer) {
 
 func (epPtr *elementPointer) elementChanged(notification *ChangeNotification, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)
@@ -74,7 +74,7 @@ func (epPtr *elementPointer) elementChanged(notification *ChangeNotification, hl
 
 func (epPtr *elementPointer) GetElement(hl *HeldLocks) Element {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)
@@ -86,7 +86,7 @@ func (epPtr *elementPointer) GetElement(hl *HeldLocks) Element {
 
 func (epPtr *elementPointer) getName(hl *HeldLocks) string {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)
@@ -106,7 +106,7 @@ func (epPtr *elementPointer) getName(hl *HeldLocks) string {
 // GetElementIdentifier() locks the element pointer and returns the element identifier, releasing the lock in the process
 func (epPtr *elementPointer) GetElementId(hl *HeldLocks) uuid.UUID {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)
@@ -115,7 +115,7 @@ func (epPtr *elementPointer) GetElementId(hl *HeldLocks) uuid.UUID {
 
 func (epPtr *elementPointer) GetElementPointerRole(hl *HeldLocks) ElementPointerRole {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)
@@ -124,7 +124,7 @@ func (epPtr *elementPointer) GetElementPointerRole(hl *HeldLocks) ElementPointer
 
 func (epPtr *elementPointer) GetElementVersion(hl *HeldLocks) int {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)
@@ -137,7 +137,7 @@ func (epPtr *elementPointer) initializeElementPointer() {
 
 func (bePtr *elementPointer) isEquivalent(be *elementPointer, hl *HeldLocks) bool {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
@@ -185,7 +185,7 @@ func (elPtr *elementPointer) marshalElementPointerFields(buffer *bytes.Buffer) e
 
 func (epPtr *elementPointer) printElementPointer(prefix string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)
@@ -262,7 +262,7 @@ func (ep *elementPointer) recoverElementPointerFields(unmarshaledData *map[strin
 // target element. Locking must take this into account.
 func (epPtr *elementPointer) SetElement(element Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)
@@ -311,7 +311,7 @@ func (epPtr *elementPointer) SetElement(element Element, hl *HeldLocks) {
 // not trigger any notifications
 func (epPtr *elementPointer) setElementVersion(newVersion int, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)
@@ -324,7 +324,7 @@ func (epPtr *elementPointer) setElementVersion(newVersion int, hl *HeldLocks) {
 // objects here and then use non-locking worker methods
 func (epPtr *elementPointer) SetOwningElement(newOwningElement Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)
@@ -363,7 +363,7 @@ func (epPtr *elementPointer) SetOwningElement(newOwningElement Element, hl *Held
 // internalSetOwningElement() is an internal function used only when unmarshaling.
 func (epPtr *elementPointer) internalSetOwningElement(element Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)
@@ -383,7 +383,7 @@ func (epPtr *elementPointer) internalSetOwningElement(element Element, hl *HeldL
 
 func (epPtr *elementPointer) setUri(uri string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)

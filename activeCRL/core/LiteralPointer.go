@@ -62,7 +62,7 @@ func (lpPtr *literalPointer) cloneAttributes(source literalPointer) {
 // attempts to find it using the uOfD. It then returns the result of calling the non-locking getLiteral()
 func (lpPtr *literalPointer) GetLiteral(hl *HeldLocks) Literal {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lpPtr)
@@ -74,7 +74,7 @@ func (lpPtr *literalPointer) GetLiteral(hl *HeldLocks) Literal {
 
 func (lpPtr *literalPointer) GetLiteralId(hl *HeldLocks) uuid.UUID {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lpPtr)
@@ -83,7 +83,7 @@ func (lpPtr *literalPointer) GetLiteralId(hl *HeldLocks) uuid.UUID {
 
 func (lpPtr *literalPointer) GetLiteralPointerRole(hl *HeldLocks) LiteralPointerRole {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lpPtr)
@@ -92,7 +92,7 @@ func (lpPtr *literalPointer) GetLiteralPointerRole(hl *HeldLocks) LiteralPointer
 
 func (lpPtr *literalPointer) GetLiteralVersion(hl *HeldLocks) int {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lpPtr)
@@ -101,7 +101,7 @@ func (lpPtr *literalPointer) GetLiteralVersion(hl *HeldLocks) int {
 
 func (lpPtr *literalPointer) getName(hl *HeldLocks) string {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lpPtr)
@@ -124,7 +124,7 @@ func (lpPtr *literalPointer) initializeLiteralPointer() {
 
 func (bePtr *literalPointer) isEquivalent(be *literalPointer, hl *HeldLocks) bool {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
@@ -173,7 +173,7 @@ func (elPtr *literalPointer) marshalLiteralPointerFields(buffer *bytes.Buffer) e
 
 func (lpPtr *literalPointer) printLiteralPointer(prefix string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	lpPtr.printPointer(prefix, hl)
@@ -245,7 +245,7 @@ func (lp *literalPointer) recoverLiteralPointerFields(unmarshaledData *map[strin
 
 func (lpPtr *literalPointer) SetLiteral(literal Literal, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lpPtr)
@@ -270,7 +270,7 @@ func (lpPtr *literalPointer) SetLiteral(literal Literal, hl *HeldLocks) {
 
 func (lpPtr *literalPointer) SetOwningElement(element Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lpPtr)
@@ -293,7 +293,7 @@ func (lpPtr *literalPointer) SetOwningElement(element Element, hl *HeldLocks) {
 // internalSetOwningElement() is an internal function used only in unmarshal
 func (lpPtr *literalPointer) internalSetOwningElement(element Element, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lpPtr)
@@ -307,7 +307,7 @@ func (lpPtr *literalPointer) internalSetOwningElement(element Element, hl *HeldL
 
 func (lpPtr *literalPointer) setUri(uri string, hl *HeldLocks) {
 	if hl == nil {
-		hl = NewHeldLocks()
+		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	if uri != lpPtr.uri {
