@@ -322,8 +322,8 @@ func (elPtr *element) GetUriLiteralPointer(hl *HeldLocks) LiteralPointer {
 // initializeElement() creates the ownedBaseElements map and calls initializeBaseElement().
 // Note that initialization is not considered a change, so the version counter is not incremented
 // nor are monitors of this element notified of changes.
-func (elPtr *element) initializeElement() {
-	elPtr.initializeBaseElement()
+func (elPtr *element) initializeElement(uri ...string) {
+	elPtr.initializeBaseElement(uri...)
 	elPtr.ownedBaseElements = make(map[string]BaseElement)
 }
 

@@ -6,6 +6,7 @@ package core
 
 import (
 	"encoding/json"
+	"github.com/satori/go.uuid"
 	"sync"
 	"testing"
 )
@@ -32,6 +33,19 @@ func TestNewElementPointerPointer(t *testing.T) {
 	}
 	if owner.GetElementPointerPointer(hl) != epp {
 		t.Error("Owner.getElementPointerPointer() did not return Referenced Element Pointer")
+	}
+}
+
+func TestNewElementPointerPointerUriId(t *testing.T) {
+	var uri string = "http://TestURI/"
+	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	uOfD := NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	epp := uOfD.NewElementPointerPointer(hl, uri)
+	if expectedId != epp.GetId(hl) {
+		t.Errorf("Incorrect UUID")
 	}
 }
 

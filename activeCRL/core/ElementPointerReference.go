@@ -54,8 +54,8 @@ func (eprPtr *elementPointerReference) GetElementPointerPointer(hl *HeldLocks) E
 	return nil
 }
 
-func (elPtr *elementPointerReference) initializeElementPointerReference() {
-	elPtr.initializeReference()
+func (elPtr *elementPointerReference) initializeElementPointerReference(uri ...string) {
+	elPtr.initializeReference(uri...)
 }
 
 func (bePtr *elementPointerReference) isEquivalent(be *elementPointerReference, hl *HeldLocks) bool {

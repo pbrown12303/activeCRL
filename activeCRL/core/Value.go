@@ -40,8 +40,8 @@ func (vPtr *value) getUri(hl *HeldLocks) string {
 	return vPtr.uri
 }
 
-func (vPtr *value) initializeValue() {
-	vPtr.initializeBaseElement()
+func (vPtr *value) initializeValue(uri ...string) {
+	vPtr.initializeBaseElement(uri...)
 }
 
 func (vPtr *value) isEquivalent(be *value, hl *HeldLocks) bool {

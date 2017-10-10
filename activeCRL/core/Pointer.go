@@ -17,8 +17,8 @@ func (pPtr *pointer) cloneAttributes(source pointer) {
 	pPtr.value.cloneAttributes(source.value)
 }
 
-func (pPtr *pointer) initializePointer() {
-	pPtr.initializeValue()
+func (pPtr *pointer) initializePointer(uri ...string) {
+	pPtr.initializeValue(uri...)
 }
 
 func (pPtr *pointer) isEquivalent(be *pointer, hl *HeldLocks) bool {

@@ -306,6 +306,20 @@ func TestNewElement(t *testing.T) {
 	}
 }
 
+func TestNewElementUriId(t *testing.T) {
+	var uri string = "http://TestURI/"
+	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	uOfD := NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	el1 := uOfD.NewElement(hl, uri)
+	if expectedId != el1.GetId(hl) {
+		t.Errorf("Incorrect UUID")
+	}
+
+}
+
 func TestSetDefinition(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup

@@ -54,8 +54,8 @@ func (lprPtr *literalPointerReference) GetLiteralPointerPointer(hl *HeldLocks) L
 	return nil
 }
 
-func (elPtr *literalPointerReference) initializeLiteralPointerReference() {
-	elPtr.initializeReference()
+func (elPtr *literalPointerReference) initializeLiteralPointerReference(uri ...string) {
+	elPtr.initializeReference(uri...)
 }
 
 func (bePtr *literalPointerReference) isEquivalent(be *literalPointerReference, hl *HeldLocks) bool {

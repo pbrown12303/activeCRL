@@ -46,8 +46,8 @@ func (lPtr *literal) getName(hl *HeldLocks) string {
 	return lPtr.GetLiteralValue(hl)
 }
 
-func (lPtr *literal) initializeLiteral() {
-	lPtr.initializeValue()
+func (lPtr *literal) initializeLiteral(uri ...string) {
+	lPtr.initializeValue(uri...)
 }
 
 func (lPtr *literal) isEquivalent(lit *literal, hl *HeldLocks) bool {

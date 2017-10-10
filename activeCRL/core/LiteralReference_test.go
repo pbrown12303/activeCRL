@@ -29,6 +29,19 @@ func TestNewLiteralReference(t *testing.T) {
 	}
 }
 
+func TestNewLiteralReferenceUriId(t *testing.T) {
+	var uri string = "http://TestURI/"
+	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	uOfD := NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	el1 := uOfD.NewLiteralReference(hl, uri)
+	if expectedId != el1.GetId(hl) {
+		t.Errorf("Incorrect UUID")
+	}
+}
+
 func TestLiteralReferenceOwnership(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup

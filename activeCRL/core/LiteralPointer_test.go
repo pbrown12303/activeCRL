@@ -7,6 +7,7 @@ package core
 import (
 	"encoding/json"
 	//	"fmt"
+	"github.com/satori/go.uuid"
 	"sync"
 	"testing"
 )
@@ -36,6 +37,19 @@ func TestNewNameLiteralPointer(t *testing.T) {
 	}
 }
 
+func TestNewNameLiteralPointerUriId(t *testing.T) {
+	var uri string = "http://TestURI/"
+	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	uOfD := NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	child := uOfD.NewNameLiteralPointer(hl, uri)
+	if expectedId != child.GetId(hl) {
+		t.Errorf("Incorrect UUID")
+	}
+}
+
 func TestDefinitionNameLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
@@ -58,6 +72,19 @@ func TestDefinitionNameLiteralPointer(t *testing.T) {
 	}
 	if child.GetLiteralPointerRole(hl) != DEFINITION {
 		t.Error("LiteralPointer role not DEFINITION \n")
+	}
+}
+
+func TestNewDefinitionLiteralPointerUriId(t *testing.T) {
+	var uri string = "http://TestURI/"
+	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	uOfD := NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	child := uOfD.NewDefinitionLiteralPointer(hl, uri)
+	if expectedId != child.GetId(hl) {
+		t.Errorf("Incorrect UUID")
 	}
 }
 
@@ -86,6 +113,19 @@ func TestNewUriLiteralPointer(t *testing.T) {
 	}
 }
 
+func TestNewUriLiteralPointerUriId(t *testing.T) {
+	var uri string = "http://TestURI/"
+	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	uOfD := NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	child := uOfD.NewUriLiteralPointer(hl, uri)
+	if expectedId != child.GetId(hl) {
+		t.Errorf("Incorrect UUID")
+	}
+}
+
 func TestNewValueLiteralPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
@@ -108,6 +148,19 @@ func TestNewValueLiteralPointer(t *testing.T) {
 	}
 	if child.GetLiteralPointerRole(hl) != VALUE {
 		t.Error("LiteralPointer role not VALUE \n")
+	}
+}
+
+func TestNewValueLiteralPointerUriId(t *testing.T) {
+	var uri string = "http://TestURI/"
+	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	uOfD := NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	child := uOfD.NewValueLiteralPointer(hl, uri)
+	if expectedId != child.GetId(hl) {
+		t.Errorf("Incorrect UUID")
 	}
 }
 

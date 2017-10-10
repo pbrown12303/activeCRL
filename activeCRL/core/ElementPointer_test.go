@@ -6,6 +6,7 @@ package core
 
 import (
 	"encoding/json"
+	"github.com/satori/go.uuid"
 	"sync"
 	"testing"
 )
@@ -38,6 +39,19 @@ func TestNewOwningElementPointer(t *testing.T) {
 	}
 }
 
+func TestNewOwningElementPointerUriId(t *testing.T) {
+	var uri string = "http://TestURI/"
+	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	uOfD := NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	oep := uOfD.NewOwningElementPointer(hl, uri)
+	if expectedId != oep.GetId(hl) {
+		t.Errorf("Incorrect UUID")
+	}
+}
+
 func TestReferencedElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
@@ -63,6 +77,19 @@ func TestReferencedElementPointer(t *testing.T) {
 	}
 	if owner.GetElementPointer(hl) != rep {
 		t.Error("Owner.getElementPointer() did not return Element Pointer")
+	}
+}
+
+func TestReferencedElementPointerUriId(t *testing.T) {
+	var uri string = "http://TestURI/"
+	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	uOfD := NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	rep := uOfD.NewReferencedElementPointer(hl, uri)
+	if expectedId != rep.GetId(hl) {
+		t.Errorf("Incorrect UUID")
 	}
 }
 
@@ -94,6 +121,19 @@ func TestAbstractElementPointer(t *testing.T) {
 	}
 }
 
+func TestAbstractElementPointerUriId(t *testing.T) {
+	var uri string = "http://TestURI/"
+	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	uOfD := NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	aep := uOfD.NewAbstractElementPointer(hl, uri)
+	if expectedId != aep.GetId(hl) {
+		t.Errorf("Incorrect UUID")
+	}
+}
+
 func TestRefinedElementPointer(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
@@ -119,6 +159,19 @@ func TestRefinedElementPointer(t *testing.T) {
 	}
 	if owner.GetRefinedElementPointer(hl) != rep {
 		t.Error("Owner.getRefinedElementPointer() did not return Abstract Element Pointer")
+	}
+}
+
+func TestRefinedElementPointerUriId(t *testing.T) {
+	var uri string = "http://TestURI/"
+	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	uOfD := NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	rep := uOfD.NewRefinedElementPointer(hl, uri)
+	if expectedId != rep.GetId(hl) {
+		t.Errorf("Incorrect UUID")
 	}
 }
 

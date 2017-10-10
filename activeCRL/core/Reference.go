@@ -17,8 +17,8 @@ func (elPtr *reference) cloneAttributes(source reference) {
 	elPtr.element.cloneAttributes(source.element)
 }
 
-func (elPtr *reference) initializeReference() {
-	elPtr.initializeElement()
+func (elPtr *reference) initializeReference(uri ...string) {
+	elPtr.initializeElement(uri...)
 }
 func (bePtr *reference) isEquivalent(be *reference, hl *HeldLocks) bool {
 	if hl == nil {

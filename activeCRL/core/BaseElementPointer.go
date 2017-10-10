@@ -76,8 +76,8 @@ func (bepPtr *baseElementPointer) GetBaseElementVersion(hl *HeldLocks) int {
 	return bepPtr.baseElementVersion
 }
 
-func (bepPtr *baseElementPointer) initializeBaseElementPointer() {
-	bepPtr.initializePointer()
+func (bepPtr *baseElementPointer) initializeBaseElementPointer(uri ...string) {
+	bepPtr.initializePointer(uri...)
 }
 
 func (bePtr *baseElementPointer) isEquivalent(be *baseElementPointer, hl *HeldLocks) bool {

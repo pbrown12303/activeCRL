@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/url"
 	"strconv"
 	"sync"
 
@@ -58,8 +59,20 @@ func (bePtr *baseElement) GetVersion(hl *HeldLocks) int {
 // initializeBaseElement() initializes the uuid. Note that initialization does
 // not increment the version counter nor does it notify other objects that a change
 // has occurred.
-func (bePtr *baseElement) initializeBaseElement() {
-	bePtr.id = uuid.NewV4()
+func (bePtr *baseElement) initializeBaseElement(uri ...string) {
+	if len(uri) == 0 {
+		bePtr.id = uuid.NewV4()
+	} else {
+		if len(uri) == 1 {
+			_, err := url.ParseRequestURI(uri[0])
+			if err != nil {
+				log.Fatalf("Invalid URI provided for initializing BaseElement %s", uri)
+			}
+			bePtr.id = uuid.NewV5(uuid.NamespaceURL, uri[0])
+		} else {
+			log.Fatalf("Invalid URI provided for initializing BaseElement %s", uri)
+		}
+	}
 }
 
 // internalIncrementVersion() increments the version counter. Note that it does not

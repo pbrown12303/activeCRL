@@ -35,7 +35,9 @@ func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	uOfD.literalPointerListenerMap = NewStringLiteralPointerPointerListMap()
 	uOfD.undoMgr = NewUndoManager()
 	uOfD.uriBaseElementMap = NewStringBaseElementMap()
-	uOfD.GetCoreConceptSpace()
+	hl := NewHeldLocks(nil)
+	defer hl.ReleaseLocks()
+	buildCoreConceptSpace(&uOfD, hl)
 	return &uOfD
 }
 
@@ -193,11 +195,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetBaseElementWithUri(uri string) BaseElemen
 }
 
 func (uOfDPtr *UniverseOfDiscourse) GetCoreConceptSpace() Element {
-	coreConceptSpace := uOfDPtr.GetElementWithUri(CoreConceptSpaceUri)
-	if coreConceptSpace == nil {
-		coreConceptSpace = uOfDPtr.RecoverElement([]byte(serializedCore))
-	}
-	return coreConceptSpace
+	return uOfDPtr.GetElementWithUri(CoreConceptSpaceUri)
 }
 
 func (uOfDPtr *UniverseOfDiscourse) GetElement(id string) Element {
@@ -307,224 +305,224 @@ func (uOfDPtr *UniverseOfDiscourse) MarkUndoPoint() {
 
 // NewElement() creates an initialized Element. No locking is required since the existence of
 // the element is unknown outside this routine
-func (uOfD *UniverseOfDiscourse) NewElement(hl *HeldLocks) Element {
+func (uOfD *UniverseOfDiscourse) NewElement(hl *HeldLocks, uri ...string) Element {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var el element
-	el.initializeElement()
+	el.initializeElement(uri...)
 	uOfD.AddBaseElement(&el, hl)
 	return &el
 }
 
 // NewAbstractElementPointer() creates and intitializes an elementPointer to play the role of an AbstractElementPointer
-func (uOfD *UniverseOfDiscourse) NewAbstractElementPointer(hl *HeldLocks) ElementPointer {
+func (uOfD *UniverseOfDiscourse) NewAbstractElementPointer(hl *HeldLocks, uri ...string) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var ep elementPointer
-	ep.initializeElementPointer()
+	ep.initializeElementPointer(uri...)
 	ep.elementPointerRole = ABSTRACT_ELEMENT
 	uOfD.AddBaseElement(&ep, hl)
 	return &ep
 }
 
 // NewBaseElementPointer() creates and intitializes an elementPointer to play the role of an AbstractElementPointer
-func (uOfD *UniverseOfDiscourse) NewBaseElementPointer(hl *HeldLocks) BaseElementPointer {
+func (uOfD *UniverseOfDiscourse) NewBaseElementPointer(hl *HeldLocks, uri ...string) BaseElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var ep baseElementPointer
-	ep.initializeBaseElementPointer()
+	ep.initializeBaseElementPointer(uri...)
 	uOfD.AddBaseElement(&ep, hl)
 	return &ep
 }
 
-func (uOfD *UniverseOfDiscourse) NewBaseElementReference(hl *HeldLocks) BaseElementReference {
+func (uOfD *UniverseOfDiscourse) NewBaseElementReference(hl *HeldLocks, uri ...string) BaseElementReference {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var el baseElementReference
-	el.initializeBaseElementReference()
+	el.initializeBaseElementReference(uri...)
 	uOfD.AddBaseElement(&el, hl)
 	return &el
 }
 
 // NewRefinedElementPointer() creates and intitializes an elementPointer to play the role of an RefinedElementPointer
-func (uOfD *UniverseOfDiscourse) NewRefinedElementPointer(hl *HeldLocks) ElementPointer {
+func (uOfD *UniverseOfDiscourse) NewRefinedElementPointer(hl *HeldLocks, uri ...string) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var ep elementPointer
-	ep.initializeElementPointer()
+	ep.initializeElementPointer(uri...)
 	ep.elementPointerRole = REFINED_ELEMENT
 	uOfD.AddBaseElement(&ep, hl)
 	return &ep
 }
 
 // NewOwningElementPointer() creates and intitializes an elementPointer to play the role of an OwningElementPointer
-func (uOfD *UniverseOfDiscourse) NewOwningElementPointer(hl *HeldLocks) ElementPointer {
+func (uOfD *UniverseOfDiscourse) NewOwningElementPointer(hl *HeldLocks, uri ...string) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var ep elementPointer
-	ep.initializeElementPointer()
+	ep.initializeElementPointer(uri...)
 	ep.elementPointerRole = OWNING_ELEMENT
 	uOfD.AddBaseElement(&ep, hl)
 	return &ep
 }
 
 // NewReferencedElementPointer() creates and intitializes an elementPointer to play the role of an ReferencedElementPointer
-func (uOfD *UniverseOfDiscourse) NewReferencedElementPointer(hl *HeldLocks) ElementPointer {
+func (uOfD *UniverseOfDiscourse) NewReferencedElementPointer(hl *HeldLocks, uri ...string) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var ep elementPointer
-	ep.initializeElementPointer()
+	ep.initializeElementPointer(uri...)
 	ep.elementPointerRole = REFERENCED_ELEMENT
 	uOfD.AddBaseElement(&ep, hl)
 	return &ep
 }
 
-func (uOfD *UniverseOfDiscourse) NewElementPointerPointer(hl *HeldLocks) ElementPointerPointer {
+func (uOfD *UniverseOfDiscourse) NewElementPointerPointer(hl *HeldLocks, uri ...string) ElementPointerPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var ep elementPointerPointer
-	ep.initializeElementPointerPointer()
+	ep.initializeElementPointerPointer(uri...)
 	uOfD.AddBaseElement(&ep, hl)
 	return &ep
 }
 
-func (uOfD *UniverseOfDiscourse) NewElementPointerReference(hl *HeldLocks) ElementPointerReference {
+func (uOfD *UniverseOfDiscourse) NewElementPointerReference(hl *HeldLocks, uri ...string) ElementPointerReference {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var el elementPointerReference
-	el.initializeElementPointerReference()
+	el.initializeElementPointerReference(uri...)
 	uOfD.AddBaseElement(&el, hl)
 	return &el
 }
 
-func (uOfD *UniverseOfDiscourse) NewElementReference(hl *HeldLocks) ElementReference {
+func (uOfD *UniverseOfDiscourse) NewElementReference(hl *HeldLocks, uri ...string) ElementReference {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var el elementReference
-	el.initializeElementReference()
+	el.initializeElementReference(uri...)
 	uOfD.AddBaseElement(&el, hl)
 	return &el
 }
 
-func (uOfD *UniverseOfDiscourse) NewLiteral(hl *HeldLocks) Literal {
+func (uOfD *UniverseOfDiscourse) NewLiteral(hl *HeldLocks, uri ...string) Literal {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var lit literal
-	lit.initializeLiteral()
+	lit.initializeLiteral(uri...)
 	uOfD.AddBaseElement(&lit, hl)
 	return &lit
 }
 
-func (uOfD *UniverseOfDiscourse) NewNameLiteralPointer(hl *HeldLocks) LiteralPointer {
+func (uOfD *UniverseOfDiscourse) NewNameLiteralPointer(hl *HeldLocks, uri ...string) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var lp literalPointer
-	lp.initializeLiteralPointer()
+	lp.initializeLiteralPointer(uri...)
 	lp.literalPointerRole = NAME
 	uOfD.AddBaseElement(&lp, hl)
 	return &lp
 }
 
-func (uOfD *UniverseOfDiscourse) NewDefinitionLiteralPointer(hl *HeldLocks) LiteralPointer {
+func (uOfD *UniverseOfDiscourse) NewDefinitionLiteralPointer(hl *HeldLocks, uri ...string) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var lp literalPointer
-	lp.initializeLiteralPointer()
+	lp.initializeLiteralPointer(uri...)
 	lp.literalPointerRole = DEFINITION
 	uOfD.AddBaseElement(&lp, hl)
 	return &lp
 }
 
-func (uOfD *UniverseOfDiscourse) NewUriLiteralPointer(hl *HeldLocks) LiteralPointer {
+func (uOfD *UniverseOfDiscourse) NewUriLiteralPointer(hl *HeldLocks, uri ...string) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var lp literalPointer
-	lp.initializeLiteralPointer()
+	lp.initializeLiteralPointer(uri...)
 	lp.literalPointerRole = URI
 	uOfD.AddBaseElement(&lp, hl)
 	return &lp
 }
 
-func (uOfD *UniverseOfDiscourse) NewValueLiteralPointer(hl *HeldLocks) LiteralPointer {
+func (uOfD *UniverseOfDiscourse) NewValueLiteralPointer(hl *HeldLocks, uri ...string) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var lp literalPointer
-	lp.initializeLiteralPointer()
+	lp.initializeLiteralPointer(uri...)
 	lp.literalPointerRole = VALUE
 	uOfD.AddBaseElement(&lp, hl)
 	return &lp
 }
 
-func (uOfD *UniverseOfDiscourse) NewLiteralPointerPointer(hl *HeldLocks) LiteralPointerPointer {
+func (uOfD *UniverseOfDiscourse) NewLiteralPointerPointer(hl *HeldLocks, uri ...string) LiteralPointerPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var ep literalPointerPointer
-	ep.initializeLiteralPointerPointer()
+	ep.initializeLiteralPointerPointer(uri...)
 	uOfD.AddBaseElement(&ep, hl)
 	return &ep
 }
 
-func (uOfD *UniverseOfDiscourse) NewLiteralPointerReference(hl *HeldLocks) LiteralPointerReference {
+func (uOfD *UniverseOfDiscourse) NewLiteralPointerReference(hl *HeldLocks, uri ...string) LiteralPointerReference {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var el literalPointerReference
-	el.initializeLiteralPointerReference()
+	el.initializeLiteralPointerReference(uri...)
 	uOfD.AddBaseElement(&el, hl)
 	return &el
 }
 
-func (uOfD *UniverseOfDiscourse) NewLiteralReference(hl *HeldLocks) LiteralReference {
+func (uOfD *UniverseOfDiscourse) NewLiteralReference(hl *HeldLocks, uri ...string) LiteralReference {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var el literalReference
-	el.initializeLiteralReference()
+	el.initializeLiteralReference(uri...)
 	uOfD.AddBaseElement(&el, hl)
 	return &el
 }
 
-func (uOfD *UniverseOfDiscourse) NewRefinement(hl *HeldLocks) Refinement {
+func (uOfD *UniverseOfDiscourse) NewRefinement(hl *HeldLocks, uri ...string) Refinement {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	var el refinement
-	el.initializeRefinement()
+	el.initializeRefinement(uri...)
 	uOfD.AddBaseElement(&el, hl)
 	return &el
 }

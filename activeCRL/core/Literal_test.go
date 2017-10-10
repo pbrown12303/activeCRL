@@ -7,6 +7,7 @@ package core
 import (
 	"encoding/json"
 	//	"fmt"
+	"github.com/satori/go.uuid"
 	"sync"
 	"testing"
 )
@@ -30,6 +31,19 @@ func TestNewLiteral(t *testing.T) {
 	}
 	if found == false {
 		t.Error("Literal not found in parent's OwnedBaseElements \n")
+	}
+}
+
+func TestNewLiteralUriId(t *testing.T) {
+	var uri string = "http://TestURI/"
+	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	uOfD := NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	child := uOfD.NewLiteral(hl, uri)
+	if expectedId != child.GetId(hl) {
+		t.Errorf("Incorrect UUID")
 	}
 }
 

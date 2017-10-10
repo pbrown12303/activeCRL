@@ -87,8 +87,8 @@ func (rPtr *refinement) GetRefinedElementPointer(hl *HeldLocks) ElementPointer {
 	return nil
 }
 
-func (rPtr *refinement) initializeRefinement() {
-	rPtr.initializeElement()
+func (rPtr *refinement) initializeRefinement(uri ...string) {
+	rPtr.initializeElement(uri...)
 }
 
 func (bePtr *refinement) isEquivalent(be *refinement, hl *HeldLocks) bool {

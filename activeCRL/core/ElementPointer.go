@@ -135,8 +135,8 @@ func (epPtr *elementPointer) GetElementVersion(hl *HeldLocks) int {
 	return epPtr.elementVersion
 }
 
-func (epPtr *elementPointer) initializeElementPointer() {
-	epPtr.initializePointer()
+func (epPtr *elementPointer) initializeElementPointer(uri ...string) {
+	epPtr.initializePointer(uri...)
 }
 
 func (bePtr *elementPointer) isEquivalent(be *elementPointer, hl *HeldLocks) bool {

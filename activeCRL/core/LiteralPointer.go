@@ -122,8 +122,8 @@ func (lpPtr *literalPointer) getName(hl *HeldLocks) string {
 	return ""
 }
 
-func (lpPtr *literalPointer) initializeLiteralPointer() {
-	lpPtr.initializePointer()
+func (lpPtr *literalPointer) initializeLiteralPointer(uri ...string) {
+	lpPtr.initializePointer(uri...)
 }
 
 func (bePtr *literalPointer) isEquivalent(be *literalPointer, hl *HeldLocks) bool {

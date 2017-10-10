@@ -7,6 +7,7 @@ package core
 import (
 	"encoding/json"
 	//	"fmt"
+	"github.com/satori/go.uuid"
 	"sync"
 	"testing"
 )
@@ -33,6 +34,19 @@ func TestNewLiteralPointerPointer(t *testing.T) {
 	}
 	if parent.GetLiteralPointerPointer(hl) != child {
 		t.Error("LiteralPointerReference.GetLiteralPointer() did not return child")
+	}
+}
+
+func TestNewLiteralPointerPointerUriId(t *testing.T) {
+	var uri string = "http://TestURI/"
+	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	uOfD := NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	child := uOfD.NewLiteralPointerPointer(hl, uri)
+	if expectedId != child.GetId(hl) {
+		t.Errorf("Incorrect UUID")
 	}
 }
 

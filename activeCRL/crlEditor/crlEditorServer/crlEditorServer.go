@@ -19,7 +19,7 @@ type Page struct {
 
 var ROOT string = "../src/github.com/pbrown12303/activeCRL/activeCRL/"
 
-var templates = template.Must(template.ParseFiles(ROOT+"crlEditor/tmpl/edit.html", ROOT+"crlEditor/tmpl/view.html", ROOT+"crlEditor/tmpl/index.html"))
+var templates = template.Must(template.ParseFiles(ROOT + "crlEditor/tmpl/index.html"))
 var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 
 func editHandler(w http.ResponseWriter, r *http.Request, title string) {
@@ -31,10 +31,7 @@ func editHandler(w http.ResponseWriter, r *http.Request, title string) {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	p, err := loadPage("index")
-	if err != nil {
-		p = &Page{Title: "CRL Editor"}
-	}
+	p := &Page{Title: "CRL Editor"}
 	renderTemplate(w, "index", p)
 }
 

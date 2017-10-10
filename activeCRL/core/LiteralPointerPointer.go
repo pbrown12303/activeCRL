@@ -70,8 +70,8 @@ func (pllPtr *literalPointerPointer) GetLiteralPointerVersion(hl *HeldLocks) int
 	return pllPtr.literalPointerVersion
 }
 
-func (pllPtr *literalPointerPointer) initializeLiteralPointerPointer() {
-	pllPtr.initializePointer()
+func (pllPtr *literalPointerPointer) initializeLiteralPointerPointer(uri ...string) {
+	pllPtr.initializePointer(uri...)
 }
 
 func (bePtr *literalPointerPointer) isEquivalent(be *literalPointerPointer, hl *HeldLocks) bool {
