@@ -116,7 +116,7 @@ func setLiteralValue(replicate core.Element, changeNotifications []*core.ChangeN
 	}
 }
 
-func BuildCoreLiteralFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCoreLiteralFunctions(coreFunctionsElement core.Element, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// LiteralFunctions
 	literalFunctions := uOfD.NewElement(hl, LiteralFunctionsUri)

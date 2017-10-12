@@ -178,7 +178,7 @@ func literalReferenceSetReferencedLiteral(replicate core.Element, changeNotifica
 	}
 }
 
-func BuildCoreLiteralReferenceFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCoreLiteralReferenceFunctions(coreFunctionsElement core.Element, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// LiteralReferenceFunctions
 	elementReferenceFunctions := uOfD.NewElement(hl, LiteralReferenceFunctionsUri)

@@ -20,7 +20,7 @@ type baseElement struct {
 	sync.Mutex
 	id      uuid.UUID
 	version int
-	uOfD    *UniverseOfDiscourse
+	uOfD    *universeOfDiscourse
 }
 
 func (bePtr *baseElement) cloneAttributes(source baseElement) {
@@ -40,7 +40,7 @@ func (bePtr *baseElement) getIdNoLock() uuid.UUID {
 	return bePtr.id
 }
 
-func (bePtr *baseElement) GetUniverseOfDiscourse(hl *HeldLocks) *UniverseOfDiscourse {
+func (bePtr *baseElement) GetUniverseOfDiscourse(hl *HeldLocks) UniverseOfDiscourse {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -147,13 +147,13 @@ func (be *baseElement) recoverBaseElementFields(unmarshaledData *map[string]json
 // speaking, this is not an attribute of the baseElement, but rather a context in which
 // the baseElement is operating in which the baseElement may be able to locate other objects
 // by id.
-func (bePtr *baseElement) setUniverseOfDiscourse(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
+func (bePtr *baseElement) setUniverseOfDiscourse(uOfD UniverseOfDiscourse, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
-	bePtr.uOfD = uOfD
+	bePtr.uOfD = uOfD.(*universeOfDiscourse)
 }
 
 func (bePtr *baseElement) TraceableLock() {
@@ -173,10 +173,10 @@ func (bePtr *baseElement) TraceableUnlock() {
 type BaseElement interface {
 	GetId(*HeldLocks) uuid.UUID
 	getIdNoLock() uuid.UUID
-	GetUniverseOfDiscourse(*HeldLocks) *UniverseOfDiscourse
+	GetUniverseOfDiscourse(*HeldLocks) UniverseOfDiscourse
 	GetVersion(*HeldLocks) int
 	internalIncrementVersion()
-	setUniverseOfDiscourse(*UniverseOfDiscourse, *HeldLocks)
+	setUniverseOfDiscourse(UniverseOfDiscourse, *HeldLocks)
 	TraceableLock()
 	TraceableUnlock()
 }

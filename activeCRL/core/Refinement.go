@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	//	"log"
+	"github.com/satori/go.uuid"
 	"reflect"
 )
 
@@ -18,7 +19,7 @@ type refinement struct {
 
 func (rPtr *refinement) clone() *refinement {
 	var clone refinement
-	clone.ownedBaseElements = make(map[string]BaseElement)
+	clone.ownedBaseElements = make(map[uuid.UUID]BaseElement)
 	clone.cloneAttributes(*rPtr)
 	return &clone
 }

@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/satori/go.uuid"
 	"reflect"
 )
 
@@ -17,7 +18,7 @@ type elementReference struct {
 
 func (erPtr *elementReference) clone() *elementReference {
 	var clone elementReference
-	clone.ownedBaseElements = make(map[string]BaseElement)
+	clone.ownedBaseElements = make(map[uuid.UUID]BaseElement)
 	clone.cloneAttributes(*erPtr)
 	return &clone
 }

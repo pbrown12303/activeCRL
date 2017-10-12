@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func validateBaseElementReferenceId(t *testing.T, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks, uri string) {
+func validateBaseElementReferenceId(t *testing.T, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks, uri string) {
 	expectedId := uuid.NewV5(uuid.NamespaceURL, uri)
 	representation := uOfD.GetBaseElementReferenceWithUri(uri)
 	if representation == nil {
@@ -20,7 +20,7 @@ func validateBaseElementReferenceId(t *testing.T, uOfD *core.UniverseOfDiscourse
 	}
 }
 
-func validateElementId(t *testing.T, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks, uri string) {
+func validateElementId(t *testing.T, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks, uri string) {
 	expectedId := uuid.NewV5(uuid.NamespaceURL, uri)
 	representation := uOfD.GetElementWithUri(uri)
 	if representation == nil {
@@ -34,7 +34,7 @@ func validateElementId(t *testing.T, uOfD *core.UniverseOfDiscourse, hl *core.He
 	}
 }
 
-func validateElementPointerReferenceId(t *testing.T, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks, uri string) {
+func validateElementPointerReferenceId(t *testing.T, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks, uri string) {
 	expectedId := uuid.NewV5(uuid.NamespaceURL, uri)
 	representation := uOfD.GetElementPointerReferenceWithUri(uri)
 	if representation == nil {
@@ -48,7 +48,7 @@ func validateElementPointerReferenceId(t *testing.T, uOfD *core.UniverseOfDiscou
 	}
 }
 
-func validateElementReferenceId(t *testing.T, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks, uri string) {
+func validateElementReferenceId(t *testing.T, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks, uri string) {
 	expectedId := uuid.NewV5(uuid.NamespaceURL, uri)
 	representation := uOfD.GetElementReferenceWithUri(uri)
 	if representation == nil {
@@ -62,7 +62,7 @@ func validateElementReferenceId(t *testing.T, uOfD *core.UniverseOfDiscourse, hl
 	}
 }
 
-func validateLiteralReferenceId(t *testing.T, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks, uri string) {
+func validateLiteralReferenceId(t *testing.T, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks, uri string) {
 	expectedId := uuid.NewV5(uuid.NamespaceURL, uri)
 	representation := uOfD.GetLiteralReferenceWithUri(uri)
 	if representation == nil {
@@ -76,7 +76,7 @@ func validateLiteralReferenceId(t *testing.T, uOfD *core.UniverseOfDiscourse, hl
 	}
 }
 
-func validateLiteralPointerReferenceId(t *testing.T, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks, uri string) {
+func validateLiteralPointerReferenceId(t *testing.T, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks, uri string) {
 	expectedId := uuid.NewV5(uuid.NamespaceURL, uri)
 	representation := uOfD.GetLiteralPointerReferenceWithUri(uri)
 	if representation == nil {

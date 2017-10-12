@@ -108,8 +108,8 @@ func abstractionChanged(element Element, notification *ChangeNotification, hl *H
 }
 
 func preChange(be BaseElement, hl *HeldLocks) {
-	if be != nil && be.GetUniverseOfDiscourse(hl).undoMgr.recordingUndo == true {
-		be.GetUniverseOfDiscourse(hl).undoMgr.markChangedBaseElement(be, hl)
+	if be != nil && be.GetUniverseOfDiscourse(hl).IsRecordingUndo() == true {
+		be.GetUniverseOfDiscourse(hl).(*universeOfDiscourse).undoMgr.markChangedBaseElement(be, hl)
 	}
 }
 
@@ -125,17 +125,17 @@ func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks)
 	be.internalIncrementVersion()
 	// Update uri indices
 	id := be.GetId(hl)
-	oldUri := uOfD.idUriMap.GetEntry(id)
+	oldUri := uOfD.(*universeOfDiscourse).idUriMap.GetEntry(id)
 	newUri := GetUri(be, hl)
 	if oldUri != newUri {
 		if oldUri != "" {
-			uOfD.uriBaseElementMap.DeleteEntry(oldUri)
+			uOfD.(*universeOfDiscourse).uriBaseElementMap.DeleteEntry(oldUri)
 		}
 		if newUri == "" {
-			uOfD.idUriMap.DeleteEntry(id)
+			uOfD.(*universeOfDiscourse).idUriMap.DeleteEntry(id)
 		} else {
-			uOfD.idUriMap.SetEntry(id, newUri)
-			uOfD.uriBaseElementMap.SetEntry(newUri, be)
+			uOfD.(*universeOfDiscourse).idUriMap.SetEntry(id, newUri)
+			uOfD.(*universeOfDiscourse).uriBaseElementMap.SetEntry(newUri, be)
 		}
 	}
 	// Initiate function execution
@@ -165,7 +165,7 @@ func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks)
 	// Notify listeners
 	switch be.(type) {
 	case Element:
-		uOfD.notifyElementListeners(notification, hl)
+		uOfD.(*universeOfDiscourse).notifyElementListeners(notification, hl)
 	}
 }
 
@@ -204,6 +204,6 @@ func propagateChange(be BaseElement, notification *ChangeNotification, hl *HeldL
 	}
 	switch be.(type) {
 	case Element:
-		be.GetUniverseOfDiscourse(hl).notifyElementListeners(notification, hl)
+		be.GetUniverseOfDiscourse(hl).(*universeOfDiscourse).notifyElementListeners(notification, hl)
 	}
 }

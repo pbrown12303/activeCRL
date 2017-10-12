@@ -15,7 +15,7 @@ import (
 
 type element struct {
 	baseElement
-	ownedBaseElements map[string]BaseElement
+	ownedBaseElements map[uuid.UUID]BaseElement
 }
 
 // addOwnedBaseElement() adds the indicated base element as a child (owned)
@@ -52,7 +52,7 @@ func childChanged(el Element, notification *ChangeNotification, hl *HeldLocks) {
 
 func (elPtr *element) clone() *element {
 	var cl element
-	cl.ownedBaseElements = make(map[string]BaseElement)
+	cl.ownedBaseElements = make(map[uuid.UUID]BaseElement)
 	cl.cloneAttributes(*elPtr)
 	return &cl
 }
@@ -246,19 +246,6 @@ func (elPtr *element) GetOwnedElements(hl *HeldLocks) []Element {
 	return obe
 }
 
-//func (elPtr *element) GetOwningElement(hl *HeldLocks) Element {
-//	if hl == nil {
-//		hl = NewHeldLocks(nil)
-//		defer hl.ReleaseLocks()
-//	}
-//	hl.LockBaseElement(elPtr)
-//	oep := elPtr.GetOwningElementPointer(hl)
-//	if oep != nil {
-//		return oep.GetElement(hl)
-//	}
-//	return nil
-//}
-
 func (elPtr *element) GetOwningElementPointer(hl *HeldLocks) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
@@ -324,7 +311,7 @@ func (elPtr *element) GetUriLiteralPointer(hl *HeldLocks) LiteralPointer {
 // nor are monitors of this element notified of changes.
 func (elPtr *element) initializeElement(uri ...string) {
 	elPtr.initializeBaseElement(uri...)
-	elPtr.ownedBaseElements = make(map[string]BaseElement)
+	elPtr.ownedBaseElements = make(map[uuid.UUID]BaseElement)
 }
 
 // internalAddOwnedBaseElement() adds the indicated base element as a child (owned)
@@ -337,7 +324,7 @@ func (elPtr *element) internalAddOwnedBaseElement(be BaseElement, hl *HeldLocks)
 	}
 	hl.LockBaseElement(elPtr)
 	if be != nil && be.GetId(hl) != uuid.Nil {
-		elPtr.ownedBaseElements[be.GetId(hl).String()] = be
+		elPtr.ownedBaseElements[be.GetId(hl)] = be
 	}
 }
 
@@ -351,7 +338,7 @@ func (elPtr *element) internalRemoveOwnedBaseElement(be BaseElement, hl *HeldLoc
 	}
 	hl.LockBaseElement(elPtr)
 	if be != nil && be.GetId(hl) != uuid.Nil {
-		delete(elPtr.ownedBaseElements, be.GetId(hl).String())
+		delete(elPtr.ownedBaseElements, be.GetId(hl))
 	}
 }
 
@@ -389,7 +376,7 @@ func (bePtr *element) isEquivalent(be *element, hl *HeldLocks) bool {
 
 func (ePtr *element) IsOwnedBaseElement(be BaseElement, hl *HeldLocks) bool {
 	for key, _ := range ePtr.ownedBaseElements {
-		if key == be.GetId(hl).String() {
+		if key == be.GetId(hl) {
 			return true
 		}
 	}

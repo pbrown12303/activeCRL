@@ -177,7 +177,7 @@ func setReferencedLiteralPointer(replicate core.Element, changeNotifications []*
 	}
 }
 
-func BuildCoreLiteralPointerReferenceFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCoreLiteralPointerReferenceFunctions(coreFunctionsElement core.Element, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// LiteralPointerReferenceFunctions
 	literalPointerReferenceFunctions := uOfD.NewElement(hl, LiteralPointerReferenceFunctionsUri)

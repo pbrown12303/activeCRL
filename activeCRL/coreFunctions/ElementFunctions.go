@@ -389,7 +389,7 @@ func setName(replicate core.Element, changeNotifications []*core.ChangeNotificat
 	}
 }
 
-func BuildCoreElementFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCoreElementFunctions(coreFunctionsElement core.Element, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// ElementFunctions
 	elementFunctions := uOfD.NewElement(hl, ElementFunctionsUri)

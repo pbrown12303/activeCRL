@@ -219,7 +219,7 @@ func setElementPointer(replicate core.Element, changeNotifications []*core.Chang
 	}
 }
 
-func BuildCoreElementPointerPointerFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCoreElementPointerPointerFunctions(coreFunctionsElement core.Element, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// ElementPointerPointerFunctions
 	elementPointerPointerFunctions := uOfD.NewElement(hl, ElementPointerPointerFunctionsUri)
