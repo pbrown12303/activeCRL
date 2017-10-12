@@ -161,13 +161,13 @@ func (eppPtr *elementPointerPointer) SetElementPointer(elementPointer ElementPoi
 	if elementPointer != eppPtr.elementPointer {
 		preChange(eppPtr, hl)
 		if eppPtr.elementPointer != nil {
-			eppPtr.uOfD.removeElementPointerListener(eppPtr.elementPointer, eppPtr, hl)
+			eppPtr.uOfD.(*universeOfDiscourse).removeElementPointerListener(eppPtr.elementPointer, eppPtr, hl)
 		}
 		eppPtr.elementPointer = elementPointer
 		if elementPointer != nil {
 			eppPtr.elementPointerId = elementPointer.GetId(hl)
 			eppPtr.elementPointerVersion = elementPointer.GetVersion(hl)
-			eppPtr.uOfD.addElementPointerListener(elementPointer, eppPtr, hl)
+			eppPtr.uOfD.(*universeOfDiscourse).addElementPointerListener(elementPointer, eppPtr, hl)
 		} else {
 			eppPtr.elementPointerId = uuid.Nil
 			eppPtr.elementPointerVersion = 0
@@ -175,6 +175,17 @@ func (eppPtr *elementPointerPointer) SetElementPointer(elementPointer ElementPoi
 		notification := NewChangeNotification(eppPtr, MODIFY, nil)
 		postChange(eppPtr, notification, hl)
 	}
+}
+
+// setElementPointerVersion() is an internal function used as part of change propagation. It does
+// not trigger any notifications
+func (eppPtr *elementPointerPointer) setElementPointerVersion(newVersion int, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks(nil)
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(eppPtr)
+	eppPtr.elementPointerVersion = newVersion
 }
 
 func (eppPtr *elementPointerPointer) SetOwningElement(element Element, hl *HeldLocks) {
@@ -233,4 +244,5 @@ type ElementPointerPointer interface {
 	GetElementPointerId(*HeldLocks) uuid.UUID
 	GetElementPointerVersion(*HeldLocks) int
 	SetElementPointer(ElementPointer, *HeldLocks)
+	setElementPointerVersion(int, *HeldLocks)
 }

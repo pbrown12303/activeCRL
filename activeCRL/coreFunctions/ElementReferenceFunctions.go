@@ -177,7 +177,7 @@ func elementReferenceSetReferencedElement(replicate core.Element, changeNotifica
 	}
 }
 
-func BuildCoreElementReferenceFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCoreElementReferenceFunctions(coreFunctionsElement core.Element, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// ElementReferenceFunctions
 	elementReferenceFunctions := uOfD.NewElement(hl, ElementReferenceFunctionsUri)

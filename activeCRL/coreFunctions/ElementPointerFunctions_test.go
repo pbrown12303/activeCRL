@@ -464,7 +464,7 @@ func TestGetElement(t *testing.T) {
 	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
-	if replicate.IsRefinementOf(getElement, hl) != true {
+	if uOfD.IsRefinementOf(replicate, getElement, hl) != true {
 		t.Errorf("Replicate is not refinement of GetElement()")
 	}
 	sourceReference := core.GetChildElementPointerReferenceWithAncestorUri(replicate, ElementPointerGetElementSourceElementPointerRefUri, hl)
@@ -521,7 +521,7 @@ func TestGetElementId(t *testing.T) {
 	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
-	if replicate.IsRefinementOf(getElementId, hl) != true {
+	if uOfD.IsRefinementOf(replicate, getElementId, hl) != true {
 		t.Errorf("Replicate is not refinement of GetElementId()")
 	}
 	sourceReference := core.GetChildElementPointerReferenceWithAncestorUri(replicate, ElementPointerGetElementIdSourceElementPointerRefUri, hl)
@@ -578,7 +578,7 @@ func TestGetElementVersion(t *testing.T) {
 	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
-	if replicate.IsRefinementOf(getElementVersion, hl) != true {
+	if uOfD.IsRefinementOf(replicate, getElementVersion, hl) != true {
 		t.Errorf("Replicate is not refinement of GetElementVersion()")
 	}
 	sourceReference := core.GetChildElementPointerReferenceWithAncestorUri(replicate, ElementPointerGetElementVersionSourceElementPointerRefUri, hl)
@@ -635,7 +635,7 @@ func TestSetElement(t *testing.T) {
 	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
-	if replicate.IsRefinementOf(setElement, hl) != true {
+	if uOfD.IsRefinementOf(replicate, setElement, hl) != true {
 		t.Errorf("Replicate is not refinement of SetBaseElement()")
 	}
 	elementReference := core.GetChildElementReferenceWithAncestorUri(replicate, ElementPointerSetElementElementRefUri, hl)

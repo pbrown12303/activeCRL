@@ -216,7 +216,7 @@ func setBaseElement(replicate core.Element, changeNotifications []*core.ChangeNo
 	}
 }
 
-func BuildCoreBaseElementPointerFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCoreBaseElementPointerFunctions(coreFunctionsElement core.Element, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// BaseElementPointerFunctions
 	baseElementPointerFunctions := uOfD.NewElement(hl, BaseElementPointerFunctionsUri)

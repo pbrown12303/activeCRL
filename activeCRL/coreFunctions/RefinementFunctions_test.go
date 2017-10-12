@@ -183,7 +183,7 @@ func TestRefinementGetAbstractElementPointer(t *testing.T) {
 	wg.Wait()
 
 	// Now check the replication
-	if replicate.IsRefinementOf(getAbstractElementPointer, hl) != true {
+	if uOfD.IsRefinementOf(replicate, getAbstractElementPointer, hl) != true {
 		t.Errorf("Replicate is not refinement of GetAbstractElementPointer()")
 	}
 	sourceRefinementRef := core.GetChildElementReferenceWithAncestorUri(replicate, RefinementGetAbstractElementPointerSourceRefinementRefUri, hl)
@@ -240,7 +240,7 @@ func TestGetAbstractElement(t *testing.T) {
 	wg.Wait()
 
 	// Now check the replication
-	if replicate.IsRefinementOf(getAbstractElement, hl) != true {
+	if uOfD.IsRefinementOf(replicate, getAbstractElement, hl) != true {
 		t.Errorf("Replicate is not refinement of GetAbstractElement()")
 	}
 	sourceRefinementRef := core.GetChildElementReferenceWithAncestorUri(replicate, RefinementGetAbstractElementSourceRefinementRefUri, hl)
@@ -297,7 +297,7 @@ func TestSetAbstractElement(t *testing.T) {
 	wg.Wait()
 
 	// Now check the replication
-	if replicate.IsRefinementOf(setAbstractElement, hl) != true {
+	if uOfD.IsRefinementOf(replicate, setAbstractElement, hl) != true {
 		t.Errorf("Replicate is not refinement of SetAbstractElement()")
 	}
 	sourceElementRef := core.GetChildElementReferenceWithAncestorUri(replicate, RefinementSetAbstractElementSourceElementRefUri, hl)
@@ -349,7 +349,7 @@ func TestRefinementGetRefinedElementPointer(t *testing.T) {
 	wg.Wait()
 
 	// Now check the replication
-	if replicate.IsRefinementOf(getRefinedElementPointer, hl) != true {
+	if uOfD.IsRefinementOf(replicate, getRefinedElementPointer, hl) != true {
 		t.Errorf("Replicate is not refinement of GetRefinedElementPointer()")
 	}
 	sourceRefinementRef := core.GetChildElementReferenceWithAncestorUri(replicate, RefinementGetRefinedElementPointerSourceRefinementRefUri, hl)
@@ -406,7 +406,7 @@ func TestGetRefinedElement(t *testing.T) {
 	wg.Wait()
 
 	// Now check the replication
-	if replicate.IsRefinementOf(getRefinedElement, hl) != true {
+	if uOfD.IsRefinementOf(replicate, getRefinedElement, hl) != true {
 		t.Errorf("Replicate is not refinement of GetRefinedElement()")
 	}
 	sourceRefinementRef := core.GetChildElementReferenceWithAncestorUri(replicate, RefinementGetRefinedElementSourceRefinementRefUri, hl)
@@ -463,7 +463,7 @@ func TestSetRefinedElement(t *testing.T) {
 	wg.Wait()
 
 	// Now check the replication
-	if replicate.IsRefinementOf(setRefinedElement, hl) != true {
+	if uOfD.IsRefinementOf(replicate, setRefinedElement, hl) != true {
 		t.Errorf("Replicate is not refinement of SetRefinedElement()")
 	}
 	sourceElementRef := core.GetChildElementReferenceWithAncestorUri(replicate, RefinementSetRefinedElementSourceElementRefUri, hl)

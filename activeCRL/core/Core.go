@@ -10,6 +10,10 @@ import (
 	//	"time"
 )
 
+var CorePrefix string = "http://activeCrl.com/core/"
+
+var UniverseOfDiscourseUri string = CorePrefix + "UniverseOfDiscourse"
+
 var CoreConceptSpaceUri string = "http://activeCrl.com/core/CoreConceptSpace"
 var BaseElementPointerUri string = "http://activeCrl.com/core/BaseElementPointer"
 var BaseElementReferenceUri string = "http://activeCrl.com/core/BaseElementReference"
@@ -86,7 +90,11 @@ func (c *coreConceptSpace) FindFunctions(element Element, notification *ChangeNo
 	if element == nil {
 		return labeledFunctions
 	}
-	abstractions := element.GetAbstractElementsRecursively(hl)
+	uOfD := element.GetUniverseOfDiscourse(hl)
+	if uOfD == nil {
+		return labeledFunctions
+	}
+	abstractions := uOfD.GetAbstractElementsRecursively(element, hl)
 	for _, abstractElement := range abstractions {
 		uri := GetUri(abstractElement, hl)
 		if uri != "" {
@@ -102,7 +110,7 @@ func (c *coreConceptSpace) FindFunctions(element Element, notification *ChangeNo
 	return labeledFunctions
 }
 
-func buildCoreConceptSpace(uOfD *UniverseOfDiscourse, hl *HeldLocks) Element {
+func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
 	// Core
 	coreElement := uOfD.NewElement(hl, CoreConceptSpaceUri)
 	SetName(coreElement, "CoreConceptSpace", hl)

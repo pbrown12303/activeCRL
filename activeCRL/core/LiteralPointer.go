@@ -256,13 +256,13 @@ func (lpPtr *literalPointer) SetLiteral(literal Literal, hl *HeldLocks) {
 	if literal != lpPtr.literal {
 		preChange(lpPtr, hl)
 		if lpPtr.literal != nil {
-			lpPtr.uOfD.removeLiteralListener(lpPtr.literal, lpPtr, hl)
+			lpPtr.uOfD.(*universeOfDiscourse).removeLiteralListener(lpPtr.literal, lpPtr, hl)
 		}
 		lpPtr.literal = literal
 		if literal != nil {
 			lpPtr.literalId = literal.GetId(hl)
 			lpPtr.literalVersion = literal.GetVersion(hl)
-			lpPtr.uOfD.addLiteralListener(literal, lpPtr, hl)
+			lpPtr.uOfD.(*universeOfDiscourse).addLiteralListener(literal, lpPtr, hl)
 		} else {
 			lpPtr.literalId = uuid.Nil
 			lpPtr.literalVersion = 0
@@ -270,6 +270,17 @@ func (lpPtr *literalPointer) SetLiteral(literal Literal, hl *HeldLocks) {
 		notification := NewChangeNotification(lpPtr, MODIFY, nil)
 		postChange(lpPtr, notification, hl)
 	}
+}
+
+// setLiteralVersion() is an internal function used as part of change propagation. It does
+// not trigger any notifications
+func (lpPtr *literalPointer) setLiteralVersion(newVersion int, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks(nil)
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lpPtr)
+	lpPtr.literalVersion = newVersion
 }
 
 func (lpPtr *literalPointer) SetOwningElement(element Element, hl *HeldLocks) {
@@ -329,4 +340,5 @@ type LiteralPointer interface {
 	GetLiteralPointerRole(*HeldLocks) LiteralPointerRole
 	GetLiteralVersion(*HeldLocks) int
 	SetLiteral(Literal, *HeldLocks)
+	setLiteralVersion(int, *HeldLocks)
 }

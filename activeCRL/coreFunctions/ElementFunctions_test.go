@@ -601,7 +601,7 @@ func TestSetDefinition(t *testing.T) {
 	wg.Wait()
 
 	// Now check the replication
-	if replicate.IsRefinementOf(setDefinition, hl) != true {
+	if uOfD.IsRefinementOf(replicate, setDefinition, hl) != true {
 		t.Errorf("Replicate is not refinement of SetDefinition()")
 	}
 	sourceLiteralRef := core.GetChildLiteralReferenceWithAncestorUri(replicate, ElementSetDefinitionSourceLiteralRefUri, hl)
@@ -654,7 +654,7 @@ func TestSetName(t *testing.T) {
 	wg.Wait()
 
 	// Now check the replication
-	if replicate.IsRefinementOf(setName, hl) != true {
+	if uOfD.IsRefinementOf(replicate, setName, hl) != true {
 		t.Errorf("Replicate is not refinement of SetName()")
 	}
 	sourceLiteralRef := core.GetChildLiteralReferenceWithAncestorUri(replicate, ElementSetNameSourceLiteralRefUri, hl)

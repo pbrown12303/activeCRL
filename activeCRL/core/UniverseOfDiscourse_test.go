@@ -10,7 +10,7 @@ import (
 )
 
 func TestGetBaseElementWithUri(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
+	uOfD := NewUniverseOfDiscourse().(*universeOfDiscourse)
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -127,7 +127,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 }
 
 func TestAddElementListener(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
+	uOfD := NewUniverseOfDiscourse().(*universeOfDiscourse)
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -159,7 +159,7 @@ func TestAddElementListener(t *testing.T) {
 }
 
 func TestAddElementPointerListener(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
+	uOfD := NewUniverseOfDiscourse().(*universeOfDiscourse)
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -191,7 +191,7 @@ func TestAddElementPointerListener(t *testing.T) {
 }
 
 func TestAddLiteralListener(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
+	uOfD := NewUniverseOfDiscourse().(*universeOfDiscourse)
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -223,7 +223,7 @@ func TestAddLiteralListener(t *testing.T) {
 }
 
 func TestAddLiteralPointerListener(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
+	uOfD := NewUniverseOfDiscourse().(*universeOfDiscourse)
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()

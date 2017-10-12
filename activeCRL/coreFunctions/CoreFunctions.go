@@ -12,7 +12,7 @@ import (
 var CoreFunctionsPrefix string = "http://activeCrl.com/coreFunctions/"
 var CoreFunctionsUri string = CoreFunctionsPrefix + "CoreFunctions"
 
-func AddCoreFunctionsToUofD(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
+func AddCoreFunctionsToUofD(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	coreFunctionsConceptSpace := uOfD.GetElementWithUri(CoreFunctionsUri)
 	if coreFunctionsConceptSpace == nil {
 		coreFunctionsConceptSpace = BuildCoreFunctionsConceptSpace(uOfD, hl)
@@ -23,7 +23,7 @@ func AddCoreFunctionsToUofD(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) 
 	return coreFunctionsConceptSpace
 }
 
-func BuildCoreFunctionsConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
+func BuildCoreFunctionsConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	// Core
 	coreFunctionsElement := uOfD.NewElement(hl, CoreFunctionsUri)
 	core.SetName(coreFunctionsElement, "CoreFunctions", hl)

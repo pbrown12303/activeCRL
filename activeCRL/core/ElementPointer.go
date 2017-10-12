@@ -289,13 +289,13 @@ func (epPtr *elementPointer) SetElement(element Element, hl *HeldLocks) {
 	// Now the actual change of the pointer
 	preChange(epPtr, hl)
 	if oldElement != nil {
-		epPtr.uOfD.removeElementListener(oldElement, epPtr, hl)
+		epPtr.uOfD.(*universeOfDiscourse).removeElementListener(oldElement, epPtr, hl)
 	}
 	epPtr.element = element
 	if element != nil {
 		epPtr.elementId = element.GetId(hl)
 		epPtr.elementVersion = element.GetVersion(hl)
-		epPtr.uOfD.addElementListener(element, epPtr, hl)
+		epPtr.uOfD.(*universeOfDiscourse).addElementListener(element, epPtr, hl)
 	} else {
 		epPtr.elementId = uuid.Nil
 		epPtr.elementVersion = 0
@@ -311,7 +311,7 @@ func (epPtr *elementPointer) SetElement(element Element, hl *HeldLocks) {
 	}
 }
 
-// setElementVersion() is an internal function used as part of change propagation. Id does
+// setElementVersion() is an internal function used as part of change propagation. It does
 // not trigger any notifications
 func (epPtr *elementPointer) setElementVersion(newVersion int, hl *HeldLocks) {
 	if hl == nil {

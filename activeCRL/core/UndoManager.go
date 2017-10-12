@@ -152,7 +152,7 @@ func PrintStackEntry(entry *undoRedoStackEntry, hl *HeldLocks) {
 	Print(entry.changedElement, "      ", hl)
 }
 
-func (undoMgr *undoManager) redo(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
+func (undoMgr *undoManager) redo(uOfD UniverseOfDiscourse, hl *HeldLocks) {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	if hl == nil {
@@ -168,12 +168,12 @@ func (undoMgr *undoManager) redo(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
 			undoMgr.undoStack.Push(currentEntry)
 			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
 			// this was a new element
-			uOfD.addBaseElementForUndo(currentEntry.changedElement, hl)
+			uOfD.(*universeOfDiscourse).addBaseElementForUndo(currentEntry.changedElement, hl)
 		} else if currentEntry.changeType == Deletion {
 			undoMgr.undoStack.Push(currentEntry)
 			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
 			// this was an deleted element
-			uOfD.removeBaseElementForUndo(currentEntry.changedElement, hl)
+			uOfD.(*universeOfDiscourse).removeBaseElementForUndo(currentEntry.changedElement, hl)
 		} else {
 			clone := clone(currentEntry.changedElement)
 			undoEntry := NewUndoRedoStackEntry(Change, clone, currentEntry.changedElement)
@@ -255,7 +255,7 @@ func (undoMgr *undoManager) TraceableUnlock() {
 	undoMgr.Unlock()
 }
 
-func (undoMgr *undoManager) undo(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
+func (undoMgr *undoManager) undo(uOfD UniverseOfDiscourse, hl *HeldLocks) {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	firstEntry := true
@@ -271,11 +271,11 @@ func (undoMgr *undoManager) undo(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
 			}
 		} else if currentEntry.changeType == Creation {
 			undoMgr.redoStack.Push(currentEntry)
-			uOfD.removeBaseElementForUndo(currentEntry.changedElement, hl)
+			uOfD.(*universeOfDiscourse).removeBaseElementForUndo(currentEntry.changedElement, hl)
 		} else if currentEntry.changeType == Deletion {
 			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
 			undoMgr.redoStack.Push(currentEntry)
-			uOfD.addBaseElementForUndo(currentEntry.changedElement, hl)
+			uOfD.(*universeOfDiscourse).addBaseElementForUndo(currentEntry.changedElement, hl)
 		} else if currentEntry.changeType == Change {
 			clone := clone(currentEntry.changedElement)
 			redoEntry := NewUndoRedoStackEntry(Change, clone, currentEntry.changedElement)

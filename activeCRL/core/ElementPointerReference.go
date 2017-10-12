@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/satori/go.uuid"
 	"reflect"
 )
 
@@ -17,7 +18,7 @@ type elementPointerReference struct {
 
 func (eprPtr *elementPointerReference) clone() *elementPointerReference {
 	var clone elementPointerReference
-	clone.ownedBaseElements = make(map[string]BaseElement)
+	clone.ownedBaseElements = make(map[uuid.UUID]BaseElement)
 	clone.cloneAttributes(*eprPtr)
 	return &clone
 }

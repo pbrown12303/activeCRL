@@ -114,7 +114,7 @@ func TestDelete(t *testing.T) {
 	//	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replications
-	if replicate.IsRefinementOf(del, hl) != true {
+	if uOfD.IsRefinementOf(replicate, del, hl) != true {
 		t.Errorf("Replicate is not refinement of Delete()")
 	}
 	targetReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementDeleteDeletedElementRefUri, hl)
@@ -187,7 +187,7 @@ func TestGetId(t *testing.T) {
 	//	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
-	if replicate.IsRefinementOf(getId, hl) != true {
+	if uOfD.IsRefinementOf(replicate, getId, hl) != true {
 		t.Errorf("Replicate is not refinement of GetId()")
 	}
 	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetIdSourceBaseElementRefUri, hl)
@@ -244,7 +244,7 @@ func TestGetName(t *testing.T) {
 	//	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
-	if replicate.IsRefinementOf(getName, hl) != true {
+	if uOfD.IsRefinementOf(replicate, getName, hl) != true {
 		t.Errorf("Replicate is not refinement of GetName()")
 	}
 	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetNameSourceBaseElementRefUri, hl)
@@ -301,7 +301,7 @@ func TestGetOwningElement(t *testing.T) {
 	//	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
-	if replicate.IsRefinementOf(getOwningElement, hl) != true {
+	if uOfD.IsRefinementOf(replicate, getOwningElement, hl) != true {
 		t.Errorf("Replicate is not refinement of GetOwningElement()")
 	}
 	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetOwningElementSourceBaseElementRefUri, hl)
@@ -358,7 +358,7 @@ func TestGetUri(t *testing.T) {
 	//	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
-	if replicate.IsRefinementOf(getUri, hl) != true {
+	if uOfD.IsRefinementOf(replicate, getUri, hl) != true {
 		t.Errorf("Replicate is not refinement of GetUri()")
 	}
 	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetUriSourceBaseElementRefUri, hl)
@@ -415,7 +415,7 @@ func TestGetVersion(t *testing.T) {
 	// time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
-	if replicate.IsRefinementOf(getVersion, hl) != true {
+	if uOfD.IsRefinementOf(replicate, getVersion, hl) != true {
 		t.Errorf("Replicate is not refinement of GetVersion()")
 	}
 	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetVersionSourceBaseElementRefUri, hl)
@@ -472,7 +472,7 @@ func TestSetOwningElement(t *testing.T) {
 	// time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
-	if replicate.IsRefinementOf(setOwningElement, hl) != true {
+	if uOfD.IsRefinementOf(replicate, setOwningElement, hl) != true {
 		t.Errorf("Replicate is not refinement of SetOwningElement()")
 	}
 	owningElementReference := core.GetChildElementReferenceWithAncestorUri(replicate, BaseElementSetOwningElementOwningElementRefUri, hl)
@@ -524,7 +524,7 @@ func TestSetUri(t *testing.T) {
 	// time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
-	if replicate.IsRefinementOf(setUri, hl) != true {
+	if uOfD.IsRefinementOf(replicate, setUri, hl) != true {
 		t.Errorf("Replicate is not refinement of SetUri()")
 	}
 	uriReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementSetUriSourceUriRefUri, hl)

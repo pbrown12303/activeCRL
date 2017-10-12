@@ -108,11 +108,20 @@ func abstractionChanged(element Element, notification *ChangeNotification, hl *H
 }
 
 func preChange(be BaseElement, hl *HeldLocks) {
-	if be != nil && be.GetUniverseOfDiscourse(hl).undoMgr.recordingUndo == true {
-		be.GetUniverseOfDiscourse(hl).undoMgr.markChangedBaseElement(be, hl)
+	if be != nil && be.GetUniverseOfDiscourse(hl).IsRecordingUndo() == true {
+		be.GetUniverseOfDiscourse(hl).(*universeOfDiscourse).undoMgr.markChangedBaseElement(be, hl)
 	}
 }
 
+// This function is called after a change is made to a base element. It does several things:
+//   1) It increments the base element version
+//   2) If the uri is changed, it updates the indexes associated with uri's
+//   3) If there are associated functions, it queues up the call to those functions
+//   4) It notifies the parent (owningElement) that this ownedElement has changed
+//      It also notifies the universe of discourse of the change so that listeners to it become
+//      aware of the change
+//   5) If there are any pointers to the base element it notifies them of the change.
+//      Notification consists of calling propagateChange() on the pointer
 func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
 	if notificationsLimit > 0 {
 		if notificationsCount > notificationsLimit {
@@ -125,17 +134,17 @@ func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks)
 	be.internalIncrementVersion()
 	// Update uri indices
 	id := be.GetId(hl)
-	oldUri := uOfD.idUriMap.GetEntry(id)
+	oldUri := uOfD.(*universeOfDiscourse).idUriMap.GetEntry(id)
 	newUri := GetUri(be, hl)
 	if oldUri != newUri {
 		if oldUri != "" {
-			uOfD.uriBaseElementMap.DeleteEntry(oldUri)
+			uOfD.(*universeOfDiscourse).uriBaseElementMap.DeleteEntry(oldUri)
 		}
 		if newUri == "" {
-			uOfD.idUriMap.DeleteEntry(id)
+			uOfD.(*universeOfDiscourse).idUriMap.DeleteEntry(id)
 		} else {
-			uOfD.idUriMap.SetEntry(id, newUri)
-			uOfD.uriBaseElementMap.SetEntry(newUri, be)
+			uOfD.(*universeOfDiscourse).idUriMap.SetEntry(id, newUri)
+			uOfD.(*universeOfDiscourse).uriBaseElementMap.SetEntry(newUri, be)
 		}
 	}
 	// Initiate function execution
@@ -144,15 +153,8 @@ func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks)
 		for _, labeledFunction := range GetCore().FindFunctions(be.(Element), notification, hl) {
 			if TraceChange == true {
 				log.Printf("PostChange calling function, URI: %s", labeledFunction.label)
-				//				time.Sleep(10000000 * time.Nanosecond)
 				Print(be, labeledFunction.label+" Target: ", hl)
-				//				time.Sleep(10000000 * time.Nanosecond)
-				//				for _, abstraction := range be.(Element).getImmediateAbstractions(hl) {
-				//					Print(abstraction, labeledFunction.label+" Abstraction: ", hl)
-				//					//					time.Sleep(10000000 * time.Nanosecond)
-				//				}
 				notification.Print("Notification: ", hl)
-				//				time.Sleep(1000000 * time.Nanosecond)
 			}
 			hl.functionCallManager.AddFunctionCall(labeledFunction, be.(Element), notification)
 		}
@@ -162,13 +164,33 @@ func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks)
 	if parent != nil {
 		childChanged(parent, notification, hl)
 	}
+	if uOfD != nil {
+		propagateChange(uOfD, notification, hl)
+	}
 	// Notify listeners
+	be.GetUniverseOfDiscourse(hl).notifyBaseElementListeners(notification, hl)
 	switch be.(type) {
 	case Element:
-		uOfD.notifyElementListeners(notification, hl)
+		uOfD.(*universeOfDiscourse).notifyElementListeners(notification, hl)
+	case ElementPointer:
+		be.GetUniverseOfDiscourse(hl).notifyElementPointerListeners(notification, hl)
+	case Literal:
+		be.GetUniverseOfDiscourse(hl).notifyLiteralListeners(notification, hl)
+	case LiteralPointer:
+		be.GetUniverseOfDiscourse(hl).notifyLiteralPointerListeners(notification, hl)
 	}
 }
 
+// propagageChange(BaseElement) spreads the knowledge that the base element has changed. It does
+// several things:
+//   1) if the object is an element it checks to see whether the element has functions associated
+//      with it and queues up the calls to the functions.
+//   2) if the object is any kind of Pointer it updates the pointer's record of its indicated object version
+//   3) It calls propagateChange() on the parent element
+//      It also notifies the universe of discourse of the change so that listeners to it become
+//      aware of the change
+//   4) If the object is of a type that can have a listener (i.e. a pointer to it), the listeners are
+//      notified
 func propagateChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
 	if notificationsLimit > 0 {
 		if notificationsCount > notificationsLimit {
@@ -182,15 +204,8 @@ func propagateChange(be BaseElement, notification *ChangeNotification, hl *HeldL
 		for _, labeledFunction := range GetCore().FindFunctions(be.(Element), notification, hl) {
 			if TraceChange == true {
 				log.Printf("PropagateChange calling function, URI: %s", labeledFunction.label)
-				//				time.Sleep(10000000 * time.Nanosecond)
 				Print(be, labeledFunction.label+" Target: ", hl)
-				//				time.Sleep(100000000 * time.Nanosecond)
-				//				for _, abstraction := range be.(Element).getImmediateAbstractions(hl) {
-				//					Print(abstraction, labeledFunction.label+" Abstraction: ", hl)
-				//					//					time.Sleep(10000000 * time.Nanosecond)
-				//				}
 				notification.Print("Notification: ", hl)
-				//				time.Sleep(10000000 * time.Nanosecond)
 			}
 			hl.functionCallManager.AddFunctionCall(labeledFunction, be.(Element), notification)
 		}
@@ -198,12 +213,39 @@ func propagateChange(be BaseElement, notification *ChangeNotification, hl *HeldL
 		ep := be.(ElementPointer)
 		target := notification.changedObject
 		ep.setElementVersion(target.GetVersion(hl), hl)
+	case ElementPointerPointer:
+		ep := be.(ElementPointerPointer)
+		target := notification.changedObject
+		ep.setElementPointerVersion(target.GetVersion(hl), hl)
+	case LiteralPointer:
+		ep := be.(LiteralPointer)
+		target := notification.changedObject
+		ep.setLiteralVersion(target.GetVersion(hl), hl)
+	case LiteralPointerPointer:
+		ep := be.(LiteralPointerPointer)
+		target := notification.changedObject
+		ep.setLiteralPointerVersion(target.GetVersion(hl), hl)
 	}
+	// Notify parent
 	if parent != nil {
 		propagateChange(parent, notification, hl)
 	}
-	switch be.(type) {
-	case Element:
-		be.GetUniverseOfDiscourse(hl).notifyElementListeners(notification, hl)
+	uOfD := be.GetUniverseOfDiscourse(hl)
+	if uOfD != nil {
+		// Notify Universe of Discourse
+		propagateChange(uOfD, notification, hl)
+		// Notify listeners
+		uOfD.notifyBaseElementListeners(notification, hl)
+		switch be.(type) {
+		case Element:
+			uOfD.notifyElementListeners(notification, hl)
+		case ElementPointer:
+			uOfD.notifyElementPointerListeners(notification, hl)
+		case Literal:
+			uOfD.notifyLiteralListeners(notification, hl)
+		case LiteralPointer:
+			uOfD.notifyLiteralPointerListeners(notification, hl)
+		}
+
 	}
 }

@@ -162,13 +162,13 @@ func (pllPtr *literalPointerPointer) SetLiteralPointer(literalPointer LiteralPoi
 	if literalPointer != pllPtr.literalPointer {
 		preChange(pllPtr, hl)
 		if pllPtr.literalPointer != nil {
-			pllPtr.uOfD.removeLiteralPointerListener(pllPtr.literalPointer, pllPtr, hl)
+			pllPtr.uOfD.(*universeOfDiscourse).removeLiteralPointerListener(pllPtr.literalPointer, pllPtr, hl)
 		}
 		pllPtr.literalPointer = literalPointer
 		if literalPointer != nil {
 			pllPtr.literalPointerId = literalPointer.GetId(hl)
 			pllPtr.literalPointerVersion = literalPointer.GetVersion(hl)
-			pllPtr.uOfD.addLiteralPointerListener(literalPointer, pllPtr, hl)
+			pllPtr.uOfD.(*universeOfDiscourse).addLiteralPointerListener(literalPointer, pllPtr, hl)
 		} else {
 			pllPtr.literalPointerId = uuid.Nil
 			pllPtr.literalPointerVersion = 0
@@ -199,6 +199,17 @@ func (pllPtr *literalPointerPointer) SetOwningElement(element Element, hl *HeldL
 			addOwnedBaseElement(element, pllPtr, hl)
 		}
 	}
+}
+
+// setLiteralPointerVersion() is an internal function used as part of change propagation. It does
+// not trigger any notifications
+func (lppPtr *literalPointerPointer) setLiteralPointerVersion(newVersion int, hl *HeldLocks) {
+	if hl == nil {
+		hl = NewHeldLocks(nil)
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(lppPtr)
+	lppPtr.literalPointerVersion = newVersion
 }
 
 // internalSetOwningElement() is an internal function used only in unmarshal
@@ -234,4 +245,5 @@ type LiteralPointerPointer interface {
 	GetLiteralPointerId(*HeldLocks) uuid.UUID
 	GetLiteralPointerVersion(*HeldLocks) int
 	SetLiteralPointer(LiteralPointer, *HeldLocks)
+	setLiteralPointerVersion(int, *HeldLocks)
 }

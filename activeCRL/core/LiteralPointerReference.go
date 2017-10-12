@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/satori/go.uuid"
 	"reflect"
 )
 
@@ -17,7 +18,7 @@ type literalPointerReference struct {
 
 func (lprPtr *literalPointerReference) clone() *literalPointerReference {
 	var clone literalPointerReference
-	clone.ownedBaseElements = make(map[string]BaseElement)
+	clone.ownedBaseElements = make(map[uuid.UUID]BaseElement)
 	clone.cloneAttributes(*lprPtr)
 	return &clone
 }

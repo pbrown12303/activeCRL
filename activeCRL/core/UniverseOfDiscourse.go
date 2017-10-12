@@ -8,11 +8,10 @@ import (
 	"errors"
 	"github.com/satori/go.uuid"
 	"log"
-	"sync"
 )
 
-type UniverseOfDiscourse struct {
-	sync.RWMutex
+type universeOfDiscourse struct {
+	element
 	baseElementMap            *UUIDBaseElementMap
 	baseElementListenerMap    *UUIDBaseElementPointerListMap
 	elementListenerMap        *UUIDElementPointerListMap
@@ -24,8 +23,8 @@ type UniverseOfDiscourse struct {
 	uriBaseElementMap         *StringBaseElementMap
 }
 
-func NewUniverseOfDiscourse() *UniverseOfDiscourse {
-	var uOfD UniverseOfDiscourse
+func NewUniverseOfDiscourse() UniverseOfDiscourse {
+	var uOfD universeOfDiscourse
 	uOfD.baseElementMap = NewUUIDBaseElementMap()
 	uOfD.baseElementListenerMap = NewUUIDBaseElementPointerListMap()
 	uOfD.elementListenerMap = NewUUIDElementPointerListMap()
@@ -38,10 +37,11 @@ func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	hl := NewHeldLocks(nil)
 	defer hl.ReleaseLocks()
 	buildCoreConceptSpace(&uOfD, hl)
+	uOfD.initializeElement(UniverseOfDiscourseUri)
 	return &uOfD
 }
 
-func (uOfDPtr *UniverseOfDiscourse) AddBaseElement(be BaseElement, hl *HeldLocks) error {
+func (uOfDPtr *universeOfDiscourse) AddBaseElement(be BaseElement, hl *HeldLocks) error {
 	if be == nil {
 		return errors.New("UniverseOfDiscource addBaseElement() failed because base element was nil")
 	}
@@ -64,7 +64,7 @@ func (uOfDPtr *UniverseOfDiscourse) AddBaseElement(be BaseElement, hl *HeldLocks
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) addBaseElementForUndo(be BaseElement, hl *HeldLocks) error {
+func (uOfDPtr *universeOfDiscourse) addBaseElementForUndo(be BaseElement, hl *HeldLocks) error {
 	if hl == nil {
 		return errors.New("UniverseOfDiscourse.addBaseElementForUndo() called with nil HeldLocks")
 	}
@@ -82,7 +82,7 @@ func (uOfDPtr *UniverseOfDiscourse) addBaseElementForUndo(be BaseElement, hl *He
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) addBaseElementListener(baseElement BaseElement, baseElementPointer BaseElementPointer, hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) addBaseElementListener(baseElement BaseElement, baseElementPointer BaseElementPointer, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -94,7 +94,7 @@ func (uOfDPtr *UniverseOfDiscourse) addBaseElementListener(baseElement BaseEleme
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) addElementListener(element Element, elementPointer ElementPointer, hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) addElementListener(element Element, elementPointer ElementPointer, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -106,7 +106,7 @@ func (uOfDPtr *UniverseOfDiscourse) addElementListener(element Element, elementP
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) addElementPointerListener(elementPointer ElementPointer, elementPointerPointer ElementPointerPointer, hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) addElementPointerListener(elementPointer ElementPointer, elementPointerPointer ElementPointerPointer, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -118,7 +118,7 @@ func (uOfDPtr *UniverseOfDiscourse) addElementPointerListener(elementPointer Ele
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) addLiteralListener(literal Literal, literalPointer LiteralPointer, hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) addLiteralListener(literal Literal, literalPointer LiteralPointer, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -130,7 +130,7 @@ func (uOfDPtr *UniverseOfDiscourse) addLiteralListener(literal Literal, literalP
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) addLiteralPointerListener(literalPointer LiteralPointer, literalPointerPointer LiteralPointerPointer, hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) addLiteralPointerListener(literalPointer LiteralPointer, literalPointerPointer LiteralPointerPointer, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -142,7 +142,7 @@ func (uOfDPtr *UniverseOfDiscourse) addLiteralPointerListener(literalPointer Lit
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) DeleteBaseElement(be BaseElement, hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) DeleteBaseElement(be BaseElement, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -177,11 +177,36 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteBaseElement(be BaseElement, hl *HeldLo
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetBaseElement(id uuid.UUID) BaseElement {
+// GetAbstractElementsRecursively() returns all of the elements abstractions
+func (uOfDPtr *universeOfDiscourse) GetAbstractElementsRecursively(el Element, hl *HeldLocks) []Element {
+	if hl == nil {
+		hl = NewHeldLocks(nil)
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(el)
+	abstractElements := uOfDPtr.getImmediateAbstractElements(el, hl)
+	var ancestors []Element
+	for _, element := range abstractElements {
+		for _, ancestor := range uOfDPtr.GetAbstractElementsRecursively(element, hl) {
+			ancestors = append(ancestors, ancestor)
+		}
+	}
+	for _, ancestor := range ancestors {
+		abstractElements = append(abstractElements, ancestor)
+	}
+	return abstractElements
+}
+
+func (uOfDPtr *universeOfDiscourse) GetBaseElement(id uuid.UUID) BaseElement {
 	return uOfDPtr.baseElementMap.GetEntry(id)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetBaseElementReferenceWithUri(uri string) BaseElementReference {
+func (uOfDPtr *universeOfDiscourse) GetBaseElements() []BaseElement {
+	var baseElements []BaseElement
+	return baseElements
+}
+
+func (uOfDPtr *universeOfDiscourse) GetBaseElementReferenceWithUri(uri string) BaseElementReference {
 	be := uOfDPtr.GetBaseElementWithUri(uri)
 	switch be.(type) {
 	case BaseElementReference:
@@ -190,15 +215,15 @@ func (uOfDPtr *UniverseOfDiscourse) GetBaseElementReferenceWithUri(uri string) B
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetBaseElementWithUri(uri string) BaseElement {
+func (uOfDPtr *universeOfDiscourse) GetBaseElementWithUri(uri string) BaseElement {
 	return uOfDPtr.uriBaseElementMap.GetEntry(uri)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetCoreConceptSpace() Element {
+func (uOfDPtr *universeOfDiscourse) GetCoreConceptSpace() Element {
 	return uOfDPtr.GetElementWithUri(CoreConceptSpaceUri)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetElement(id uuid.UUID) Element {
+func (uOfDPtr *universeOfDiscourse) GetElement(id uuid.UUID) Element {
 	// No locking required
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
@@ -208,7 +233,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetElement(id uuid.UUID) Element {
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetElementPointer(id uuid.UUID) ElementPointer {
+func (uOfDPtr *universeOfDiscourse) GetElementPointer(id uuid.UUID) ElementPointer {
 	// No locking required
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
@@ -218,7 +243,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetElementPointer(id uuid.UUID) ElementPoint
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetElementWithUri(uri string) Element {
+func (uOfDPtr *universeOfDiscourse) GetElementWithUri(uri string) Element {
 	be := uOfDPtr.GetBaseElementWithUri(uri)
 	switch be.(type) {
 	case Element:
@@ -227,7 +252,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetElementWithUri(uri string) Element {
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetElementPointerReferenceWithUri(uri string) ElementPointerReference {
+func (uOfDPtr *universeOfDiscourse) GetElementPointerReferenceWithUri(uri string) ElementPointerReference {
 	be := uOfDPtr.GetBaseElementWithUri(uri)
 	switch be.(type) {
 	case ElementPointerReference:
@@ -236,7 +261,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetElementPointerReferenceWithUri(uri string
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetElementReferenceWithUri(uri string) ElementReference {
+func (uOfDPtr *universeOfDiscourse) GetElementReferenceWithUri(uri string) ElementReference {
 	be := uOfDPtr.GetBaseElementWithUri(uri)
 	switch be.(type) {
 	case ElementReference:
@@ -245,7 +270,61 @@ func (uOfDPtr *UniverseOfDiscourse) GetElementReferenceWithUri(uri string) Eleme
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetLiteral(id uuid.UUID) Literal {
+func (uOfDPtr *universeOfDiscourse) getImmediateAbstractElements(el Element, hl *HeldLocks) []Element {
+	if hl == nil {
+		hl = NewHeldLocks(nil)
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(el)
+	var abstractElements []Element
+	abstractions := uOfDPtr.getImmediateAbstractions(el, hl)
+	if abstractions != nil {
+		for _, abstraction := range abstractions {
+			if abstraction.GetAbstractElement(hl) != nil {
+				abstractElements = append(abstractElements, abstraction.GetAbstractElement(hl))
+			}
+		}
+	}
+	return abstractElements
+}
+
+func (uOfDPtr *universeOfDiscourse) getImmediateAbstractions(el Element, hl *HeldLocks) []Refinement {
+	if hl == nil {
+		hl = NewHeldLocks(nil)
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(el)
+	var abstractions []Refinement
+	ePtrs := uOfDPtr.elementListenerMap.GetEntry(el.GetId(hl))
+	if ePtrs != nil {
+		for _, ePtr := range *ePtrs {
+			if ePtr.GetElementPointerRole(hl) == REFINED_ELEMENT {
+				abstractions = append(abstractions, GetOwningElement(ePtr, hl).(Refinement))
+			}
+		}
+	}
+	return abstractions
+}
+
+func (uOfDPtr *universeOfDiscourse) getImmediateRefinements(el Element, hl *HeldLocks) []Refinement {
+	if hl == nil {
+		hl = NewHeldLocks(nil)
+		defer hl.ReleaseLocks()
+	}
+	hl.LockBaseElement(el)
+	var refinements []Refinement
+	ePtrs := uOfDPtr.elementListenerMap.GetEntry(el.GetId(hl))
+	if ePtrs != nil {
+		for _, ePtr := range *ePtrs {
+			if ePtr.GetElementPointerRole(hl) == ABSTRACT_ELEMENT {
+				refinements = append(refinements, GetOwningElement(ePtr, hl).(Refinement))
+			}
+		}
+	}
+	return refinements
+}
+
+func (uOfDPtr *universeOfDiscourse) GetLiteral(id uuid.UUID) Literal {
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
 	case Literal:
@@ -254,7 +333,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetLiteral(id uuid.UUID) Literal {
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetLiteralWithUri(uri string) Literal {
+func (uOfDPtr *universeOfDiscourse) GetLiteralWithUri(uri string) Literal {
 	be := uOfDPtr.GetBaseElementWithUri(uri)
 	switch be.(type) {
 	case Literal:
@@ -263,7 +342,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetLiteralWithUri(uri string) Literal {
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetLiteralPointer(id uuid.UUID) LiteralPointer {
+func (uOfDPtr *universeOfDiscourse) GetLiteralPointer(id uuid.UUID) LiteralPointer {
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
 	case LiteralPointer:
@@ -272,7 +351,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetLiteralPointer(id uuid.UUID) LiteralPoint
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetLiteralReferenceWithUri(uri string) LiteralReference {
+func (uOfDPtr *universeOfDiscourse) GetLiteralReferenceWithUri(uri string) LiteralReference {
 	be := uOfDPtr.GetBaseElementWithUri(uri)
 	switch be.(type) {
 	case LiteralReference:
@@ -281,7 +360,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetLiteralReferenceWithUri(uri string) Liter
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetLiteralPointerReferenceWithUri(uri string) LiteralPointerReference {
+func (uOfDPtr *universeOfDiscourse) GetLiteralPointerReferenceWithUri(uri string) LiteralPointerReference {
 	be := uOfDPtr.GetBaseElementWithUri(uri)
 	switch be.(type) {
 	case LiteralPointerReference:
@@ -290,7 +369,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetLiteralPointerReferenceWithUri(uri string
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) getRefinement(id uuid.UUID) Refinement {
+func (uOfDPtr *universeOfDiscourse) getRefinement(id uuid.UUID) Refinement {
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
 	case Refinement:
@@ -299,13 +378,26 @@ func (uOfDPtr *UniverseOfDiscourse) getRefinement(id uuid.UUID) Refinement {
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) MarkUndoPoint() {
+func (uOfDPtr *universeOfDiscourse) IsRefinementOf(refinedElement Element, abstractElement Element, hl *HeldLocks) bool {
+	for _, candidateElement := range uOfDPtr.GetAbstractElementsRecursively(refinedElement, hl) {
+		if candidateElement == abstractElement {
+			return true
+		}
+	}
+	return false
+}
+
+func (uOfDPtr *universeOfDiscourse) IsRecordingUndo() bool {
+	return uOfDPtr.undoMgr.recordingUndo
+}
+
+func (uOfDPtr *universeOfDiscourse) MarkUndoPoint() {
 	uOfDPtr.undoMgr.MarkUndoPoint()
 }
 
 // NewElement() creates an initialized Element. No locking is required since the existence of
 // the element is unknown outside this routine
-func (uOfD *UniverseOfDiscourse) NewElement(hl *HeldLocks, uri ...string) Element {
+func (uOfD *universeOfDiscourse) NewElement(hl *HeldLocks, uri ...string) Element {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -317,7 +409,7 @@ func (uOfD *UniverseOfDiscourse) NewElement(hl *HeldLocks, uri ...string) Elemen
 }
 
 // NewAbstractElementPointer() creates and intitializes an elementPointer to play the role of an AbstractElementPointer
-func (uOfD *UniverseOfDiscourse) NewAbstractElementPointer(hl *HeldLocks, uri ...string) ElementPointer {
+func (uOfD *universeOfDiscourse) NewAbstractElementPointer(hl *HeldLocks, uri ...string) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -330,7 +422,7 @@ func (uOfD *UniverseOfDiscourse) NewAbstractElementPointer(hl *HeldLocks, uri ..
 }
 
 // NewBaseElementPointer() creates and intitializes an elementPointer to play the role of an AbstractElementPointer
-func (uOfD *UniverseOfDiscourse) NewBaseElementPointer(hl *HeldLocks, uri ...string) BaseElementPointer {
+func (uOfD *universeOfDiscourse) NewBaseElementPointer(hl *HeldLocks, uri ...string) BaseElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -341,7 +433,7 @@ func (uOfD *UniverseOfDiscourse) NewBaseElementPointer(hl *HeldLocks, uri ...str
 	return &ep
 }
 
-func (uOfD *UniverseOfDiscourse) NewBaseElementReference(hl *HeldLocks, uri ...string) BaseElementReference {
+func (uOfD *universeOfDiscourse) NewBaseElementReference(hl *HeldLocks, uri ...string) BaseElementReference {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -353,7 +445,7 @@ func (uOfD *UniverseOfDiscourse) NewBaseElementReference(hl *HeldLocks, uri ...s
 }
 
 // NewRefinedElementPointer() creates and intitializes an elementPointer to play the role of an RefinedElementPointer
-func (uOfD *UniverseOfDiscourse) NewRefinedElementPointer(hl *HeldLocks, uri ...string) ElementPointer {
+func (uOfD *universeOfDiscourse) NewRefinedElementPointer(hl *HeldLocks, uri ...string) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -366,7 +458,7 @@ func (uOfD *UniverseOfDiscourse) NewRefinedElementPointer(hl *HeldLocks, uri ...
 }
 
 // NewOwningElementPointer() creates and intitializes an elementPointer to play the role of an OwningElementPointer
-func (uOfD *UniverseOfDiscourse) NewOwningElementPointer(hl *HeldLocks, uri ...string) ElementPointer {
+func (uOfD *universeOfDiscourse) NewOwningElementPointer(hl *HeldLocks, uri ...string) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -379,7 +471,7 @@ func (uOfD *UniverseOfDiscourse) NewOwningElementPointer(hl *HeldLocks, uri ...s
 }
 
 // NewReferencedElementPointer() creates and intitializes an elementPointer to play the role of an ReferencedElementPointer
-func (uOfD *UniverseOfDiscourse) NewReferencedElementPointer(hl *HeldLocks, uri ...string) ElementPointer {
+func (uOfD *universeOfDiscourse) NewReferencedElementPointer(hl *HeldLocks, uri ...string) ElementPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -391,7 +483,7 @@ func (uOfD *UniverseOfDiscourse) NewReferencedElementPointer(hl *HeldLocks, uri 
 	return &ep
 }
 
-func (uOfD *UniverseOfDiscourse) NewElementPointerPointer(hl *HeldLocks, uri ...string) ElementPointerPointer {
+func (uOfD *universeOfDiscourse) NewElementPointerPointer(hl *HeldLocks, uri ...string) ElementPointerPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -402,7 +494,7 @@ func (uOfD *UniverseOfDiscourse) NewElementPointerPointer(hl *HeldLocks, uri ...
 	return &ep
 }
 
-func (uOfD *UniverseOfDiscourse) NewElementPointerReference(hl *HeldLocks, uri ...string) ElementPointerReference {
+func (uOfD *universeOfDiscourse) NewElementPointerReference(hl *HeldLocks, uri ...string) ElementPointerReference {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -413,7 +505,7 @@ func (uOfD *UniverseOfDiscourse) NewElementPointerReference(hl *HeldLocks, uri .
 	return &el
 }
 
-func (uOfD *UniverseOfDiscourse) NewElementReference(hl *HeldLocks, uri ...string) ElementReference {
+func (uOfD *universeOfDiscourse) NewElementReference(hl *HeldLocks, uri ...string) ElementReference {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -424,7 +516,7 @@ func (uOfD *UniverseOfDiscourse) NewElementReference(hl *HeldLocks, uri ...strin
 	return &el
 }
 
-func (uOfD *UniverseOfDiscourse) NewLiteral(hl *HeldLocks, uri ...string) Literal {
+func (uOfD *universeOfDiscourse) NewLiteral(hl *HeldLocks, uri ...string) Literal {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -435,7 +527,7 @@ func (uOfD *UniverseOfDiscourse) NewLiteral(hl *HeldLocks, uri ...string) Litera
 	return &lit
 }
 
-func (uOfD *UniverseOfDiscourse) NewNameLiteralPointer(hl *HeldLocks, uri ...string) LiteralPointer {
+func (uOfD *universeOfDiscourse) NewNameLiteralPointer(hl *HeldLocks, uri ...string) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -447,7 +539,7 @@ func (uOfD *UniverseOfDiscourse) NewNameLiteralPointer(hl *HeldLocks, uri ...str
 	return &lp
 }
 
-func (uOfD *UniverseOfDiscourse) NewDefinitionLiteralPointer(hl *HeldLocks, uri ...string) LiteralPointer {
+func (uOfD *universeOfDiscourse) NewDefinitionLiteralPointer(hl *HeldLocks, uri ...string) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -459,7 +551,7 @@ func (uOfD *UniverseOfDiscourse) NewDefinitionLiteralPointer(hl *HeldLocks, uri 
 	return &lp
 }
 
-func (uOfD *UniverseOfDiscourse) NewUriLiteralPointer(hl *HeldLocks, uri ...string) LiteralPointer {
+func (uOfD *universeOfDiscourse) NewUriLiteralPointer(hl *HeldLocks, uri ...string) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -471,7 +563,7 @@ func (uOfD *UniverseOfDiscourse) NewUriLiteralPointer(hl *HeldLocks, uri ...stri
 	return &lp
 }
 
-func (uOfD *UniverseOfDiscourse) NewValueLiteralPointer(hl *HeldLocks, uri ...string) LiteralPointer {
+func (uOfD *universeOfDiscourse) NewValueLiteralPointer(hl *HeldLocks, uri ...string) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -483,7 +575,7 @@ func (uOfD *UniverseOfDiscourse) NewValueLiteralPointer(hl *HeldLocks, uri ...st
 	return &lp
 }
 
-func (uOfD *UniverseOfDiscourse) NewLiteralPointerPointer(hl *HeldLocks, uri ...string) LiteralPointerPointer {
+func (uOfD *universeOfDiscourse) NewLiteralPointerPointer(hl *HeldLocks, uri ...string) LiteralPointerPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -494,7 +586,7 @@ func (uOfD *UniverseOfDiscourse) NewLiteralPointerPointer(hl *HeldLocks, uri ...
 	return &ep
 }
 
-func (uOfD *UniverseOfDiscourse) NewLiteralPointerReference(hl *HeldLocks, uri ...string) LiteralPointerReference {
+func (uOfD *universeOfDiscourse) NewLiteralPointerReference(hl *HeldLocks, uri ...string) LiteralPointerReference {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -505,7 +597,7 @@ func (uOfD *UniverseOfDiscourse) NewLiteralPointerReference(hl *HeldLocks, uri .
 	return &el
 }
 
-func (uOfD *UniverseOfDiscourse) NewLiteralReference(hl *HeldLocks, uri ...string) LiteralReference {
+func (uOfD *universeOfDiscourse) NewLiteralReference(hl *HeldLocks, uri ...string) LiteralReference {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -516,7 +608,7 @@ func (uOfD *UniverseOfDiscourse) NewLiteralReference(hl *HeldLocks, uri ...strin
 	return &el
 }
 
-func (uOfD *UniverseOfDiscourse) NewRefinement(hl *HeldLocks, uri ...string) Refinement {
+func (uOfD *universeOfDiscourse) NewRefinement(hl *HeldLocks, uri ...string) Refinement {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -527,7 +619,25 @@ func (uOfD *UniverseOfDiscourse) NewRefinement(hl *HeldLocks, uri ...string) Ref
 	return &el
 }
 
-func (uOfDPtr *UniverseOfDiscourse) notifyElementListeners(notification *ChangeNotification, hl *HeldLocks) error {
+func (uOfDPtr *universeOfDiscourse) notifyBaseElementListeners(notification *ChangeNotification, hl *HeldLocks) error {
+	if hl == nil {
+		return errors.New("UniverseOfDiscourse.notifyElementListeners() called with nil HeldLocks")
+	}
+	id := notification.changedObject.GetId(hl)
+	bepl := uOfDPtr.baseElementListenerMap.GetEntry(id)
+	if bepl != nil {
+		for _, baseElementPointer := range *bepl {
+			// Must suppress circular notifications
+			if notification.isReferenced(baseElementPointer) == false {
+				newNotification := NewChangeNotification(baseElementPointer, MODIFY, notification)
+				propagateChange(baseElementPointer, newNotification, hl)
+			}
+		}
+	}
+	return nil
+}
+
+func (uOfDPtr *universeOfDiscourse) notifyElementListeners(notification *ChangeNotification, hl *HeldLocks) error {
 	if hl == nil {
 		return errors.New("UniverseOfDiscourse.notifyElementListeners() called with nil HeldLocks")
 	}
@@ -548,7 +658,70 @@ func (uOfDPtr *UniverseOfDiscourse) notifyElementListeners(notification *ChangeN
 	return nil
 }
 
-func (uOfD *UniverseOfDiscourse) RecoverElement(data []byte) Element {
+func (uOfDPtr *universeOfDiscourse) notifyElementPointerListeners(notification *ChangeNotification, hl *HeldLocks) error {
+	if hl == nil {
+		return errors.New("UniverseOfDiscourse.notifyElementPointerListeners() called with nil HeldLocks")
+	}
+	switch notification.changedObject.(type) {
+	case ElementPointer:
+		id := notification.changedObject.GetId(hl)
+		epl := uOfDPtr.elementPointerListenerMap.GetEntry(id)
+		if epl != nil {
+			for _, elementPointerPointer := range *epl {
+				// Must suppress circular notifications
+				if notification.isReferenced(elementPointerPointer) == false {
+					newNotification := NewChangeNotification(elementPointerPointer, MODIFY, notification)
+					propagateChange(elementPointerPointer, newNotification, hl)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (uOfDPtr *universeOfDiscourse) notifyLiteralListeners(notification *ChangeNotification, hl *HeldLocks) error {
+	if hl == nil {
+		return errors.New("UniverseOfDiscourse.notifyLiteralListeners() called with nil HeldLocks")
+	}
+	switch notification.changedObject.(type) {
+	case Literal:
+		id := notification.changedObject.GetId(hl)
+		lpl := uOfDPtr.literalListenerMap.GetEntry(id)
+		if lpl != nil {
+			for _, literalPointer := range *lpl {
+				// Must suppress circular notifications
+				if notification.isReferenced(literalPointer) == false {
+					newNotification := NewChangeNotification(literalPointer, MODIFY, notification)
+					propagateChange(literalPointer, newNotification, hl)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (uOfDPtr *universeOfDiscourse) notifyLiteralPointerListeners(notification *ChangeNotification, hl *HeldLocks) error {
+	if hl == nil {
+		return errors.New("UniverseOfDiscourse.notifyLiteralPointerListeners() called with nil HeldLocks")
+	}
+	switch notification.changedObject.(type) {
+	case LiteralPointer:
+		id := notification.changedObject.GetId(hl)
+		epl := uOfDPtr.literalPointerListenerMap.GetEntry(id)
+		if epl != nil {
+			for _, literalPointerPointer := range *epl {
+				// Must suppress circular notifications
+				if notification.isReferenced(literalPointerPointer) == false {
+					newNotification := NewChangeNotification(literalPointerPointer, MODIFY, notification)
+					propagateChange(literalPointerPointer, newNotification, hl)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (uOfD *universeOfDiscourse) RecoverElement(data []byte) Element {
 	if len(data) == 0 {
 		return nil
 	}
@@ -566,7 +739,7 @@ func (uOfD *UniverseOfDiscourse) RecoverElement(data []byte) Element {
 	return recoveredElement.(Element)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) Redo(hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) Redo(hl *HeldLocks) {
 	if hl == nil {
 		hl := NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -574,7 +747,7 @@ func (uOfDPtr *UniverseOfDiscourse) Redo(hl *HeldLocks) {
 	uOfDPtr.undoMgr.redo(uOfDPtr, hl)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeBaseElement(be BaseElement, hl *HeldLocks) error {
+func (uOfDPtr *universeOfDiscourse) removeBaseElement(be BaseElement, hl *HeldLocks) error {
 	if hl == nil {
 		return errors.New("UniverseOfDiscourse.removeBaseElement called with nil HeldLocks")
 	}
@@ -592,7 +765,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeBaseElement(be BaseElement, hl *HeldLo
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeBaseElementForUndo(be BaseElement, hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) removeBaseElementForUndo(be BaseElement, hl *HeldLocks) {
 	if be != nil {
 		hl.LockBaseElement(be)
 		if uOfDPtr.undoMgr.debugUndo == true {
@@ -603,7 +776,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeBaseElementForUndo(be BaseElement, hl 
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeBaseElementListener(baseElement BaseElement, baseElementPointer BaseElementPointer, hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) removeBaseElementListener(baseElement BaseElement, baseElementPointer BaseElementPointer, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -614,7 +787,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeBaseElementListener(baseElement BaseEl
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeElementListener(element Element, elementPointer ElementPointer, hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) removeElementListener(element Element, elementPointer ElementPointer, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -625,7 +798,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeElementListener(element Element, eleme
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeElementPointerListener(elementPointer ElementPointer, elementPointerPointer ElementPointerPointer, hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) removeElementPointerListener(elementPointer ElementPointer, elementPointerPointer ElementPointerPointer, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -636,7 +809,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeElementPointerListener(elementPointer 
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeLiteralListener(literal Literal, literalPointer LiteralPointer, hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) removeLiteralListener(literal Literal, literalPointer LiteralPointer, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -647,7 +820,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeLiteralListener(literal Literal, liter
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeLiteralPointerListener(literalPointer LiteralPointer, literalPointerPointer LiteralPointerPointer, hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) removeLiteralPointerListener(literalPointer LiteralPointer, literalPointerPointer LiteralPointerPointer, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -658,7 +831,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeLiteralPointerListener(literalPointer 
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) restoreUriIndexRecursively(be BaseElement, hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) restoreUriIndexRecursively(be BaseElement, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -677,15 +850,15 @@ func (uOfDPtr *UniverseOfDiscourse) restoreUriIndexRecursively(be BaseElement, h
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) SetDebugUndo(newSetting bool) {
+func (uOfDPtr *universeOfDiscourse) SetDebugUndo(newSetting bool) {
 	uOfDPtr.undoMgr.setDebugUndo(newSetting)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) SetRecordingUndo(newSetting bool) {
+func (uOfDPtr *universeOfDiscourse) SetRecordingUndo(newSetting bool) {
 	uOfDPtr.undoMgr.setRecordingUndo(newSetting)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourseRecursively(be BaseElement, hl *HeldLocks) {
+func (uOfDPtr *universeOfDiscourse) SetUniverseOfDiscourseRecursively(be BaseElement, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -699,24 +872,86 @@ func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourseRecursively(be BaseEle
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) TraceableLock() {
-	if TraceLocks {
-		log.Printf("About to lock Universe of Discourse %p\n", uOfDPtr)
-	}
-	uOfDPtr.Lock()
-}
-
-func (uOfDPtr *UniverseOfDiscourse) TraceableUnlock() {
-	if TraceLocks {
-		log.Printf("About to unlock Universe of Discourse %p\n", uOfDPtr)
-	}
-	uOfDPtr.Unlock()
-}
-
-func (uOfDPtr *UniverseOfDiscourse) Undo(hl *HeldLocks) {
+//func (uOfDPtr *universeOfDiscourse) TraceableLock() {
+//	if TraceLocks {
+//		log.Printf("About to lock Universe of Discourse %p\n", uOfDPtr)
+//	}
+//	uOfDPtr.Lock()
+//}
+//
+//func (uOfDPtr *universeOfDiscourse) TraceableUnlock() {
+//	if TraceLocks {
+//		log.Printf("About to unlock Universe of Discourse %p\n", uOfDPtr)
+//	}
+//	uOfDPtr.Unlock()
+//}
+//
+func (uOfDPtr *universeOfDiscourse) Undo(hl *HeldLocks) {
 	if hl == nil {
 		hl := NewHeldLocks(nil)
 		hl.ReleaseLocks()
 	}
 	uOfDPtr.undoMgr.undo(uOfDPtr, hl)
+}
+
+type UniverseOfDiscourse interface {
+	Element
+	AddBaseElement(BaseElement, *HeldLocks) error
+	addBaseElementListener(BaseElement, BaseElementPointer, *HeldLocks)
+	DeleteBaseElement(BaseElement, *HeldLocks)
+	GetAbstractElementsRecursively(Element, *HeldLocks) []Element
+	GetBaseElement(uuid.UUID) BaseElement
+	GetBaseElements() []BaseElement
+	GetBaseElementReferenceWithUri(string) BaseElementReference
+	GetBaseElementWithUri(string) BaseElement
+	GetCoreConceptSpace() Element
+	GetElement(uuid.UUID) Element
+	GetElementPointer(uuid.UUID) ElementPointer
+	GetElementWithUri(string) Element
+	GetElementPointerReferenceWithUri(string) ElementPointerReference
+	GetElementReferenceWithUri(string) ElementReference
+	getImmediateAbstractElements(Element, *HeldLocks) []Element
+	getImmediateAbstractions(Element, *HeldLocks) []Refinement
+	getImmediateRefinements(Element, *HeldLocks) []Refinement
+	GetLiteral(uuid.UUID) Literal
+	GetLiteralWithUri(string) Literal
+	GetLiteralPointer(uuid.UUID) LiteralPointer
+	GetLiteralReferenceWithUri(string) LiteralReference
+	GetLiteralPointerReferenceWithUri(string) LiteralPointerReference
+	IsRefinementOf(Element, Element, *HeldLocks) bool
+	IsRecordingUndo() bool
+	MarkUndoPoint()
+	NewElement(*HeldLocks, ...string) Element
+	NewAbstractElementPointer(*HeldLocks, ...string) ElementPointer
+	NewBaseElementPointer(*HeldLocks, ...string) BaseElementPointer
+	NewBaseElementReference(*HeldLocks, ...string) BaseElementReference
+	NewRefinedElementPointer(*HeldLocks, ...string) ElementPointer
+	NewOwningElementPointer(*HeldLocks, ...string) ElementPointer
+	NewReferencedElementPointer(*HeldLocks, ...string) ElementPointer
+	NewElementPointerPointer(*HeldLocks, ...string) ElementPointerPointer
+	NewElementPointerReference(*HeldLocks, ...string) ElementPointerReference
+	NewElementReference(*HeldLocks, ...string) ElementReference
+	NewLiteral(*HeldLocks, ...string) Literal
+	NewNameLiteralPointer(*HeldLocks, ...string) LiteralPointer
+	NewDefinitionLiteralPointer(*HeldLocks, ...string) LiteralPointer
+	NewUriLiteralPointer(*HeldLocks, ...string) LiteralPointer
+	NewValueLiteralPointer(*HeldLocks, ...string) LiteralPointer
+	NewLiteralPointerPointer(*HeldLocks, ...string) LiteralPointerPointer
+	NewLiteralPointerReference(*HeldLocks, ...string) LiteralPointerReference
+	NewLiteralReference(*HeldLocks, ...string) LiteralReference
+	NewRefinement(*HeldLocks, ...string) Refinement
+	notifyBaseElementListeners(*ChangeNotification, *HeldLocks) error
+	notifyElementListeners(*ChangeNotification, *HeldLocks) error
+	notifyElementPointerListeners(*ChangeNotification, *HeldLocks) error
+	notifyLiteralListeners(*ChangeNotification, *HeldLocks) error
+	notifyLiteralPointerListeners(*ChangeNotification, *HeldLocks) error
+	RecoverElement([]byte) Element
+	Redo(*HeldLocks)
+	removeBaseElementListener(BaseElement, BaseElementPointer, *HeldLocks)
+	SetDebugUndo(bool)
+	SetRecordingUndo(bool)
+	SetUniverseOfDiscourseRecursively(BaseElement, *HeldLocks)
+	//	TraceableLock()
+	//	TraceableUnlock()
+	Undo(*HeldLocks)
 }

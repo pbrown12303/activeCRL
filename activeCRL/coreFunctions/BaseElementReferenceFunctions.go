@@ -178,7 +178,7 @@ func setReferencedBaseElement(replicate core.Element, changeNotifications []*cor
 	}
 }
 
-func BuildCoreBaseElementReferenceFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCoreBaseElementReferenceFunctions(coreFunctionsElement core.Element, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// BaseElementReferenceFunctions
 	baseElementReferenceFunctions := uOfD.NewElement(hl, BaseElementReferenceFunctionsUri)

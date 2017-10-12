@@ -315,7 +315,7 @@ func refinementSetRefinedElement(replicate core.Element, changeNotifications []*
 	}
 }
 
-func BuildCoreRefinementFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCoreRefinementFunctions(coreFunctionsElement core.Element, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// RefinementFunctions
 	refinementFunctions := uOfD.NewElement(hl, RefinementFunctionsUri)

@@ -112,7 +112,7 @@ func TestGetAbstractElementsRecursively(t *testing.T) {
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	refinedElement := uOfD.NewElement(hl)
-	abstractElements := refinedElement.GetAbstractElementsRecursively(hl)
+	abstractElements := uOfD.GetAbstractElementsRecursively(refinedElement, hl)
 	if len(abstractElements) != 0 {
 		t.Error("AbstractElements length not 0\n")
 	}
@@ -120,7 +120,7 @@ func TestGetAbstractElementsRecursively(t *testing.T) {
 	refinement1 := uOfD.NewRefinement(hl)
 	refinement1.SetAbstractElement(abstractElement1, hl)
 	refinement1.SetRefinedElement(refinedElement, hl)
-	abstractElements = refinedElement.GetAbstractElementsRecursively(hl)
+	abstractElements = uOfD.GetAbstractElementsRecursively(refinedElement, hl)
 	if len(abstractElements) != 1 {
 		t.Error("AbstractElements length != 1")
 	}
@@ -131,7 +131,7 @@ func TestGetAbstractElementsRecursively(t *testing.T) {
 	refinement2 := uOfD.NewRefinement(hl)
 	refinement2.SetAbstractElement(abstractElement2, hl)
 	refinement2.SetRefinedElement(refinedElement, hl)
-	abstractElements = refinedElement.GetAbstractElementsRecursively(hl)
+	abstractElements = uOfD.GetAbstractElementsRecursively(refinedElement, hl)
 	if len(abstractElements) != 2 {
 		t.Error("Abstractions length != 2")
 	}
@@ -142,7 +142,7 @@ func TestGetAbstractElementsRecursively(t *testing.T) {
 	refinement3 := uOfD.NewRefinement(hl)
 	refinement3.SetAbstractElement(abstractElement3, hl)
 	refinement3.SetRefinedElement(abstractElement1, hl)
-	abstractElements = refinedElement.GetAbstractElementsRecursively(hl)
+	abstractElements = uOfD.GetAbstractElementsRecursively(refinedElement, hl)
 	if len(abstractElements) != 3 {
 		t.Error("Abstractions length != 3")
 	}
@@ -153,7 +153,7 @@ func TestGetAbstractElementsRecursively(t *testing.T) {
 	refinement4 := uOfD.NewRefinement(hl)
 	refinement4.SetAbstractElement(abstractElement4, hl)
 	refinement4.SetRefinedElement(abstractElement2, hl)
-	abstractElements = refinedElement.GetAbstractElementsRecursively(hl)
+	abstractElements = uOfD.GetAbstractElementsRecursively(refinedElement, hl)
 	if len(abstractElements) != 4 {
 		t.Error("Abstractions length != 4")
 	}
@@ -168,7 +168,7 @@ func TestGetImmediateAbstractElements(t *testing.T) {
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	refinedElement := uOfD.NewElement(hl)
-	abstractElements := refinedElement.getImmediateAbstractElements(hl)
+	abstractElements := uOfD.getImmediateAbstractElements(refinedElement, hl)
 	if len(abstractElements) != 0 {
 		t.Error("AbstractElements length not 0\n")
 	}
@@ -176,7 +176,7 @@ func TestGetImmediateAbstractElements(t *testing.T) {
 	refinement1 := uOfD.NewRefinement(hl)
 	refinement1.SetAbstractElement(abstractElement1, hl)
 	refinement1.SetRefinedElement(refinedElement, hl)
-	abstractElements = refinedElement.getImmediateAbstractElements(hl)
+	abstractElements = uOfD.getImmediateAbstractElements(refinedElement, hl)
 	if len(abstractElements) != 1 {
 		t.Error("AbstractElements length != 1")
 	}
@@ -187,7 +187,7 @@ func TestGetImmediateAbstractElements(t *testing.T) {
 	refinement2 := uOfD.NewRefinement(hl)
 	refinement2.SetAbstractElement(abstractElement2, hl)
 	refinement2.SetRefinedElement(refinedElement, hl)
-	abstractElements = refinedElement.getImmediateAbstractElements(hl)
+	abstractElements = uOfD.getImmediateAbstractElements(refinedElement, hl)
 	if len(abstractElements) != 2 {
 		t.Error("Abstractions length != 2")
 	}
@@ -196,74 +196,74 @@ func TestGetImmediateAbstractElements(t *testing.T) {
 	}
 }
 
-func TestGetImmediateAbstractions(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
-	var wg sync.WaitGroup
-	hl := NewHeldLocks(&wg)
-	defer hl.ReleaseLocks()
-	refinedElement := uOfD.NewElement(hl)
-	abstractions := refinedElement.getImmediateAbstractions(hl)
-	if len(abstractions) != 0 {
-		t.Error("Abstractions length not 0\n")
-	}
-	abstractElement1 := uOfD.NewElement(hl)
-	refinement1 := uOfD.NewRefinement(hl)
-	refinement1.SetAbstractElement(abstractElement1, hl)
-	refinement1.SetRefinedElement(refinedElement, hl)
-	abstractions = refinedElement.getImmediateAbstractions(hl)
-	if len(abstractions) != 1 {
-		t.Error("Abstractions length != 1")
-	}
-	if abstractions[0] != refinement1 {
-		t.Error("Abstractions first element not refinement1")
-	}
-	abstractElement2 := uOfD.NewElement(hl)
-	refinement2 := uOfD.NewRefinement(hl)
-	refinement2.SetAbstractElement(abstractElement2, hl)
-	refinement2.SetRefinedElement(refinedElement, hl)
-	abstractions = refinedElement.getImmediateAbstractions(hl)
-	if len(abstractions) != 2 {
-		t.Error("Abstractions length != 2")
-	}
-	if abstractions[1] != refinement2 {
-		t.Error("Abstractions second element not refinement2")
-	}
-}
-
-func TestGetImmediateRefinements(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
-	var wg sync.WaitGroup
-	hl := NewHeldLocks(&wg)
-	defer hl.ReleaseLocks()
-	abstractElement := uOfD.NewElement(hl)
-	refinedElement1 := uOfD.NewElement(hl)
-	refinedElement2 := uOfD.NewElement(hl)
-	refinements := abstractElement.getImmediateRefinements(hl)
-	if len(refinements) != 0 {
-		t.Error("Refinements length not 0\n")
-	}
-	refinement1 := uOfD.NewRefinement(hl)
-	refinement1.SetAbstractElement(abstractElement, hl)
-	refinement1.SetRefinedElement(refinedElement1, hl)
-	refinements = abstractElement.getImmediateRefinements(hl)
-	if len(refinements) != 1 {
-		t.Error("Refinements length != 1")
-	}
-	if refinements[0] != refinement1 {
-		t.Error("Refinements first element not refinement1")
-	}
-	refinement2 := uOfD.NewRefinement(hl)
-	refinement2.SetAbstractElement(abstractElement, hl)
-	refinement2.SetRefinedElement(refinedElement2, hl)
-	refinements = abstractElement.getImmediateRefinements(hl)
-	if len(refinements) != 2 {
-		t.Error("Refinements length != 2")
-	}
-	if refinements[1] != refinement2 {
-		t.Error("Refinements second element not refinement2")
-	}
-}
-
+//func TestGetImmediateAbstractions(t *testing.T) {
+//	uOfD := NewUniverseOfDiscourse()
+//	var wg sync.WaitGroup
+//	hl := NewHeldLocks(&wg)
+//	defer hl.ReleaseLocks()
+//	refinedElement := uOfD.NewElement(hl)
+//	abstractions := refinedElement.getImmediateAbstractions(hl)
+//	if len(abstractions) != 0 {
+//		t.Error("Abstractions length not 0\n")
+//	}
+//	abstractElement1 := uOfD.NewElement(hl)
+//	refinement1 := uOfD.NewRefinement(hl)
+//	refinement1.SetAbstractElement(abstractElement1, hl)
+//	refinement1.SetRefinedElement(refinedElement, hl)
+//	abstractions = refinedElement.getImmediateAbstractions(hl)
+//	if len(abstractions) != 1 {
+//		t.Error("Abstractions length != 1")
+//	}
+//	if abstractions[0] != refinement1 {
+//		t.Error("Abstractions first element not refinement1")
+//	}
+//	abstractElement2 := uOfD.NewElement(hl)
+//	refinement2 := uOfD.NewRefinement(hl)
+//	refinement2.SetAbstractElement(abstractElement2, hl)
+//	refinement2.SetRefinedElement(refinedElement, hl)
+//	abstractions = refinedElement.getImmediateAbstractions(hl)
+//	if len(abstractions) != 2 {
+//		t.Error("Abstractions length != 2")
+//	}
+//	if abstractions[1] != refinement2 {
+//		t.Error("Abstractions second element not refinement2")
+//	}
+//}
+//
+//func TestGetImmediateRefinements(t *testing.T) {
+//	uOfD := NewUniverseOfDiscourse()
+//	var wg sync.WaitGroup
+//	hl := NewHeldLocks(&wg)
+//	defer hl.ReleaseLocks()
+//	abstractElement := uOfD.NewElement(hl)
+//	refinedElement1 := uOfD.NewElement(hl)
+//	refinedElement2 := uOfD.NewElement(hl)
+//	refinements := abstractElement.getImmediateRefinements(hl)
+//	if len(refinements) != 0 {
+//		t.Error("Refinements length not 0\n")
+//	}
+//	refinement1 := uOfD.NewRefinement(hl)
+//	refinement1.SetAbstractElement(abstractElement, hl)
+//	refinement1.SetRefinedElement(refinedElement1, hl)
+//	refinements = abstractElement.getImmediateRefinements(hl)
+//	if len(refinements) != 1 {
+//		t.Error("Refinements length != 1")
+//	}
+//	if refinements[0] != refinement1 {
+//		t.Error("Refinements first element not refinement1")
+//	}
+//	refinement2 := uOfD.NewRefinement(hl)
+//	refinement2.SetAbstractElement(abstractElement, hl)
+//	refinement2.SetRefinedElement(refinedElement2, hl)
+//	refinements = abstractElement.getImmediateRefinements(hl)
+//	if len(refinements) != 2 {
+//		t.Error("Refinements length != 2")
+//	}
+//	if refinements[1] != refinement2 {
+//		t.Error("Refinements second element not refinement2")
+//	}
+//}
+//
 func TestIsRefinementOf(t *testing.T) {
 	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
@@ -281,10 +281,10 @@ func TestIsRefinementOf(t *testing.T) {
 	refinement2.SetAbstractElement(abstraction2, hl)
 	refinement2.SetRefinedElement(refinedElement, hl)
 
-	if refinedElement.IsRefinementOf(abstraction1, hl) == false {
+	if uOfD.IsRefinementOf(refinedElement, abstraction1, hl) == false {
 		t.Errorf("Refinement of Element failed")
 	}
-	if refinedElement.IsRefinementOf(abstraction2, hl) == false {
+	if uOfD.IsRefinementOf(refinedElement, abstraction2, hl) == false {
 		t.Errorf("Refinement of ElementReference failed")
 	}
 }

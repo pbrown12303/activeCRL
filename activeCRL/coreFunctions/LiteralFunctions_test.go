@@ -210,7 +210,7 @@ func TestSetLiteralValue(t *testing.T) {
 	wg.Wait()
 
 	// Now check the replication
-	if replicate.IsRefinementOf(setLiteralValue, hl) != true {
+	if uOfD.IsRefinementOf(replicate, setLiteralValue, hl) != true {
 		t.Errorf("Replicate is not refinement of SetLiteralValue()")
 	}
 	sourceLiteralRef := core.GetChildLiteralReferenceWithAncestorUri(replicate, LiteralSetLiteralValueSourceLiteralRefUri, hl)

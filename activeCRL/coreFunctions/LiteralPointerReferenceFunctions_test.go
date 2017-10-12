@@ -163,7 +163,7 @@ func TestGetLiteralPointerPointer(t *testing.T) {
 	wg.Wait()
 
 	// Now check the replication
-	if replicate.IsRefinementOf(getLiteralPointerPointer, hl) != true {
+	if uOfD.IsRefinementOf(replicate, getLiteralPointerPointer, hl) != true {
 		t.Errorf("Replicate is not refinement of GetLiteralPointerPointer()")
 	}
 	sourceLiteralPointerReferenceRef := core.GetChildElementReferenceWithAncestorUri(replicate, LiteralPointerReferenceGetLiteralPointerPointerSourceLiteralPointerReferenceRefUri, hl)
@@ -220,7 +220,7 @@ func TestGetReferencedLiteralPointer(t *testing.T) {
 	wg.Wait()
 
 	// Now check the replication
-	if replicate.IsRefinementOf(getReferencedLiteralPointer, hl) != true {
+	if uOfD.IsRefinementOf(replicate, getReferencedLiteralPointer, hl) != true {
 		t.Errorf("Replicate is not refinement of GetReferencedLiteralPointer()")
 	}
 	sourceLiteralPointerReferenceRef := core.GetChildElementReferenceWithAncestorUri(replicate, LiteralPointerReferenceGetReferencedLiteralPointerSourceLiteralPointerReferenceRefUri, hl)
@@ -277,7 +277,7 @@ func TestSetReferencedLiteralPointer(t *testing.T) {
 	wg.Wait()
 
 	// Now check the replication
-	if replicate.IsRefinementOf(setReferencedLiteralPointer, hl) != true {
+	if uOfD.IsRefinementOf(replicate, setReferencedLiteralPointer, hl) != true {
 		t.Errorf("Replicate is not refinement of SetReferencedLiteralPointer()")
 	}
 	sourceLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(replicate, LiteralPointerReferenceSetReferencedLiteralPointerSourceLiteralPointerRefUri, hl)

@@ -40,10 +40,10 @@ func TestGetChildElementWithAncestorUri(t *testing.T) {
 		t.Errorf("Child found when it should not have been")
 	}
 	SetUri(ancestor, uri, hl)
-	if len(child.GetAbstractElementsRecursively(hl)) != 1 {
+	if len(uOfD.GetAbstractElementsRecursively(child, hl)) != 1 {
 		t.Errorf("Ancestor set size != 1")
 	}
-	foundAncestor := child.GetAbstractElementsRecursively(hl)[0]
+	foundAncestor := uOfD.GetAbstractElementsRecursively(child, hl)[0]
 	if GetUri(foundAncestor, hl) != uri {
 		t.Errorf("Ancestor uri not set")
 	}
@@ -71,10 +71,10 @@ func TestGetChildElementReferenceWithAncestorUri(t *testing.T) {
 		t.Errorf("Child found when it should not have been")
 	}
 	SetUri(ancestor, uri, hl)
-	if len(child.GetAbstractElementsRecursively(hl)) != 1 {
+	if len(uOfD.GetAbstractElementsRecursively(child, hl)) != 1 {
 		t.Errorf("Ancestor set size != 1")
 	}
-	foundAncestor := child.GetAbstractElementsRecursively(hl)[0]
+	foundAncestor := uOfD.GetAbstractElementsRecursively(child, hl)[0]
 	if GetUri(foundAncestor, hl) != uri {
 		t.Errorf("Ancestor uri not set")
 	}
@@ -157,7 +157,7 @@ func TestReplicateAsRefinement(t *testing.T) {
 	replicate := uOfD.NewElement(hl)
 	ReplicateAsRefinement(original, replicate, hl)
 
-	if replicate.IsRefinementOf(original, hl) == false {
+	if uOfD.IsRefinementOf(replicate, original, hl) == false {
 		t.Errorf("Replicate not refinement of Original")
 	}
 
@@ -168,19 +168,19 @@ func TestReplicateAsRefinement(t *testing.T) {
 	var foundChild5Replicate bool = false
 
 	for _, replicateChild := range replicate.GetOwnedElements(hl) {
-		if replicateChild.IsRefinementOf(oChild1, hl) {
+		if uOfD.IsRefinementOf(replicateChild, oChild1, hl) {
 			foundChild1Replicate = true
 		}
-		if replicateChild.IsRefinementOf(oChild2, hl) {
+		if uOfD.IsRefinementOf(replicateChild, oChild2, hl) {
 			foundChild2Replicate = true
 		}
-		if replicateChild.IsRefinementOf(oChild3, hl) {
+		if uOfD.IsRefinementOf(replicateChild, oChild3, hl) {
 			foundChild3Replicate = true
 		}
-		if replicateChild.IsRefinementOf(oChild4, hl) {
+		if uOfD.IsRefinementOf(replicateChild, oChild4, hl) {
 			foundChild4Replicate = true
 		}
-		if replicateChild.IsRefinementOf(oChild5, hl) {
+		if uOfD.IsRefinementOf(replicateChild, oChild5, hl) {
 			foundChild5Replicate = true
 		}
 	}

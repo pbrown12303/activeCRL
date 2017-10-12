@@ -314,7 +314,7 @@ func setLiteral(replicate core.Element, changeNotifications []*core.ChangeNotifi
 	}
 }
 
-func BuildCoreLiteralPointerFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCoreLiteralPointerFunctions(coreFunctionsElement core.Element, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// LiteralPointerFunctions
 	literalPointerFunctions := uOfD.NewElement(hl, LiteralPointerFunctionsUri)

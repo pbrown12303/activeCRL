@@ -289,7 +289,7 @@ func setUri(replicate core.Element, changeNotifications []*core.ChangeNotificati
 }
 
 // UpdateRecoveredCoreBaseElementFunctions() updates the representations of all BaseElementFunctions. The function is idempotent.
-func BuildCoreBaseElementFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCoreBaseElementFunctions(coreFunctionsElement core.Element, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// BaseElementFunctions
 	baseElementFunctions := uOfD.NewElement(hl, BaseElementFunctionsUri)

@@ -15,7 +15,7 @@ import (
 
 type element struct {
 	baseElement
-	ownedBaseElements map[string]BaseElement
+	ownedBaseElements map[uuid.UUID]BaseElement
 }
 
 // addOwnedBaseElement() adds the indicated base element as a child (owned)
@@ -52,7 +52,7 @@ func childChanged(el Element, notification *ChangeNotification, hl *HeldLocks) {
 
 func (elPtr *element) clone() *element {
 	var cl element
-	cl.ownedBaseElements = make(map[string]BaseElement)
+	cl.ownedBaseElements = make(map[uuid.UUID]BaseElement)
 	cl.cloneAttributes(*elPtr)
 	return &cl
 }
@@ -65,26 +65,6 @@ func (elPtr *element) cloneAttributes(source element) {
 	for key, value := range source.ownedBaseElements {
 		elPtr.ownedBaseElements[key] = value
 	}
-}
-
-// GetAbstractElementsRecursivelyNoLock() returns all of the elements abstractions
-func (elPtr *element) GetAbstractElementsRecursively(hl *HeldLocks) []Element {
-	if hl == nil {
-		hl = NewHeldLocks(nil)
-		defer hl.ReleaseLocks()
-	}
-	hl.LockBaseElement(elPtr)
-	abstractElements := elPtr.getImmediateAbstractElements(hl)
-	var ancestors []Element
-	for _, element := range abstractElements {
-		for _, ancestor := range element.GetAbstractElementsRecursively(hl) {
-			ancestors = append(ancestors, ancestor)
-		}
-	}
-	for _, ancestor := range ancestors {
-		abstractElements = append(abstractElements, ancestor)
-	}
-	return abstractElements
 }
 
 func (elPtr *element) GetDefinition(hl *HeldLocks) string {
@@ -131,60 +111,6 @@ func (elPtr *element) GetDefinitionLiteralPointer(hl *HeldLocks) LiteralPointer 
 		}
 	}
 	return nil
-}
-
-func (elPtr *element) getImmediateAbstractElements(hl *HeldLocks) []Element {
-	if hl == nil {
-		hl = NewHeldLocks(nil)
-		defer hl.ReleaseLocks()
-	}
-	hl.LockBaseElement(elPtr)
-	var abstractElements []Element
-	abstractions := elPtr.getImmediateAbstractions(hl)
-	if abstractions != nil {
-		for _, abstraction := range abstractions {
-			if abstraction.GetAbstractElement(hl) != nil {
-				abstractElements = append(abstractElements, abstraction.GetAbstractElement(hl))
-			}
-		}
-	}
-	return abstractElements
-}
-
-func (elPtr *element) getImmediateAbstractions(hl *HeldLocks) []Refinement {
-	if hl == nil {
-		hl = NewHeldLocks(nil)
-		defer hl.ReleaseLocks()
-	}
-	hl.LockBaseElement(elPtr)
-	var abstractions []Refinement
-	ePtrs := elPtr.uOfD.elementListenerMap.GetEntry(elPtr.GetId(hl))
-	if ePtrs != nil {
-		for _, ePtr := range *ePtrs {
-			if ePtr.GetElementPointerRole(hl) == REFINED_ELEMENT {
-				abstractions = append(abstractions, GetOwningElement(ePtr, hl).(Refinement))
-			}
-		}
-	}
-	return abstractions
-}
-
-func (elPtr *element) getImmediateRefinements(hl *HeldLocks) []Refinement {
-	if hl == nil {
-		hl = NewHeldLocks(nil)
-		defer hl.ReleaseLocks()
-	}
-	hl.LockBaseElement(elPtr)
-	var refinements []Refinement
-	ePtrs := elPtr.uOfD.elementListenerMap.GetEntry(elPtr.GetId(hl))
-	if ePtrs != nil {
-		for _, ePtr := range *ePtrs {
-			if ePtr.GetElementPointerRole(hl) == ABSTRACT_ELEMENT {
-				refinements = append(refinements, GetOwningElement(ePtr, hl).(Refinement))
-			}
-		}
-	}
-	return refinements
 }
 
 func (elPtr *element) GetNameLiteral(hl *HeldLocks) Literal {
@@ -245,19 +171,6 @@ func (elPtr *element) GetOwnedElements(hl *HeldLocks) []Element {
 	}
 	return obe
 }
-
-//func (elPtr *element) GetOwningElement(hl *HeldLocks) Element {
-//	if hl == nil {
-//		hl = NewHeldLocks(nil)
-//		defer hl.ReleaseLocks()
-//	}
-//	hl.LockBaseElement(elPtr)
-//	oep := elPtr.GetOwningElementPointer(hl)
-//	if oep != nil {
-//		return oep.GetElement(hl)
-//	}
-//	return nil
-//}
 
 func (elPtr *element) GetOwningElementPointer(hl *HeldLocks) ElementPointer {
 	if hl == nil {
@@ -324,7 +237,7 @@ func (elPtr *element) GetUriLiteralPointer(hl *HeldLocks) LiteralPointer {
 // nor are monitors of this element notified of changes.
 func (elPtr *element) initializeElement(uri ...string) {
 	elPtr.initializeBaseElement(uri...)
-	elPtr.ownedBaseElements = make(map[string]BaseElement)
+	elPtr.ownedBaseElements = make(map[uuid.UUID]BaseElement)
 }
 
 // internalAddOwnedBaseElement() adds the indicated base element as a child (owned)
@@ -337,7 +250,7 @@ func (elPtr *element) internalAddOwnedBaseElement(be BaseElement, hl *HeldLocks)
 	}
 	hl.LockBaseElement(elPtr)
 	if be != nil && be.GetId(hl) != uuid.Nil {
-		elPtr.ownedBaseElements[be.GetId(hl).String()] = be
+		elPtr.ownedBaseElements[be.GetId(hl)] = be
 	}
 }
 
@@ -351,7 +264,7 @@ func (elPtr *element) internalRemoveOwnedBaseElement(be BaseElement, hl *HeldLoc
 	}
 	hl.LockBaseElement(elPtr)
 	if be != nil && be.GetId(hl) != uuid.Nil {
-		delete(elPtr.ownedBaseElements, be.GetId(hl).String())
+		delete(elPtr.ownedBaseElements, be.GetId(hl))
 	}
 }
 
@@ -389,16 +302,7 @@ func (bePtr *element) isEquivalent(be *element, hl *HeldLocks) bool {
 
 func (ePtr *element) IsOwnedBaseElement(be BaseElement, hl *HeldLocks) bool {
 	for key, _ := range ePtr.ownedBaseElements {
-		if key == be.GetId(hl).String() {
-			return true
-		}
-	}
-	return false
-}
-
-func (elPtr *element) IsRefinementOf(el Element, hl *HeldLocks) bool {
-	for _, abstractElement := range elPtr.GetAbstractElementsRecursively(hl) {
-		if el == abstractElement {
+		if key == be.GetId(hl) {
 			return true
 		}
 	}
@@ -489,30 +393,6 @@ func removeOwnedBaseElement(elPtr Element, be BaseElement, hl *HeldLocks) {
 	postChange(elPtr, notification, hl)
 }
 
-type Element interface {
-	BaseElement
-	GetAbstractElementsRecursively(*HeldLocks) []Element
-	GetDefinition(*HeldLocks) string
-	GetDefinitionLiteral(*HeldLocks) Literal
-	GetDefinitionLiteralPointer(*HeldLocks) LiteralPointer
-	getImmediateAbstractElements(*HeldLocks) []Element
-	getImmediateAbstractions(*HeldLocks) []Refinement
-	getImmediateRefinements(*HeldLocks) []Refinement
-	GetNameLiteral(*HeldLocks) Literal
-	GetNameLiteralPointer(*HeldLocks) LiteralPointer
-	GetOwnedBaseElements(*HeldLocks) []BaseElement
-	GetOwnedElements(*HeldLocks) []Element
-	//	GetOwningElement(*HeldLocks) Element
-	GetOwningElementPointer(*HeldLocks) ElementPointer
-	GetUriLiteral(*HeldLocks) Literal
-	GetUriLiteralPointer(*HeldLocks) LiteralPointer
-	internalAddOwnedBaseElement(BaseElement, *HeldLocks)
-	internalRemoveOwnedBaseElement(BaseElement, *HeldLocks)
-	IsOwnedBaseElement(BaseElement, *HeldLocks) bool
-	IsRefinementOf(Element, *HeldLocks) bool
-	MarshalJSON() ([]byte, error)
-}
-
 func SetDefinition(el Element, definition string, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
@@ -551,4 +431,23 @@ func SetName(el Element, name string, hl *HeldLocks) {
 		nlp.SetLiteral(nl, hl)
 	}
 	nl.SetLiteralValue(name, hl)
+}
+
+type Element interface {
+	BaseElement
+	GetDefinition(*HeldLocks) string
+	GetDefinitionLiteral(*HeldLocks) Literal
+	GetDefinitionLiteralPointer(*HeldLocks) LiteralPointer
+	GetNameLiteral(*HeldLocks) Literal
+	GetNameLiteralPointer(*HeldLocks) LiteralPointer
+	GetOwnedBaseElements(*HeldLocks) []BaseElement
+	GetOwnedElements(*HeldLocks) []Element
+	//	GetOwningElement(*HeldLocks) Element
+	GetOwningElementPointer(*HeldLocks) ElementPointer
+	GetUriLiteral(*HeldLocks) Literal
+	GetUriLiteralPointer(*HeldLocks) LiteralPointer
+	internalAddOwnedBaseElement(BaseElement, *HeldLocks)
+	internalRemoveOwnedBaseElement(BaseElement, *HeldLocks)
+	IsOwnedBaseElement(BaseElement, *HeldLocks) bool
+	MarshalJSON() ([]byte, error)
 }
