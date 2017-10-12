@@ -289,208 +289,137 @@ func setUri(replicate core.Element, changeNotifications []*core.ChangeNotificati
 }
 
 // UpdateRecoveredCoreBaseElementFunctions() updates the representations of all BaseElementFunctions. The function is idempotent.
-func UpdateRecoveredCoreBaseElementFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCoreBaseElementFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// BaseElementFunctions
-	baseElementFunctions := uOfD.GetElementWithUri(BaseElementFunctionsUri)
-	if baseElementFunctions == nil {
-		baseElementFunctions = uOfD.NewElement(hl)
-		core.SetName(baseElementFunctions, "BaseElementFunctions", hl)
-		core.SetOwningElement(baseElementFunctions, coreFunctionsElement, hl)
-		core.SetUri(baseElementFunctions, BaseElementFunctionsUri, hl)
-	}
+	baseElementFunctions := uOfD.NewElement(hl, BaseElementFunctionsUri)
+	core.SetName(baseElementFunctions, "BaseElementFunctions", hl)
+	core.SetOwningElement(baseElementFunctions, coreFunctionsElement, hl)
+	core.SetUri(baseElementFunctions, BaseElementFunctionsUri, hl)
 
 	// Delete
-	del := uOfD.GetElementWithUri(BaseElementDeleteUri)
-	if del == nil {
-		del = uOfD.NewElement(hl)
-		core.SetName(del, "Delete", hl)
-		core.SetOwningElement(del, baseElementFunctions, hl)
-		core.SetUri(del, BaseElementDeleteUri, hl)
-	}
+	del := uOfD.NewElement(hl, BaseElementDeleteUri)
+	core.SetName(del, "Delete", hl)
+	core.SetOwningElement(del, baseElementFunctions, hl)
+	core.SetUri(del, BaseElementDeleteUri, hl)
+
 	// Delete.TargetReference
-	delTargetReference := core.GetChildBaseElementReferenceWithUri(del, BaseElementDeleteDeletedElementRefUri, hl)
-	if delTargetReference == nil {
-		delTargetReference = uOfD.NewBaseElementReference(hl)
-		core.SetOwningElement(delTargetReference, del, hl)
-		core.SetName(delTargetReference, "DeletedElementRef", hl)
-		core.SetUri(delTargetReference, BaseElementDeleteDeletedElementRefUri, hl)
-	}
+	delTargetReference := uOfD.NewBaseElementReference(hl, BaseElementDeleteDeletedElementRefUri)
+	core.SetOwningElement(delTargetReference, del, hl)
+	core.SetName(delTargetReference, "DeletedElementRef", hl)
+	core.SetUri(delTargetReference, BaseElementDeleteDeletedElementRefUri, hl)
 
 	// GetId
-	getId := uOfD.GetElementWithUri(BaseElementGetIdUri)
-	if getId == nil {
-		getId = uOfD.NewElement(hl)
-		core.SetName(getId, "GetId", hl)
-		core.SetOwningElement(getId, baseElementFunctions, hl)
-		core.SetUri(getId, BaseElementGetIdUri, hl)
-	}
+	getId := uOfD.NewElement(hl, BaseElementGetIdUri)
+	core.SetName(getId, "GetId", hl)
+	core.SetOwningElement(getId, baseElementFunctions, hl)
+	core.SetUri(getId, BaseElementGetIdUri, hl)
 	// GetId.SourceReference
-	getIdSourceReference := core.GetChildBaseElementReferenceWithUri(getId, BaseElementGetIdSourceBaseElementRefUri, hl)
-	if getIdSourceReference == nil {
-		getIdSourceReference = uOfD.NewBaseElementReference(hl)
-		core.SetOwningElement(getIdSourceReference, getId, hl)
-		core.SetName(getIdSourceReference, "SourceBaseElementRef", hl)
-		core.SetUri(getIdSourceReference, BaseElementGetIdSourceBaseElementRefUri, hl)
-	}
+	getIdSourceReference := uOfD.NewBaseElementReference(hl, BaseElementGetIdSourceBaseElementRefUri)
+	core.SetOwningElement(getIdSourceReference, getId, hl)
+	core.SetName(getIdSourceReference, "SourceBaseElementRef", hl)
+	core.SetUri(getIdSourceReference, BaseElementGetIdSourceBaseElementRefUri, hl)
 	// GetIdTargetLiteralReference
-	getIdTargetReference := core.GetChildLiteralReferenceWithUri(getId, BaseElementGetIdCreatedLiteralRefUri, hl)
-	if getIdTargetReference == nil {
-		getIdTargetReference = uOfD.NewLiteralReference(hl)
-		core.SetOwningElement(getIdTargetReference, getId, hl)
-		core.SetName(getIdTargetReference, "CreatedLiteralRef", hl)
-		core.SetUri(getIdTargetReference, BaseElementGetIdCreatedLiteralRefUri, hl)
-	}
+	getIdTargetReference := uOfD.NewLiteralReference(hl, BaseElementGetIdCreatedLiteralRefUri)
+	core.SetOwningElement(getIdTargetReference, getId, hl)
+	core.SetName(getIdTargetReference, "CreatedLiteralRef", hl)
+	core.SetUri(getIdTargetReference, BaseElementGetIdCreatedLiteralRefUri, hl)
 
 	// GetName
-	getName := uOfD.GetElementWithUri(BaseElementGetNameUri)
-	if getName == nil {
-		getName = uOfD.NewElement(hl)
-		core.SetName(getName, "GetName", hl)
-		core.SetOwningElement(getName, baseElementFunctions, hl)
-		core.SetUri(getName, BaseElementGetNameUri, hl)
-	}
+	getName := uOfD.NewElement(hl, BaseElementGetNameUri)
+	core.SetName(getName, "GetName", hl)
+	core.SetOwningElement(getName, baseElementFunctions, hl)
+	core.SetUri(getName, BaseElementGetNameUri, hl)
 	// GetName.SourceReference
-	getNameSourceReference := core.GetChildBaseElementReferenceWithUri(getName, BaseElementGetNameSourceBaseElementRefUri, hl)
-	if getNameSourceReference == nil {
-		getNameSourceReference = uOfD.NewBaseElementReference(hl)
-		core.SetOwningElement(getNameSourceReference, getName, hl)
-		core.SetName(getNameSourceReference, "SourceBaseElementRef", hl)
-		core.SetUri(getNameSourceReference, BaseElementGetNameSourceBaseElementRefUri, hl)
-	}
+	getNameSourceReference := uOfD.NewBaseElementReference(hl, BaseElementGetNameSourceBaseElementRefUri)
+	core.SetOwningElement(getNameSourceReference, getName, hl)
+	core.SetName(getNameSourceReference, "SourceBaseElementRef", hl)
+	core.SetUri(getNameSourceReference, BaseElementGetNameSourceBaseElementRefUri, hl)
 	// GetNameTargetLiteralReference
-	getNameTargetReference := core.GetChildLiteralReferenceWithUri(getName, BaseElementGetNameCreatedLiteralRefUri, hl)
-	if getNameTargetReference == nil {
-		getNameTargetReference = uOfD.NewLiteralReference(hl)
-		core.SetOwningElement(getNameTargetReference, getName, hl)
-		core.SetName(getNameTargetReference, "CreatedLiteralRef", hl)
-		core.SetUri(getNameTargetReference, BaseElementGetNameCreatedLiteralRefUri, hl)
-	}
+	getNameTargetReference := uOfD.NewLiteralReference(hl, BaseElementGetNameCreatedLiteralRefUri)
+	core.SetOwningElement(getNameTargetReference, getName, hl)
+	core.SetName(getNameTargetReference, "CreatedLiteralRef", hl)
+	core.SetUri(getNameTargetReference, BaseElementGetNameCreatedLiteralRefUri, hl)
 
 	// GetOwningElement
-	getOwningElement := uOfD.GetElementWithUri(BaseElementGetOwningElementUri)
-	if getOwningElement == nil {
-		getOwningElement = uOfD.NewElement(hl)
-		core.SetName(getOwningElement, "GetOwningElement", hl)
-		core.SetOwningElement(getOwningElement, baseElementFunctions, hl)
-		core.SetUri(getOwningElement, BaseElementGetOwningElementUri, hl)
-	}
+	getOwningElement := uOfD.NewElement(hl, BaseElementGetOwningElementUri)
+	core.SetName(getOwningElement, "GetOwningElement", hl)
+	core.SetOwningElement(getOwningElement, baseElementFunctions, hl)
+	core.SetUri(getOwningElement, BaseElementGetOwningElementUri, hl)
 	// GetOwningElement.SourceReference
-	getOwningElementSourceReference := core.GetChildBaseElementReferenceWithUri(getOwningElement, BaseElementGetOwningElementSourceBaseElementRefUri, hl)
-	if getOwningElementSourceReference == nil {
-		getOwningElementSourceReference = uOfD.NewBaseElementReference(hl)
-		core.SetOwningElement(getOwningElementSourceReference, getOwningElement, hl)
-		core.SetName(getOwningElementSourceReference, "SourceBaseElementRef", hl)
-		core.SetUri(getOwningElementSourceReference, BaseElementGetOwningElementSourceBaseElementRefUri, hl)
-	}
+	getOwningElementSourceReference := uOfD.NewBaseElementReference(hl, BaseElementGetOwningElementSourceBaseElementRefUri)
+	core.SetOwningElement(getOwningElementSourceReference, getOwningElement, hl)
+	core.SetName(getOwningElementSourceReference, "SourceBaseElementRef", hl)
+	core.SetUri(getOwningElementSourceReference, BaseElementGetOwningElementSourceBaseElementRefUri, hl)
 	// GetOwningElementTargetElementReference
-	getOwningElementTargetReference := core.GetChildElementReferenceWithUri(getOwningElement, BaseElementGetOwningElementOwningElementRefUri, hl)
-	if getOwningElementTargetReference == nil {
-		getOwningElementTargetReference = uOfD.NewElementReference(hl)
-		core.SetOwningElement(getOwningElementTargetReference, getOwningElement, hl)
-		core.SetName(getOwningElementTargetReference, "OwningElementRef", hl)
-		core.SetUri(getOwningElementTargetReference, BaseElementGetOwningElementOwningElementRefUri, hl)
-	}
+	getOwningElementTargetReference := uOfD.NewElementReference(hl, BaseElementGetOwningElementOwningElementRefUri)
+	core.SetOwningElement(getOwningElementTargetReference, getOwningElement, hl)
+	core.SetName(getOwningElementTargetReference, "OwningElementRef", hl)
+	core.SetUri(getOwningElementTargetReference, BaseElementGetOwningElementOwningElementRefUri, hl)
 
 	// GetUri
-	getUri := uOfD.GetElementWithUri(BaseElementGetUriUri)
-	if getUri == nil {
-		getUri = uOfD.NewElement(hl)
-		core.SetName(getUri, "GetUri", hl)
-		core.SetOwningElement(getUri, baseElementFunctions, hl)
-		core.SetUri(getUri, BaseElementGetUriUri, hl)
-	}
+	getUri := uOfD.NewElement(hl, BaseElementGetUriUri)
+	core.SetName(getUri, "GetUri", hl)
+	core.SetOwningElement(getUri, baseElementFunctions, hl)
+	core.SetUri(getUri, BaseElementGetUriUri, hl)
 	// GetUri.SourceReference
-	getUriSourceReference := core.GetChildBaseElementReferenceWithUri(getUri, BaseElementGetUriSourceBaseElementRefUri, hl)
-	if getUriSourceReference == nil {
-		getUriSourceReference = uOfD.NewBaseElementReference(hl)
-		core.SetOwningElement(getUriSourceReference, getUri, hl)
-		core.SetName(getUriSourceReference, "SourceBaseElementRef", hl)
-		core.SetUri(getUriSourceReference, BaseElementGetUriSourceBaseElementRefUri, hl)
-	}
+	getUriSourceReference := uOfD.NewBaseElementReference(hl, BaseElementGetUriSourceBaseElementRefUri)
+	core.SetOwningElement(getUriSourceReference, getUri, hl)
+	core.SetName(getUriSourceReference, "SourceBaseElementRef", hl)
+	core.SetUri(getUriSourceReference, BaseElementGetUriSourceBaseElementRefUri, hl)
 	// GetUriTargetLiteralReference
-	getUriTargetReference := core.GetChildLiteralReferenceWithUri(getUri, BaseElementGetUriCreatedLiteralRefUri, hl)
-	if getUriTargetReference == nil {
-		getUriTargetReference = uOfD.NewLiteralReference(hl)
-		core.SetOwningElement(getUriTargetReference, getUri, hl)
-		core.SetName(getUriTargetReference, "CreatedLiteralRef", hl)
-		core.SetUri(getUriTargetReference, BaseElementGetUriCreatedLiteralRefUri, hl)
-	}
+	getUriTargetReference := uOfD.NewLiteralReference(hl, BaseElementGetUriCreatedLiteralRefUri)
+	core.SetOwningElement(getUriTargetReference, getUri, hl)
+	core.SetName(getUriTargetReference, "CreatedLiteralRef", hl)
+	core.SetUri(getUriTargetReference, BaseElementGetUriCreatedLiteralRefUri, hl)
 
 	// GetVersion
-	getVersion := uOfD.GetElementWithUri(BaseElementGetVersionUri)
-	if getVersion == nil {
-		getVersion = uOfD.NewElement(hl)
-		core.SetName(getVersion, "GetVersion", hl)
-		core.SetOwningElement(getVersion, baseElementFunctions, hl)
-		core.SetUri(getVersion, BaseElementGetVersionUri, hl)
-	}
+	getVersion := uOfD.NewElement(hl, BaseElementGetVersionUri)
+	core.SetName(getVersion, "GetVersion", hl)
+	core.SetOwningElement(getVersion, baseElementFunctions, hl)
+	core.SetUri(getVersion, BaseElementGetVersionUri, hl)
 	// GetVersion.SourceReference
-	getVersionSourceReference := core.GetChildBaseElementReferenceWithUri(getVersion, BaseElementGetVersionSourceBaseElementRefUri, hl)
-	if getVersionSourceReference == nil {
-		getVersionSourceReference = uOfD.NewBaseElementReference(hl)
-		core.SetOwningElement(getVersionSourceReference, getVersion, hl)
-		core.SetName(getVersionSourceReference, "SourceBaseElementRef", hl)
-		core.SetUri(getVersionSourceReference, BaseElementGetVersionSourceBaseElementRefUri, hl)
-	}
+	getVersionSourceReference := uOfD.NewBaseElementReference(hl, BaseElementGetVersionSourceBaseElementRefUri)
+	core.SetOwningElement(getVersionSourceReference, getVersion, hl)
+	core.SetName(getVersionSourceReference, "SourceBaseElementRef", hl)
+	core.SetUri(getVersionSourceReference, BaseElementGetVersionSourceBaseElementRefUri, hl)
 	// GetVersionTargetLiteralReference
-	getVersionTargetReference := core.GetChildLiteralReferenceWithUri(getVersion, BaseElementGetVersionCreatedLiteralRefUri, hl)
-	if getVersionTargetReference == nil {
-		getVersionTargetReference = uOfD.NewLiteralReference(hl)
-		core.SetOwningElement(getVersionTargetReference, getVersion, hl)
-		core.SetName(getVersionTargetReference, "CreatedLiteralRef", hl)
-		core.SetUri(getVersionTargetReference, BaseElementGetVersionCreatedLiteralRefUri, hl)
-	}
+	getVersionTargetReference := uOfD.NewLiteralReference(hl, BaseElementGetVersionCreatedLiteralRefUri)
+	core.SetOwningElement(getVersionTargetReference, getVersion, hl)
+	core.SetName(getVersionTargetReference, "CreatedLiteralRef", hl)
+	core.SetUri(getVersionTargetReference, BaseElementGetVersionCreatedLiteralRefUri, hl)
 
 	// SetOwningElement
-	setOwningElement := uOfD.GetElementWithUri(BaseElementSetOwningElementUri)
-	if setOwningElement == nil {
-		setOwningElement = uOfD.NewElement(hl)
-		core.SetName(setOwningElement, "SetOwningElement", hl)
-		core.SetOwningElement(setOwningElement, baseElementFunctions, hl)
-		core.SetUri(setOwningElement, BaseElementSetOwningElementUri, hl)
-	}
+	setOwningElement := uOfD.NewElement(hl, BaseElementSetOwningElementUri)
+	core.SetName(setOwningElement, "SetOwningElement", hl)
+	core.SetOwningElement(setOwningElement, baseElementFunctions, hl)
+	core.SetUri(setOwningElement, BaseElementSetOwningElementUri, hl)
 	// SetOwningElement.SourceReference
-	setOwningElementOwningElementReference := core.GetChildElementReferenceWithUri(setOwningElement, BaseElementSetOwningElementOwningElementRefUri, hl)
-	if setOwningElementOwningElementReference == nil {
-		setOwningElementOwningElementReference = uOfD.NewElementReference(hl)
-		core.SetOwningElement(setOwningElementOwningElementReference, setOwningElement, hl)
-		core.SetName(setOwningElementOwningElementReference, "OwningElementRef", hl)
-		core.SetUri(setOwningElementOwningElementReference, BaseElementSetOwningElementOwningElementRefUri, hl)
-	}
+	setOwningElementOwningElementReference := uOfD.NewElementReference(hl, BaseElementSetOwningElementOwningElementRefUri)
+	core.SetOwningElement(setOwningElementOwningElementReference, setOwningElement, hl)
+	core.SetName(setOwningElementOwningElementReference, "OwningElementRef", hl)
+	core.SetUri(setOwningElementOwningElementReference, BaseElementSetOwningElementOwningElementRefUri, hl)
 	// SetOwningElementTargetBaseElementReference
-	setOwningElementTargetBaseElementReference := core.GetChildBaseElementReferenceWithUri(setOwningElement, BaseElementSetOwningElementModifiedBaseElementRefUri, hl)
-	if setOwningElementTargetBaseElementReference == nil {
-		setOwningElementTargetBaseElementReference = uOfD.NewBaseElementReference(hl)
-		core.SetOwningElement(setOwningElementTargetBaseElementReference, setOwningElement, hl)
-		core.SetName(setOwningElementTargetBaseElementReference, "ModifiedBaseElementRef", hl)
-		core.SetUri(setOwningElementTargetBaseElementReference, BaseElementSetOwningElementModifiedBaseElementRefUri, hl)
-	}
+	setOwningElementTargetBaseElementReference := uOfD.NewBaseElementReference(hl, BaseElementSetOwningElementModifiedBaseElementRefUri)
+	core.SetOwningElement(setOwningElementTargetBaseElementReference, setOwningElement, hl)
+	core.SetName(setOwningElementTargetBaseElementReference, "ModifiedBaseElementRef", hl)
+	core.SetUri(setOwningElementTargetBaseElementReference, BaseElementSetOwningElementModifiedBaseElementRefUri, hl)
 
 	// SetUri
-	setUri := uOfD.GetElementWithUri(BaseElementSetUriUri)
-	if setUri == nil {
-		setUri = uOfD.NewElement(hl)
-		core.SetName(setUri, "SetUri", hl)
-		core.SetOwningElement(setUri, baseElementFunctions, hl)
-		core.SetUri(setUri, BaseElementSetUriUri, hl)
-	}
+	setUri := uOfD.NewElement(hl, BaseElementSetUriUri)
+	core.SetName(setUri, "SetUri", hl)
+	core.SetOwningElement(setUri, baseElementFunctions, hl)
+	core.SetUri(setUri, BaseElementSetUriUri, hl)
 	// SetUri.UriReference
-	setUriUriReference := core.GetChildLiteralReferenceWithUri(setUri, BaseElementSetUriSourceUriRefUri, hl)
-	if setUriUriReference == nil {
-		setUriUriReference = uOfD.NewLiteralReference(hl)
-		core.SetOwningElement(setUriUriReference, setUri, hl)
-		core.SetName(setUriUriReference, "SourceUriRef", hl)
-		core.SetUri(setUriUriReference, BaseElementSetUriSourceUriRefUri, hl)
-	}
+	setUriUriReference := uOfD.NewLiteralReference(hl, BaseElementSetUriSourceUriRefUri)
+	core.SetOwningElement(setUriUriReference, setUri, hl)
+	core.SetName(setUriUriReference, "SourceUriRef", hl)
+	core.SetUri(setUriUriReference, BaseElementSetUriSourceUriRefUri, hl)
 	// SetUriTargetBaseElementReference
-	setUriTargetBaseElementReference := core.GetChildBaseElementReferenceWithUri(setUri, BaseElementSetUriModifiedBaseElementRefUri, hl)
-	if setUriTargetBaseElementReference == nil {
-		setUriTargetBaseElementReference = uOfD.NewBaseElementReference(hl)
-		core.SetOwningElement(setUriTargetBaseElementReference, setUri, hl)
-		core.SetName(setUriTargetBaseElementReference, "ModifiedBaseElementRef", hl)
-		core.SetUri(setUriTargetBaseElementReference, BaseElementSetUriModifiedBaseElementRefUri, hl)
-	}
+	setUriTargetBaseElementReference := uOfD.NewBaseElementReference(hl, BaseElementSetUriModifiedBaseElementRefUri)
+	core.SetOwningElement(setUriTargetBaseElementReference, setUri, hl)
+	core.SetName(setUriTargetBaseElementReference, "ModifiedBaseElementRef", hl)
+	core.SetUri(setUriTargetBaseElementReference, BaseElementSetUriModifiedBaseElementRefUri, hl)
 
 }
 

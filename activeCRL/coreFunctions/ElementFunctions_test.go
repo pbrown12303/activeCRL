@@ -12,13 +12,93 @@ import (
 	//	"time"
 )
 
+func TestElementFunctionsIds(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	AddCoreFunctionsToUofD(uOfD, hl)
+
+	//var ElementFunctionsUri string = CoreFunctionsPrefix + "ElementFunctions"
+	validateElementId(t, uOfD, hl, ElementFunctionsUri)
+	//
+	//var ElementCreateUri string = CoreFunctionsPrefix + "Element/Create"
+	validateElementId(t, uOfD, hl, ElementCreateUri)
+	//var ElementCreateCreatedElementRefUri = CoreFunctionsPrefix + "Element/Create/CreatedElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementCreateCreatedElementRefUri)
+	//
+	//var ElementGetDefinitionUri string = CoreFunctionsPrefix + "Element/GetDefinition"
+	validateElementId(t, uOfD, hl, ElementGetDefinitionUri)
+	//var ElementGetDefinitionSourceElementRefUri string = CoreFunctionsPrefix + "Element/GetDefinition/SourceElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementGetDefinitionSourceElementRefUri)
+	//var ElementGetDefinitionCreatedLiteralRefUri string = CoreFunctionsPrefix + "Element/GetDefinition/CreatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, ElementGetDefinitionCreatedLiteralRefUri)
+	//
+	//var ElementGetDefinitionLiteralUri string = CoreFunctionsPrefix + "Element/GetDefinitionLiteral"
+	validateElementId(t, uOfD, hl, ElementGetDefinitionLiteralUri)
+	//var ElementGetDefinitionLiteralSourceElementRefUri string = CoreFunctionsPrefix + "Element/GetDefinitionLiteral/SourceElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementGetDefinitionLiteralSourceElementRefUri)
+	//var ElementGetDefinitionLiteralIndicatedLiteralRefUri string = CoreFunctionsPrefix + "Element/GetDefinitionLiteral/IndicatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, ElementGetDefinitionLiteralIndicatedLiteralRefUri)
+	//
+	//var ElementGetDefinitionLiteralPointerUri string = CoreFunctionsPrefix + "Element/GetDefinitionLiteralPointer"
+	validateElementId(t, uOfD, hl, ElementGetDefinitionLiteralPointerUri)
+	//var ElementGetDefinitionLiteralPointerSourceElementRefUri string = CoreFunctionsPrefix + "Element/GetDefinitionLiteralPointer/SourceElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementGetDefinitionLiteralPointerSourceElementRefUri)
+	//var ElementGetDefinitionLiteralPointerIndicatedLiteralPointerRefUri string = CoreFunctionsPrefix + "Element/GetDefinitionLiteralPointer/IndicatedLiteralPointerRef"
+	validateLiteralPointerReferenceId(t, uOfD, hl, ElementGetDefinitionLiteralPointerIndicatedLiteralPointerRefUri)
+	//
+	//var ElementGetNameLiteralUri string = CoreFunctionsPrefix + "Element/GetNameLiteral"
+	validateElementId(t, uOfD, hl, ElementGetNameLiteralUri)
+	//var ElementGetNameLiteralSourceElementRefUri string = CoreFunctionsPrefix + "Element/GetNameLiteral/SourceElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementGetNameLiteralSourceElementRefUri)
+	//var ElementGetNameLiteralIndicatedLiteralRefUri string = CoreFunctionsPrefix + "Element/GetNameLiteral/IndicatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, ElementGetNameLiteralIndicatedLiteralRefUri)
+	//
+	//var ElementGetNameLiteralPointerUri string = CoreFunctionsPrefix + "Element/GetNameLiteralPointer"
+	validateElementId(t, uOfD, hl, ElementGetNameLiteralPointerUri)
+	//var ElementGetNameLiteralPointerSourceElementRefUri string = CoreFunctionsPrefix + "Element/GetNameLiteralPointer/SourceElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementGetNameLiteralPointerSourceElementRefUri)
+	//var ElementGetNameLiteralPointerIndicatedLiteralPointerRefUri string = CoreFunctionsPrefix + "Element/GetNameLiteralPointer/IndicatedLiteralPointerRef"
+	validateLiteralPointerReferenceId(t, uOfD, hl, ElementGetNameLiteralPointerIndicatedLiteralPointerRefUri)
+	//
+	//var ElementGetUriLiteralUri string = CoreFunctionsPrefix + "Element/GetUriLiteral"
+	validateElementId(t, uOfD, hl, ElementGetUriLiteralUri)
+	//var ElementGetUriLiteralSourceElementRefUri string = CoreFunctionsPrefix + "Element/GetUriLiteral/SourceElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementGetUriLiteralSourceElementRefUri)
+	//var ElementGetUriLiteralIndicatedLiteralRefUri string = CoreFunctionsPrefix + "Element/GetUriLiteral/IndicatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, ElementGetUriLiteralIndicatedLiteralRefUri)
+	//
+	//var ElementGetUriLiteralPointerUri string = CoreFunctionsPrefix + "Element/GetUriLiteralPointer"
+	validateElementId(t, uOfD, hl, ElementGetUriLiteralPointerUri)
+	//var ElementGetUriLiteralPointerSourceElementRefUri string = CoreFunctionsPrefix + "Element/GetUriLiteralPointer/SourceElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementGetUriLiteralPointerSourceElementRefUri)
+	//var ElementGetUriLiteralPointerIndicatedLiteralPointerRefUri string = CoreFunctionsPrefix + "Element/GetUriLiteralPointer/IndicatedLiteralPointerRef"
+	validateLiteralPointerReferenceId(t, uOfD, hl, ElementGetUriLiteralPointerIndicatedLiteralPointerRefUri)
+	//
+	//var ElementSetDefinitionUri string = CoreFunctionsPrefix + "Element/SetDefinition"
+	validateElementId(t, uOfD, hl, ElementSetDefinitionUri)
+	//var ElementSetDefinitionSourceLiteralRefUri string = CoreFunctionsPrefix + "Element/SetDefinition/SourceLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, ElementSetDefinitionSourceLiteralRefUri)
+	//var ElementSetDefinitionModifiedElementRefUri string = CoreFunctionsPrefix + "Element/SetDefinition/ModifiedElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementSetDefinitionModifiedElementRefUri)
+	//
+	//var ElementSetNameUri string = CoreFunctionsPrefix + "Element/SetName"
+	validateElementId(t, uOfD, hl, ElementSetNameUri)
+	//var ElementSetNameSourceLiteralRefUri string = CoreFunctionsPrefix + "Element/SetName/SourceLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, ElementSetNameSourceLiteralRefUri)
+	//var ElementSetNameModifiedElementRefUri string = CoreFunctionsPrefix + "Element/SetName/ModifiedElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementSetNameModifiedElementRefUri)
+}
+
 func TestCreateElementFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	createElementFunction := uOfD.GetElementWithUri(ElementCreateUri)
@@ -102,7 +182,7 @@ func TestGetDefinition(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	getDefinitionFunction := uOfD.GetElementWithUri(ElementGetDefinitionUri)
@@ -162,7 +242,7 @@ func TestGetDefinitionLiteral(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	getDefinitionFunction := uOfD.GetElementWithUri(ElementGetDefinitionLiteralUri)
@@ -219,7 +299,7 @@ func TestGetDefinitionLiteralPointer(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	getDefinitionFunction := uOfD.GetElementWithUri(ElementGetDefinitionLiteralPointerUri)
@@ -276,7 +356,7 @@ func TestGetNameLiteral(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	getNameFunction := uOfD.GetElementWithUri(ElementGetNameLiteralUri)
@@ -333,7 +413,7 @@ func TestGetNameLiteralPointer(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	getNameFunction := uOfD.GetElementWithUri(ElementGetNameLiteralPointerUri)
@@ -390,7 +470,7 @@ func TestGetUriLiteral(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	getUriFunction := uOfD.GetElementWithUri(ElementGetUriLiteralUri)
@@ -447,7 +527,7 @@ func TestGetUriLiteralPointer(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	getUriFunction := uOfD.GetElementWithUri(ElementGetUriLiteralPointerUri)
@@ -504,7 +584,7 @@ func TestSetDefinition(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	setDefinition := uOfD.GetElementWithUri(ElementSetDefinitionUri)
@@ -557,7 +637,7 @@ func TestSetName(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	setName := uOfD.GetElementWithUri(ElementSetNameUri)

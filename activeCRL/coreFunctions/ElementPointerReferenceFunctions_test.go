@@ -12,13 +12,51 @@ import (
 	//	"time"
 )
 
+func TestElementPointerReferenceFunctionsIds(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	AddCoreFunctionsToUofD(uOfD, hl)
+
+	//var ElementPointerReferenceFunctionsUri string = CoreFunctionsPrefix + "ElementPointerReferenceFunctions"
+	validateElementId(t, uOfD, hl, ElementPointerReferenceFunctionsUri)
+	//
+	//var ElementPointerReferenceCreateUri string = CoreFunctionsPrefix + "ElementPointerReference/Create"
+	validateElementId(t, uOfD, hl, ElementPointerReferenceCreateUri)
+	//var ElementPointerReferenceCreateCreatedElementPointerReferenceRefUri = CoreFunctionsPrefix + "ElementPointerReference/Create/CreatedElementPointerReferenceRef"
+	validateElementReferenceId(t, uOfD, hl, ElementPointerReferenceCreateCreatedElementPointerReferenceRefUri)
+	//
+	//var ElementPointerReferenceGetReferencedElementPointerUri string = CoreFunctionsPrefix + "ElementPointerReference/GetReferencedElementPointer"
+	validateElementId(t, uOfD, hl, ElementPointerReferenceGetReferencedElementPointerUri)
+	//var ElementPointerReferenceGetReferencedElementPointerSourceElementPointerReferenceRefUri = CoreFunctionsPrefix + "ElementPointerReference/GetReferencedElementPointer/SourceElementPointerReferenceRef"
+	validateElementReferenceId(t, uOfD, hl, ElementPointerReferenceGetReferencedElementPointerSourceElementPointerReferenceRefUri)
+	//var ElementPointerReferenceGetReferencedElementPointerIndicatedElementPointerRefUri string = CoreFunctionsPrefix + "ElementPointerReference/GetReferencedElementPointer/IndicatedElementPointerRef"
+	validateElementPointerReferenceId(t, uOfD, hl, ElementPointerReferenceGetReferencedElementPointerIndicatedElementPointerRefUri)
+	//
+	//var ElementPointerReferenceGetElementPointerPointerUri string = CoreFunctionsPrefix + "ElementPointerReference/GetElementPointerPointer"
+	validateElementId(t, uOfD, hl, ElementPointerReferenceGetElementPointerPointerUri)
+	//var ElementPointerReferenceGetElementPointerPointerSourceElementPointerReferenceRefUri string = CoreFunctionsPrefix + "ElementPointerReference/GetElementPointerPointer/SourceElementPointerReferenceRef"
+	validateElementReferenceId(t, uOfD, hl, ElementPointerReferenceGetElementPointerPointerSourceElementPointerReferenceRefUri)
+	//var ElementPointerReferenceGetElementPointerPointerIndicatedElementPointerPointerRefUri string = CoreFunctionsPrefix + "ElementPointerReference/GetElementPointerPointer/IndicatedElementPointerPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, ElementPointerReferenceGetElementPointerPointerIndicatedElementPointerPointerRefUri)
+	//
+	//var ElementPointerReferenceSetReferencedElementPointerUri string = CoreFunctionsPrefix + "ElementPointerReference/SetReferencedElementPointer"
+	validateElementId(t, uOfD, hl, ElementPointerReferenceSetReferencedElementPointerUri)
+	//var ElementPointerReferenceSetReferencedElementPointerSourceElementPointerRefUri string = CoreFunctionsPrefix + "ElementPointerReference/SetReferencedElementPointer/SourceElementPointerRef"
+	validateElementPointerReferenceId(t, uOfD, hl, ElementPointerReferenceSetReferencedElementPointerSourceElementPointerRefUri)
+	//var ElementPointerReferenceSetReferencedElementPointerModifiedElementPointerReferenceRefUri string = CoreFunctionsPrefix + "ElementPointerReference/SetReferencedElementPointer/ModifiedElementPointerReferenceRef"
+	validateElementReferenceId(t, uOfD, hl, ElementPointerReferenceSetReferencedElementPointerModifiedElementPointerReferenceRefUri)
+}
+
 func TestCreateElementPointerReferenceFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	createElementPointerReference := uOfD.GetElementWithUri(ElementPointerReferenceCreateUri)
@@ -108,7 +146,7 @@ func TestGetElementPointerPointer(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getElementPointerPointer := uOfD.GetElementWithUri(ElementPointerReferenceGetElementPointerPointerUri)
@@ -165,7 +203,7 @@ func TestGetReferencedElementPointer(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getReferencedElementPointer := uOfD.GetElementWithUri(ElementPointerReferenceGetReferencedElementPointerUri)
@@ -222,48 +260,48 @@ func TestSetReferencedElementPointer(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	setReferencedElementPointer := uOfD.GetElementWithUri(ElementPointerReferenceSetReferencedElementPointerUri)
 	if setReferencedElementPointer == nil {
 		t.Errorf("SetReferencedElementPointer function representation not found")
-	}
+	} else {
+		//		 Create the instance
+		replicate := core.CreateReplicateAsRefinement(setReferencedElementPointer, hl)
 
-	// Create the instance
-	replicate := core.CreateReplicateAsRefinement(setReferencedElementPointer, hl)
+		// Locks must be released to allow function to execute
+		hl.ReleaseLocks()
+		wg.Wait()
 
-	// Locks must be released to allow function to execute
-	hl.ReleaseLocks()
-	wg.Wait()
+		// Now check the replication
+		if replicate.IsRefinementOf(setReferencedElementPointer, hl) != true {
+			t.Errorf("Replicate is not refinement of SetReferencedElementPointer()")
+		}
+		sourceElementPointerRef := core.GetChildElementPointerReferenceWithAncestorUri(replicate, ElementPointerReferenceSetReferencedElementPointerSourceElementPointerRefUri, hl)
+		if sourceElementPointerRef == nil {
+			t.Errorf("SourceElementPointerRef child not found")
+		}
+		modifiedElementPointerReferenceRef := core.GetChildElementReferenceWithAncestorUri(replicate, ElementPointerReferenceSetReferencedElementPointerModifiedElementPointerReferenceRefUri, hl)
+		if modifiedElementPointerReferenceRef == nil {
+			t.Errorf("TargetReference child not found")
+		}
 
-	// Now check the replication
-	if replicate.IsRefinementOf(setReferencedElementPointer, hl) != true {
-		t.Errorf("Replicate is not refinement of SetReferencedElementPointer()")
-	}
-	sourceElementPointerRef := core.GetChildElementPointerReferenceWithAncestorUri(replicate, ElementPointerReferenceSetReferencedElementPointerSourceElementPointerRefUri, hl)
-	if sourceElementPointerRef == nil {
-		t.Errorf("SourceElementPointerRef child not found")
-	}
-	modifiedElementPointerReferenceRef := core.GetChildElementReferenceWithAncestorUri(replicate, ElementPointerReferenceSetReferencedElementPointerModifiedElementPointerReferenceRefUri, hl)
-	if modifiedElementPointerReferenceRef == nil {
-		t.Errorf("TargetReference child not found")
-	}
+		// Now test target reference update functionality
+		sourceElementPointer := uOfD.NewReferencedElementPointer(hl)
+		targetElementPointerReference := uOfD.NewElementPointerReference(hl)
+		modifiedElementPointerReferenceRef.SetReferencedElement(targetElementPointerReference, hl)
+		sourceElementPointerRef.SetReferencedElementPointer(sourceElementPointer, hl)
 
-	// Now test target reference update functionality
-	sourceElementPointer := uOfD.NewReferencedElementPointer(hl)
-	targetElementPointerReference := uOfD.NewElementPointerReference(hl)
-	modifiedElementPointerReferenceRef.SetReferencedElement(targetElementPointerReference, hl)
-	sourceElementPointerRef.SetReferencedElementPointer(sourceElementPointer, hl)
+		// Locks must be released to allow function to execute
+		hl.ReleaseLocks()
+		wg.Wait()
 
-	// Locks must be released to allow function to execute
-	hl.ReleaseLocks()
-	wg.Wait()
-
-	hl.LockBaseElement(replicate)
-	if targetElementPointerReference.GetReferencedElementPointer(hl) != sourceElementPointer {
-		t.Errorf("ElementPointerReference value not set")
-		core.Print(sourceElementPointerRef, "ElementPointerRef: ", hl)
-		core.Print(modifiedElementPointerReferenceRef, "TargetReference: ", hl)
+		hl.LockBaseElement(replicate)
+		if targetElementPointerReference.GetReferencedElementPointer(hl) != sourceElementPointer {
+			t.Errorf("ElementPointerReference value not set")
+			core.Print(sourceElementPointerRef, "ElementPointerRef: ", hl)
+			core.Print(modifiedElementPointerReferenceRef, "TargetReference: ", hl)
+		}
 	}
 }

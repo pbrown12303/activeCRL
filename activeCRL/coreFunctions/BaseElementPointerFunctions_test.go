@@ -13,13 +13,58 @@ import (
 	//	"time"
 )
 
+func TestBaseElementPointerFunctionsIds(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	AddCoreFunctionsToUofD(uOfD, hl)
+
+	//var BaseElementPointerFunctionsUri string = CoreFunctionsPrefix + "BaseElementPointerFunctions"
+	validateElementId(t, uOfD, hl, BaseElementPointerFunctionsUri)
+	//
+	//var BaseElementPointerCreateUri string = CoreFunctionsPrefix + "BaseElementPointer/Create"
+	validateElementId(t, uOfD, hl, BaseElementPointerCreateUri)
+	//var BaseElementPointerCreateCreatedBaseElementPointerRefUri = CoreFunctionsPrefix + "BaseElementPointer/Create/CreatedBaseElementPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementPointerCreateCreatedBaseElementPointerRefUri)
+	//
+	//var BaseElementPointerGetBaseElementUri string = CoreFunctionsPrefix + "BaseElementPointer/GetBaseElement"
+	validateElementId(t, uOfD, hl, BaseElementPointerGetBaseElementUri)
+	//var BaseElementPointerGetBaseElementSourceBaseElementPointerRefUri string = CoreFunctionsPrefix + "BaseElementPointer/GetBaseElement/SourceBaseElementPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementPointerGetBaseElementSourceBaseElementPointerRefUri)
+	//var BaseElementPointerGetBaseElementIndicatedBaseElementRefUri string = CoreFunctionsPrefix + "BaseElementPointer/GetBaseElement/IndicatedBaseElementRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementPointerGetBaseElementIndicatedBaseElementRefUri)
+	//
+	//var BaseElementPointerGetBaseElementIdUri string = CoreFunctionsPrefix + "BaseElementPointer/GetBaseElementId"
+	validateElementId(t, uOfD, hl, BaseElementPointerGetBaseElementIdUri)
+	//var BaseElementPointerGetBaseElementIdSourceBaseElementPointerRefUri string = CoreFunctionsPrefix + "BaseElementPointer/GetBaseElementId/SourceBaseElementPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementPointerGetBaseElementIdSourceBaseElementPointerRefUri)
+	//var BaseElementPointerGetBaseElementIdCreatedLiteralUri string = CoreFunctionsPrefix + "BaseElementPointer/GetBaseElementId/CreatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, BaseElementPointerGetBaseElementIdCreatedLiteralUri)
+	//
+	//var BaseElementPointerGetBaseElementVersionUri string = CoreFunctionsPrefix + "BaseElementPointer/GetBaseElementVersion"
+	validateElementId(t, uOfD, hl, BaseElementPointerGetBaseElementVersionUri)
+	//var BaseElementPointerGetBaseElementVersionSourceBaseElementPointerRefUri string = CoreFunctionsPrefix + "BaseElementPointer/GetBaseElementVersion/SourceBaseElementPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementPointerGetBaseElementVersionSourceBaseElementPointerRefUri)
+	//var BaseElementPointerGetBaseElementVersionCreatedLiteralRefUri string = CoreFunctionsPrefix + "BaseElementPointer/GetBaseElementVersion/CreatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, BaseElementPointerGetBaseElementVersionCreatedLiteralRefUri)
+	//
+	//var BaseElementPointerSetBaseElementUri string = CoreFunctionsPrefix + "BaseElementPointer/SetBaseElement"
+	validateElementId(t, uOfD, hl, BaseElementPointerSetBaseElementUri)
+	//var BaseElementPointerSetBaseElementBaseElementRefUri string = CoreFunctionsPrefix + "BaseElementPointer/SetBaseElement/BaseElementRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementPointerSetBaseElementBaseElementRefUri)
+	//var BaseElementPointerSetBaseElementModifiedBaseElementPointerRefUri string = CoreFunctionsPrefix + "BaseElementPointer/SetBaseElement/ModifiedBaseElementPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementPointerSetBaseElementModifiedBaseElementPointerRefUri)
+}
+
 func TestCreateBaseElementPointerFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	createBaseElementPointer := uOfD.GetElementWithUri(BaseElementPointerCreateUri)
@@ -112,7 +157,7 @@ func TestGetBaseElement(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getBaseElement := uOfD.GetElementWithUri(BaseElementPointerGetBaseElementUri)
@@ -169,7 +214,7 @@ func TestGetBaseElementId(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getBaseElementId := uOfD.GetElementWithUri(BaseElementPointerGetBaseElementIdUri)
@@ -226,7 +271,7 @@ func TestGetBaseElementVersion(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getBaseElementVersion := uOfD.GetElementWithUri(BaseElementPointerGetBaseElementVersionUri)
@@ -283,7 +328,7 @@ func TestSetBaseElement(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	setBaseElement := uOfD.GetElementWithUri(BaseElementPointerSetBaseElementUri)

@@ -17,10 +17,12 @@ func TestBaseElement(t *testing.T) {
 	defer hl.ReleaseLocks()
 	var be baseElement
 	// Test id
-	if be.GetId(hl) != uuid.Nil {
+	// Can't use the locking version of GetId because we are about to change the id
+	if be.getIdNoLock() != uuid.Nil {
 		t.Error("baseElement identifier not nil before setting")
 	}
 
+	// This will change the id
 	be.initializeBaseElement()
 	if be.GetId(hl) == uuid.Nil {
 		t.Error("baseElement identifier nil after setting")

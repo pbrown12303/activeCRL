@@ -12,13 +12,51 @@ import (
 	//	"time"
 )
 
+func TestElementReferenceFunctionsIds(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	AddCoreFunctionsToUofD(uOfD, hl)
+
+	//var ElementReferenceFunctionsUri string = CoreFunctionsPrefix + "ElementReferenceFunctions"
+	validateElementId(t, uOfD, hl, ElementReferenceFunctionsUri)
+	//
+	//var ElementReferenceCreateUri string = CoreFunctionsPrefix + "ElementReference/Create"
+	validateElementId(t, uOfD, hl, ElementReferenceCreateUri)
+	//var ElementReferenceCreateCreatedElementReferenceRefUri = CoreFunctionsPrefix + "ElementReference/Create/CreatedElementReferenceRef"
+	validateElementReferenceId(t, uOfD, hl, ElementReferenceCreateCreatedElementReferenceRefUri)
+	//
+	//var ElementReferenceGetReferencedElementUri string = CoreFunctionsPrefix + "ElementReference/GetReferencedElement"
+	validateElementId(t, uOfD, hl, ElementReferenceGetReferencedElementUri)
+	//var ElementReferenceGetReferencedElementSourceElementReferenceRefUri = CoreFunctionsPrefix + "ElementReference/GetReferencedElement/SourceElementReferenceRef"
+	validateElementReferenceId(t, uOfD, hl, ElementReferenceGetReferencedElementSourceElementReferenceRefUri)
+	//var ElementReferenceGetReferencedElementIndicatedElementRefUri string = CoreFunctionsPrefix + "ElementReference/GetReferencedElement/IndicatedElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementReferenceGetReferencedElementIndicatedElementRefUri)
+	//
+	//var ElementReferenceGetElementPointerUri string = CoreFunctionsPrefix + "ElementReference/GetElementPointer"
+	validateElementId(t, uOfD, hl, ElementReferenceGetElementPointerUri)
+	//var ElementReferenceGetElementPointerSourceElementReferenceRefUri string = CoreFunctionsPrefix + "ElementReference/GetElementPointer/SourceElementReferenceRef"
+	validateElementReferenceId(t, uOfD, hl, ElementReferenceGetElementPointerSourceElementReferenceRefUri)
+	//var ElementReferenceGetElementPointerIndicatedElementPointerRefUri string = CoreFunctionsPrefix + "ElementReference/GetElementPointer/IndicatedElementPointerRef"
+	validateElementPointerReferenceId(t, uOfD, hl, ElementReferenceGetElementPointerIndicatedElementPointerRefUri)
+	//
+	//var ElementReferenceSetReferencedElementUri string = CoreFunctionsPrefix + "ElementReference/SetReferencedElement"
+	validateElementId(t, uOfD, hl, ElementReferenceSetReferencedElementUri)
+	//var ElementReferenceSetReferencedElementSourceElementRefUri string = CoreFunctionsPrefix + "ElementReference/SetReferencedElement/SourceElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementReferenceSetReferencedElementSourceElementRefUri)
+	//var ElementReferenceSetReferencedElementModifiedElementReferenceRefUri string = CoreFunctionsPrefix + "ElementReference/SetReferencedElement/ModifiedElementReferenceRef"
+	validateElementReferenceId(t, uOfD, hl, ElementReferenceSetReferencedElementModifiedElementReferenceRefUri)
+}
+
 func TestCreateElementReferenceFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	createElementReference := uOfD.GetElementWithUri(ElementReferenceCreateUri)
@@ -108,7 +146,7 @@ func TestElementReferenceGetElementPointer(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getElementPointer := uOfD.GetElementWithUri(ElementReferenceGetElementPointerUri)
@@ -165,7 +203,7 @@ func TestGetReferencedElement(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getReferencedElement := uOfD.GetElementWithUri(ElementReferenceGetReferencedElementUri)
@@ -222,7 +260,7 @@ func TestSetReferencedElement(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	setReferencedElement := uOfD.GetElementWithUri(ElementReferenceSetReferencedElementUri)

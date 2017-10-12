@@ -13,13 +13,58 @@ import (
 	//	"time"
 )
 
+func TestElementPointerPointerFunctionsIds(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	AddCoreFunctionsToUofD(uOfD, hl)
+
+	//var ElementPointerPointerFunctionsUri string = CoreFunctionsPrefix + "ElementPointerPointerFunctions"
+	validateElementId(t, uOfD, hl, ElementPointerPointerFunctionsUri)
+	//
+	//var ElementPointerPointerCreateElementPointerPointerUri string = CoreFunctionsPrefix + "ElementPointerPointer/CreateAbstractElementPointerPointer"
+	validateElementId(t, uOfD, hl, ElementPointerPointerCreateElementPointerPointerUri)
+	//var ElementPointerPointerCreateElementPointerPointerCreatedElementPointerPointerRefUri = CoreFunctionsPrefix + "ElementPointerPointer/CreateAbstractElementPointerPointer/CreatedElementPointerPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, ElementPointerPointerCreateElementPointerPointerCreatedElementPointerPointerRefUri)
+	//
+	//var ElementPointerPointerGetElementPointerUri string = CoreFunctionsPrefix + "ElementPointerPointer/GetElementPointer"
+	validateElementId(t, uOfD, hl, ElementPointerPointerGetElementPointerUri)
+	//var ElementPointerPointerGetElementPointerSourceElementPointerPointerRefUri string = CoreFunctionsPrefix + "ElementPointerPointer/GetElementPointer/SourceElementPointerPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, ElementPointerPointerGetElementPointerSourceElementPointerPointerRefUri)
+	//var ElementPointerPointerGetElementPointerIndicatedElementPointerRefUri string = CoreFunctionsPrefix + "ElementPointerPointer/GetElementPointer/IndicatedElementPointerRef"
+	validateElementPointerReferenceId(t, uOfD, hl, ElementPointerPointerGetElementPointerIndicatedElementPointerRefUri)
+	//
+	//var ElementPointerPointerGetElementPointerIdUri string = CoreFunctionsPrefix + "ElementPointerPointer/GetElementPointerId"
+	validateElementId(t, uOfD, hl, ElementPointerPointerGetElementPointerIdUri)
+	//var ElementPointerPointerGetElementPointerIdSourceElementPointerPointerRefUri string = CoreFunctionsPrefix + "ElementPointerPointer/GetElementPointerId/SourceElementPointerPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, ElementPointerPointerGetElementPointerIdSourceElementPointerPointerRefUri)
+	//var ElementPointerPointerGetElementPointerIdCreatedLiteralUri string = CoreFunctionsPrefix + "ElementPointerPointer/GetElementPointerId/CreatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, ElementPointerPointerGetElementPointerIdCreatedLiteralUri)
+	//
+	//var ElementPointerPointerGetElementPointerVersionUri string = CoreFunctionsPrefix + "ElementPointerPointer/GetElementPointerVersion"
+	validateElementId(t, uOfD, hl, ElementPointerPointerGetElementPointerVersionUri)
+	//var ElementPointerPointerGetElementPointerVersionSourceElementPointerPointerRefUri string = CoreFunctionsPrefix + "ElementPointerPointer/GetElementPointerVersion/SourceElementPointerPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, ElementPointerPointerGetElementPointerVersionSourceElementPointerPointerRefUri)
+	//var ElementPointerPointerGetElementPointerVersionCreatedLiteralRefUri string = CoreFunctionsPrefix + "ElementPointerPointer/GetElementPointerVersion/CreatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, ElementPointerPointerGetElementPointerVersionCreatedLiteralRefUri)
+	//
+	//var ElementPointerPointerSetElementPointerUri string = CoreFunctionsPrefix + "ElementPointerPointer/SetElementPointer"
+	validateElementId(t, uOfD, hl, ElementPointerPointerSetElementPointerUri)
+	//var ElementPointerPointerSetElementPointerElementPointerRefUri string = CoreFunctionsPrefix + "ElementPointerPointer/SetElementPointer/ElementPointerRef"
+	validateElementPointerReferenceId(t, uOfD, hl, ElementPointerPointerSetElementPointerElementPointerRefUri)
+	//var ElementPointerPointerSetElementPointerModifiedElementPointerPointerRefUri string = CoreFunctionsPrefix + "ElementPointerPointer/SetElementPointer/ModifiedElementPointerPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, ElementPointerPointerSetElementPointerModifiedElementPointerPointerRefUri)
+}
+
 func TestCreateElementPointerPointerFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	createElementPointerPointer := uOfD.GetElementWithUri(ElementPointerPointerCreateElementPointerPointerUri)
@@ -111,7 +156,7 @@ func TestGetElementPointer(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getElementPointer := uOfD.GetElementWithUri(ElementPointerPointerGetElementPointerUri)
@@ -163,7 +208,7 @@ func TestGetElementPointerId(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getElementPointerId := uOfD.GetElementWithUri(ElementPointerPointerGetElementPointerIdUri)
@@ -218,7 +263,7 @@ func TestGetElementPointerVersion(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getElementPointerVersion := uOfD.GetElementWithUri(ElementPointerPointerGetElementPointerVersionUri)
@@ -275,7 +320,7 @@ func TestSetElementPointer(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	setElementPointer := uOfD.GetElementWithUri(ElementPointerPointerSetElementPointerUri)

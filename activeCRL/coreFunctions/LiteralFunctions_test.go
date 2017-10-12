@@ -12,13 +12,44 @@ import (
 	//	"time"
 )
 
+func TestLiteralFunctionsIds(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	AddCoreFunctionsToUofD(uOfD, hl)
+
+	//var LiteralFunctionsUri string = CoreFunctionsPrefix + "LiteralFunctions"
+	validateElementId(t, uOfD, hl, LiteralFunctionsUri)
+	//
+	//var LiteralCreateUri string = CoreFunctionsPrefix + "Literal/Create"
+	validateElementId(t, uOfD, hl, LiteralCreateUri)
+	//var LiteralCreateCreatedLiteralRefUri string = CoreFunctionsPrefix + "Literal/Create/CreatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, LiteralCreateCreatedLiteralRefUri)
+	//
+	//var LiteralGetLiteralValueUri string = CoreFunctionsPrefix + "Literal/GetLiteralValue"
+	validateElementId(t, uOfD, hl, LiteralGetLiteralValueUri)
+	//var LiteralGetLiteralValueSourceLiteralRefUri string = CoreFunctionsPrefix + "Literal/GetLiteralValue/SourceLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, LiteralGetLiteralValueSourceLiteralRefUri)
+	//var LiteralGetLiteralValueCreatedLiteralRefUri string = CoreFunctionsPrefix + "Literal/GetLiteralValue/CreatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, LiteralGetLiteralValueCreatedLiteralRefUri)
+	//
+	//var LiteralSetLiteralValueUri string = CoreFunctionsPrefix + "Literal/SetLiteralValue"
+	validateElementId(t, uOfD, hl, LiteralSetLiteralValueUri)
+	//var LiteralSetLiteralValueSourceLiteralRefUri string = CoreFunctionsPrefix + "Literal/SetLiteralValue/SourceLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, LiteralSetLiteralValueSourceLiteralRefUri)
+	//var LiteralSetLiteralValueModifiedLiteralRefUri string = CoreFunctionsPrefix + "Literal/SetLiteralValue/ModifiedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, LiteralSetLiteralValueModifiedLiteralRefUri)
+}
+
 func TestCreateLiteralFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	createLiteralFunction := uOfD.GetElementWithUri(LiteralCreateUri)
@@ -102,7 +133,7 @@ func TestGetLiteralValue(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	getLiteralValueFunction := uOfD.GetElementWithUri(LiteralGetLiteralValueUri)
@@ -162,7 +193,7 @@ func TestSetLiteralValue(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	setLiteralValue := uOfD.GetElementWithUri(LiteralSetLiteralValueUri)

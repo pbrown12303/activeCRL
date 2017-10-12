@@ -13,13 +13,58 @@ import (
 	//	"time"
 )
 
+func TestLiteralPointerPointerFunctionsIds(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	AddCoreFunctionsToUofD(uOfD, hl)
+
+	//var LiteralPointerPointerFunctionsUri string = CoreFunctionsPrefix + "LiteralPointerPointerFunctions"
+	validateElementId(t, uOfD, hl, LiteralPointerPointerFunctionsUri)
+	//
+	//var LiteralPointerPointerCreateLiteralPointerPointerUri string = CoreFunctionsPrefix + "LiteralPointerPointer/CreateAbstractLiteralPointerPointer"
+	validateElementId(t, uOfD, hl, LiteralPointerPointerCreateLiteralPointerPointerUri)
+	//var LiteralPointerPointerCreateLiteralPointerPointerCreatedLiteralPointerPointerRefUri = CoreFunctionsPrefix + "LiteralPointerPointer/CreateAbstractLiteralPointerPointer/CreatedLiteralPointerPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, LiteralPointerPointerCreateLiteralPointerPointerCreatedLiteralPointerPointerRefUri)
+	//
+	//var LiteralPointerPointerGetLiteralPointerUri string = CoreFunctionsPrefix + "LiteralPointerPointer/GetLiteralPointer"
+	validateElementId(t, uOfD, hl, LiteralPointerPointerGetLiteralPointerUri)
+	//var LiteralPointerPointerGetLiteralPointerSourceLiteralPointerPointerRefUri string = CoreFunctionsPrefix + "LiteralPointerPointer/GetLiteralPointer/SourceLiteralPointerPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, LiteralPointerPointerGetLiteralPointerSourceLiteralPointerPointerRefUri)
+	//var LiteralPointerPointerGetLiteralPointerIndicatedLiteralPointerRefUri string = CoreFunctionsPrefix + "LiteralPointerPointer/GetLiteralPointer/IndicatedLiteralPointerRef"
+	validateLiteralPointerReferenceId(t, uOfD, hl, LiteralPointerPointerGetLiteralPointerIndicatedLiteralPointerRefUri)
+	//
+	//var LiteralPointerPointerGetLiteralPointerIdUri string = CoreFunctionsPrefix + "LiteralPointerPointer/GetLiteralPointerId"
+	validateElementId(t, uOfD, hl, LiteralPointerPointerGetLiteralPointerIdUri)
+	//var LiteralPointerPointerGetLiteralPointerIdSourceLiteralPointerPointerRefUri string = CoreFunctionsPrefix + "LiteralPointerPointer/GetLiteralPointerId/SourceLiteralPointerPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, LiteralPointerPointerGetLiteralPointerIdSourceLiteralPointerPointerRefUri)
+	//var LiteralPointerPointerGetLiteralPointerIdCreatedLiteralUri string = CoreFunctionsPrefix + "LiteralPointerPointer/GetLiteralPointerId/CreatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, LiteralPointerPointerGetLiteralPointerIdCreatedLiteralUri)
+	//
+	//var LiteralPointerPointerGetLiteralPointerVersionUri string = CoreFunctionsPrefix + "LiteralPointerPointer/GetLiteralPointerVersion"
+	validateElementId(t, uOfD, hl, LiteralPointerPointerGetLiteralPointerVersionUri)
+	//var LiteralPointerPointerGetLiteralPointerVersionSourceLiteralPointerPointerRefUri string = CoreFunctionsPrefix + "LiteralPointerPointer/GetLiteralPointerVersion/SourceLiteralPointerPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, LiteralPointerPointerGetLiteralPointerVersionSourceLiteralPointerPointerRefUri)
+	//var LiteralPointerPointerGetLiteralPointerVersionCreatedLiteralRefUri string = CoreFunctionsPrefix + "LiteralPointerPointer/GetLiteralPointerVersion/CreatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, LiteralPointerPointerGetLiteralPointerVersionCreatedLiteralRefUri)
+	//
+	//var LiteralPointerPointerSetLiteralPointerUri string = CoreFunctionsPrefix + "LiteralPointerPointer/SetLiteralPointer"
+	validateElementId(t, uOfD, hl, LiteralPointerPointerSetLiteralPointerUri)
+	//var LiteralPointerPointerSetLiteralPointerLiteralPointerRefUri string = CoreFunctionsPrefix + "LiteralPointerPointer/SetLiteralPointer/LiteralPointerRef"
+	validateLiteralPointerReferenceId(t, uOfD, hl, LiteralPointerPointerSetLiteralPointerLiteralPointerRefUri)
+	//var LiteralPointerPointerSetLiteralPointerModifiedLiteralPointerPointerRefUri string = CoreFunctionsPrefix + "LiteralPointerPointer/SetLiteralPointer/ModifiedLiteralPointerPointerRef"
+	validateBaseElementReferenceId(t, uOfD, hl, LiteralPointerPointerSetLiteralPointerModifiedLiteralPointerPointerRefUri)
+}
+
 func TestCreateLiteralPointerPointerFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	createLiteralPointerPointer := uOfD.GetElementWithUri(LiteralPointerPointerCreateLiteralPointerPointerUri)
@@ -111,7 +156,7 @@ func TestGetLiteralPointer(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getLiteralPointer := uOfD.GetElementWithUri(LiteralPointerPointerGetLiteralPointerUri)
@@ -163,7 +208,7 @@ func TestGetLiteralPointerId(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getLiteralPointerId := uOfD.GetElementWithUri(LiteralPointerPointerGetLiteralPointerIdUri)
@@ -218,7 +263,7 @@ func TestGetLiteralPointerVersion(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getLiteralPointerVersion := uOfD.GetElementWithUri(LiteralPointerPointerGetLiteralPointerVersionUri)
@@ -275,7 +320,7 @@ func TestSetLiteralPointer(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	setLiteralPointer := uOfD.GetElementWithUri(LiteralPointerPointerSetLiteralPointerUri)

@@ -5,18 +5,20 @@
 package core
 
 import (
+	//	"log"
 	"sync"
 )
 
 type HeldLocks struct {
 	sync.Mutex
-	beLocks             []BaseElement
+	beLocks             map[string]BaseElement
 	waitGroup           *sync.WaitGroup
 	functionCallManager *FunctionCallManager
 }
 
 func NewHeldLocks(wg *sync.WaitGroup) *HeldLocks {
 	var hl HeldLocks
+	hl.beLocks = make(map[string]BaseElement)
 	hl.waitGroup = wg
 	hl.functionCallManager = NewFunctionCallManager()
 	return &hl
@@ -29,15 +31,11 @@ func (hlPtr *HeldLocks) GetWaitGroup() *sync.WaitGroup {
 func (hlPtr *HeldLocks) LockBaseElement(be BaseElement) {
 	hlPtr.Lock()
 	defer hlPtr.Unlock()
-	found := false
-	for _, lbe := range hlPtr.beLocks {
-		if lbe.getIdNoLock() == be.getIdNoLock() {
-			found = true
-		}
-	}
-	if found == false {
+	id := be.getIdNoLock().String()
+	if hlPtr.beLocks[id] == nil {
+		//		log.Printf("Locking %s", id)
+		hlPtr.beLocks[id] = be
 		be.TraceableLock()
-		hlPtr.beLocks = append(hlPtr.beLocks, be)
 	}
 }
 
@@ -47,6 +45,6 @@ func (hlPtr *HeldLocks) ReleaseLocks() {
 	for _, be := range hlPtr.beLocks {
 		be.TraceableUnlock()
 	}
-	hlPtr.beLocks = nil
+	hlPtr.beLocks = make(map[string]BaseElement)
 	hlPtr.functionCallManager.ExecuteFunctions(hlPtr.waitGroup)
 }

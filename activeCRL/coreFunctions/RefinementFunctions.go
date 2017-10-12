@@ -315,184 +315,120 @@ func refinementSetRefinedElement(replicate core.Element, changeNotifications []*
 	}
 }
 
-func UpdateRecoveredCoreRefinementFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCoreRefinementFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// RefinementFunctions
-	refinementFunctions := uOfD.GetElementWithUri(RefinementFunctionsUri)
-	if refinementFunctions == nil {
-		refinementFunctions = uOfD.NewElement(hl)
-		core.SetOwningElement(refinementFunctions, coreFunctionsElement, hl)
-		core.SetName(refinementFunctions, "RefinementFunctions", hl)
-		core.SetUri(refinementFunctions, RefinementFunctionsUri, hl)
-	}
+	refinementFunctions := uOfD.NewElement(hl, RefinementFunctionsUri)
+	core.SetOwningElement(refinementFunctions, coreFunctionsElement, hl)
+	core.SetName(refinementFunctions, "RefinementFunctions", hl)
+	core.SetUri(refinementFunctions, RefinementFunctionsUri, hl)
 
 	// CreateRefinement
-	refinementCreateRefinement := uOfD.GetElementWithUri(RefinementCreateUri)
-	if refinementCreateRefinement == nil {
-		refinementCreateRefinement = uOfD.NewElement(hl)
-		core.SetOwningElement(refinementCreateRefinement, refinementFunctions, hl)
-		core.SetName(refinementCreateRefinement, "CreateRefinement", hl)
-		core.SetUri(refinementCreateRefinement, RefinementCreateUri, hl)
-	}
+	refinementCreateRefinement := uOfD.NewElement(hl, RefinementCreateUri)
+	core.SetOwningElement(refinementCreateRefinement, refinementFunctions, hl)
+	core.SetName(refinementCreateRefinement, "CreateRefinement", hl)
+	core.SetUri(refinementCreateRefinement, RefinementCreateUri, hl)
 	// CreatedRefinement
-	createdRefinementRef := core.GetChildElementReferenceWithUri(refinementCreateRefinement, RefinementCreateCreatedRefinementRefUri, hl)
-	if createdRefinementRef == nil {
-		createdRefinementRef = uOfD.NewElementReference(hl)
-		core.SetOwningElement(createdRefinementRef, refinementCreateRefinement, hl)
-		core.SetName(createdRefinementRef, "CreatedRefinementRef", hl)
-		core.SetUri(createdRefinementRef, RefinementCreateCreatedRefinementRefUri, hl)
-	}
+	createdRefinementRef := uOfD.NewElementReference(hl, RefinementCreateCreatedRefinementRefUri)
+	core.SetOwningElement(createdRefinementRef, refinementCreateRefinement, hl)
+	core.SetName(createdRefinementRef, "CreatedRefinementRef", hl)
+	core.SetUri(createdRefinementRef, RefinementCreateCreatedRefinementRefUri, hl)
 
 	// GetAbstractElement
-	refinementGetAbstractElement := uOfD.GetElementWithUri(RefinementGetAbstractElementUri)
-	if refinementGetAbstractElement == nil {
-		refinementGetAbstractElement = uOfD.NewElement(hl)
-		core.SetName(refinementGetAbstractElement, "GetAbstractElement", hl)
-		core.SetOwningElement(refinementGetAbstractElement, refinementFunctions, hl)
-		core.SetUri(refinementGetAbstractElement, RefinementGetAbstractElementUri, hl)
-	}
+	refinementGetAbstractElement := uOfD.NewElement(hl, RefinementGetAbstractElementUri)
+	core.SetName(refinementGetAbstractElement, "GetAbstractElement", hl)
+	core.SetOwningElement(refinementGetAbstractElement, refinementFunctions, hl)
+	core.SetUri(refinementGetAbstractElement, RefinementGetAbstractElementUri, hl)
 	// GetAbstractElement.SourceReference
-	getElementSourceReference := core.GetChildElementReferenceWithUri(refinementGetAbstractElement, RefinementGetAbstractElementSourceRefinementRefUri, hl)
-	if getElementSourceReference == nil {
-		getElementSourceReference = uOfD.NewElementReference(hl)
-		core.SetOwningElement(getElementSourceReference, refinementGetAbstractElement, hl)
-		core.SetName(getElementSourceReference, "SourceRefinementRef", hl)
-		core.SetUri(getElementSourceReference, RefinementGetAbstractElementSourceRefinementRefUri, hl)
-	}
+	getElementSourceReference0 := uOfD.NewElementReference(hl, RefinementGetAbstractElementSourceRefinementRefUri)
+	core.SetOwningElement(getElementSourceReference0, refinementGetAbstractElement, hl)
+	core.SetName(getElementSourceReference0, "SourceRefinementRef", hl)
+	core.SetUri(getElementSourceReference0, RefinementGetAbstractElementSourceRefinementRefUri, hl)
 	// GetAbstractElementTargetElementReference
-	getElementTargetReference := core.GetChildElementReferenceWithUri(refinementGetAbstractElement, RefinementGetAbstractElementIndicatedElementRefUri, hl)
-	if getElementTargetReference == nil {
-		getElementTargetReference = uOfD.NewElementReference(hl)
-		core.SetOwningElement(getElementTargetReference, refinementGetAbstractElement, hl)
-		core.SetName(getElementTargetReference, "IndicatedElementRef", hl)
-		core.SetUri(getElementTargetReference, RefinementGetAbstractElementIndicatedElementRefUri, hl)
-	}
+	getElementTargetReference0 := uOfD.NewElementReference(hl, RefinementGetAbstractElementIndicatedElementRefUri)
+	core.SetOwningElement(getElementTargetReference0, refinementGetAbstractElement, hl)
+	core.SetName(getElementTargetReference0, "IndicatedElementRef", hl)
+	core.SetUri(getElementTargetReference0, RefinementGetAbstractElementIndicatedElementRefUri, hl)
 
 	// GetAbstractElementPointer
-	refinementGetAbstractElementPointer := uOfD.GetElementWithUri(RefinementGetAbstractElementPointerUri)
-	if refinementGetAbstractElementPointer == nil {
-		refinementGetAbstractElementPointer = uOfD.NewElement(hl)
-		core.SetName(refinementGetAbstractElementPointer, "GetAbstractElementPointer", hl)
-		core.SetOwningElement(refinementGetAbstractElementPointer, refinementFunctions, hl)
-		core.SetUri(refinementGetAbstractElementPointer, RefinementGetAbstractElementPointerUri, hl)
-	}
+	refinementGetAbstractElementPointer := uOfD.NewElement(hl, RefinementGetAbstractElementPointerUri)
+	core.SetName(refinementGetAbstractElementPointer, "GetAbstractElementPointer", hl)
+	core.SetOwningElement(refinementGetAbstractElementPointer, refinementFunctions, hl)
+	core.SetUri(refinementGetAbstractElementPointer, RefinementGetAbstractElementPointerUri, hl)
 	// GetAbstractElementPointer.SourceReference
-	getElementPointerSourceReference := core.GetChildElementReferenceWithUri(refinementGetAbstractElementPointer, RefinementGetAbstractElementPointerSourceRefinementRefUri, hl)
-	if getElementPointerSourceReference == nil {
-		getElementPointerSourceReference = uOfD.NewElementReference(hl)
-		core.SetOwningElement(getElementPointerSourceReference, refinementGetAbstractElementPointer, hl)
-		core.SetName(getElementPointerSourceReference, "SourceRefinementRef", hl)
-		core.SetUri(getElementPointerSourceReference, RefinementGetAbstractElementPointerSourceRefinementRefUri, hl)
-	}
+	getElementPointerSourceReference0 := uOfD.NewElementReference(hl, RefinementGetAbstractElementPointerSourceRefinementRefUri)
+	core.SetOwningElement(getElementPointerSourceReference0, refinementGetAbstractElementPointer, hl)
+	core.SetName(getElementPointerSourceReference0, "SourceRefinementRef", hl)
+	core.SetUri(getElementPointerSourceReference0, RefinementGetAbstractElementPointerSourceRefinementRefUri, hl)
 	// GetAbstractElementPointerIndicatedElementPointerRef
-	getElementPointerIndicatedElementPointerRef := core.GetChildElementPointerReferenceWithUri(refinementGetAbstractElementPointer, RefinementGetAbstractElementPointerIndicatedElementPointerRefUri, hl)
-	if getElementPointerIndicatedElementPointerRef == nil {
-		getElementPointerIndicatedElementPointerRef = uOfD.NewElementPointerReference(hl)
-		core.SetOwningElement(getElementPointerIndicatedElementPointerRef, refinementGetAbstractElementPointer, hl)
-		core.SetName(getElementPointerIndicatedElementPointerRef, "IndicatedElementPointerRef", hl)
-		core.SetUri(getElementPointerIndicatedElementPointerRef, RefinementGetAbstractElementPointerIndicatedElementPointerRefUri, hl)
-	}
+	getElementPointerIndicatedElementPointerRef0 := uOfD.NewElementPointerReference(hl, RefinementGetAbstractElementPointerIndicatedElementPointerRefUri)
+	core.SetOwningElement(getElementPointerIndicatedElementPointerRef0, refinementGetAbstractElementPointer, hl)
+	core.SetName(getElementPointerIndicatedElementPointerRef0, "IndicatedElementPointerRef", hl)
+	core.SetUri(getElementPointerIndicatedElementPointerRef0, RefinementGetAbstractElementPointerIndicatedElementPointerRefUri, hl)
 
 	// GetRefinedElement
-	refinementGetRefinedElement := uOfD.GetElementWithUri(RefinementGetRefinedElementUri)
-	if refinementGetRefinedElement == nil {
-		refinementGetRefinedElement = uOfD.NewElement(hl)
-		core.SetName(refinementGetRefinedElement, "GetRefinedElement", hl)
-		core.SetOwningElement(refinementGetRefinedElement, refinementFunctions, hl)
-		core.SetUri(refinementGetRefinedElement, RefinementGetRefinedElementUri, hl)
-	}
+	refinementGetRefinedElement := uOfD.NewElement(hl, RefinementGetRefinedElementUri)
+	core.SetName(refinementGetRefinedElement, "GetRefinedElement", hl)
+	core.SetOwningElement(refinementGetRefinedElement, refinementFunctions, hl)
+	core.SetUri(refinementGetRefinedElement, RefinementGetRefinedElementUri, hl)
 	// GetRefinedElement.SourceReference
-	getElementSourceReference = core.GetChildElementReferenceWithUri(refinementGetRefinedElement, RefinementGetRefinedElementSourceRefinementRefUri, hl)
-	if getElementSourceReference == nil {
-		getElementSourceReference = uOfD.NewElementReference(hl)
-		core.SetOwningElement(getElementSourceReference, refinementGetRefinedElement, hl)
-		core.SetName(getElementSourceReference, "SourceRefinementRef", hl)
-		core.SetUri(getElementSourceReference, RefinementGetRefinedElementSourceRefinementRefUri, hl)
-	}
+	getElementSourceReference1 := uOfD.NewElementReference(hl, RefinementGetRefinedElementSourceRefinementRefUri)
+	core.SetOwningElement(getElementSourceReference1, refinementGetRefinedElement, hl)
+	core.SetName(getElementSourceReference1, "SourceRefinementRef", hl)
+	core.SetUri(getElementSourceReference1, RefinementGetRefinedElementSourceRefinementRefUri, hl)
 	// GetRefinedElementTargetElementReference
-	getElementTargetReference = core.GetChildElementReferenceWithUri(refinementGetRefinedElement, RefinementGetRefinedElementIndicatedElementRefUri, hl)
-	if getElementTargetReference == nil {
-		getElementTargetReference = uOfD.NewElementReference(hl)
-		core.SetOwningElement(getElementTargetReference, refinementGetRefinedElement, hl)
-		core.SetName(getElementTargetReference, "IndicatedElementRef", hl)
-		core.SetUri(getElementTargetReference, RefinementGetRefinedElementIndicatedElementRefUri, hl)
-	}
+	getElementTargetReference1 := uOfD.NewElementReference(hl, RefinementGetRefinedElementIndicatedElementRefUri)
+	core.SetOwningElement(getElementTargetReference1, refinementGetRefinedElement, hl)
+	core.SetName(getElementTargetReference1, "IndicatedElementRef", hl)
+	core.SetUri(getElementTargetReference1, RefinementGetRefinedElementIndicatedElementRefUri, hl)
 
 	// GetRefinedElementPointer
-	refinementGetRefinedElementPointer := uOfD.GetElementWithUri(RefinementGetRefinedElementPointerUri)
-	if refinementGetRefinedElementPointer == nil {
-		refinementGetRefinedElementPointer = uOfD.NewElement(hl)
-		core.SetName(refinementGetRefinedElementPointer, "GetRefinedElementPointer", hl)
-		core.SetOwningElement(refinementGetRefinedElementPointer, refinementFunctions, hl)
-		core.SetUri(refinementGetRefinedElementPointer, RefinementGetRefinedElementPointerUri, hl)
-	}
+	refinementGetRefinedElementPointer := uOfD.NewElement(hl, RefinementGetRefinedElementPointerUri)
+	core.SetName(refinementGetRefinedElementPointer, "GetRefinedElementPointer", hl)
+	core.SetOwningElement(refinementGetRefinedElementPointer, refinementFunctions, hl)
+	core.SetUri(refinementGetRefinedElementPointer, RefinementGetRefinedElementPointerUri, hl)
 	// GetRefinedElementPointer.SourceReference
-	getElementPointerSourceReference = core.GetChildElementReferenceWithUri(refinementGetRefinedElementPointer, RefinementGetRefinedElementPointerSourceRefinementRefUri, hl)
-	if getElementPointerSourceReference == nil {
-		getElementPointerSourceReference = uOfD.NewElementReference(hl)
-		core.SetOwningElement(getElementPointerSourceReference, refinementGetRefinedElementPointer, hl)
-		core.SetName(getElementPointerSourceReference, "SourceRefinementRef", hl)
-		core.SetUri(getElementPointerSourceReference, RefinementGetRefinedElementPointerSourceRefinementRefUri, hl)
-	}
+	getElementPointerSourceReference1 := uOfD.NewElementReference(hl, RefinementGetRefinedElementPointerSourceRefinementRefUri)
+	core.SetOwningElement(getElementPointerSourceReference1, refinementGetRefinedElementPointer, hl)
+	core.SetName(getElementPointerSourceReference1, "SourceRefinementRef", hl)
+	core.SetUri(getElementPointerSourceReference1, RefinementGetRefinedElementPointerSourceRefinementRefUri, hl)
 	// GetRefinedElementPointerIndicatedElementPointerRef
-	getElementPointerIndicatedElementPointerRef = core.GetChildElementPointerReferenceWithUri(refinementGetRefinedElementPointer, RefinementGetRefinedElementPointerIndicatedElementPointerRefUri, hl)
-	if getElementPointerIndicatedElementPointerRef == nil {
-		getElementPointerIndicatedElementPointerRef = uOfD.NewElementPointerReference(hl)
-		core.SetOwningElement(getElementPointerIndicatedElementPointerRef, refinementGetRefinedElementPointer, hl)
-		core.SetName(getElementPointerIndicatedElementPointerRef, "IndicatedElementPointerRef", hl)
-		core.SetUri(getElementPointerIndicatedElementPointerRef, RefinementGetRefinedElementPointerIndicatedElementPointerRefUri, hl)
-	}
+	getElementPointerIndicatedElementPointerRef1 := uOfD.NewElementPointerReference(hl, RefinementGetRefinedElementPointerIndicatedElementPointerRefUri)
+	core.SetOwningElement(getElementPointerIndicatedElementPointerRef1, refinementGetRefinedElementPointer, hl)
+	core.SetName(getElementPointerIndicatedElementPointerRef1, "IndicatedElementPointerRef", hl)
+	core.SetUri(getElementPointerIndicatedElementPointerRef1, RefinementGetRefinedElementPointerIndicatedElementPointerRefUri, hl)
 
 	// SetAbstractElement
-	refinementSetAbstractElement := uOfD.GetElementWithUri(RefinementSetAbstractElementUri)
-	if refinementSetAbstractElement == nil {
-		refinementSetAbstractElement = uOfD.NewElement(hl)
-		core.SetName(refinementSetAbstractElement, "SetAbstractElement", hl)
-		core.SetOwningElement(refinementSetAbstractElement, refinementFunctions, hl)
-		core.SetUri(refinementSetAbstractElement, RefinementSetAbstractElementUri, hl)
-	}
+	refinementSetAbstractElement := uOfD.NewElement(hl, RefinementSetAbstractElementUri)
+	core.SetName(refinementSetAbstractElement, "SetAbstractElement", hl)
+	core.SetOwningElement(refinementSetAbstractElement, refinementFunctions, hl)
+	core.SetUri(refinementSetAbstractElement, RefinementSetAbstractElementUri, hl)
 	// SetAbstractElement.ElementReference
-	setReferencedElementElementReference := core.GetChildElementReferenceWithUri(refinementSetAbstractElement, RefinementSetAbstractElementSourceElementRefUri, hl)
-	if setReferencedElementElementReference == nil {
-		setReferencedElementElementReference = uOfD.NewElementReference(hl)
-		core.SetOwningElement(setReferencedElementElementReference, refinementSetAbstractElement, hl)
-		core.SetName(setReferencedElementElementReference, "SourceElementRef", hl)
-		core.SetUri(setReferencedElementElementReference, RefinementSetAbstractElementSourceElementRefUri, hl)
-	}
+	setReferencedElementElementReference0 := uOfD.NewElementReference(hl, RefinementSetAbstractElementSourceElementRefUri)
+	core.SetOwningElement(setReferencedElementElementReference0, refinementSetAbstractElement, hl)
+	core.SetName(setReferencedElementElementReference0, "SourceElementRef", hl)
+	core.SetUri(setReferencedElementElementReference0, RefinementSetAbstractElementSourceElementRefUri, hl)
 	// SetAbstractElementTargetRefinement
-	setReferencedElementTargetRefinement := core.GetChildElementReferenceWithUri(refinementSetAbstractElement, RefinementSetAbstractElementModifiedRefinementRefUri, hl)
-	if setReferencedElementTargetRefinement == nil {
-		setReferencedElementTargetRefinement = uOfD.NewElementReference(hl)
-		core.SetOwningElement(setReferencedElementTargetRefinement, refinementSetAbstractElement, hl)
-		core.SetName(setReferencedElementTargetRefinement, "ModifiedRefinementRef", hl)
-		core.SetUri(setReferencedElementTargetRefinement, RefinementSetAbstractElementModifiedRefinementRefUri, hl)
-	}
+	setReferencedElementTargetRefinement0 := uOfD.NewElementReference(hl, RefinementSetAbstractElementModifiedRefinementRefUri)
+	core.SetOwningElement(setReferencedElementTargetRefinement0, refinementSetAbstractElement, hl)
+	core.SetName(setReferencedElementTargetRefinement0, "ModifiedRefinementRef", hl)
+	core.SetUri(setReferencedElementTargetRefinement0, RefinementSetAbstractElementModifiedRefinementRefUri, hl)
 
 	// SetRefinedElement
-	refinementSetRefinedElement := uOfD.GetElementWithUri(RefinementSetRefinedElementUri)
-	if refinementSetRefinedElement == nil {
-		refinementSetRefinedElement = uOfD.NewElement(hl)
-		core.SetName(refinementSetRefinedElement, "SetRefinedElement", hl)
-		core.SetOwningElement(refinementSetRefinedElement, refinementFunctions, hl)
-		core.SetUri(refinementSetRefinedElement, RefinementSetRefinedElementUri, hl)
-	}
+	refinementSetRefinedElement := uOfD.NewElement(hl, RefinementSetRefinedElementUri)
+	core.SetName(refinementSetRefinedElement, "SetRefinedElement", hl)
+	core.SetOwningElement(refinementSetRefinedElement, refinementFunctions, hl)
+	core.SetUri(refinementSetRefinedElement, RefinementSetRefinedElementUri, hl)
 	// SetRefinedElement.ElementReference
-	setReferencedElementElementReference = core.GetChildElementReferenceWithUri(refinementSetRefinedElement, RefinementSetRefinedElementSourceElementRefUri, hl)
-	if setReferencedElementElementReference == nil {
-		setReferencedElementElementReference = uOfD.NewElementReference(hl)
-		core.SetOwningElement(setReferencedElementElementReference, refinementSetRefinedElement, hl)
-		core.SetName(setReferencedElementElementReference, "SourceElementRef", hl)
-		core.SetUri(setReferencedElementElementReference, RefinementSetRefinedElementSourceElementRefUri, hl)
-	}
+	setReferencedElementElementReference1 := uOfD.NewElementReference(hl, RefinementSetRefinedElementSourceElementRefUri)
+	core.SetOwningElement(setReferencedElementElementReference1, refinementSetRefinedElement, hl)
+	core.SetName(setReferencedElementElementReference1, "SourceElementRef", hl)
+	core.SetUri(setReferencedElementElementReference1, RefinementSetRefinedElementSourceElementRefUri, hl)
 	// SetRefinedElementTargetRefinement
-	setReferencedElementTargetRefinement = core.GetChildElementReferenceWithUri(refinementSetRefinedElement, RefinementSetRefinedElementModifiedRefinementRefUri, hl)
-	if setReferencedElementTargetRefinement == nil {
-		setReferencedElementTargetRefinement = uOfD.NewElementReference(hl)
-		core.SetOwningElement(setReferencedElementTargetRefinement, refinementSetRefinedElement, hl)
-		core.SetName(setReferencedElementTargetRefinement, "ModifiedRefinementRef", hl)
-		core.SetUri(setReferencedElementTargetRefinement, RefinementSetRefinedElementModifiedRefinementRefUri, hl)
-	}
-
+	setReferencedElementTargetRefinement1 := uOfD.NewElementReference(hl, RefinementSetRefinedElementModifiedRefinementRefUri)
+	core.SetOwningElement(setReferencedElementTargetRefinement1, refinementSetRefinedElement, hl)
+	core.SetName(setReferencedElementTargetRefinement1, "ModifiedRefinementRef", hl)
+	core.SetUri(setReferencedElementTargetRefinement1, RefinementSetRefinedElementModifiedRefinementRefUri, hl)
 }
 
 func refinementFunctionsInit() {

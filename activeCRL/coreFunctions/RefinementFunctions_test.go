@@ -12,13 +12,72 @@ import (
 	//	"time"
 )
 
+func TestRefinementFunctionsIds(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	AddCoreFunctionsToUofD(uOfD, hl)
+
+	//var RefinementFunctionsUri string = CoreFunctionsPrefix + "RefinementFunctions"
+	validateElementId(t, uOfD, hl, RefinementFunctionsUri)
+	//
+	//var RefinementCreateUri string = CoreFunctionsPrefix + "Refinement/Create"
+	validateElementId(t, uOfD, hl, RefinementCreateUri)
+	//var RefinementCreateCreatedRefinementRefUri = CoreFunctionsPrefix + "Refinement/Create/CreatedRefinementRef"
+	validateElementReferenceId(t, uOfD, hl, RefinementCreateCreatedRefinementRefUri)
+	//
+	//var RefinementGetAbstractElementUri string = CoreFunctionsPrefix + "Refinement/GetAbstractElement"
+	validateElementId(t, uOfD, hl, RefinementGetAbstractElementUri)
+	//var RefinementGetAbstractElementSourceRefinementRefUri = CoreFunctionsPrefix + "Refinement/GetAbstractElement/SourceRefinementRef"
+	validateElementReferenceId(t, uOfD, hl, RefinementGetAbstractElementSourceRefinementRefUri)
+	//var RefinementGetAbstractElementIndicatedElementRefUri string = CoreFunctionsPrefix + "Refinement/GetAbstractElement/IndicatedElementRef"
+	validateElementReferenceId(t, uOfD, hl, RefinementGetAbstractElementIndicatedElementRefUri)
+	//
+	//var RefinementGetAbstractElementPointerUri string = CoreFunctionsPrefix + "Refinement/GetAbstractElementPointer"
+	validateElementId(t, uOfD, hl, RefinementGetAbstractElementPointerUri)
+	//var RefinementGetAbstractElementPointerSourceRefinementRefUri string = CoreFunctionsPrefix + "Refinement/GetAbstractElementPointer/SourceRefinementRef"
+	validateElementReferenceId(t, uOfD, hl, RefinementGetAbstractElementPointerSourceRefinementRefUri)
+	//var RefinementGetAbstractElementPointerIndicatedElementPointerRefUri string = CoreFunctionsPrefix + "Refinement/GetAbstractElementPointer/IndicatedElementPointerRef"
+	validateElementPointerReferenceId(t, uOfD, hl, RefinementGetAbstractElementPointerIndicatedElementPointerRefUri)
+	//
+	//var RefinementGetRefinedElementUri string = CoreFunctionsPrefix + "Refinement/GetRefinedElement"
+	validateElementId(t, uOfD, hl, RefinementGetRefinedElementUri)
+	//var RefinementGetRefinedElementSourceRefinementRefUri = CoreFunctionsPrefix + "Refinement/GetRefinedElement/SourceRefinementRef"
+	validateElementReferenceId(t, uOfD, hl, RefinementGetRefinedElementSourceRefinementRefUri)
+	//var RefinementGetRefinedElementIndicatedElementRefUri string = CoreFunctionsPrefix + "Refinement/GetRefinedElement/IndicatedElementRef"
+	validateElementReferenceId(t, uOfD, hl, RefinementGetRefinedElementIndicatedElementRefUri)
+	//
+	//var RefinementGetRefinedElementPointerUri string = CoreFunctionsPrefix + "Refinement/GetRefinedElementPointer"
+	validateElementId(t, uOfD, hl, RefinementGetRefinedElementPointerUri)
+	//var RefinementGetRefinedElementPointerSourceRefinementRefUri string = CoreFunctionsPrefix + "Refinement/GetRefinedElementPointer/SourceRefinementRef"
+	validateElementReferenceId(t, uOfD, hl, RefinementGetRefinedElementPointerSourceRefinementRefUri)
+	//var RefinementGetRefinedElementPointerIndicatedElementPointerRefUri string = CoreFunctionsPrefix + "Refinement/GetRefinedElementPointer/IndicatedElementPointerRef"
+	validateElementPointerReferenceId(t, uOfD, hl, RefinementGetRefinedElementPointerIndicatedElementPointerRefUri)
+	//
+	//var RefinementSetAbstractElementUri string = CoreFunctionsPrefix + "Refinement/SetAbstractElement"
+	validateElementId(t, uOfD, hl, RefinementSetAbstractElementUri)
+	//var RefinementSetAbstractElementSourceElementRefUri string = CoreFunctionsPrefix + "Refinement/SetAbstractElement/SourceElementRef"
+	validateElementReferenceId(t, uOfD, hl, RefinementSetAbstractElementSourceElementRefUri)
+	//var RefinementSetAbstractElementModifiedRefinementRefUri string = CoreFunctionsPrefix + "Refinement/SetAbstractElement/ModifiedRefinementRef"
+	validateElementReferenceId(t, uOfD, hl, RefinementSetAbstractElementModifiedRefinementRefUri)
+	//
+	//var RefinementSetRefinedElementUri string = CoreFunctionsPrefix + "Refinement/SetRefinedElement"
+	validateElementId(t, uOfD, hl, RefinementSetRefinedElementUri)
+	//var RefinementSetRefinedElementSourceElementRefUri string = CoreFunctionsPrefix + "Refinement/SetRefinedElement/SourceElementRef"
+	validateElementReferenceId(t, uOfD, hl, RefinementSetRefinedElementSourceElementRefUri)
+	//var RefinementSetRefinedElementModifiedRefinementRefUri string = CoreFunctionsPrefix + "Refinement/SetRefinedElement/ModifiedRefinementRef"
+	validateElementReferenceId(t, uOfD, hl, RefinementSetRefinedElementModifiedRefinementRefUri)
+}
+
 func TestCreateRefinementFunction(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
 	createRefinement := uOfD.GetElementWithUri(RefinementCreateUri)
@@ -107,7 +166,7 @@ func TestRefinementGetAbstractElementPointer(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getAbstractElementPointer := uOfD.GetElementWithUri(RefinementGetAbstractElementPointerUri)
@@ -164,7 +223,7 @@ func TestGetAbstractElement(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getAbstractElement := uOfD.GetElementWithUri(RefinementGetAbstractElementUri)
@@ -221,7 +280,7 @@ func TestSetAbstractElement(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	setAbstractElement := uOfD.GetElementWithUri(RefinementSetAbstractElementUri)
@@ -273,7 +332,7 @@ func TestRefinementGetRefinedElementPointer(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getRefinedElementPointer := uOfD.GetElementWithUri(RefinementGetRefinedElementPointerUri)
@@ -330,7 +389,7 @@ func TestGetRefinedElement(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getRefinedElement := uOfD.GetElementWithUri(RefinementGetRefinedElementUri)
@@ -387,7 +446,7 @@ func TestSetRefinedElement(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	setRefinedElement := uOfD.GetElementWithUri(RefinementSetRefinedElementUri)

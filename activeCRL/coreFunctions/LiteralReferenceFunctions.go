@@ -178,108 +178,72 @@ func literalReferenceSetReferencedLiteral(replicate core.Element, changeNotifica
 	}
 }
 
-func UpdateRecoveredCoreLiteralReferenceFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCoreLiteralReferenceFunctions(coreFunctionsElement core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	// LiteralReferenceFunctions
-	elementReferenceFunctions := uOfD.GetElementWithUri(LiteralReferenceFunctionsUri)
-	if elementReferenceFunctions == nil {
-		elementReferenceFunctions = uOfD.NewElement(hl)
-		core.SetOwningElement(elementReferenceFunctions, coreFunctionsElement, hl)
-		core.SetName(elementReferenceFunctions, "LiteralReferenceFunctions", hl)
-		core.SetUri(elementReferenceFunctions, LiteralReferenceFunctionsUri, hl)
-	}
+	elementReferenceFunctions := uOfD.NewElement(hl, LiteralReferenceFunctionsUri)
+	core.SetOwningElement(elementReferenceFunctions, coreFunctionsElement, hl)
+	core.SetName(elementReferenceFunctions, "LiteralReferenceFunctions", hl)
+	core.SetUri(elementReferenceFunctions, LiteralReferenceFunctionsUri, hl)
 
 	// CreateLiteralReference
-	literalReferenceCreateLiteralReference := uOfD.GetElementWithUri(LiteralReferenceCreateUri)
-	if literalReferenceCreateLiteralReference == nil {
-		literalReferenceCreateLiteralReference = uOfD.NewElement(hl)
-		core.SetOwningElement(literalReferenceCreateLiteralReference, elementReferenceFunctions, hl)
-		core.SetName(literalReferenceCreateLiteralReference, "CreateLiteralReference", hl)
-		core.SetUri(literalReferenceCreateLiteralReference, LiteralReferenceCreateUri, hl)
-	}
+	literalReferenceCreateLiteralReference := uOfD.NewElement(hl, LiteralReferenceCreateUri)
+	core.SetOwningElement(literalReferenceCreateLiteralReference, elementReferenceFunctions, hl)
+	core.SetName(literalReferenceCreateLiteralReference, "CreateLiteralReference", hl)
+	core.SetUri(literalReferenceCreateLiteralReference, LiteralReferenceCreateUri, hl)
 	// CreatedLiteralReference
-	createdLiteralReferenceRef := core.GetChildElementReferenceWithUri(literalReferenceCreateLiteralReference, LiteralReferenceCreateCreatedLiteralReferenceRefUri, hl)
-	if createdLiteralReferenceRef == nil {
-		createdLiteralReferenceRef = uOfD.NewElementReference(hl)
-		core.SetOwningElement(createdLiteralReferenceRef, literalReferenceCreateLiteralReference, hl)
-		core.SetName(createdLiteralReferenceRef, "CreatedLiteralReferenceRef", hl)
-		core.SetUri(createdLiteralReferenceRef, LiteralReferenceCreateCreatedLiteralReferenceRefUri, hl)
-	}
+	createdLiteralReferenceRef := uOfD.NewElementReference(hl, LiteralReferenceCreateCreatedLiteralReferenceRefUri)
+	core.SetOwningElement(createdLiteralReferenceRef, literalReferenceCreateLiteralReference, hl)
+	core.SetName(createdLiteralReferenceRef, "CreatedLiteralReferenceRef", hl)
+	core.SetUri(createdLiteralReferenceRef, LiteralReferenceCreateCreatedLiteralReferenceRefUri, hl)
 
 	// GetReferencedLiteral
-	literalReferenceGetReferencedLiteral := uOfD.GetElementWithUri(LiteralReferenceGetReferencedLiteralUri)
-	if literalReferenceGetReferencedLiteral == nil {
-		literalReferenceGetReferencedLiteral = uOfD.NewElement(hl)
-		core.SetName(literalReferenceGetReferencedLiteral, "GetReferencedLiteral", hl)
-		core.SetOwningElement(literalReferenceGetReferencedLiteral, elementReferenceFunctions, hl)
-		core.SetUri(literalReferenceGetReferencedLiteral, LiteralReferenceGetReferencedLiteralUri, hl)
-	}
+	literalReferenceGetReferencedLiteral := uOfD.NewElement(hl, LiteralReferenceGetReferencedLiteralUri)
+	core.SetName(literalReferenceGetReferencedLiteral, "GetReferencedLiteral", hl)
+	core.SetOwningElement(literalReferenceGetReferencedLiteral, elementReferenceFunctions, hl)
+	core.SetUri(literalReferenceGetReferencedLiteral, LiteralReferenceGetReferencedLiteralUri, hl)
 	// GetReferencedLiteral.SourceReference
-	getElementSourceReference := core.GetChildElementReferenceWithUri(literalReferenceGetReferencedLiteral, LiteralReferenceGetReferencedLiteralSourceLiteralReferenceRefUri, hl)
-	if getElementSourceReference == nil {
-		getElementSourceReference = uOfD.NewElementReference(hl)
-		core.SetOwningElement(getElementSourceReference, literalReferenceGetReferencedLiteral, hl)
-		core.SetName(getElementSourceReference, "SourceLiteralReferenceRef", hl)
-		core.SetUri(getElementSourceReference, LiteralReferenceGetReferencedLiteralSourceLiteralReferenceRefUri, hl)
-	}
+	getElementSourceReference := uOfD.NewElementReference(hl, LiteralReferenceGetReferencedLiteralSourceLiteralReferenceRefUri)
+	core.SetOwningElement(getElementSourceReference, literalReferenceGetReferencedLiteral, hl)
+	core.SetName(getElementSourceReference, "SourceLiteralReferenceRef", hl)
+	core.SetUri(getElementSourceReference, LiteralReferenceGetReferencedLiteralSourceLiteralReferenceRefUri, hl)
 	// GetReferencedLiteralTargetLiteralReference
-	getElementTargetReference := core.GetChildLiteralReferenceWithUri(literalReferenceGetReferencedLiteral, LiteralReferenceGetReferencedLiteralIndicatedLiteralRefUri, hl)
-	if getElementTargetReference == nil {
-		getElementTargetReference = uOfD.NewLiteralReference(hl)
-		core.SetOwningElement(getElementTargetReference, literalReferenceGetReferencedLiteral, hl)
-		core.SetName(getElementTargetReference, "IndicatedLiteralRef", hl)
-		core.SetUri(getElementTargetReference, LiteralReferenceGetReferencedLiteralIndicatedLiteralRefUri, hl)
-	}
+	getElementTargetReference := uOfD.NewLiteralReference(hl, LiteralReferenceGetReferencedLiteralIndicatedLiteralRefUri)
+	core.SetOwningElement(getElementTargetReference, literalReferenceGetReferencedLiteral, hl)
+	core.SetName(getElementTargetReference, "IndicatedLiteralRef", hl)
+	core.SetUri(getElementTargetReference, LiteralReferenceGetReferencedLiteralIndicatedLiteralRefUri, hl)
 
 	// GetLiteralPointer
-	literalReferenceGetLiteralPointer := uOfD.GetElementWithUri(LiteralReferenceGetLiteralPointerUri)
-	if literalReferenceGetLiteralPointer == nil {
-		literalReferenceGetLiteralPointer = uOfD.NewElement(hl)
-		core.SetName(literalReferenceGetLiteralPointer, "GetLiteralPointer", hl)
-		core.SetOwningElement(literalReferenceGetLiteralPointer, elementReferenceFunctions, hl)
-		core.SetUri(literalReferenceGetLiteralPointer, LiteralReferenceGetLiteralPointerUri, hl)
-	}
+	literalReferenceGetLiteralPointer := uOfD.NewElement(hl, LiteralReferenceGetLiteralPointerUri)
+	core.SetName(literalReferenceGetLiteralPointer, "GetLiteralPointer", hl)
+	core.SetOwningElement(literalReferenceGetLiteralPointer, elementReferenceFunctions, hl)
+	core.SetUri(literalReferenceGetLiteralPointer, LiteralReferenceGetLiteralPointerUri, hl)
 	// GetLiteralPointer.SourceReference
-	getElementPointerSourceReference := core.GetChildElementReferenceWithUri(literalReferenceGetLiteralPointer, LiteralReferenceGetLiteralPointerSourceLiteralReferenceRefUri, hl)
-	if getElementPointerSourceReference == nil {
-		getElementPointerSourceReference = uOfD.NewElementReference(hl)
-		core.SetOwningElement(getElementPointerSourceReference, literalReferenceGetLiteralPointer, hl)
-		core.SetName(getElementPointerSourceReference, "SourceLiteralReferenceRef", hl)
-		core.SetUri(getElementPointerSourceReference, LiteralReferenceGetLiteralPointerSourceLiteralReferenceRefUri, hl)
-	}
+	getElementPointerSourceReference := uOfD.NewElementReference(hl, LiteralReferenceGetLiteralPointerSourceLiteralReferenceRefUri)
+	core.SetOwningElement(getElementPointerSourceReference, literalReferenceGetLiteralPointer, hl)
+	core.SetName(getElementPointerSourceReference, "SourceLiteralReferenceRef", hl)
+	core.SetUri(getElementPointerSourceReference, LiteralReferenceGetLiteralPointerSourceLiteralReferenceRefUri, hl)
 	// GetLiteralPointerIndicatedLiteralPointerRef
-	getElementPointerIndicatedLiteralPointerRef := core.GetChildLiteralPointerReferenceWithUri(literalReferenceGetLiteralPointer, LiteralReferenceGetLiteralPointerIndicatedLiteralPointerRefUri, hl)
-	if getElementPointerIndicatedLiteralPointerRef == nil {
-		getElementPointerIndicatedLiteralPointerRef = uOfD.NewLiteralPointerReference(hl)
-		core.SetOwningElement(getElementPointerIndicatedLiteralPointerRef, literalReferenceGetLiteralPointer, hl)
-		core.SetName(getElementPointerIndicatedLiteralPointerRef, "IndicatedLiteralPointerRef", hl)
-		core.SetUri(getElementPointerIndicatedLiteralPointerRef, LiteralReferenceGetLiteralPointerIndicatedLiteralPointerRefUri, hl)
-	}
+	getElementPointerIndicatedLiteralPointerRef := uOfD.NewLiteralPointerReference(hl, LiteralReferenceGetLiteralPointerIndicatedLiteralPointerRefUri)
+	core.SetOwningElement(getElementPointerIndicatedLiteralPointerRef, literalReferenceGetLiteralPointer, hl)
+	core.SetName(getElementPointerIndicatedLiteralPointerRef, "IndicatedLiteralPointerRef", hl)
+	core.SetUri(getElementPointerIndicatedLiteralPointerRef, LiteralReferenceGetLiteralPointerIndicatedLiteralPointerRefUri, hl)
 
 	// SetReferencedLiteral
-	literalReferenceSetReferencedLiteral := uOfD.GetElementWithUri(LiteralReferenceSetReferencedLiteralUri)
-	if literalReferenceSetReferencedLiteral == nil {
-		literalReferenceSetReferencedLiteral = uOfD.NewElement(hl)
-		core.SetName(literalReferenceSetReferencedLiteral, "SetReferencedLiteral", hl)
-		core.SetOwningElement(literalReferenceSetReferencedLiteral, elementReferenceFunctions, hl)
-		core.SetUri(literalReferenceSetReferencedLiteral, LiteralReferenceSetReferencedLiteralUri, hl)
-	}
+	literalReferenceSetReferencedLiteral := uOfD.NewElement(hl, LiteralReferenceSetReferencedLiteralUri)
+	core.SetName(literalReferenceSetReferencedLiteral, "SetReferencedLiteral", hl)
+	core.SetOwningElement(literalReferenceSetReferencedLiteral, elementReferenceFunctions, hl)
+	core.SetUri(literalReferenceSetReferencedLiteral, LiteralReferenceSetReferencedLiteralUri, hl)
 	// SetReferencedLiteral.LiteralReference
-	setReferencedElementLiteralReference := core.GetChildLiteralReferenceWithUri(literalReferenceSetReferencedLiteral, LiteralReferenceSetReferencedLiteralSourceLiteralRefUri, hl)
-	if setReferencedElementLiteralReference == nil {
-		setReferencedElementLiteralReference = uOfD.NewLiteralReference(hl)
-		core.SetOwningElement(setReferencedElementLiteralReference, literalReferenceSetReferencedLiteral, hl)
-		core.SetName(setReferencedElementLiteralReference, "SourceLiteralRef", hl)
-		core.SetUri(setReferencedElementLiteralReference, LiteralReferenceSetReferencedLiteralSourceLiteralRefUri, hl)
-	}
+	setReferencedElementLiteralReference := uOfD.NewLiteralReference(hl, LiteralReferenceSetReferencedLiteralSourceLiteralRefUri)
+	core.SetOwningElement(setReferencedElementLiteralReference, literalReferenceSetReferencedLiteral, hl)
+	core.SetName(setReferencedElementLiteralReference, "SourceLiteralRef", hl)
+	core.SetUri(setReferencedElementLiteralReference, LiteralReferenceSetReferencedLiteralSourceLiteralRefUri, hl)
 	// SetReferencedLiteralTargetLiteralReference
-	setReferencedElementTargetLiteralReference := core.GetChildElementReferenceWithUri(literalReferenceSetReferencedLiteral, LiteralReferenceSetReferencedLiteralModifiedLiteralReferenceRefUri, hl)
-	if setReferencedElementTargetLiteralReference == nil {
-		setReferencedElementTargetLiteralReference = uOfD.NewElementReference(hl)
-		core.SetOwningElement(setReferencedElementTargetLiteralReference, literalReferenceSetReferencedLiteral, hl)
-		core.SetName(setReferencedElementTargetLiteralReference, "ModifiedLiteralReferenceRef", hl)
-		core.SetUri(setReferencedElementTargetLiteralReference, LiteralReferenceSetReferencedLiteralModifiedLiteralReferenceRefUri, hl)
-	}
+	setReferencedElementTargetLiteralReference := uOfD.NewElementReference(hl, LiteralReferenceSetReferencedLiteralModifiedLiteralReferenceRefUri)
+	core.SetOwningElement(setReferencedElementTargetLiteralReference, literalReferenceSetReferencedLiteral, hl)
+	core.SetName(setReferencedElementTargetLiteralReference, "ModifiedLiteralReferenceRef", hl)
+	core.SetUri(setReferencedElementTargetLiteralReference, LiteralReferenceSetReferencedLiteralModifiedLiteralReferenceRefUri, hl)
 }
 
 func literalReferenceFunctionsInit() {

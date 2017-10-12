@@ -13,15 +13,80 @@ import (
 	//	"time"
 )
 
+func TestBaseElementFunctionsIds(t *testing.T) {
+	uOfD := core.NewUniverseOfDiscourse()
+	var wg sync.WaitGroup
+	hl := core.NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	uOfD.SetRecordingUndo(true)
+	AddCoreFunctionsToUofD(uOfD, hl)
+
+	// var BaseElementFunctionsUri string = CoreFunctionsPrefix + "BaseElement"
+	validateElementId(t, uOfD, hl, BaseElementFunctionsUri)
+
+	//var BaseElementDeleteUri string = CoreFunctionsPrefix + "BaseElement/Delete"
+	validateElementId(t, uOfD, hl, BaseElementDeleteUri)
+	//var BaseElementDeleteDeletedElementRefUri string = CoreFunctionsPrefix + "BaseElement/Delete/DeletedElementRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementDeleteDeletedElementRefUri)
+	//
+	//var BaseElementGetIdUri string = CoreFunctionsPrefix + "BaseElement/GetId"
+	validateElementId(t, uOfD, hl, BaseElementGetIdUri)
+	//var BaseElementGetIdSourceBaseElementRefUri string = CoreFunctionsPrefix + "BaseElement/GetId/SourceBaseElementRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementGetIdSourceBaseElementRefUri)
+	//var BaseElementGetIdCreatedLiteralRefUri string = CoreFunctionsPrefix + "BaseElement/GetId/CreatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, BaseElementGetIdCreatedLiteralRefUri)
+	//
+	//var BaseElementGetNameUri string = CoreFunctionsPrefix + "BaseElement/GetName"
+	validateElementId(t, uOfD, hl, BaseElementGetNameUri)
+	//var BaseElementGetNameSourceBaseElementRefUri string = CoreFunctionsPrefix + "BaseElement/GetName/SourceBaseElementRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementGetNameSourceBaseElementRefUri)
+	//var BaseElementGetNameCreatedLiteralRefUri string = CoreFunctionsPrefix + "BaseElement/GetName/CreatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, BaseElementGetNameCreatedLiteralRefUri)
+	//
+	//var BaseElementGetOwningElementUri string = CoreFunctionsPrefix + "BaseElement/GetOwningElement"
+	validateElementId(t, uOfD, hl, BaseElementGetOwningElementUri)
+	//var BaseElementGetOwningElementSourceBaseElementRefUri string = CoreFunctionsPrefix + "BaseElement/GetOwningElement/SourceBaseElementRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementGetOwningElementSourceBaseElementRefUri)
+	//var BaseElementGetOwningElementOwningElementRefUri string = CoreFunctionsPrefix + "BaseElement/GetOwningElement/TargetElementReference"
+	validateElementReferenceId(t, uOfD, hl, BaseElementGetOwningElementOwningElementRefUri)
+	//
+	//var BaseElementGetUriUri string = CoreFunctionsPrefix + "BaseElement/GetUri"
+	validateElementId(t, uOfD, hl, BaseElementGetUriUri)
+	//var BaseElementGetUriSourceBaseElementRefUri string = CoreFunctionsPrefix + "BaseElement/GetUri/SourceBaseElementRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementGetUriSourceBaseElementRefUri)
+	//var BaseElementGetUriCreatedLiteralRefUri string = CoreFunctionsPrefix + "BaseElement/GetUri/CreatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, BaseElementGetUriCreatedLiteralRefUri)
+	//
+	//var BaseElementGetVersionUri string = CoreFunctionsPrefix + "BaseElement/GetVersion"
+	validateElementId(t, uOfD, hl, BaseElementGetVersionUri)
+	//var BaseElementGetVersionSourceBaseElementRefUri string = CoreFunctionsPrefix + "BaseElement/GetVersion/SourceBaseElementRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementGetVersionSourceBaseElementRefUri)
+	//var BaseElementGetVersionCreatedLiteralRefUri string = CoreFunctionsPrefix + "BaseElement/GetVersion/CreatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, BaseElementGetVersionCreatedLiteralRefUri)
+	//
+	//var BaseElementSetOwningElementUri string = CoreFunctionsPrefix + "BaseElement/SetOwningElement"
+	validateElementId(t, uOfD, hl, BaseElementSetOwningElementUri)
+	//var BaseElementSetOwningElementOwningElementRefUri string = CoreFunctionsPrefix + "BaseElement/SetOwningElement/OwningElementRef"
+	validateElementReferenceId(t, uOfD, hl, BaseElementSetOwningElementOwningElementRefUri)
+	//var BaseElementSetOwningElementModifiedBaseElementRefUri string = CoreFunctionsPrefix + "BaseElement/SetOwningElement/ModifiedBaseElementRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementSetOwningElementModifiedBaseElementRefUri)
+	//
+	//var BaseElementSetUriUri string = CoreFunctionsPrefix + "BaseElement/SetUri"
+	validateElementId(t, uOfD, hl, BaseElementSetUriUri)
+	//var BaseElementSetUriSourceUriRefUri string = CoreFunctionsPrefix + "BaseElement/SetUri/SourceUriRef"
+	validateLiteralReferenceId(t, uOfD, hl, BaseElementSetUriSourceUriRefUri)
+	//var BaseElementSetUriModifiedBaseElementRefUri string = CoreFunctionsPrefix + "BaseElement/SetUri/ModifiedBaseElementRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementSetUriModifiedBaseElementRefUri)
+
+}
+
 func TestDelete(t *testing.T) {
 	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
-	//	cfcs := GetCoreFunctionsConceptSpace(uOfD)
-	//	core.Print(cfcs, "cfcs: ", hl)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	deleteFunction := core.GetCore().GetFunction(BaseElementDeleteUri)
 	if deleteFunction == nil {
@@ -105,7 +170,7 @@ func TestGetId(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getId := uOfD.GetElementWithUri(BaseElementGetIdUri)
@@ -162,7 +227,7 @@ func TestGetName(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getName := uOfD.GetElementWithUri(BaseElementGetNameUri)
@@ -219,7 +284,7 @@ func TestGetOwningElement(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getOwningElement := uOfD.GetElementWithUri(BaseElementGetOwningElementUri)
@@ -276,7 +341,7 @@ func TestGetUri(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getUri := uOfD.GetElementWithUri(BaseElementGetUriUri)
@@ -333,7 +398,7 @@ func TestGetVersion(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	getVersion := uOfD.GetElementWithUri(BaseElementGetVersionUri)
@@ -390,7 +455,7 @@ func TestSetOwningElement(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	setOwningElement := uOfD.GetElementWithUri(BaseElementSetOwningElementUri)
@@ -442,7 +507,7 @@ func TestSetUri(t *testing.T) {
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD.SetRecordingUndo(true)
-	GetCoreFunctionsConceptSpace(uOfD)
+	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
 	setUri := uOfD.GetElementWithUri(BaseElementSetUriUri)

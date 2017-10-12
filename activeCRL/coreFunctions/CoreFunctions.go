@@ -12,15 +12,39 @@ import (
 var CoreFunctionsPrefix string = "http://activeCrl.com/coreFunctions/"
 var CoreFunctionsUri string = CoreFunctionsPrefix + "CoreFunctions"
 
-func GetCoreFunctionsConceptSpace(uOfD *core.UniverseOfDiscourse) core.Element {
+func AddCoreFunctionsToUofD(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	coreFunctionsConceptSpace := uOfD.GetElementWithUri(CoreFunctionsUri)
 	if coreFunctionsConceptSpace == nil {
-		coreFunctionsConceptSpace = uOfD.RecoverElement([]byte(serializedCoreFunctions))
+		coreFunctionsConceptSpace = BuildCoreFunctionsConceptSpace(uOfD, hl)
 		if coreFunctionsConceptSpace == nil {
-			log.Printf("Recovery of CoreFunctions failed")
+			log.Printf("Build of CoreFunctions failed")
 		}
 	}
 	return coreFunctionsConceptSpace
+}
+
+func BuildCoreFunctionsConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
+	// Core
+	coreFunctionsElement := uOfD.NewElement(hl, CoreFunctionsUri)
+	core.SetName(coreFunctionsElement, "CoreFunctions", hl)
+	core.SetUri(coreFunctionsElement, CoreFunctionsUri, hl)
+
+	BuildCoreBaseElementFunctions(coreFunctionsElement, uOfD, hl)
+	BuildCoreBaseElementPointerFunctions(coreFunctionsElement, uOfD, hl)
+	BuildCoreBaseElementReferenceFunctions(coreFunctionsElement, uOfD, hl)
+	BuildCoreElementFunctions(coreFunctionsElement, uOfD, hl)
+	BuildCoreElementPointerFunctions(coreFunctionsElement, uOfD, hl)
+	BuildCoreElementPointerPointerFunctions(coreFunctionsElement, uOfD, hl)
+	BuildCoreElementPointerReferenceFunctions(coreFunctionsElement, uOfD, hl)
+	BuildCoreElementReferenceFunctions(coreFunctionsElement, uOfD, hl)
+	BuildCoreLiteralFunctions(coreFunctionsElement, uOfD, hl)
+	BuildCoreLiteralPointerFunctions(coreFunctionsElement, uOfD, hl)
+	BuildCoreLiteralPointerPointerFunctions(coreFunctionsElement, uOfD, hl)
+	BuildCoreLiteralPointerReferenceFunctions(coreFunctionsElement, uOfD, hl)
+	BuildCoreLiteralReferenceFunctions(coreFunctionsElement, uOfD, hl)
+	BuildCoreRefinementFunctions(coreFunctionsElement, uOfD, hl)
+
+	return coreFunctionsElement
 }
 
 func init() {
