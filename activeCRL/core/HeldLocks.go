@@ -5,20 +5,21 @@
 package core
 
 import (
+	"github.com/satori/go.uuid"
 	//	"log"
 	"sync"
 )
 
 type HeldLocks struct {
 	sync.Mutex
-	beLocks             map[string]BaseElement
+	beLocks             map[uuid.UUID]BaseElement
 	waitGroup           *sync.WaitGroup
 	functionCallManager *FunctionCallManager
 }
 
 func NewHeldLocks(wg *sync.WaitGroup) *HeldLocks {
 	var hl HeldLocks
-	hl.beLocks = make(map[string]BaseElement)
+	hl.beLocks = make(map[uuid.UUID]BaseElement)
 	hl.waitGroup = wg
 	hl.functionCallManager = NewFunctionCallManager()
 	return &hl
@@ -31,7 +32,7 @@ func (hlPtr *HeldLocks) GetWaitGroup() *sync.WaitGroup {
 func (hlPtr *HeldLocks) LockBaseElement(be BaseElement) {
 	hlPtr.Lock()
 	defer hlPtr.Unlock()
-	id := be.getIdNoLock().String()
+	id := be.getIdNoLock()
 	if hlPtr.beLocks[id] == nil {
 		//		log.Printf("Locking %s", id)
 		hlPtr.beLocks[id] = be
@@ -45,6 +46,6 @@ func (hlPtr *HeldLocks) ReleaseLocks() {
 	for _, be := range hlPtr.beLocks {
 		be.TraceableUnlock()
 	}
-	hlPtr.beLocks = make(map[string]BaseElement)
+	hlPtr.beLocks = make(map[uuid.UUID]BaseElement)
 	hlPtr.functionCallManager.ExecuteFunctions(hlPtr.waitGroup)
 }

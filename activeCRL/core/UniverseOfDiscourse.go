@@ -13,7 +13,7 @@ import (
 
 type UniverseOfDiscourse struct {
 	sync.RWMutex
-	baseElementMap            *StringBaseElementMap
+	baseElementMap            *UUIDBaseElementMap
 	baseElementListenerMap    *StringBaseElementPointerListMap
 	elementListenerMap        *StringElementPointerListMap
 	elementPointerListenerMap *StringElementPointerPointerListMap
@@ -26,7 +26,7 @@ type UniverseOfDiscourse struct {
 
 func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	var uOfD UniverseOfDiscourse
-	uOfD.baseElementMap = NewStringBaseElementMap()
+	uOfD.baseElementMap = NewUUIDBaseElementMap()
 	uOfD.baseElementListenerMap = NewStringBaseElementPointerListMap()
 	uOfD.elementListenerMap = NewStringElementPointerListMap()
 	uOfD.elementPointerListenerMap = NewStringElementPointerPointerListMap()
@@ -54,7 +54,7 @@ func (uOfDPtr *UniverseOfDiscourse) AddBaseElement(be BaseElement, hl *HeldLocks
 	}
 	hl.LockBaseElement(be)
 	be.setUniverseOfDiscourse(uOfDPtr, hl)
-	uOfDPtr.baseElementMap.SetEntry(be.GetId(hl).String(), be)
+	uOfDPtr.baseElementMap.SetEntry(be.GetId(hl), be)
 	uri := GetUri(be, hl)
 	if uri != "" {
 		uOfDPtr.uriBaseElementMap.SetEntry(uri, be)
@@ -78,7 +78,7 @@ func (uOfDPtr *UniverseOfDiscourse) addBaseElementForUndo(be BaseElement, hl *He
 		log.Printf("Adding base element for undo, id: %s\n", be.GetId(hl).String())
 		Print(be, "AddedBaseElement: ", hl)
 	}
-	uOfDPtr.baseElementMap.SetEntry(be.GetId(hl).String(), be)
+	uOfDPtr.baseElementMap.SetEntry(be.GetId(hl), be)
 	return nil
 }
 
@@ -177,7 +177,7 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteBaseElement(be BaseElement, hl *HeldLo
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetBaseElement(id string) BaseElement {
+func (uOfDPtr *UniverseOfDiscourse) GetBaseElement(id uuid.UUID) BaseElement {
 	return uOfDPtr.baseElementMap.GetEntry(id)
 }
 
@@ -198,7 +198,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetCoreConceptSpace() Element {
 	return uOfDPtr.GetElementWithUri(CoreConceptSpaceUri)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetElement(id string) Element {
+func (uOfDPtr *UniverseOfDiscourse) GetElement(id uuid.UUID) Element {
 	// No locking required
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
@@ -208,7 +208,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetElement(id string) Element {
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetElementPointer(id string) ElementPointer {
+func (uOfDPtr *UniverseOfDiscourse) GetElementPointer(id uuid.UUID) ElementPointer {
 	// No locking required
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
@@ -245,7 +245,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetElementReferenceWithUri(uri string) Eleme
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetLiteral(id string) Literal {
+func (uOfDPtr *UniverseOfDiscourse) GetLiteral(id uuid.UUID) Literal {
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
 	case Literal:
@@ -263,7 +263,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetLiteralWithUri(uri string) Literal {
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) GetLiteralPointer(id string) LiteralPointer {
+func (uOfDPtr *UniverseOfDiscourse) GetLiteralPointer(id uuid.UUID) LiteralPointer {
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
 	case LiteralPointer:
@@ -290,7 +290,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetLiteralPointerReferenceWithUri(uri string
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) getRefinement(id string) Refinement {
+func (uOfDPtr *UniverseOfDiscourse) getRefinement(id uuid.UUID) Refinement {
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
 	case Refinement:
@@ -582,7 +582,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeBaseElement(be BaseElement, hl *HeldLo
 		return errors.New("UniverseOfDiscource removeBaseElement failed because base element was nil")
 	}
 	hl.LockBaseElement(be)
-	uOfDPtr.baseElementMap.DeleteEntry(be.GetId(hl).String())
+	uOfDPtr.baseElementMap.DeleteEntry(be.GetId(hl))
 	url := GetUri(be, hl)
 	if url != "" {
 		uOfDPtr.uriBaseElementMap.DeleteEntry(url)
@@ -599,7 +599,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeBaseElementForUndo(be BaseElement, hl 
 			log.Printf("Removing base element for undo, id: %s\n", be.GetId(hl).String())
 			Print(be, "RemovedBaseElement: ", hl)
 		}
-		uOfDPtr.baseElementMap.DeleteEntry(be.GetId(hl).String())
+		uOfDPtr.baseElementMap.DeleteEntry(be.GetId(hl))
 	}
 }
 

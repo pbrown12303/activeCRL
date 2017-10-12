@@ -29,7 +29,7 @@ func TestUndoRedoElementCreation(t *testing.T) {
 	if creationEntry.changedElement.(*element) != e1.(*element) {
 		t.Error("Creation entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()).(*element) != e1.(*element) {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)).(*element) != e1.(*element) {
 		t.Error("Element not added to uOfD.baseElementMap after creation")
 	}
 
@@ -51,7 +51,7 @@ func TestUndoRedoElementCreation(t *testing.T) {
 	if redoEntry.changedElement.(*element) != e1.(*element) {
 		t.Error("Redo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)) != nil {
 		t.Error("Element not removed from uOfD.baseElementMap after undo")
 	}
 
@@ -70,7 +70,7 @@ func TestUndoRedoElementCreation(t *testing.T) {
 	if undoEntry.changedElement.(*element) != e1.(*element) {
 		t.Error("Undo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()).(*element) != e1.(*element) {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)).(*element) != e1.(*element) {
 		t.Error("Element not added to uOfD.baseElementMap after redo")
 	}
 }
@@ -168,10 +168,10 @@ func TestUndoRedoElementSetName(t *testing.T) {
 	undoStackSizeAfterSetName := len(uOfD.undoMgr.undoStack)
 	nameLiteralPointer := e1.GetNameLiteralPointer(hl)
 	nameLiteral := e1.GetNameLiteral(hl)
-	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) == nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl)) == nil {
 		t.Error("Name literal pointer not in baseElementMap")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl).String()) == nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl)) == nil {
 		t.Error("Name literal not in baseElementMap")
 	}
 
@@ -200,10 +200,10 @@ func TestUndoRedoElementSetName(t *testing.T) {
 	if e1.GetNameLiteral(hl) != nil {
 		t.Error("Undo did not remove name literal")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl)) != nil {
 		t.Error("Name literal pointer not removed from baseElementMap")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl)) != nil {
 		t.Error("Name literal not removed from baseElementMap")
 	}
 
@@ -229,10 +229,10 @@ func TestUndoRedoElementSetName(t *testing.T) {
 	if e1.GetNameLiteral(hl) != nameLiteral {
 		t.Error("Redo did not restore name literal")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) == nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl)) == nil {
 		t.Error("Name literal pointer not restored to baseElementMap")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl).String()) == nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl)) == nil {
 		t.Error("Name literal not restored to baseElementMap")
 	}
 
@@ -256,10 +256,10 @@ func TestUndoRedoElementSetName(t *testing.T) {
 	if e1.GetNameLiteral(hl) != nameLiteral {
 		t.Error("Double undo/redo did not restore name literal")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) == nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl)) == nil {
 		t.Error("Double undo/redo Name literal pointer not restored to baseElementMap")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl).String()) == nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl)) == nil {
 		t.Error("Double undo/redoName literal not restored to baseElementMap")
 	}
 }
@@ -273,7 +273,7 @@ func TestUndoRedoElementSetOwner(t *testing.T) {
 	parent := uOfD.NewElement(hl)
 	uOfD.MarkUndoPoint()
 	child := uOfD.NewElement(hl)
-	childId := child.GetId(hl).String()
+	childId := child.GetId(hl)
 	SetOwningElement(child, parent, hl)
 
 	// Undo
@@ -290,7 +290,7 @@ func TestUndoRedoElementSetOwner(t *testing.T) {
 	if uOfD.GetElement(childId) == nil {
 		t.Errorf("Child not restored to uOfD")
 	}
-	if parent.GetOwnedBaseElements(hl)[0].GetId(hl).String() != childId {
+	if parent.GetOwnedBaseElements(hl)[0].GetId(hl) != childId {
 		t.Errorf("Child not restored to parent")
 	}
 
@@ -305,10 +305,10 @@ func TestUndoRedoReferenceAndReferencedElement(t *testing.T) {
 	parent := uOfD.NewElement(hl)
 	uOfD.MarkUndoPoint()
 	child := uOfD.NewElementReference(hl)
-	childId := child.GetId(hl).String()
+	childId := child.GetId(hl)
 	SetOwningElement(child, parent, hl)
 	target := uOfD.NewElement(hl)
-	targetId := target.GetId(hl).String()
+	targetId := target.GetId(hl)
 	child.SetReferencedElement(target, hl)
 
 	// Undo
@@ -329,14 +329,14 @@ func TestUndoRedoReferenceAndReferencedElement(t *testing.T) {
 	if recoveredChild == nil {
 		t.Errorf("Child not restored to uOfD, id: %s\n", childId)
 	}
-	if parent.GetOwnedBaseElements(hl)[0].GetId(hl).String() != childId {
+	if parent.GetOwnedBaseElements(hl)[0].GetId(hl) != childId {
 		t.Errorf("Child not restored to parent")
 	}
 	recoveredTarget := uOfD.GetElement(targetId)
 	if recoveredTarget == nil {
 		t.Errorf("Target not restored to uOfD, id: %s\n", targetId)
 	} else {
-		if recoveredChild.(ElementReference).GetReferencedElement(hl).GetId(hl).String() != targetId {
+		if recoveredChild.(ElementReference).GetReferencedElement(hl).GetId(hl) != targetId {
 			t.Errorf("Child's referencedElement not restored")
 		}
 	}
@@ -351,10 +351,10 @@ func TestUndoRedoDeleteReferenceAndReferencedElement(t *testing.T) {
 	parent := uOfD.NewElement(hl)
 	uOfD.MarkUndoPoint()
 	child := uOfD.NewElementReference(hl)
-	childId := child.GetId(hl).String()
+	childId := child.GetId(hl)
 	SetOwningElement(child, parent, hl)
 	target := uOfD.NewElement(hl)
-	targetId := target.GetId(hl).String()
+	targetId := target.GetId(hl)
 	child.SetReferencedElement(target, hl)
 	uOfD.MarkUndoPoint()
 
@@ -373,14 +373,14 @@ func TestUndoRedoDeleteReferenceAndReferencedElement(t *testing.T) {
 	if recoveredChild == nil {
 		t.Errorf("Child not restored to uOfD, id: %s\n", childId)
 	}
-	if parent.GetOwnedBaseElements(hl)[0].GetId(hl).String() != childId {
+	if parent.GetOwnedBaseElements(hl)[0].GetId(hl) != childId {
 		t.Errorf("Child not restored to parent")
 	}
 	recoveredTarget := uOfD.GetElement(targetId)
 	if recoveredTarget == nil {
 		t.Errorf("Target not restored to uOfD, id: %s\n", targetId)
 	} else {
-		if recoveredChild.(ElementReference).GetReferencedElement(hl).GetId(hl).String() != targetId {
+		if recoveredChild.(ElementReference).GetReferencedElement(hl).GetId(hl) != targetId {
 			t.Errorf("Child's referencedElement not restored")
 		}
 	}
@@ -433,10 +433,10 @@ func TestUndoRedoElementSetUri(t *testing.T) {
 	undoStackSizeAfterSetUri := len(uOfD.undoMgr.undoStack)
 	nameLiteralPointer := e1.GetUriLiteralPointer(hl)
 	nameLiteral := e1.GetUriLiteral(hl)
-	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) == nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl)) == nil {
 		t.Error("Uri literal pointer not in baseElementMap")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl).String()) == nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl)) == nil {
 		t.Error("Uri literal not in baseElementMap")
 	}
 
@@ -465,10 +465,10 @@ func TestUndoRedoElementSetUri(t *testing.T) {
 	if e1.GetUriLiteral(hl) != nil {
 		t.Error("Undo did not remove name literal")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl)) != nil {
 		t.Error("Uri literal pointer not removed from baseElementMap")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl)) != nil {
 		t.Error("Uri literal not removed from baseElementMap")
 	}
 
@@ -494,10 +494,10 @@ func TestUndoRedoElementSetUri(t *testing.T) {
 	if e1.GetUriLiteral(hl) != nameLiteral {
 		t.Error("Redo did not restore name literal")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) == nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl)) == nil {
 		t.Error("Uri literal pointer not restored to baseElementMap")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl).String()) == nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl)) == nil {
 		t.Error("Uri literal not restored to baseElementMap")
 	}
 }
@@ -542,10 +542,10 @@ func TestUndoRedoElementSetDefinition(t *testing.T) {
 	undoStackSizeAfterSetDefinition := len(uOfD.undoMgr.undoStack)
 	nameLiteralPointer := e1.GetDefinitionLiteralPointer(hl)
 	nameLiteral := e1.GetDefinitionLiteral(hl)
-	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) == nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl)) == nil {
 		t.Error("Definition literal pointer not in baseElementMap")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl).String()) == nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl)) == nil {
 		t.Error("Definition literal not in baseElementMap")
 	}
 
@@ -574,10 +574,10 @@ func TestUndoRedoElementSetDefinition(t *testing.T) {
 	if e1.GetDefinitionLiteral(hl) != nil {
 		t.Error("Undo did not remove name literal")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl)) != nil {
 		t.Error("Definition literal pointer not removed from baseElementMap")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl)) != nil {
 		t.Error("Definition literal not removed from baseElementMap")
 	}
 
@@ -603,10 +603,10 @@ func TestUndoRedoElementSetDefinition(t *testing.T) {
 	if e1.GetDefinitionLiteral(hl) != nameLiteral {
 		t.Error("Redo did not restore name literal")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl).String()) == nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl)) == nil {
 		t.Error("Definition literal pointer not restored to baseElementMap")
 	}
-	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl).String()) == nil {
+	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl)) == nil {
 		t.Error("Definition literal not restored to baseElementMap")
 	}
 }
@@ -625,7 +625,7 @@ func TestUndoRedoElementPointerCreation(t *testing.T) {
 	if creationEntry.changedElement.(*elementPointer) != ep1.(*elementPointer) {
 		t.Error("Creation entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(ep1.GetId(hl).String()).(*elementPointer) != ep1.(*elementPointer) {
+	if uOfD.baseElementMap.GetEntry(ep1.GetId(hl)).(*elementPointer) != ep1.(*elementPointer) {
 		t.Error("Element not added to uOfD.baseElementMap after creation")
 	}
 
@@ -641,7 +641,7 @@ func TestUndoRedoElementPointerCreation(t *testing.T) {
 	if redoEntry.changedElement.(*elementPointer) != ep1.(*elementPointer) {
 		t.Error("Redo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(ep1.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(ep1.GetId(hl)) != nil {
 		t.Error("Element not removed from uOfD.baseElementMap after undo")
 	}
 
@@ -654,7 +654,7 @@ func TestUndoRedoElementPointerCreation(t *testing.T) {
 	if undoEntry.changedElement.(*elementPointer) != ep1.(*elementPointer) {
 		t.Error("Undo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(ep1.GetId(hl).String()).(*elementPointer) != ep1.(*elementPointer) {
+	if uOfD.baseElementMap.GetEntry(ep1.GetId(hl)).(*elementPointer) != ep1.(*elementPointer) {
 		t.Error("Element not added to uOfD.baseElementMap after redo")
 	}
 }
@@ -737,7 +737,7 @@ func TestUndoRedoElementPointerPointerCreation(t *testing.T) {
 	if creationEntry.changedElement.(*elementPointerPointer) != epp1.(*elementPointerPointer) {
 		t.Error("Creation entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(epp1.GetId(hl).String()).(*elementPointerPointer) != epp1.(*elementPointerPointer) {
+	if uOfD.baseElementMap.GetEntry(epp1.GetId(hl)).(*elementPointerPointer) != epp1.(*elementPointerPointer) {
 		t.Error("ElementPointerPointer not added to uOfD.baseElementMap after creation")
 	}
 
@@ -753,7 +753,7 @@ func TestUndoRedoElementPointerPointerCreation(t *testing.T) {
 	if redoEntry.changedElement.(*elementPointerPointer) != epp1.(*elementPointerPointer) {
 		t.Error("Redo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(epp1.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(epp1.GetId(hl)) != nil {
 		t.Error("Element not removed from uOfD.baseElementMap after undo")
 	}
 
@@ -766,7 +766,7 @@ func TestUndoRedoElementPointerPointerCreation(t *testing.T) {
 	if undoEntry.changedElement.(*elementPointerPointer) != epp1.(*elementPointerPointer) {
 		t.Error("Undo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(epp1.GetId(hl).String()).(*elementPointerPointer) != epp1.(*elementPointerPointer) {
+	if uOfD.baseElementMap.GetEntry(epp1.GetId(hl)).(*elementPointerPointer) != epp1.(*elementPointerPointer) {
 		t.Error("Element not added to uOfD.baseElementMap after redo")
 	}
 }
@@ -846,7 +846,7 @@ func TestUndoRedoElementPointerReferenceCreation(t *testing.T) {
 	if creationEntry.changedElement.(*elementPointerReference) != e1.(*elementPointerReference) {
 		t.Error("Creation entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()).(*elementPointerReference) != e1.(*elementPointerReference) {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)).(*elementPointerReference) != e1.(*elementPointerReference) {
 		t.Error("Element not added to uOfD.baseElementMap after creation")
 	}
 
@@ -868,7 +868,7 @@ func TestUndoRedoElementPointerReferenceCreation(t *testing.T) {
 	if redoEntry.changedElement.(*elementPointerReference) != e1.(*elementPointerReference) {
 		t.Error("Redo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)) != nil {
 		t.Error("Element not removed from uOfD.baseElementMap after undo")
 	}
 
@@ -887,7 +887,7 @@ func TestUndoRedoElementPointerReferenceCreation(t *testing.T) {
 	if undoEntry.changedElement.(*elementPointerReference) != e1.(*elementPointerReference) {
 		t.Error("Undo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()).(*elementPointerReference) != e1.(*elementPointerReference) {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)).(*elementPointerReference) != e1.(*elementPointerReference) {
 		t.Error("Element not added to uOfD.baseElementMap after redo")
 	}
 }
@@ -912,7 +912,7 @@ func TestUndoRedoElementReferenceCreation(t *testing.T) {
 	if creationEntry.changedElement.(*elementReference) != e1.(*elementReference) {
 		t.Error("Creation entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()).(*elementReference) != e1.(*elementReference) {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)).(*elementReference) != e1.(*elementReference) {
 		t.Error("Element not added to uOfD.baseElementMap after creation")
 	}
 
@@ -934,7 +934,7 @@ func TestUndoRedoElementReferenceCreation(t *testing.T) {
 	if redoEntry.changedElement.(*elementReference) != e1.(*elementReference) {
 		t.Error("Redo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)) != nil {
 		t.Error("Element not removed from uOfD.baseElementMap after undo")
 	}
 
@@ -953,7 +953,7 @@ func TestUndoRedoElementReferenceCreation(t *testing.T) {
 	if undoEntry.changedElement.(*elementReference) != e1.(*elementReference) {
 		t.Error("Undo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()).(*elementReference) != e1.(*elementReference) {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)).(*elementReference) != e1.(*elementReference) {
 		t.Error("Element not added to uOfD.baseElementMap after redo")
 	}
 }
@@ -978,7 +978,7 @@ func TestUndoRedoLiteralCreation(t *testing.T) {
 	if creationEntry.changedElement.(*literal) != l1.(*literal) {
 		t.Error("Creation entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(l1.GetId(hl).String()).(*literal) != l1.(*literal) {
+	if uOfD.baseElementMap.GetEntry(l1.GetId(hl)).(*literal) != l1.(*literal) {
 		t.Error("Element not added to uOfD.baseElementMap after creation")
 	}
 
@@ -1000,7 +1000,7 @@ func TestUndoRedoLiteralCreation(t *testing.T) {
 	if redoEntry.changedElement.(*literal) != l1.(*literal) {
 		t.Error("Redo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(l1.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(l1.GetId(hl)) != nil {
 		t.Error("Element not removed from uOfD.baseElementMap after undo")
 	}
 
@@ -1019,7 +1019,7 @@ func TestUndoRedoLiteralCreation(t *testing.T) {
 	if undoEntry.changedElement.(*literal) != l1.(*literal) {
 		t.Error("Undo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(l1.GetId(hl).String()).(*literal) != l1.(*literal) {
+	if uOfD.baseElementMap.GetEntry(l1.GetId(hl)).(*literal) != l1.(*literal) {
 		t.Error("Element not added to uOfD.baseElementMap after redo")
 	}
 }
@@ -1044,7 +1044,7 @@ func TestUndoRedoLiteralPointerCreation(t *testing.T) {
 	if creationEntry.changedElement.(*literalPointer) != lp1.(*literalPointer) {
 		t.Error("Creation entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(lp1.GetId(hl).String()).(*literalPointer) != lp1.(*literalPointer) {
+	if uOfD.baseElementMap.GetEntry(lp1.GetId(hl)).(*literalPointer) != lp1.(*literalPointer) {
 		t.Error("Element not added to uOfD.baseElementMap after creation")
 	}
 
@@ -1066,7 +1066,7 @@ func TestUndoRedoLiteralPointerCreation(t *testing.T) {
 	if redoEntry.changedElement.(*literalPointer) != lp1.(*literalPointer) {
 		t.Error("Redo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(lp1.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(lp1.GetId(hl)) != nil {
 		t.Error("Element not removed from uOfD.baseElementMap after undo")
 	}
 
@@ -1085,7 +1085,7 @@ func TestUndoRedoLiteralPointerCreation(t *testing.T) {
 	if undoEntry.changedElement.(*literalPointer) != lp1.(*literalPointer) {
 		t.Error("Undo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(lp1.GetId(hl).String()).(*literalPointer) != lp1.(*literalPointer) {
+	if uOfD.baseElementMap.GetEntry(lp1.GetId(hl)).(*literalPointer) != lp1.(*literalPointer) {
 		t.Error("Element not added to uOfD.baseElementMap after redo")
 	}
 }
@@ -1110,7 +1110,7 @@ func TestUndoRedoLiteralPointerPointerCreation(t *testing.T) {
 	if creationEntry.changedElement.(*literalPointerPointer) != lp1.(*literalPointerPointer) {
 		t.Error("Creation entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(lp1.GetId(hl).String()).(*literalPointerPointer) != lp1.(*literalPointerPointer) {
+	if uOfD.baseElementMap.GetEntry(lp1.GetId(hl)).(*literalPointerPointer) != lp1.(*literalPointerPointer) {
 		t.Error("Element not added to uOfD.baseElementMap after creation")
 	}
 
@@ -1132,7 +1132,7 @@ func TestUndoRedoLiteralPointerPointerCreation(t *testing.T) {
 	if redoEntry.changedElement.(*literalPointerPointer) != lp1.(*literalPointerPointer) {
 		t.Error("Redo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(lp1.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(lp1.GetId(hl)) != nil {
 		t.Error("Element not removed from uOfD.baseElementMap after undo")
 	}
 
@@ -1151,7 +1151,7 @@ func TestUndoRedoLiteralPointerPointerCreation(t *testing.T) {
 	if undoEntry.changedElement.(*literalPointerPointer) != lp1.(*literalPointerPointer) {
 		t.Error("Undo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(lp1.GetId(hl).String()).(*literalPointerPointer) != lp1.(*literalPointerPointer) {
+	if uOfD.baseElementMap.GetEntry(lp1.GetId(hl)).(*literalPointerPointer) != lp1.(*literalPointerPointer) {
 		t.Error("Element not added to uOfD.baseElementMap after redo")
 	}
 }
@@ -1231,7 +1231,7 @@ func TestUndoRedoLiteralReferenceCreation(t *testing.T) {
 	if creationEntry.changedElement.(*literalReference) != e1.(*literalReference) {
 		t.Error("Creation entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()).(*literalReference) != e1.(*literalReference) {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)).(*literalReference) != e1.(*literalReference) {
 		t.Error("Element not added to uOfD.baseElementMap after creation")
 	}
 
@@ -1253,7 +1253,7 @@ func TestUndoRedoLiteralReferenceCreation(t *testing.T) {
 	if redoEntry.changedElement.(*literalReference) != e1.(*literalReference) {
 		t.Error("Redo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)) != nil {
 		t.Error("Element not removed from uOfD.baseElementMap after undo")
 	}
 
@@ -1272,7 +1272,7 @@ func TestUndoRedoLiteralReferenceCreation(t *testing.T) {
 	if undoEntry.changedElement.(*literalReference) != e1.(*literalReference) {
 		t.Error("Undo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()).(*literalReference) != e1.(*literalReference) {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)).(*literalReference) != e1.(*literalReference) {
 		t.Error("Element not added to uOfD.baseElementMap after redo")
 	}
 }
@@ -1297,7 +1297,7 @@ func TestUndoRedoRefinementCreation(t *testing.T) {
 	if creationEntry.changedElement.(*refinement) != e1.(*refinement) {
 		t.Error("Creation entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()).(*refinement) != e1.(*refinement) {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)).(*refinement) != e1.(*refinement) {
 		t.Error("Element not added to uOfD.baseElementMap after creation")
 	}
 
@@ -1319,7 +1319,7 @@ func TestUndoRedoRefinementCreation(t *testing.T) {
 	if redoEntry.changedElement.(*refinement) != e1.(*refinement) {
 		t.Error("Redo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()) != nil {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)) != nil {
 		t.Error("Element not removed from uOfD.baseElementMap after undo")
 	}
 
@@ -1338,7 +1338,7 @@ func TestUndoRedoRefinementCreation(t *testing.T) {
 	if undoEntry.changedElement.(*refinement) != e1.(*refinement) {
 		t.Error("Undo entry new entry not nil")
 	}
-	if uOfD.baseElementMap.GetEntry(e1.GetId(hl).String()).(*refinement) != e1.(*refinement) {
+	if uOfD.baseElementMap.GetEntry(e1.GetId(hl)).(*refinement) != e1.(*refinement) {
 		t.Error("Element not added to uOfD.baseElementMap after redo")
 	}
 }

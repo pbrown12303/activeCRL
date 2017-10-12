@@ -6,6 +6,7 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	"github.com/satori/go.uuid"
 	//	"log"
 	"sync"
 	"testing"
@@ -112,7 +113,7 @@ func TestCreateElementFunction(t *testing.T) {
 
 	// Now create the instance of the function
 	createElementInstance := uOfD.NewElement(hl)
-	createElementInstanceIdentifier := createElementInstance.GetId(hl).String()
+	createElementInstanceIdentifier := createElementInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createElementFunction, hl)
 
@@ -125,18 +126,18 @@ func TestCreateElementFunction(t *testing.T) {
 	//	core.Print(createElementInstance, "...", hl)
 
 	foundReference := core.GetChildElementReferenceWithAncestorUri(createElementInstance, ElementCreateCreatedElementRefUri, hl)
-	foundReferenceIdentifier := ""
+	foundReferenceIdentifier := uuid.Nil
 	var createdElement core.Element
-	createdElementIdentifier := ""
+	createdElementIdentifier := uuid.Nil
 	if foundReference == nil {
 		t.Error("Reference not created")
 	} else {
-		foundReferenceIdentifier = foundReference.GetId(hl).String()
+		foundReferenceIdentifier = foundReference.GetId(hl)
 		createdElement = foundReference.GetReferencedElement(hl)
 		if createdElement == nil {
 			t.Error("Element not created")
 		} else {
-			createdElementIdentifier = createdElement.GetId(hl).String()
+			createdElementIdentifier = createdElement.GetId(hl)
 		}
 	}
 

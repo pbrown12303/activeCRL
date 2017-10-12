@@ -6,6 +6,7 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	"github.com/satori/go.uuid"
 	//	"log"
 	"sync"
 	"testing"
@@ -63,7 +64,7 @@ func TestCreateLiteralFunction(t *testing.T) {
 
 	// Now create the instance of the function
 	createLiteralInstance := uOfD.NewElement(hl)
-	createLiteralInstanceIdentifier := createLiteralInstance.GetId(hl).String()
+	createLiteralInstanceIdentifier := createLiteralInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createLiteralFunction, hl)
 
@@ -76,18 +77,18 @@ func TestCreateLiteralFunction(t *testing.T) {
 	//	core.Print(createLiteralInstance, "...", hl)
 
 	foundReference := core.GetChildLiteralReferenceWithAncestorUri(createLiteralInstance, LiteralCreateCreatedLiteralRefUri, hl)
-	foundReferenceIdentifier := ""
+	foundReferenceIdentifier := uuid.Nil
 	var createdLiteral core.Literal
-	createdLiteralIdentifier := ""
+	createdLiteralIdentifier := uuid.Nil
 	if foundReference == nil {
 		t.Error("Reference not created")
 	} else {
-		foundReferenceIdentifier = foundReference.GetId(hl).String()
+		foundReferenceIdentifier = foundReference.GetId(hl)
 		createdLiteral = foundReference.GetReferencedLiteral(hl)
 		if createdLiteral == nil {
 			t.Error("Literal not created")
 		} else {
-			createdLiteralIdentifier = createdLiteral.GetId(hl).String()
+			createdLiteralIdentifier = createdLiteral.GetId(hl)
 		}
 	}
 

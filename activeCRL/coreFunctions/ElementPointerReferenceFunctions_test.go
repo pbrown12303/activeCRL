@@ -6,6 +6,7 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	"github.com/satori/go.uuid"
 	//	"log"
 	"sync"
 	"testing"
@@ -70,7 +71,7 @@ func TestCreateElementPointerReferenceFunction(t *testing.T) {
 	}
 
 	createElementPointerReferenceInstance := uOfD.NewElement(hl)
-	createElementPointerReferenceInstanceIdentifier := createElementPointerReferenceInstance.GetId(hl).String()
+	createElementPointerReferenceInstanceIdentifier := createElementPointerReferenceInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createElementPointerReference, hl)
 
@@ -79,13 +80,13 @@ func TestCreateElementPointerReferenceFunction(t *testing.T) {
 	wg.Wait()
 
 	foundElementPointerReferenceRef := core.GetChildElementReferenceWithAncestorUri(createElementPointerReferenceInstance, ElementPointerReferenceCreateCreatedElementPointerReferenceRefUri, hl)
-	foundElementPointerReferenceRefIdentifier := ""
+	foundElementPointerReferenceRefIdentifier := uuid.Nil
 	var createdElementPointerReference core.ElementPointerReference
-	createdElementPointerReferenceIdentifier := ""
+	createdElementPointerReferenceIdentifier := uuid.Nil
 	if foundElementPointerReferenceRef == nil {
 		t.Error("ElementPointerReferenceRef not created")
 	} else {
-		foundElementPointerReferenceRefIdentifier = foundElementPointerReferenceRef.GetId(hl).String()
+		foundElementPointerReferenceRefIdentifier = foundElementPointerReferenceRef.GetId(hl)
 		foundElementPointerReference := foundElementPointerReferenceRef.GetReferencedElement(hl)
 		if foundElementPointerReference == nil {
 			t.Error("ElementPointerReference not created")
@@ -93,7 +94,7 @@ func TestCreateElementPointerReferenceFunction(t *testing.T) {
 			switch foundElementPointerReference.(type) {
 			case core.ElementPointerReference:
 				createdElementPointerReference = foundElementPointerReference.(core.ElementPointerReference)
-				createdElementPointerReferenceIdentifier = createdElementPointerReference.GetId(hl).String()
+				createdElementPointerReferenceIdentifier = createdElementPointerReference.GetId(hl)
 			default:
 				t.Error("Created object of wrong type")
 			}

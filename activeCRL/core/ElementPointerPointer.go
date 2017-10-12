@@ -42,7 +42,7 @@ func (eppPtr *elementPointerPointer) GetElementPointer(hl *HeldLocks) ElementPoi
 	}
 	hl.LockBaseElement(eppPtr)
 	if eppPtr.elementPointer == nil && eppPtr.GetElementPointerId(hl) != uuid.Nil && eppPtr.uOfD != nil {
-		eppPtr.elementPointer = eppPtr.uOfD.GetElementPointer(eppPtr.GetElementPointerId(hl).String())
+		eppPtr.elementPointer = eppPtr.uOfD.GetElementPointer(eppPtr.GetElementPointerId(hl))
 	}
 	return eppPtr.elementPointer
 }

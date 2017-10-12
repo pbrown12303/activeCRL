@@ -6,6 +6,7 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	"github.com/satori/go.uuid"
 	//	"log"
 	"strconv"
 	"sync"
@@ -100,7 +101,7 @@ func TestCreateNameLiteralPointerFunction(t *testing.T) {
 
 	// Now create the instance of the function
 	createLiteralPointerInstance := uOfD.NewElement(hl)
-	createLiteralPointerInstanceIdentifier := createLiteralPointerInstance.GetId(hl).String()
+	createLiteralPointerInstanceIdentifier := createLiteralPointerInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createNameLiteralPointer, hl)
 	refinementInstance.SetRefinedElement(createLiteralPointerInstance, hl)
@@ -108,18 +109,18 @@ func TestCreateNameLiteralPointerFunction(t *testing.T) {
 	wg.Wait()
 
 	foundLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(createLiteralPointerInstance, LiteralPointerCreateNameLiteralPointerCreatedLiteralPointerRefUri, hl)
-	foundLiteralPointerRefIdentifier := ""
+	foundLiteralPointerRefIdentifier := uuid.Nil
 	var createdLiteralPointer core.LiteralPointer
-	createdLiteralPointerIdentifier := ""
+	createdLiteralPointerIdentifier := uuid.Nil
 	if foundLiteralPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
-		foundLiteralPointerRefIdentifier = foundLiteralPointerRef.GetId(hl).String()
+		foundLiteralPointerRefIdentifier = foundLiteralPointerRef.GetId(hl)
 		createdLiteralPointer = foundLiteralPointerRef.GetReferencedLiteralPointer(hl)
 		if createdLiteralPointer == nil {
 			t.Error("LiteralPointer not created")
 		} else {
-			createdLiteralPointerIdentifier = createdLiteralPointer.GetId(hl).String()
+			createdLiteralPointerIdentifier = createdLiteralPointer.GetId(hl)
 		}
 	}
 	if createdLiteralPointer == nil {
@@ -186,7 +187,7 @@ func TestCreateDefinitionLiteralPointerFunction(t *testing.T) {
 
 	// Now create the instance of the function
 	createLiteralPointerInstance := uOfD.NewElement(hl)
-	createLiteralPointerInstanceIdentifier := createLiteralPointerInstance.GetId(hl).String()
+	createLiteralPointerInstanceIdentifier := createLiteralPointerInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createDefinitionLiteralPointer, hl)
 	refinementInstance.SetRefinedElement(createLiteralPointerInstance, hl)
@@ -194,18 +195,18 @@ func TestCreateDefinitionLiteralPointerFunction(t *testing.T) {
 	wg.Wait()
 
 	foundLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(createLiteralPointerInstance, LiteralPointerCreateDefinitionLiteralPointerCreatedLiteralPointerRefUri, hl)
-	foundLiteralPointerRefIdentifier := ""
+	foundLiteralPointerRefIdentifier := uuid.Nil
 	var createdLiteralPointer core.LiteralPointer
-	createdLiteralPointerIdentifier := ""
+	createdLiteralPointerIdentifier := uuid.Nil
 	if foundLiteralPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
-		foundLiteralPointerRefIdentifier = foundLiteralPointerRef.GetId(hl).String()
+		foundLiteralPointerRefIdentifier = foundLiteralPointerRef.GetId(hl)
 		createdLiteralPointer = foundLiteralPointerRef.GetReferencedLiteralPointer(hl)
 		if createdLiteralPointer == nil {
 			t.Error("LiteralPointer not created")
 		} else {
-			createdLiteralPointerIdentifier = createdLiteralPointer.GetId(hl).String()
+			createdLiteralPointerIdentifier = createdLiteralPointer.GetId(hl)
 		}
 	}
 	if createdLiteralPointer == nil {
@@ -272,7 +273,7 @@ func TestCreateUriLiteralPointerFunction(t *testing.T) {
 
 	// Now create the instance of the function
 	createLiteralPointerInstance := uOfD.NewElement(hl)
-	createLiteralPointerInstanceIdentifier := createLiteralPointerInstance.GetId(hl).String()
+	createLiteralPointerInstanceIdentifier := createLiteralPointerInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createUriLiteralPointer, hl)
 	refinementInstance.SetRefinedElement(createLiteralPointerInstance, hl)
@@ -280,18 +281,18 @@ func TestCreateUriLiteralPointerFunction(t *testing.T) {
 	wg.Wait()
 
 	foundLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(createLiteralPointerInstance, LiteralPointerCreateUriLiteralPointerCreatedLiteralPointerRefUri, hl)
-	foundLiteralPointerRefIdentifier := ""
+	foundLiteralPointerRefIdentifier := uuid.Nil
 	var createdLiteralPointer core.LiteralPointer
-	createdLiteralPointerIdentifier := ""
+	createdLiteralPointerIdentifier := uuid.Nil
 	if foundLiteralPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
-		foundLiteralPointerRefIdentifier = foundLiteralPointerRef.GetId(hl).String()
+		foundLiteralPointerRefIdentifier = foundLiteralPointerRef.GetId(hl)
 		createdLiteralPointer = foundLiteralPointerRef.GetReferencedLiteralPointer(hl)
 		if createdLiteralPointer == nil {
 			t.Error("LiteralPointer not created")
 		} else {
-			createdLiteralPointerIdentifier = createdLiteralPointer.GetId(hl).String()
+			createdLiteralPointerIdentifier = createdLiteralPointer.GetId(hl)
 		}
 	}
 	if createdLiteralPointer == nil {
@@ -358,7 +359,7 @@ func TestCreateValueLiteralPointerFunction(t *testing.T) {
 
 	// Now create the instance of the function
 	createLiteralPointerInstance := uOfD.NewElement(hl)
-	createLiteralPointerInstanceIdentifier := createLiteralPointerInstance.GetId(hl).String()
+	createLiteralPointerInstanceIdentifier := createLiteralPointerInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createValueLiteralPointer, hl)
 	refinementInstance.SetRefinedElement(createLiteralPointerInstance, hl)
@@ -366,18 +367,18 @@ func TestCreateValueLiteralPointerFunction(t *testing.T) {
 	wg.Wait()
 
 	foundLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(createLiteralPointerInstance, LiteralPointerCreateValueLiteralPointerCreatedLiteralPointerRefUri, hl)
-	foundLiteralPointerRefIdentifier := ""
+	foundLiteralPointerRefIdentifier := uuid.Nil
 	var createdLiteralPointer core.LiteralPointer
-	createdLiteralPointerIdentifier := ""
+	createdLiteralPointerIdentifier := uuid.Nil
 	if foundLiteralPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
-		foundLiteralPointerRefIdentifier = foundLiteralPointerRef.GetId(hl).String()
+		foundLiteralPointerRefIdentifier = foundLiteralPointerRef.GetId(hl)
 		createdLiteralPointer = foundLiteralPointerRef.GetReferencedLiteralPointer(hl)
 		if createdLiteralPointer == nil {
 			t.Error("LiteralPointer not created")
 		} else {
-			createdLiteralPointerIdentifier = createdLiteralPointer.GetId(hl).String()
+			createdLiteralPointerIdentifier = createdLiteralPointer.GetId(hl)
 		}
 	}
 	if createdLiteralPointer == nil {

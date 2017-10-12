@@ -6,6 +6,7 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	"github.com/satori/go.uuid"
 	//	"log"
 	"strconv"
 	"sync"
@@ -78,7 +79,7 @@ func TestCreateElementPointerPointerFunction(t *testing.T) {
 
 	// Now create the instance of the function
 	createElementPointePointerInstance := uOfD.NewElement(hl)
-	createElementPointePointerInstanceIdentifier := createElementPointePointerInstance.GetId(hl).String()
+	createElementPointePointerInstanceIdentifier := createElementPointePointerInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createElementPointerPointer, hl)
 	refinementInstance.SetRefinedElement(createElementPointePointerInstance, hl)
@@ -86,13 +87,13 @@ func TestCreateElementPointerPointerFunction(t *testing.T) {
 	wg.Wait()
 
 	foundReference := core.GetChildBaseElementReferenceWithAncestorUri(createElementPointePointerInstance, ElementPointerPointerCreateElementPointerPointerCreatedElementPointerPointerRefUri, hl)
-	foundReferenceIdentifier := ""
+	foundReferenceIdentifier := uuid.Nil
 	var createdElementPointerPointer core.ElementPointerPointer
-	createdElementPointerPointerIdentifier := ""
+	createdElementPointerPointerIdentifier := uuid.Nil
 	if foundReference == nil {
 		t.Error("Reference not created")
 	} else {
-		foundReferenceIdentifier = foundReference.GetId(hl).String()
+		foundReferenceIdentifier = foundReference.GetId(hl)
 		foundBaseElement := foundReference.GetReferencedBaseElement(hl)
 		if foundBaseElement == nil {
 			t.Error("ElementPointerPointer not created")
@@ -100,7 +101,7 @@ func TestCreateElementPointerPointerFunction(t *testing.T) {
 			switch foundBaseElement.(type) {
 			case core.ElementPointerPointer:
 				createdElementPointerPointer = foundBaseElement.(core.ElementPointerPointer)
-				createdElementPointerPointerIdentifier = createdElementPointerPointer.GetId(hl).String()
+				createdElementPointerPointerIdentifier = createdElementPointerPointer.GetId(hl)
 			default:
 				t.Error("Created object of wrong type")
 			}

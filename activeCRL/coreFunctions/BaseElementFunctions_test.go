@@ -123,7 +123,7 @@ func TestDelete(t *testing.T) {
 	}
 
 	targetElement := uOfD.NewElement(hl)
-	targetElementId := targetElement.GetId(hl).String()
+	targetElementId := targetElement.GetId(hl)
 	if uOfD.GetBaseElement(targetElementId) != targetElement {
 		t.Error("TargetElement not created successfully")
 	}

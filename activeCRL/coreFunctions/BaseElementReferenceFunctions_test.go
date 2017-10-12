@@ -6,6 +6,7 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	"github.com/satori/go.uuid"
 	//	"log"
 	"sync"
 	"testing"
@@ -70,7 +71,7 @@ func TestCreateBaseElementReferenceFunction(t *testing.T) {
 	}
 
 	createBaseElementReferenceInstance := uOfD.NewElement(hl)
-	createBaseElementReferenceInstanceIdentifier := createBaseElementReferenceInstance.GetId(hl).String()
+	createBaseElementReferenceInstanceIdentifier := createBaseElementReferenceInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createBaseElementReference, hl)
 
@@ -79,13 +80,13 @@ func TestCreateBaseElementReferenceFunction(t *testing.T) {
 	wg.Wait()
 
 	foundBaseElementReferenceReference := core.GetChildElementReferenceWithAncestorUri(createBaseElementReferenceInstance, BaseElementReferenceCreateCreatedBaseElementReferenceRefUri, hl)
-	foundBaseElementReferenceReferenceIdentifier := ""
+	foundBaseElementReferenceReferenceIdentifier := uuid.Nil
 	var createdBaseElementReference core.BaseElementReference
-	createdBaseElementReferenceIdentifier := ""
+	createdBaseElementReferenceIdentifier := uuid.Nil
 	if foundBaseElementReferenceReference == nil {
 		t.Error("BaseElementReference not created")
 	} else {
-		foundBaseElementReferenceReferenceIdentifier = foundBaseElementReferenceReference.GetId(hl).String()
+		foundBaseElementReferenceReferenceIdentifier = foundBaseElementReferenceReference.GetId(hl)
 		foundBaseElementReference := foundBaseElementReferenceReference.GetReferencedElement(hl)
 		if foundBaseElementReference == nil {
 			t.Error("Element not created")
@@ -93,7 +94,7 @@ func TestCreateBaseElementReferenceFunction(t *testing.T) {
 			switch foundBaseElementReference.(type) {
 			case core.BaseElementReference:
 				createdBaseElementReference = foundBaseElementReference.(core.BaseElementReference)
-				createdBaseElementReferenceIdentifier = createdBaseElementReference.GetId(hl).String()
+				createdBaseElementReferenceIdentifier = createdBaseElementReference.GetId(hl)
 			default:
 				t.Error("Created object of wrong type")
 			}

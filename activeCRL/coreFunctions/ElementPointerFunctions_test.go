@@ -6,6 +6,7 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	"github.com/satori/go.uuid"
 	//	"log"
 	"strconv"
 	"sync"
@@ -100,7 +101,7 @@ func TestCreateAbstractElementPointerFunction(t *testing.T) {
 
 	// Now create the instance of the function
 	createElementPointerFunctionInstance := uOfD.NewElement(hl)
-	createElementPointerFunctionInstanceIdentifier := createElementPointerFunctionInstance.GetId(hl).String()
+	createElementPointerFunctionInstanceIdentifier := createElementPointerFunctionInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createAbstractElementPointer, hl)
 	refinementInstance.SetRefinedElement(createElementPointerFunctionInstance, hl)
@@ -108,18 +109,18 @@ func TestCreateAbstractElementPointerFunction(t *testing.T) {
 	time.Sleep(10000000 * time.Nanosecond)
 
 	foundElementPointerRef := core.GetChildElementPointerReferenceWithAncestorUri(createElementPointerFunctionInstance, ElementPointerCreateAbstractElementPointerCreatedElementPointerRefUri, hl)
-	foundElementPointerRefIdentifier := ""
+	foundElementPointerRefIdentifier := uuid.Nil
 	var foundElementPointer core.ElementPointer
-	foundElementPointerIdentifier := ""
+	foundElementPointerIdentifier := uuid.Nil
 	if foundElementPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
-		foundElementPointerRefIdentifier = foundElementPointerRef.GetId(hl).String()
+		foundElementPointerRefIdentifier = foundElementPointerRef.GetId(hl)
 		foundElementPointer = foundElementPointerRef.GetReferencedElementPointer(hl)
 		if foundElementPointer == nil {
 			t.Error("ElementPointer not created")
 		} else {
-			foundElementPointerIdentifier = foundElementPointer.GetId(hl).String()
+			foundElementPointerIdentifier = foundElementPointer.GetId(hl)
 		}
 	}
 	if foundElementPointer == nil {
@@ -186,7 +187,7 @@ func TestCreateRefinedElementPointerFunction(t *testing.T) {
 
 	// Now create the instance of the function
 	createElementPointerFunctionInstance := uOfD.NewElement(hl)
-	createElementPointerFunctionInstanceIdentifier := createElementPointerFunctionInstance.GetId(hl).String()
+	createElementPointerFunctionInstanceIdentifier := createElementPointerFunctionInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createRefinedElementPointer, hl)
 	refinementInstance.SetRefinedElement(createElementPointerFunctionInstance, hl)
@@ -194,13 +195,13 @@ func TestCreateRefinedElementPointerFunction(t *testing.T) {
 	time.Sleep(10000000 * time.Nanosecond)
 
 	foundElementPointerRef := core.GetChildElementPointerReferenceWithAncestorUri(createElementPointerFunctionInstance, ElementPointerCreateRefinedElementPointerCreatedElementPointerRefUri, hl)
-	foundElementPointerRefIdentifier := ""
+	foundElementPointerRefIdentifier := uuid.Nil
 	var createdElementPointer core.ElementPointer
-	createdElementPointerIdentifier := ""
+	createdElementPointerIdentifier := uuid.Nil
 	if foundElementPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
-		foundElementPointerRefIdentifier = foundElementPointerRef.GetId(hl).String()
+		foundElementPointerRefIdentifier = foundElementPointerRef.GetId(hl)
 		foundElementPointer := foundElementPointerRef.GetReferencedElementPointer(hl)
 		if foundElementPointer == nil {
 			t.Error("ElementPointer not created")
@@ -208,7 +209,7 @@ func TestCreateRefinedElementPointerFunction(t *testing.T) {
 			switch foundElementPointer.(type) {
 			case core.ElementPointer:
 				createdElementPointer = foundElementPointer.(core.ElementPointer)
-				createdElementPointerIdentifier = createdElementPointer.GetId(hl).String()
+				createdElementPointerIdentifier = createdElementPointer.GetId(hl)
 			default:
 				t.Error("Created object of wrong type")
 			}
@@ -277,7 +278,7 @@ func TestCreateOwningElementPointerFunction(t *testing.T) {
 
 	// Now create the instance of the function
 	createElementPointerFunctionInstance := uOfD.NewElement(hl)
-	createElementPointerFunctionInstanceIdentifier := createElementPointerFunctionInstance.GetId(hl).String()
+	createElementPointerFunctionInstanceIdentifier := createElementPointerFunctionInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createOwningElementPointer, hl)
 	refinementInstance.SetRefinedElement(createElementPointerFunctionInstance, hl)
@@ -285,13 +286,13 @@ func TestCreateOwningElementPointerFunction(t *testing.T) {
 	time.Sleep(10000000 * time.Nanosecond)
 
 	foundElementPointerRef := core.GetChildElementPointerReferenceWithAncestorUri(createElementPointerFunctionInstance, ElementPointerCreateOwningElementPointerCreatedElementPointerRefUri, hl)
-	foundElementPointerRefIdentifier := ""
+	foundElementPointerRefIdentifier := uuid.Nil
 	var createdElementPointer core.ElementPointer
-	createdElementPointerIdentifier := ""
+	createdElementPointerIdentifier := uuid.Nil
 	if foundElementPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
-		foundElementPointerRefIdentifier = foundElementPointerRef.GetId(hl).String()
+		foundElementPointerRefIdentifier = foundElementPointerRef.GetId(hl)
 		foundElementPointer := foundElementPointerRef.GetReferencedElementPointer(hl)
 		if foundElementPointer == nil {
 			t.Error("ElementPointer not created")
@@ -299,7 +300,7 @@ func TestCreateOwningElementPointerFunction(t *testing.T) {
 			switch foundElementPointer.(type) {
 			case core.ElementPointer:
 				createdElementPointer = foundElementPointer.(core.ElementPointer)
-				createdElementPointerIdentifier = createdElementPointer.GetId(hl).String()
+				createdElementPointerIdentifier = createdElementPointer.GetId(hl)
 			default:
 				t.Error("Created object of wrong type")
 			}
@@ -369,7 +370,7 @@ func TestCreateReferencedElementPointerFunction(t *testing.T) {
 
 	// Now create the instance of the function
 	createElementPointerFunctionInstance := uOfD.NewElement(hl)
-	createElementPointerFunctionInstanceIdentifier := createElementPointerFunctionInstance.GetId(hl).String()
+	createElementPointerFunctionInstanceIdentifier := createElementPointerFunctionInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createReferencedElementPointer, hl)
 	refinementInstance.SetRefinedElement(createElementPointerFunctionInstance, hl)
@@ -377,13 +378,13 @@ func TestCreateReferencedElementPointerFunction(t *testing.T) {
 	time.Sleep(10000000 * time.Nanosecond)
 
 	foundElementPointerRef := core.GetChildElementPointerReferenceWithAncestorUri(createElementPointerFunctionInstance, ElementPointerCreateReferencedElementPointerCreatedElementPointerRefUri, hl)
-	foundElementPointerRefIdentifier := ""
+	foundElementPointerRefIdentifier := uuid.Nil
 	var createdElementPointer core.ElementPointer
-	createdElementPointerIdentifier := ""
+	createdElementPointerIdentifier := uuid.Nil
 	if foundElementPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
-		foundElementPointerRefIdentifier = foundElementPointerRef.GetId(hl).String()
+		foundElementPointerRefIdentifier = foundElementPointerRef.GetId(hl)
 		foundElementPointer := foundElementPointerRef.GetReferencedElementPointer(hl)
 		if foundElementPointer == nil {
 			t.Error("ElementPointer not created")
@@ -391,7 +392,7 @@ func TestCreateReferencedElementPointerFunction(t *testing.T) {
 			switch foundElementPointer.(type) {
 			case core.ElementPointer:
 				createdElementPointer = foundElementPointer.(core.ElementPointer)
-				createdElementPointerIdentifier = createdElementPointer.GetId(hl).String()
+				createdElementPointerIdentifier = createdElementPointer.GetId(hl)
 			default:
 				t.Error("Created object of wrong type")
 			}

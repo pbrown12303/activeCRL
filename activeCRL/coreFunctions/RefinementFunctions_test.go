@@ -6,6 +6,7 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	"github.com/satori/go.uuid"
 	//	"log"
 	"sync"
 	"testing"
@@ -91,7 +92,7 @@ func TestCreateRefinementFunction(t *testing.T) {
 	}
 
 	createRefinementInstance := uOfD.NewElement(hl)
-	createRefinementInstanceIdentifier := createRefinementInstance.GetId(hl).String()
+	createRefinementInstanceIdentifier := createRefinementInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createRefinement, hl)
 	refinementInstance.SetRefinedElement(createRefinementInstance, hl)
@@ -99,13 +100,13 @@ func TestCreateRefinementFunction(t *testing.T) {
 	wg.Wait()
 
 	foundRefinementRef := core.GetChildElementReferenceWithAncestorUri(createRefinementInstance, RefinementCreateCreatedRefinementRefUri, hl)
-	foundRefinementRefIdentifier := ""
+	foundRefinementRefIdentifier := uuid.Nil
 	var createdRefinement core.Refinement
-	createdRefinementIdentifier := ""
+	createdRefinementIdentifier := uuid.Nil
 	if foundRefinementRef == nil {
 		t.Error("RefinementRef not created")
 	} else {
-		foundRefinementRefIdentifier = foundRefinementRef.GetId(hl).String()
+		foundRefinementRefIdentifier = foundRefinementRef.GetId(hl)
 		foundRefinement := foundRefinementRef.GetReferencedElement(hl)
 		if foundRefinement == nil {
 			t.Error("Refinement not created")
@@ -113,7 +114,7 @@ func TestCreateRefinementFunction(t *testing.T) {
 			switch foundRefinement.(type) {
 			case core.Refinement:
 				createdRefinement = foundRefinement.(core.Refinement)
-				createdRefinementIdentifier = createdRefinement.GetId(hl).String()
+				createdRefinementIdentifier = createdRefinement.GetId(hl)
 			default:
 				t.Error("Created object of wrong type")
 			}

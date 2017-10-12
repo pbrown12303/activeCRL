@@ -51,7 +51,7 @@ func (bepPtr *baseElementPointer) GetBaseElement(hl *HeldLocks) BaseElement {
 	}
 	hl.LockBaseElement(&bepPtr.pointer.baseElement)
 	if bepPtr.baseEl == nil && bepPtr.GetBaseElementId(hl) != uuid.Nil && bepPtr.uOfD != nil {
-		bepPtr.baseEl = bepPtr.uOfD.GetBaseElement(bepPtr.GetBaseElementId(hl).String())
+		bepPtr.baseEl = bepPtr.uOfD.GetBaseElement(bepPtr.GetBaseElementId(hl))
 	}
 	return bepPtr.baseEl
 }

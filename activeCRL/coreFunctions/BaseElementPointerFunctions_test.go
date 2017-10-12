@@ -6,6 +6,7 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	"github.com/satori/go.uuid"
 	//	"log"
 	"strconv"
 	"sync"
@@ -78,7 +79,7 @@ func TestCreateBaseElementPointerFunction(t *testing.T) {
 
 	// Now create the instance of the function
 	createBaseElementPointerInstance := uOfD.NewElement(hl)
-	createBaseElementPointerInstanceIdentifier := createBaseElementPointerInstance.GetId(hl).String()
+	createBaseElementPointerInstanceIdentifier := createBaseElementPointerInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createBaseElementPointer, hl)
 
@@ -87,13 +88,13 @@ func TestCreateBaseElementPointerFunction(t *testing.T) {
 	wg.Wait()
 
 	foundReference := core.GetChildBaseElementReferenceWithAncestorUri(createBaseElementPointerInstance, BaseElementPointerCreateCreatedBaseElementPointerRefUri, hl)
-	foundReferenceIdentifier := ""
+	foundReferenceIdentifier := uuid.Nil
 	var createdBaseElementPointer core.BaseElementPointer
-	createdBaseElementPointerIdentifier := ""
+	createdBaseElementPointerIdentifier := uuid.Nil
 	if foundReference == nil {
 		t.Error("Reference not created")
 	} else {
-		foundReferenceIdentifier = foundReference.GetId(hl).String()
+		foundReferenceIdentifier = foundReference.GetId(hl)
 		foundBaseElement := foundReference.GetReferencedBaseElement(hl)
 		if foundBaseElement == nil {
 			t.Error("Element not created")
@@ -101,7 +102,7 @@ func TestCreateBaseElementPointerFunction(t *testing.T) {
 			switch foundBaseElement.(type) {
 			case core.BaseElementPointer:
 				createdBaseElementPointer = foundBaseElement.(core.BaseElementPointer)
-				createdBaseElementPointerIdentifier = createdBaseElementPointer.GetId(hl).String()
+				createdBaseElementPointerIdentifier = createdBaseElementPointer.GetId(hl)
 			default:
 				t.Error("Created object of wrong type")
 			}

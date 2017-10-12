@@ -42,7 +42,7 @@ func (pllPtr *literalPointerPointer) GetLiteralPointer(hl *HeldLocks) LiteralPoi
 	}
 	hl.LockBaseElement(pllPtr)
 	if pllPtr.literalPointer == nil && pllPtr.GetLiteralPointerId(hl) != uuid.Nil && pllPtr.uOfD != nil {
-		pllPtr.literalPointer = pllPtr.uOfD.GetLiteralPointer(pllPtr.GetLiteralPointerId(hl).String())
+		pllPtr.literalPointer = pllPtr.uOfD.GetLiteralPointer(pllPtr.GetLiteralPointerId(hl))
 	}
 	return pllPtr.literalPointer
 }

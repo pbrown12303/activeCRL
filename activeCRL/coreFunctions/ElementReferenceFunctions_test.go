@@ -6,6 +6,7 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	"github.com/satori/go.uuid"
 	//	"log"
 	"sync"
 	"testing"
@@ -70,7 +71,7 @@ func TestCreateElementReferenceFunction(t *testing.T) {
 	}
 
 	createElementReferenceInstance := uOfD.NewElement(hl)
-	createElementReferenceInstanceIdentifier := createElementReferenceInstance.GetId(hl).String()
+	createElementReferenceInstanceIdentifier := createElementReferenceInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createElementReference, hl)
 
@@ -79,13 +80,13 @@ func TestCreateElementReferenceFunction(t *testing.T) {
 	wg.Wait()
 
 	foundElementReferenceRef := core.GetChildElementReferenceWithAncestorUri(createElementReferenceInstance, ElementReferenceCreateCreatedElementReferenceRefUri, hl)
-	foundElementReferenceRefIdentifier := ""
+	foundElementReferenceRefIdentifier := uuid.Nil
 	var createdElementReference core.ElementReference
-	createdElementReferenceIdentifier := ""
+	createdElementReferenceIdentifier := uuid.Nil
 	if foundElementReferenceRef == nil {
 		t.Error("ElementReferenceRef not created")
 	} else {
-		foundElementReferenceRefIdentifier = foundElementReferenceRef.GetId(hl).String()
+		foundElementReferenceRefIdentifier = foundElementReferenceRef.GetId(hl)
 		foundElementReference := foundElementReferenceRef.GetReferencedElement(hl)
 		if foundElementReference == nil {
 			t.Error("ElementReference not created")
@@ -93,7 +94,7 @@ func TestCreateElementReferenceFunction(t *testing.T) {
 			switch foundElementReference.(type) {
 			case core.ElementReference:
 				createdElementReference = foundElementReference.(core.ElementReference)
-				createdElementReferenceIdentifier = createdElementReference.GetId(hl).String()
+				createdElementReferenceIdentifier = createdElementReference.GetId(hl)
 			default:
 				t.Error("Created object of wrong type")
 			}

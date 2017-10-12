@@ -6,6 +6,7 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	"github.com/satori/go.uuid"
 	//	"log"
 	"sync"
 	"testing"
@@ -70,7 +71,7 @@ func TestCreateLiteralReferenceFunction(t *testing.T) {
 	}
 
 	createLiteralReferenceInstance := uOfD.NewElement(hl)
-	createLiteralReferenceInstanceIdentifier := createLiteralReferenceInstance.GetId(hl).String()
+	createLiteralReferenceInstanceIdentifier := createLiteralReferenceInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createLiteralReference, hl)
 
@@ -79,13 +80,13 @@ func TestCreateLiteralReferenceFunction(t *testing.T) {
 	wg.Wait()
 
 	foundLiteralReferenceRef := core.GetChildElementReferenceWithAncestorUri(createLiteralReferenceInstance, LiteralReferenceCreateCreatedLiteralReferenceRefUri, hl)
-	foundLiteralReferenceRefIdentifier := ""
+	foundLiteralReferenceRefIdentifier := uuid.Nil
 	var createdLiteralReference core.LiteralReference
-	createdLiteralReferenceIdentifier := ""
+	createdLiteralReferenceIdentifier := uuid.Nil
 	if foundLiteralReferenceRef == nil {
 		t.Error("LiteralReferenceRef not created")
 	} else {
-		foundLiteralReferenceRefIdentifier = foundLiteralReferenceRef.GetId(hl).String()
+		foundLiteralReferenceRefIdentifier = foundLiteralReferenceRef.GetId(hl)
 		foundLiteralReference := foundLiteralReferenceRef.GetReferencedElement(hl)
 		if foundLiteralReference == nil {
 			t.Error("LiteralReference not created")
@@ -93,7 +94,7 @@ func TestCreateLiteralReferenceFunction(t *testing.T) {
 			switch foundLiteralReference.(type) {
 			case core.LiteralReference:
 				createdLiteralReference = foundLiteralReference.(core.LiteralReference)
-				createdLiteralReferenceIdentifier = createdLiteralReference.GetId(hl).String()
+				createdLiteralReferenceIdentifier = createdLiteralReference.GetId(hl)
 			default:
 				t.Error("Created object of wrong type")
 			}

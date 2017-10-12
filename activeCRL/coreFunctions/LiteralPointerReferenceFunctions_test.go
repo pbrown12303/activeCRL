@@ -6,6 +6,7 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	"github.com/satori/go.uuid"
 	//	"log"
 	"sync"
 	"testing"
@@ -70,7 +71,7 @@ func TestCreateLiteralPointerReferenceFunction(t *testing.T) {
 	}
 
 	createLiteralPointerReferenceInstance := uOfD.NewElement(hl)
-	createLiteralPointerReferenceInstanceIdentifier := createLiteralPointerReferenceInstance.GetId(hl).String()
+	createLiteralPointerReferenceInstanceIdentifier := createLiteralPointerReferenceInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
 	refinementInstance.SetAbstractElement(createLiteralPointerReference, hl)
 
@@ -79,13 +80,13 @@ func TestCreateLiteralPointerReferenceFunction(t *testing.T) {
 	wg.Wait()
 
 	foundLiteralPointerReferenceRef := core.GetChildElementReferenceWithAncestorUri(createLiteralPointerReferenceInstance, LiteralPointerReferenceCreateCreatedLiteralPointerReferenceRefUri, hl)
-	foundLiteralPointerReferenceRefIdentifier := ""
+	foundLiteralPointerReferenceRefIdentifier := uuid.Nil
 	var createdLiteralPointerReference core.LiteralPointerReference
-	createdLiteralPointerReferenceIdentifier := ""
+	createdLiteralPointerReferenceIdentifier := uuid.Nil
 	if foundLiteralPointerReferenceRef == nil {
 		t.Error("LiteralPointerReferenceRef not created")
 	} else {
-		foundLiteralPointerReferenceRefIdentifier = foundLiteralPointerReferenceRef.GetId(hl).String()
+		foundLiteralPointerReferenceRefIdentifier = foundLiteralPointerReferenceRef.GetId(hl)
 		foundLiteralPointerReference := foundLiteralPointerReferenceRef.GetReferencedElement(hl)
 		if foundLiteralPointerReference == nil {
 			t.Error("LiteralPointerReference not created")
@@ -93,7 +94,7 @@ func TestCreateLiteralPointerReferenceFunction(t *testing.T) {
 			switch foundLiteralPointerReference.(type) {
 			case core.LiteralPointerReference:
 				createdLiteralPointerReference = foundLiteralPointerReference.(core.LiteralPointerReference)
-				createdLiteralPointerReferenceIdentifier = createdLiteralPointerReference.GetId(hl).String()
+				createdLiteralPointerReferenceIdentifier = createdLiteralPointerReference.GetId(hl)
 			default:
 				t.Error("Created object of wrong type")
 			}
