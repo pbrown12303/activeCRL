@@ -5,24 +5,25 @@
 package core
 
 import (
+	"github.com/satori/go.uuid"
 	"log"
 	"sync"
 )
 
 type literalPointerPointerList *[]LiteralPointerPointer
 
-type StringLiteralPointerPointerListMap struct {
+type UUIDLiteralPointerPointerListMap struct {
 	sync.Mutex
-	literalPointerPointerListMap map[string]literalPointerPointerList
+	literalPointerPointerListMap map[uuid.UUID]literalPointerPointerList
 }
 
-func NewStringLiteralPointerPointerListMap() *StringLiteralPointerPointerListMap {
-	var stringLiteralPointerPointerMap StringLiteralPointerPointerListMap
-	stringLiteralPointerPointerMap.literalPointerPointerListMap = make(map[string]literalPointerPointerList)
-	return &stringLiteralPointerPointerMap
+func NewUUIDLiteralPointerPointerListMap() *UUIDLiteralPointerPointerListMap {
+	var uuidLiteralPointerPointerMap UUIDLiteralPointerPointerListMap
+	uuidLiteralPointerPointerMap.literalPointerPointerListMap = make(map[uuid.UUID]literalPointerPointerList)
+	return &uuidLiteralPointerPointerMap
 }
 
-func (sbeMap *StringLiteralPointerPointerListMap) AddEntry(key string, value LiteralPointerPointer) {
+func (sbeMap *UUIDLiteralPointerPointerListMap) AddEntry(key uuid.UUID, value LiteralPointerPointer) {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	currentList := sbeMap.literalPointerPointerListMap[key]
@@ -45,7 +46,7 @@ func (sbeMap *StringLiteralPointerPointerListMap) AddEntry(key string, value Lit
 	}
 }
 
-func (sbeMap *StringLiteralPointerPointerListMap) RemoveEntry(key string, entry LiteralPointerPointer) {
+func (sbeMap *UUIDLiteralPointerPointerListMap) RemoveEntry(key uuid.UUID, entry LiteralPointerPointer) {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	currentList := sbeMap.literalPointerPointerListMap[key]
@@ -61,22 +62,22 @@ func (sbeMap *StringLiteralPointerPointerListMap) RemoveEntry(key string, entry 
 	}
 }
 
-func (sbeMap *StringLiteralPointerPointerListMap) GetEntry(key string) literalPointerPointerList {
+func (sbeMap *UUIDLiteralPointerPointerListMap) GetEntry(key uuid.UUID) literalPointerPointerList {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	return sbeMap.literalPointerPointerListMap[key]
 }
 
-func (sbeMap *StringLiteralPointerPointerListMap) TraceableLock() {
+func (sbeMap *UUIDLiteralPointerPointerListMap) TraceableLock() {
 	if TraceLocks {
-		log.Printf("About to lock StringLiteralPointerPointerListMap %p\n", sbeMap)
+		log.Printf("About to lock UUIDLiteralPointerPointerListMap %p\n", sbeMap)
 	}
 	sbeMap.Lock()
 }
 
-func (sbeMap *StringLiteralPointerPointerListMap) TraceableUnlock() {
+func (sbeMap *UUIDLiteralPointerPointerListMap) TraceableUnlock() {
 	if TraceLocks {
-		log.Printf("About to unlock StringLiteralPointerPointerListMap %p\n", sbeMap)
+		log.Printf("About to unlock UUIDLiteralPointerPointerListMap %p\n", sbeMap)
 	}
 	sbeMap.Unlock()
 }

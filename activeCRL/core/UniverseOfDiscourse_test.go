@@ -134,7 +134,7 @@ func TestAddElementListener(t *testing.T) {
 	e1 := uOfD.NewElement(hl)
 	ep := uOfD.NewReferencedElementPointer(hl)
 	ep.SetElement(e1, hl)
-	elm := uOfD.elementListenerMap.GetEntry(e1.GetId(hl).String())
+	elm := uOfD.elementListenerMap.GetEntry(e1.GetId(hl))
 	if elm == nil {
 		t.Error("ElementListenerMap entry is nil")
 	} else {
@@ -147,7 +147,7 @@ func TestAddElementListener(t *testing.T) {
 		}
 	}
 	ep.SetElement(nil, hl)
-	elm = uOfD.elementListenerMap.GetEntry(e1.GetId(hl).String())
+	elm = uOfD.elementListenerMap.GetEntry(e1.GetId(hl))
 	if elm == nil {
 		t.Error("ElementListenerMap entry is nil after SetElement(nil)")
 	} else {
@@ -166,7 +166,7 @@ func TestAddElementPointerListener(t *testing.T) {
 	ep := uOfD.NewReferencedElementPointer(hl)
 	epp := uOfD.NewElementPointerPointer(hl)
 	epp.SetElementPointer(ep, hl)
-	elm := uOfD.elementPointerListenerMap.GetEntry(ep.GetId(hl).String())
+	elm := uOfD.elementPointerListenerMap.GetEntry(ep.GetId(hl))
 	if elm == nil {
 		t.Error("ElementPointerListenerMap entry is nil")
 	} else {
@@ -179,7 +179,7 @@ func TestAddElementPointerListener(t *testing.T) {
 		}
 	}
 	epp.SetElementPointer(nil, hl)
-	elm = uOfD.elementPointerListenerMap.GetEntry(ep.GetId(hl).String())
+	elm = uOfD.elementPointerListenerMap.GetEntry(ep.GetId(hl))
 	if elm == nil {
 		t.Error("ElementListenerMap entry is nil after SetElement(nil)")
 	} else {
@@ -198,7 +198,7 @@ func TestAddLiteralListener(t *testing.T) {
 	e1 := uOfD.NewLiteral(hl)
 	lp := uOfD.NewNameLiteralPointer(hl)
 	lp.SetLiteral(e1, hl)
-	elm := uOfD.literalListenerMap.GetEntry(e1.GetId(hl).String())
+	elm := uOfD.literalListenerMap.GetEntry(e1.GetId(hl))
 	if elm == nil {
 		t.Error("LiteralListenerMap entry is nil")
 	} else {
@@ -211,7 +211,7 @@ func TestAddLiteralListener(t *testing.T) {
 		}
 	}
 	lp.SetLiteral(nil, hl)
-	elm = uOfD.literalListenerMap.GetEntry(e1.GetId(hl).String())
+	elm = uOfD.literalListenerMap.GetEntry(e1.GetId(hl))
 	if elm == nil {
 		t.Error("LiteralListenerMap entry is nil after SetLiteral(nil)")
 	} else {
@@ -230,7 +230,7 @@ func TestAddLiteralPointerListener(t *testing.T) {
 	lp := uOfD.NewNameLiteralPointer(hl)
 	lpp := uOfD.NewLiteralPointerPointer(hl)
 	lpp.SetLiteralPointer(lp, hl)
-	elm := uOfD.literalPointerListenerMap.GetEntry(lp.GetId(hl).String())
+	elm := uOfD.literalPointerListenerMap.GetEntry(lp.GetId(hl))
 	if elm == nil {
 		t.Error("LiteralPointerListenerMap entry is nil")
 	} else {
@@ -243,7 +243,7 @@ func TestAddLiteralPointerListener(t *testing.T) {
 		}
 	}
 	lpp.SetLiteralPointer(nil, hl)
-	elm = uOfD.literalPointerListenerMap.GetEntry(lp.GetId(hl).String())
+	elm = uOfD.literalPointerListenerMap.GetEntry(lp.GetId(hl))
 	if elm == nil {
 		t.Error("LiteralListenerMap entry is nil after SetLiteral(nil)")
 	} else {

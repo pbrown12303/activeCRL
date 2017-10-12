@@ -5,24 +5,25 @@
 package core
 
 import (
+	"github.com/satori/go.uuid"
 	"log"
 	"sync"
 )
 
 type elementPointerList *[]ElementPointer
 
-type StringElementPointerListMap struct {
+type UUIDElementPointerListMap struct {
 	sync.Mutex
-	elementPointerListMap map[string]elementPointerList
+	elementPointerListMap map[uuid.UUID]elementPointerList
 }
 
-func NewStringElementPointerListMap() *StringElementPointerListMap {
-	var stringElementPointerMap StringElementPointerListMap
-	stringElementPointerMap.elementPointerListMap = make(map[string]elementPointerList)
-	return &stringElementPointerMap
+func NewUUIDElementPointerListMap() *UUIDElementPointerListMap {
+	var uuidElementPointerMap UUIDElementPointerListMap
+	uuidElementPointerMap.elementPointerListMap = make(map[uuid.UUID]elementPointerList)
+	return &uuidElementPointerMap
 }
 
-func (sbeMap *StringElementPointerListMap) AddEntry(key string, value ElementPointer) {
+func (sbeMap *UUIDElementPointerListMap) AddEntry(key uuid.UUID, value ElementPointer) {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	currentList := sbeMap.elementPointerListMap[key]
@@ -45,7 +46,7 @@ func (sbeMap *StringElementPointerListMap) AddEntry(key string, value ElementPoi
 	}
 }
 
-func (sbeMap *StringElementPointerListMap) RemoveEntry(key string, entry ElementPointer) {
+func (sbeMap *UUIDElementPointerListMap) RemoveEntry(key uuid.UUID, entry ElementPointer) {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	currentList := sbeMap.elementPointerListMap[key]
@@ -61,22 +62,22 @@ func (sbeMap *StringElementPointerListMap) RemoveEntry(key string, entry Element
 	}
 }
 
-func (sbeMap *StringElementPointerListMap) GetEntry(key string) elementPointerList {
+func (sbeMap *UUIDElementPointerListMap) GetEntry(key uuid.UUID) elementPointerList {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	return sbeMap.elementPointerListMap[key]
 }
 
-func (sbeMap *StringElementPointerListMap) TraceableLock() {
+func (sbeMap *UUIDElementPointerListMap) TraceableLock() {
 	if TraceLocks {
-		log.Printf("About to lock StringElementPointerListMap %p\n", sbeMap)
+		log.Printf("About to lock UUIDElementPointerListMap %p\n", sbeMap)
 	}
 	sbeMap.Lock()
 }
 
-func (sbeMap *StringElementPointerListMap) TraceableUnlock() {
+func (sbeMap *UUIDElementPointerListMap) TraceableUnlock() {
 	if TraceLocks {
-		log.Printf("About to unlock StringElementPointerListMap %p\n", sbeMap)
+		log.Printf("About to unlock UUIDElementPointerListMap %p\n", sbeMap)
 	}
 	sbeMap.Unlock()
 }

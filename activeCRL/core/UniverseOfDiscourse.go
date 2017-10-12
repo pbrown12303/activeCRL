@@ -14,12 +14,12 @@ import (
 type UniverseOfDiscourse struct {
 	sync.RWMutex
 	baseElementMap            *UUIDBaseElementMap
-	baseElementListenerMap    *StringBaseElementPointerListMap
-	elementListenerMap        *StringElementPointerListMap
-	elementPointerListenerMap *StringElementPointerPointerListMap
-	idUriMap                  *StringStringMap
-	literalListenerMap        *StringLiteralPointerListMap
-	literalPointerListenerMap *StringLiteralPointerPointerListMap
+	baseElementListenerMap    *UUIDBaseElementPointerListMap
+	elementListenerMap        *UUIDElementPointerListMap
+	elementPointerListenerMap *UUIDElementPointerPointerListMap
+	idUriMap                  *UUIDStringMap
+	literalListenerMap        *UUIDLiteralPointerListMap
+	literalPointerListenerMap *UUIDLiteralPointerPointerListMap
 	undoMgr                   *undoManager
 	uriBaseElementMap         *StringBaseElementMap
 }
@@ -27,12 +27,12 @@ type UniverseOfDiscourse struct {
 func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	var uOfD UniverseOfDiscourse
 	uOfD.baseElementMap = NewUUIDBaseElementMap()
-	uOfD.baseElementListenerMap = NewStringBaseElementPointerListMap()
-	uOfD.elementListenerMap = NewStringElementPointerListMap()
-	uOfD.elementPointerListenerMap = NewStringElementPointerPointerListMap()
-	uOfD.idUriMap = NewStringStringMap()
-	uOfD.literalListenerMap = NewStringLiteralPointerListMap()
-	uOfD.literalPointerListenerMap = NewStringLiteralPointerPointerListMap()
+	uOfD.baseElementListenerMap = NewUUIDBaseElementPointerListMap()
+	uOfD.elementListenerMap = NewUUIDElementPointerListMap()
+	uOfD.elementPointerListenerMap = NewUUIDElementPointerPointerListMap()
+	uOfD.idUriMap = NewUUIDStringMap()
+	uOfD.literalListenerMap = NewUUIDLiteralPointerListMap()
+	uOfD.literalPointerListenerMap = NewUUIDLiteralPointerPointerListMap()
 	uOfD.undoMgr = NewUndoManager()
 	uOfD.uriBaseElementMap = NewStringBaseElementMap()
 	hl := NewHeldLocks(nil)
@@ -58,7 +58,7 @@ func (uOfDPtr *UniverseOfDiscourse) AddBaseElement(be BaseElement, hl *HeldLocks
 	uri := GetUri(be, hl)
 	if uri != "" {
 		uOfDPtr.uriBaseElementMap.SetEntry(uri, be)
-		uOfDPtr.idUriMap.SetEntry(be.GetId(hl).String(), uri)
+		uOfDPtr.idUriMap.SetEntry(be.GetId(hl), uri)
 	}
 	uOfDPtr.undoMgr.markNewBaseElement(be, hl)
 	return nil
@@ -89,7 +89,7 @@ func (uOfDPtr *UniverseOfDiscourse) addBaseElementListener(baseElement BaseEleme
 	}
 	hl.LockBaseElement(baseElement)
 	if baseElement != nil {
-		elementId := baseElement.GetId(hl).String()
+		elementId := baseElement.GetId(hl)
 		uOfDPtr.baseElementListenerMap.AddEntry(elementId, baseElementPointer)
 	}
 }
@@ -101,7 +101,7 @@ func (uOfDPtr *UniverseOfDiscourse) addElementListener(element Element, elementP
 	}
 	hl.LockBaseElement(element)
 	if element != nil {
-		elementId := element.GetId(hl).String()
+		elementId := element.GetId(hl)
 		uOfDPtr.elementListenerMap.AddEntry(elementId, elementPointer)
 	}
 }
@@ -113,7 +113,7 @@ func (uOfDPtr *UniverseOfDiscourse) addElementPointerListener(elementPointer Ele
 	}
 	hl.LockBaseElement(elementPointer)
 	if elementPointer != nil {
-		elementId := elementPointer.GetId(hl).String()
+		elementId := elementPointer.GetId(hl)
 		uOfDPtr.elementPointerListenerMap.AddEntry(elementId, elementPointerPointer)
 	}
 }
@@ -125,7 +125,7 @@ func (uOfDPtr *UniverseOfDiscourse) addLiteralListener(literal Literal, literalP
 	}
 	hl.LockBaseElement(literal)
 	if literal != nil {
-		literalId := literal.GetId(hl).String()
+		literalId := literal.GetId(hl)
 		uOfDPtr.literalListenerMap.AddEntry(literalId, literalPointer)
 	}
 }
@@ -137,7 +137,7 @@ func (uOfDPtr *UniverseOfDiscourse) addLiteralPointerListener(literalPointer Lit
 	}
 	hl.LockBaseElement(literalPointer)
 	if literalPointer != nil {
-		literalId := literalPointer.GetId(hl).String()
+		literalId := literalPointer.GetId(hl)
 		uOfDPtr.literalPointerListenerMap.AddEntry(literalId, literalPointerPointer)
 	}
 }
@@ -152,7 +152,7 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteBaseElement(be BaseElement, hl *HeldLo
 		//		log.Printf("About to delete BaseElement with id: %s\n", be.GetId(hl).String())
 		SetOwningElement(be, nil, hl)
 		uOfDPtr.removeBaseElement(be, hl)
-		beId := be.GetId(hl).String()
+		beId := be.GetId(hl)
 		bepl := uOfDPtr.baseElementListenerMap.GetEntry(beId)
 		if bepl != nil {
 			for _, bep := range *bepl {
@@ -533,7 +533,7 @@ func (uOfDPtr *UniverseOfDiscourse) notifyElementListeners(notification *ChangeN
 	}
 	switch notification.changedObject.(type) {
 	case Element:
-		id := notification.changedObject.GetId(hl).String()
+		id := notification.changedObject.GetId(hl)
 		epl := uOfDPtr.elementListenerMap.GetEntry(id)
 		if epl != nil {
 			for _, elementPointer := range *epl {
@@ -586,7 +586,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeBaseElement(be BaseElement, hl *HeldLo
 	url := GetUri(be, hl)
 	if url != "" {
 		uOfDPtr.uriBaseElementMap.DeleteEntry(url)
-		uOfDPtr.idUriMap.DeleteEntry(be.GetId(hl).String())
+		uOfDPtr.idUriMap.DeleteEntry(be.GetId(hl))
 	}
 	uOfDPtr.undoMgr.markRemovedBaseElement(be, hl)
 	return nil
@@ -609,7 +609,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeBaseElementListener(baseElement BaseEl
 		defer hl.ReleaseLocks()
 	}
 	if baseElement != nil {
-		elementId := baseElement.GetId(hl).String()
+		elementId := baseElement.GetId(hl)
 		uOfDPtr.baseElementListenerMap.RemoveEntry(elementId, baseElementPointer)
 	}
 }
@@ -620,7 +620,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeElementListener(element Element, eleme
 		defer hl.ReleaseLocks()
 	}
 	if element != nil {
-		elementId := element.GetId(hl).String()
+		elementId := element.GetId(hl)
 		uOfDPtr.elementListenerMap.RemoveEntry(elementId, elementPointer)
 	}
 }
@@ -631,7 +631,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeElementPointerListener(elementPointer 
 		defer hl.ReleaseLocks()
 	}
 	if elementPointer != nil {
-		elementId := elementPointer.GetId(hl).String()
+		elementId := elementPointer.GetId(hl)
 		uOfDPtr.elementPointerListenerMap.RemoveEntry(elementId, elementPointerPointer)
 	}
 }
@@ -642,7 +642,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeLiteralListener(literal Literal, liter
 		defer hl.ReleaseLocks()
 	}
 	if literal != nil {
-		literalId := literal.GetId(hl).String()
+		literalId := literal.GetId(hl)
 		uOfDPtr.literalListenerMap.RemoveEntry(literalId, literalPointer)
 	}
 }
@@ -653,7 +653,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeLiteralPointerListener(literalPointer 
 		defer hl.ReleaseLocks()
 	}
 	if literalPointer != nil {
-		elementId := literalPointer.GetId(hl).String()
+		elementId := literalPointer.GetId(hl)
 		uOfDPtr.literalPointerListenerMap.RemoveEntry(elementId, literalPointerPointer)
 	}
 }
@@ -666,7 +666,7 @@ func (uOfDPtr *UniverseOfDiscourse) restoreUriIndexRecursively(be BaseElement, h
 	uri := GetUri(be, hl)
 	if uri != "" {
 		uOfDPtr.uriBaseElementMap.SetEntry(uri, be)
-		uOfDPtr.idUriMap.SetEntry(be.GetId(hl).String(), uri)
+		uOfDPtr.idUriMap.SetEntry(be.GetId(hl), uri)
 	}
 
 	switch be.(type) {

@@ -124,7 +124,7 @@ func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks)
 	// Increment the version
 	be.internalIncrementVersion()
 	// Update uri indices
-	id := be.GetId(hl).String()
+	id := be.GetId(hl)
 	oldUri := uOfD.idUriMap.GetEntry(id)
 	newUri := GetUri(be, hl)
 	if oldUri != newUri {

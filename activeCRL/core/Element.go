@@ -158,7 +158,7 @@ func (elPtr *element) getImmediateAbstractions(hl *HeldLocks) []Refinement {
 	}
 	hl.LockBaseElement(elPtr)
 	var abstractions []Refinement
-	ePtrs := elPtr.uOfD.elementListenerMap.GetEntry(elPtr.GetId(hl).String())
+	ePtrs := elPtr.uOfD.elementListenerMap.GetEntry(elPtr.GetId(hl))
 	if ePtrs != nil {
 		for _, ePtr := range *ePtrs {
 			if ePtr.GetElementPointerRole(hl) == REFINED_ELEMENT {
@@ -176,7 +176,7 @@ func (elPtr *element) getImmediateRefinements(hl *HeldLocks) []Refinement {
 	}
 	hl.LockBaseElement(elPtr)
 	var refinements []Refinement
-	ePtrs := elPtr.uOfD.elementListenerMap.GetEntry(elPtr.GetId(hl).String())
+	ePtrs := elPtr.uOfD.elementListenerMap.GetEntry(elPtr.GetId(hl))
 	if ePtrs != nil {
 		for _, ePtr := range *ePtrs {
 			if ePtr.GetElementPointerRole(hl) == ABSTRACT_ELEMENT {
