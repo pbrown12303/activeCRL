@@ -246,6 +246,5 @@ func propagateChange(be BaseElement, notification *ChangeNotification, hl *HeldL
 		case LiteralPointer:
 			uOfD.notifyLiteralPointerListeners(notification, hl)
 		}
-
 	}
 }
