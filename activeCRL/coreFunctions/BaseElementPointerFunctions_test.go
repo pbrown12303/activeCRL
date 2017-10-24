@@ -15,10 +15,10 @@ import (
 )
 
 func TestBaseElementPointerFunctionsIds(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -60,10 +60,10 @@ func TestBaseElementPointerFunctionsIds(t *testing.T) {
 }
 
 func TestCreateBaseElementPointerFunction(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -153,10 +153,10 @@ func TestCreateBaseElementPointerFunction(t *testing.T) {
 }
 
 func TestGetBaseElement(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -210,10 +210,10 @@ func TestGetBaseElement(t *testing.T) {
 }
 
 func TestGetBaseElementId(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -267,10 +267,10 @@ func TestGetBaseElementId(t *testing.T) {
 }
 
 func TestGetBaseElementVersion(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -324,10 +324,10 @@ func TestGetBaseElementVersion(t *testing.T) {
 }
 
 func TestSetBaseElement(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 

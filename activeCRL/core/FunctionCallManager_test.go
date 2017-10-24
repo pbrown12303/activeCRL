@@ -22,15 +22,16 @@ func trialFunction2(element Element, changeNotifications []*ChangeNotification, 
 }
 
 func TestFunctionCallManager(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	el := uOfD.NewElement(hl)
 	fcm := hl.functionCallManager
 
 	// Add the first functioncall
 	var lf1 labeledFunction = labeledFunction{trialFunction1, "Function1"}
-	cn1a := NewChangeNotification(el, ADD, nil)
+	cn1a := NewChangeNotification(el, ADD, "TestFunctionCallManager", nil)
 	fcm.AddFunctionCall(&lf1, el, cn1a)
 	if fcm.functionTargetMap[&lf1] == nil {
 		t.Errorf("Labeled function not found in function target map\n")
@@ -46,7 +47,7 @@ func TestFunctionCallManager(t *testing.T) {
 	}
 
 	// Now call the first function with a different change notification
-	cn1b := NewChangeNotification(el, MODIFY, nil)
+	cn1b := NewChangeNotification(el, MODIFY, "TestFunctionCallManager", nil)
 	fcm.AddFunctionCall(&lf1, el, cn1b)
 	if fcm.functionTargetMap[&lf1] == nil {
 		t.Errorf("Labeled function not found in function target map\n")
@@ -64,7 +65,7 @@ func TestFunctionCallManager(t *testing.T) {
 
 	// Add a call to the second function
 	var lf2 labeledFunction = labeledFunction{trialFunction2, "Function2"}
-	cn2a := NewChangeNotification(el, ADD, nil)
+	cn2a := NewChangeNotification(el, ADD, "TestFunctionCallManager", nil)
 	fcm.AddFunctionCall(&lf2, el, cn2a)
 	if fcm.functionTargetMap[&lf2] == nil {
 		t.Errorf("Labeled function 2 not found in function target map\n")
@@ -80,7 +81,7 @@ func TestFunctionCallManager(t *testing.T) {
 	}
 
 	// Now call the second function again with a different change notification
-	cn2b := NewChangeNotification(el, MODIFY, nil)
+	cn2b := NewChangeNotification(el, MODIFY, "TestFunctionCallManager", nil)
 	fcm.AddFunctionCall(&lf2, el, cn2b)
 	if fcm.functionTargetMap[&lf2] == nil {
 		t.Errorf("Labeled function not found in function target map\n")

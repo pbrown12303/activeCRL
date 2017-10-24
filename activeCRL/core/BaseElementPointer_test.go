@@ -12,10 +12,10 @@ import (
 )
 
 func TestBaseElementPointer(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewBaseElementReference(hl)
 	rep := uOfD.NewBaseElementPointer(hl)
 	SetOwningElement(rep, owner, hl)
@@ -38,10 +38,10 @@ func TestBaseElementPointer(t *testing.T) {
 
 func TestBaseElementPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI"
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewBaseElementReference(hl)
 	rep := uOfD.NewBaseElementPointer(hl, uri)
 	SetOwningElement(rep, owner, hl)
@@ -52,10 +52,10 @@ func TestBaseElementPointerUriId(t *testing.T) {
 }
 
 func TestSetBaseElement(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewBaseElementReference(hl)
 	rep := uOfD.NewBaseElementPointer(hl)
 	SetOwningElement(rep, owner, hl)
@@ -72,10 +72,10 @@ func TestSetBaseElement(t *testing.T) {
 }
 
 func TestBaseElementPointerMarshal(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewBaseElementReference(hl)
 	rep := uOfD.NewBaseElementPointer(hl)
 	SetOwningElement(rep, owner, hl)
@@ -88,7 +88,7 @@ func TestBaseElementPointerMarshal(t *testing.T) {
 		t.Error(err)
 	}
 
-	uOfD2 := NewUniverseOfDiscourse()
+	uOfD2 := NewUniverseOfDiscourse(hl)
 	recoveredOwner := uOfD2.RecoverElement(result)
 	if !Equivalent(owner, recoveredOwner, hl) {
 		t.Error("Recovered owner not equivalent to original owner")
@@ -96,10 +96,10 @@ func TestBaseElementPointerMarshal(t *testing.T) {
 }
 
 func TestBaseElementPointerClone(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewBaseElementReference(hl)
 	rep := uOfD.NewBaseElementPointer(hl)
 	SetOwningElement(rep, owner, hl)

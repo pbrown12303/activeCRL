@@ -14,10 +14,10 @@ import (
 )
 
 func TestElementReferenceFunctionsIds(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -52,10 +52,10 @@ func TestElementReferenceFunctionsIds(t *testing.T) {
 }
 
 func TestCreateElementReferenceFunction(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -142,10 +142,10 @@ func TestCreateElementReferenceFunction(t *testing.T) {
 }
 
 func TestElementReferenceGetElementPointer(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -199,10 +199,10 @@ func TestElementReferenceGetElementPointer(t *testing.T) {
 }
 
 func TestGetReferencedElement(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -256,10 +256,10 @@ func TestGetReferencedElement(t *testing.T) {
 }
 
 func TestSetReferencedElement(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 

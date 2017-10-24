@@ -70,7 +70,7 @@ func (epPtr *elementPointer) elementChanged(notification *ChangeNotification, hl
 	hl.LockBaseElement(epPtr)
 	// Circular references need to be detected and curtailed, hence the isReferenced() call
 	if epPtr.getOwningElement(hl) != nil && notification.isReferenced(epPtr) == false {
-		newNotification := NewChangeNotification(epPtr, MODIFY, notification)
+		newNotification := NewChangeNotification(epPtr, MODIFY, "elementChanged", notification)
 		childChanged(epPtr.getOwningElement(hl), newNotification, hl)
 	}
 
@@ -300,7 +300,7 @@ func (epPtr *elementPointer) SetElement(element Element, hl *HeldLocks) {
 		epPtr.elementId = uuid.Nil
 		epPtr.elementVersion = 0
 	}
-	notification := NewChangeNotification(epPtr, MODIFY, nil)
+	notification := NewChangeNotification(epPtr, MODIFY, "SetElement", nil)
 	postChange(epPtr, notification, hl)
 
 	// If this is an owningElementPointer, some bookkeeping of the newOwner
@@ -350,7 +350,7 @@ func (epPtr *elementPointer) SetOwningElement(newOwningElement Element, hl *Held
 
 	preChange(epPtr, hl)
 	epPtr.owningElement = newOwningElement
-	notification := NewChangeNotification(epPtr, MODIFY, nil)
+	notification := NewChangeNotification(epPtr, MODIFY, "SetOwningElement", nil)
 	postChange(epPtr, notification, hl)
 
 	if newOwningElement != nil {
@@ -393,7 +393,7 @@ func (epPtr *elementPointer) setUri(uri string, hl *HeldLocks) {
 	hl.LockBaseElement(epPtr)
 	preChange(epPtr, hl)
 	epPtr.uri = uri
-	notification := NewChangeNotification(epPtr, MODIFY, nil)
+	notification := NewChangeNotification(epPtr, MODIFY, "setUri", nil)
 	postChange(epPtr, notification, hl)
 }
 

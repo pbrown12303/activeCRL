@@ -12,10 +12,10 @@ import (
 
 func TestBuildCoreFunctions(t *testing.T) {
 	//	log.Printf("Entering TestUpdateCoreElement")
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(false)
 
 	//Core

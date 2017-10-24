@@ -10,10 +10,10 @@ import (
 )
 
 func TestEquivalence(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElement(hl)
 	SetOwningElement(child, parent, hl)
@@ -23,10 +23,10 @@ func TestEquivalence(t *testing.T) {
 }
 
 func TestGetChildElementWithAncestorUri(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElement(hl)
 	SetOwningElement(child, parent, hl)
@@ -54,10 +54,10 @@ func TestGetChildElementWithAncestorUri(t *testing.T) {
 }
 
 func TestGetChildElementReferenceWithAncestorUri(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementReference(hl)
 	SetOwningElement(child, parent, hl)
@@ -85,10 +85,10 @@ func TestGetChildElementReferenceWithAncestorUri(t *testing.T) {
 }
 
 func TestGetChildElementWithURI(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElement(hl)
 	SetOwningElement(child, parent, hl)
@@ -105,10 +105,10 @@ func TestGetChildElementWithURI(t *testing.T) {
 }
 
 func TestGetChildElementReferenceWithURI(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementReference(hl)
 	SetOwningElement(child, parent, hl)
@@ -125,10 +125,10 @@ func TestGetChildElementReferenceWithURI(t *testing.T) {
 }
 
 func TestReplicateAsRefinement(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 
 	// Create original
 	original := uOfD.NewElement(hl)

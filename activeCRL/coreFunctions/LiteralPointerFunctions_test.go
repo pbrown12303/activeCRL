@@ -15,10 +15,10 @@ import (
 )
 
 func TestLiteralPointerFunctionsIds(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -82,10 +82,10 @@ func TestLiteralPointerFunctionsIds(t *testing.T) {
 }
 
 func TestCreateNameLiteralPointerFunction(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -168,10 +168,10 @@ func TestCreateNameLiteralPointerFunction(t *testing.T) {
 }
 
 func TestCreateDefinitionLiteralPointerFunction(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -254,10 +254,10 @@ func TestCreateDefinitionLiteralPointerFunction(t *testing.T) {
 }
 
 func TestCreateUriLiteralPointerFunction(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -340,10 +340,10 @@ func TestCreateUriLiteralPointerFunction(t *testing.T) {
 }
 
 func TestCreateValueLiteralPointerFunction(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -426,10 +426,10 @@ func TestCreateValueLiteralPointerFunction(t *testing.T) {
 }
 
 func TestGetLiteral(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -483,10 +483,10 @@ func TestGetLiteral(t *testing.T) {
 }
 
 func TestGetLiteralId(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -540,10 +540,10 @@ func TestGetLiteralId(t *testing.T) {
 }
 
 func TestGetLiteralVersion(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -597,10 +597,10 @@ func TestGetLiteralVersion(t *testing.T) {
 }
 
 func TestSetLiteral(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 

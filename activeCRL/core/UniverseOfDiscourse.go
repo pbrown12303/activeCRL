@@ -23,7 +23,7 @@ type universeOfDiscourse struct {
 	uriBaseElementMap         *StringBaseElementMap
 }
 
-func NewUniverseOfDiscourse() UniverseOfDiscourse {
+func NewUniverseOfDiscourse(hl *HeldLocks) UniverseOfDiscourse {
 	var uOfD universeOfDiscourse
 	uOfD.baseElementMap = NewUUIDBaseElementMap()
 	uOfD.baseElementListenerMap = NewUUIDBaseElementPointerListMap()
@@ -34,10 +34,9 @@ func NewUniverseOfDiscourse() UniverseOfDiscourse {
 	uOfD.literalPointerListenerMap = NewUUIDLiteralPointerPointerListMap()
 	uOfD.undoMgr = NewUndoManager()
 	uOfD.uriBaseElementMap = NewStringBaseElementMap()
-	hl := NewHeldLocks(nil)
-	defer hl.ReleaseLocks()
-	buildCoreConceptSpace(&uOfD, hl)
 	uOfD.initializeElement(UniverseOfDiscourseUri)
+	buildCoreConceptSpace(&uOfD, hl)
+	uOfD.AddBaseElement(&uOfD, hl)
 	return &uOfD
 }
 
@@ -61,6 +60,8 @@ func (uOfDPtr *universeOfDiscourse) AddBaseElement(be BaseElement, hl *HeldLocks
 		uOfDPtr.idUriMap.SetEntry(be.GetId(hl), uri)
 	}
 	uOfDPtr.undoMgr.markNewBaseElement(be, hl)
+	notification := NewChangeNotification(be, ADD, "AddBaseElement", nil)
+	uOfDPtr.uOfDChanged(notification, hl)
 	return nil
 }
 
@@ -629,8 +630,8 @@ func (uOfDPtr *universeOfDiscourse) notifyBaseElementListeners(notification *Cha
 		for _, baseElementPointer := range *bepl {
 			// Must suppress circular notifications
 			if notification.isReferenced(baseElementPointer) == false {
-				newNotification := NewChangeNotification(baseElementPointer, MODIFY, notification)
-				propagateChange(baseElementPointer, newNotification, hl)
+				newNotification := NewChangeNotification(baseElementPointer, MODIFY, "notifyBaseElementListeners", notification)
+				indicatedBaseElementChanged(baseElementPointer, newNotification, hl)
 			}
 		}
 	}
@@ -647,10 +648,13 @@ func (uOfDPtr *universeOfDiscourse) notifyElementListeners(notification *ChangeN
 		epl := uOfDPtr.elementListenerMap.GetEntry(id)
 		if epl != nil {
 			for _, elementPointer := range *epl {
-				// Must suppress circular notifications
-				if notification.isReferenced(elementPointer) == false {
-					newNotification := NewChangeNotification(elementPointer, MODIFY, notification)
-					propagateChange(elementPointer, newNotification, hl)
+				// Determine whether the pointer is an OWNING_ELEMENT pointer. If it is, see if the change is a
+				// modification. We do not want to propagate modifications to owners down to their owned elements.
+				isOwningElementPointer := elementPointer.GetElementPointerRole(hl) == OWNING_ELEMENT
+				isModification := notification.natureOfChange == MODIFY
+				if !(isOwningElementPointer && isModification) {
+					newNotification := NewChangeNotification(elementPointer, MODIFY, "notifyElementListeners", notification)
+					indicatedBaseElementChanged(elementPointer, newNotification, hl)
 				}
 			}
 		}
@@ -670,13 +674,36 @@ func (uOfDPtr *universeOfDiscourse) notifyElementPointerListeners(notification *
 			for _, elementPointerPointer := range *epl {
 				// Must suppress circular notifications
 				if notification.isReferenced(elementPointerPointer) == false {
-					newNotification := NewChangeNotification(elementPointerPointer, MODIFY, notification)
-					propagateChange(elementPointerPointer, newNotification, hl)
+					newNotification := NewChangeNotification(elementPointerPointer, MODIFY, "notifyElementPointerListeners", notification)
+					indicatedBaseElementChanged(elementPointerPointer, newNotification, hl)
 				}
 			}
 		}
 	}
 	return nil
+}
+
+func (uOfDPtr *universeOfDiscourse) notifyListeners(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
+	// If the element that changed (the base element) is already a source of change in the notification's prior history, we have a circular
+	// reference. No notification should be performed
+	priorChange := notification.underlyingChange
+	if priorChange != nil && priorChange.isReferenced(notification.changedObject) {
+		return
+	}
+
+	uOfDPtr.notifyBaseElementListeners(notification, hl)
+	switch be.(type) {
+	case Element:
+		uOfDPtr.notifyElementListeners(notification, hl)
+	case ElementPointer:
+		uOfDPtr.notifyElementPointerListeners(notification, hl)
+	case Literal:
+		uOfDPtr.notifyLiteralListeners(notification, hl)
+	case LiteralPointer:
+		uOfDPtr.notifyLiteralPointerListeners(notification, hl)
+	case UniverseOfDiscourse:
+		uOfDPtr.notifyElementListeners(notification, hl)
+	}
 }
 
 func (uOfDPtr *universeOfDiscourse) notifyLiteralListeners(notification *ChangeNotification, hl *HeldLocks) error {
@@ -691,8 +718,8 @@ func (uOfDPtr *universeOfDiscourse) notifyLiteralListeners(notification *ChangeN
 			for _, literalPointer := range *lpl {
 				// Must suppress circular notifications
 				if notification.isReferenced(literalPointer) == false {
-					newNotification := NewChangeNotification(literalPointer, MODIFY, notification)
-					propagateChange(literalPointer, newNotification, hl)
+					newNotification := NewChangeNotification(literalPointer, MODIFY, "notifyLiteralListeners", notification)
+					indicatedBaseElementChanged(literalPointer, newNotification, hl)
 				}
 			}
 		}
@@ -712,8 +739,8 @@ func (uOfDPtr *universeOfDiscourse) notifyLiteralPointerListeners(notification *
 			for _, literalPointerPointer := range *epl {
 				// Must suppress circular notifications
 				if notification.isReferenced(literalPointerPointer) == false {
-					newNotification := NewChangeNotification(literalPointerPointer, MODIFY, notification)
-					propagateChange(literalPointerPointer, newNotification, hl)
+					newNotification := NewChangeNotification(literalPointerPointer, MODIFY, "notifyLiteralPointerListeners", notification)
+					indicatedBaseElementChanged(literalPointerPointer, newNotification, hl)
 				}
 			}
 		}
@@ -762,6 +789,8 @@ func (uOfDPtr *universeOfDiscourse) removeBaseElement(be BaseElement, hl *HeldLo
 		uOfDPtr.idUriMap.DeleteEntry(be.GetId(hl))
 	}
 	uOfDPtr.undoMgr.markRemovedBaseElement(be, hl)
+	notification := NewChangeNotification(be, ADD, "removeBaseElement", nil)
+	uOfDPtr.uOfDChanged(notification, hl)
 	return nil
 }
 
@@ -894,6 +923,32 @@ func (uOfDPtr *universeOfDiscourse) Undo(hl *HeldLocks) {
 	uOfDPtr.undoMgr.undo(uOfDPtr, hl)
 }
 
+func (uOfD *universeOfDiscourse) updateUriIndices(be BaseElement, hl *HeldLocks) {
+	id := be.GetId(hl)
+	oldUri := uOfD.idUriMap.GetEntry(id)
+	newUri := GetUri(be, hl)
+	if oldUri != newUri {
+		if oldUri != "" {
+			uOfD.uriBaseElementMap.DeleteEntry(oldUri)
+		}
+		if newUri == "" {
+			uOfD.idUriMap.DeleteEntry(id)
+		} else {
+			uOfD.idUriMap.SetEntry(id, newUri)
+			uOfD.uriBaseElementMap.SetEntry(newUri, be)
+		}
+	}
+}
+
+func (uOfDPtr *universeOfDiscourse) uOfDChanged(notification *ChangeNotification, hl *HeldLocks) {
+	if TraceChange == true {
+		log.Printf("uOfDChanged called, uOfD ID: %s \n", uOfDPtr.GetId(hl).String())
+		notification.Print("uOfDChanged Incoming Notification: ", hl)
+	}
+	newNotification := NewChangeNotification(uOfDPtr, MODIFY, "uOfDChanged", notification)
+	indicatedBaseElementChanged(uOfDPtr, newNotification, hl)
+}
+
 type UniverseOfDiscourse interface {
 	Element
 	AddBaseElement(BaseElement, *HeldLocks) error
@@ -943,6 +998,7 @@ type UniverseOfDiscourse interface {
 	notifyBaseElementListeners(*ChangeNotification, *HeldLocks) error
 	notifyElementListeners(*ChangeNotification, *HeldLocks) error
 	notifyElementPointerListeners(*ChangeNotification, *HeldLocks) error
+	notifyListeners(BaseElement, *ChangeNotification, *HeldLocks)
 	notifyLiteralListeners(*ChangeNotification, *HeldLocks) error
 	notifyLiteralPointerListeners(*ChangeNotification, *HeldLocks) error
 	RecoverElement([]byte) Element
@@ -951,7 +1007,7 @@ type UniverseOfDiscourse interface {
 	SetDebugUndo(bool)
 	SetRecordingUndo(bool)
 	SetUniverseOfDiscourseRecursively(BaseElement, *HeldLocks)
-	//	TraceableLock()
-	//	TraceableUnlock()
 	Undo(*HeldLocks)
+	uOfDChanged(*ChangeNotification, *HeldLocks)
+	updateUriIndices(BaseElement, *HeldLocks)
 }

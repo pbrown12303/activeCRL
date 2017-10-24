@@ -14,10 +14,10 @@ import (
 )
 
 func TestLiteralReferenceFunctionsIds(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -52,10 +52,10 @@ func TestLiteralReferenceFunctionsIds(t *testing.T) {
 }
 
 func TestCreateLiteralReferenceFunction(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -142,10 +142,10 @@ func TestCreateLiteralReferenceFunction(t *testing.T) {
 }
 
 func TestLiteralReferenceGetLiteralPointer(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -199,10 +199,10 @@ func TestLiteralReferenceGetLiteralPointer(t *testing.T) {
 }
 
 func TestGetReferencedLiteral(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
@@ -256,10 +256,10 @@ func TestGetReferencedLiteral(t *testing.T) {
 }
 
 func TestSetReferencedLiteral(t *testing.T) {
-	uOfD := core.NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := core.NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 

@@ -6,6 +6,8 @@ package core
 
 import (
 	"log"
+	"os"
+	"strconv"
 	//	"time"
 )
 
@@ -24,13 +26,15 @@ const (
 type ChangeNotification struct {
 	changedObject    BaseElement
 	natureOfChange   NatureOfChange
+	origin           string
 	underlyingChange *ChangeNotification
 }
 
-func NewChangeNotification(baseElement BaseElement, natureOfChange NatureOfChange, underlyingChange *ChangeNotification) *ChangeNotification {
+func NewChangeNotification(baseElement BaseElement, natureOfChange NatureOfChange, origin string, underlyingChange *ChangeNotification) *ChangeNotification {
 	var notification ChangeNotification
 	notification.changedObject = baseElement
 	notification.natureOfChange = natureOfChange
+	notification.origin = origin
 	notification.underlyingChange = underlyingChange
 	return &notification
 }
@@ -75,6 +79,11 @@ func (cnPtr *ChangeNotification) getReferencingChangeNotification(be BaseElement
 }
 
 func (notification *ChangeNotification) Print(prefix string, hl *HeldLocks) {
+	startCount := 0
+	notification.PrintRecursively(prefix, hl, startCount)
+}
+
+func (notification *ChangeNotification) PrintRecursively(prefix string, hl *HeldLocks, startCount int) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -82,13 +91,14 @@ func (notification *ChangeNotification) Print(prefix string, hl *HeldLocks) {
 	notificationType := ""
 	switch notification.natureOfChange {
 	case ADD:
-		notificationType = "Add"
+		notificationType = "+++ Add"
 	case MODIFY:
-		notificationType = "Modify"
+		notificationType = "~~~ Modify"
 	case REMOVE:
-		notificationType = "Remove"
+		notificationType = "--- Remove"
 	}
-	log.Printf("%s%s: \n", prefix, notificationType)
+	log.Printf("%s%s: \n", prefix, "### Notification Level: "+strconv.Itoa(startCount)+" Type: "+notificationType)
+	log.Printf("%s Origin: %s \n", prefix, notification.origin)
 	if notification.changedObject == nil {
 		log.Printf(prefix + "Changed object is nil")
 	} else {
@@ -96,7 +106,7 @@ func (notification *ChangeNotification) Print(prefix string, hl *HeldLocks) {
 		Print(notification.changedObject, prefix+"   ", hl)
 	}
 	if notification.underlyingChange != nil {
-		notification.underlyingChange.Print(prefix+"      ", hl)
+		notification.underlyingChange.PrintRecursively(prefix+"      ", hl, startCount-1)
 	}
 	log.Printf(prefix + "End of notification")
 }
@@ -105,6 +115,78 @@ func (notification *ChangeNotification) Print(prefix string, hl *HeldLocks) {
 func abstractionChanged(element Element, notification *ChangeNotification, hl *HeldLocks) {
 	preChange(element, hl)
 	postChange(element, notification, hl)
+}
+
+// childChanged() is used by ownedBaseElements to inform their parents when they have changed. It does no locking.
+func childChanged(el Element, notification *ChangeNotification, hl *HeldLocks) {
+	if TraceChange == true {
+		log.Printf("childChanged called on Element %s \n", el.GetId(hl).String())
+		notification.Print("ChildChanged Incoming Notification: ", hl)
+	}
+	// First check for circular notifications. We do not want to propagate these
+	if notification.isReferenced(el) {
+		return
+	}
+	preChange(el, hl)
+	newNotification := NewChangeNotification(el, MODIFY, "childChanged", notification)
+	switch el.(type) {
+	case Refinement:
+		refinedElement := el.(Refinement).GetRefinedElement(hl)
+		refinedElementPointer := el.(Refinement).GetRefinedElementPointer(hl)
+		if refinedElement != nil {
+			cn := notification.getReferencingChangeNotification(refinedElementPointer)
+			if cn != nil && cn.underlyingChange == nil {
+				abstractionChanged(refinedElement, newNotification, hl)
+			}
+		}
+	}
+	postChange(el, newNotification, hl)
+}
+
+func notifyListeners(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
+	underlyingChange := notification.underlyingChange
+	if underlyingChange != nil {
+		if underlyingChange.isReferenced(notification.changedObject) {
+			return
+		}
+	}
+	uOfD := be.GetUniverseOfDiscourse(hl)
+	if uOfD != nil {
+		uOfD.notifyListeners(be, notification, hl)
+	}
+}
+
+func notifyParent(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
+	parent := GetOwningElement(be, hl)
+	if parent != nil {
+		childChanged(parent, notification, hl)
+	}
+}
+
+func notifyUniverseOfDiscourse(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
+	uOfD := be.GetUniverseOfDiscourse(hl)
+	if uOfD != nil {
+		if uOfD != be {
+			uOfD.uOfDChanged(notification, hl)
+		}
+	}
+
+}
+
+func queueFunctionExecutions(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
+	switch be.(type) {
+	case Element:
+		functions := GetCore().FindFunctions(be.(Element), notification, hl)
+		for _, labeledFunction := range functions {
+			if TraceChange == true {
+				log.Printf("queueFunctionExecutions calling function, URI: %s", labeledFunction.label)
+				Print(be, labeledFunction.label+"Function Target: ", hl)
+				notification.Print("Notification: ", hl)
+			}
+			hl.functionCallManager.AddFunctionCall(labeledFunction, be.(Element), notification)
+		}
+	}
+
 }
 
 func preChange(be BaseElement, hl *HeldLocks) {
@@ -121,94 +203,90 @@ func preChange(be BaseElement, hl *HeldLocks) {
 //      It also notifies the universe of discourse of the change so that listeners to it become
 //      aware of the change
 //   5) If there are any pointers to the base element it notifies them of the change.
-//      Notification consists of calling propagateChange() on the pointer
+//      Notification consists of calling indicatedBaseElementChanged() on the pointer
 func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
+	if TraceChange == true {
+		log.Printf("In post change, be identifier: %s \n", be.getIdNoLock().String())
+		notification.Print("PostChange Incoming Notification: ", hl)
+	}
 	if notificationsLimit > 0 {
 		if notificationsCount > notificationsLimit {
 			return
 		}
 		notificationsCount++
 	}
-	uOfD := be.GetUniverseOfDiscourse(hl)
+
 	// Increment the version
 	be.internalIncrementVersion()
 	// Update uri indices
-	id := be.GetId(hl)
-	oldUri := uOfD.(*universeOfDiscourse).idUriMap.GetEntry(id)
-	newUri := GetUri(be, hl)
-	if oldUri != newUri {
-		if oldUri != "" {
-			uOfD.(*universeOfDiscourse).uriBaseElementMap.DeleteEntry(oldUri)
-		}
-		if newUri == "" {
-			uOfD.(*universeOfDiscourse).idUriMap.DeleteEntry(id)
-		} else {
-			uOfD.(*universeOfDiscourse).idUriMap.SetEntry(id, newUri)
-			uOfD.(*universeOfDiscourse).uriBaseElementMap.SetEntry(newUri, be)
-		}
-	}
+	updateUriIndices(be, hl)
 	// Initiate function execution
-	switch be.(type) {
-	case Element:
-		for _, labeledFunction := range GetCore().FindFunctions(be.(Element), notification, hl) {
-			if TraceChange == true {
-				log.Printf("PostChange calling function, URI: %s", labeledFunction.label)
-				Print(be, labeledFunction.label+" Target: ", hl)
-				notification.Print("Notification: ", hl)
-			}
-			hl.functionCallManager.AddFunctionCall(labeledFunction, be.(Element), notification)
-		}
-	}
+	queueFunctionExecutions(be, notification, hl)
 	// Notify parents of change
-	parent := GetOwningElement(be, hl)
-	if parent != nil {
-		childChanged(parent, notification, hl)
-	}
-	if uOfD != nil {
-		propagateChange(uOfD, notification, hl)
-	}
+	notifyParent(be, notification, hl)
+	// Notify Universe of Discourse
+	notifyUniverseOfDiscourse(be, notification, hl)
 	// Notify listeners
-	be.GetUniverseOfDiscourse(hl).notifyBaseElementListeners(notification, hl)
-	switch be.(type) {
-	case Element:
-		uOfD.(*universeOfDiscourse).notifyElementListeners(notification, hl)
-	case ElementPointer:
-		be.GetUniverseOfDiscourse(hl).notifyElementPointerListeners(notification, hl)
-	case Literal:
-		be.GetUniverseOfDiscourse(hl).notifyLiteralListeners(notification, hl)
-	case LiteralPointer:
-		be.GetUniverseOfDiscourse(hl).notifyLiteralPointerListeners(notification, hl)
-	}
+	notifyListeners(be, notification, hl)
 }
 
-// propagageChange(BaseElement) spreads the knowledge that the base element has changed. It does
+// indicatedBaseElementChanged(BaseElement) spreads the knowledge that the base element has changed. It does
 // several things:
-//   1) if the object is an element it checks to see whether the element has functions associated
+//   1) if the receiving object is an element it checks to see whether the element has functions associated
 //      with it and queues up the calls to the functions.
 //   2) if the object is any kind of Pointer it updates the pointer's record of its indicated object version
-//   3) It calls propagateChange() on the parent element
+//   3) It calls indicatedBaseElementChanged() on the parent element
 //      It also notifies the universe of discourse of the change so that listeners to it become
 //      aware of the change
 //   4) If the object is of a type that can have a listener (i.e. a pointer to it), the listeners are
 //      notified
-func propagateChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
+func indicatedBaseElementChanged(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
+	if TraceChange == true {
+		log.Printf("In indicatedBaseElementChanged, be identifier: %s \n", be.getIdNoLock().String())
+		notification.Print("indicatedBaseElementChanged Incoming Notification: ", hl)
+		var filename string = "NotificationGraph" + strconv.Itoa(notificationsCount)
+		file, err := os.Create(filename)
+		if err != nil {
+			log.Printf("Error: %s", err)
+		}
+		nGraph := NewNotificationGraph(notification, hl)
+		file.WriteString(nGraph.getGraph().String())
+	}
 	if notificationsLimit > 0 {
 		if notificationsCount > notificationsLimit {
 			return
 		}
 		notificationsCount++
 	}
-	parent := GetOwningElement(be, hl)
-	switch be.(type) {
-	case Element:
-		for _, labeledFunction := range GetCore().FindFunctions(be.(Element), notification, hl) {
-			if TraceChange == true {
-				log.Printf("PropagateChange calling function, URI: %s", labeledFunction.label)
-				Print(be, labeledFunction.label+" Target: ", hl)
-				notification.Print("Notification: ", hl)
-			}
-			hl.functionCallManager.AddFunctionCall(labeledFunction, be.(Element), notification)
+	if AdHocTrace == true {
+		if notificationsCount > 900000 {
+			TraceChange = true
 		}
+	}
+
+	// Suppress circular notifications
+	underlyingChange := notification.underlyingChange
+	if underlyingChange != nil {
+		if underlyingChange.isReferenced(notification.changedObject) {
+			return
+		}
+	}
+
+	// Initiate function executions
+	queueFunctionExecutions(be, notification, hl)
+	// For pointers, update the version number of the referenced object. This does not count as a change
+	// to the pointer itself
+	updatePointerVersions(be, notification, hl)
+	// Notify parent
+	notifyParent(be, notification, hl)
+	// Notify Universe of Discourse
+	notifyUniverseOfDiscourse(be, notification, hl)
+	// Notify listeners
+	notifyListeners(be, notification, hl)
+}
+
+func updatePointerVersions(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
+	switch be.(type) {
 	case ElementPointer:
 		ep := be.(ElementPointer)
 		target := notification.changedObject
@@ -226,25 +304,11 @@ func propagateChange(be BaseElement, notification *ChangeNotification, hl *HeldL
 		target := notification.changedObject
 		ep.setLiteralPointerVersion(target.GetVersion(hl), hl)
 	}
-	// Notify parent
-	if parent != nil {
-		propagateChange(parent, notification, hl)
-	}
+}
+
+func updateUriIndices(be BaseElement, hl *HeldLocks) {
 	uOfD := be.GetUniverseOfDiscourse(hl)
 	if uOfD != nil {
-		// Notify Universe of Discourse
-		propagateChange(uOfD, notification, hl)
-		// Notify listeners
-		uOfD.notifyBaseElementListeners(notification, hl)
-		switch be.(type) {
-		case Element:
-			uOfD.notifyElementListeners(notification, hl)
-		case ElementPointer:
-			uOfD.notifyElementPointerListeners(notification, hl)
-		case Literal:
-			uOfD.notifyLiteralListeners(notification, hl)
-		case LiteralPointer:
-			uOfD.notifyLiteralPointerListeners(notification, hl)
-		}
+		uOfD.updateUriIndices(be, hl)
 	}
 }

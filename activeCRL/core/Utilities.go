@@ -9,6 +9,7 @@ import (
 	"github.com/satori/go.uuid"
 	"log"
 	"reflect"
+	"runtime/debug"
 	"sync"
 )
 
@@ -49,6 +50,7 @@ func clone(be BaseElement) BaseElement {
 		return be.(*refinement).clone()
 	}
 	log.Printf("clone called with unhandled type %T\n", be)
+	debug.PrintStack()
 	return nil
 }
 
@@ -398,6 +400,10 @@ func printBe(be BaseElement, prefix string, hl *HeldLocks) {
 		be.(*literalReference).printLiteralReference(prefix, hl)
 	case *refinement:
 		be.(*refinement).printRefinement(prefix, hl)
+	case *universeOfDiscourse:
+		be.(*universeOfDiscourse).printElement(prefix, hl)
+	case *baseElement:
+		be.(*baseElement).printBaseElement(prefix, hl)
 	default:
 		log.Printf("No case for %T in Print \n", be)
 	}

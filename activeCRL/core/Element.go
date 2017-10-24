@@ -24,30 +24,8 @@ type element struct {
 func addOwnedBaseElement(elPtr Element, be BaseElement, hl *HeldLocks) {
 	preChange(elPtr, hl)
 	elPtr.internalAddOwnedBaseElement(be, hl)
-	notification := NewChangeNotification(elPtr, ADD, nil)
+	notification := NewChangeNotification(elPtr, ADD, "addOwnedBaseElement", nil)
 	postChange(elPtr, notification, hl)
-}
-
-// childChanged() is used by ownedBaseElements to inform their parents when they have changed. It does no locking.
-func childChanged(el Element, notification *ChangeNotification, hl *HeldLocks) {
-	if TraceChange == true {
-		log.Printf("childChanged called on Element %s \n", el.GetId(hl).String())
-		notification.Print("ChildChanged Incoming Notification: ", hl)
-	}
-	preChange(el, hl)
-	newNotification := NewChangeNotification(el, MODIFY, notification)
-	switch el.(type) {
-	case Refinement:
-		refinedElement := el.(Refinement).GetRefinedElement(hl)
-		refinedElementPointer := el.(Refinement).GetRefinedElementPointer(hl)
-		if refinedElement != nil {
-			cn := notification.getReferencingChangeNotification(refinedElementPointer)
-			if cn != nil && cn.underlyingChange == nil {
-				abstractionChanged(refinedElement, newNotification, hl)
-			}
-		}
-	}
-	postChange(el, newNotification, hl)
 }
 
 func (elPtr *element) clone() *element {
@@ -389,7 +367,7 @@ func (el *element) recoverElementFields(unmarshaledData *map[string]json.RawMess
 func removeOwnedBaseElement(elPtr Element, be BaseElement, hl *HeldLocks) {
 	preChange(elPtr, hl)
 	elPtr.internalRemoveOwnedBaseElement(be, hl)
-	notification := NewChangeNotification(elPtr, REMOVE, nil)
+	notification := NewChangeNotification(elPtr, REMOVE, "removeOwnedBaseElement", nil)
 	postChange(elPtr, notification, hl)
 }
 

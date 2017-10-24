@@ -13,10 +13,10 @@ import (
 )
 
 func TestNewRefinement(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	el1 := uOfD.NewRefinement(hl)
 	if el1.GetId(hl) == uuid.Nil {
 		t.Error("Refinement identifier not properly initialized")
@@ -32,10 +32,10 @@ func TestNewRefinement(t *testing.T) {
 func TestNewRefinementUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
 	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	el1 := uOfD.NewRefinement(hl, uri)
 	if expectedId != el1.GetId(hl) {
 		t.Errorf("Incorrect UUID")
@@ -43,10 +43,10 @@ func TestNewRefinementUriId(t *testing.T) {
 }
 
 func TestRefinementOwnership(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewRefinement(hl)
 	SetOwningElement(child, parent, hl)
@@ -65,10 +65,10 @@ func TestRefinementOwnership(t *testing.T) {
 }
 
 func TestSetAbstractElement(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewRefinement(hl)
 	SetOwningElement(child, parent, hl)
@@ -91,10 +91,10 @@ func TestSetAbstractElement(t *testing.T) {
 }
 
 func TestSetRefinedElement(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewRefinement(hl)
 	SetOwningElement(child, parent, hl)
@@ -117,10 +117,10 @@ func TestSetRefinedElement(t *testing.T) {
 }
 
 func TestRefinementMarshal(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewRefinement(hl)
 	SetOwningElement(child, parent, hl)
@@ -136,7 +136,7 @@ func TestRefinementMarshal(t *testing.T) {
 
 	//	fmt.Printf("Encoded Parent \n%s \n", result)
 
-	uOfD2 := NewUniverseOfDiscourse()
+	uOfD2 := NewUniverseOfDiscourse(hl)
 	recoveredParent := uOfD2.RecoverElement(result)
 	if recoveredParent != nil {
 		//		Print(recoveredParent, "")
@@ -147,10 +147,10 @@ func TestRefinementMarshal(t *testing.T) {
 }
 
 func TestRefinementClone(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewRefinement(hl)
 	SetOwningElement(child, parent, hl)

@@ -13,10 +13,10 @@ import (
 )
 
 func TestCloneElement(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	el := uOfD.NewElement(hl)
 	SetName(el, "E1", hl)
 	SetUri(el, "E1.testDomain.com", hl)
@@ -30,10 +30,10 @@ func TestCloneElement(t *testing.T) {
 }
 
 func TestElementMarshal(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElement(hl)
 	SetOwningElement(child, parent, hl)
@@ -47,7 +47,7 @@ func TestElementMarshal(t *testing.T) {
 		t.Error(err)
 	}
 
-	uOfD2 := NewUniverseOfDiscourse()
+	uOfD2 := NewUniverseOfDiscourse(hl)
 	recoveredParent := uOfD2.RecoverElement(result)
 	if !Equivalent(parent, recoveredParent, hl) {
 		t.Error("Recovered parent not equivalent to original parent")
@@ -67,10 +67,10 @@ func TestElementMarshal(t *testing.T) {
 }
 
 func TestElementOwnership(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElement(hl)
 	SetOwningElement(child, parent, hl)
@@ -107,10 +107,10 @@ func TestElementOwnership(t *testing.T) {
 }
 
 func TestGetAbstractElementsRecursively(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	refinedElement := uOfD.NewElement(hl)
 	abstractElements := uOfD.GetAbstractElementsRecursively(refinedElement, hl)
 	if len(abstractElements) != 0 {
@@ -163,10 +163,10 @@ func TestGetAbstractElementsRecursively(t *testing.T) {
 }
 
 func TestGetImmediateAbstractElements(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	refinedElement := uOfD.NewElement(hl)
 	abstractElements := uOfD.getImmediateAbstractElements(refinedElement, hl)
 	if len(abstractElements) != 0 {
@@ -196,79 +196,11 @@ func TestGetImmediateAbstractElements(t *testing.T) {
 	}
 }
 
-//func TestGetImmediateAbstractions(t *testing.T) {
-//	uOfD := NewUniverseOfDiscourse()
-//	var wg sync.WaitGroup
-//	hl := NewHeldLocks(&wg)
-//	defer hl.ReleaseLocks()
-//	refinedElement := uOfD.NewElement(hl)
-//	abstractions := refinedElement.getImmediateAbstractions(hl)
-//	if len(abstractions) != 0 {
-//		t.Error("Abstractions length not 0\n")
-//	}
-//	abstractElement1 := uOfD.NewElement(hl)
-//	refinement1 := uOfD.NewRefinement(hl)
-//	refinement1.SetAbstractElement(abstractElement1, hl)
-//	refinement1.SetRefinedElement(refinedElement, hl)
-//	abstractions = refinedElement.getImmediateAbstractions(hl)
-//	if len(abstractions) != 1 {
-//		t.Error("Abstractions length != 1")
-//	}
-//	if abstractions[0] != refinement1 {
-//		t.Error("Abstractions first element not refinement1")
-//	}
-//	abstractElement2 := uOfD.NewElement(hl)
-//	refinement2 := uOfD.NewRefinement(hl)
-//	refinement2.SetAbstractElement(abstractElement2, hl)
-//	refinement2.SetRefinedElement(refinedElement, hl)
-//	abstractions = refinedElement.getImmediateAbstractions(hl)
-//	if len(abstractions) != 2 {
-//		t.Error("Abstractions length != 2")
-//	}
-//	if abstractions[1] != refinement2 {
-//		t.Error("Abstractions second element not refinement2")
-//	}
-//}
-//
-//func TestGetImmediateRefinements(t *testing.T) {
-//	uOfD := NewUniverseOfDiscourse()
-//	var wg sync.WaitGroup
-//	hl := NewHeldLocks(&wg)
-//	defer hl.ReleaseLocks()
-//	abstractElement := uOfD.NewElement(hl)
-//	refinedElement1 := uOfD.NewElement(hl)
-//	refinedElement2 := uOfD.NewElement(hl)
-//	refinements := abstractElement.getImmediateRefinements(hl)
-//	if len(refinements) != 0 {
-//		t.Error("Refinements length not 0\n")
-//	}
-//	refinement1 := uOfD.NewRefinement(hl)
-//	refinement1.SetAbstractElement(abstractElement, hl)
-//	refinement1.SetRefinedElement(refinedElement1, hl)
-//	refinements = abstractElement.getImmediateRefinements(hl)
-//	if len(refinements) != 1 {
-//		t.Error("Refinements length != 1")
-//	}
-//	if refinements[0] != refinement1 {
-//		t.Error("Refinements first element not refinement1")
-//	}
-//	refinement2 := uOfD.NewRefinement(hl)
-//	refinement2.SetAbstractElement(abstractElement, hl)
-//	refinement2.SetRefinedElement(refinedElement2, hl)
-//	refinements = abstractElement.getImmediateRefinements(hl)
-//	if len(refinements) != 2 {
-//		t.Error("Refinements length != 2")
-//	}
-//	if refinements[1] != refinement2 {
-//		t.Error("Refinements second element not refinement2")
-//	}
-//}
-//
 func TestIsRefinementOf(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	abstraction1 := uOfD.NewElement(hl)
 	abstraction2 := uOfD.NewElementReference(hl)
 	refinedElement := uOfD.NewElementReference(hl)
@@ -290,10 +222,10 @@ func TestIsRefinementOf(t *testing.T) {
 }
 
 func TestNewElement(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	el1 := uOfD.NewElement(hl)
 	if el1.GetId(hl) == uuid.Nil {
 		t.Error("Element identifier not properly initialized")
@@ -309,10 +241,10 @@ func TestNewElement(t *testing.T) {
 func TestNewElementUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
 	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	el1 := uOfD.NewElement(hl, uri)
 	if expectedId != el1.GetId(hl) {
 		t.Errorf("Incorrect UUID")
@@ -321,10 +253,10 @@ func TestNewElementUriId(t *testing.T) {
 }
 
 func TestSetDefinition(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	var testName string = "Test Name"
 	SetDefinition(parent, testName, hl)
@@ -341,10 +273,10 @@ func TestSetDefinition(t *testing.T) {
 }
 
 func TestSetName(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	var testName string = "Test Name"
 	SetName(parent, testName, hl)
@@ -361,10 +293,10 @@ func TestSetName(t *testing.T) {
 }
 
 func TestSetUri(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	var testName string = "Test Name"
 	SetUri(parent, testName, hl)
@@ -381,10 +313,10 @@ func TestSetUri(t *testing.T) {
 }
 
 func TestVersionWithParentChange(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	oldParent := uOfD.NewElement(hl)
 	newParent := uOfD.NewElement(hl)
 	elementX := uOfD.NewElement(hl)
@@ -414,10 +346,10 @@ func TestVersionWithParentChange(t *testing.T) {
 }
 
 func TestVersionWithParentChangeAndCommonGrandparent(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	grandparent := uOfD.NewElement(hl)
 	grandparentPreviousVersion := grandparent.GetVersion(hl)
 	oldParent := uOfD.NewElement(hl)

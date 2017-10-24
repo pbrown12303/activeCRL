@@ -55,8 +55,8 @@ func (undoMgr *undoManager) markNewBaseElement(be BaseElement, hl *HeldLocks) er
 	if undoMgr.debugUndo == true {
 		debug.PrintStack()
 	}
-	clone := clone(be)
 	if undoMgr.recordingUndo {
+		clone := clone(be)
 		stackEntry := NewUndoRedoStackEntry(Creation, clone, be)
 		if undoMgr.debugUndo == true {
 			PrintStackEntry(stackEntry, hl)
@@ -77,8 +77,8 @@ func (undoMgr *undoManager) markRemovedBaseElement(be BaseElement, hl *HeldLocks
 	if undoMgr.debugUndo == true {
 		debug.PrintStack()
 	}
-	clone := clone(be)
 	if undoMgr.recordingUndo {
+		clone := clone(be)
 		undoMgr.undoStack.Push(NewUndoRedoStackEntry(Deletion, clone, be))
 	}
 	return nil

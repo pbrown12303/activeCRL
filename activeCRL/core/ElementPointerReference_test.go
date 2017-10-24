@@ -13,10 +13,10 @@ import (
 )
 
 func TestNewElementPointerReference(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	el1 := uOfD.NewElementPointerReference(hl)
 	if el1.GetId(hl) == uuid.Nil {
 		t.Error("Element identifier not properly initialized")
@@ -32,10 +32,10 @@ func TestNewElementPointerReference(t *testing.T) {
 func TestNewElementPointerReferenceUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
 	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	el1 := uOfD.NewElementPointerReference(hl, uri)
 	if expectedId != el1.GetId(hl) {
 		t.Errorf("Incorrect UUID")
@@ -43,10 +43,10 @@ func TestNewElementPointerReferenceUriId(t *testing.T) {
 }
 
 func TestElementPointerReferenceOwnership(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementPointerReference(hl)
 	SetOwningElement(child, parent, hl)
@@ -65,10 +65,10 @@ func TestElementPointerReferenceOwnership(t *testing.T) {
 }
 
 func TestSetReferencedElementPointer(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementPointerReference(hl)
 	SetOwningElement(child, parent, hl)
@@ -91,10 +91,10 @@ func TestSetReferencedElementPointer(t *testing.T) {
 }
 
 func TestElementPointerReferenceMarshal(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementPointerReference(hl)
 	SetOwningElement(child, parent, hl)
@@ -108,7 +108,7 @@ func TestElementPointerReferenceMarshal(t *testing.T) {
 
 	//	fmt.Printf("Encoded Parent \n%s \n", result)
 
-	uOfD2 := NewUniverseOfDiscourse()
+	uOfD2 := NewUniverseOfDiscourse(hl)
 	recoveredParent := uOfD2.RecoverElement(result)
 	if recoveredParent != nil {
 		//		Print(recoveredParent, "")
@@ -119,10 +119,10 @@ func TestElementPointerReferenceMarshal(t *testing.T) {
 }
 
 func TestElementPointerReferenceClone(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElementPointerReference(hl)
 	SetOwningElement(child, parent, hl)

@@ -173,7 +173,7 @@ func (pllPtr *literalPointerPointer) SetLiteralPointer(literalPointer LiteralPoi
 			pllPtr.literalPointerId = uuid.Nil
 			pllPtr.literalPointerVersion = 0
 		}
-		notification := NewChangeNotification(pllPtr, MODIFY, nil)
+		notification := NewChangeNotification(pllPtr, MODIFY, "SetLiteralPointer", nil)
 		postChange(pllPtr, notification, hl)
 	}
 }
@@ -192,7 +192,7 @@ func (pllPtr *literalPointerPointer) SetOwningElement(element Element, hl *HeldL
 
 		preChange(pllPtr, hl)
 		pllPtr.owningElement = element
-		notification := NewChangeNotification(pllPtr, MODIFY, nil)
+		notification := NewChangeNotification(pllPtr, MODIFY, "SetOwningElement", nil)
 		postChange(pllPtr, notification, hl)
 
 		if element != nil {
@@ -235,7 +235,7 @@ func (lpPtr *literalPointerPointer) setUri(uri string, hl *HeldLocks) {
 	hl.LockBaseElement(lpPtr)
 	preChange(lpPtr, hl)
 	lpPtr.uri = uri
-	notification := NewChangeNotification(lpPtr, MODIFY, nil)
+	notification := NewChangeNotification(lpPtr, MODIFY, "SetOwningElement", nil)
 	postChange(lpPtr, notification, hl)
 }
 

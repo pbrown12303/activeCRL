@@ -120,7 +120,7 @@ func (lPtr *literal) SetLiteralValue(newValue string, hl *HeldLocks) {
 	if lPtr.literalValue != newValue {
 		preChange(lPtr, hl)
 		lPtr.literalValue = newValue
-		notification := NewChangeNotification(lPtr, MODIFY, nil)
+		notification := NewChangeNotification(lPtr, MODIFY, "SetLiteralValue", nil)
 		postChange(lPtr, notification, hl)
 	}
 }
@@ -138,7 +138,7 @@ func (lPtr *literal) SetOwningElement(el Element, hl *HeldLocks) {
 
 		preChange(lPtr, hl)
 		lPtr.owningElement = el
-		notification := NewChangeNotification(lPtr, MODIFY, nil)
+		notification := NewChangeNotification(lPtr, MODIFY, "SetOwningElement", nil)
 		postChange(lPtr, notification, hl)
 
 		if lPtr.owningElement != nil {
@@ -169,7 +169,7 @@ func (lPtr *literal) setUri(uri string, hl *HeldLocks) {
 	if uri != lPtr.uri {
 		preChange(lPtr, hl)
 		lPtr.uri = uri
-		notification := NewChangeNotification(lPtr, MODIFY, nil)
+		notification := NewChangeNotification(lPtr, MODIFY, "setUri", nil)
 		postChange(lPtr, notification, hl)
 	}
 }

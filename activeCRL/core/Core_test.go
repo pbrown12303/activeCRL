@@ -6,10 +6,10 @@ import (
 )
 
 func TestBuildCoreConceptSpace(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	uOfD.SetRecordingUndo(false)
 
 	//Core
@@ -258,4 +258,5 @@ func TestBuildCoreConceptSpace(t *testing.T) {
 	if !ok {
 		t.Error("Refinement is of wrong type")
 	}
+
 }

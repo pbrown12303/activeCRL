@@ -23,7 +23,7 @@ func TesFunctionExecution(t *testing.T) {
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	functionCalled = false
-	uOfD := NewUniverseOfDiscourse()
+	uOfD := NewUniverseOfDiscourse(hl)
 	uri := "FunctionAncestor"
 	GetCore().AddFunction(uri, trialFunction)
 	functionAncestor := uOfD.NewElement(hl)

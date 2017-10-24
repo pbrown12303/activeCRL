@@ -43,7 +43,7 @@ func TestGetUri(t *testing.T) {
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
-	uOfD := NewUniverseOfDiscourse()
+	uOfD := NewUniverseOfDiscourse(hl)
 	e1 := uOfD.NewElement(hl)
 	testUri := "testUri"
 	SetUri(e1, testUri, hl)

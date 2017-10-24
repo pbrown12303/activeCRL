@@ -49,3 +49,8 @@ func (hlPtr *HeldLocks) ReleaseLocks() {
 	hlPtr.beLocks = make(map[uuid.UUID]BaseElement)
 	hlPtr.functionCallManager.ExecuteFunctions(hlPtr.waitGroup)
 }
+
+func (hlPtr *HeldLocks) ReleaseLocksAndWait() {
+	hlPtr.ReleaseLocks()
+	hlPtr.waitGroup.Wait()
+}

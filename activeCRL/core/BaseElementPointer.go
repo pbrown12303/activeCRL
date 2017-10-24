@@ -38,7 +38,7 @@ func (bepPtr *baseElementPointer) cloneAttributes(source baseElementPointer) {
 func (bepPtr *baseElementPointer) baseElementChanged(notification *ChangeNotification, hl *HeldLocks) {
 	// Circular references need to be detected and curtailed, hence the isReferenced() call
 	if bepPtr.getOwningElement(hl) != nil && notification.isReferenced(bepPtr) == false {
-		newNotification := NewChangeNotification(bepPtr, MODIFY, notification)
+		newNotification := NewChangeNotification(bepPtr, MODIFY, "baseElementChanged", notification)
 		childChanged(bepPtr.getOwningElement(hl), newNotification, hl)
 	}
 
@@ -191,7 +191,7 @@ func (bepPtr *baseElementPointer) SetBaseElement(newBaseElement BaseElement, hl 
 		bepPtr.baseElementId = uuid.Nil
 		bepPtr.baseElementVersion = 0
 	}
-	notification := NewChangeNotification(bepPtr, MODIFY, nil)
+	notification := NewChangeNotification(bepPtr, MODIFY, "SetBaseElement", nil)
 	postChange(bepPtr, notification, hl)
 }
 
@@ -213,7 +213,7 @@ func (bepPtr *baseElementPointer) SetOwningElement(newOwningElement Element, hl 
 
 	preChange(bepPtr, hl)
 	bepPtr.owningElement = newOwningElement
-	notification := NewChangeNotification(bepPtr, MODIFY, nil)
+	notification := NewChangeNotification(bepPtr, MODIFY, "SetOwningElement", nil)
 	postChange(bepPtr, notification, hl)
 
 	if bepPtr.getOwningElement(hl) != nil {
@@ -239,7 +239,7 @@ func (bepPtr *baseElementPointer) setUri(uri string, hl *HeldLocks) {
 	hl.LockBaseElement(bepPtr)
 	preChange(bepPtr, hl)
 	bepPtr.uri = uri
-	notification := NewChangeNotification(bepPtr, MODIFY, nil)
+	notification := NewChangeNotification(bepPtr, MODIFY, "setUri", nil)
 	postChange(bepPtr, notification, hl)
 }
 

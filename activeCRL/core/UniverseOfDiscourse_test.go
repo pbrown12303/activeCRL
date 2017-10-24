@@ -7,13 +7,14 @@ package core
 import (
 	"sync"
 	"testing"
+	//	"time"
 )
 
 func TestGetBaseElementWithUri(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse().(*universeOfDiscourse)
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl).(*universeOfDiscourse)
 
 	// Element
 	element := uOfD.NewElement(hl)
@@ -127,10 +128,10 @@ func TestGetBaseElementWithUri(t *testing.T) {
 }
 
 func TestAddElementListener(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse().(*universeOfDiscourse)
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl).(*universeOfDiscourse)
 	e1 := uOfD.NewElement(hl)
 	ep := uOfD.NewReferencedElementPointer(hl)
 	ep.SetElement(e1, hl)
@@ -159,10 +160,10 @@ func TestAddElementListener(t *testing.T) {
 }
 
 func TestAddElementPointerListener(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse().(*universeOfDiscourse)
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl).(*universeOfDiscourse)
 	ep := uOfD.NewReferencedElementPointer(hl)
 	epp := uOfD.NewElementPointerPointer(hl)
 	epp.SetElementPointer(ep, hl)
@@ -191,10 +192,10 @@ func TestAddElementPointerListener(t *testing.T) {
 }
 
 func TestAddLiteralListener(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse().(*universeOfDiscourse)
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl).(*universeOfDiscourse)
 	e1 := uOfD.NewLiteral(hl)
 	lp := uOfD.NewNameLiteralPointer(hl)
 	lp.SetLiteral(e1, hl)
@@ -223,10 +224,10 @@ func TestAddLiteralListener(t *testing.T) {
 }
 
 func TestAddLiteralPointerListener(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse().(*universeOfDiscourse)
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl).(*universeOfDiscourse)
 	lp := uOfD.NewNameLiteralPointer(hl)
 	lpp := uOfD.NewLiteralPointerPointer(hl)
 	lpp.SetLiteralPointer(lp, hl)
@@ -250,5 +251,76 @@ func TestAddLiteralPointerListener(t *testing.T) {
 		if len(*elm) != 0 {
 			t.Error("LiteralListenerMap entry length != 0")
 		}
+	}
+}
+
+// Test uOfD Notifications
+
+type TestLock struct {
+	sync.Mutex
+}
+
+var testLock TestLock
+var uOfDNotificationReceived bool = false
+var uOfDNotificationTestUrl string = "http://activeCRL.com/test/uOfDNotificationTestUrl"
+var testElement BaseElement
+var testElementFound bool = false
+
+func uOfDNotificationReceiver(el Element, notifications []*ChangeNotification, wg *sync.WaitGroup) {
+	testLock.Lock()
+	defer testLock.Unlock()
+	uOfDNotificationReceived = true
+	for _, notification := range notifications {
+		if notification.isReferenced(testElement) {
+			testElementFound = true
+		}
+	}
+}
+
+func TestUOfDNotifications(t *testing.T) {
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
+
+	GetCore().AddFunction(uOfDNotificationTestUrl, uOfDNotificationReceiver)
+	functionRepresentation := uOfD.NewElement(hl)
+	SetUri(functionRepresentation, uOfDNotificationTestUrl, hl)
+
+	monitor := uOfD.NewElement(hl)
+	reference := uOfD.NewElementReference(hl)
+	SetOwningElement(reference, monitor, hl)
+	refinement := uOfD.NewRefinement(hl)
+	SetOwningElement(refinement, monitor, hl)
+	refinement.SetAbstractElement(functionRepresentation, hl)
+	refinement.SetRefinedElement(monitor, hl)
+	reference.SetReferencedElement(uOfD, hl)
+	hl.ReleaseLocksAndWait()
+
+	// Check the static setup
+	// Check to see that the reference's referencedElementPointer is registered to listen to the uOfD
+	var foundPointer bool = false
+	ep := reference.GetElementPointer(hl)
+	elementListenerMap := uOfD.(*universeOfDiscourse).elementListenerMap
+	for _, fep := range *(*elementListenerMap).elementPointerListMap[uOfD.getIdNoLock()] {
+		if fep == ep {
+			foundPointer = true
+		}
+	}
+	if foundPointer == false {
+		t.Errorf("Pointer to uOfD not in elementListenerMap")
+	}
+
+	// Now start the test
+	uOfDNotificationReceived = false
+	testElement = uOfD.NewElement(hl)
+	hl.ReleaseLocksAndWait()
+
+	if uOfDNotificationReceived == false {
+		t.Errorf("Notification not received")
+	}
+	if testElementFound == false {
+		t.Errorf("New Element not found in notifications, id: %s", testElement.GetId(hl).String())
+
 	}
 }

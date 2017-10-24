@@ -12,10 +12,10 @@ import (
 )
 
 func TestNewOwningElementPointer(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewElement(hl)
 	oep := uOfD.NewOwningElementPointer(hl)
 	SetOwningElement(oep, owner, hl)
@@ -42,10 +42,10 @@ func TestNewOwningElementPointer(t *testing.T) {
 func TestNewOwningElementPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
 	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	oep := uOfD.NewOwningElementPointer(hl, uri)
 	if expectedId != oep.GetId(hl) {
 		t.Errorf("Incorrect UUID")
@@ -53,10 +53,10 @@ func TestNewOwningElementPointerUriId(t *testing.T) {
 }
 
 func TestReferencedElementPointer(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewElementReference(hl)
 	rep := uOfD.NewReferencedElementPointer(hl)
 	SetOwningElement(rep, owner, hl)
@@ -83,10 +83,10 @@ func TestReferencedElementPointer(t *testing.T) {
 func TestReferencedElementPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
 	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	rep := uOfD.NewReferencedElementPointer(hl, uri)
 	if expectedId != rep.GetId(hl) {
 		t.Errorf("Incorrect UUID")
@@ -94,10 +94,10 @@ func TestReferencedElementPointerUriId(t *testing.T) {
 }
 
 func TestAbstractElementPointer(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewRefinement(hl)
 	aep := uOfD.NewAbstractElementPointer(hl)
 	SetOwningElement(aep, owner, hl)
@@ -124,10 +124,10 @@ func TestAbstractElementPointer(t *testing.T) {
 func TestAbstractElementPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
 	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	aep := uOfD.NewAbstractElementPointer(hl, uri)
 	if expectedId != aep.GetId(hl) {
 		t.Errorf("Incorrect UUID")
@@ -135,10 +135,10 @@ func TestAbstractElementPointerUriId(t *testing.T) {
 }
 
 func TestRefinedElementPointer(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewRefinement(hl)
 	rep := uOfD.NewRefinedElementPointer(hl)
 	SetOwningElement(rep, owner, hl)
@@ -165,10 +165,10 @@ func TestRefinedElementPointer(t *testing.T) {
 func TestRefinedElementPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
 	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	rep := uOfD.NewRefinedElementPointer(hl, uri)
 	if expectedId != rep.GetId(hl) {
 		t.Errorf("Incorrect UUID")
@@ -176,10 +176,10 @@ func TestRefinedElementPointerUriId(t *testing.T) {
 }
 
 func TestSetElement(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewElementReference(hl)
 	rep := uOfD.NewReferencedElementPointer(hl)
 	SetOwningElement(rep, owner, hl)
@@ -202,10 +202,10 @@ func TestSetElement(t *testing.T) {
 }
 
 func TestElementPointerMarshal(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewElementReference(hl)
 	rep := uOfD.NewReferencedElementPointer(hl)
 	SetOwningElement(rep, owner, hl)
@@ -218,7 +218,7 @@ func TestElementPointerMarshal(t *testing.T) {
 		t.Error(err)
 	}
 
-	uOfD2 := NewUniverseOfDiscourse()
+	uOfD2 := NewUniverseOfDiscourse(hl)
 	recoveredOwner := uOfD2.RecoverElement(result)
 	if !Equivalent(owner, recoveredOwner, hl) {
 		t.Error("Recovered owner not equivalent to original owner")
@@ -226,10 +226,10 @@ func TestElementPointerMarshal(t *testing.T) {
 }
 
 func TestElementPointerClone(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewElementReference(hl)
 	rep := uOfD.NewReferencedElementPointer(hl)
 	SetOwningElement(rep, owner, hl)

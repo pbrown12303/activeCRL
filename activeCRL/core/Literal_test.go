@@ -13,10 +13,10 @@ import (
 )
 
 func TestNewLiteral(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewLiteral(hl)
 	SetOwningElement(child, parent, hl)
@@ -37,10 +37,10 @@ func TestNewLiteral(t *testing.T) {
 func TestNewLiteralUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
 	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	child := uOfD.NewLiteral(hl, uri)
 	if expectedId != child.GetId(hl) {
 		t.Errorf("Incorrect UUID")
@@ -48,10 +48,10 @@ func TestNewLiteralUriId(t *testing.T) {
 }
 
 func TestLiteralMarshal(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewLiteral(hl)
 	SetOwningElement(child, parent, hl)
@@ -65,7 +65,7 @@ func TestLiteralMarshal(t *testing.T) {
 
 	//	fmt.Printf("Encoded Parent \n%s \n", result)
 
-	uOfD2 := NewUniverseOfDiscourse()
+	uOfD2 := NewUniverseOfDiscourse(hl)
 	recoveredParent := uOfD2.RecoverElement(result)
 	if recoveredParent != nil {
 		//		Print(recoveredParent, "")
@@ -76,10 +76,10 @@ func TestLiteralMarshal(t *testing.T) {
 }
 
 func TestLiteralClone(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewLiteral(hl)
 	SetOwningElement(child, parent, hl)

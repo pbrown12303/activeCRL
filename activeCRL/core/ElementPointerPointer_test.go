@@ -12,10 +12,10 @@ import (
 )
 
 func TestNewElementPointerPointer(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewElementPointerReference(hl)
 	epp := uOfD.NewElementPointerPointer(hl)
 	SetOwningElement(epp, owner, hl)
@@ -39,10 +39,10 @@ func TestNewElementPointerPointer(t *testing.T) {
 func TestNewElementPointerPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
 	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	epp := uOfD.NewElementPointerPointer(hl, uri)
 	if expectedId != epp.GetId(hl) {
 		t.Errorf("Incorrect UUID")
@@ -50,10 +50,10 @@ func TestNewElementPointerPointerUriId(t *testing.T) {
 }
 
 func TestSetElementPointer(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewElementPointerReference(hl)
 	epp := uOfD.NewElementPointerPointer(hl)
 	SetOwningElement(epp, owner, hl)
@@ -70,10 +70,10 @@ func TestSetElementPointer(t *testing.T) {
 }
 
 func TestElementPointerPointerMarshal(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewElementPointerReference(hl)
 	epp := uOfD.NewElementPointerPointer(hl)
 	SetOwningElement(epp, owner, hl)
@@ -86,7 +86,7 @@ func TestElementPointerPointerMarshal(t *testing.T) {
 		t.Error(err)
 	}
 
-	uOfD2 := NewUniverseOfDiscourse()
+	uOfD2 := NewUniverseOfDiscourse(hl)
 	recoveredOwner := uOfD2.RecoverElement(result)
 	if !Equivalent(owner, recoveredOwner, hl) {
 		t.Error("Recovered owner not equivalent to original owner")
@@ -94,10 +94,10 @@ func TestElementPointerPointerMarshal(t *testing.T) {
 }
 
 func TestElementPointerPointerClone(t *testing.T) {
-	uOfD := NewUniverseOfDiscourse()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl)
 	owner := uOfD.NewElementPointerReference(hl)
 	epp := uOfD.NewElementPointerPointer(hl)
 	SetOwningElement(epp, owner, hl)

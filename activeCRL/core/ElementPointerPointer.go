@@ -172,7 +172,7 @@ func (eppPtr *elementPointerPointer) SetElementPointer(elementPointer ElementPoi
 			eppPtr.elementPointerId = uuid.Nil
 			eppPtr.elementPointerVersion = 0
 		}
-		notification := NewChangeNotification(eppPtr, MODIFY, nil)
+		notification := NewChangeNotification(eppPtr, MODIFY, "SetElementPointer", nil)
 		postChange(eppPtr, notification, hl)
 	}
 }
@@ -202,7 +202,7 @@ func (eppPtr *elementPointerPointer) SetOwningElement(element Element, hl *HeldL
 
 		preChange(eppPtr, hl)
 		eppPtr.owningElement = element
-		notification := NewChangeNotification(eppPtr, MODIFY, nil)
+		notification := NewChangeNotification(eppPtr, MODIFY, "SetOwningElement", nil)
 		postChange(eppPtr, notification, hl)
 
 		if element != nil {
@@ -234,7 +234,7 @@ func (epPtr *elementPointerPointer) setUri(uri string, hl *HeldLocks) {
 	hl.LockBaseElement(epPtr)
 	preChange(epPtr, hl)
 	epPtr.uri = uri
-	notification := NewChangeNotification(epPtr, MODIFY, nil)
+	notification := NewChangeNotification(epPtr, MODIFY, "setUri", nil)
 	postChange(epPtr, notification, hl)
 }
 

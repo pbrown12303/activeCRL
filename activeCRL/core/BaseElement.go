@@ -112,7 +112,13 @@ func (bePtr *baseElement) printBaseElement(prefix string, hl *HeldLocks) {
 	}
 	hl.LockBaseElement(bePtr)
 	log.Printf("%s  id: %s \n", prefix, bePtr.id.String())
-	log.Printf("%s  version %d \n", prefix, bePtr.version)
+	log.Printf("%s  version: %d \n", prefix, bePtr.version)
+	uOfD := bePtr.uOfD
+	if uOfD == nil {
+		log.Printf("%s  uOfD Identifier: %s \n", prefix, "UofD is nil")
+	} else {
+		log.Printf("%s  uOfD Identifier: %s \n", prefix, bePtr.uOfD.getIdNoLock().String())
+	}
 }
 
 func (be *baseElement) recoverBaseElementFields(unmarshaledData *map[string]json.RawMessage) error {
@@ -281,7 +287,7 @@ func SetOwningElement(be BaseElement, parent Element, hl *HeldLocks) {
 		}
 		preChange(val, hl)
 		val.setOwningElement(parent, hl)
-		notification := NewChangeNotification(val, MODIFY, nil)
+		notification := NewChangeNotification(val, MODIFY, "SetOwningElement", nil)
 		postChange(val, notification, hl)
 
 		if val.getOwningElement(hl) != nil {
@@ -318,7 +324,7 @@ func SetUri(be BaseElement, uri string, hl *HeldLocks) {
 	case Value:
 		preChange(be, hl)
 		be.(Value).setUri(uri, hl)
-		notification := NewChangeNotification(be, MODIFY, nil)
+		notification := NewChangeNotification(be, MODIFY, "SetURI", nil)
 		postChange(be, notification, hl)
 
 	}

@@ -267,7 +267,7 @@ func (lpPtr *literalPointer) SetLiteral(literal Literal, hl *HeldLocks) {
 			lpPtr.literalId = uuid.Nil
 			lpPtr.literalVersion = 0
 		}
-		notification := NewChangeNotification(lpPtr, MODIFY, nil)
+		notification := NewChangeNotification(lpPtr, MODIFY, "SetLiteral", nil)
 		postChange(lpPtr, notification, hl)
 	}
 }
@@ -296,7 +296,7 @@ func (lpPtr *literalPointer) SetOwningElement(element Element, hl *HeldLocks) {
 
 		preChange(lpPtr, hl)
 		lpPtr.owningElement = element
-		notification := NewChangeNotification(lpPtr, MODIFY, nil)
+		notification := NewChangeNotification(lpPtr, MODIFY, "SetOwningElement", nil)
 		postChange(lpPtr, notification, hl)
 
 		if lpPtr.owningElement != nil {
@@ -328,7 +328,7 @@ func (lpPtr *literalPointer) setUri(uri string, hl *HeldLocks) {
 	if uri != lpPtr.uri {
 		preChange(lpPtr, hl)
 		lpPtr.uri = uri
-		notification := NewChangeNotification(lpPtr, MODIFY, nil)
+		notification := NewChangeNotification(lpPtr, MODIFY, "setUri", nil)
 		postChange(lpPtr, notification, hl)
 	}
 }
