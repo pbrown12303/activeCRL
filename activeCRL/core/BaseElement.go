@@ -197,6 +197,8 @@ func GetName(be BaseElement, hl *HeldLocks) string {
 	case Value:
 		val := be.(Value)
 		return val.getName(hl)
+	case UniverseOfDiscourse:
+		return "UniverseOfDiscourse"
 	case Element:
 		el := be.(Element)
 		nl := el.GetNameLiteral(hl)

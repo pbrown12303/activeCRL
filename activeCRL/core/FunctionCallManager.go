@@ -6,6 +6,7 @@ package core
 
 import (
 	"log"
+	//	"runtime/debug"
 	"sync"
 )
 
@@ -14,16 +15,16 @@ import (
 type elementNotificationsMap map[BaseElement][]*ChangeNotification
 
 type FunctionCallManager struct {
-	functionTargetMap map[*labeledFunction]elementNotificationsMap
+	functionTargetMap map[crlExecutionFunctionIdentifier]elementNotificationsMap
 }
 
 func NewFunctionCallManager() *FunctionCallManager {
 	var fcm FunctionCallManager
-	fcm.functionTargetMap = make(map[*labeledFunction]elementNotificationsMap)
+	fcm.functionTargetMap = make(map[crlExecutionFunctionIdentifier]elementNotificationsMap)
 	return &fcm
 }
 
-func (fcm *FunctionCallManager) AddFunctionCall(lf *labeledFunction, el Element, notification *ChangeNotification) {
+func (fcm *FunctionCallManager) AddFunctionCall(lf crlExecutionFunctionIdentifier, el Element, notification *ChangeNotification) {
 	enm := fcm.functionTargetMap[lf]
 	if enm == nil {
 		enm = make(map[BaseElement][]*ChangeNotification)
@@ -40,9 +41,10 @@ func (fcm *FunctionCallManager) ExecuteFunctions(wg *sync.WaitGroup) {
 			callLabeledFunction(labeledFunction, el.(Element), notifications, wg)
 		}
 	}
+	fcm.clearFunctionCalls()
 }
 
-func callLabeledFunction(lf *labeledFunction, el Element, notifications []*ChangeNotification, wg *sync.WaitGroup) {
+func callLabeledFunction(lf crlExecutionFunctionIdentifier, el Element, notifications []*ChangeNotification, wg *sync.WaitGroup) {
 	// We have to call wg.Add() before the go call because there may be a delay between when the gorouting is invoked and
 	// when it gets around to calling wg.Add()
 	if wg != nil {
@@ -51,26 +53,28 @@ func callLabeledFunction(lf *labeledFunction, el Element, notifications []*Chang
 	go makeGoCall(lf, el, notifications, wg)
 }
 
-func makeGoCall(lf *labeledFunction, el Element, notifications []*ChangeNotification, wg *sync.WaitGroup) {
+func (fcm *FunctionCallManager) clearFunctionCalls() {
+	fcm.functionTargetMap = make(map[crlExecutionFunctionIdentifier]elementNotificationsMap)
+}
+
+func makeGoCall(functionId crlExecutionFunctionIdentifier, el Element, notifications []*ChangeNotification, wg *sync.WaitGroup) {
 	if wg != nil {
 		defer wg.Done()
 	}
-	lf.function(el, notifications, wg)
+	function := GetCore().computeFunctions[functionId]
+	if function != nil {
+		function(el, notifications, wg)
+	} else {
+		log.Printf("In makeGoCall, function not found for identifier: %s ", functionId)
+	}
 }
 
-func (fcm *FunctionCallManager) Print(prefix string, hl *HeldLocks) {
-	if hl == nil {
-		hl = NewHeldLocks(nil)
-		defer hl.ReleaseLocks()
-	}
+func (fcm *FunctionCallManager) Print(prefix string) {
 	log.Printf(prefix + "Pending Function Calls")
-	for pendingFunction, enm := range fcm.functionTargetMap {
-		log.Printf(prefix+"   Pending function: %s\n", pendingFunction.label)
+	for pendingFunctionIdentifier, enm := range fcm.functionTargetMap {
+		log.Printf(prefix+"   Pending function: %s\n", pendingFunctionIdentifier)
 		for el, notifications := range enm {
-			log.Printf(prefix+"      Element Id: %s\n", el.GetId(hl))
-			for _, notification := range notifications {
-				notification.Print(prefix+"         ", hl)
-			}
+			log.Printf(prefix+"      Element Id: %s Notifications length: %d\n", el.getIdNoLock(), len(notifications))
 		}
 	}
 }

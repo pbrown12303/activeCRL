@@ -30,14 +30,15 @@ func TestFunctionCallManager(t *testing.T) {
 	fcm := hl.functionCallManager
 
 	// Add the first functioncall
-	var lf1 labeledFunction = labeledFunction{trialFunction1, "Function1"}
+	var functionIdentifier1 crlExecutionFunctionIdentifier = "Function1"
+	GetCore().AddFunction(string(functionIdentifier1), trialFunction1)
 	cn1a := NewChangeNotification(el, ADD, "TestFunctionCallManager", nil)
-	fcm.AddFunctionCall(&lf1, el, cn1a)
-	if fcm.functionTargetMap[&lf1] == nil {
+	fcm.AddFunctionCall(functionIdentifier1, el, cn1a)
+	if fcm.functionTargetMap[functionIdentifier1] == nil {
 		t.Errorf("Labeled function not found in function target map\n")
-		fcm.Print("Pending Function Calls: ", hl)
+		fcm.Print("Pending Function Calls: ")
 	} else {
-		enm := fcm.functionTargetMap[&lf1]
+		enm := fcm.functionTargetMap[functionIdentifier1]
 		if len(enm[el]) != 1 {
 			t.Errorf("ElementNotificationsMap length != 1")
 		}
@@ -48,15 +49,15 @@ func TestFunctionCallManager(t *testing.T) {
 
 	// Now call the first function with a different change notification
 	cn1b := NewChangeNotification(el, MODIFY, "TestFunctionCallManager", nil)
-	fcm.AddFunctionCall(&lf1, el, cn1b)
-	if fcm.functionTargetMap[&lf1] == nil {
+	fcm.AddFunctionCall(functionIdentifier1, el, cn1b)
+	if fcm.functionTargetMap[functionIdentifier1] == nil {
 		t.Errorf("Labeled function not found in function target map\n")
-		fcm.Print("Pending Function Calls: ", hl)
+		fcm.Print("Pending Function Calls: ")
 	} else {
-		enm := fcm.functionTargetMap[&lf1]
+		enm := fcm.functionTargetMap[functionIdentifier1]
 		if len(enm[el]) != 2 {
 			t.Errorf("ElementNotificationsMap length != 2")
-			fcm.Print("", hl)
+			fcm.Print("")
 		}
 		if enm[el][1] != cn1b {
 			t.Errorf("ElementNotificationsMap[1] != cn1b")
@@ -64,14 +65,15 @@ func TestFunctionCallManager(t *testing.T) {
 	}
 
 	// Add a call to the second function
-	var lf2 labeledFunction = labeledFunction{trialFunction2, "Function2"}
+	var functionIdentifier2 crlExecutionFunctionIdentifier = "Function2"
+	GetCore().AddFunction(string(functionIdentifier2), trialFunction2)
 	cn2a := NewChangeNotification(el, ADD, "TestFunctionCallManager", nil)
-	fcm.AddFunctionCall(&lf2, el, cn2a)
-	if fcm.functionTargetMap[&lf2] == nil {
+	fcm.AddFunctionCall(functionIdentifier2, el, cn2a)
+	if fcm.functionTargetMap[functionIdentifier2] == nil {
 		t.Errorf("Labeled function 2 not found in function target map\n")
-		fcm.Print("Pending Function Calls: ", hl)
+		fcm.Print("Pending Function Calls: ")
 	} else {
-		enm := fcm.functionTargetMap[&lf2]
+		enm := fcm.functionTargetMap[functionIdentifier2]
 		if len(enm[el]) != 1 {
 			t.Errorf("ElementNotificationsMap length != 1")
 		}
@@ -82,15 +84,15 @@ func TestFunctionCallManager(t *testing.T) {
 
 	// Now call the second function again with a different change notification
 	cn2b := NewChangeNotification(el, MODIFY, "TestFunctionCallManager", nil)
-	fcm.AddFunctionCall(&lf2, el, cn2b)
-	if fcm.functionTargetMap[&lf2] == nil {
+	fcm.AddFunctionCall(functionIdentifier2, el, cn2b)
+	if fcm.functionTargetMap[functionIdentifier2] == nil {
 		t.Errorf("Labeled function not found in function target map\n")
-		fcm.Print("Pending Function Calls: ", hl)
+		fcm.Print("Pending Function Calls: ")
 	} else {
-		enm := fcm.functionTargetMap[&lf2]
+		enm := fcm.functionTargetMap[functionIdentifier2]
 		if len(enm[el]) != 2 {
 			t.Errorf("ElementNotificationsMap length != 2")
-			fcm.Print("", hl)
+			fcm.Print("")
 		}
 		if enm[el][1] != cn2b {
 			t.Errorf("ElementNotificationsMap[1] != cn2b")

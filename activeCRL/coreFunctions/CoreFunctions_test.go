@@ -2,6 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// The coreFunctions package defines the executable functions related to the core CRL model. These functions
+// are sufficient to build any CRL representation, and correspond 1:1 with the functions provided in the go
+// representation of the core. The package defines the CRL representations of these functions and associates
+// the executable go functions with these representations. To execute a function, use
 package coreFunctions
 
 import (

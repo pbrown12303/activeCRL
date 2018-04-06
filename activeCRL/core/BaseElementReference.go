@@ -91,34 +91,6 @@ func (el *baseElementReference) recoverBaseElementReferenceFields(unmarshaledDat
 	return el.reference.recoverReferenceFields(unmarshaledData)
 }
 
-//func (erPtr *baseElementReference) SetOwningElement(parent Element, hl *HeldLocks) {
-//	if hl == nil {
-//		hl = NewHeldLocks(nil)
-//		defer hl.ReleaseLocks()
-//	}
-//	hl.LockBaseElement(erPtr)
-//	oldParent := erPtr.GetOwningElement(hl)
-//	if oldParent == nil && parent == nil {
-//		return // Nothing to do
-//	} else if oldParent != nil && parent != nil && oldParent.GetId(hl) != parent.GetId(hl) {
-//		return // Nothing to do
-//	}
-//	if oldParent != nil {
-//		hl.LockBaseElement(oldParent)
-//	}
-//	if parent != nil {
-//		hl.LockBaseElement(parent)
-//	}
-//	oep := erPtr.getOwningElementPointer(hl)
-//	if oep != nil {
-//		hl.LockBaseElement(oep)
-//	} else {
-//		oep = erPtr.uOfD.NewOwningElementPointer(hl)
-//		oep.SetOwningElement(erPtr, hl)
-//	}
-//	oep.SetElement(parent, hl)
-//}
-
 func (erPtr *baseElementReference) SetReferencedBaseElement(el BaseElement, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)

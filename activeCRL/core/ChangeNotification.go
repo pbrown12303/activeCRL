@@ -67,6 +67,10 @@ func (cnPtr *ChangeNotification) isReferenced(be BaseElement) bool {
 	return false
 }
 
+func (cnPtr *ChangeNotification) GetChangedBaseElement() BaseElement {
+	return cnPtr.changedObject
+}
+
 func (cnPtr *ChangeNotification) getReferencingChangeNotification(be BaseElement) *ChangeNotification {
 	if cnPtr.changedObject == be {
 		return cnPtr
@@ -76,6 +80,10 @@ func (cnPtr *ChangeNotification) getReferencingChangeNotification(be BaseElement
 		}
 	}
 	return nil
+}
+
+func (cnPtr *ChangeNotification) GetUnderlyingChangeNotification() *ChangeNotification {
+	return cnPtr.underlyingChange
 }
 
 func (notification *ChangeNotification) Print(prefix string, hl *HeldLocks) {
@@ -103,7 +111,10 @@ func (notification *ChangeNotification) PrintRecursively(prefix string, hl *Held
 		log.Printf(prefix + "Changed object is nil")
 	} else {
 		log.Printf(prefix + "Changed object is not nil")
-		Print(notification.changedObject, prefix+"   ", hl)
+		log.Printf(prefix+"  Type: %T", notification.changedObject)
+		log.Printf(prefix+"  Id: %s", notification.changedObject.GetId(hl).String())
+		log.Printf(prefix+"  Version: %d", notification.changedObject.GetVersion(hl))
+		//		Print(notification.changedObject, prefix+"   ", hl)
 	}
 	if notification.underlyingChange != nil {
 		notification.underlyingChange.PrintRecursively(prefix+"      ", hl, startCount-1)
@@ -120,7 +131,7 @@ func abstractionChanged(element Element, notification *ChangeNotification, hl *H
 // childChanged() is used by ownedBaseElements to inform their parents when they have changed. It does no locking.
 func childChanged(el Element, notification *ChangeNotification, hl *HeldLocks) {
 	if TraceChange == true {
-		log.Printf("childChanged called on Element %s \n", el.GetId(hl).String())
+		log.Printf("childChanged called on %T identifier: %s \n", el, el.GetId(hl).String())
 		notification.Print("ChildChanged Incoming Notification: ", hl)
 	}
 	// First check for circular notifications. We do not want to propagate these
@@ -176,14 +187,14 @@ func notifyUniverseOfDiscourse(be BaseElement, notification *ChangeNotification,
 func queueFunctionExecutions(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
 	switch be.(type) {
 	case Element:
-		functions := GetCore().FindFunctions(be.(Element), notification, hl)
-		for _, labeledFunction := range functions {
+		functionIdentifiers := GetCore().FindFunctions(be.(Element), notification, hl)
+		for _, functionIdentifier := range functionIdentifiers {
 			if TraceChange == true {
-				log.Printf("queueFunctionExecutions calling function, URI: %s", labeledFunction.label)
-				Print(be, labeledFunction.label+"Function Target: ", hl)
+				log.Printf("queueFunctionExecutions calling function, URI: %s", functionIdentifier)
+				Print(be, string(functionIdentifier)+"Function Target: ", hl)
 				notification.Print("Notification: ", hl)
 			}
-			hl.functionCallManager.AddFunctionCall(labeledFunction, be.(Element), notification)
+			hl.functionCallManager.AddFunctionCall(functionIdentifier, be.(Element), notification)
 		}
 	}
 
@@ -206,7 +217,7 @@ func preChange(be BaseElement, hl *HeldLocks) {
 //      Notification consists of calling indicatedBaseElementChanged() on the pointer
 func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
 	if TraceChange == true {
-		log.Printf("In post change, be identifier: %s \n", be.getIdNoLock().String())
+		log.Printf("In post change, %T identifier: %s \n", be, be.getIdNoLock().String())
 		notification.Print("PostChange Incoming Notification: ", hl)
 	}
 	if notificationsLimit > 0 {

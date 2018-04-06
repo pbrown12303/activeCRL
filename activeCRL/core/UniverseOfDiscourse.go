@@ -203,7 +203,12 @@ func (uOfDPtr *universeOfDiscourse) GetBaseElement(id uuid.UUID) BaseElement {
 }
 
 func (uOfDPtr *universeOfDiscourse) GetBaseElements() []BaseElement {
+	uOfDPtr.baseElementMap.TraceableLock()
+	defer uOfDPtr.baseElementMap.TraceableUnlock()
 	var baseElements []BaseElement
+	for _, be := range uOfDPtr.baseElementMap.baseElementMap {
+		baseElements = append(baseElements, be)
+	}
 	return baseElements
 }
 

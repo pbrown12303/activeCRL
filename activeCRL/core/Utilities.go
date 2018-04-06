@@ -6,6 +6,7 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/satori/go.uuid"
 	"log"
 	"reflect"
@@ -83,6 +84,14 @@ func CreateReplicateAsRefinement(original Element, hl *HeldLocks) Element {
 	}
 	ReplicateAsRefinement(original, replicate, hl)
 	return replicate
+}
+
+func CreateReplicateAsRefinementFromUri(uOfD UniverseOfDiscourse, originalUri string, hl *HeldLocks) (Element, error) {
+	original := uOfD.GetElementWithUri(originalUri)
+	if original == nil {
+		return nil, fmt.Errorf("In CreateReplicateAsRefinementFromUri Element with uri %s not found", originalUri)
+	}
+	return CreateReplicateAsRefinement(original, hl), nil
 }
 
 func Equivalent(be1 BaseElement, be2 BaseElement, hl *HeldLocks) bool {
@@ -353,6 +362,38 @@ func GetChildWithUri(element Element, uri string, hl *HeldLocks) BaseElement {
 		}
 	}
 	return nil
+}
+
+func GetTypeName(be BaseElement) string {
+	switch be.(type) {
+	case BaseElementPointer:
+		return "BaseElementPointer"
+	case BaseElementReference:
+		return "BaseElementReference"
+	case ElementPointer:
+		return "ElementPointer"
+	case ElementPointerPointer:
+		return "ElementPointerPointer"
+	case ElementPointerReference:
+		return "ElementPointerReference"
+	case ElementReference:
+		return "ElementReference"
+	case Literal:
+		return "Literal"
+	case LiteralPointer:
+		return "LiteralPointer"
+	case LiteralPointerPointer:
+		return "LiteralPointerPointer"
+	case LiteralPointerReference:
+		return "LiteralPointerReference"
+	case LiteralReference:
+		return "LiteralReference"
+	case Refinement:
+		return "Refinement"
+	case Element:
+		return "Element"
+	}
+	return "undefined"
 }
 
 func Print(be BaseElement, prefix string, hl *HeldLocks) {

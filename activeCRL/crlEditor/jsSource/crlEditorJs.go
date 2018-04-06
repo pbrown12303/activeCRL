@@ -10,7 +10,7 @@ package main
 import (
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/jquery"
-	//	"github.com/pbrown12303/activeCRL/activeCRL/core"
+	"github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"
 	"github.com/pbrown12303/activeCRL/activeCRL/crlEditor/jsTree"
 	"log"
 )
@@ -25,8 +25,6 @@ const (
 )
 
 func main() {
-
-	//	uOfD := core.NewUniverseOfDiscourse()
 
 	// *** EXPERIMENTAL CODE BELOW THIS LINE **************************************************************
 
@@ -46,6 +44,11 @@ func main() {
 			jQuery(OUTPUT).Empty()
 		}
 	})
+	// *** END OF EXPERIMENTAL CODE ABOVE THIS LINE **************************************************************
+
+	js.Global.Set("initializeEditor", initializeEditor)
+
+	// *** EXPERIMENTAL CODE BELOW THIS LINE **************************************************************
 
 	js.Global.Set("newJQuery", newJQuery)
 
@@ -62,15 +65,21 @@ func main() {
 	js.Global.Set("pet", map[string]interface{}{
 		"NewPet": NewPet,
 	})
-
+	// *** END OF EXPERIMENTAL CODE ABOVE THIS LINE **************************************************************
 }
-
-// *** EXPERIMENTAL CODE BELOW THIS LINE **************************************************************
 
 func newJQuery(args ...interface{}) jquery.JQuery {
 	return jquery.NewJQuery(args...)
 }
 
+func initializeEditor() {
+	editor.InitializeCrlEditorSingleton()
+	js.Global.Set("CrlEditor", js.MakeWrapper(editor.CrlEditorSingleton))
+	js.Global.Set("DiagramManager", js.MakeWrapper(editor.CrlEditorSingleton.GetDiagramManager()))
+	js.Global.Set("TreeManager", js.MakeWrapper(editor.CrlEditorSingleton.GetTreeManager()))
+}
+
+// *** EXPERIMENTAL CODE BELOW THIS LINE **************************************************************
 func logEntry(x string) {
 	log.Printf("Log Entry %s\n", x)
 }
@@ -119,3 +128,5 @@ func (p *Pet) Name() string {
 func (p *Pet) SetName(name string) {
 	p.name = name
 }
+
+// *** END OF EXPERIMENTAL CODE ABOVE THIS LINE **************************************************************

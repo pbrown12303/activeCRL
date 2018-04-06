@@ -1,70 +1,179 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
+<meta charset="ISO-8859-1">
 <title>CRL Editor</title>
-<link rel="stylesheet" 	href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
-<link rel="stylesheet" 	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<link rel="stylesheet" href="/js/themes/joint.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
-<!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script> -->
+<script src="/js/lodash.js"></script>
+<script src="/js/backbone.js"></script>
+<script src="/js/joint.js"></script>
+<script src="/js/joint.shapes.uml.js"></script>
+<script src="/js/crlShapes.js"></script>
 <script src="/js/jstree.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="/js/crlEditor.js"></script>
 <script>
 	$(function() {
-		// 6 create an instance when the DOM is ready
-		$('#uOfD').jstree({'core' : { 'check_callback' : true }});
-		// 7 bind to events triggered on the tree
-		$('#uOfD').on("changed.jstree", function(e, data) {
-			console.log(data.selected);
-		});
+		initializeEditor();
 	});
 </script>
-<script src="/js/crlEditor.js"></script>
+<var foo> 
+</var>
+<script type="text/javascript">
+	$(function() {
+		var graph = new joint.dia.Graph;
+
+		var paper = new joint.dia.Paper({
+			el : $('#diagram'),
+			width : 600,
+			height : 600,
+			model : graph,
+			gridSize : 1
+		});
+
+		var rect = new joint.shapes.basic.Rect({
+			position : {
+				x : 100,
+				y : 30
+			},
+			size : {
+				width : 100,
+				height : 30
+			},
+			attrs : {
+				rect : {
+					fill : 'blue'
+				},
+				text : {
+					text : 'my box',
+					fill : 'white'
+				}
+			}
+		});
+
+		var rect2 = new joint.shapes.crl.BaseElement({
+			position : {
+				x : 300,
+				y : 30
+			},
+			size : {
+				width : 100,
+				height : 30
+			},
+			name : `Foo`
+		});
+
+		foo = rect2
+
+		var rect3 = new joint.shapes.uml.Class({
+			position : {
+				x : 500,
+				y : 30
+			},
+			size : {
+				width : 100,
+				height : 30
+			},
+			name : `Bar`
+		});
+
+		var link = new joint.dia.Link({
+			source : {
+				id : rect.id
+			},
+			target : {
+				id : rect2.id
+			}
+		});
+
+		graph.addCells([ rect, rect2, rect3, link ]);
+	});
+</script>
 
 
 </head>
 
 <body>
-    <input id="name" type="text" value="" placeholder="What is your name ?" autofocus/>
-    <span id="output"></span>
-    <script> logEntry() </script>
-    <script> addCallback() </script>
-	<div class="container">
-		<div class="dropdown">
-			<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-				File 
-				<span class="caret"></span>
-			</button>
-			<ul class="dropdown-menu">
-				<li><a href='javascript:logEntry("Open")'> Open Tree Root </a> </li>
-				<li><a href='javascript:logEntry("Close")'> Close Tree Root </a></li>
-				<li><a href="#">JavaScript</a></li>
-			</ul>
+	<input id="name" type="text" value="" placeholder="What is your name ?" autofocus />
+	<span id="output"></span>
+	<script>
+		addCallback()
+	</script>
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+				<div class="btn-group">
+					<div class="btn-group">
+						<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+							File <span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu" role="menu">
+							<li><a href='javascript:DiagramManager.NewDiagram()'> New Diagram </a></li>
+							<li><a href='javascript:DiagramManager.SetSize()'> Set Size </a></li>
+							<li><a href='javascript:logEntry("Open")'> Open Tree Root </a></li>
+							<li><a href='javascript:logEntry("Close")'> Close Tree Root </a></li>
+							<li><a href="#">JavaScript</a></li>
+						</ul>
+					</div>
+					<button type="button" class="btn btn-primary">Apple</button>
+					<button type="button" class="btn btn-primary">Samsung</button>
+					<button type="button" class="btn btn-primary">Sony</button>
+				</div>
+			</div>
 		</div>
 	</div>
 	<div class="container-fluid">
 		<div class="row">
-			<div class="col-xs-4 col-sm-3 col-md-3 col-lg-2"
-				style="background-color: #f5ecb1;">
+			<div class="col-xs-4 col-sm-3 col-md-3 col-lg-2" style="background-color: #f5ecb1;">
 				<h4>Universe of Discourse</h4>
-				<div id="uOfD">
-					<!-- in this example the tree is populated from inline HTML -->
-					<ul>
-						<li>Root node 1
-							<ul>
-								<li id="child_node_1">Child node 1</li>
-								<li>Child node 2</li>
-							</ul>
-						</li>
-						<li>Root node 2</li>
-					</ul>
+				<div id="uOfD"></div>
+			</div>
+			<div class="col-xs-4 col-sm-9 col-md-9 col-lg-10">
+				<ul id="tabs" class="nav nav-tabs">
+					<li class="active"><a data-toggle="tab" href="#home">Homex</a></li>
+					<li><a data-toggle="tab" href="#menu1">Menu 1</a></li>
+					<li><a data-toggle="tab" href="#menu2">Menu 2</a></li>
+					<li><a data-toggle="tab" href="#menu3">Menu 3</a></li>
+				</ul>
 
+				<div id="tabPanes" class="tab-content">
+					<div id="home" class="tab-pane fade in active">
+						<div id="diagram"></div>
+					</div>
+					<div id="menu1" class="tab-pane fade">
+						<h3>Menu 1</h3>
+						<p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+					</div>
+					<div id="menu2" class="tab-pane fade">
+						<h3>Menu 2</h3>
+						<p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem
+							aperiam.</p>
+					</div>
+					<div id="menu3" class="tab-pane fade">
+						<h3>Menu 3</h3>
+						<p>Eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+					</div>
+				</div>
+				<div class="container">
+					<h2>Properties</h2>
+					<div>
+						<table id="properties" class="table">
+							<thead>
+								<tr>
+									<th>Property</th>
+									<th>Value</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>
+						</table>
+					</div>
 
 				</div>
 			</div>
-			<div class="col-xs-8 col-sm-3 col-md-9 col-lg-10"
-				style="background-color: #704a38;">Diagram</div>
 		</div>
-	</div>
 </body>
 </html>

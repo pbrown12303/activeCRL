@@ -41,14 +41,23 @@ var RefinementUri string = "http://activeCrl.com/core/Refinement"
 
 var AdHocTrace bool = false
 
+// The crlExecutionFunction is the standard signature of a function that gets called when an element (including
+// its children) experience a change. Its arguments are the element that changed, the array of ChangeNotifications, and
+// a pointer to a WaitGroup that is used to determine (on a larger scale) when the execution of the triggered functions
+// has completed.
 type crlExecutionFunction func(Element, []*ChangeNotification, *sync.WaitGroup)
 
-type functions map[string]crlExecutionFunction
+// The crlExecutionFunctionIdentifier is expected to be the string version of the URI associated with the element.
+// It serves as the index into the functions associated with the core Element.
+type crlExecutionFunctionIdentifier string
 
-type labeledFunction struct {
-	function crlExecutionFunction
-	label    string
-}
+// The functions type maps core Element identifiers to crlExecutionFunctions associated with the identfier.
+type functions map[crlExecutionFunctionIdentifier]crlExecutionFunction
+
+//type labeledFunction struct {
+//	function crlExecutionFunction
+//	label    string
+//}
 
 var coreSingleton *coreConceptSpace
 
@@ -66,7 +75,7 @@ type coreConceptSpace struct {
 
 func newCore() *coreConceptSpace {
 	var newCore coreConceptSpace
-	newCore.computeFunctions = make(map[string]crlExecutionFunction)
+	newCore.computeFunctions = make(map[crlExecutionFunctionIdentifier]crlExecutionFunction)
 	return &newCore
 }
 
@@ -78,36 +87,36 @@ func init() {
 }
 
 func (c *coreConceptSpace) AddFunction(uri string, function crlExecutionFunction) {
-	c.computeFunctions[uri] = function
+	c.computeFunctions[crlExecutionFunctionIdentifier(uri)] = function
 }
 
 func (c *coreConceptSpace) GetFunction(uri string) crlExecutionFunction {
-	return c.computeFunctions[uri]
+	return c.computeFunctions[crlExecutionFunctionIdentifier(uri)]
 }
 
-func (c *coreConceptSpace) FindFunctions(element Element, notification *ChangeNotification, hl *HeldLocks) []*labeledFunction {
-	var labeledFunctions []*labeledFunction
+func (c *coreConceptSpace) FindFunctions(element Element, notification *ChangeNotification, hl *HeldLocks) []crlExecutionFunctionIdentifier {
+	var functionIdentifiers []crlExecutionFunctionIdentifier
 	if element == nil {
-		return labeledFunctions
+		return functionIdentifiers
 	}
 	uOfD := element.GetUniverseOfDiscourse(hl)
 	if uOfD == nil {
-		return labeledFunctions
+		return functionIdentifiers
 	}
 	abstractions := uOfD.GetAbstractElementsRecursively(element, hl)
 	for _, abstractElement := range abstractions {
 		uri := GetUri(abstractElement, hl)
 		if uri != "" {
-			f := c.computeFunctions[uri]
+			f := c.computeFunctions[crlExecutionFunctionIdentifier(uri)]
 			if f != nil {
-				var entry labeledFunction
-				entry.function = f
-				entry.label = uri
-				labeledFunctions = append(labeledFunctions, &entry)
+				//				var entry labeledFunction
+				//				entry.function = f
+				//				entry.label = uri
+				functionIdentifiers = append(functionIdentifiers, crlExecutionFunctionIdentifier(uri))
 			}
 		}
 	}
-	return labeledFunctions
+	return functionIdentifiers
 }
 
 func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {

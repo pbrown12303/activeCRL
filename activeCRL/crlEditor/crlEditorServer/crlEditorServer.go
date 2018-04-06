@@ -19,7 +19,7 @@ type Page struct {
 
 var ROOT string = "../src/github.com/pbrown12303/activeCRL/activeCRL/"
 
-var templates = template.Must(template.ParseFiles(ROOT + "crlEditor/tmpl/index.html"))
+var templates = template.Must(template.ParseFiles(ROOT+"crlEditor/tmpl/index.html", ROOT+"crlEditor/tmpl/sandbox.html"))
 var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 
 func editHandler(w http.ResponseWriter, r *http.Request, title string) {
@@ -33,6 +33,11 @@ func editHandler(w http.ResponseWriter, r *http.Request, title string) {
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	p := &Page{Title: "CRL Editor"}
 	renderTemplate(w, "index", p)
+}
+
+func sandboxHandler(w http.ResponseWriter, r *http.Request) {
+	p := &Page{Title: "Sandbox"}
+	renderTemplate(w, "sandbox", p)
 }
 
 func loadPage(title string) (*Page, error) {
@@ -59,10 +64,12 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 
 func main() {
 	http.HandleFunc("/index/", indexHandler)
+	http.HandleFunc("/sandbox/", sandboxHandler)
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
 	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir(ROOT+"crlEditor/js"))))
+	http.Handle("/icons/", http.StripPrefix("/icons/", http.FileServer(http.Dir(ROOT+"crlEditor/icons"))))
 	http.ListenAndServe(":8080", nil)
 }
 
