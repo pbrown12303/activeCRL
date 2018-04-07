@@ -30,7 +30,7 @@ func TestFunctionCallManager(t *testing.T) {
 	fcm := hl.functionCallManager
 
 	// Add the first functioncall
-	var functionIdentifier1 crlExecutionFunctionIdentifier = "Function1"
+	var functionIdentifier1 crlExecutionFunctionArrayIdentifier = "Function1"
 	GetCore().AddFunction(string(functionIdentifier1), trialFunction1)
 	cn1a := NewChangeNotification(el, ADD, "TestFunctionCallManager", nil)
 	fcm.AddFunctionCall(functionIdentifier1, el, cn1a)
@@ -65,7 +65,7 @@ func TestFunctionCallManager(t *testing.T) {
 	}
 
 	// Add a call to the second function
-	var functionIdentifier2 crlExecutionFunctionIdentifier = "Function2"
+	var functionIdentifier2 crlExecutionFunctionArrayIdentifier = "Function2"
 	GetCore().AddFunction(string(functionIdentifier2), trialFunction2)
 	cn2a := NewChangeNotification(el, ADD, "TestFunctionCallManager", nil)
 	fcm.AddFunctionCall(functionIdentifier2, el, cn2a)

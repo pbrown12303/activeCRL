@@ -47,20 +47,18 @@ var AdHocTrace bool = false
 // has completed.
 type crlExecutionFunction func(Element, []*ChangeNotification, *sync.WaitGroup)
 
-// The crlExecutionFunctionIdentifier is expected to be the string version of the URI associated with the element.
-// It serves as the index into the functions associated with the core Element.
-type crlExecutionFunctionIdentifier string
+// The crlExecutionFunctionArrayIdentifier is expected to be the string version of the URI associated with the element.
+// It serves as the index into the array of functions associated with the core Element.
+type crlExecutionFunctionArrayIdentifier string
 
-// The functions type maps core Element identifiers to crlExecutionFunctions associated with the identfier.
-type functions map[crlExecutionFunctionIdentifier]crlExecutionFunction
+// The functions type maps core Element identifiers to the array of crlExecutionFunctions associated with the identfier.
+type functions map[crlExecutionFunctionArrayIdentifier][]crlExecutionFunction
 
-//type labeledFunction struct {
-//	function crlExecutionFunction
-//	label    string
-//}
-
+// coreSingleton is the singleton instance of the coreConceptSpace. It provides the singular instances of all of the core
+// concepts and the mapping from Element identifiers to functions.
 var coreSingleton *coreConceptSpace
 
+// GetCore() is a static function that returns the singleton instance of the coreConceptSpace
 func GetCore() *coreConceptSpace {
 	if coreSingleton == nil {
 		coreSingleton = newCore()
@@ -75,7 +73,7 @@ type coreConceptSpace struct {
 
 func newCore() *coreConceptSpace {
 	var newCore coreConceptSpace
-	newCore.computeFunctions = make(map[crlExecutionFunctionIdentifier]crlExecutionFunction)
+	newCore.computeFunctions = make(map[crlExecutionFunctionArrayIdentifier][]crlExecutionFunction)
 	return &newCore
 }
 
@@ -87,15 +85,15 @@ func init() {
 }
 
 func (c *coreConceptSpace) AddFunction(uri string, function crlExecutionFunction) {
-	c.computeFunctions[crlExecutionFunctionIdentifier(uri)] = function
+	c.computeFunctions[crlExecutionFunctionArrayIdentifier(uri)] = append(c.computeFunctions[crlExecutionFunctionArrayIdentifier(uri)], function)
 }
 
-func (c *coreConceptSpace) GetFunction(uri string) crlExecutionFunction {
-	return c.computeFunctions[crlExecutionFunctionIdentifier(uri)]
+func (c *coreConceptSpace) GetFunctions(uri string) []crlExecutionFunction {
+	return c.computeFunctions[crlExecutionFunctionArrayIdentifier(uri)]
 }
 
-func (c *coreConceptSpace) FindFunctions(element Element, notification *ChangeNotification, hl *HeldLocks) []crlExecutionFunctionIdentifier {
-	var functionIdentifiers []crlExecutionFunctionIdentifier
+func (c *coreConceptSpace) FindFunctions(element Element, notification *ChangeNotification, hl *HeldLocks) []crlExecutionFunctionArrayIdentifier {
+	var functionIdentifiers []crlExecutionFunctionArrayIdentifier
 	if element == nil {
 		return functionIdentifiers
 	}
@@ -107,12 +105,12 @@ func (c *coreConceptSpace) FindFunctions(element Element, notification *ChangeNo
 	for _, abstractElement := range abstractions {
 		uri := GetUri(abstractElement, hl)
 		if uri != "" {
-			f := c.computeFunctions[crlExecutionFunctionIdentifier(uri)]
+			f := c.computeFunctions[crlExecutionFunctionArrayIdentifier(uri)]
 			if f != nil {
 				//				var entry labeledFunction
 				//				entry.function = f
 				//				entry.label = uri
-				functionIdentifiers = append(functionIdentifiers, crlExecutionFunctionIdentifier(uri))
+				functionIdentifiers = append(functionIdentifiers, crlExecutionFunctionArrayIdentifier(uri))
 			}
 		}
 	}

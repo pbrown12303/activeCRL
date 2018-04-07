@@ -88,9 +88,9 @@ func TestDelete(t *testing.T) {
 	uOfD.SetRecordingUndo(true)
 	AddCoreFunctionsToUofD(uOfD, hl)
 
-	deleteFunction := core.GetCore().GetFunction(BaseElementDeleteUri)
-	if deleteFunction == nil {
-		t.Errorf("Delete function not registered with core")
+	deleteFunctions := core.GetCore().GetFunctions(BaseElementDeleteUri)
+	if deleteFunctions == nil {
+		t.Errorf("Delete functions not registered with core")
 	}
 
 	// Get Ancestor
