@@ -22,11 +22,13 @@ type CrlEditor struct {
 	propertiesManager *PropertiesManager
 	treeManager       *TreeManager
 	uOfD              core.UniverseOfDiscourse
+	initialized       bool
 }
 
 func InitializeCrlEditorSingleton() {
 	var wg sync.WaitGroup
 	var editor CrlEditor
+	editor.initialized = false
 	editor.hl = core.NewHeldLocks(&wg)
 	defer editor.hl.ReleaseLocks()
 
@@ -55,6 +57,7 @@ func InitializeCrlEditorSingleton() {
 	})
 
 	editor.hl.ReleaseLocksAndWait()
+	editor.initialized = true
 	log.Printf("Editor initialized")
 }
 
@@ -83,6 +86,10 @@ func (edPtr *CrlEditor) GetTreeDragSelection() core.BaseElement {
 
 func (edPtr *CrlEditor) GetTreeManager() *TreeManager {
 	return edPtr.treeManager
+}
+
+func (edPtr *CrlEditor) IsInitialized() bool {
+	return edPtr.initialized
 }
 
 func (edPtr *CrlEditor) SelectBaseElement(be core.BaseElement) core.BaseElement {

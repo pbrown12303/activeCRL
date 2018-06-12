@@ -10,27 +10,12 @@ import (
 	"strconv"
 )
 
+const diagramContainerSuffix = "DiagramContainer"
+const diagramSuffix = "Diagram"
+
 var defaultNameCount int
 var diagramViewCount int
 var diagramGraphCount int
-
-type DiagramManager struct {
-	abstractDiagram           core.Element
-	diagrams                  map[uuid.UUID]core.Element
-	diagramGraphs             map[string]*js.Object
-	diagramFromDiagramGraphId map[string]core.Element
-	diagramPapers             map[string]*js.Object
-}
-
-func NewDiagramManager() *DiagramManager {
-	var diagramManager DiagramManager
-	diagramManager.abstractDiagram = CrlEditorSingleton.uOfD.GetElementWithUri(coreDiagram.CrlDiagramUri)
-	diagramManager.diagrams = make(map[uuid.UUID]core.Element)
-	diagramManager.diagramGraphs = make(map[string]*js.Object)
-	diagramManager.diagramFromDiagramGraphId = make(map[string]core.Element)
-	diagramManager.diagramPapers = make(map[string]*js.Object)
-	return &diagramManager
-}
 
 type paperProperties struct {
 	*js.Object
@@ -90,6 +75,32 @@ type nameProperty struct {
 	name string `js:"name"`
 }
 
+type DiagramManager struct {
+	abstractDiagram           core.Element
+	diagrams                  map[uuid.UUID]core.Element
+	diagramGraphs             map[string]*js.Object
+	diagramFromDiagramGraphId map[string]core.Element
+	diagramPapers             map[string]*js.Object
+}
+
+func NewDiagramManager() *DiagramManager {
+	var diagramManager DiagramManager
+	diagramManager.abstractDiagram = CrlEditorSingleton.uOfD.GetElementWithUri(coreDiagram.CrlDiagramUri)
+	diagramManager.diagrams = make(map[uuid.UUID]core.Element)
+	diagramManager.diagramGraphs = make(map[string]*js.Object)
+	diagramManager.diagramFromDiagramGraphId = make(map[string]core.Element)
+	diagramManager.diagramPapers = make(map[string]*js.Object)
+	return &diagramManager
+}
+
+func (dm *DiagramManager) addViewFunctionsToUofD() {
+	uOfD := CrlEditorSingleton.uOfD
+	hl := CrlEditorSingleton.hl
+	addDiagramViewFunctionsToUofD(uOfD, hl)
+	//	addDiagramNodeViewFunctionsToUofD(uOfD, hl)
+	//	addDiagramLinkViewFunctionsToUofD(uOfD, hl)
+}
+
 func createDiagramViewPrefix() string {
 	diagramViewCount++
 	countString := strconv.Itoa(diagramViewCount)
@@ -107,6 +118,8 @@ func (dmPtr *DiagramManager) DisplayDiagram(diagram core.Element, hl *core.HeldL
 	diagramIdString := diagramId.String()
 	diagramName := core.GetName(diagram, hl)
 	diagramViewId := createDiagramViewPrefix() + diagramIdString
+
+	// See if diagram is already in GUI
 
 	tabPanes := js.Global.Get("tabPanes")
 	newTabPane := js.Global.Get("document").Call("createElement", "DIV")

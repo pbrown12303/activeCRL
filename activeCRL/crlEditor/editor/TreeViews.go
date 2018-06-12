@@ -4,7 +4,7 @@ import (
 	//	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/jquery"
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
-	"github.com/satori/go.uuid"
+	//	"github.com/satori/go.uuid"
 	"log"
 	//	"strconv"
 	"sync"
@@ -16,6 +16,8 @@ var ManageNodesUofDReferenceUri string = ManageNodesUri + "/UofDReference"
 var ViewNodeUri string = TreeViewsUri + "/ViewNode"
 var ViewNodeBaseElementReferenceUri string = ViewNodeUri + "/BaseElementReference"
 
+// treeViewManageNodes() is the callback function that manaages the tree view when base elements in the Universe of Discourse change.
+// The changes being sought are the addition, removal, and re-parenting of base elements and the changes in their names.
 func treeViewManageNodes(instance core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
 	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
@@ -26,53 +28,59 @@ func treeViewManageNodes(instance core.Element, changeNotifications []*core.Chan
 	if treeManager == nil {
 		log.Printf("TreeManager is nil")
 	}
-	var changedBaseElements map[uuid.UUID]core.BaseElement = make(map[uuid.UUID]core.BaseElement)
 	log.Printf("treeViewManageNodes called, notifications length: %d", len(changeNotifications))
 	for _, changeNotification := range changeNotifications {
 		underlyingChangeNotification := treeManager.getChangeNotificationBelowUofD(changeNotification)
 		if underlyingChangeNotification != nil {
 			// this is the notification we are interested in
+			// Find the changed base element
 			changedBaseElement := underlyingChangeNotification.GetChangedBaseElement()
+			changedBaseElementId := changedBaseElement.GetId(hl).String()
+
+			// Tracing
 			//			underlyingChangeNotification.Print("Change Notification "+strconv.Itoa(i)+": ", hl)
-			changedBaseElements[changedBaseElement.GetId(hl)] = changedBaseElement
+			//			js.Global.Set("changedBaseElementId", changedBaseElementId)
+
+			// Now see if the node view exists
+			changedBaseElementNodeViewId := changedBaseElementId + treeNodeSuffix
+			changedBaseElementNodeView := jquery.NewJQuery(treeManager.treeId).Call("jstree", "get_node", changedBaseElementNodeViewId)
+
+			// Tracing
+			//			js.Global.Set("treeManagerJquery", jquery.NewJQuery(treeManager.treeId))
+			//			js.Global.Set("changedBaseElementNodeView", changedBaseElementNodeView)
+
+			if changedBaseElementNodeView.Length == 0 {
+				// Node does not exist. Create it
+				// First, determine whether this is a root element or a child
+				var parentTreeNodeId string
+				parentTreeNodeId = "#"
+				parent := core.GetOwningElement(changedBaseElement, hl)
+				if parent != nil {
+					parentTreeNodeId = parent.GetId(hl).String() + treeNodeSuffix
+				}
+				treeManager.AddNode(changedBaseElement, parentTreeNodeId, hl)
+			} else {
+				// Node exists - update it
+				// See if parent has changed
+				currentTreeParentId := changedBaseElementNodeView.Attr("parent")
+				currentParent := core.GetOwningElement(changedBaseElement, hl)
+				currentParentId := "#" // the jstree version of a nil parent
+				if currentParent != nil {
+					currentParentId = currentParent.GetId(hl).String() + treeNodeSuffix
+				}
+				if currentTreeParentId != currentParentId {
+					jquery.NewJQuery(treeManager.treeId).Call("jstree", "cut", changedBaseElementId)
+					jquery.NewJQuery(treeManager.treeId).Call("jstree", "paste", currentParentId, "last")
+				}
+
+				// See if the name has changed
+				changedBaseElementName := core.GetName(changedBaseElement, hl)
+				if changedBaseElementNodeView.Attr("text") != changedBaseElementName {
+					jquery.NewJQuery(treeManager.treeId).Call("jstree", "rename_node", changedBaseElementNodeViewId, changedBaseElementName)
+				}
+			}
 		}
 	}
-	for _, changedBaseElement := range changedBaseElements {
-		changedBaseElementId := changedBaseElement.GetId(hl).String()
-		currentTreeNode := jquery.NewJQuery(treeManager.treeId).Call("jstree", "get_node", changedBaseElement.GetId(hl).String())
-		if currentTreeNode.Length == 0 {
-			// Node does not exist. Create it
-			parentId := "#"
-			parent := core.GetOwningElement(changedBaseElement, hl)
-			if parent != nil {
-				parentId = parent.GetId(hl).String()
-			}
-			treeManager.AddNode(changedBaseElement, parentId, hl)
-		} else {
-			// Node exists - update it
-			// See if parent has changed
-			currentTreeParentId := currentTreeNode.Attr("parent")
-			currentParent := core.GetOwningElement(changedBaseElement, hl)
-			currentParentId := "#" // the jstree version of a nil parent
-			if currentParent != nil {
-				currentParentId = currentParent.GetId(hl).String()
-			}
-			if currentTreeParentId != currentParentId {
-				jquery.NewJQuery(treeManager.treeId).Call("jstree", "cut", changedBaseElementId)
-				jquery.NewJQuery(treeManager.treeId).Call("jstree", "paste", currentParentId, "last")
-			}
-
-			// See if the name has changed
-			changedBaseElementName := core.GetName(changedBaseElement, hl)
-			if currentTreeNode.Attr("text") != changedBaseElementName {
-				jquery.NewJQuery(treeManager.treeId).Call("jstree", "rename_node", changedBaseElementId, changedBaseElementName)
-			}
-		}
-	}
-}
-
-func treeViewViewNode(instance core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
-
 }
 
 func BuildTreeViews(conceptSpace core.Element, hl *core.HeldLocks) {
@@ -109,6 +117,4 @@ func BuildTreeViews(conceptSpace core.Element, hl *core.HeldLocks) {
 
 func registerTreeViewFunctions() {
 	core.GetCore().AddFunction(ManageNodesUri, treeViewManageNodes)
-	core.GetCore().AddFunction(ViewNodeUri, treeViewViewNode)
-
 }

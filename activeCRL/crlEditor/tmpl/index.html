@@ -4,32 +4,123 @@
 <meta charset="ISO-8859-1">
 <title>CRL Editor</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<!--  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">  -->
 <link rel="stylesheet" href="/js/themes/joint.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+<link rel="stylesheet" href="/js/jquery-ui-1.12.1.custom/jquery-ui.css">
+<link rel="stylesheet" href="/js/themes/crlEditor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="/js/jquery-ui-1.12.1.custom/external/jquery/jquery.js"></script>
+<script src="/js/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
 <script src="/js/lodash.js"></script>
 <script src="/js/backbone.js"></script>
 <script src="/js/joint.js"></script>
 <script src="/js/joint.shapes.uml.js"></script>
 <script src="/js/crlShapes.js"></script>
 <script src="/js/jstree.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<!--  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script> -->
 <script src="/js/crlEditor.js"></script>
 <script>
 	$(function() {
 		initializeEditor();
 	});
 </script>
-<var foo> 
-</var>
+<script type="text/javascript">
+	function sizeAll() {
+		// Body
+		var bodyHeight = jQuery("body").height();
+		var bodyWidth = jQuery("body").width();
+//		console.log("Body width" + bodyWidth.toString());
+		// Wrapper
+		var wrapperMargin = jQuery("#wrapper").outerWidth(true) - jQuery("#wrapper").width();
+		var wrapperWidth = bodyWidth - wrapperMargin;
+		var wrapperHeight = bodyHeight - jQuery("#navbar").outerHeight(true) - wrapperMargin;
+		jQuery("#wrapper").width(wrapperWidth);
+		jQuery("#wrapper").height(wrapperHeight);
+		// UofDBrowser
+		var uOfDBrowserOuterWidth = jQuery("#uofd-browser").outerWidth(true);
+		var uOfDBrowserMargin = uOfDBrowserOuterWidth - jQuery("#uofd-browser").width();
+		var uOfDBrowserHeight = wrapperHeight - uOfDBrowserMargin;
+		jQuery("#uofd-browser").height(uOfDBrowserHeight);
+		// Bottom
+		jQuery("#bottom").position({
+			my: "left bottom",
+			at: "right bottom",
+			of: "#uofd-browser"
+		});
+		// Center Pane
+		var centerPaneMargin = jQuery("center-pane").outerWidth(true) - jQuery("center-pane").width();
+		var centerPaneWidth = wrapperWidth - uOfDBrowserOuterWidth - centerPaneMargin;
+		jQuery("#center-pane").width(centerPaneWidth);
+		var centerPaneHeight = wrapperHeight - centerPaneMargin;
+		jQuery("#center-pane").height(centerPaneHeight);
+		jQuery("#center-pane").position({
+			my: "left top",
+			at: "right top",
+			of: "#uofd-browser"
+		})
+		
+		// Top Pane
+		var topPaneMargin = jQuery("#top-pane").outerWidth(true) - jQuery("#top-pane").width();
+		jQuery("#top-pane").height(centerPaneHeight - jQuery("#bottom").outerHeight(true) - topPaneMargin);
+		
+		// Toolbar
+		var toolbarOuterWidth = jQuery("#toolbar").outerWidth(true);
+		var toolbarMargin = toolbarOuterWidth - jQuery("#toolbar").width();
+		var toolbarHeight = jQuery("#top-pane").height() - toolbarMargin;
+		jQuery("#toolbar").height(toolbarHeight);
+		
+		// Top Content
+		var topContentMargin = jQuery("#top-content").outerWidth(true) - jQuery("#top-content").width();
+		jQuery("#top-content").width(centerPaneWidth - toolbarOuterWidth - topContentMargin);
+		topContentHeight = jQuery("#top-pane").height() - topContentMargin;
+		jQuery("#top-caontent").height(topContentHeight);
+		console.log("topContentMargin: " + topContentMargin.toString());
+		console.log("topPaneHeight: " + jQuery("#top-pane").height());
+
+		// crlDiagramContainer
+		crlDiagramContainerHeight = topContentHeight - jQuery("#tabs").height();
+		jQuery(".crlDiagramContainer").height(crlDiagramContainerHeight);
+		console.log("topContentHeight: " + topContentHeight.toString());
+		console.log("tabsHeight: " + jQuery("#tabs").height().toString());
+		console.log("CrlDiagramContainerHeight: " + crlDiagramContainerHeight.toString());
+	};
+</script>
+<script type="text/javascript">
+	$(function() {
+		$(".uofd-browser").resizable({
+			handles : "e",
+			resize: sizeAll()
+		});
+		$(".bottom").resizable({
+			handles : "n",
+			resize : sizeAll()
+		});
+	});
+</script>
+
+<script type="text/javascript">
+	function openDiagramContainer(diagramContainerId) {
+		var i;
+		var x = document.getElementsByClassName("crlDiagramContainer");
+		for (i = 0; i < x.length; i++) {
+			if (x[i].id == diagramContainerId) {
+				x[i].style.display = "block";
+			} else {
+				x[i].style.display = "none";
+			}
+		}
+	}
+</script>
+
+<var foo> </var>
 <script type="text/javascript">
 	$(function() {
 		var graph = new joint.dia.Graph;
 
 		var paper = new joint.dia.Paper({
 			el : $('#diagram'),
-			width : 600,
-			height : 600,
+			/*			width : 800,
+			 height : 800, */
 			model : graph,
 			gridSize : 1
 		});
@@ -93,87 +184,63 @@
 	});
 </script>
 
-
 </head>
 
-<body>
-	<input id="name" type="text" value="" placeholder="What is your name ?" autofocus />
-	<span id="output"></span>
-	<script>
-		addCallback()
-	</script>
-	<div class="container-fluid">
-		<div class="row">
-			<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-				<div class="btn-group">
-					<div class="btn-group">
-						<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-							File <span class="caret"></span>
-						</button>
-						<ul class="dropdown-menu" role="menu">
-							<li><a href='javascript:DiagramManager.NewDiagram()'> New Diagram </a></li>
-							<li><a href='javascript:DiagramManager.SetSize()'> Set Size </a></li>
-							<li><a href='javascript:logEntry("Open")'> Open Tree Root </a></li>
-							<li><a href='javascript:logEntry("Close")'> Close Tree Root </a></li>
-							<li><a href="#">JavaScript</a></li>
-						</ul>
-					</div>
-					<button type="button" class="btn btn-primary">Apple</button>
-					<button type="button" class="btn btn-primary">Samsung</button>
-					<button type="button" class="btn btn-primary">Sony</button>
+<body onresize="sizeAll()" onload="sizeAll()" id="body">
+	<div class="navbar" id="navbar">
+		<div class="dropdown">
+			<button class="dropbtn">
+				File <i class="fa fa-caret-down"></i>
+			</button>
+			<div class="dropdown-content">
+				<a onClick="DiagramManager.NewDiagram()">New Diagram</a>
+			</div>
+		</div>
+		<div class="dropdown">
+			<button class="dropbtn">
+				Edit <i class="fa fa-caret-down"></i>
+			</button>
+		</div>
+		<div class="dropdown">
+			<button class="dropbtn">
+				Help <i class="fa fa-caret-down"></i>
+			</button>
+		</div>
+	</div>
+	<div class="wrapper" id="wrapper">
+		<div class="uofd-browser" id="uofd-browser">
+			<a>Universe of Discourse</a>
+			<div class="modelTree" id="uOfD"></div>
+		</div>
+		<div class="center-pane" id="center-pane">
+			<div class="top-pane" id="top-pane">
+				<div class="toolbar" id="toolbar">
+					<button>Element</button>
 				</div>
+				<div class="top-content" id="top-content">
+					<div id="tabs" class="w3-bar w3-black tabs">
+						<button class="w3-bar-item w3-button" onClick="openDiagramContainer('home')">Home</button>
+					</div>
+					<div id="home" class="crlDiagramContainer">
+						<div class="diagram" id="diagram"></div>
+					</div>
+				</div>
+			</div>
+			<div class="bottom" id="bottom">
+					<table id="properties" class="table">
+						<thead>
+							<tr>
+								<th>Property</th>
+								<th>Value</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
 			</div>
 		</div>
 	</div>
-	<div class="container-fluid">
-		<div class="row">
-			<div class="col-xs-4 col-sm-3 col-md-3 col-lg-2" style="background-color: #f5ecb1;">
-				<h4>Universe of Discourse</h4>
-				<div id="uOfD"></div>
-			</div>
-			<div class="col-xs-4 col-sm-9 col-md-9 col-lg-10">
-				<ul id="tabs" class="nav nav-tabs">
-					<li class="active"><a data-toggle="tab" href="#home">Homex</a></li>
-					<li><a data-toggle="tab" href="#menu1">Menu 1</a></li>
-					<li><a data-toggle="tab" href="#menu2">Menu 2</a></li>
-					<li><a data-toggle="tab" href="#menu3">Menu 3</a></li>
-				</ul>
 
-				<div id="tabPanes" class="tab-content">
-					<div id="home" class="tab-pane fade in active">
-						<div id="diagram"></div>
-					</div>
-					<div id="menu1" class="tab-pane fade">
-						<h3>Menu 1</h3>
-						<p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-					</div>
-					<div id="menu2" class="tab-pane fade">
-						<h3>Menu 2</h3>
-						<p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem
-							aperiam.</p>
-					</div>
-					<div id="menu3" class="tab-pane fade">
-						<h3>Menu 3</h3>
-						<p>Eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
-					</div>
-				</div>
-				<div class="container">
-					<h2>Properties</h2>
-					<div>
-						<table id="properties" class="table">
-							<thead>
-								<tr>
-									<th>Property</th>
-									<th>Value</th>
-								</tr>
-							</thead>
-							<tbody>
-							</tbody>
-						</table>
-					</div>
 
-				</div>
-			</div>
-		</div>
 </body>
 </html>
