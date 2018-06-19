@@ -187,7 +187,7 @@ type BaseElement interface {
 	TraceableUnlock()
 }
 
-func GetName(be BaseElement, hl *HeldLocks) string {
+func GetLabel(be BaseElement, hl *HeldLocks) string {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -196,12 +196,12 @@ func GetName(be BaseElement, hl *HeldLocks) string {
 	switch be.(type) {
 	case Value:
 		val := be.(Value)
-		return val.getName(hl)
+		return val.getLabel(hl)
 	case UniverseOfDiscourse:
 		return "UniverseOfDiscourse"
 	case Element:
 		el := be.(Element)
-		nl := el.GetNameLiteral(hl)
+		nl := el.GetLabelLiteral(hl)
 		if nl != nil {
 			return nl.GetLiteralValue(hl)
 		}

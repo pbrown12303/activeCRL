@@ -99,7 +99,7 @@ func (ngPtr *notificationGraph) makeLabel(be BaseElement, hl *HeldLocks) string 
 	case ElementPointer:
 		augmentation = ":" + be.(ElementPointer).GetElementPointerRole(hl).RoleToString()
 	}
-	label := "<<TABLE><TR><TD>" + typeString + augmentation + "</TD></TR><TR><TD>" + GetName(be, hl) + "</TD></TR><TR><TD>" + graphId + "</TD></TR>" + ngPtr.callAnnotation[graphId] + "</TABLE>>"
+	label := "<<TABLE><TR><TD>" + typeString + augmentation + "</TD></TR><TR><TD>" + GetLabel(be, hl) + "</TD></TR><TR><TD>" + graphId + "</TD></TR>" + ngPtr.callAnnotation[graphId] + "</TABLE>>"
 	return label
 }
 

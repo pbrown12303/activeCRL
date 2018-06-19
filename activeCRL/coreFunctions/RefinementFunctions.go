@@ -49,7 +49,7 @@ func refinementCreateRefinement(element core.Element, changeNotifications []*cor
 	if createdRefinementRef == nil {
 		createdRefinementRef = uOfD.NewElementReference(hl)
 		core.SetOwningElement(createdRefinementRef, element, hl)
-		core.SetName(createdRefinementRef, "CreatedRefinementReference", hl)
+		core.SetLabel(createdRefinementRef, "CreatedRefinementReference", hl)
 		rootCreatedRefinementReference := uOfD.GetElementReferenceWithUri(RefinementCreateCreatedRefinementRefUri)
 		refinement := uOfD.NewRefinement(hl)
 		core.SetOwningElement(refinement, createdRefinementRef, hl)
@@ -320,114 +320,114 @@ func BuildCoreRefinementFunctions(coreFunctionsElement core.Element, uOfD core.U
 	// RefinementFunctions
 	refinementFunctions := uOfD.NewElement(hl, RefinementFunctionsUri)
 	core.SetOwningElement(refinementFunctions, coreFunctionsElement, hl)
-	core.SetName(refinementFunctions, "RefinementFunctions", hl)
+	core.SetLabel(refinementFunctions, "RefinementFunctions", hl)
 	core.SetUri(refinementFunctions, RefinementFunctionsUri, hl)
 
 	// CreateRefinement
 	refinementCreateRefinement := uOfD.NewElement(hl, RefinementCreateUri)
 	core.SetOwningElement(refinementCreateRefinement, refinementFunctions, hl)
-	core.SetName(refinementCreateRefinement, "CreateRefinement", hl)
+	core.SetLabel(refinementCreateRefinement, "CreateRefinement", hl)
 	core.SetUri(refinementCreateRefinement, RefinementCreateUri, hl)
 	// CreatedRefinement
 	createdRefinementRef := uOfD.NewElementReference(hl, RefinementCreateCreatedRefinementRefUri)
 	core.SetOwningElement(createdRefinementRef, refinementCreateRefinement, hl)
-	core.SetName(createdRefinementRef, "CreatedRefinementRef", hl)
+	core.SetLabel(createdRefinementRef, "CreatedRefinementRef", hl)
 	core.SetUri(createdRefinementRef, RefinementCreateCreatedRefinementRefUri, hl)
 
 	// GetAbstractElement
 	refinementGetAbstractElement := uOfD.NewElement(hl, RefinementGetAbstractElementUri)
-	core.SetName(refinementGetAbstractElement, "GetAbstractElement", hl)
+	core.SetLabel(refinementGetAbstractElement, "GetAbstractElement", hl)
 	core.SetOwningElement(refinementGetAbstractElement, refinementFunctions, hl)
 	core.SetUri(refinementGetAbstractElement, RefinementGetAbstractElementUri, hl)
 	// GetAbstractElement.SourceReference
 	getElementSourceReference0 := uOfD.NewElementReference(hl, RefinementGetAbstractElementSourceRefinementRefUri)
 	core.SetOwningElement(getElementSourceReference0, refinementGetAbstractElement, hl)
-	core.SetName(getElementSourceReference0, "SourceRefinementRef", hl)
+	core.SetLabel(getElementSourceReference0, "SourceRefinementRef", hl)
 	core.SetUri(getElementSourceReference0, RefinementGetAbstractElementSourceRefinementRefUri, hl)
 	// GetAbstractElementTargetElementReference
 	getElementTargetReference0 := uOfD.NewElementReference(hl, RefinementGetAbstractElementIndicatedElementRefUri)
 	core.SetOwningElement(getElementTargetReference0, refinementGetAbstractElement, hl)
-	core.SetName(getElementTargetReference0, "IndicatedElementRef", hl)
+	core.SetLabel(getElementTargetReference0, "IndicatedElementRef", hl)
 	core.SetUri(getElementTargetReference0, RefinementGetAbstractElementIndicatedElementRefUri, hl)
 
 	// GetAbstractElementPointer
 	refinementGetAbstractElementPointer := uOfD.NewElement(hl, RefinementGetAbstractElementPointerUri)
-	core.SetName(refinementGetAbstractElementPointer, "GetAbstractElementPointer", hl)
+	core.SetLabel(refinementGetAbstractElementPointer, "GetAbstractElementPointer", hl)
 	core.SetOwningElement(refinementGetAbstractElementPointer, refinementFunctions, hl)
 	core.SetUri(refinementGetAbstractElementPointer, RefinementGetAbstractElementPointerUri, hl)
 	// GetAbstractElementPointer.SourceReference
 	getElementPointerSourceReference0 := uOfD.NewElementReference(hl, RefinementGetAbstractElementPointerSourceRefinementRefUri)
 	core.SetOwningElement(getElementPointerSourceReference0, refinementGetAbstractElementPointer, hl)
-	core.SetName(getElementPointerSourceReference0, "SourceRefinementRef", hl)
+	core.SetLabel(getElementPointerSourceReference0, "SourceRefinementRef", hl)
 	core.SetUri(getElementPointerSourceReference0, RefinementGetAbstractElementPointerSourceRefinementRefUri, hl)
 	// GetAbstractElementPointerIndicatedElementPointerRef
 	getElementPointerIndicatedElementPointerRef0 := uOfD.NewElementPointerReference(hl, RefinementGetAbstractElementPointerIndicatedElementPointerRefUri)
 	core.SetOwningElement(getElementPointerIndicatedElementPointerRef0, refinementGetAbstractElementPointer, hl)
-	core.SetName(getElementPointerIndicatedElementPointerRef0, "IndicatedElementPointerRef", hl)
+	core.SetLabel(getElementPointerIndicatedElementPointerRef0, "IndicatedElementPointerRef", hl)
 	core.SetUri(getElementPointerIndicatedElementPointerRef0, RefinementGetAbstractElementPointerIndicatedElementPointerRefUri, hl)
 
 	// GetRefinedElement
 	refinementGetRefinedElement := uOfD.NewElement(hl, RefinementGetRefinedElementUri)
-	core.SetName(refinementGetRefinedElement, "GetRefinedElement", hl)
+	core.SetLabel(refinementGetRefinedElement, "GetRefinedElement", hl)
 	core.SetOwningElement(refinementGetRefinedElement, refinementFunctions, hl)
 	core.SetUri(refinementGetRefinedElement, RefinementGetRefinedElementUri, hl)
 	// GetRefinedElement.SourceReference
 	getElementSourceReference1 := uOfD.NewElementReference(hl, RefinementGetRefinedElementSourceRefinementRefUri)
 	core.SetOwningElement(getElementSourceReference1, refinementGetRefinedElement, hl)
-	core.SetName(getElementSourceReference1, "SourceRefinementRef", hl)
+	core.SetLabel(getElementSourceReference1, "SourceRefinementRef", hl)
 	core.SetUri(getElementSourceReference1, RefinementGetRefinedElementSourceRefinementRefUri, hl)
 	// GetRefinedElementTargetElementReference
 	getElementTargetReference1 := uOfD.NewElementReference(hl, RefinementGetRefinedElementIndicatedElementRefUri)
 	core.SetOwningElement(getElementTargetReference1, refinementGetRefinedElement, hl)
-	core.SetName(getElementTargetReference1, "IndicatedElementRef", hl)
+	core.SetLabel(getElementTargetReference1, "IndicatedElementRef", hl)
 	core.SetUri(getElementTargetReference1, RefinementGetRefinedElementIndicatedElementRefUri, hl)
 
 	// GetRefinedElementPointer
 	refinementGetRefinedElementPointer := uOfD.NewElement(hl, RefinementGetRefinedElementPointerUri)
-	core.SetName(refinementGetRefinedElementPointer, "GetRefinedElementPointer", hl)
+	core.SetLabel(refinementGetRefinedElementPointer, "GetRefinedElementPointer", hl)
 	core.SetOwningElement(refinementGetRefinedElementPointer, refinementFunctions, hl)
 	core.SetUri(refinementGetRefinedElementPointer, RefinementGetRefinedElementPointerUri, hl)
 	// GetRefinedElementPointer.SourceReference
 	getElementPointerSourceReference1 := uOfD.NewElementReference(hl, RefinementGetRefinedElementPointerSourceRefinementRefUri)
 	core.SetOwningElement(getElementPointerSourceReference1, refinementGetRefinedElementPointer, hl)
-	core.SetName(getElementPointerSourceReference1, "SourceRefinementRef", hl)
+	core.SetLabel(getElementPointerSourceReference1, "SourceRefinementRef", hl)
 	core.SetUri(getElementPointerSourceReference1, RefinementGetRefinedElementPointerSourceRefinementRefUri, hl)
 	// GetRefinedElementPointerIndicatedElementPointerRef
 	getElementPointerIndicatedElementPointerRef1 := uOfD.NewElementPointerReference(hl, RefinementGetRefinedElementPointerIndicatedElementPointerRefUri)
 	core.SetOwningElement(getElementPointerIndicatedElementPointerRef1, refinementGetRefinedElementPointer, hl)
-	core.SetName(getElementPointerIndicatedElementPointerRef1, "IndicatedElementPointerRef", hl)
+	core.SetLabel(getElementPointerIndicatedElementPointerRef1, "IndicatedElementPointerRef", hl)
 	core.SetUri(getElementPointerIndicatedElementPointerRef1, RefinementGetRefinedElementPointerIndicatedElementPointerRefUri, hl)
 
 	// SetAbstractElement
 	refinementSetAbstractElement := uOfD.NewElement(hl, RefinementSetAbstractElementUri)
-	core.SetName(refinementSetAbstractElement, "SetAbstractElement", hl)
+	core.SetLabel(refinementSetAbstractElement, "SetAbstractElement", hl)
 	core.SetOwningElement(refinementSetAbstractElement, refinementFunctions, hl)
 	core.SetUri(refinementSetAbstractElement, RefinementSetAbstractElementUri, hl)
 	// SetAbstractElement.ElementReference
 	setReferencedElementElementReference0 := uOfD.NewElementReference(hl, RefinementSetAbstractElementSourceElementRefUri)
 	core.SetOwningElement(setReferencedElementElementReference0, refinementSetAbstractElement, hl)
-	core.SetName(setReferencedElementElementReference0, "SourceElementRef", hl)
+	core.SetLabel(setReferencedElementElementReference0, "SourceElementRef", hl)
 	core.SetUri(setReferencedElementElementReference0, RefinementSetAbstractElementSourceElementRefUri, hl)
 	// SetAbstractElementTargetRefinement
 	setReferencedElementTargetRefinement0 := uOfD.NewElementReference(hl, RefinementSetAbstractElementModifiedRefinementRefUri)
 	core.SetOwningElement(setReferencedElementTargetRefinement0, refinementSetAbstractElement, hl)
-	core.SetName(setReferencedElementTargetRefinement0, "ModifiedRefinementRef", hl)
+	core.SetLabel(setReferencedElementTargetRefinement0, "ModifiedRefinementRef", hl)
 	core.SetUri(setReferencedElementTargetRefinement0, RefinementSetAbstractElementModifiedRefinementRefUri, hl)
 
 	// SetRefinedElement
 	refinementSetRefinedElement := uOfD.NewElement(hl, RefinementSetRefinedElementUri)
-	core.SetName(refinementSetRefinedElement, "SetRefinedElement", hl)
+	core.SetLabel(refinementSetRefinedElement, "SetRefinedElement", hl)
 	core.SetOwningElement(refinementSetRefinedElement, refinementFunctions, hl)
 	core.SetUri(refinementSetRefinedElement, RefinementSetRefinedElementUri, hl)
 	// SetRefinedElement.ElementReference
 	setReferencedElementElementReference1 := uOfD.NewElementReference(hl, RefinementSetRefinedElementSourceElementRefUri)
 	core.SetOwningElement(setReferencedElementElementReference1, refinementSetRefinedElement, hl)
-	core.SetName(setReferencedElementElementReference1, "SourceElementRef", hl)
+	core.SetLabel(setReferencedElementElementReference1, "SourceElementRef", hl)
 	core.SetUri(setReferencedElementElementReference1, RefinementSetRefinedElementSourceElementRefUri, hl)
 	// SetRefinedElementTargetRefinement
 	setReferencedElementTargetRefinement1 := uOfD.NewElementReference(hl, RefinementSetRefinedElementModifiedRefinementRefUri)
 	core.SetOwningElement(setReferencedElementTargetRefinement1, refinementSetRefinedElement, hl)
-	core.SetName(setReferencedElementTargetRefinement1, "ModifiedRefinementRef", hl)
+	core.SetLabel(setReferencedElementTargetRefinement1, "ModifiedRefinementRef", hl)
 	core.SetUri(setReferencedElementTargetRefinement1, RefinementSetRefinedElementModifiedRefinementRefUri, hl)
 }
 

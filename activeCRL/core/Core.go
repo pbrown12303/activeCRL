@@ -32,7 +32,7 @@ var LiteralPointerUri string = "http://activeCrl.com/core/LiteralPointer"
 var LiteralPointerPointerUri string = "http://activeCrl.com/core/LiteralPointerPointer"
 var LiteralPointerReferenceUri string = "http://activeCrl.com/core/LiteralPointerReference"
 var LiteralPointerRoleUri string = "http://activeCrl.com/core/LiteralPointerRole"
-var NameUri string = "http://activeCrl.com/core/LiteralPointerRole/Name"
+var LabelUri string = "http://activeCrl.com/core/LiteralPointerRole/Label"
 var DefinitionUri string = "http://activeCrl.com/core/LiteralPointerRole/Definition"
 var UriUri string = "http://activeCrl.com/core/LiteralPointerRole/Uri"
 var ValueUri string = "http://activeCrl.com/core/LiteralPointerRole/Value"
@@ -120,7 +120,7 @@ func (c *coreConceptSpace) FindFunctions(element Element, notification *ChangeNo
 func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
 	// Core
 	coreElement := uOfD.NewElement(hl, CoreConceptSpaceUri)
-	SetName(coreElement, "CoreConceptSpace", hl)
+	SetLabel(coreElement, "CoreConceptSpace", hl)
 	SetUri(coreElement, CoreConceptSpaceUri, hl)
 
 	// BaseElementPointer
@@ -131,13 +131,13 @@ func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
 	// BaseElementReference
 	baseElementReference := uOfD.NewBaseElementReference(hl, BaseElementReferenceUri)
 	SetOwningElement(baseElementReference, coreElement, hl)
-	SetName(baseElementReference, "BaseElementReference", hl)
+	SetLabel(baseElementReference, "BaseElementReference", hl)
 	SetUri(baseElementReference, BaseElementReferenceUri, hl)
 
 	// Element
 	element := uOfD.NewElement(hl, ElememtUri)
 	SetOwningElement(element, coreElement, hl)
-	SetName(element, "Element", hl)
+	SetLabel(element, "Element", hl)
 	SetUri(element, ElememtUri, hl)
 
 	// ElementPointer
@@ -153,18 +153,18 @@ func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
 	// ElementPointerReference
 	elementPointerReference := uOfD.NewElementPointerReference(hl, ElementPointerReferenceUri)
 	SetOwningElement(elementPointerReference, coreElement, hl)
-	SetName(elementPointerReference, "ElementReference", hl)
+	SetLabel(elementPointerReference, "ElementReference", hl)
 	SetUri(elementPointerReference, ElementPointerReferenceUri, hl)
 
 	// ElementPointerRole and values
 	elementPointerRole := uOfD.NewElement(hl, ElementPointerRoleUri)
 	SetOwningElement(elementPointerRole, coreElement, hl)
-	SetName(elementPointerRole, "ElementPointerRole", hl)
+	SetLabel(elementPointerRole, "ElementPointerRole", hl)
 	SetUri(elementPointerRole, ElementPointerRoleUri, hl)
 
 	abstractElement := uOfD.NewElement(hl, AbstractElementUri)
 	SetOwningElement(abstractElement, coreElement, hl)
-	SetName(abstractElement, "AbstractElementRole", hl)
+	SetLabel(abstractElement, "AbstractElementRole", hl)
 	SetUri(abstractElement, AbstractElementUri, hl)
 	refinement0 := uOfD.NewRefinement(hl)
 	SetOwningElement(refinement0, abstractElement, hl)
@@ -173,7 +173,7 @@ func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
 
 	refinedElement := uOfD.NewElement(hl, RefinedElementUri)
 	SetOwningElement(refinedElement, coreElement, hl)
-	SetName(refinedElement, "RefinedElementRole", hl)
+	SetLabel(refinedElement, "RefinedElementRole", hl)
 	SetUri(refinedElement, RefinedElementUri, hl)
 	refinement1 := uOfD.NewRefinement(hl)
 	SetOwningElement(refinement1, refinedElement, hl)
@@ -182,7 +182,7 @@ func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
 
 	owningElement := uOfD.NewElement(hl, OwningElementUri)
 	SetOwningElement(owningElement, coreElement, hl)
-	SetName(owningElement, "OwningElementRole", hl)
+	SetLabel(owningElement, "OwningElementRole", hl)
 	SetUri(owningElement, OwningElementUri, hl)
 	refinement2 := uOfD.NewRefinement(hl)
 	SetOwningElement(refinement2, owningElement, hl)
@@ -191,7 +191,7 @@ func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
 
 	referencedElement := uOfD.NewElement(hl, ReferencedElementUri)
 	SetOwningElement(referencedElement, coreElement, hl)
-	SetName(referencedElement, "ReferencedElementRole", hl)
+	SetLabel(referencedElement, "ReferencedElementRole", hl)
 	SetUri(referencedElement, ReferencedElementUri, hl)
 	refinement3 := uOfD.NewRefinement(hl)
 	SetOwningElement(refinement3, referencedElement, hl)
@@ -201,7 +201,7 @@ func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
 	// ElementReference
 	elementReference := uOfD.NewElementReference(hl, ElementReferenceUri)
 	SetOwningElement(elementReference, coreElement, hl)
-	SetName(elementReference, "ElementReference", hl)
+	SetLabel(elementReference, "ElementReference", hl)
 	SetUri(elementReference, ElementReferenceUri, hl)
 
 	// Literal
@@ -222,19 +222,19 @@ func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
 	// LiteralPointerReference
 	literalPointerReference := uOfD.NewLiteralPointerReference(hl, LiteralPointerReferenceUri)
 	SetOwningElement(literalPointerReference, coreElement, hl)
-	SetName(literalPointerReference, "LiteralReference", hl)
+	SetLabel(literalPointerReference, "LiteralReference", hl)
 	SetUri(literalPointerReference, LiteralPointerReferenceUri, hl)
 
 	// LiteralPointerRole and values
 	literalPointerRole := uOfD.NewElement(hl, LiteralPointerRoleUri)
 	SetOwningElement(literalPointerRole, coreElement, hl)
-	SetName(literalPointerRole, "LiteralPointerRole", hl)
+	SetLabel(literalPointerRole, "LiteralPointerRole", hl)
 	SetUri(literalPointerRole, LiteralPointerRoleUri, hl)
 
-	name := uOfD.NewElement(hl, NameUri)
+	name := uOfD.NewElement(hl, LabelUri)
 	SetOwningElement(name, literalPointerRole, hl)
-	SetName(name, "Name", hl)
-	SetUri(name, NameUri, hl)
+	SetLabel(name, "Label", hl)
+	SetUri(name, LabelUri, hl)
 	refinement4 := uOfD.NewRefinement(hl)
 	SetOwningElement(refinement4, name, hl)
 	refinement4.SetAbstractElement(literalPointerRole, hl)
@@ -242,7 +242,7 @@ func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
 
 	definition := uOfD.NewElement(hl, DefinitionUri)
 	SetOwningElement(definition, literalPointerRole, hl)
-	SetName(definition, "Definition", hl)
+	SetLabel(definition, "Definition", hl)
 	SetUri(definition, DefinitionUri, hl)
 	refinement5 := uOfD.NewRefinement(hl)
 	SetOwningElement(refinement5, definition, hl)
@@ -251,7 +251,7 @@ func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
 
 	uri := uOfD.NewElement(hl, UriUri)
 	SetOwningElement(uri, literalPointerRole, hl)
-	SetName(uri, "Uri", hl)
+	SetLabel(uri, "Uri", hl)
 	SetUri(uri, UriUri, hl)
 	refinement6 := uOfD.NewRefinement(hl)
 	SetOwningElement(refinement6, uri, hl)
@@ -260,7 +260,7 @@ func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
 
 	value := uOfD.NewElement(hl, ValueUri)
 	SetOwningElement(value, literalPointerRole, hl)
-	SetName(value, "Value", hl)
+	SetLabel(value, "Value", hl)
 	SetUri(value, ValueUri, hl)
 	refinement7 := uOfD.NewRefinement(hl)
 	SetOwningElement(refinement7, value, hl)
@@ -270,13 +270,13 @@ func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
 	// LiteralReference
 	literalReference := uOfD.NewLiteralReference(hl, LiteralReferenceUri)
 	SetOwningElement(literalReference, coreElement, hl)
-	SetName(literalReference, "LiteralReference", hl)
+	SetLabel(literalReference, "LiteralReference", hl)
 	SetUri(literalReference, LiteralReferenceUri, hl)
 
 	// Refinement
 	refinement := uOfD.NewRefinement(hl, RefinementUri)
 	SetOwningElement(refinement, coreElement, hl)
-	SetName(refinement, "Refinement", hl)
+	SetLabel(refinement, "Refinement", hl)
 	SetUri(refinement, RefinementUri, hl)
 
 	return coreElement

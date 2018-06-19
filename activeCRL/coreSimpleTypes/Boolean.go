@@ -14,13 +14,13 @@ var BooleanFalseUri string = BooleanUri + "/" + "False"
 func BuildBooleanSimpleTypes(coreSimpleTypesConceptSpace core.Element, uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) {
 
 	crlBoolean := uOfD.NewElement(hl, BooleanUri)
-	core.SetName(crlBoolean, "Boolean", hl)
+	core.SetLabel(crlBoolean, "Boolean", hl)
 	core.SetUri(crlBoolean, BooleanUri, hl)
 	core.SetOwningElement(crlBoolean, coreSimpleTypesConceptSpace, hl)
 
 	crlTrueValue := "true"
 	crlBooleanTrue := uOfD.NewLiteralReference(hl, BooleanTrueUri)
-	core.SetName(crlBooleanTrue, crlTrueValue, hl)
+	core.SetLabel(crlBooleanTrue, crlTrueValue, hl)
 	core.SetUri(crlBooleanTrue, BooleanTrueUri, hl)
 	core.SetOwningElement(crlBooleanTrue, coreSimpleTypesConceptSpace, hl)
 
@@ -31,7 +31,7 @@ func BuildBooleanSimpleTypes(coreSimpleTypesConceptSpace core.Element, uOfD core
 
 	crlFalseValue := "false"
 	crlBooleanFalse := uOfD.NewLiteralReference(hl, BooleanFalseUri)
-	core.SetName(crlBooleanFalse, crlFalseValue, hl)
+	core.SetLabel(crlBooleanFalse, crlFalseValue, hl)
 	core.SetUri(crlBooleanFalse, BooleanFalseUri, hl)
 	core.SetOwningElement(crlBooleanFalse, coreSimpleTypesConceptSpace, hl)
 

@@ -42,7 +42,7 @@ func createLiteralPointerPointer(element core.Element, changeNotifications []*co
 	if createdLiteralPointerPointerRef == nil {
 		createdLiteralPointerPointerRef = uOfD.NewBaseElementReference(hl)
 		core.SetOwningElement(createdLiteralPointerPointerRef, element, hl)
-		core.SetName(createdLiteralPointerPointerRef, "CreatedLiteralPointerPointerRef", hl)
+		core.SetLabel(createdLiteralPointerPointerRef, "CreatedLiteralPointerPointerRef", hl)
 		rootCreatedElementReference := uOfD.GetBaseElementReferenceWithUri(LiteralPointerPointerCreateLiteralPointerPointerCreatedLiteralPointerPointerRefUri)
 		refinement := uOfD.NewRefinement(hl)
 		core.SetOwningElement(refinement, createdLiteralPointerPointerRef, hl)
@@ -224,81 +224,81 @@ func BuildCoreLiteralPointerPointerFunctions(coreFunctionsElement core.Element, 
 	// LiteralPointerPointerFunctions
 	literalPointerPointerFunctions := uOfD.NewElement(hl, LiteralPointerPointerFunctionsUri)
 	core.SetOwningElement(literalPointerPointerFunctions, coreFunctionsElement, hl)
-	core.SetName(literalPointerPointerFunctions, "LiteralPointerPointerFunctions", hl)
+	core.SetLabel(literalPointerPointerFunctions, "LiteralPointerPointerFunctions", hl)
 	core.SetUri(literalPointerPointerFunctions, LiteralPointerPointerFunctionsUri, hl)
 
 	// CreateAbstractLiteralPointerPointer
 	createLiteralPointerPointer := uOfD.NewElement(hl, LiteralPointerPointerCreateLiteralPointerPointerUri)
 	core.SetOwningElement(createLiteralPointerPointer, literalPointerPointerFunctions, hl)
-	core.SetName(createLiteralPointerPointer, "CreateLiteralPointerPointer", hl)
+	core.SetLabel(createLiteralPointerPointer, "CreateLiteralPointerPointer", hl)
 	core.SetUri(createLiteralPointerPointer, LiteralPointerPointerCreateLiteralPointerPointerUri, hl)
 	// CreatedLiteralPointerPointerReference
 	createdLiteralPointerPointerRef := uOfD.NewBaseElementReference(hl, LiteralPointerPointerCreateLiteralPointerPointerCreatedLiteralPointerPointerRefUri)
 	core.SetOwningElement(createdLiteralPointerPointerRef, createLiteralPointerPointer, hl)
-	core.SetName(createdLiteralPointerPointerRef, "CreatedLiteralPointerdPointerRef", hl)
+	core.SetLabel(createdLiteralPointerPointerRef, "CreatedLiteralPointerdPointerRef", hl)
 	core.SetUri(createdLiteralPointerPointerRef, LiteralPointerPointerCreateLiteralPointerPointerCreatedLiteralPointerPointerRefUri, hl)
 
 	// GetLiteralPointer
 	getLiteralPointer := uOfD.NewElement(hl, LiteralPointerPointerGetLiteralPointerUri)
-	core.SetName(getLiteralPointer, "GetLiteralPointer", hl)
+	core.SetLabel(getLiteralPointer, "GetLiteralPointer", hl)
 	core.SetOwningElement(getLiteralPointer, literalPointerPointerFunctions, hl)
 	core.SetUri(getLiteralPointer, LiteralPointerPointerGetLiteralPointerUri, hl)
 	// GetLiteralPointer.SourceReference
 	getLiteralPointerSourceLiteralPointerPointerRef := uOfD.NewBaseElementReference(hl, LiteralPointerPointerGetLiteralPointerSourceLiteralPointerPointerRefUri)
 	core.SetOwningElement(getLiteralPointerSourceLiteralPointerPointerRef, getLiteralPointer, hl)
-	core.SetName(getLiteralPointerSourceLiteralPointerPointerRef, "SourceLiteralPointerPointerRef", hl)
+	core.SetLabel(getLiteralPointerSourceLiteralPointerPointerRef, "SourceLiteralPointerPointerRef", hl)
 	core.SetUri(getLiteralPointerSourceLiteralPointerPointerRef, LiteralPointerPointerGetLiteralPointerSourceLiteralPointerPointerRefUri, hl)
 	// GetLiteralPointerIndicatedLiteralPointerRef
 	getLiteralPointerIndicatedLiteralPointerRef := uOfD.NewLiteralPointerReference(hl, LiteralPointerPointerGetLiteralPointerIndicatedLiteralPointerRefUri)
 	core.SetOwningElement(getLiteralPointerIndicatedLiteralPointerRef, getLiteralPointer, hl)
-	core.SetName(getLiteralPointerIndicatedLiteralPointerRef, "IndicatedLiteralPointerRef", hl)
+	core.SetLabel(getLiteralPointerIndicatedLiteralPointerRef, "IndicatedLiteralPointerRef", hl)
 	core.SetUri(getLiteralPointerIndicatedLiteralPointerRef, LiteralPointerPointerGetLiteralPointerIndicatedLiteralPointerRefUri, hl)
 
 	// GetLiteralPointerId
 	getLiteralPointerId := uOfD.NewElement(hl, LiteralPointerPointerGetLiteralPointerIdUri)
-	core.SetName(getLiteralPointerId, "GetLiteralPointerId", hl)
+	core.SetLabel(getLiteralPointerId, "GetLiteralPointerId", hl)
 	core.SetOwningElement(getLiteralPointerId, literalPointerPointerFunctions, hl)
 	core.SetUri(getLiteralPointerId, LiteralPointerPointerGetLiteralPointerIdUri, hl)
 	// GetLiteralPointerId.SourceLiteralPointerPointerRef
 	getLiteralPointerIdSourceLiteralPointerPointerRef := uOfD.NewBaseElementReference(hl, LiteralPointerPointerGetLiteralPointerIdSourceLiteralPointerPointerRefUri)
 	core.SetOwningElement(getLiteralPointerIdSourceLiteralPointerPointerRef, getLiteralPointerId, hl)
-	core.SetName(getLiteralPointerIdSourceLiteralPointerPointerRef, "SourceLiteralPointerPointerRef", hl)
+	core.SetLabel(getLiteralPointerIdSourceLiteralPointerPointerRef, "SourceLiteralPointerPointerRef", hl)
 	core.SetUri(getLiteralPointerIdSourceLiteralPointerPointerRef, LiteralPointerPointerGetLiteralPointerIdSourceLiteralPointerPointerRefUri, hl)
 	// GetLiteralPointerIdCreatedLiteralRef
 	getLiteralPointerIdCreatedLiteralRef := uOfD.NewLiteralReference(hl, LiteralPointerPointerGetLiteralPointerIdCreatedLiteralUri)
 	core.SetOwningElement(getLiteralPointerIdCreatedLiteralRef, getLiteralPointerId, hl)
-	core.SetName(getLiteralPointerIdCreatedLiteralRef, "CreatedLiteralRef", hl)
+	core.SetLabel(getLiteralPointerIdCreatedLiteralRef, "CreatedLiteralRef", hl)
 	core.SetUri(getLiteralPointerIdCreatedLiteralRef, LiteralPointerPointerGetLiteralPointerIdCreatedLiteralUri, hl)
 
 	// GetLiteralPointerVersion
 	getLiteralPointerVersion := uOfD.NewElement(hl, LiteralPointerPointerGetLiteralPointerVersionUri)
-	core.SetName(getLiteralPointerVersion, "GetLiteralPointerVersion", hl)
+	core.SetLabel(getLiteralPointerVersion, "GetLiteralPointerVersion", hl)
 	core.SetOwningElement(getLiteralPointerVersion, literalPointerPointerFunctions, hl)
 	core.SetUri(getLiteralPointerVersion, LiteralPointerPointerGetLiteralPointerVersionUri, hl)
 	// GetLiteralPointerVersion.SourceReference
 	getLiteralPointerVersionSourceReference := uOfD.NewBaseElementReference(hl, LiteralPointerPointerGetLiteralPointerVersionSourceLiteralPointerPointerRefUri)
 	core.SetOwningElement(getLiteralPointerVersionSourceReference, getLiteralPointerVersion, hl)
-	core.SetName(getLiteralPointerVersionSourceReference, "SourceLiteralPointerRef", hl)
+	core.SetLabel(getLiteralPointerVersionSourceReference, "SourceLiteralPointerRef", hl)
 	core.SetUri(getLiteralPointerVersionSourceReference, LiteralPointerPointerGetLiteralPointerVersionSourceLiteralPointerPointerRefUri, hl)
 	// GetLiteralPointerVersionTargetLiteralReference
 	getLiteralPointerVersionCreatedLiteralRef := uOfD.NewLiteralReference(hl, LiteralPointerPointerGetLiteralPointerVersionCreatedLiteralRefUri)
 	core.SetOwningElement(getLiteralPointerVersionCreatedLiteralRef, getLiteralPointerVersion, hl)
-	core.SetName(getLiteralPointerVersionCreatedLiteralRef, "CreatedLiteralRef", hl)
+	core.SetLabel(getLiteralPointerVersionCreatedLiteralRef, "CreatedLiteralRef", hl)
 	core.SetUri(getLiteralPointerVersionCreatedLiteralRef, LiteralPointerPointerGetLiteralPointerVersionCreatedLiteralRefUri, hl)
 
 	// SetLiteralPointer
 	setLiteralPointer := uOfD.NewElement(hl, LiteralPointerPointerSetLiteralPointerUri)
-	core.SetName(setLiteralPointer, "SetLiteralPointer", hl)
+	core.SetLabel(setLiteralPointer, "SetLiteralPointer", hl)
 	core.SetOwningElement(setLiteralPointer, literalPointerPointerFunctions, hl)
 	core.SetUri(setLiteralPointer, LiteralPointerPointerSetLiteralPointerUri, hl)
 	// SetLiteralPointer.LiteralPointerRef
 	setLiteralPointerLiteralPointerRef := uOfD.NewLiteralPointerReference(hl, LiteralPointerPointerSetLiteralPointerLiteralPointerRefUri)
-	core.SetName(setLiteralPointerLiteralPointerRef, "LiteralPointerRef", hl)
+	core.SetLabel(setLiteralPointerLiteralPointerRef, "LiteralPointerRef", hl)
 	core.SetOwningElement(setLiteralPointerLiteralPointerRef, setLiteralPointer, hl)
 	core.SetUri(setLiteralPointerLiteralPointerRef, LiteralPointerPointerSetLiteralPointerLiteralPointerRefUri, hl)
 	// SetLiteralPointer.ModifiedLiteralPointerPointerRef
 	setLiteralPointerTargetLiteralPointerPointerReference := uOfD.NewBaseElementReference(hl, LiteralPointerPointerSetLiteralPointerModifiedLiteralPointerPointerRefUri)
-	core.SetName(setLiteralPointerTargetLiteralPointerPointerReference, "ModifiedLiteralPointerPointerRef", hl)
+	core.SetLabel(setLiteralPointerTargetLiteralPointerPointerReference, "ModifiedLiteralPointerPointerRef", hl)
 	core.SetOwningElement(setLiteralPointerTargetLiteralPointerPointerReference, setLiteralPointer, hl)
 	core.SetUri(setLiteralPointerTargetLiteralPointerPointerReference, LiteralPointerPointerSetLiteralPointerModifiedLiteralPointerPointerRefUri, hl)
 }

@@ -29,7 +29,6 @@
 		// Body
 		var bodyHeight = jQuery("body").height();
 		var bodyWidth = jQuery("body").width();
-//		console.log("Body width" + bodyWidth.toString());
 		// Wrapper
 		var wrapperMargin = jQuery("#wrapper").outerWidth(true) - jQuery("#wrapper").width();
 		var wrapperWidth = bodyWidth - wrapperMargin;
@@ -74,15 +73,10 @@
 		jQuery("#top-content").width(centerPaneWidth - toolbarOuterWidth - topContentMargin);
 		topContentHeight = jQuery("#top-pane").height() - topContentMargin;
 		jQuery("#top-caontent").height(topContentHeight);
-		console.log("topContentMargin: " + topContentMargin.toString());
-		console.log("topPaneHeight: " + jQuery("#top-pane").height());
 
 		// crlDiagramContainer
 		crlDiagramContainerHeight = topContentHeight - jQuery("#tabs").height();
 		jQuery(".crlDiagramContainer").height(crlDiagramContainerHeight);
-		console.log("topContentHeight: " + topContentHeight.toString());
-		console.log("tabsHeight: " + jQuery("#tabs").height().toString());
-		console.log("CrlDiagramContainerHeight: " + crlDiagramContainerHeight.toString());
 	};
 </script>
 <script type="text/javascript">
@@ -105,8 +99,10 @@
 		for (i = 0; i < x.length; i++) {
 			if (x[i].id == diagramContainerId) {
 				x[i].style.display = "block";
+				console.log("Showing: " + diagramContainerId.toString())
 			} else {
 				x[i].style.display = "none";
+				console.log("Hiding: " + diagramContainerId.toString())
 			}
 		}
 	}
@@ -227,7 +223,7 @@
 				</div>
 			</div>
 			<div class="bottom" id="bottom">
-					<table id="properties" class="table">
+					<table id="properties" class="table" border="1">
 						<thead>
 							<tr>
 								<th>Property</th>

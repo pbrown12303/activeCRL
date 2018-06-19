@@ -203,13 +203,13 @@ func TestBuildCoreConceptSpace(t *testing.T) {
 		t.Error("LiteralPointerRole is of wrong type")
 	}
 
-	recoveredBaseElement = uOfD.GetBaseElementWithUri(NameUri)
+	recoveredBaseElement = uOfD.GetBaseElementWithUri(LabelUri)
 	if recoveredBaseElement == nil {
-		t.Error("Name not found")
+		t.Error("Label not found")
 	}
 	_, ok = recoveredBaseElement.(Element)
 	if !ok {
-		t.Error("Name is of wrong type")
+		t.Error("Label is of wrong type")
 	}
 
 	recoveredBaseElement = uOfD.GetBaseElementWithUri(DefinitionUri)

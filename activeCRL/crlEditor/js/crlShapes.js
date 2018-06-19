@@ -7,9 +7,9 @@ joint.shapes.basic.Generic.define('crl.BaseElement', {
         rect: { 'width': 200 },
 
         '.uml-class-name-rect': { 'stroke': 'black', 'stroke-width': 2, 'fill': '#ffffff' },
-        '.uml-class-attrs-rect': { 'stroke': 'black', 'stroke-width': 2, 'fill': '#ffffff' },
+/*        '.uml-class-attrs-rect': { 'stroke': 'black', 'stroke-width': 2, 'fill': '#ffffff' },
         '.uml-class-methods-rect': { 'stroke': 'black', 'stroke-width': 2, 'fill': '#ffffff' },
-
+*/
         '.uml-class-name-text': {
             'ref': '.uml-class-name-rect',
             'ref-y': .5,
@@ -19,15 +19,15 @@ joint.shapes.basic.Generic.define('crl.BaseElement', {
             'font-weight': 'bold',
             'fill': 'black',
             'font-size': 12,
-            'font-family': 'Times New Roman'
+            'font-family': 'Go,  Helvetica, Ariel, sans-serif'
         },
         '.uml-class-attrs-text': {
             'ref': '.uml-class-attrs-rect', 'ref-y': 5, 'ref-x': 5,
-            'fill': 'black', 'font-size': 12, 'font-family': 'Times New Roman'
+            'fill': 'black', 'font-size': 12, 'font-family': 'Go,  Helvetica, Ariel, sans-serif' 
         },
         '.uml-class-methods-text': {
             'ref': '.uml-class-methods-rect', 'ref-y': 5, 'ref-x': 5,
-            'fill': 'black', 'font-size': 12, 'font-family': 'Times New Roman'
+            'fill': 'black', 'font-size': 12, 'font-family': 'Go,  Helvetica, Ariel, sans-serif'
         }
     },
 
@@ -65,9 +65,9 @@ joint.shapes.basic.Generic.define('crl.BaseElement', {
         var attrs = this.get('attrs');
 
         var rects = [
-            { type: 'name', text: this.getClassName() },
+            { type: 'name', text: this.getClassName() } /*,
             { type: 'attrs', text: this.get('attributes') },
-            { type: 'methods', text: this.get('methods') }
+            { type: 'methods', text: this.get('methods') } */
         ];
 
         var offsetY = 0;

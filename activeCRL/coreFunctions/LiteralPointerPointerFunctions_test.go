@@ -186,7 +186,7 @@ func TestGetLiteralPointer(t *testing.T) {
 	}
 
 	// Now test target reference update functionality
-	sourceLiteralPointer := uOfD.NewNameLiteralPointer(hl)
+	sourceLiteralPointer := uOfD.NewLabelLiteralPointer(hl)
 	sourceLiteralPointerPointer := uOfD.NewLiteralPointerPointer(hl)
 	sourceLiteralPointerPointer.SetLiteralPointer(sourceLiteralPointer, hl)
 	sourceLiteralPointerPointerRef.SetReferencedBaseElement(sourceLiteralPointerPointer, hl)
@@ -238,7 +238,7 @@ func TestGetLiteralPointerId(t *testing.T) {
 	}
 
 	// Now test target reference update functionality
-	sourceLiteralPointer := uOfD.NewNameLiteralPointer(hl)
+	sourceLiteralPointer := uOfD.NewLabelLiteralPointer(hl)
 	sourceLiteralPointerPointer := uOfD.NewLiteralPointerPointer(hl)
 	sourceLiteralPointerPointer.SetLiteralPointer(sourceLiteralPointer, hl)
 	sourceLiteralPointerPointerRef.SetReferencedBaseElement(sourceLiteralPointerPointer, hl)
@@ -293,7 +293,7 @@ func TestGetLiteralPointerVersion(t *testing.T) {
 	}
 
 	// Now test target reference update functionality
-	sourceLiteralPointer := uOfD.NewNameLiteralPointer(hl)
+	sourceLiteralPointer := uOfD.NewLabelLiteralPointer(hl)
 	// Force the version to change
 	core.SetUri(sourceLiteralPointer, "Test URI", hl)
 	sourceLiteralPointerPointer := uOfD.NewLiteralPointerPointer(hl)
@@ -350,7 +350,7 @@ func TestSetLiteralPointer(t *testing.T) {
 	}
 
 	// Now test target reference update functionality
-	sourceLiteralPointer := uOfD.NewNameLiteralPointer(hl)
+	sourceLiteralPointer := uOfD.NewLabelLiteralPointer(hl)
 	literalPointerRef.SetReferencedLiteralPointer(sourceLiteralPointer, hl)
 
 	targetLiteralPointerPointer := uOfD.NewLiteralPointerPointer(hl)

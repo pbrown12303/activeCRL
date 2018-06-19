@@ -245,8 +245,8 @@ func TestGetBaseElementId(t *testing.T) {
 
 	// Now test target reference update functionality
 	sourceBaseElement := uOfD.NewElement(hl)
-	sourceName := "SourceName"
-	core.SetName(sourceBaseElement, sourceName, hl)
+	sourceLabel := "SourceLabel"
+	core.SetLabel(sourceBaseElement, sourceLabel, hl)
 	sourceBaseElementPointer := uOfD.NewBaseElementPointer(hl)
 	sourceBaseElementPointer.SetBaseElement(sourceBaseElement, hl)
 	sourceReference.SetReferencedBaseElement(sourceBaseElementPointer, hl)
@@ -302,8 +302,8 @@ func TestGetBaseElementVersion(t *testing.T) {
 
 	// Now test target reference update functionality
 	sourceBaseElement := uOfD.NewElement(hl)
-	sourceName := "SourceName"
-	core.SetName(sourceBaseElement, sourceName, hl)
+	sourceLabel := "SourceLabel"
+	core.SetLabel(sourceBaseElement, sourceLabel, hl)
 	sourceBaseElementPointer := uOfD.NewBaseElementPointer(hl)
 	sourceBaseElementPointer.SetBaseElement(sourceBaseElement, hl)
 	sourceReference.SetReferencedBaseElement(sourceBaseElementPointer, hl)

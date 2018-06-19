@@ -59605,7 +59605,7 @@ $packages["github.com/pbrown12303/activeCRL/activeCRL/coreDiagram"] = (function(
 	return $pkg;
 })();
 $packages["github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"] = (function() {
-	var $pkg = {}, $init, js, jquery, core, coreDiagram, uuid, log, strconv, sync, CrlEditor, paperProperties, positionProperties, sizeProperties, shapeProperties, textProperties, attrProperties, rectProperties, baseElementProperties, DiagramManager, PropertiesManager, jstree, jstreeCore, jstreeNode, TreeManager, ptrType, arrayType, ptrType$1, ptrType$2, ptrType$3, ptrType$4, sliceType, ptrType$5, funcType, sliceType$1, funcType$1, funcType$2, sliceType$2, ptrType$6, funcType$3, ptrType$7, ptrType$8, ptrType$9, ptrType$10, ptrType$11, ptrType$12, ptrType$13, funcType$4, ptrType$14, ptrType$15, mapType, mapType$1, mapType$2, mapType$3, defaultNameCount, diagramViewCount, diagramGraphCount, InitializeCrlEditorSingleton, AddEditorViewsToUofD, BuildEditorConceptSpace, onEditorDrop, init, NewDiagramManager, createDiagramViewPrefix, createDiagramGraphPrefix, getDefaultDiagramName, onDragover, onDiagramManagerDrop, onDiagramManagerCellPointerDown, updateDiagramNodeView, init$1, init$2, NewPropertiesManager, clearRow, obtainPropertyRow, displayDefinition, displayId, displayName, displayPointerProperties, displayType, displayUniverseOfDiscourse, displayUri, displayVersion, NewTreeManager, IsDiagram, getIdWithoutSuffix, onTreeDragStart, treeViewManageNodes, BuildTreeViews, registerTreeViewFunctions;
+	var $pkg = {}, $init, js, jquery, core, coreDiagram, uuid, log, strconv, sync, CrlEditor, paperProperties, positionProperties, sizeProperties, shapeProperties, textProperties, attrProperties, rectProperties, baseElementProperties, DiagramManager, PropertiesManager, jstree, jstreeCore, jstreeNode, TreeManager, ptrType, arrayType, ptrType$1, ptrType$2, ptrType$3, ptrType$4, sliceType, ptrType$5, funcType, sliceType$1, funcType$1, funcType$2, funcType$3, sliceType$2, ptrType$6, funcType$4, ptrType$7, ptrType$8, ptrType$9, ptrType$10, ptrType$11, ptrType$12, ptrType$13, ptrType$14, ptrType$15, mapType, mapType$1, mapType$2, mapType$3, defaultNameCount, diagramTabCount, diagramViewCount, diagramGraphCount, InitializeCrlEditorSingleton, AddEditorViewsToUofD, BuildEditorConceptSpace, onEditorDrop, init, NewDiagramManager, createDiagramTabPrefix, createDiagramViewPrefix, createDiagramGraphPrefix, getDefaultDiagramName, onDragover, onDiagramManagerDrop, onDiagramManagerCellPointerDown, onMakeDiagramVisible, updateDiagramNodeView, init$1, init$2, NewPropertiesManager, clearRow, obtainPropertyRow, displayDefinition, displayId, displayName, displayPointerProperties, displayType, displayUniverseOfDiscourse, displayUri, displayVersion, NewTreeManager, IsDiagram, getIdWithoutSuffix, onTreeDragStart, treeViewManageNodes, BuildTreeViews, registerTreeViewFunctions;
 	js = $packages["github.com/gopherjs/gopherjs/js"];
 	jquery = $packages["github.com/gopherjs/jquery"];
 	core = $packages["github.com/pbrown12303/activeCRL/activeCRL/core"];
@@ -59828,9 +59828,10 @@ $packages["github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"] = (func
 	sliceType$1 = $sliceType($String);
 	funcType$1 = $funcType([ptrType$5, ptrType$5], [], false);
 	funcType$2 = $funcType([ptrType$5], [], false);
+	funcType$3 = $funcType([jquery.Event], [], false);
 	sliceType$2 = $sliceType(ptrType$5);
 	ptrType$6 = $ptrType(paperProperties);
-	funcType$3 = $funcType([ptrType$5, ptrType$5, ptrType$5, ptrType$5], [], false);
+	funcType$4 = $funcType([ptrType$5, ptrType$5, ptrType$5, ptrType$5], [], false);
 	ptrType$7 = $ptrType(positionProperties);
 	ptrType$8 = $ptrType(sizeProperties);
 	ptrType$9 = $ptrType(attrProperties);
@@ -59838,7 +59839,6 @@ $packages["github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"] = (func
 	ptrType$11 = $ptrType(shapeProperties);
 	ptrType$12 = $ptrType(textProperties);
 	ptrType$13 = $ptrType(rectProperties);
-	funcType$4 = $funcType([jquery.Event], [], false);
 	ptrType$14 = $ptrType(jstreeCore);
 	ptrType$15 = $ptrType(core.ChangeNotification);
 	mapType = $mapType(uuid.UUID, core.Element);
@@ -60034,6 +60034,12 @@ $packages["github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"] = (func
 		/* */ } return; } if ($f === undefined) { $f = { $blk: NewDiagramManager }; } $f._r = _r; $f.diagramManager = diagramManager; $f.$s = $s; $f.$r = $r; return $f;
 	};
 	$pkg.NewDiagramManager = NewDiagramManager;
+	createDiagramTabPrefix = function() {
+		var countString;
+		diagramTabCount = diagramTabCount + (1) >> 0;
+		countString = strconv.Itoa(diagramTabCount);
+		return "DiagramTab" + countString;
+	};
 	createDiagramViewPrefix = function() {
 		var countString;
 		diagramViewCount = diagramViewCount + (1) >> 0;
@@ -60047,8 +60053,8 @@ $packages["github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"] = (func
 		return "DiagramGraph" + countString;
 	};
 	DiagramManager.ptr.prototype.DisplayDiagram = function(diagram, hl) {
-		var _entry, _entry$1, _key, _key$1, _key$2, _r, _r$1, diagram, diagramGraph, diagramGraphId, diagramId, diagramIdString, diagramName, diagramPaper, diagramViewId, dmPtr, hl, newDiagramDiv, newTab, newTabPane, pProps, tabPaneLink, tabPanes, tabs, $s, $r;
-		/* */ $s = 0; var $f, $c = false; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; _entry = $f._entry; _entry$1 = $f._entry$1; _key = $f._key; _key$1 = $f._key$1; _key$2 = $f._key$2; _r = $f._r; _r$1 = $f._r$1; diagram = $f.diagram; diagramGraph = $f.diagramGraph; diagramGraphId = $f.diagramGraphId; diagramId = $f.diagramId; diagramIdString = $f.diagramIdString; diagramName = $f.diagramName; diagramPaper = $f.diagramPaper; diagramViewId = $f.diagramViewId; dmPtr = $f.dmPtr; hl = $f.hl; newDiagramDiv = $f.newDiagramDiv; newTab = $f.newTab; newTabPane = $f.newTabPane; pProps = $f.pProps; tabPaneLink = $f.tabPaneLink; tabPanes = $f.tabPanes; tabs = $f.tabs; $s = $f.$s; $r = $f.$r; } s: while (true) { switch ($s) { case 0:
+		var _entry, _entry$1, _key, _key$1, _key$2, _r, _r$1, crlDiagramContainer, diagram, diagramGraph, diagramGraphId, diagramId, diagramIdString, diagramName, diagramPaper, diagramPaperDiv, diagramViewId, dmPtr, hl, newTab, newTabId, pProps, tabs, topContent, $s, $r;
+		/* */ $s = 0; var $f, $c = false; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; _entry = $f._entry; _entry$1 = $f._entry$1; _key = $f._key; _key$1 = $f._key$1; _key$2 = $f._key$2; _r = $f._r; _r$1 = $f._r$1; crlDiagramContainer = $f.crlDiagramContainer; diagram = $f.diagram; diagramGraph = $f.diagramGraph; diagramGraphId = $f.diagramGraphId; diagramId = $f.diagramId; diagramIdString = $f.diagramIdString; diagramName = $f.diagramName; diagramPaper = $f.diagramPaper; diagramPaperDiv = $f.diagramPaperDiv; diagramViewId = $f.diagramViewId; dmPtr = $f.dmPtr; hl = $f.hl; newTab = $f.newTab; newTabId = $f.newTabId; pProps = $f.pProps; tabs = $f.tabs; topContent = $f.topContent; $s = $f.$s; $r = $f.$r; } s: while (true) { switch ($s) { case 0:
 		dmPtr = this;
 		_r = diagram.GetId(hl); /* */ $s = 1; case 1: if($c) { $c = false; _r = _r.$blk(); } if (_r && _r.$blk !== undefined) { break s; }
 		diagramId = $clone(_r, uuid.UUID);
@@ -60056,24 +60062,25 @@ $packages["github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"] = (func
 		_r$1 = core.GetName(diagram, hl); /* */ $s = 2; case 2: if($c) { $c = false; _r$1 = _r$1.$blk(); } if (_r$1 && _r$1.$blk !== undefined) { break s; }
 		diagramName = _r$1;
 		diagramViewId = createDiagramViewPrefix() + diagramIdString;
-		tabPanes = $global.tabPanes;
-		newTabPane = $global.document.createElement($externalize("DIV", $String));
-		newTabPane.id = $externalize("tabPane" + diagramViewId, $String);
-		newTabPane.classList.add($externalize("tab-pane", $String));
-		newTabPane.classList.add($externalize("fade", $String));
-		newDiagramDiv = $global.document.createElement($externalize("DIV", $String));
-		newDiagramDiv.id = $externalize(diagramViewId, $String);
-		newDiagramDiv.ondragover = $externalize(onDragover, funcType$1);
-		newDiagramDiv.ondrop = $externalize(onDiagramManagerDrop, funcType$2);
-		newTabPane.appendChild(newDiagramDiv);
-		tabPanes.appendChild(newTabPane);
+		topContent = $global[$externalize("top-content", $String)];
+		crlDiagramContainer = $global.document.createElement($externalize("DIV", $String));
+		crlDiagramContainer.id = $externalize(diagramViewId, $String);
+		crlDiagramContainer.setAttribute($externalize("class", $String), $externalize("crlDiagramContainer", $String));
+		crlDiagramContainer.ondragover = $externalize(onDragover, funcType$1);
+		crlDiagramContainer.ondrop = $externalize(onDiagramManagerDrop, funcType$2);
+		crlDiagramContainer.style.display = $externalize("none", $String);
+		topContent.appendChild(crlDiagramContainer);
 		tabs = $global.tabs;
-		newTab = $global.document.createElement($externalize("LI", $String));
-		tabPaneLink = $global.document.createElement($externalize("A", $String));
-		tabPaneLink.dataset.toggle = $externalize("tab", $String);
-		tabPaneLink.href = $externalize("#tabPane" + diagramViewId, $String);
-		tabPaneLink.innerHTML = $externalize(diagramName, $String);
-		newTab.appendChild(tabPaneLink, -1);
+		newTab = $global.document.createElement($externalize("button", $String));
+		newTab.innerHTML = $externalize(diagramName, $String);
+		newTab.className = $externalize("w3-bar-item w3-button", $String);
+		newTabId = createDiagramTabPrefix() + diagramIdString;
+		newTab.id = $externalize(newTabId, $String);
+		newTab.setAttribute($externalize("viewId", $String), $externalize(diagramViewId, $String));
+		newTab.addEventListener($externalize("click", $String), $externalize((function(e) {
+			var e;
+			onMakeDiagramVisible($clone(e, jquery.Event));
+		}), funcType$3));
 		tabs.appendChild(newTab, -1);
 		diagramGraph = (_entry = dmPtr.diagramGraphs[$String.keyFor(diagramViewId)], _entry !== undefined ? _entry.v : null);
 		if (diagramGraph === null) {
@@ -60085,8 +60092,10 @@ $packages["github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"] = (func
 		}
 		diagramPaper = (_entry$1 = dmPtr.diagramPapers[$String.keyFor(diagramViewId)], _entry$1 !== undefined ? _entry$1.v : null);
 		if (diagramPaper === null) {
+			diagramPaperDiv = $global.document.createElement($externalize("DIV", $String));
+			crlDiagramContainer.appendChild(diagramPaperDiv);
 			pProps = new paperProperties.ptr(new ($global.Object)(), sliceType$2.nil, 0, 0, null, 0);
-			pProps.Object.el = $externalize(new sliceType$2([newDiagramDiv]), sliceType$2);
+			pProps.Object.el = $externalize(new sliceType$2([diagramPaperDiv]), sliceType$2);
 			pProps.Object.width = 600;
 			pProps.Object.height = 600;
 			pProps.Object.model = diagramGraph;
@@ -60094,11 +60103,11 @@ $packages["github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"] = (func
 			$global.pProps = $externalize(pProps, ptrType$6);
 			diagramPaper = new ($global.joint.dia.Paper)($externalize(pProps, ptrType$6));
 			_key$2 = diagramViewId; (dmPtr.diagramPapers || $throwRuntimeError("assignment to entry in nil map"))[$String.keyFor(_key$2)] = { k: _key$2, v: diagramPaper };
-			diagramPaper.on($externalize("cell:pointerdown", $String), $externalize(onDiagramManagerCellPointerDown, funcType$3));
+			diagramPaper.on($externalize("cell:pointerdown", $String), $externalize(onDiagramManagerCellPointerDown, funcType$4));
 		}
 		$global.diagramGraph = diagramGraph;
 		$s = -1; return;
-		/* */ } return; } if ($f === undefined) { $f = { $blk: DiagramManager.ptr.prototype.DisplayDiagram }; } $f._entry = _entry; $f._entry$1 = _entry$1; $f._key = _key; $f._key$1 = _key$1; $f._key$2 = _key$2; $f._r = _r; $f._r$1 = _r$1; $f.diagram = diagram; $f.diagramGraph = diagramGraph; $f.diagramGraphId = diagramGraphId; $f.diagramId = diagramId; $f.diagramIdString = diagramIdString; $f.diagramName = diagramName; $f.diagramPaper = diagramPaper; $f.diagramViewId = diagramViewId; $f.dmPtr = dmPtr; $f.hl = hl; $f.newDiagramDiv = newDiagramDiv; $f.newTab = newTab; $f.newTabPane = newTabPane; $f.pProps = pProps; $f.tabPaneLink = tabPaneLink; $f.tabPanes = tabPanes; $f.tabs = tabs; $f.$s = $s; $f.$r = $r; return $f;
+		/* */ } return; } if ($f === undefined) { $f = { $blk: DiagramManager.ptr.prototype.DisplayDiagram }; } $f._entry = _entry; $f._entry$1 = _entry$1; $f._key = _key; $f._key$1 = _key$1; $f._key$2 = _key$2; $f._r = _r; $f._r$1 = _r$1; $f.crlDiagramContainer = crlDiagramContainer; $f.diagram = diagram; $f.diagramGraph = diagramGraph; $f.diagramGraphId = diagramGraphId; $f.diagramId = diagramId; $f.diagramIdString = diagramIdString; $f.diagramName = diagramName; $f.diagramPaper = diagramPaper; $f.diagramPaperDiv = diagramPaperDiv; $f.diagramViewId = diagramViewId; $f.dmPtr = dmPtr; $f.hl = hl; $f.newTab = newTab; $f.newTabId = newTabId; $f.pProps = pProps; $f.tabs = tabs; $f.topContent = topContent; $f.$s = $s; $f.$r = $r; return $f;
 	};
 	DiagramManager.prototype.DisplayDiagram = function(diagram, hl) { return this.$val.DisplayDiagram(diagram, hl); };
 	getDefaultDiagramName = function() {
@@ -60145,7 +60154,11 @@ $packages["github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"] = (func
 		$global.dropEvent = event;
 		$r = log.Printf("On Drop called", new sliceType([])); /* */ $s = 1; case 1: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
 		diagramManager = $pkg.CrlEditorSingleton.GetDiagramManager();
-		diagramViewId = $internalize(event.target.parentElement.id, $String);
+		diagramViewId = $internalize(event.target.parentElement.parentElement.id, $String);
+		$global.dropTarget = event.target;
+		$global.dropTargetParent = event.target.parentElement;
+		$global.dropTargetParentId = event.target.parentElement.id;
+		$global.console.log($externalize("DiagramViewId: " + diagramViewId, $String));
 		graph = (_entry = diagramManager.diagramGraphs[$String.keyFor(diagramViewId)], _entry !== undefined ? _entry.v : null);
 		diagramBaseElementProps = new baseElementProperties.ptr(new ($global.Object)(), ptrType$7.nil, ptrType$8.nil, ptrType$9.nil, "");
 		sizeProp = new sizeProperties.ptr(new ($global.Object)(), 0, 0);
@@ -60181,6 +60194,30 @@ $packages["github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"] = (func
 		_r;
 		$s = -1; return;
 		/* */ } return; } if ($f === undefined) { $f = { $blk: onDiagramManagerCellPointerDown }; } $f._r = _r; $f.baseElementIdString = baseElementIdString; $f.cellView = cellView; $f.event = event; $f.x = x; $f.y = y; $f.$s = $s; $f.$r = $r; return $f;
+	};
+	onMakeDiagramVisible = function(e) {
+		var diagramViewId, e, i, lengthString, x;
+		diagramViewId = $internalize(e.Object.target.getAttribute($externalize("viewId", $String)), $String);
+		$global.console.log($externalize("In : onMakeDiagramVisible with: " + diagramViewId, $String));
+		$global.clickEvent = $externalize(e, jquery.Event);
+		$global.clickEventTarget = e.Object.target;
+		$global.clickEventViewId = e.Object.target.getAttribute($externalize("viewId", $String));
+		x = $global.document.getElementsByClassName($externalize("crlDiagramContainer", $String));
+		lengthString = strconv.Itoa($parseInt(x.length));
+		$global.console.log($externalize("List length: " + lengthString, $String));
+		i = 0;
+		while (true) {
+			if (!(i < $parseInt(x.length))) { break; }
+			$global.console.log($externalize("Container id: ", $String), $externalize($internalize(x[i].id, $String), $String));
+			if ($internalize(x[i].id, $String) === diagramViewId) {
+				x[i].style.display = $externalize("block", $String);
+				$global.console.log($externalize("Showing: " + diagramViewId, $String));
+			} else {
+				x[i].style.display = $externalize("none", $String);
+				$global.console.log($externalize("Hiding: " + diagramViewId, $String));
+			}
+			i = i + (1) >> 0;
+		}
 	};
 	DiagramManager.ptr.prototype.SetSize = function() {
 		var attrProp, dmPtr, posProp, rect, rectProp, shapeProp, sizeProp, textProp;
@@ -60304,7 +60341,7 @@ $packages["github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"] = (func
 			/* } else { */ case 7:
 				definitionRow.cells[1].contentEditable = $externalize(true, $Bool);
 				definitionQuery = $clone(jquery.NewJQuery(new sliceType([new $String("#definition")])), jquery.JQuery);
-				$clone(definitionQuery, jquery.JQuery).On(new sliceType([new $String("keyup"), new funcType$4((function $b(e) {
+				$clone(definitionQuery, jquery.JQuery).On(new sliceType([new $String("keyup"), new funcType$3((function $b(e) {
 					var definition, e, $s, $r;
 					/* */ $s = 0; var $f, $c = false; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; definition = $f.definition; e = $f.e; $s = $f.$s; $r = $f.$r; } s: while (true) { switch ($s) { case 0:
 					definition = $clone(jquery.NewJQuery(new sliceType([new $jsObjectPtr(e.Object.target)])), jquery.JQuery).Text();
@@ -60365,7 +60402,7 @@ $packages["github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"] = (func
 			/* } else { */ case 7:
 				nameRow.cells[1].contentEditable = $externalize(true, $Bool);
 				nameQuery = $clone(jquery.NewJQuery(new sliceType([new $String("#baseElementName")])), jquery.JQuery);
-				$clone(nameQuery, jquery.JQuery).On(new sliceType([new $String("keyup"), new funcType$4((function $b(e) {
+				$clone(nameQuery, jquery.JQuery).On(new sliceType([new $String("keyup"), new funcType$3((function $b(e) {
 					var e, name, $s, $r;
 					/* */ $s = 0; var $f, $c = false; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; e = $f.e; name = $f.name; $s = $f.$s; $r = $f.$r; } s: while (true) { switch ($s) { case 0:
 					name = $clone(jquery.NewJQuery(new sliceType([new $jsObjectPtr(e.Object.target)])), jquery.JQuery).Text();
@@ -60485,7 +60522,7 @@ $packages["github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"] = (func
 		/* } else { */ case 3:
 			uriRow.cells[1].contentEditable = $externalize(true, $Bool);
 			uriQuery = $clone(jquery.NewJQuery(new sliceType([new $String("#uri")])), jquery.JQuery);
-			$clone(uriQuery, jquery.JQuery).On(new sliceType([new $String("keyup"), new funcType$4((function $b(e) {
+			$clone(uriQuery, jquery.JQuery).On(new sliceType([new $String("keyup"), new funcType$3((function $b(e) {
 				var e, uri$1, $s, $r;
 				/* */ $s = 0; var $f, $c = false; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; e = $f.e; uri$1 = $f.uri$1; $s = $f.$s; $r = $f.$r; } s: while (true) { switch ($s) { case 0:
 				uri$1 = $clone(jquery.NewJQuery(new sliceType([new $jsObjectPtr(e.Object.target)])), jquery.JQuery).Text();
@@ -60878,6 +60915,7 @@ $packages["github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"] = (func
 		$r = sync.$init(); /* */ $s = 8; case 8: if($c) { $c = false; $r = $r.$blk(); } if ($r && $r.$blk !== undefined) { break s; }
 		$pkg.CrlEditorSingleton = ptrType.nil;
 		defaultNameCount = 0;
+		diagramTabCount = 0;
 		diagramViewCount = 0;
 		diagramGraphCount = 0;
 		$pkg.EditorUri = "http://activeCrl.com/crlEditor/Editor";

@@ -12,13 +12,13 @@ import (
 	"testing"
 )
 
-func TestNewNameLiteralPointer(t *testing.T) {
+func TestNewLabelLiteralPointer(t *testing.T) {
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
-	child := uOfD.NewNameLiteralPointer(hl)
+	child := uOfD.NewLabelLiteralPointer(hl)
 	SetOwningElement(child, parent, hl)
 	if GetOwningElement(child, hl) != parent {
 		t.Error("Child's owner not set properly")
@@ -37,20 +37,20 @@ func TestNewNameLiteralPointer(t *testing.T) {
 	}
 }
 
-func TestNewNameLiteralPointerUriId(t *testing.T) {
+func TestNewLabelLiteralPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
 	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl)
-	child := uOfD.NewNameLiteralPointer(hl, uri)
+	child := uOfD.NewLabelLiteralPointer(hl, uri)
 	if expectedId != child.GetId(hl) {
 		t.Errorf("Incorrect UUID")
 	}
 }
 
-func TestDefinitionNameLiteralPointer(t *testing.T) {
+func TestDefinitionLabelLiteralPointer(t *testing.T) {
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -170,7 +170,7 @@ func TestSetLiteral(t *testing.T) {
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
-	child := uOfD.NewNameLiteralPointer(hl)
+	child := uOfD.NewLabelLiteralPointer(hl)
 	SetOwningElement(child, parent, hl)
 	literal := uOfD.NewLiteral(hl)
 	SetOwningElement(literal, parent, hl)
@@ -189,7 +189,7 @@ func TestLiteralPointerMarshal(t *testing.T) {
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
-	child := uOfD.NewNameLiteralPointer(hl)
+	child := uOfD.NewLabelLiteralPointer(hl)
 	SetOwningElement(child, parent, hl)
 	literal := uOfD.NewLiteral(hl)
 	SetOwningElement(literal, parent, hl)
@@ -215,7 +215,7 @@ func TestLiteralPointerClone(t *testing.T) {
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
-	child := uOfD.NewNameLiteralPointer(hl)
+	child := uOfD.NewLabelLiteralPointer(hl)
 	SetOwningElement(child, parent, hl)
 	literal := uOfD.NewLiteral(hl)
 	SetOwningElement(literal, parent, hl)

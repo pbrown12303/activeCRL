@@ -128,7 +128,7 @@ func TestUndoRedoMarkUndoPoint(t *testing.T) {
 	}
 }
 
-func TestUndoRedoElementSetName(t *testing.T) {
+func TestUndoRedoElementSetLabel(t *testing.T) {
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -136,7 +136,7 @@ func TestUndoRedoElementSetName(t *testing.T) {
 	uOfD.SetRecordingUndo(true)
 	e1 := uOfD.NewElement(hl)
 	uOfD.MarkUndoPoint()
-	//	PrintUndoStack(uOfD.undoMgr.undoStack, "Undo stack after creating new element and marking undo point, before SetName")
+	//	PrintUndoStack(uOfD.undoMgr.undoStack, "Undo stack after creating new element and marking undo point, before SetLabel")
 
 	if len(uOfD.undoMgr.undoStack) != 2 {
 		t.Error("Undo stack size incorrect after marking undo point")
@@ -150,69 +150,69 @@ func TestUndoRedoElementSetName(t *testing.T) {
 	}
 
 	// Verify initial state
-	if GetName(e1, hl) != "" {
-		t.Error("Name not initially empty string")
+	if GetLabel(e1, hl) != "" {
+		t.Error("Label not initially empty string")
 	}
-	if e1.GetNameLiteralPointer(hl) != nil {
-		t.Error("Name literal pointer not initially nil")
+	if e1.GetLabelLiteralPointer(hl) != nil {
+		t.Error("Label literal pointer not initially nil")
 	}
-	if e1.GetNameLiteral(hl) != nil {
-		t.Error("Name literal not initially nil")
+	if e1.GetLabelLiteral(hl) != nil {
+		t.Error("Label literal not initially nil")
 	}
 
-	// SetName
-	testName := "Test name"
+	// SetLabel
+	testLabel := "Test name"
 	//	uOfD.debugUndo = true
-	SetName(e1, testName, hl)
+	SetLabel(e1, testLabel, hl)
 	//	uOfD.debugUndo = false
-	undoStackSizeAfterSetName := len(uOfD.undoMgr.undoStack)
-	nameLiteralPointer := e1.GetNameLiteralPointer(hl)
-	nameLiteral := e1.GetNameLiteral(hl)
+	undoStackSizeAfterSetLabel := len(uOfD.undoMgr.undoStack)
+	nameLiteralPointer := e1.GetLabelLiteralPointer(hl)
+	nameLiteral := e1.GetLabelLiteral(hl)
 	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl)) == nil {
-		t.Error("Name literal pointer not in baseElementMap")
+		t.Error("Label literal pointer not in baseElementMap")
 	}
 	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl)) == nil {
-		t.Error("Name literal not in baseElementMap")
+		t.Error("Label literal not in baseElementMap")
 	}
 
 	// Undo
-	//	PrintUndoStack(uOfD.undoMgr.undoStack, "Undo stack after SetName and before undo")
+	//	PrintUndoStack(uOfD.undoMgr.undoStack, "Undo stack after SetLabel and before undo")
 	//	uOfD.debugUndo = true
 	uOfD.Undo(hl)
 	//	uOfD.debugUndo = false
 	//	PrintUndoStack(uOfD.undoMgr.undoStack, "Undo stack after undo")
 	if len(uOfD.undoMgr.undoStack) != 2 {
-		t.Error("Undo stack size incorrect after undo of SetName")
+		t.Error("Undo stack size incorrect after undo of SetLabel")
 	}
-	if len(uOfD.undoMgr.redoStack) != (undoStackSizeAfterSetName - 2) {
-		t.Error("Redo stack size incorrect after undo of SetName")
+	if len(uOfD.undoMgr.redoStack) != (undoStackSizeAfterSetLabel - 2) {
+		t.Error("Redo stack size incorrect after undo of SetLabel")
 	}
 	undoPointEntry = uOfD.undoMgr.undoStack.Peek()
 	if undoPointEntry.changeType != Marker {
 		t.Error("Undo point changeType not Marker")
 	}
-	if GetName(e1, hl) != "" {
+	if GetLabel(e1, hl) != "" {
 		t.Error("Undo did not remove name")
 	}
-	if e1.GetNameLiteralPointer(hl) != nil {
+	if e1.GetLabelLiteralPointer(hl) != nil {
 		t.Error("Undo did not remove name literal pointer")
 	}
-	if e1.GetNameLiteral(hl) != nil {
+	if e1.GetLabelLiteral(hl) != nil {
 		t.Error("Undo did not remove name literal")
 	}
 	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl)) != nil {
-		t.Error("Name literal pointer not removed from baseElementMap")
+		t.Error("Label literal pointer not removed from baseElementMap")
 	}
 	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl)) != nil {
-		t.Error("Name literal not removed from baseElementMap")
+		t.Error("Label literal not removed from baseElementMap")
 	}
 
 	// Redo
-	//	PrintUndoStack(uOfD.undoMgr.undoStack, "Undo stack after creating new element, marking undo point, settingName, undo, and before redo")
-	//	PrintUndoStack(uOfD.undoMgr.redoStack, "Redo stack after creating new element, marking undo point, settingName, undo, and before redo")
+	//	PrintUndoStack(uOfD.undoMgr.undoStack, "Undo stack after creating new element, marking undo point, settingLabel, undo, and before redo")
+	//	PrintUndoStack(uOfD.undoMgr.redoStack, "Redo stack after creating new element, marking undo point, settingLabel, undo, and before redo")
 	uOfD.Redo(hl)
-	//	PrintUndoStack(uOfD.undoMgr.undoStack, "Undo stack after creating new element, marking undo point, settingName, undo, and redo")
-	//	PrintUndoStack(uOfD.undoMgr.redoStack, "Redo stack after creating new element, marking undo point, settingName, undo, and redo")
+	//	PrintUndoStack(uOfD.undoMgr.undoStack, "Undo stack after creating new element, marking undo point, settingLabel, undo, and redo")
+	//	PrintUndoStack(uOfD.undoMgr.redoStack, "Redo stack after creating new element, marking undo point, settingLabel, undo, and redo")
 
 	if len(uOfD.undoMgr.redoStack) > 0 {
 		redoPointEntry := uOfD.undoMgr.redoStack.Peek()
@@ -220,20 +220,20 @@ func TestUndoRedoElementSetName(t *testing.T) {
 			t.Error("redo point changeType not Marker")
 		}
 	}
-	if GetName(e1, hl) != testName {
+	if GetLabel(e1, hl) != testLabel {
 		t.Error("Redo did not restore name")
 	}
-	if e1.GetNameLiteralPointer(hl) != nameLiteralPointer {
+	if e1.GetLabelLiteralPointer(hl) != nameLiteralPointer {
 		t.Error("Redo did not restore name literal pointer")
 	}
-	if e1.GetNameLiteral(hl) != nameLiteral {
+	if e1.GetLabelLiteral(hl) != nameLiteral {
 		t.Error("Redo did not restore name literal")
 	}
 	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl)) == nil {
-		t.Error("Name literal pointer not restored to baseElementMap")
+		t.Error("Label literal pointer not restored to baseElementMap")
 	}
 	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl)) == nil {
-		t.Error("Name literal not restored to baseElementMap")
+		t.Error("Label literal not restored to baseElementMap")
 	}
 
 	// Now do two undos and two redos
@@ -247,20 +247,20 @@ func TestUndoRedoElementSetName(t *testing.T) {
 			t.Error("redo point changeType not Marker")
 		}
 	}
-	if GetName(e1, hl) != testName {
+	if GetLabel(e1, hl) != testLabel {
 		t.Error("Double undo/redo did not restore name")
 	}
-	if e1.GetNameLiteralPointer(hl) != nameLiteralPointer {
+	if e1.GetLabelLiteralPointer(hl) != nameLiteralPointer {
 		t.Error("Double undo/redo did not restore name literal pointer")
 	}
-	if e1.GetNameLiteral(hl) != nameLiteral {
+	if e1.GetLabelLiteral(hl) != nameLiteral {
 		t.Error("Double undo/redo did not restore name literal")
 	}
 	if uOfD.baseElementMap.GetEntry(nameLiteralPointer.GetId(hl)) == nil {
-		t.Error("Double undo/redo Name literal pointer not restored to baseElementMap")
+		t.Error("Double undo/redo Label literal pointer not restored to baseElementMap")
 	}
 	if uOfD.baseElementMap.GetEntry(nameLiteral.GetId(hl)) == nil {
-		t.Error("Double undo/redoName literal not restored to baseElementMap")
+		t.Error("Double undo/redoLabel literal not restored to baseElementMap")
 	}
 }
 
@@ -1033,7 +1033,7 @@ func TestUndoRedoLiteralPointerCreation(t *testing.T) {
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl).(*universeOfDiscourse)
 	uOfD.SetRecordingUndo(true)
-	lp1 := uOfD.NewNameLiteralPointer(hl)
+	lp1 := uOfD.NewLabelLiteralPointer(hl)
 	if len(uOfD.undoMgr.undoStack) != 1 {
 		t.Error("Undo stack size incorrect after creating Element")
 	}
@@ -1165,7 +1165,7 @@ func TestUndoRedoLiteralPointerPointerSetLiteralPointer(t *testing.T) {
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl).(*universeOfDiscourse)
 	uOfD.SetRecordingUndo(true)
-	lp1 := uOfD.NewNameLiteralPointer(hl)
+	lp1 := uOfD.NewLabelLiteralPointer(hl)
 	r1 := uOfD.NewLiteralPointerReference(hl)
 	uOfD.MarkUndoPoint()
 	r1.SetReferencedLiteralPointer(lp1, hl)

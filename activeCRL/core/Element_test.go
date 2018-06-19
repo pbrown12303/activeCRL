@@ -18,7 +18,7 @@ func TestCloneElement(t *testing.T) {
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl)
 	el := uOfD.NewElement(hl)
-	SetName(el, "E1", hl)
+	SetLabel(el, "E1", hl)
 	SetUri(el, "E1.testDomain.com", hl)
 	SetDefinition(el, "The definition of E1", hl)
 	clone := el.(*element).clone()
@@ -37,9 +37,9 @@ func TestElementMarshal(t *testing.T) {
 	parent := uOfD.NewElement(hl)
 	child := uOfD.NewElement(hl)
 	SetOwningElement(child, parent, hl)
-	testName := "TestName"
+	testLabel := "TestLabel"
 	testUri := "TestUri"
-	SetName(parent, testName, hl)
+	SetLabel(parent, testLabel, hl)
 	SetUri(parent, testUri, hl)
 
 	result, err := json.MarshalIndent(parent, "", "   ")
@@ -52,14 +52,14 @@ func TestElementMarshal(t *testing.T) {
 	if !Equivalent(parent, recoveredParent, hl) {
 		t.Error("Recovered parent not equivalent to original parent")
 	}
-	if GetName(recoveredParent, hl) != testName {
+	if GetLabel(recoveredParent, hl) != testLabel {
 		t.Error("Recovered test name incorrect")
 	}
 	if GetUri(recoveredParent, hl) != testUri {
 		t.Error("Recovered test uri incorrect")
 	}
-	if recoveredParent.GetNameLiteral(hl).getOwningElement(hl) != recoveredParent {
-		t.Error("Recovered NameLiteral owning element not restored properly")
+	if recoveredParent.GetLabelLiteral(hl).getOwningElement(hl) != recoveredParent {
+		t.Error("Recovered LabelLiteral owning element not restored properly")
 	}
 	if recoveredParent.GetUriLiteral(hl).getOwningElement(hl) != recoveredParent {
 		t.Error("Recovered UriLiteral owning element not restored properly")
@@ -258,36 +258,36 @@ func TestSetDefinition(t *testing.T) {
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
-	var testName string = "Test Name"
-	SetDefinition(parent, testName, hl)
-	if parent.GetDefinition(hl) != testName {
-		t.Error("GetName() value not equal to assigned name")
+	var testLabel string = "Test Label"
+	SetDefinition(parent, testLabel, hl)
+	if parent.GetDefinition(hl) != testLabel {
+		t.Error("GetLabel() value not equal to assigned name")
 	}
 	if parent.GetDefinitionLiteral(hl) == nil {
-		t.Error("getNameLiteral() is nil after name assigned")
+		t.Error("getLabelLiteral() is nil after name assigned")
 	}
 	if parent.GetDefinitionLiteralPointer(hl) == nil {
-		t.Error("getNameLiteralPointer() is nil after name assigned")
+		t.Error("getLabelLiteralPointer() is nil after name assigned")
 
 	}
 }
 
-func TestSetName(t *testing.T) {
+func TestSetLabel(t *testing.T) {
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
-	var testName string = "Test Name"
-	SetName(parent, testName, hl)
-	if GetName(parent, hl) != testName {
-		t.Error("GetName() value not equal to assigned name")
+	var testLabel string = "Test Label"
+	SetLabel(parent, testLabel, hl)
+	if GetLabel(parent, hl) != testLabel {
+		t.Error("GetLabel() value not equal to assigned name")
 	}
-	if parent.GetNameLiteral(hl) == nil {
-		t.Error("getNameLiteral() is nil after name assigned")
+	if parent.GetLabelLiteral(hl) == nil {
+		t.Error("getLabelLiteral() is nil after name assigned")
 	}
-	if parent.GetNameLiteralPointer(hl) == nil {
-		t.Error("getNameLiteralPointer() is nil after name assigned")
+	if parent.GetLabelLiteralPointer(hl) == nil {
+		t.Error("getLabelLiteralPointer() is nil after name assigned")
 
 	}
 }
@@ -298,16 +298,16 @@ func TestSetUri(t *testing.T) {
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl)
 	parent := uOfD.NewElement(hl)
-	var testName string = "Test Name"
-	SetUri(parent, testName, hl)
-	if GetUri(parent, hl) != testName {
-		t.Error("GetName() value not equal to assigned name")
+	var testLabel string = "Test Label"
+	SetUri(parent, testLabel, hl)
+	if GetUri(parent, hl) != testLabel {
+		t.Error("GetLabel() value not equal to assigned name")
 	}
 	if parent.GetUriLiteral(hl) == nil {
-		t.Error("getNameLiteral() is nil after name assigned")
+		t.Error("getLabelLiteral() is nil after name assigned")
 	}
 	if parent.GetUriLiteralPointer(hl) == nil {
-		t.Error("getNameLiteralPointer() is nil after name assigned")
+		t.Error("getLabelLiteralPointer() is nil after name assigned")
 
 	}
 }

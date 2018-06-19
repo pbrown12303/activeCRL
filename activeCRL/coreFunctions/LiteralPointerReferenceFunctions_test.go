@@ -177,7 +177,7 @@ func TestGetLiteralPointerPointer(t *testing.T) {
 
 	// Now test target reference update functionality
 	sourceLiteralPointerReference := uOfD.NewLiteralPointerReference(hl)
-	dummyLiteralPointer := uOfD.NewNameLiteralPointer(hl)
+	dummyLiteralPointer := uOfD.NewLabelLiteralPointer(hl)
 	sourceLiteralPointerReference.SetReferencedLiteralPointer(dummyLiteralPointer, hl)
 	sourceLiteralPointerReferenceRef.SetReferencedElement(sourceLiteralPointerReference, hl)
 
@@ -234,7 +234,7 @@ func TestGetReferencedLiteralPointer(t *testing.T) {
 
 	// Now test target reference update functionality
 	sourceLiteralPointerReference := uOfD.NewLiteralPointerReference(hl)
-	dummyLiteralPointer := uOfD.NewNameLiteralPointer(hl)
+	dummyLiteralPointer := uOfD.NewLabelLiteralPointer(hl)
 	sourceLiteralPointerReference.SetReferencedLiteralPointer(dummyLiteralPointer, hl)
 	sourceLiteralPointerReferenceRef.SetReferencedElement(sourceLiteralPointerReference, hl)
 
@@ -290,7 +290,7 @@ func TestSetReferencedLiteralPointer(t *testing.T) {
 	}
 
 	// Now test target reference update functionality
-	sourceLiteralPointer := uOfD.NewNameLiteralPointer(hl)
+	sourceLiteralPointer := uOfD.NewLabelLiteralPointer(hl)
 	targetLiteralPointerReference := uOfD.NewLiteralPointerReference(hl)
 	modifiedLiteralPointerReferenceRef.SetReferencedElement(targetLiteralPointerReference, hl)
 	sourceLiteralPointerRef.SetReferencedLiteralPointer(sourceLiteralPointer, hl)

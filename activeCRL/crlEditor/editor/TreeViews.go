@@ -74,9 +74,9 @@ func treeViewManageNodes(instance core.Element, changeNotifications []*core.Chan
 				}
 
 				// See if the name has changed
-				changedBaseElementName := core.GetName(changedBaseElement, hl)
-				if changedBaseElementNodeView.Attr("text") != changedBaseElementName {
-					jquery.NewJQuery(treeManager.treeId).Call("jstree", "rename_node", changedBaseElementNodeViewId, changedBaseElementName)
+				changedBaseElementLabel := core.GetLabel(changedBaseElement, hl)
+				if changedBaseElementNodeView.Attr("text") != changedBaseElementLabel {
+					jquery.NewJQuery(treeManager.treeId).Call("jstree", "rename_node", changedBaseElementNodeViewId, changedBaseElementLabel)
 				}
 			}
 		}
@@ -88,29 +88,29 @@ func BuildTreeViews(conceptSpace core.Element, hl *core.HeldLocks) {
 
 	// TreeViews
 	treeViews := uOfD.NewElement(hl, TreeViewsUri)
-	core.SetName(treeViews, "TreeViews", hl)
+	core.SetLabel(treeViews, "TreeViews", hl)
 	core.SetUri(treeViews, TreeViewsUri, hl)
 	core.SetOwningElement(treeViews, conceptSpace, hl)
 
 	// ManageNodes
 	manageNodes := uOfD.NewElement(hl, ManageNodesUri)
-	core.SetName(manageNodes, "ManageNodes", hl)
+	core.SetLabel(manageNodes, "ManageNodes", hl)
 	core.SetUri(manageNodes, ManageNodesUri, hl)
 	core.SetOwningElement(manageNodes, treeViews, hl)
 	// ManageNodes UofD Reference
 	uOfDReference := uOfD.NewElementReference(hl, ManageNodesUofDReferenceUri)
-	core.SetName(uOfDReference, "UofDReference", hl)
+	core.SetLabel(uOfDReference, "UofDReference", hl)
 	core.SetUri(uOfDReference, ManageNodesUofDReferenceUri, hl)
 	core.SetOwningElement(uOfDReference, manageNodes, hl)
 
 	// ViewNode
 	viewNode := uOfD.NewElement(hl, ViewNodeUri)
-	core.SetName(viewNode, "ViewNode", hl)
+	core.SetLabel(viewNode, "ViewNode", hl)
 	core.SetUri(viewNode, ViewNodeUri, hl)
 	core.SetOwningElement(viewNode, treeViews, hl)
 	// ViewNode BaseElementReference
 	baseElementReference := uOfD.NewBaseElementReference(hl, ViewNodeBaseElementReferenceUri)
-	core.SetName(baseElementReference, "BaseElementReference", hl)
+	core.SetLabel(baseElementReference, "BaseElementReference", hl)
 	core.SetUri(baseElementReference, ViewNodeBaseElementReferenceUri, hl)
 	core.SetOwningElement(baseElementReference, viewNode, hl)
 }

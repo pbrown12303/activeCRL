@@ -113,10 +113,10 @@ func (edPtr *CrlEditor) SetSelectionDefinition(definition string) {
 	}
 }
 
-func (edPtr *CrlEditor) SetSelectionName(name string) {
+func (edPtr *CrlEditor) SetSelectionLabel(name string) {
 	switch edPtr.currentSelection.(type) {
 	case core.Element:
-		core.SetName(edPtr.currentSelection.(core.Element), name, edPtr.hl)
+		core.SetLabel(edPtr.currentSelection.(core.Element), name, edPtr.hl)
 		edPtr.hl.ReleaseLocksAndWait()
 	}
 }
@@ -133,7 +133,7 @@ func (edPtr *CrlEditor) SetTreeDragSelection(be core.BaseElement) {
 func BuildEditorConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	// EditorConceptSpace
 	conceptSpace := uOfD.NewElement(hl, EditorUri)
-	core.SetName(conceptSpace, "EditorConceptSpace", hl)
+	core.SetLabel(conceptSpace, "EditorConceptSpace", hl)
 	core.SetUri(conceptSpace, EditorUri, hl)
 
 	BuildTreeViews(conceptSpace, hl)

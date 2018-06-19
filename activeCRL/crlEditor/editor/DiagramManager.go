@@ -2,7 +2,7 @@ package editor
 
 import (
 	"github.com/gopherjs/gopherjs/js"
-	//	"github.com/gopherjs/jquery"
+	"github.com/gopherjs/jquery"
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/activeCRL/coreDiagram"
 	"github.com/satori/go.uuid"
@@ -13,7 +13,8 @@ import (
 const diagramContainerSuffix = "DiagramContainer"
 const diagramSuffix = "Diagram"
 
-var defaultNameCount int
+var defaultLabelCount int
+var diagramTabCount int
 var diagramViewCount int
 var diagramGraphCount int
 
@@ -101,6 +102,12 @@ func (dm *DiagramManager) addViewFunctionsToUofD() {
 	//	addDiagramLinkViewFunctionsToUofD(uOfD, hl)
 }
 
+func createDiagramTabPrefix() string {
+	diagramTabCount++
+	countString := strconv.Itoa(diagramTabCount)
+	return "DiagramTab" + countString
+}
+
 func createDiagramViewPrefix() string {
 	diagramViewCount++
 	countString := strconv.Itoa(diagramViewCount)
@@ -116,32 +123,33 @@ func createDiagramGraphPrefix() string {
 func (dmPtr *DiagramManager) DisplayDiagram(diagram core.Element, hl *core.HeldLocks) {
 	diagramId := diagram.GetId(hl)
 	diagramIdString := diagramId.String()
-	diagramName := core.GetName(diagram, hl)
+	diagramLabel := core.GetLabel(diagram, hl)
 	diagramViewId := createDiagramViewPrefix() + diagramIdString
 
 	// See if diagram is already in GUI
 
-	tabPanes := js.Global.Get("tabPanes")
-	newTabPane := js.Global.Get("document").Call("createElement", "DIV")
-	newTabPane.Set("id", "tabPane"+diagramViewId)
-	newTabPane.Get("classList").Call("add", "tab-pane")
-	newTabPane.Get("classList").Call("add", "fade")
-	newDiagramDiv := js.Global.Get("document").Call("createElement", "DIV")
-	newDiagramDiv.Set("id", diagramViewId)
+	topContent := js.Global.Get("top-content")
+	crlDiagramContainer := js.Global.Get("document").Call("createElement", "DIV")
+	crlDiagramContainer.Set("id", diagramViewId)
+	crlDiagramContainer.Call("setAttribute", "class", "crlDiagramContainer")
 	// It is not clear why, but the ondrop callback does not get called unless the ondragover callback is used,
 	// even though the callback just calls preventDefault on the dragover event
-	newDiagramDiv.Set("ondragover", onDragover)
-	newDiagramDiv.Set("ondrop", onDiagramManagerDrop)
-	newTabPane.Call("appendChild", newDiagramDiv)
-	tabPanes.Call("appendChild", newTabPane)
+	crlDiagramContainer.Set("ondragover", onDragover)
+	crlDiagramContainer.Set("ondrop", onDiagramManagerDrop)
+	crlDiagramContainer.Get("style").Set("display", "none")
+	topContent.Call("appendChild", crlDiagramContainer)
 
 	tabs := js.Global.Get("tabs")
-	newTab := js.Global.Get("document").Call("createElement", "LI")
-	tabPaneLink := js.Global.Get("document").Call("createElement", "A")
-	tabPaneLink.Get("dataset").Set("toggle", "tab")
-	tabPaneLink.Set("href", "#"+"tabPane"+diagramViewId)
-	tabPaneLink.Set("innerHTML", diagramName)
-	newTab.Call("appendChild", tabPaneLink, -1)
+	newTab := js.Global.Get("document").Call("createElement", "button")
+	newTab.Set("innerHTML", diagramLabel)
+	newTab.Set("className", "w3-bar-item w3-button")
+	newTabId := createDiagramTabPrefix() + diagramIdString
+	newTab.Set("id", newTabId)
+	newTab.Call("setAttribute", "viewId", diagramViewId)
+	//	newTab.Set("onclick", "openDiagramContainer('"+diagramViewId+"')")
+	newTab.Call("addEventListener", "click", func(e jquery.Event) {
+		onMakeDiagramVisible(e)
+	})
 	tabs.Call("appendChild", newTab, -1)
 
 	diagramGraph := dmPtr.diagramGraphs[diagramViewId]
@@ -155,8 +163,10 @@ func (dmPtr *DiagramManager) DisplayDiagram(diagram core.Element, hl *core.HeldL
 
 	diagramPaper := dmPtr.diagramPapers[diagramViewId]
 	if diagramPaper == nil {
+		diagramPaperDiv := js.Global.Get("document").Call("createElement", "DIV")
+		crlDiagramContainer.Call("appendChild", diagramPaperDiv)
 		pProps := &paperProperties{Object: js.Global.Get("Object").New()}
-		pProps.el = []*js.Object{newDiagramDiv}
+		pProps.el = []*js.Object{diagramPaperDiv}
 		pProps.width = 600
 		pProps.height = 600
 		pProps.model = diagramGraph
@@ -170,15 +180,15 @@ func (dmPtr *DiagramManager) DisplayDiagram(diagram core.Element, hl *core.HeldL
 	js.Global.Set("diagramGraph", diagramGraph)
 }
 
-func getDefaultDiagramName() string {
-	defaultNameCount++
-	countString := strconv.Itoa(defaultNameCount)
+func getDefaultDiagramLabel() string {
+	defaultLabelCount++
+	countString := strconv.Itoa(defaultLabelCount)
 	return "Diagram" + countString
 }
 
 func (dmPtr *DiagramManager) NewDiagram() core.Element {
 	// Insert name prompt here
-	name := getDefaultDiagramName()
+	name := getDefaultDiagramLabel()
 	hl := CrlEditorSingleton.hl
 	defer hl.ReleaseLocks()
 	uOfD := CrlEditorSingleton.uOfD
@@ -186,7 +196,7 @@ func (dmPtr *DiagramManager) NewDiagram() core.Element {
 	if err != nil {
 		log.Print(err)
 	}
-	core.SetName(diagram, name, hl)
+	core.SetLabel(diagram, name, hl)
 	dmPtr.diagrams[diagram.GetId(hl)] = diagram
 	log.Printf("Created diagram with name: %s", name)
 	dmPtr.DisplayDiagram(diagram, hl)
@@ -204,7 +214,11 @@ func onDiagramManagerDrop(event *js.Object) {
 	log.Printf("On Drop called")
 	diagramManager := CrlEditorSingleton.GetDiagramManager()
 
-	diagramViewId := event.Get("target").Get("parentElement").Get("id").String()
+	diagramViewId := event.Get("target").Get("parentElement").Get("parentElement").Get("id").String()
+	js.Global.Set("dropTarget", event.Get("target"))
+	js.Global.Set("dropTargetParent", event.Get("target").Get("parentElement"))
+	js.Global.Set("dropTargetParentId", event.Get("target").Get("parentElement").Get("id"))
+	js.Global.Get("console").Call("log", "DiagramViewId: "+diagramViewId)
 	graph := diagramManager.diagramGraphs[diagramViewId]
 	//	diagram := diagramManager.diagramFromDiagramGraphId[graph.Get("id").String()]
 
@@ -226,7 +240,7 @@ func onDiagramManagerDrop(event *js.Object) {
 
 	// name
 	be := CrlEditorSingleton.GetTreeDragSelection()
-	name := core.GetName(be, hl)
+	name := core.GetLabel(be, hl)
 	//	nameProps := &nameProperty{Object: js.Global.Get("Object").New()}
 	//	nameProps.name = name
 	diagramBaseElement.Get("attributes").Set("name", name)
@@ -245,6 +259,27 @@ func onDiagramManagerCellPointerDown(cellView *js.Object, event *js.Object, x *j
 	log.Printf("Pointerdown on Cell %s", baseElementIdString)
 	js.Global.Set("cellView", cellView)
 	CrlEditorSingleton.SelectBaseElementUsingIdString(baseElementIdString)
+}
+
+func onMakeDiagramVisible(e jquery.Event) {
+	diagramViewId := e.Get("target").Call("getAttribute", "viewId").String()
+	js.Global.Get("console").Call("log", "In : onMakeDiagramVisible with: "+diagramViewId)
+	js.Global.Set("clickEvent", e)
+	js.Global.Set("clickEventTarget", e.Get("target"))
+	js.Global.Set("clickEventViewId", e.Get("target").Call("getAttribute", "viewId"))
+	x := js.Global.Get("document").Call("getElementsByClassName", "crlDiagramContainer")
+	lengthString := strconv.Itoa(x.Length())
+	js.Global.Get("console").Call("log", "List length: "+lengthString)
+	for i := 0; i < x.Length(); i++ {
+		js.Global.Get("console").Call("log", "Container id: ", x.Index(i).Get("id").String())
+		if x.Index(i).Get("id").String() == diagramViewId {
+			x.Index(i).Get("style").Set("display", "block")
+			js.Global.Get("console").Call("log", "Showing: "+diagramViewId)
+		} else {
+			x.Index(i).Get("style").Set("display", "none")
+			js.Global.Get("console").Call("log", "Hiding: "+diagramViewId)
+		}
+	}
 }
 
 func (dmPtr *DiagramManager) SetSize() {

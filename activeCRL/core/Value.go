@@ -117,7 +117,7 @@ func (el *value) setOwningElement(oe Element, hl *HeldLocks) {
 
 type Value interface {
 	BaseElement
-	getName(*HeldLocks) string
+	getLabel(*HeldLocks) string
 	getOwningElement(*HeldLocks) Element
 	getUri(*HeldLocks) string
 	setOwningElement(Element, *HeldLocks)

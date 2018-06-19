@@ -43,14 +43,14 @@ func TesFunctionExecution(t *testing.T) {
 		t.Errorf("TrialFunction not called after abstraction created")
 	}
 
-	// Now test to see if SetName() also triggers the function
-	// The SetName() call is going to result in six change notification function calls
+	// Now test to see if SetLabel() also triggers the function
+	// The SetLabel() call is going to result in six change notification function calls
 	//	wg.Add(6)
 	functionCalled = false
-	SetName(child, "Child", hl)
+	SetLabel(child, "Child", hl)
 	wg.Wait()
 
 	if functionCalled == false {
-		t.Errorf("TrialFunction not called after child.SetName()")
+		t.Errorf("TrialFunction not called after child.SetLabel()")
 	}
 }

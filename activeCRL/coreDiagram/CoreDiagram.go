@@ -33,7 +33,7 @@ var CrlDiagramHeightUri string = CrlDiagramUri + "/" + "Height"
 
 var CrlDiagramNodeUri string = CoreDiagramConceptSpace + "/" + "CrlDiagramNode"
 var CrlDiagramNodeModelBaseElementReferenceUri string = CrlDiagramNodeUri + "/" + "ModelBaseElementReference"
-var CrlDiagramNodeDisplayNameUri string = CrlDiagramNodeUri + "/" + "DisplayName"
+var CrlDiagramNodeDisplayLabelUri string = CrlDiagramNodeUri + "/" + "DisplayLabel"
 var CrlDiagramNodeXUri string = CrlDiagramNodeUri + "/" + "X"
 var CrlDiagramNodeYUri string = CrlDiagramNodeUri + "/" + "Y"
 var CrlDiagramNodeHeightUri string = CrlDiagramNodeUri + "/" + "Height"
@@ -59,64 +59,64 @@ func AddCoreDiagramToUofD(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) cor
 func BuildCoreDiagramConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	// Core
 	coreDiagramConceptSpace := uOfD.NewElement(hl, CoreDiagramConceptSpace)
-	core.SetName(coreDiagramConceptSpace, "CoreDiagramConceptSpace", hl)
+	core.SetLabel(coreDiagramConceptSpace, "CoreDiagramConceptSpace", hl)
 	core.SetUri(coreDiagramConceptSpace, CoreDiagramConceptSpace, hl)
 
 	// CrlDiagram
 	crlDiagram := uOfD.NewElement(hl, CrlDiagramUri)
-	core.SetName(crlDiagram, "CrlDiagram", hl)
+	core.SetLabel(crlDiagram, "CrlDiagram", hl)
 	core.SetUri(crlDiagram, CrlDiagramUri, hl)
 	core.SetOwningElement(crlDiagram, coreDiagramConceptSpace, hl)
 
 	crlDiagramWidth := uOfD.NewLiteralReference(hl, CrlDiagramWidthUri)
-	core.SetName(crlDiagramWidth, "Width", hl)
+	core.SetLabel(crlDiagramWidth, "Width", hl)
 	core.SetUri(crlDiagramWidth, CrlDiagramWidthUri, hl)
 	core.SetOwningElement(crlDiagramWidth, crlDiagram, hl)
 
 	crlDiagramHeight := uOfD.NewLiteralReference(hl, CrlDiagramHeightUri)
-	core.SetName(crlDiagramHeight, "Height", hl)
+	core.SetLabel(crlDiagramHeight, "Height", hl)
 	core.SetUri(crlDiagramHeight, CrlDiagramHeightUri, hl)
 	core.SetOwningElement(crlDiagramHeight, crlDiagram, hl)
 
 	// CrlDiagramNode
 	crlDiagramNode := uOfD.NewElement(hl, CrlDiagramNodeUri)
-	core.SetName(crlDiagramNode, "CrlDiagramNode", hl)
+	core.SetLabel(crlDiagramNode, "CrlDiagramNode", hl)
 	core.SetUri(crlDiagramNode, CrlDiagramNodeUri, hl)
 	core.SetOwningElement(crlDiagramNode, coreDiagramConceptSpace, hl)
 
 	crlDiagramNodeModelBaseElementReference := uOfD.NewBaseElementReference(hl, CrlDiagramNodeModelBaseElementReferenceUri)
-	core.SetName(crlDiagramNodeModelBaseElementReference, "ModelBaseElementReference", hl)
+	core.SetLabel(crlDiagramNodeModelBaseElementReference, "ModelBaseElementReference", hl)
 	core.SetUri(crlDiagramNodeModelBaseElementReference, CrlDiagramNodeModelBaseElementReferenceUri, hl)
 	core.SetOwningElement(crlDiagramNodeModelBaseElementReference, crlDiagramNode, hl)
 
-	crlDiagramNodeDisplayName := uOfD.NewLiteralReference(hl, CrlDiagramNodeDisplayNameUri)
-	core.SetName(crlDiagramNodeDisplayName, "DisplayName", hl)
-	core.SetUri(crlDiagramNodeDisplayName, CrlDiagramNodeDisplayNameUri, hl)
-	core.SetOwningElement(crlDiagramNodeDisplayName, crlDiagramNode, hl)
+	crlDiagramNodeDisplayLabel := uOfD.NewLiteralReference(hl, CrlDiagramNodeDisplayLabelUri)
+	core.SetLabel(crlDiagramNodeDisplayLabel, "DisplayLabel", hl)
+	core.SetUri(crlDiagramNodeDisplayLabel, CrlDiagramNodeDisplayLabelUri, hl)
+	core.SetOwningElement(crlDiagramNodeDisplayLabel, crlDiagramNode, hl)
 
 	crlDiagramNodeX := uOfD.NewLiteralReference(hl, CrlDiagramNodeXUri)
-	core.SetName(crlDiagramNodeX, "X", hl)
+	core.SetLabel(crlDiagramNodeX, "X", hl)
 	core.SetUri(crlDiagramNodeX, CrlDiagramNodeXUri, hl)
 	core.SetOwningElement(crlDiagramNodeX, crlDiagramNode, hl)
 
 	crlDiagramNodeY := uOfD.NewLiteralReference(hl, CrlDiagramNodeYUri)
-	core.SetName(crlDiagramNodeY, "Y", hl)
+	core.SetLabel(crlDiagramNodeY, "Y", hl)
 	core.SetUri(crlDiagramNodeY, CrlDiagramNodeYUri, hl)
 	core.SetOwningElement(crlDiagramNodeY, crlDiagramNode, hl)
 
 	crlDiagramNodeHeight := uOfD.NewLiteralReference(hl, CrlDiagramNodeHeightUri)
-	core.SetName(crlDiagramNodeHeight, "Height", hl)
+	core.SetLabel(crlDiagramNodeHeight, "Height", hl)
 	core.SetUri(crlDiagramNodeHeight, CrlDiagramNodeHeightUri, hl)
 	core.SetOwningElement(crlDiagramNodeHeight, crlDiagramNode, hl)
 
 	crlDiagramNodeWidth := uOfD.NewLiteralReference(hl, CrlDiagramNodeWidthUri)
-	core.SetName(crlDiagramNodeWidth, "Width", hl)
+	core.SetLabel(crlDiagramNodeWidth, "Width", hl)
 	core.SetUri(crlDiagramNodeWidth, CrlDiagramNodeWidthUri, hl)
 	core.SetOwningElement(crlDiagramNodeWidth, crlDiagramNode, hl)
 
 	// CrlDiagramLink
 	crlDiagramLink := uOfD.NewElement(hl, CrlDiagramLinkUri)
-	core.SetName(crlDiagramLink, "CrlDiagramLink", hl)
+	core.SetLabel(crlDiagramLink, "CrlDiagramLink", hl)
 	core.SetUri(crlDiagramLink, CrlDiagramLinkUri, hl)
 	core.SetOwningElement(crlDiagramLink, coreDiagramConceptSpace, hl)
 

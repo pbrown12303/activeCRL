@@ -50,19 +50,19 @@ func TestElementFunctionsIds(t *testing.T) {
 	//var ElementGetDefinitionLiteralPointerIndicatedLiteralPointerRefUri string = CoreFunctionsPrefix + "Element/GetDefinitionLiteralPointer/IndicatedLiteralPointerRef"
 	validateLiteralPointerReferenceId(t, uOfD, hl, ElementGetDefinitionLiteralPointerIndicatedLiteralPointerRefUri)
 	//
-	//var ElementGetNameLiteralUri string = CoreFunctionsPrefix + "Element/GetNameLiteral"
-	validateElementId(t, uOfD, hl, ElementGetNameLiteralUri)
-	//var ElementGetNameLiteralSourceElementRefUri string = CoreFunctionsPrefix + "Element/GetNameLiteral/SourceElementRef"
-	validateElementReferenceId(t, uOfD, hl, ElementGetNameLiteralSourceElementRefUri)
-	//var ElementGetNameLiteralIndicatedLiteralRefUri string = CoreFunctionsPrefix + "Element/GetNameLiteral/IndicatedLiteralRef"
-	validateLiteralReferenceId(t, uOfD, hl, ElementGetNameLiteralIndicatedLiteralRefUri)
+	//var ElementGetLabelLiteralUri string = CoreFunctionsPrefix + "Element/GetLabelLiteral"
+	validateElementId(t, uOfD, hl, ElementGetLabelLiteralUri)
+	//var ElementGetLabelLiteralSourceElementRefUri string = CoreFunctionsPrefix + "Element/GetLabelLiteral/SourceElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementGetLabelLiteralSourceElementRefUri)
+	//var ElementGetLabelLiteralIndicatedLiteralRefUri string = CoreFunctionsPrefix + "Element/GetLabelLiteral/IndicatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, ElementGetLabelLiteralIndicatedLiteralRefUri)
 	//
-	//var ElementGetNameLiteralPointerUri string = CoreFunctionsPrefix + "Element/GetNameLiteralPointer"
-	validateElementId(t, uOfD, hl, ElementGetNameLiteralPointerUri)
-	//var ElementGetNameLiteralPointerSourceElementRefUri string = CoreFunctionsPrefix + "Element/GetNameLiteralPointer/SourceElementRef"
-	validateElementReferenceId(t, uOfD, hl, ElementGetNameLiteralPointerSourceElementRefUri)
-	//var ElementGetNameLiteralPointerIndicatedLiteralPointerRefUri string = CoreFunctionsPrefix + "Element/GetNameLiteralPointer/IndicatedLiteralPointerRef"
-	validateLiteralPointerReferenceId(t, uOfD, hl, ElementGetNameLiteralPointerIndicatedLiteralPointerRefUri)
+	//var ElementGetLabelLiteralPointerUri string = CoreFunctionsPrefix + "Element/GetLabelLiteralPointer"
+	validateElementId(t, uOfD, hl, ElementGetLabelLiteralPointerUri)
+	//var ElementGetLabelLiteralPointerSourceElementRefUri string = CoreFunctionsPrefix + "Element/GetLabelLiteralPointer/SourceElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementGetLabelLiteralPointerSourceElementRefUri)
+	//var ElementGetLabelLiteralPointerIndicatedLiteralPointerRefUri string = CoreFunctionsPrefix + "Element/GetLabelLiteralPointer/IndicatedLiteralPointerRef"
+	validateLiteralPointerReferenceId(t, uOfD, hl, ElementGetLabelLiteralPointerIndicatedLiteralPointerRefUri)
 	//
 	//var ElementGetUriLiteralUri string = CoreFunctionsPrefix + "Element/GetUriLiteral"
 	validateElementId(t, uOfD, hl, ElementGetUriLiteralUri)
@@ -85,12 +85,12 @@ func TestElementFunctionsIds(t *testing.T) {
 	//var ElementSetDefinitionModifiedElementRefUri string = CoreFunctionsPrefix + "Element/SetDefinition/ModifiedElementRef"
 	validateElementReferenceId(t, uOfD, hl, ElementSetDefinitionModifiedElementRefUri)
 	//
-	//var ElementSetNameUri string = CoreFunctionsPrefix + "Element/SetName"
-	validateElementId(t, uOfD, hl, ElementSetNameUri)
-	//var ElementSetNameSourceLiteralRefUri string = CoreFunctionsPrefix + "Element/SetName/SourceLiteralRef"
-	validateLiteralReferenceId(t, uOfD, hl, ElementSetNameSourceLiteralRefUri)
-	//var ElementSetNameModifiedElementRefUri string = CoreFunctionsPrefix + "Element/SetName/ModifiedElementRef"
-	validateElementReferenceId(t, uOfD, hl, ElementSetNameModifiedElementRefUri)
+	//var ElementSetLabelUri string = CoreFunctionsPrefix + "Element/SetLabel"
+	validateElementId(t, uOfD, hl, ElementSetLabelUri)
+	//var ElementSetLabelSourceLiteralRefUri string = CoreFunctionsPrefix + "Element/SetLabel/SourceLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, ElementSetLabelSourceLiteralRefUri)
+	//var ElementSetLabelModifiedElementRefUri string = CoreFunctionsPrefix + "Element/SetLabel/ModifiedElementRef"
+	validateElementReferenceId(t, uOfD, hl, ElementSetLabelModifiedElementRefUri)
 }
 
 func TestCreateElementFunction(t *testing.T) {
@@ -351,7 +351,7 @@ func TestGetDefinitionLiteralPointer(t *testing.T) {
 	}
 }
 
-func TestGetNameLiteral(t *testing.T) {
+func TestGetLabelLiteral(t *testing.T) {
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -360,55 +360,55 @@ func TestGetNameLiteral(t *testing.T) {
 	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
-	getNameFunction := uOfD.GetElementWithUri(ElementGetNameLiteralUri)
-	if getNameFunction == nil {
-		t.Error("GetName Function not found")
+	getLabelFunction := uOfD.GetElementWithUri(ElementGetLabelLiteralUri)
+	if getLabelFunction == nil {
+		t.Error("GetLabel Function not found")
 	}
-	sourceElementRef := uOfD.GetElementReferenceWithUri(ElementGetNameLiteralSourceElementRefUri)
+	sourceElementRef := uOfD.GetElementReferenceWithUri(ElementGetLabelLiteralSourceElementRefUri)
 	if sourceElementRef == nil {
 		t.Error("SourceElementRef not found")
 	}
-	indicatedLiteralRef := uOfD.GetLiteralReferenceWithUri(ElementGetNameLiteralIndicatedLiteralRefUri)
+	indicatedLiteralRef := uOfD.GetLiteralReferenceWithUri(ElementGetLabelLiteralIndicatedLiteralRefUri)
 	if indicatedLiteralRef == nil {
 		t.Error("IndicatedLiteralRef not found")
 	}
 
 	// Now create the instance of the function
-	getNameInstance := uOfD.NewElement(hl)
+	getLabelInstance := uOfD.NewElement(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
-	refinementInstance.SetAbstractElement(getNameFunction, hl)
-	refinementInstance.SetRefinedElement(getNameInstance, hl)
+	refinementInstance.SetAbstractElement(getLabelFunction, hl)
+	refinementInstance.SetRefinedElement(getLabelInstance, hl)
 	hl.ReleaseLocks()
 	wg.Wait()
 
 	// Check the results
-	foundSourceElementRef := core.GetChildElementReferenceWithAncestorUri(getNameInstance, ElementGetNameLiteralSourceElementRefUri, hl)
+	foundSourceElementRef := core.GetChildElementReferenceWithAncestorUri(getLabelInstance, ElementGetLabelLiteralSourceElementRefUri, hl)
 	if foundSourceElementRef == nil {
 		t.Error("SourceElementRef not found")
 	}
-	foundIndicatedLiteralRef := core.GetChildLiteralReferenceWithAncestorUri(getNameInstance, ElementGetNameLiteralIndicatedLiteralRefUri, hl)
+	foundIndicatedLiteralRef := core.GetChildLiteralReferenceWithAncestorUri(getLabelInstance, ElementGetLabelLiteralIndicatedLiteralRefUri, hl)
 	if foundIndicatedLiteralRef == nil {
 		t.Error("IndicatedLiteralRef not found")
 	}
 
 	// Now check function execution
 	sourceElement := uOfD.NewElement(hl)
-	sourceName := "SourceName"
-	core.SetName(sourceElement, sourceName, hl)
-	sourceNameLiteral := sourceElement.GetNameLiteral(hl)
+	sourceLabel := "SourceLabel"
+	core.SetLabel(sourceElement, sourceLabel, hl)
+	sourceLabelLiteral := sourceElement.GetLabelLiteral(hl)
 	foundSourceElementRef.SetReferencedElement(sourceElement, hl)
 	hl.ReleaseLocks()
 	wg.Wait()
 
 	indicatedLiteral := foundIndicatedLiteralRef.GetReferencedLiteral(hl)
-	if indicatedLiteral != sourceNameLiteral {
+	if indicatedLiteral != sourceLabelLiteral {
 		t.Error("IndicatedLiteral not set properly")
 		core.Print(sourceElementRef, "foundSourceElementRef: ", hl)
 		core.Print(indicatedLiteralRef, "foundIndicatedLiteralRef: ", hl)
 	}
 }
 
-func TestGetNameLiteralPointer(t *testing.T) {
+func TestGetLabelLiteralPointer(t *testing.T) {
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -417,48 +417,48 @@ func TestGetNameLiteralPointer(t *testing.T) {
 	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
-	getNameFunction := uOfD.GetElementWithUri(ElementGetNameLiteralPointerUri)
-	if getNameFunction == nil {
-		t.Error("GetName Function not found")
+	getLabelFunction := uOfD.GetElementWithUri(ElementGetLabelLiteralPointerUri)
+	if getLabelFunction == nil {
+		t.Error("GetLabel Function not found")
 	}
-	sourceElementRef := uOfD.GetElementReferenceWithUri(ElementGetNameLiteralPointerSourceElementRefUri)
+	sourceElementRef := uOfD.GetElementReferenceWithUri(ElementGetLabelLiteralPointerSourceElementRefUri)
 	if sourceElementRef == nil {
 		t.Error("SourceElementRef not found")
 	}
-	indicatedLiteralPointerRef := uOfD.GetLiteralPointerReferenceWithUri(ElementGetNameLiteralPointerIndicatedLiteralPointerRefUri)
+	indicatedLiteralPointerRef := uOfD.GetLiteralPointerReferenceWithUri(ElementGetLabelLiteralPointerIndicatedLiteralPointerRefUri)
 	if indicatedLiteralPointerRef == nil {
 		t.Error("IndicatedLiteralPointerRef not found")
 	}
 
 	// Now create the instance of the function
-	getNameInstance := uOfD.NewElement(hl)
+	getLabelInstance := uOfD.NewElement(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
-	refinementInstance.SetAbstractElement(getNameFunction, hl)
-	refinementInstance.SetRefinedElement(getNameInstance, hl)
+	refinementInstance.SetAbstractElement(getLabelFunction, hl)
+	refinementInstance.SetRefinedElement(getLabelInstance, hl)
 	hl.ReleaseLocks()
 	wg.Wait()
 
 	// Check the results
-	foundSourceElementRef := core.GetChildElementReferenceWithAncestorUri(getNameInstance, ElementGetNameLiteralPointerSourceElementRefUri, hl)
+	foundSourceElementRef := core.GetChildElementReferenceWithAncestorUri(getLabelInstance, ElementGetLabelLiteralPointerSourceElementRefUri, hl)
 	if foundSourceElementRef == nil {
 		t.Error("SourceElementRef not found")
 	}
-	foundIndicatedLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(getNameInstance, ElementGetNameLiteralPointerIndicatedLiteralPointerRefUri, hl)
+	foundIndicatedLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(getLabelInstance, ElementGetLabelLiteralPointerIndicatedLiteralPointerRefUri, hl)
 	if foundIndicatedLiteralPointerRef == nil {
 		t.Error("IndicatedLiteralPointerRef not found")
 	}
 
 	// Now check function execution
 	sourceElement := uOfD.NewElement(hl)
-	sourceName := "SourceName"
-	core.SetName(sourceElement, sourceName, hl)
-	sourceNameLiteralPointer := sourceElement.GetNameLiteralPointer(hl)
+	sourceLabel := "SourceLabel"
+	core.SetLabel(sourceElement, sourceLabel, hl)
+	sourceLabelLiteralPointer := sourceElement.GetLabelLiteralPointer(hl)
 	foundSourceElementRef.SetReferencedElement(sourceElement, hl)
 	hl.ReleaseLocks()
 	wg.Wait()
 
 	indicatedLiteralPointer := foundIndicatedLiteralPointerRef.GetReferencedLiteralPointer(hl)
-	if indicatedLiteralPointer != sourceNameLiteralPointer {
+	if indicatedLiteralPointer != sourceLabelLiteralPointer {
 		t.Error("IndicatedLiteralPointer not set properly")
 		core.Print(sourceElementRef, "foundSourceElementRef: ", hl)
 		core.Print(indicatedLiteralPointerRef, "foundIndicatedLiteralPointerRef: ", hl)
@@ -632,7 +632,7 @@ func TestSetDefinition(t *testing.T) {
 	}
 }
 
-func TestSetName(t *testing.T) {
+func TestSetLabel(t *testing.T) {
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -641,27 +641,27 @@ func TestSetName(t *testing.T) {
 	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
-	setName := uOfD.GetElementWithUri(ElementSetNameUri)
-	if setName == nil {
-		t.Errorf("SetName function representation not found")
+	setLabel := uOfD.GetElementWithUri(ElementSetLabelUri)
+	if setLabel == nil {
+		t.Errorf("SetLabel function representation not found")
 	}
 
 	// Create the instance
-	replicate := core.CreateReplicateAsRefinement(setName, hl)
+	replicate := core.CreateReplicateAsRefinement(setLabel, hl)
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
 	wg.Wait()
 
 	// Now check the replication
-	if uOfD.IsRefinementOf(replicate, setName, hl) != true {
-		t.Errorf("Replicate is not refinement of SetName()")
+	if uOfD.IsRefinementOf(replicate, setLabel, hl) != true {
+		t.Errorf("Replicate is not refinement of SetLabel()")
 	}
-	sourceLiteralRef := core.GetChildLiteralReferenceWithAncestorUri(replicate, ElementSetNameSourceLiteralRefUri, hl)
+	sourceLiteralRef := core.GetChildLiteralReferenceWithAncestorUri(replicate, ElementSetLabelSourceLiteralRefUri, hl)
 	if sourceLiteralRef == nil {
 		t.Errorf("SourceLiteralRef child not found")
 	}
-	modifiedElementRef := core.GetChildElementReferenceWithAncestorUri(replicate, ElementSetNameModifiedElementRefUri, hl)
+	modifiedElementRef := core.GetChildElementReferenceWithAncestorUri(replicate, ElementSetLabelModifiedElementRefUri, hl)
 	if modifiedElementRef == nil {
 		t.Errorf("ModifiedElementRef child not found")
 		core.Print(replicate, "Replicate: ", hl)
@@ -669,7 +669,7 @@ func TestSetName(t *testing.T) {
 
 	// Now test target reference update functionality
 	sourceLiteral := uOfD.NewLiteral(hl)
-	name := "TestName"
+	name := "TestLabel"
 	sourceLiteral.SetLiteralValue(name, hl)
 	sourceLiteralRef.SetReferencedLiteral(sourceLiteral, hl)
 	modifiedElement := uOfD.NewElement(hl)
@@ -680,7 +680,7 @@ func TestSetName(t *testing.T) {
 	wg.Wait()
 
 	hl.LockBaseElement(replicate)
-	if core.GetName(modifiedElement, hl) != name {
-		t.Errorf("Name not set properly")
+	if core.GetLabel(modifiedElement, hl) != name {
+		t.Errorf("Label not set properly")
 	}
 }

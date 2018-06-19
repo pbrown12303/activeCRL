@@ -47,7 +47,7 @@ func (eppPtr *elementPointerPointer) GetElementPointer(hl *HeldLocks) ElementPoi
 	return eppPtr.elementPointer
 }
 
-func (eppPtr *elementPointerPointer) getName(hl *HeldLocks) string {
+func (eppPtr *elementPointerPointer) getLabel(hl *HeldLocks) string {
 	// No locking required - it's a constant
 	return "elementPointerPointer"
 }

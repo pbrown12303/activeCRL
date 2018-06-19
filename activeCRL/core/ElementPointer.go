@@ -88,7 +88,7 @@ func (epPtr *elementPointer) GetElement(hl *HeldLocks) Element {
 	return epPtr.element
 }
 
-func (epPtr *elementPointer) getName(hl *HeldLocks) string {
+func (epPtr *elementPointer) getLabel(hl *HeldLocks) string {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()

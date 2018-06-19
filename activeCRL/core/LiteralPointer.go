@@ -103,7 +103,7 @@ func (lpPtr *literalPointer) GetLiteralVersion(hl *HeldLocks) int {
 	return lpPtr.literalVersion
 }
 
-func (lpPtr *literalPointer) getName(hl *HeldLocks) string {
+func (lpPtr *literalPointer) getLabel(hl *HeldLocks) string {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()

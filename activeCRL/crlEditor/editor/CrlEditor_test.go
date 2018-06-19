@@ -62,7 +62,3 @@ var _ = Describe("CrlEditor Initialization", func() {
 		})
 	})
 })
-
-var _ = Describe("CrlEditor Selection", func() {
-		
-	}

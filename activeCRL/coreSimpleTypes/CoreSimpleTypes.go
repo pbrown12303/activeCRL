@@ -33,7 +33,7 @@ func AddCoreSimpleTypesToUofD(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks)
 func BuildCoreSimpleTypesConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	// Core
 	coreSimpleTypesConceptSpace := uOfD.NewElement(hl, CoreSimpleTypesConceptSpaceUri)
-	core.SetName(coreSimpleTypesConceptSpace, "CoreSimpleTypes", hl)
+	core.SetLabel(coreSimpleTypesConceptSpace, "CoreSimpleTypes", hl)
 	core.SetUri(coreSimpleTypesConceptSpace, CoreSimpleTypesConceptSpaceUri, hl)
 
 	BuildBooleanSimpleTypes(coreSimpleTypesConceptSpace, uOfD, hl)

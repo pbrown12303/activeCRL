@@ -96,7 +96,7 @@ func (tmPtr *TreeManager) AddChildren(be core.BaseElement, hl *core.HeldLocks) {
 func (tmPtr *TreeManager) AddNode(be core.BaseElement, parentId string, hl *core.HeldLocks) {
 	nodeData := &jstreeNode{Object: js.Global.Get("Object").New()}
 	nodeData.id = be.GetId(hl).String() + treeNodeSuffix
-	nodeData.name = core.GetName(be, hl)
+	nodeData.name = core.GetLabel(be, hl)
 	switch be.(type) {
 	case core.ElementPointer:
 		nodeData.icon = "/icons/ElementPointerIcon.svg"

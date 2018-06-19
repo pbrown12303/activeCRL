@@ -37,7 +37,7 @@ func (lPtr *literal) GetLiteralValue(hl *HeldLocks) string {
 	return lPtr.literalValue
 }
 
-func (lPtr *literal) getName(hl *HeldLocks) string {
+func (lPtr *literal) getLabel(hl *HeldLocks) string {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()

@@ -91,20 +91,20 @@ func (elPtr *element) GetDefinitionLiteralPointer(hl *HeldLocks) LiteralPointer 
 	return nil
 }
 
-func (elPtr *element) GetNameLiteral(hl *HeldLocks) Literal {
+func (elPtr *element) GetLabelLiteral(hl *HeldLocks) Literal {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
-	nlp := elPtr.GetNameLiteralPointer(hl)
+	nlp := elPtr.GetLabelLiteralPointer(hl)
 	if nlp != nil {
 		return nlp.GetLiteral(hl)
 	}
 	return nil
 }
 
-func (elPtr *element) GetNameLiteralPointer(hl *HeldLocks) LiteralPointer {
+func (elPtr *element) GetLabelLiteralPointer(hl *HeldLocks) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -391,17 +391,17 @@ func SetDefinition(el Element, definition string, hl *HeldLocks) {
 	nl.SetLiteralValue(definition, hl)
 }
 
-func SetName(el Element, name string, hl *HeldLocks) {
+func SetLabel(el Element, name string, hl *HeldLocks) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(el)
-	nl := el.GetNameLiteral(hl)
+	nl := el.GetLabelLiteral(hl)
 	if nl == nil {
-		nlp := el.GetNameLiteralPointer(hl)
+		nlp := el.GetLabelLiteralPointer(hl)
 		if nlp == nil {
-			nlp = el.GetUniverseOfDiscourse(hl).NewNameLiteralPointer(hl)
+			nlp = el.GetUniverseOfDiscourse(hl).NewLabelLiteralPointer(hl)
 			SetOwningElement(nlp, el, hl)
 		}
 		nl = el.GetUniverseOfDiscourse(hl).NewLiteral(hl)
@@ -416,8 +416,8 @@ type Element interface {
 	GetDefinition(*HeldLocks) string
 	GetDefinitionLiteral(*HeldLocks) Literal
 	GetDefinitionLiteralPointer(*HeldLocks) LiteralPointer
-	GetNameLiteral(*HeldLocks) Literal
-	GetNameLiteralPointer(*HeldLocks) LiteralPointer
+	GetLabelLiteral(*HeldLocks) Literal
+	GetLabelLiteralPointer(*HeldLocks) LiteralPointer
 	GetOwnedBaseElements(*HeldLocks) []BaseElement
 	GetOwnedElements(*HeldLocks) []Element
 	//	GetOwningElement(*HeldLocks) Element

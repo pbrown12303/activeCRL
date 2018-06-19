@@ -47,7 +47,7 @@ func (pllPtr *literalPointerPointer) GetLiteralPointer(hl *HeldLocks) LiteralPoi
 	return pllPtr.literalPointer
 }
 
-func (pllPtr *literalPointerPointer) getName(hl *HeldLocks) string {
+func (pllPtr *literalPointerPointer) getLabel(hl *HeldLocks) string {
 	// No locking required - it's a constant
 	return "literalPointerPointer"
 }

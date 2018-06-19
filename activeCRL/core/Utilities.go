@@ -480,7 +480,7 @@ func ReplicateAsRefinement(original Element, replicate Element, hl *HeldLocks) {
 	hl.LockBaseElement(replicate)
 	uOfD := replicate.GetUniverseOfDiscourse(hl)
 
-	SetName(replicate, GetName(original, hl), hl)
+	SetLabel(replicate, GetLabel(original, hl), hl)
 	if uOfD.IsRefinementOf(replicate, original, hl) == false {
 		refinement := uOfD.NewRefinement(hl)
 		SetOwningElement(refinement, replicate, hl)
@@ -517,7 +517,7 @@ func ReplicateAsRefinement(original Element, replicate Element, hl *HeldLocks) {
 			SetOwningElement(refinement, replicateChild, hl)
 			refinement.SetAbstractElement(originalChild, hl)
 			refinement.SetRefinedElement(replicateChild, hl)
-			SetName(replicateChild, GetName(originalChild, hl), hl)
+			SetLabel(replicateChild, GetLabel(originalChild, hl), hl)
 		}
 		switch originalChild.(type) {
 		case Element:

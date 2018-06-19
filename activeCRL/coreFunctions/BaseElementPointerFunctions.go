@@ -42,7 +42,7 @@ func createBaseElementPointer(element core.Element, changeNotifications []*core.
 	if createdBaseElementPointerReference == nil {
 		createdBaseElementPointerReference = uOfD.NewBaseElementReference(hl)
 		core.SetOwningElement(createdBaseElementPointerReference, element, hl)
-		core.SetName(createdBaseElementPointerReference, "CreatedBaseElementPointerReference", hl)
+		core.SetLabel(createdBaseElementPointerReference, "CreatedBaseElementPointerReference", hl)
 		rootCreatedElementReference := uOfD.GetBaseElementReferenceWithUri(BaseElementPointerCreateCreatedBaseElementPointerRefUri)
 		refinement := uOfD.NewRefinement(hl)
 		core.SetOwningElement(refinement, createdBaseElementPointerReference, hl)
@@ -221,80 +221,80 @@ func BuildCoreBaseElementPointerFunctions(coreFunctionsElement core.Element, uOf
 	// BaseElementPointerFunctions
 	baseElementPointerFunctions := uOfD.NewElement(hl, BaseElementPointerFunctionsUri)
 	core.SetOwningElement(baseElementPointerFunctions, coreFunctionsElement, hl)
-	core.SetName(baseElementPointerFunctions, "BaseElementPointerFunctions", hl)
+	core.SetLabel(baseElementPointerFunctions, "BaseElementPointerFunctions", hl)
 	core.SetUri(baseElementPointerFunctions, BaseElementPointerFunctionsUri, hl)
 
 	// CreateElement
 	createBaseElementPointer := uOfD.NewElement(hl, BaseElementPointerCreateUri)
 	core.SetOwningElement(createBaseElementPointer, baseElementPointerFunctions, hl)
-	core.SetName(createBaseElementPointer, "CreateBaseElementPointer", hl)
+	core.SetLabel(createBaseElementPointer, "CreateBaseElementPointer", hl)
 	core.SetUri(createBaseElementPointer, BaseElementPointerCreateUri, hl)
 	// CreatedElementReference
 	createdBaseElementPointerReference := uOfD.NewBaseElementReference(hl, BaseElementPointerCreateCreatedBaseElementPointerRefUri)
 	core.SetOwningElement(createdBaseElementPointerReference, createBaseElementPointer, hl)
-	core.SetName(createdBaseElementPointerReference, "CreatedBaseElementPointerRef", hl)
+	core.SetLabel(createdBaseElementPointerReference, "CreatedBaseElementPointerRef", hl)
 	core.SetUri(createdBaseElementPointerReference, BaseElementPointerCreateCreatedBaseElementPointerRefUri, hl)
 
 	// GetBaseElement
 	getBaseElement := uOfD.NewElement(hl, BaseElementPointerGetBaseElementUri)
-	core.SetName(getBaseElement, "GetBaseElement", hl)
+	core.SetLabel(getBaseElement, "GetBaseElement", hl)
 	core.SetOwningElement(getBaseElement, baseElementPointerFunctions, hl)
 	core.SetUri(getBaseElement, BaseElementPointerGetBaseElementUri, hl)
 	// GetBaseElement.SourceReference
 	getBaseElementSourceReference := uOfD.NewBaseElementReference(hl, BaseElementPointerGetBaseElementSourceBaseElementPointerRefUri)
 	core.SetOwningElement(getBaseElementSourceReference, getBaseElement, hl)
-	core.SetName(getBaseElementSourceReference, "SourceBaseElementPointerRef", hl)
+	core.SetLabel(getBaseElementSourceReference, "SourceBaseElementPointerRef", hl)
 	core.SetUri(getBaseElementSourceReference, BaseElementPointerGetBaseElementSourceBaseElementPointerRefUri, hl)
 	// GetBaseElementTargetBaseElementReference
 	getBaseElementTargetReference := uOfD.NewBaseElementReference(hl, BaseElementPointerGetBaseElementIndicatedBaseElementRefUri)
 	core.SetOwningElement(getBaseElementTargetReference, getBaseElement, hl)
-	core.SetName(getBaseElementTargetReference, "IndicatedBaseElementRef", hl)
+	core.SetLabel(getBaseElementTargetReference, "IndicatedBaseElementRef", hl)
 	core.SetUri(getBaseElementTargetReference, BaseElementPointerGetBaseElementIndicatedBaseElementRefUri, hl)
 
 	// GetBaseElementId
 	getBaseElementId := uOfD.NewElement(hl, BaseElementPointerGetBaseElementIdUri)
-	core.SetName(getBaseElementId, "GetBaseElementId", hl)
+	core.SetLabel(getBaseElementId, "GetBaseElementId", hl)
 	core.SetOwningElement(getBaseElementId, baseElementPointerFunctions, hl)
 	core.SetUri(getBaseElementId, BaseElementPointerGetBaseElementIdUri, hl)
 	// GetBaseElementId.SourceReference
 	getBaseElementIdSourceReference := uOfD.NewBaseElementReference(hl, BaseElementPointerGetBaseElementIdSourceBaseElementPointerRefUri)
 	core.SetOwningElement(getBaseElementIdSourceReference, getBaseElementId, hl)
-	core.SetName(getBaseElementIdSourceReference, "SourceBaseElementPointerRef", hl)
+	core.SetLabel(getBaseElementIdSourceReference, "SourceBaseElementPointerRef", hl)
 	core.SetUri(getBaseElementIdSourceReference, BaseElementPointerGetBaseElementIdSourceBaseElementPointerRefUri, hl)
 	// GetBaseElementIdTargetLiteralReference
 	getBaseElementIdTargetReference := uOfD.NewLiteralReference(hl, BaseElementPointerGetBaseElementIdCreatedLiteralUri)
 	core.SetOwningElement(getBaseElementIdTargetReference, getBaseElementId, hl)
-	core.SetName(getBaseElementIdTargetReference, "CreatedLiteralRef", hl)
+	core.SetLabel(getBaseElementIdTargetReference, "CreatedLiteralRef", hl)
 	core.SetUri(getBaseElementIdTargetReference, BaseElementPointerGetBaseElementIdCreatedLiteralUri, hl)
 
 	// GetBaseElementVersion
 	getBaseElementVersion := uOfD.NewElement(hl, BaseElementPointerGetBaseElementVersionUri)
-	core.SetName(getBaseElementVersion, "GetBaseElementVersion", hl)
+	core.SetLabel(getBaseElementVersion, "GetBaseElementVersion", hl)
 	core.SetOwningElement(getBaseElementVersion, baseElementPointerFunctions, hl)
 	core.SetUri(getBaseElementVersion, BaseElementPointerGetBaseElementVersionUri, hl)
 	// GetBaseElementVersion.SourceReference
 	getBaseElementVersionSourceReference := uOfD.NewBaseElementReference(hl, BaseElementPointerGetBaseElementVersionSourceBaseElementPointerRefUri)
 	core.SetOwningElement(getBaseElementVersionSourceReference, getBaseElementVersion, hl)
-	core.SetName(getBaseElementVersionSourceReference, "SourceBaseElementPointerRef", hl)
+	core.SetLabel(getBaseElementVersionSourceReference, "SourceBaseElementPointerRef", hl)
 	core.SetUri(getBaseElementVersionSourceReference, BaseElementPointerGetBaseElementVersionSourceBaseElementPointerRefUri, hl)
 	// GetBaseElementVersionTargetLiteralReference
 	getBaseElementVersionTargetReference := uOfD.NewLiteralReference(hl, BaseElementPointerGetBaseElementVersionCreatedLiteralRefUri)
 	core.SetOwningElement(getBaseElementVersionTargetReference, getBaseElementVersion, hl)
-	core.SetName(getBaseElementVersionTargetReference, "CreatedLiteralRef", hl)
+	core.SetLabel(getBaseElementVersionTargetReference, "CreatedLiteralRef", hl)
 	core.SetUri(getBaseElementVersionTargetReference, BaseElementPointerGetBaseElementVersionCreatedLiteralRefUri, hl)
 
 	// SetBaseElement
 	setBaseElement := uOfD.NewElement(hl, BaseElementPointerSetBaseElementUri)
-	core.SetName(setBaseElement, "SetBaseElement", hl)
+	core.SetLabel(setBaseElement, "SetBaseElement", hl)
 	core.SetOwningElement(setBaseElement, baseElementPointerFunctions, hl)
 	core.SetUri(setBaseElement, BaseElementPointerSetBaseElementUri, hl)
 	// SetBaseElement.BaseElementReference
 	setBaseElementBaseElementReference := uOfD.NewBaseElementReference(hl, BaseElementPointerSetBaseElementBaseElementRefUri)
-	core.SetName(setBaseElementBaseElementReference, "BaseElementRef", hl)
+	core.SetLabel(setBaseElementBaseElementReference, "BaseElementRef", hl)
 	core.SetOwningElement(setBaseElementBaseElementReference, setBaseElement, hl)
 	core.SetUri(setBaseElementBaseElementReference, BaseElementPointerSetBaseElementBaseElementRefUri, hl)
 	setBaseElementTargetBaseElementPointerReference := uOfD.NewBaseElementReference(hl, BaseElementPointerSetBaseElementModifiedBaseElementPointerRefUri)
-	core.SetName(setBaseElementTargetBaseElementPointerReference, "ModifiedBaseElementPointerRef", hl)
+	core.SetLabel(setBaseElementTargetBaseElementPointerReference, "ModifiedBaseElementPointerRef", hl)
 	core.SetOwningElement(setBaseElementTargetBaseElementPointerReference, setBaseElement, hl)
 	core.SetUri(setBaseElementTargetBaseElementPointerReference, BaseElementPointerSetBaseElementModifiedBaseElementPointerRefUri, hl)
 }

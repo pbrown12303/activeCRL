@@ -18,7 +18,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 
 	// Element
 	element := uOfD.NewElement(hl)
-	SetName(element, "Element", hl)
+	SetLabel(element, "Element", hl)
 	recoveredElement := uOfD.GetBaseElementWithUri("http://activeCrl.com/test/Element")
 	if recoveredElement != nil {
 		t.Error("Wrong element returned for find Element by URI")
@@ -48,7 +48,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 
 	// ElementPointerReference
 	elementPointerReference := uOfD.NewElementPointerReference(hl)
-	SetName(elementPointerReference, "ElementReference", hl)
+	SetLabel(elementPointerReference, "ElementReference", hl)
 	SetUri(elementPointerReference, "http://activeCrl.com/test/ElementPointerReference", hl)
 	recoveredElementPointerReference := uOfD.GetBaseElementWithUri("http://activeCrl.com/test/ElementPointerReference")
 	if recoveredElementPointerReference == nil {
@@ -57,7 +57,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 
 	// ElementReference
 	elementReference := uOfD.NewElementReference(hl)
-	SetName(elementReference, "ElementReference", hl)
+	SetLabel(elementReference, "ElementReference", hl)
 	SetUri(elementReference, "http://activeCrl.com/test/ElementReference", hl)
 	recoveredElementReference := uOfD.GetBaseElementWithUri("http://activeCrl.com/test/ElementReference")
 	if recoveredElementReference == nil {
@@ -90,7 +90,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 
 	// LiteralPointerReference
 	literalPointerReference := uOfD.NewLiteralPointerReference(hl)
-	SetName(literalPointerReference, "LiteralReference", hl)
+	SetLabel(literalPointerReference, "LiteralReference", hl)
 	SetUri(literalPointerReference, "http://activeCrl.com/test/LiteralPointerReference", hl)
 	recoveredLiteralPointerReference := uOfD.GetBaseElementWithUri("http://activeCrl.com/test/LiteralPointerReference")
 	if recoveredLiteralPointerReference == nil {
@@ -99,7 +99,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 
 	// LiteralReference
 	literalReference := uOfD.NewLiteralReference(hl)
-	SetName(literalReference, "LiteralReference", hl)
+	SetLabel(literalReference, "LiteralReference", hl)
 	SetUri(literalReference, "http://activeCrl.com/test/LiteralReference", hl)
 	recoveredLiteralReference := uOfD.GetBaseElementWithUri("http://activeCrl.com/test/LiteralReference")
 	if recoveredLiteralReference == nil {
@@ -108,7 +108,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 
 	// Refinement
 	refinement := uOfD.NewRefinement(hl)
-	SetName(refinement, "Refinement", hl)
+	SetLabel(refinement, "Refinement", hl)
 	SetUri(refinement, "http://activeCrl.com/test/Refinement", hl)
 	recoveredRefinement := uOfD.GetBaseElementWithUri("http://activeCrl.com/test/Refinement")
 	if recoveredRefinement == nil {
@@ -117,7 +117,7 @@ func TestGetBaseElementWithUri(t *testing.T) {
 
 	// Child of element
 	child := uOfD.NewElement(hl)
-	SetName(child, "Child", hl)
+	SetLabel(child, "Child", hl)
 	SetOwningElement(child, element, hl)
 	SetUri(child, "http://activeCrl.com/test/Element/Child", hl)
 	recoveredChild := uOfD.GetBaseElementWithUri("http://activeCrl.com/test/Element/Child")
@@ -197,7 +197,7 @@ func TestAddLiteralListener(t *testing.T) {
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl).(*universeOfDiscourse)
 	e1 := uOfD.NewLiteral(hl)
-	lp := uOfD.NewNameLiteralPointer(hl)
+	lp := uOfD.NewLabelLiteralPointer(hl)
 	lp.SetLiteral(e1, hl)
 	elm := uOfD.literalListenerMap.GetEntry(e1.GetId(hl))
 	if elm == nil {
@@ -228,7 +228,7 @@ func TestAddLiteralPointerListener(t *testing.T) {
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl).(*universeOfDiscourse)
-	lp := uOfD.NewNameLiteralPointer(hl)
+	lp := uOfD.NewLabelLiteralPointer(hl)
 	lpp := uOfD.NewLiteralPointerPointer(hl)
 	lpp.SetLiteralPointer(lp, hl)
 	elm := uOfD.literalPointerListenerMap.GetEntry(lp.GetId(hl))

@@ -25,10 +25,10 @@ func TestLiteralPointerFunctionsIds(t *testing.T) {
 	//var LiteralPointerFunctionsUri string = CoreFunctionsPrefix + "LiteralPointerFunctions"
 	validateElementId(t, uOfD, hl, LiteralPointerFunctionsUri)
 	//
-	//var LiteralPointerCreateNameLiteralPointerUri string = CoreFunctionsPrefix + "LiteralPointer/CreateNameLiteralPointer"
-	validateElementId(t, uOfD, hl, LiteralPointerCreateNameLiteralPointerUri)
-	//var LiteralPointerCreateNameLiteralPointerCreatedLiteralPointerRefUri = CoreFunctionsPrefix + "LiteralPointer/CreateNameLiteralPointer/CreatedLiteralPointerRef"
-	validateLiteralPointerReferenceId(t, uOfD, hl, LiteralPointerCreateNameLiteralPointerCreatedLiteralPointerRefUri)
+	//var LiteralPointerCreateLabelLiteralPointerUri string = CoreFunctionsPrefix + "LiteralPointer/CreateLabelLiteralPointer"
+	validateElementId(t, uOfD, hl, LiteralPointerCreateLabelLiteralPointerUri)
+	//var LiteralPointerCreateLabelLiteralPointerCreatedLiteralPointerRefUri = CoreFunctionsPrefix + "LiteralPointer/CreateLabelLiteralPointer/CreatedLiteralPointerRef"
+	validateLiteralPointerReferenceId(t, uOfD, hl, LiteralPointerCreateLabelLiteralPointerCreatedLiteralPointerRefUri)
 	//
 	//var LiteralPointerCreateDefinitionLiteralPointerUri string = CoreFunctionsPrefix + "LiteralPointer/CreateDefinitionLiteralPointer"
 	validateElementId(t, uOfD, hl, LiteralPointerCreateDefinitionLiteralPointerUri)
@@ -81,7 +81,7 @@ func TestLiteralPointerFunctionsIds(t *testing.T) {
 	validateLiteralPointerReferenceId(t, uOfD, hl, LiteralPointerSetLiteralModifiedLiteralPointerRefUri)
 }
 
-func TestCreateNameLiteralPointerFunction(t *testing.T) {
+func TestCreateLabelLiteralPointerFunction(t *testing.T) {
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -90,11 +90,11 @@ func TestCreateNameLiteralPointerFunction(t *testing.T) {
 	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get the reference elements
-	createNameLiteralPointer := uOfD.GetElementWithUri(LiteralPointerCreateNameLiteralPointerUri)
-	if createNameLiteralPointer == nil {
-		t.Error("CreateNameLiteralPointer not found")
+	createLabelLiteralPointer := uOfD.GetElementWithUri(LiteralPointerCreateLabelLiteralPointerUri)
+	if createLabelLiteralPointer == nil {
+		t.Error("CreateLabelLiteralPointer not found")
 	}
-	createdLiteralPointerRef := uOfD.GetLiteralPointerReferenceWithUri(LiteralPointerCreateNameLiteralPointerCreatedLiteralPointerRefUri)
+	createdLiteralPointerRef := uOfD.GetLiteralPointerReferenceWithUri(LiteralPointerCreateLabelLiteralPointerCreatedLiteralPointerRefUri)
 	if createdLiteralPointerRef == nil {
 		t.Error("CreatedElementReference not found")
 	}
@@ -103,12 +103,12 @@ func TestCreateNameLiteralPointerFunction(t *testing.T) {
 	createLiteralPointerInstance := uOfD.NewElement(hl)
 	createLiteralPointerInstanceIdentifier := createLiteralPointerInstance.GetId(hl)
 	refinementInstance := uOfD.NewRefinement(hl)
-	refinementInstance.SetAbstractElement(createNameLiteralPointer, hl)
+	refinementInstance.SetAbstractElement(createLabelLiteralPointer, hl)
 	refinementInstance.SetRefinedElement(createLiteralPointerInstance, hl)
 	hl.ReleaseLocks()
 	wg.Wait()
 
-	foundLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(createLiteralPointerInstance, LiteralPointerCreateNameLiteralPointerCreatedLiteralPointerRefUri, hl)
+	foundLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(createLiteralPointerInstance, LiteralPointerCreateLabelLiteralPointerCreatedLiteralPointerRefUri, hl)
 	foundLiteralPointerRefIdentifier := uuid.Nil
 	var createdLiteralPointer core.LiteralPointer
 	createdLiteralPointerIdentifier := uuid.Nil
@@ -153,7 +153,7 @@ func TestCreateNameLiteralPointerFunction(t *testing.T) {
 	if redoneReference == nil {
 		t.Error("Reference creation not redone")
 	} else {
-		if core.GetChildLiteralPointerReferenceWithAncestorUri(redoneInstance, LiteralPointerCreateNameLiteralPointerCreatedLiteralPointerRefUri, hl) != redoneReference {
+		if core.GetChildLiteralPointerReferenceWithAncestorUri(redoneInstance, LiteralPointerCreateLabelLiteralPointerCreatedLiteralPointerRefUri, hl) != redoneReference {
 			t.Error("Reference not restored as child of function instance")
 		}
 		redoneCreatedElement := uOfD.GetBaseElement(createdLiteralPointerIdentifier)
@@ -518,7 +518,7 @@ func TestGetLiteralId(t *testing.T) {
 
 	// Now test target reference update functionality
 	sourceLiteral := uOfD.NewLiteral(hl)
-	sourceLiteralValue := "SourceName"
+	sourceLiteralValue := "SourceLabel"
 	sourceLiteral.SetLiteralValue(sourceLiteralValue, hl)
 	sourceLiteralPointer := uOfD.NewValueLiteralPointer(hl)
 	sourceLiteralPointer.SetLiteral(sourceLiteral, hl)
@@ -575,7 +575,7 @@ func TestGetLiteralVersion(t *testing.T) {
 
 	// Now test target reference update functionality
 	sourceLiteral := uOfD.NewLiteral(hl)
-	sourceLiteralValue := "SourceName"
+	sourceLiteralValue := "SourceLabel"
 	sourceLiteral.SetLiteralValue(sourceLiteralValue, hl)
 	sourceLiteralPointer := uOfD.NewValueLiteralPointer(hl)
 	sourceLiteralPointer.SetLiteral(sourceLiteral, hl)

@@ -533,7 +533,7 @@ func (uOfD *universeOfDiscourse) NewLiteral(hl *HeldLocks, uri ...string) Litera
 	return &lit
 }
 
-func (uOfD *universeOfDiscourse) NewNameLiteralPointer(hl *HeldLocks, uri ...string) LiteralPointer {
+func (uOfD *universeOfDiscourse) NewLabelLiteralPointer(hl *HeldLocks, uri ...string) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -992,7 +992,7 @@ type UniverseOfDiscourse interface {
 	NewElementPointerReference(*HeldLocks, ...string) ElementPointerReference
 	NewElementReference(*HeldLocks, ...string) ElementReference
 	NewLiteral(*HeldLocks, ...string) Literal
-	NewNameLiteralPointer(*HeldLocks, ...string) LiteralPointer
+	NewLabelLiteralPointer(*HeldLocks, ...string) LiteralPointer
 	NewDefinitionLiteralPointer(*HeldLocks, ...string) LiteralPointer
 	NewUriLiteralPointer(*HeldLocks, ...string) LiteralPointer
 	NewValueLiteralPointer(*HeldLocks, ...string) LiteralPointer

@@ -132,27 +132,27 @@ func TestReplicateAsRefinement(t *testing.T) {
 
 	// Create original
 	original := uOfD.NewElement(hl)
-	SetName(original, "Root", hl)
+	SetLabel(original, "Root", hl)
 	oChild1 := uOfD.NewElement(hl)
 	SetOwningElement(oChild1, original, hl)
-	oChild1Name := "Element"
-	SetName(oChild1, oChild1Name, hl)
+	oChild1Label := "Element"
+	SetLabel(oChild1, oChild1Label, hl)
 	oChild2 := uOfD.NewElementPointerReference(hl)
 	SetOwningElement(oChild2, original, hl)
-	oChild2Name := "ElementPointerReference"
-	SetName(oChild2, oChild2Name, hl)
+	oChild2Label := "ElementPointerReference"
+	SetLabel(oChild2, oChild2Label, hl)
 	oChild3 := uOfD.NewElementReference(hl)
 	SetOwningElement(oChild3, original, hl)
-	oChild3Name := "ElementReference"
-	SetName(oChild3, oChild3Name, hl)
+	oChild3Label := "ElementReference"
+	SetLabel(oChild3, oChild3Label, hl)
 	oChild4 := uOfD.NewLiteralPointerReference(hl)
 	SetOwningElement(oChild4, original, hl)
-	oChild4Name := "LiteralPointerReference"
-	SetName(oChild4, oChild4Name, hl)
+	oChild4Label := "LiteralPointerReference"
+	SetLabel(oChild4, oChild4Label, hl)
 	oChild5 := uOfD.NewLiteralReference(hl)
 	SetOwningElement(oChild5, original, hl)
-	oChild5Name := "LiteralReference"
-	SetName(oChild5, oChild5Name, hl)
+	oChild5Label := "LiteralReference"
+	SetLabel(oChild5, oChild5Label, hl)
 
 	replicate := uOfD.NewElement(hl)
 	ReplicateAsRefinement(original, replicate, hl)

@@ -26,7 +26,7 @@ func AddCoreFunctionsToUofD(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) c
 func BuildCoreFunctionsConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	// Core
 	coreFunctionsElement := uOfD.NewElement(hl, CoreFunctionsUri)
-	core.SetName(coreFunctionsElement, "CoreFunctions", hl)
+	core.SetLabel(coreFunctionsElement, "CoreFunctions", hl)
 	core.SetUri(coreFunctionsElement, CoreFunctionsUri, hl)
 
 	BuildCoreBaseElementFunctions(coreFunctionsElement, uOfD, hl)

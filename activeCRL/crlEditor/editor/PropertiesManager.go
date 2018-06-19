@@ -35,8 +35,8 @@ func (pmPtr *PropertiesManager) BaseElementSelected(be core.BaseElement, hl *cor
 	// UniverseOfDiscourse
 	displayUniverseOfDiscourse(properties, be, 4, hl)
 
-	// Name
-	displayName(properties, be, 5, hl)
+	// Label
+	displayLabel(properties, be, 5, hl)
 
 	// URI
 	displayUri(properties, be, 6, hl)
@@ -106,11 +106,11 @@ func displayId(properties *js.Object, be core.BaseElement, row int, hl *core.Hel
 	idRow.Get("cells").Index(1).Set("innerHTML", core.BaseElement.GetId(be, hl).String())
 }
 
-func displayName(properties *js.Object, be core.BaseElement, row int, hl *core.HeldLocks) {
+func displayLabel(properties *js.Object, be core.BaseElement, row int, hl *core.HeldLocks) {
 	nameRow := obtainPropertyRow(properties, row)
 	nameRow.Get("cells").Index(0).Set("innerHTML", "Name")
-	nameRow.Get("cells").Index(1).Set("innerHTML", core.GetName(be, hl))
-	nameRow.Get("cells").Index(1).Set("id", "baseElementName")
+	nameRow.Get("cells").Index(1).Set("innerHTML", core.GetLabel(be, hl))
+	nameRow.Get("cells").Index(1).Set("id", "baseElementLabel")
 	switch be.(type) {
 	case core.Element:
 		uri := core.GetUri(be, hl)
@@ -118,10 +118,10 @@ func displayName(properties *js.Object, be core.BaseElement, row int, hl *core.H
 			nameRow.Get("cells").Index(1).Set("contentEditable", false)
 		} else {
 			nameRow.Get("cells").Index(1).Set("contentEditable", true)
-			nameQuery := jquery.NewJQuery("#baseElementName")
+			nameQuery := jquery.NewJQuery("#baseElementLabel")
 			nameQuery.On(jquery.KEYUP, func(e jquery.Event) {
 				name := jquery.NewJQuery(e.Target).Text()
-				CrlEditorSingleton.SetSelectionName(name)
+				CrlEditorSingleton.SetSelectionLabel(name)
 			})
 		}
 	default:

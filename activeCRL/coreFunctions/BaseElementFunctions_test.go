@@ -36,12 +36,12 @@ func TestBaseElementFunctionsIds(t *testing.T) {
 	//var BaseElementGetIdCreatedLiteralRefUri string = CoreFunctionsPrefix + "BaseElement/GetId/CreatedLiteralRef"
 	validateLiteralReferenceId(t, uOfD, hl, BaseElementGetIdCreatedLiteralRefUri)
 	//
-	//var BaseElementGetNameUri string = CoreFunctionsPrefix + "BaseElement/GetName"
-	validateElementId(t, uOfD, hl, BaseElementGetNameUri)
-	//var BaseElementGetNameSourceBaseElementRefUri string = CoreFunctionsPrefix + "BaseElement/GetName/SourceBaseElementRef"
-	validateBaseElementReferenceId(t, uOfD, hl, BaseElementGetNameSourceBaseElementRefUri)
-	//var BaseElementGetNameCreatedLiteralRefUri string = CoreFunctionsPrefix + "BaseElement/GetName/CreatedLiteralRef"
-	validateLiteralReferenceId(t, uOfD, hl, BaseElementGetNameCreatedLiteralRefUri)
+	//var BaseElementGetLabelUri string = CoreFunctionsPrefix + "BaseElement/GetLabel"
+	validateElementId(t, uOfD, hl, BaseElementGetLabelUri)
+	//var BaseElementGetLabelSourceBaseElementRefUri string = CoreFunctionsPrefix + "BaseElement/GetLabel/SourceBaseElementRef"
+	validateBaseElementReferenceId(t, uOfD, hl, BaseElementGetLabelSourceBaseElementRefUri)
+	//var BaseElementGetLabelCreatedLiteralRefUri string = CoreFunctionsPrefix + "BaseElement/GetLabel/CreatedLiteralRef"
+	validateLiteralReferenceId(t, uOfD, hl, BaseElementGetLabelCreatedLiteralRefUri)
 	//
 	//var BaseElementGetOwningElementUri string = CoreFunctionsPrefix + "BaseElement/GetOwningElement"
 	validateElementId(t, uOfD, hl, BaseElementGetOwningElementUri)
@@ -201,8 +201,8 @@ func TestGetId(t *testing.T) {
 
 	// Now test literal update functionality
 	source := uOfD.NewElement(hl)
-	sourceName := "SourceName"
-	core.SetName(source, sourceName, hl)
+	sourceLabel := "SourceLabel"
+	core.SetLabel(source, sourceLabel, hl)
 	sourceReference.SetReferencedBaseElement(source, hl)
 
 	// Locks must be released to allow function to execute
@@ -215,13 +215,13 @@ func TestGetId(t *testing.T) {
 	if targetLiteral == nil {
 		t.Errorf("Target literal not found")
 	} else {
-		if targetLiteral.GetLiteralValue(hl) != sourceName {
+		if targetLiteral.GetLiteralValue(hl) != sourceLabel {
 			t.Errorf("Target literal value incorrect")
 		}
 	}
 }
 
-func TestGetName(t *testing.T) {
+func TestGetLabel(t *testing.T) {
 	var wg sync.WaitGroup
 	hl := core.NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -230,13 +230,13 @@ func TestGetName(t *testing.T) {
 	AddCoreFunctionsToUofD(uOfD, hl)
 
 	// Get Ancestor
-	getName := uOfD.GetElementWithUri(BaseElementGetNameUri)
-	if getName == nil {
-		t.Errorf("GetName function representation not found")
+	getLabel := uOfD.GetElementWithUri(BaseElementGetLabelUri)
+	if getLabel == nil {
+		t.Errorf("GetLabel function representation not found")
 	}
 
 	// Create the instance
-	replicate := core.CreateReplicateAsRefinement(getName, hl)
+	replicate := core.CreateReplicateAsRefinement(getLabel, hl)
 
 	// Locks must be released to allow function to execute
 	hl.ReleaseLocks()
@@ -244,22 +244,22 @@ func TestGetName(t *testing.T) {
 	//	time.Sleep(10000000 * time.Nanosecond)
 
 	// Now check the replication
-	if uOfD.IsRefinementOf(replicate, getName, hl) != true {
-		t.Errorf("Replicate is not refinement of GetName()")
+	if uOfD.IsRefinementOf(replicate, getLabel, hl) != true {
+		t.Errorf("Replicate is not refinement of GetLabel()")
 	}
-	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetNameSourceBaseElementRefUri, hl)
+	sourceReference := core.GetChildBaseElementReferenceWithAncestorUri(replicate, BaseElementGetLabelSourceBaseElementRefUri, hl)
 	if sourceReference == nil {
 		t.Errorf("SourceReference child not found")
 	}
-	targetReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementGetNameCreatedLiteralRefUri, hl)
+	targetReference := core.GetChildLiteralReferenceWithAncestorUri(replicate, BaseElementGetLabelCreatedLiteralRefUri, hl)
 	if targetReference == nil {
 		t.Errorf("TargetReference child not found")
 	}
 
 	// Now test literal update functionality
 	source := uOfD.NewElement(hl)
-	sourceName := "SourceName"
-	core.SetName(source, sourceName, hl)
+	sourceLabel := "SourceLabel"
+	core.SetLabel(source, sourceLabel, hl)
 	sourceReference.SetReferencedBaseElement(source, hl)
 
 	// Locks must be released to allow function to execute
@@ -272,7 +272,7 @@ func TestGetName(t *testing.T) {
 	if targetLiteral == nil {
 		t.Errorf("Target literal not found")
 	} else {
-		if targetLiteral.GetLiteralValue(hl) != sourceName {
+		if targetLiteral.GetLiteralValue(hl) != sourceLabel {
 			t.Errorf("Target literal value incorrect")
 		}
 	}
@@ -372,8 +372,8 @@ func TestGetUri(t *testing.T) {
 
 	// Now test literal update functionality
 	source := uOfD.NewElement(hl)
-	sourceName := "SourceName"
-	core.SetName(source, sourceName, hl)
+	sourceLabel := "SourceLabel"
+	core.SetLabel(source, sourceLabel, hl)
 	sourceReference.SetReferencedBaseElement(source, hl)
 
 	// Locks must be released to allow function to execute
@@ -386,7 +386,7 @@ func TestGetUri(t *testing.T) {
 	if targetLiteral == nil {
 		t.Errorf("Target literal not found")
 	} else {
-		if targetLiteral.GetLiteralValue(hl) != sourceName {
+		if targetLiteral.GetLiteralValue(hl) != sourceLabel {
 			t.Errorf("Target literal value incorrect")
 		}
 	}
@@ -429,8 +429,8 @@ func TestGetVersion(t *testing.T) {
 
 	// Now test literal update functionality
 	source := uOfD.NewElement(hl)
-	sourceName := "SourceName"
-	core.SetName(source, sourceName, hl)
+	sourceLabel := "SourceLabel"
+	core.SetLabel(source, sourceLabel, hl)
 	sourceReference.SetReferencedBaseElement(source, hl)
 
 	// Locks must be released to allow function to execute
