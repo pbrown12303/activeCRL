@@ -5,6 +5,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
+    // Debugging variables
 (function(root, factory) {
 
     if (typeof define === 'function' && define.amd) {
@@ -8055,6 +8056,7 @@ joint.dia.CellView = joint.mvc.View.extend({
         return nodesAttrs;
     },
 
+    
     // Default is to process the `model.attributes.attrs` object and set attributes on subelements based on the selectors,
     // unless `attrs` parameter was passed.
     updateDOMSubtreeAttributes: function(rootNode, attrs, opt) {

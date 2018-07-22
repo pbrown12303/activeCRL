@@ -107,17 +107,17 @@ func displayId(properties *js.Object, be core.BaseElement, row int, hl *core.Hel
 }
 
 func displayLabel(properties *js.Object, be core.BaseElement, row int, hl *core.HeldLocks) {
-	nameRow := obtainPropertyRow(properties, row)
-	nameRow.Get("cells").Index(0).Set("innerHTML", "Name")
-	nameRow.Get("cells").Index(1).Set("innerHTML", core.GetLabel(be, hl))
-	nameRow.Get("cells").Index(1).Set("id", "baseElementLabel")
+	labelRow := obtainPropertyRow(properties, row)
+	labelRow.Get("cells").Index(0).Set("innerHTML", "Label")
+	labelRow.Get("cells").Index(1).Set("innerHTML", core.GetLabel(be, hl))
+	labelRow.Get("cells").Index(1).Set("id", "baseElementLabel")
 	switch be.(type) {
 	case core.Element:
 		uri := core.GetUri(be, hl)
 		if uri != "" && core.BaseElement.GetId(be, hl) == uuid.NewV5(uuid.NamespaceURL, uri) {
-			nameRow.Get("cells").Index(1).Set("contentEditable", false)
+			labelRow.Get("cells").Index(1).Set("contentEditable", false)
 		} else {
-			nameRow.Get("cells").Index(1).Set("contentEditable", true)
+			labelRow.Get("cells").Index(1).Set("contentEditable", true)
 			nameQuery := jquery.NewJQuery("#baseElementLabel")
 			nameQuery.On(jquery.KEYUP, func(e jquery.Event) {
 				name := jquery.NewJQuery(e.Target).Text()
@@ -125,7 +125,7 @@ func displayLabel(properties *js.Object, be core.BaseElement, row int, hl *core.
 			})
 		}
 	default:
-		nameRow.Get("cells").Index(1).Set("contentEditable", false)
+		labelRow.Get("cells").Index(1).Set("contentEditable", false)
 	}
 }
 

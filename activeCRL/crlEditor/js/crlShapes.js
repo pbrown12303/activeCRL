@@ -4,14 +4,14 @@
 
 joint.shapes.basic.Generic.define('crl.BaseElement', {
     attrs: {
-        rect: { 'width': 200 },
+        rect: { width: 300  },
 
-        '.uml-class-name-rect': { 'stroke': 'black', 'stroke-width': 2, 'fill': '#ffffff' },
-/*        '.uml-class-attrs-rect': { 'stroke': 'black', 'stroke-width': 2, 'fill': '#ffffff' },
-        '.uml-class-methods-rect': { 'stroke': 'black', 'stroke-width': 2, 'fill': '#ffffff' },
+        '.label-rect': { 'stroke': 'black', 'stroke-width': 2, 'fill': '#ffffff' },
+        /*        '.uml-class-attrs-rect': { 'stroke': 'black', 'stroke-width': 2, 'fill': '#ffffff' },
+                '.uml-class-methods-rect': { 'stroke': 'black', 'stroke-width': 2, 'fill': '#ffffff' },
 */
-        '.uml-class-name-text': {
-            'ref': '.uml-class-name-rect',
+        '.label-text': {
+            'ref': '.label-rect',
             'ref-y': .5,
             'ref-x': .5,
             'text-anchor': 'middle',
@@ -38,9 +38,9 @@ joint.shapes.basic.Generic.define('crl.BaseElement', {
     markup: [
         '<g class="rotatable">',
         '<g class="scalable">',
-        '<rect class="uml-class-name-rect"/><rect class="uml-class-attrs-rect"/><rect class="uml-class-methods-rect"/>',
+        '<rect class="label-rect"/><rect class="uml-class-attrs-rect"/><rect class="uml-class-methods-rect"/>',
         '</g>',
-        '<text class="uml-class-name-text"/><text class="uml-class-attrs-text"/><text class="uml-class-methods-text"/>',
+        '<text class="label-text"/><text class="uml-class-attrs-text"/><text class="uml-class-methods-text"/>',
         '</g>'
     ].join(''),
 
@@ -71,8 +71,19 @@ joint.shapes.basic.Generic.define('crl.BaseElement', {
         ];
 
         var offsetY = 0;
+        
+        var lines = [this.getClassName()]; 
+        var rectHeight = 1 * 12 + 6; 
 
-        rects.forEach(function(rect) {
+        attrs['.label-text'].text = lines.join('\n');
+        attrs['.label-rect'].height = rectHeight;
+        var rectWidth = CalculateTextWidth(attrs['.label-text'].text) + 6;
+        attrs['.label-rect'].transform = 'translate(0,' + offsetY + ')';
+        this.resize(rectWidth, rectHeight);
+
+        offsetY += rectHeight;
+
+/*        rects.forEach(function(rect) {
 
             var lines = Array.isArray(rect.text) ? rect.text : [rect.text];
             var rectHeight = lines.length * 20 + 20;
@@ -83,6 +94,7 @@ joint.shapes.basic.Generic.define('crl.BaseElement', {
 
             offsetY += rectHeight;
         });
+        */
     }
 
 });

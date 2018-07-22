@@ -2,13 +2,13 @@ package editor
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
-	"github.com/pbrown12303/activeCRL/activeCRL/coreDiagram"
+	"github.com/pbrown12303/activeCRL/activeCRL/crlDiagram"
 	//	"log"
 	"sync"
 )
 
 func addDiagramViewFunctionsToUofD(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) {
-	core.GetCore().AddFunction(coreDiagram.CrlDiagramUri, updateDiagramView)
+	core.GetCore().AddFunction(crlDiagram.CrlDiagramUri, updateDiagramView)
 }
 
 func updateDiagramView(el core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
@@ -26,5 +26,5 @@ func updateDiagramViewInternal(el core.Element, changeNotifications []*core.Chan
 }
 
 func init() {
-	//	core.GetCore().AddFunction(coreDiagram.CrlDiagramUri, updateDiagramView)
+	//	core.GetCore().AddFunction(crlDiagram.CrlDiagramUri, updateDiagramView)
 }

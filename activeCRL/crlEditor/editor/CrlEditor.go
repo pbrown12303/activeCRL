@@ -4,7 +4,7 @@ import (
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/jquery"
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
-	"github.com/pbrown12303/activeCRL/activeCRL/coreDiagram"
+	"github.com/pbrown12303/activeCRL/activeCRL/crlDiagram"
 	"github.com/satori/go.uuid"
 	"log"
 	"sync"
@@ -37,7 +37,7 @@ func InitializeCrlEditorSingleton() {
 
 	// Set up the Universe of Discourse
 	editor.uOfD = core.NewUniverseOfDiscourse(editor.hl)
-	coreDiagram.AddCoreDiagramToUofD(editor.uOfD, editor.hl)
+	crlDiagram.AddCoreDiagramToUofD(editor.uOfD, editor.hl)
 	AddEditorViewsToUofD(editor.uOfD, editor.hl)
 
 	// Set up the diagram manager

@@ -219,7 +219,7 @@ func TestGetBaseElementId(t *testing.T) {
 
 	// Get Ancestor
 	getBaseElementId := uOfD.GetElementWithUri(BaseElementPointerGetBaseElementIdUri)
-	if getBaseElementVersion == nil {
+	if getBaseElementId == nil {
 		t.Errorf("GetBaseElementId function representation not found")
 	}
 

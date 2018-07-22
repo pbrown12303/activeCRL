@@ -15,7 +15,7 @@
 <script src="/js/backbone.js"></script>
 <script src="/js/joint.js"></script>
 <script src="/js/joint.shapes.uml.js"></script>
-<script src="/js/crlShapes.js"></script>
+<!-- <script src="/js/crlShapes.js"></script>  -->
 <script src="/js/jstree.js"></script>
 <!--  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script> -->
 <script src="/js/crlEditor.js"></script>
@@ -93,6 +93,27 @@
 </script>
 
 <script type="text/javascript">
+function dropdownMenu(dropdownId) {
+    document.getElementById(dropdownId).classList.toggle("show");
+}
+
+// Close the dropdown menu if the user clicks outside of it
+window.onclick = function(event) {
+  if (!event.target.matches('.dropbtn')) {
+
+    var dropdowns = document.getElementsByClassName("dropdown-content");
+    var i;
+    for (i = 0; i < dropdowns.length; i++) {
+      var openDropdown = dropdowns[i];
+      if (openDropdown.classList.contains('show')) {
+        openDropdown.classList.remove('show');
+      }
+    }
+  }
+}
+</script>
+
+<script type="text/javascript">
 	function openDiagramContainer(diagramContainerId) {
 		var i;
 		var x = document.getElementsByClassName("crlDiagramContainer");
@@ -109,6 +130,7 @@
 </script>
 
 <var foo> </var>
+<var theClass> </var>
 <script type="text/javascript">
 	$(function() {
 		var graph = new joint.dia.Graph;
@@ -166,6 +188,8 @@
 			},
 			name : `Bar`
 		});
+		
+		theClass = rect3
 
 		var link = new joint.dia.Link({
 			source : {
@@ -185,11 +209,11 @@
 <body onresize="sizeAll()" onload="sizeAll()" id="body">
 	<div class="navbar" id="navbar">
 		<div class="dropdown">
-			<button class="dropbtn">
+			<button class="dropbtn" onclick="dropdownMenu('FileDropdown')">
 				File <i class="fa fa-caret-down"></i>
 			</button>
-			<div class="dropdown-content">
-				<a onClick="DiagramManager.NewDiagram()">New Diagram</a>
+			<div class="dropdown-content" id="FileDropdown">
+				<a class="show" onClick="DiagramManager.NewDiagram()">New Diagram</a>
 			</div>
 		</div>
 		<div class="dropdown">
