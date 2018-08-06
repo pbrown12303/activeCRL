@@ -8,13 +8,14 @@ import (
 	"github.com/satori/go.uuid"
 	"log"
 	"sync"
+	"time"
 )
 
 var EditorUri string = "http://activeCrl.com/crlEditor/Editor"
 
-var CrlEditorSingleton *CrlEditor
+var CrlEditorSingleton CrlEditor
 
-type CrlEditor struct {
+type crlEditor struct {
 	currentSelection  core.BaseElement
 	treeDragSelection core.BaseElement
 	diagramManager    *DiagramManager
@@ -27,7 +28,7 @@ type CrlEditor struct {
 
 func InitializeCrlEditorSingleton() {
 	var wg sync.WaitGroup
-	var editor CrlEditor
+	var editor crlEditor
 	editor.initialized = false
 	editor.hl = core.NewHeldLocks(&wg)
 	defer editor.hl.ReleaseLocks()
@@ -72,40 +73,79 @@ func AddEditorViewsToUofD(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) cor
 	return conceptSpace
 }
 
-func (edPtr *CrlEditor) GetCurrentSelection() core.BaseElement {
+func (edPtr *crlEditor) GetCurrentSelection() core.BaseElement {
 	return edPtr.currentSelection
 }
 
-func (edPtr *CrlEditor) GetDiagramManager() *DiagramManager {
+func (edPtr *crlEditor) GetCurrentSelectionId() string {
+	return edPtr.currentSelection.GetId(edPtr.hl).String()
+}
+
+func (edPtr *crlEditor) GetDiagramManager() *DiagramManager {
 	return edPtr.diagramManager
 }
 
-func (edPtr *CrlEditor) GetTreeDragSelection() core.BaseElement {
+func (edPtr *crlEditor) getHeldLocks() *core.HeldLocks {
+	return edPtr.hl
+}
+
+func (edPtr *crlEditor) GetPropertiesManager() *PropertiesManager {
+	return edPtr.propertiesManager
+}
+
+func (edPtr *crlEditor) GetTreeDragSelection() core.BaseElement {
 	return edPtr.treeDragSelection
 }
 
-func (edPtr *CrlEditor) GetTreeManager() *TreeManager {
+func (edPtr *crlEditor) GetTreeDragSelectionId() string {
+	return edPtr.treeDragSelection.GetId(edPtr.hl).String()
+}
+
+func (edPtr *crlEditor) GetTreeManager() *TreeManager {
 	return edPtr.treeManager
 }
 
-func (edPtr *CrlEditor) IsInitialized() bool {
+func (edPtr *crlEditor) GetUofD() core.UniverseOfDiscourse {
+	return edPtr.uOfD
+}
+
+func (edPtr *crlEditor) IsInitialized() bool {
 	return edPtr.initialized
 }
 
-func (edPtr *CrlEditor) SelectBaseElement(be core.BaseElement) core.BaseElement {
+func (edPtr *crlEditor) RunTest() string {
+	log.Printf("In RunTest \n")
+	currentSelection := edPtr.GetCurrentSelection()
+	if currentSelection == nil {
+		log.Printf("In RunTest, current selection is nil \n")
+		return ""
+	}
+	i := 100000
+	startTime := time.Now()
+	for i > 0 {
+		edPtr.hl.LockBaseElement(currentSelection)
+		i--
+	}
+	endTime := time.Now()
+	duration := endTime.Sub(startTime)
+	log.Printf("RunTest duration: %s \n", duration.String())
+	return duration.String()
+}
+
+func (edPtr *crlEditor) SelectBaseElement(be core.BaseElement) core.BaseElement {
 	edPtr.currentSelection = be
 	edPtr.propertiesManager.BaseElementSelected(edPtr.currentSelection, edPtr.hl)
 	return edPtr.currentSelection
 }
 
-func (edPtr *CrlEditor) SelectBaseElementUsingIdString(id string) core.BaseElement {
+func (edPtr *crlEditor) SelectBaseElementUsingIdString(id string) core.BaseElement {
 	uuid, _ := uuid.FromString(id)
 	edPtr.currentSelection = edPtr.uOfD.GetBaseElement(uuid)
 	edPtr.propertiesManager.BaseElementSelected(edPtr.currentSelection, edPtr.hl)
 	return edPtr.currentSelection
 }
 
-func (edPtr *CrlEditor) SetSelectionDefinition(definition string) {
+func (edPtr *crlEditor) SetSelectionDefinition(definition string) {
 	switch edPtr.currentSelection.(type) {
 	case core.Element:
 		core.SetDefinition(edPtr.currentSelection.(core.Element), definition, edPtr.hl)
@@ -113,7 +153,7 @@ func (edPtr *CrlEditor) SetSelectionDefinition(definition string) {
 	}
 }
 
-func (edPtr *CrlEditor) SetSelectionLabel(name string) {
+func (edPtr *crlEditor) SetSelectionLabel(name string) {
 	switch edPtr.currentSelection.(type) {
 	case core.Element:
 		core.SetLabel(edPtr.currentSelection.(core.Element), name, edPtr.hl)
@@ -121,12 +161,12 @@ func (edPtr *CrlEditor) SetSelectionLabel(name string) {
 	}
 }
 
-func (edPtr *CrlEditor) SetSelectionUri(uri string) {
+func (edPtr *crlEditor) SetSelectionUri(uri string) {
 	core.SetUri(edPtr.currentSelection, uri, edPtr.hl)
 	edPtr.hl.ReleaseLocksAndWait()
 }
 
-func (edPtr *CrlEditor) SetTreeDragSelection(be core.BaseElement) {
+func (edPtr *crlEditor) SetTreeDragSelection(be core.BaseElement) {
 	edPtr.treeDragSelection = be
 }
 
@@ -147,4 +187,24 @@ func onEditorDrop(e jquery.Event, data *js.Object) {
 
 func init() {
 	registerTreeViewFunctions()
+}
+
+type CrlEditor interface {
+	GetCurrentSelection() core.BaseElement
+	GetCurrentSelectionId() string
+	GetDiagramManager() *DiagramManager
+	getHeldLocks() *core.HeldLocks
+	GetPropertiesManager() *PropertiesManager
+	GetTreeDragSelection() core.BaseElement
+	GetTreeDragSelectionId() string
+	GetTreeManager() *TreeManager
+	GetUofD() core.UniverseOfDiscourse
+	IsInitialized() bool
+	RunTest() string
+	SelectBaseElement(be core.BaseElement) core.BaseElement
+	SelectBaseElementUsingIdString(id string) core.BaseElement
+	SetSelectionDefinition(definition string)
+	SetSelectionLabel(name string)
+	SetSelectionUri(uri string)
+	SetTreeDragSelection(be core.BaseElement)
 }

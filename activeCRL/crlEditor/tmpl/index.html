@@ -209,11 +209,11 @@ window.onclick = function(event) {
 <body onresize="sizeAll()" onload="sizeAll()" id="body">
 	<div class="navbar" id="navbar">
 		<div class="dropdown">
-			<button class="dropbtn" onclick="dropdownMenu('FileDropdown')">
+			<button id="FileMenuButton" class="dropbtn" onclick="dropdownMenu('FileDropdown')">
 				File <i class="fa fa-caret-down"></i>
 			</button>
 			<div class="dropdown-content" id="FileDropdown">
-				<a class="show" onClick="DiagramManager.NewDiagram()">New Diagram</a>
+				<a id="NewDiagramButton" class="show" onClick="DiagramManager.NewDiagram()">New Diagram</a>
 			</div>
 		</div>
 		<div class="dropdown">

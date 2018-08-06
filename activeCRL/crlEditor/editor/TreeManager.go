@@ -10,26 +10,6 @@ import (
 
 const treeNodeSuffix = "TreeNode"
 
-// Data structures used to set up the jstree
-type jstree struct {
-	*js.Object
-	core    *jstreeCore `js:"core"`
-	plugins []string    `js:"plugins"`
-}
-
-type jstreeCore struct {
-	*js.Object
-	check_callback bool `js:"check_callback"`
-	multiple       bool `js:"multiple"`
-}
-
-type jstreeNode struct {
-	*js.Object
-	id   string `js:"id"`
-	name string `js:"text"`
-	icon string `js:"icon"`
-}
-
 // The Tree Manager itself
 type TreeManager struct {
 	manageNodesFunction core.Element
@@ -44,15 +24,9 @@ func NewTreeManager(uOfD core.UniverseOfDiscourse, treeId string, hl *core.HeldL
 	treeManager.treeId = treeId
 	treeManager.rootElements = make(map[uuid.UUID]core.BaseElement)
 
-	// Set up the jstree
-	coreData := &jstreeCore{Object: js.Global.Get("Object").New()}
-	coreData.check_callback = true
-	coreData.multiple = false
-	jstreeData := &jstree{Object: js.Global.Get("Object").New()}
-	jstreeData.core = coreData
-	//	jstreeData.plugins = []string{"dnd"}
 	uOfDQuery := jquery.NewJQuery("#uOfD")
-	uOfDQuery.Call("jstree", jstreeData)
+	uOfDQuery.Call("jstree", js.M{"core": js.M{"check_callback": true,
+		"multiple": false}})
 
 	// Set up the selection callback
 	uOfDQuery.On("select_node.jstree", func(e jquery.Event, selection *js.Object) {
@@ -94,38 +68,40 @@ func (tmPtr *TreeManager) AddChildren(be core.BaseElement, hl *core.HeldLocks) {
 }
 
 func (tmPtr *TreeManager) AddNode(be core.BaseElement, parentId string, hl *core.HeldLocks) {
-	nodeData := &jstreeNode{Object: js.Global.Get("Object").New()}
-	nodeData.id = be.GetId(hl).String() + treeNodeSuffix
-	nodeData.name = core.GetLabel(be, hl)
+	id := be.GetId(hl).String() + treeNodeSuffix
+	name := core.GetLabel(be, hl)
+	var icon string
 	switch be.(type) {
 	case core.ElementPointer:
-		nodeData.icon = "/icons/ElementPointerIcon.svg"
+		icon = "/icons/ElementPointerIcon.svg"
 	case core.ElementPointerPointer:
-		nodeData.icon = "/icons/ElementPointerPointerIcon.svg"
+		icon = "/icons/ElementPointerPointerIcon.svg"
 	case core.ElementPointerReference:
-		nodeData.icon = "/icons/ElementPointerReferenceIcon.svg"
+		icon = "/icons/ElementPointerReferenceIcon.svg"
 	case core.ElementReference:
-		nodeData.icon = "/icons/ElementReferenceIcon.svg"
+		icon = "/icons/ElementReferenceIcon.svg"
 	case core.Literal:
-		nodeData.icon = "/icons/LiteralIcon.svg"
+		icon = "/icons/LiteralIcon.svg"
 	case core.LiteralPointer:
-		nodeData.icon = "/icons/LiteralPointerIcon.svg"
+		icon = "/icons/LiteralPointerIcon.svg"
 	case core.LiteralPointerPointer:
-		nodeData.icon = "/icons/LiteralPointerPointerIcon.svg"
+		icon = "/icons/LiteralPointerPointerIcon.svg"
 	case core.LiteralPointerReference:
-		nodeData.icon = "/icons/LiteralPointerReferenceIcon.svg"
+		icon = "/icons/LiteralPointerReferenceIcon.svg"
 	case core.LiteralReference:
-		nodeData.icon = "/icons/LiteralReferenceIcon.svg"
+		icon = "/icons/LiteralReferenceIcon.svg"
 	case core.Refinement:
-		nodeData.icon = "/icons/RefinementIcon.svg"
+		icon = "/icons/RefinementIcon.svg"
 	case core.Element:
 		if IsDiagram(be, hl) {
-			nodeData.icon = "/icons/DiagramIcon.svg"
+			icon = "/icons/DiagramIcon.svg"
 		} else {
-			nodeData.icon = "/icons/ElementIcon.svg"
+			icon = "/icons/ElementIcon.svg"
 		}
 	}
-	jquery.NewJQuery(tmPtr.treeId).Call("jstree", "create_node", parentId, nodeData, "last")
+	jquery.NewJQuery(tmPtr.treeId).Call("jstree", "create_node", parentId, js.M{"id": id,
+		"text": name,
+		"icon": icon}, "last")
 }
 
 func (tmPtr *TreeManager) getChangeNotificationBelowUofD(changeNotification *core.ChangeNotification) *core.ChangeNotification {
@@ -149,7 +125,7 @@ func (tmPtr *TreeManager) InitializeTree(hl *core.HeldLocks) {
 func IsDiagram(be core.BaseElement, hl *core.HeldLocks) bool {
 	switch be.(type) {
 	case core.Element:
-		return CrlEditorSingleton.uOfD.IsRefinementOf(be.(core.Element), CrlEditorSingleton.diagramManager.abstractDiagram, hl)
+		return CrlEditorSingleton.GetUofD().IsRefinementOf(be.(core.Element), CrlEditorSingleton.GetDiagramManager().abstractDiagram, hl)
 	}
 	return false
 }
@@ -169,7 +145,7 @@ func onTreeDragStart(e jquery.Event, data *js.Object) {
 	log.Printf("selectedBaseElementId = %s", selectedBaseElementId)
 	selectedBaseElementUUID, err := uuid.FromString(selectedBaseElementId)
 	if err == nil {
-		be := CrlEditorSingleton.uOfD.GetBaseElement(selectedBaseElementUUID)
+		be := CrlEditorSingleton.GetUofD().GetBaseElement(selectedBaseElementUUID)
 		CrlEditorSingleton.SetTreeDragSelection(be)
 	}
 }

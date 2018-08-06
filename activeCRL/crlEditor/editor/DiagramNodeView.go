@@ -18,8 +18,8 @@ var go12PtBoldFace font.Face
 
 func addNodeView(httpDiagramContainerId string, be core.BaseElement, x float64, y float64, hl *core.HeldLocks) (core.BaseElement, error) {
 	//	create crlDiagramNode
-	uOfD := CrlEditorSingleton.uOfD
-	diagramManager := CrlEditorSingleton.diagramManager
+	uOfD := CrlEditorSingleton.GetUofD()
+	diagramManager := CrlEditorSingleton.GetDiagramManager()
 	crlDiag := diagramManager.diagramContainerIdToCrlDiagram[httpDiagramContainerId]
 	js.Global.Get("console").Call("log", "In addNodeView CrlDiagramId is "+crlDiag.GetId(hl).String())
 	newCrlDiagramNode, err := core.CreateReplicateAsRefinementFromUri(uOfD, crlDiagram.CrlDiagramNodeUri, hl)

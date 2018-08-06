@@ -118,10 +118,17 @@ func (c *coreConceptSpace) FindFunctions(element Element, notification *ChangeNo
 }
 
 func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
+	log.Printf("*** In buildCoreConceptSpace, held locks present is %v \n", hl != nil)
 	// Core
+	AdHocTrace = false
+	//	log.Printf("*** In buildCoreConceptSpace, about to create Core Element \n")
 	coreElement := uOfD.NewElement(hl, CoreConceptSpaceUri)
+	//	log.Printf("*** In buildCoreConceptSpace, about to call SetLabel on Core Element \n")
 	SetLabel(coreElement, "CoreConceptSpace", hl)
+	//	log.Printf("*** In buildCoreConceptSpace, about to call SetURI on Core Element \n")
 	SetUri(coreElement, CoreConceptSpaceUri, hl)
+	//	log.Printf("*** In buildCoreConceptSpace, completed calling SetUri on core Element \n")
+	AdHocTrace = false
 
 	// BaseElementPointer
 	baseElementPointer := uOfD.NewBaseElementPointer(hl, BaseElementPointerUri)

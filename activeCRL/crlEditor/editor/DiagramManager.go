@@ -8,17 +8,10 @@ import (
 	"github.com/pbrown12303/activeCRL/activeCRL/crlDiagram"
 	"github.com/satori/go.uuid"
 	"log"
-	"strconv"
 )
 
 const diagramContainerSuffix = "DiagramContainer"
 const diagramSuffix = "Diagram"
-
-var defaultLabelCount int
-var diagramTabCount int
-var diagramContainerCount int
-var jointGraphCount int
-var jointBaseElementNodeCount int
 
 type DiagramManager struct {
 	abstractDiagram                  core.Element
@@ -34,7 +27,7 @@ type DiagramManager struct {
 
 func NewDiagramManager() *DiagramManager {
 	var diagramManager DiagramManager
-	diagramManager.abstractDiagram = CrlEditorSingleton.uOfD.GetElementWithUri(crlDiagram.CrlDiagramUri)
+	diagramManager.abstractDiagram = CrlEditorSingleton.GetUofD().GetElementWithUri(crlDiagram.CrlDiagramUri)
 	diagramManager.crlDiagramUUIDToCrlDiagram = make(map[uuid.UUID]core.Element)
 	diagramManager.crlDiagramIdToDiagramContainer = make(map[string]*js.Object)
 	diagramManager.crlDiagramIdToJointGraph = make(map[string]*js.Object)
@@ -48,35 +41,24 @@ func NewDiagramManager() *DiagramManager {
 }
 
 func (dm *DiagramManager) addViewFunctionsToUofD() {
-	uOfD := CrlEditorSingleton.uOfD
-	hl := CrlEditorSingleton.hl
+	uOfD := CrlEditorSingleton.GetUofD()
+	hl := CrlEditorSingleton.getHeldLocks()
 	addDiagramViewFunctionsToUofD(uOfD, hl)
 	//	addDiagramNodeViewFunctionsToUofD(uOfD, hl)
 	//	addDiagramLinkViewFunctionsToUofD(uOfD, hl)
 }
 
-func createDiagramTabPrefix() string {
-	diagramTabCount++
-	countString := strconv.Itoa(diagramTabCount)
-	return "DiagramTab" + countString
+func (dmPtr *DiagramManager) GetCrlDiagramForContainerId(containerId string) core.Element {
+	return dmPtr.diagramContainerIdToCrlDiagram[containerId]
 }
 
-func createDiagramContainerPrefix() string {
-	diagramContainerCount++
-	countString := strconv.Itoa(diagramContainerCount)
-	return "DiagramView" + countString
-}
-
-func createJointBaseElementNodePrefix() string {
-	jointBaseElementNodeCount++
-	countString := strconv.Itoa(jointGraphCount)
-	return "JointBaseElementNode" + countString
-}
-
-func createJointGraphPrefix() string {
-	jointGraphCount++
-	countString := strconv.Itoa(jointGraphCount)
-	return "DiagramGraph" + countString
+func (dmPtr *DiagramManager) GetCrlDiagramIdForContainerId(containerId string) string {
+	diagram := dmPtr.diagramContainerIdToCrlDiagram[containerId]
+	id := ""
+	if diagram != nil {
+		id = diagram.GetId(CrlEditorSingleton.getHeldLocks()).String()
+	}
+	return id
 }
 
 func (dmPtr *DiagramManager) DisplayDiagram(diagram core.Element, hl *core.HeldLocks) {
@@ -139,18 +121,12 @@ func (dmPtr *DiagramManager) DisplayDiagram(diagram core.Element, hl *core.HeldL
 	makeDiagramVisible(httpDiagramContainer.Get("id").String())
 }
 
-func getDefaultDiagramLabel() string {
-	defaultLabelCount++
-	countString := strconv.Itoa(defaultLabelCount)
-	return "Diagram" + countString
-}
-
 func (dmPtr *DiagramManager) NewDiagram() core.Element {
 	// Insert name prompt here
 	name := getDefaultDiagramLabel()
-	hl := CrlEditorSingleton.hl
+	hl := CrlEditorSingleton.getHeldLocks()
 	defer hl.ReleaseLocks()
-	uOfD := CrlEditorSingleton.uOfD
+	uOfD := CrlEditorSingleton.GetUofD()
 	diagram, err := core.CreateReplicateAsRefinementFromUri(uOfD, crlDiagram.CrlDiagramUri, hl)
 	if err != nil {
 		log.Print(err)
@@ -160,71 +136,6 @@ func (dmPtr *DiagramManager) NewDiagram() core.Element {
 	log.Printf("Created diagram with name: %s", name)
 	dmPtr.DisplayDiagram(diagram, hl)
 	return diagram
-}
-
-func onDragover(event *js.Object, data *js.Object) {
-	event.Call("preventDefault")
-}
-
-func onDiagramManagerDrop(event *js.Object) {
-	hl := CrlEditorSingleton.hl
-	event.Call("preventDefault")
-	js.Global.Set("dropEvent", event)
-	log.Printf("On Drop called")
-	httpDiagramContainerId := event.Get("target").Get("parentElement").Get("parentElement").Get("id").String()
-	be := CrlEditorSingleton.GetTreeDragSelection()
-	js.Global.Set("diagramDroppedBaseElement", be.GetId(hl).String())
-	js.Global.Get("console").Call("log", "In onDiagramManagerDrop")
-
-	addNodeView(httpDiagramContainerId, be, event.Get("layerX").Float(), event.Get("layerY").Float(), hl)
-
-	CrlEditorSingleton.SelectBaseElement(be)
-	CrlEditorSingleton.SetTreeDragSelection(nil)
-}
-
-func onDiagramManagerCellPointerDown(cellView *js.Object, event *js.Object, x *js.Object, y *js.Object) {
-	js.Global.Get("console").Call("log", "In onDiagramManagerCellPointerDown")
-	hl := CrlEditorSingleton.hl
-	crlJointId := cellView.Get("model").Get("crlJointId").String()
-	js.Global.Get("console").Call("log", "In onDiagramManagerCellPointerDown crlJointId = "+crlJointId)
-	diagramManager := CrlEditorSingleton.diagramManager
-	diagramNode := diagramManager.jointElementIdToCrlDiagramNode[crlJointId]
-	if diagramNode == nil {
-		js.Global.Get("console").Call("log", "In onDiagramManagerCellPointerDown diagramNode is nil")
-	} else {
-		js.Global.Get("console").Call("log", "In onDiagramManagerCellPointerDown diagramNode id = "+diagramNode.GetId(hl).String())
-	}
-
-	be, err := crlDiagram.GetReferencedBaseElement(diagramNode, hl)
-	if err == nil {
-		CrlEditorSingleton.SelectBaseElement(be)
-	}
-}
-
-func onMakeDiagramVisible(e jquery.Event) {
-	httpDiagramContainerId := e.Get("target").Call("getAttribute", "viewId").String()
-	//	js.Global.Get("console").Call("log", "In : onMakeDiagramVisible with: "+httpDiagramContainerId)
-	//	js.Global.Set("clickEvent", e)
-	//	js.Global.Set("clickEventTarget", e.Get("target"))
-	//	js.Global.Set("clickEventViewId", e.Get("target").Call("getAttribute", "viewId"))
-	makeDiagramVisible(httpDiagramContainerId)
-}
-
-func makeDiagramVisible(httpDiagramContainerId string) {
-	x := js.Global.Get("document").Call("getElementsByClassName", "crlDiagramContainer")
-	lengthString := strconv.Itoa(x.Length())
-	js.Global.Get("console").Call("log", "List length: "+lengthString)
-	for i := 0; i < x.Length(); i++ {
-		js.Global.Get("console").Call("log", "Container id: ", x.Index(i).Get("id").String())
-		if x.Index(i).Get("id").String() == httpDiagramContainerId {
-			x.Index(i).Get("style").Set("display", "block")
-			js.Global.Get("console").Call("log", "Showing: "+httpDiagramContainerId)
-		} else {
-			x.Index(i).Get("style").Set("display", "none")
-			js.Global.Get("console").Call("log", "Hiding: "+httpDiagramContainerId)
-		}
-	}
-
 }
 
 func (dmPtr *DiagramManager) SetSize() {

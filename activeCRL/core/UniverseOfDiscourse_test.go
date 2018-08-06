@@ -5,10 +5,56 @@
 package core
 
 import (
+	"log"
 	"sync"
 	"testing"
-	//	"time"
+	"time"
 )
+
+func TestUniverseOfDiscourseCreationTime(t *testing.T) {
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	CountHeldLocksInvocations = true
+	HeldLocksInvocations = 0
+	NewLockInvocations = 0
+	startTime := time.Now()
+	uOfD := NewUniverseOfDiscourse(hl).(*universeOfDiscourse)
+	if uOfD == nil {
+		t.Error("Universe of Discourse not created")
+	}
+	endTime := time.Now()
+	CountHeldLocksInvocations = false
+	lockInvocations := HeldLocksInvocations
+	HeldLocksInvocations = 0
+	newLocks := NewLockInvocations
+	NewLockInvocations = 0
+	duration := endTime.Sub(startTime)
+	log.Printf("Create Universe of Discourse duration: %s \n", duration.String())
+	log.Printf("Create Universe of Discourse LockBaseElement invocations: %d \n", lockInvocations)
+	log.Printf("Create Universe of Discourse LockBaseElement new locks: %d \n", newLocks)
+}
+
+func TestHeldLocksOverhead(t *testing.T) {
+	var wg sync.WaitGroup
+	hl := NewHeldLocks(&wg)
+	defer hl.ReleaseLocks()
+	uOfD := NewUniverseOfDiscourse(hl).(*universeOfDiscourse)
+
+	// Element
+	element := uOfD.NewElement(hl)
+
+	i := 100000
+	startTime := time.Now()
+	for i > 0 {
+		hl.LockBaseElement(element)
+		i--
+	}
+	endTime := time.Now()
+	duration := endTime.Sub(startTime)
+	log.Printf("RunTest duration: %s \n", duration.String())
+
+}
 
 func TestGetBaseElementWithUri(t *testing.T) {
 	var wg sync.WaitGroup

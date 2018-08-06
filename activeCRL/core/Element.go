@@ -392,21 +392,48 @@ func SetDefinition(el Element, definition string, hl *HeldLocks) {
 }
 
 func SetLabel(el Element, name string, hl *HeldLocks) {
+	if AdHocTrace == true {
+		log.Printf("--> In SetLabel, held locks is present = %v \n", hl != nil)
+	}
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(el)
+	if AdHocTrace == true {
+		log.Printf("--> In SetLabel, about to call GetLabelLiteral \n")
+	}
 	nl := el.GetLabelLiteral(hl)
 	if nl == nil {
+		if AdHocTrace == true {
+			log.Printf("--> In SetLabel, LabelLiteral not found, about to call GetLabelLiteralPointer \n")
+		}
 		nlp := el.GetLabelLiteralPointer(hl)
 		if nlp == nil {
+			if AdHocTrace == true {
+				log.Printf("--> In SetLabel, LabelLiteral Pointer not found, about to create new LabelLiteralPointer \n")
+			}
 			nlp = el.GetUniverseOfDiscourse(hl).NewLabelLiteralPointer(hl)
+			if AdHocTrace == true {
+				log.Printf("--> In SetLabel, about to SetOwningElement for new LabelLiteralPointer \n")
+			}
 			SetOwningElement(nlp, el, hl)
 		}
+		if AdHocTrace == true {
+			log.Printf("--> In SetLabel, LabelLiteral not found, about to create new LabelLiteral \n")
+		}
 		nl = el.GetUniverseOfDiscourse(hl).NewLiteral(hl)
+		if AdHocTrace == true {
+			log.Printf("--> In SetLabel, about to SetOwningElement for new LabelLiteral \n")
+		}
 		SetOwningElement(nl, el, hl)
+		if AdHocTrace == true {
+			log.Printf("--> In SetLabel, about to SetLiteral on LabelLiteralPointer \n")
+		}
 		nlp.SetLiteral(nl, hl)
+	}
+	if AdHocTrace == true {
+		log.Printf("--> In SetLabel, about to SetLiteralValue on LabelLiteral \n")
 	}
 	nl.SetLiteralValue(name, hl)
 }

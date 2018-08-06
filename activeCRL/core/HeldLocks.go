@@ -6,9 +6,14 @@ package core
 
 import (
 	"github.com/satori/go.uuid"
-	//	"log"
+	"log"
+	//	"runtime/debug"
 	"sync"
 )
+
+var CountHeldLocksInvocations bool = false
+var HeldLocksInvocations int = 0
+var NewLockInvocations int = 0
 
 type HeldLocks struct {
 	sync.Mutex
@@ -30,11 +35,24 @@ func (hlPtr *HeldLocks) GetWaitGroup() *sync.WaitGroup {
 }
 
 func (hlPtr *HeldLocks) LockBaseElement(be BaseElement) {
+	if CountHeldLocksInvocations == true {
+		HeldLocksInvocations++
+	}
 	hlPtr.Lock()
 	defer hlPtr.Unlock()
 	id := be.getIdNoLock()
+	if AdHocTrace == true {
+		log.Printf("In LockBaseElement for be %s \n", id)
+	}
 	if hlPtr.beLocks[id] == nil {
+		if AdHocTrace == true {
+			log.Printf("In LockBaseElement, lock not found for be %s of type %T \n", id, be)
+			//			debug.PrintStack()
+		}
 		//		log.Printf("Locking %s", id)
+		if CountHeldLocksInvocations == true {
+			NewLockInvocations++
+		}
 		hlPtr.beLocks[id] = be
 		be.TraceableLock()
 	}

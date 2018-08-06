@@ -74,10 +74,12 @@ func newJQuery(args ...interface{}) jquery.JQuery {
 }
 
 func initializeEditor() {
+	log.Printf("initializeEditor called")
 	editor.InitializeCrlEditorSingleton()
 	js.Global.Set("CrlEditor", js.MakeWrapper(editor.CrlEditorSingleton))
 	js.Global.Set("DiagramManager", js.MakeWrapper(editor.CrlEditorSingleton.GetDiagramManager()))
 	js.Global.Set("TreeManager", js.MakeWrapper(editor.CrlEditorSingleton.GetTreeManager()))
+	js.Global.Set("PropertiesManager", js.MakeWrapper(editor.CrlEditorSingleton.GetPropertiesManager()))
 }
 
 // *** EXPERIMENTAL CODE BELOW THIS LINE **************************************************************
