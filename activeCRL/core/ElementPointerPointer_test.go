@@ -38,7 +38,7 @@ func TestNewElementPointerPointer(t *testing.T) {
 
 func TestNewElementPointerPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
-	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	var expectedId string = uuid.NewV5(uuid.NamespaceURL, uri).String()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()

@@ -53,7 +53,7 @@ func (sbeMap *StringBaseElementMap) PrintJustIdentifiers(hl *HeldLocks) {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	for uri, be := range sbeMap.baseElementMap {
-		log.Printf("Uri: %s Id: %s\n", uri, be.GetId(hl).String())
+		log.Printf("Uri: %s Id: %s\n", uri, be.GetId(hl))
 	}
 }
 

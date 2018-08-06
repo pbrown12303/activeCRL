@@ -5,7 +5,7 @@
 package core
 
 import (
-	"github.com/satori/go.uuid"
+	//	"github.com/satori/go.uuid"
 	"log"
 	//	"runtime/debug"
 	"sync"
@@ -17,14 +17,14 @@ var NewLockInvocations int = 0
 
 type HeldLocks struct {
 	sync.Mutex
-	beLocks             map[uuid.UUID]BaseElement
+	beLocks             map[string]BaseElement
 	waitGroup           *sync.WaitGroup
 	functionCallManager *FunctionCallManager
 }
 
 func NewHeldLocks(wg *sync.WaitGroup) *HeldLocks {
 	var hl HeldLocks
-	hl.beLocks = make(map[uuid.UUID]BaseElement)
+	hl.beLocks = make(map[string]BaseElement)
 	hl.waitGroup = wg
 	hl.functionCallManager = NewFunctionCallManager()
 	return &hl
@@ -64,7 +64,7 @@ func (hlPtr *HeldLocks) ReleaseLocks() {
 	for _, be := range hlPtr.beLocks {
 		be.TraceableUnlock()
 	}
-	hlPtr.beLocks = make(map[uuid.UUID]BaseElement)
+	hlPtr.beLocks = make(map[string]BaseElement)
 	hlPtr.functionCallManager.ExecuteFunctions(hlPtr.waitGroup)
 }
 

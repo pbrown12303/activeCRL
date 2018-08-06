@@ -6,7 +6,6 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
-	"github.com/satori/go.uuid"
 	//	"log"
 	"strconv"
 	"sync"
@@ -109,9 +108,9 @@ func TestCreateAbstractElementPointerFunction(t *testing.T) {
 	time.Sleep(10000000 * time.Nanosecond)
 
 	foundElementPointerRef := core.GetChildElementPointerReferenceWithAncestorUri(createElementPointerFunctionInstance, ElementPointerCreateAbstractElementPointerCreatedElementPointerRefUri, hl)
-	foundElementPointerRefIdentifier := uuid.Nil
+	foundElementPointerRefIdentifier := ""
 	var foundElementPointer core.ElementPointer
-	foundElementPointerIdentifier := uuid.Nil
+	foundElementPointerIdentifier := ""
 	if foundElementPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
@@ -195,9 +194,9 @@ func TestCreateRefinedElementPointerFunction(t *testing.T) {
 	time.Sleep(10000000 * time.Nanosecond)
 
 	foundElementPointerRef := core.GetChildElementPointerReferenceWithAncestorUri(createElementPointerFunctionInstance, ElementPointerCreateRefinedElementPointerCreatedElementPointerRefUri, hl)
-	foundElementPointerRefIdentifier := uuid.Nil
+	foundElementPointerRefIdentifier := ""
 	var createdElementPointer core.ElementPointer
-	createdElementPointerIdentifier := uuid.Nil
+	createdElementPointerIdentifier := ""
 	if foundElementPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
@@ -286,9 +285,9 @@ func TestCreateOwningElementPointerFunction(t *testing.T) {
 	time.Sleep(10000000 * time.Nanosecond)
 
 	foundElementPointerRef := core.GetChildElementPointerReferenceWithAncestorUri(createElementPointerFunctionInstance, ElementPointerCreateOwningElementPointerCreatedElementPointerRefUri, hl)
-	foundElementPointerRefIdentifier := uuid.Nil
+	foundElementPointerRefIdentifier := ""
 	var createdElementPointer core.ElementPointer
-	createdElementPointerIdentifier := uuid.Nil
+	createdElementPointerIdentifier := ""
 	if foundElementPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
@@ -378,9 +377,9 @@ func TestCreateReferencedElementPointerFunction(t *testing.T) {
 	time.Sleep(10000000 * time.Nanosecond)
 
 	foundElementPointerRef := core.GetChildElementPointerReferenceWithAncestorUri(createElementPointerFunctionInstance, ElementPointerCreateReferencedElementPointerCreatedElementPointerRefUri, hl)
-	foundElementPointerRefIdentifier := uuid.Nil
+	foundElementPointerRefIdentifier := ""
 	var createdElementPointer core.ElementPointer
-	createdElementPointerIdentifier := uuid.Nil
+	createdElementPointerIdentifier := ""
 	if foundElementPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
@@ -550,7 +549,7 @@ func TestGetElementId(t *testing.T) {
 	if targetLiteral == nil {
 		t.Errorf("Target literal not found")
 	} else {
-		if targetLiteral.GetLiteralValue(hl) != sourceElementPointer.GetElementId(hl).String() {
+		if targetLiteral.GetLiteralValue(hl) != sourceElementPointer.GetElementId(hl) {
 			t.Errorf("Target literal value incorrect")
 		}
 	}

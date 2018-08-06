@@ -6,7 +6,6 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
-	"github.com/satori/go.uuid"
 	//	"log"
 	"sync"
 	"testing"
@@ -100,9 +99,9 @@ func TestCreateRefinementFunction(t *testing.T) {
 	wg.Wait()
 
 	foundRefinementRef := core.GetChildElementReferenceWithAncestorUri(createRefinementInstance, RefinementCreateCreatedRefinementRefUri, hl)
-	foundRefinementRefIdentifier := uuid.Nil
+	foundRefinementRefIdentifier := ""
 	var createdRefinement core.Refinement
-	createdRefinementIdentifier := uuid.Nil
+	createdRefinementIdentifier := ""
 	if foundRefinementRef == nil {
 		t.Error("RefinementRef not created")
 	} else {

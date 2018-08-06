@@ -227,7 +227,7 @@ func TestNewElement(t *testing.T) {
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl)
 	el1 := uOfD.NewElement(hl)
-	if el1.GetId(hl) == uuid.Nil {
+	if el1.GetId(hl) == "" {
 		t.Error("Element identifier not properly initialized")
 	}
 	if el1.GetVersion(hl) != 0 {
@@ -240,7 +240,7 @@ func TestNewElement(t *testing.T) {
 
 func TestNewElementUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
-	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	var expectedId string = uuid.NewV5(uuid.NamespaceURL, uri).String()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()

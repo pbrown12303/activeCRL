@@ -5,19 +5,19 @@
 package core
 
 import (
-	"github.com/satori/go.uuid"
+	//	"github.com/satori/go.uuid"
 	"log"
 	"sync"
 )
 
 type UUIDBaseElementMap struct {
 	sync.Mutex
-	baseElementMap map[uuid.UUID]BaseElement
+	baseElementMap map[string]BaseElement
 }
 
 func NewUUIDBaseElementMap() *UUIDBaseElementMap {
 	var uuidBaseElementMap UUIDBaseElementMap
-	uuidBaseElementMap.baseElementMap = make(map[uuid.UUID]BaseElement)
+	uuidBaseElementMap.baseElementMap = make(map[string]BaseElement)
 	return &uuidBaseElementMap
 }
 
@@ -29,13 +29,13 @@ func (sbeMap *UUIDBaseElementMap) GetRange() []BaseElement {
 	return baseElements
 }
 
-func (sbeMap *UUIDBaseElementMap) DeleteEntry(key uuid.UUID) {
+func (sbeMap *UUIDBaseElementMap) DeleteEntry(key string) {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	delete(sbeMap.baseElementMap, key)
 }
 
-func (sbeMap *UUIDBaseElementMap) GetEntry(key uuid.UUID) BaseElement {
+func (sbeMap *UUIDBaseElementMap) GetEntry(key string) BaseElement {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	return sbeMap.baseElementMap[key]
@@ -45,7 +45,7 @@ func (sbeMap *UUIDBaseElementMap) Print(hl *HeldLocks) {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	for uuid, be := range sbeMap.baseElementMap {
-		log.Printf("Uri: %s\n", uuid.String())
+		log.Printf("Uri: %s\n", uuid)
 		Print(be, "    ", hl)
 	}
 }
@@ -54,11 +54,11 @@ func (sbeMap *UUIDBaseElementMap) PrintJustIdentifiers(hl *HeldLocks) {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	for uuid, _ := range sbeMap.baseElementMap {
-		log.Printf("UUID: %s \n", uuid.String())
+		log.Printf("UUID: %s \n", uuid)
 	}
 }
 
-func (sbeMap *UUIDBaseElementMap) SetEntry(key uuid.UUID, value BaseElement) {
+func (sbeMap *UUIDBaseElementMap) SetEntry(key string, value BaseElement) {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	sbeMap.baseElementMap[key] = value

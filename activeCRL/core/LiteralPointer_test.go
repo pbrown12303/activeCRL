@@ -39,7 +39,7 @@ func TestNewLabelLiteralPointer(t *testing.T) {
 
 func TestNewLabelLiteralPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
-	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	var expectedId string = uuid.NewV5(uuid.NamespaceURL, uri).String()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -77,7 +77,7 @@ func TestDefinitionLabelLiteralPointer(t *testing.T) {
 
 func TestNewDefinitionLiteralPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
-	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	var expectedId string = uuid.NewV5(uuid.NamespaceURL, uri).String()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -115,7 +115,7 @@ func TestNewUriLiteralPointer(t *testing.T) {
 
 func TestNewUriLiteralPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
-	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	var expectedId string = uuid.NewV5(uuid.NamespaceURL, uri).String()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -153,7 +153,7 @@ func TestNewValueLiteralPointer(t *testing.T) {
 
 func TestNewValueLiteralPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
-	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	var expectedId string = uuid.NewV5(uuid.NamespaceURL, uri).String()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()

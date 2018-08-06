@@ -11,14 +11,12 @@ import (
 	"log"
 	"reflect"
 	"strconv"
-
-	"github.com/satori/go.uuid"
 )
 
 type literalPointerPointer struct {
 	pointer
 	literalPointer        LiteralPointer
-	literalPointerId      uuid.UUID
+	literalPointerId      string
 	literalPointerVersion int
 }
 
@@ -41,7 +39,7 @@ func (pllPtr *literalPointerPointer) GetLiteralPointer(hl *HeldLocks) LiteralPoi
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(pllPtr)
-	if pllPtr.literalPointer == nil && pllPtr.GetLiteralPointerId(hl) != uuid.Nil && pllPtr.uOfD != nil {
+	if pllPtr.literalPointer == nil && pllPtr.GetLiteralPointerId(hl) != "" && pllPtr.uOfD != nil {
 		pllPtr.literalPointer = pllPtr.uOfD.GetLiteralPointer(pllPtr.GetLiteralPointerId(hl))
 	}
 	return pllPtr.literalPointer
@@ -52,7 +50,7 @@ func (pllPtr *literalPointerPointer) getLabel(hl *HeldLocks) string {
 	return "literalPointerPointer"
 }
 
-func (pllPtr *literalPointerPointer) GetLiteralPointerId(hl *HeldLocks) uuid.UUID {
+func (pllPtr *literalPointerPointer) GetLiteralPointerId(hl *HeldLocks) string {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -104,7 +102,7 @@ func (elPtr *literalPointerPointer) MarshalJSON() ([]byte, error) {
 
 func (elPtr *literalPointerPointer) maarshalLiteralPointerPointerFields(buffer *bytes.Buffer) error {
 	err := elPtr.pointer.marshalPointerFields(buffer)
-	buffer.WriteString(fmt.Sprintf("\"LiteralPointerId\":\"%s\",", elPtr.literalPointerId.String()))
+	buffer.WriteString(fmt.Sprintf("\"LiteralPointerId\":\"%s\",", elPtr.literalPointerId))
 	buffer.WriteString(fmt.Sprintf("\"LiteralPointerVersion\":\"%d\"", elPtr.literalPointerVersion))
 	return err
 }
@@ -116,7 +114,7 @@ func (pllPtr *literalPointerPointer) printLiteralPointerPointer(prefix string, h
 	}
 	hl.LockBaseElement(pllPtr)
 	pllPtr.printPointer(prefix, hl)
-	log.Printf("%s  Indicated LiteralPointerID: %s \n", prefix, pllPtr.literalPointerId.String())
+	log.Printf("%s  Indicated LiteralPointerID: %s \n", prefix, pllPtr.literalPointerId)
 	log.Printf("%s  Indicated LiteralPointerVersion: %d \n", prefix, pllPtr.literalPointerVersion)
 }
 
@@ -133,7 +131,7 @@ func (ep *literalPointerPointer) recoverLiteralPointerPointerFields(unmarshaledD
 		fmt.Printf("LiteralPointerPointer's Recovery of LiteralPointerId failed\n")
 		return err
 	}
-	ep.literalPointerId, err = uuid.FromString(recoveredLiteralPointerId)
+	ep.literalPointerId = recoveredLiteralPointerId
 	if err != nil {
 		fmt.Printf("LiteralPointerPointer's conversion of LiteralPointerId failed\n")
 		return err
@@ -170,7 +168,7 @@ func (pllPtr *literalPointerPointer) SetLiteralPointer(literalPointer LiteralPoi
 			pllPtr.literalPointerVersion = literalPointer.GetVersion(hl)
 			pllPtr.uOfD.(*universeOfDiscourse).addLiteralPointerListener(literalPointer, pllPtr, hl)
 		} else {
-			pllPtr.literalPointerId = uuid.Nil
+			pllPtr.literalPointerId = ""
 			pllPtr.literalPointerVersion = 0
 		}
 		notification := NewChangeNotification(pllPtr, MODIFY, "SetLiteralPointer", nil)
@@ -242,7 +240,7 @@ func (lpPtr *literalPointerPointer) setUri(uri string, hl *HeldLocks) {
 type LiteralPointerPointer interface {
 	Pointer
 	GetLiteralPointer(*HeldLocks) LiteralPointer
-	GetLiteralPointerId(*HeldLocks) uuid.UUID
+	GetLiteralPointerId(*HeldLocks) string
 	GetLiteralPointerVersion(*HeldLocks) int
 	SetLiteralPointer(LiteralPointer, *HeldLocks)
 	setLiteralPointerVersion(int, *HeldLocks)

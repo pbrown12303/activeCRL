@@ -7,8 +7,6 @@ package core
 import (
 	"sync"
 	"testing"
-
-	"github.com/satori/go.uuid"
 )
 
 func TestBaseElement(t *testing.T) {
@@ -18,13 +16,13 @@ func TestBaseElement(t *testing.T) {
 	var be baseElement
 	// Test id
 	// Can't use the locking version of GetId because we are about to change the id
-	if be.getIdNoLock() != uuid.Nil {
+	if be.getIdNoLock() != "" {
 		t.Error("baseElement identifier not nil before setting")
 	}
 
 	// This will change the id
 	be.initializeBaseElement()
-	if be.GetId(hl) == uuid.Nil {
+	if be.GetId(hl) == "" {
 		t.Error("baseElement identifier nil after setting")
 	}
 

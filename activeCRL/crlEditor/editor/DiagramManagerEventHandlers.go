@@ -18,7 +18,7 @@ func onDiagramManagerDrop(event *js.Object) {
 	log.Printf("On Drop called")
 	httpDiagramContainerId := event.Get("target").Get("parentElement").Get("parentElement").Get("id").String()
 	be := CrlEditorSingleton.GetTreeDragSelection()
-	js.Global.Set("diagramDroppedBaseElement", be.GetId(hl).String())
+	js.Global.Set("diagramDroppedBaseElement", be.GetId(hl))
 	js.Global.Get("console").Call("log", "In onDiagramManagerDrop")
 
 	addNodeView(httpDiagramContainerId, be, event.Get("layerX").Float(), event.Get("layerY").Float(), hl)
@@ -37,7 +37,7 @@ func onDiagramManagerCellPointerDown(cellView *js.Object, event *js.Object, x *j
 	if diagramNode == nil {
 		js.Global.Get("console").Call("log", "In onDiagramManagerCellPointerDown diagramNode is nil")
 	} else {
-		js.Global.Get("console").Call("log", "In onDiagramManagerCellPointerDown diagramNode id = "+diagramNode.GetId(hl).String())
+		js.Global.Get("console").Call("log", "In onDiagramManagerCellPointerDown diagramNode id = "+diagramNode.GetId(hl))
 	}
 
 	be, err := crlDiagram.GetReferencedBaseElement(diagramNode, hl)

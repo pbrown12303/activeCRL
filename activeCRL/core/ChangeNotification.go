@@ -112,7 +112,7 @@ func (notification *ChangeNotification) PrintRecursively(prefix string, hl *Held
 	} else {
 		log.Printf(prefix + "Changed object is not nil")
 		log.Printf(prefix+"  Type: %T", notification.changedObject)
-		log.Printf(prefix+"  Id: %s", notification.changedObject.GetId(hl).String())
+		log.Printf(prefix+"  Id: %s", notification.changedObject.GetId(hl))
 		log.Printf(prefix+"  Version: %d", notification.changedObject.GetVersion(hl))
 		//		Print(notification.changedObject, prefix+"   ", hl)
 	}
@@ -131,7 +131,7 @@ func abstractionChanged(element Element, notification *ChangeNotification, hl *H
 // childChanged() is used by ownedBaseElements to inform their parents when they have changed. It does no locking.
 func childChanged(el Element, notification *ChangeNotification, hl *HeldLocks) {
 	if TraceChange == true {
-		log.Printf("childChanged called on %T identifier: %s \n", el, el.GetId(hl).String())
+		log.Printf("childChanged called on %T identifier: %s \n", el, el.GetId(hl))
 		notification.Print("ChildChanged Incoming Notification: ", hl)
 	}
 	// First check for circular notifications. We do not want to propagate these
@@ -217,7 +217,7 @@ func preChange(be BaseElement, hl *HeldLocks) {
 //      Notification consists of calling indicatedBaseElementChanged() on the pointer
 func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
 	if TraceChange == true {
-		log.Printf("In post change, %T identifier: %s \n", be, be.getIdNoLock().String())
+		log.Printf("In post change, %T identifier: %s \n", be, be.getIdNoLock())
 		notification.Print("PostChange Incoming Notification: ", hl)
 	}
 	if notificationsLimit > 0 {
@@ -253,7 +253,7 @@ func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks)
 //      notified
 func indicatedBaseElementChanged(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
 	if TraceChange == true {
-		log.Printf("In indicatedBaseElementChanged, be identifier: %s \n", be.getIdNoLock().String())
+		log.Printf("In indicatedBaseElementChanged, be identifier: %s \n", be.getIdNoLock())
 		notification.Print("indicatedBaseElementChanged Incoming Notification: ", hl)
 		var filename string = "NotificationGraph" + strconv.Itoa(notificationsCount)
 		file, err := os.Create(filename)

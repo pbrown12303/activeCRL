@@ -5,7 +5,6 @@ import (
 	"github.com/gopherjs/jquery"
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/activeCRL/crlDiagram"
-	"github.com/satori/go.uuid"
 	"log"
 	"sync"
 	"time"
@@ -78,7 +77,7 @@ func (edPtr *crlEditor) GetCurrentSelection() core.BaseElement {
 }
 
 func (edPtr *crlEditor) GetCurrentSelectionId() string {
-	return edPtr.currentSelection.GetId(edPtr.hl).String()
+	return edPtr.currentSelection.GetId(edPtr.hl)
 }
 
 func (edPtr *crlEditor) GetDiagramManager() *DiagramManager {
@@ -98,7 +97,7 @@ func (edPtr *crlEditor) GetTreeDragSelection() core.BaseElement {
 }
 
 func (edPtr *crlEditor) GetTreeDragSelectionId() string {
-	return edPtr.treeDragSelection.GetId(edPtr.hl).String()
+	return edPtr.treeDragSelection.GetId(edPtr.hl)
 }
 
 func (edPtr *crlEditor) GetTreeManager() *TreeManager {
@@ -139,8 +138,7 @@ func (edPtr *crlEditor) SelectBaseElement(be core.BaseElement) core.BaseElement 
 }
 
 func (edPtr *crlEditor) SelectBaseElementUsingIdString(id string) core.BaseElement {
-	uuid, _ := uuid.FromString(id)
-	edPtr.currentSelection = edPtr.uOfD.GetBaseElement(uuid)
+	edPtr.currentSelection = edPtr.uOfD.GetBaseElement(id)
 	edPtr.propertiesManager.BaseElementSelected(edPtr.currentSelection, edPtr.hl)
 	return edPtr.currentSelection
 }

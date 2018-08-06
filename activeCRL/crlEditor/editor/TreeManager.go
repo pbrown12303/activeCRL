@@ -4,7 +4,6 @@ import (
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/jquery"
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
-	"github.com/satori/go.uuid"
 	"log"
 )
 
@@ -14,7 +13,7 @@ const treeNodeSuffix = "TreeNode"
 type TreeManager struct {
 	manageNodesFunction core.Element
 	treeId              string
-	rootElements        map[uuid.UUID]core.BaseElement
+	rootElements        map[string]core.BaseElement
 	uOfD                core.UniverseOfDiscourse
 }
 
@@ -22,7 +21,7 @@ func NewTreeManager(uOfD core.UniverseOfDiscourse, treeId string, hl *core.HeldL
 	var treeManager TreeManager
 	treeManager.uOfD = uOfD
 	treeManager.treeId = treeId
-	treeManager.rootElements = make(map[uuid.UUID]core.BaseElement)
+	treeManager.rootElements = make(map[string]core.BaseElement)
 
 	uOfDQuery := jquery.NewJQuery("#uOfD")
 	uOfDQuery.Call("jstree", js.M{"core": js.M{"check_callback": true,
@@ -58,7 +57,7 @@ func NewTreeManager(uOfD core.UniverseOfDiscourse, treeId string, hl *core.HeldL
 func (tmPtr *TreeManager) AddChildren(be core.BaseElement, hl *core.HeldLocks) {
 	switch be.(type) {
 	case core.Element:
-		parentId := be.GetId(hl).String()
+		parentId := be.GetId(hl)
 		jTreeParentId := parentId + "TreeNode"
 		for _, child := range be.(core.Element).GetOwnedBaseElements(hl) {
 			tmPtr.AddNode(child, jTreeParentId, hl)
@@ -68,7 +67,7 @@ func (tmPtr *TreeManager) AddChildren(be core.BaseElement, hl *core.HeldLocks) {
 }
 
 func (tmPtr *TreeManager) AddNode(be core.BaseElement, parentId string, hl *core.HeldLocks) {
-	id := be.GetId(hl).String() + treeNodeSuffix
+	id := be.GetId(hl) + treeNodeSuffix
 	name := core.GetLabel(be, hl)
 	var icon string
 	switch be.(type) {
@@ -143,9 +142,6 @@ func onTreeDragStart(e jquery.Event, data *js.Object) {
 	log.Printf("On Tree Drag Start called, ParentId = %s", parentId)
 	selectedBaseElementId := getIdWithoutSuffix(parentId, treeNodeSuffix)
 	log.Printf("selectedBaseElementId = %s", selectedBaseElementId)
-	selectedBaseElementUUID, err := uuid.FromString(selectedBaseElementId)
-	if err == nil {
-		be := CrlEditorSingleton.GetUofD().GetBaseElement(selectedBaseElementUUID)
-		CrlEditorSingleton.SetTreeDragSelection(be)
-	}
+	be := CrlEditorSingleton.GetUofD().GetBaseElement(selectedBaseElementId)
+	CrlEditorSingleton.SetTreeDragSelection(be)
 }

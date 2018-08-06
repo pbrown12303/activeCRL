@@ -11,14 +11,12 @@ import (
 	"log"
 	"reflect"
 	"strconv"
-
-	"github.com/satori/go.uuid"
 )
 
 type elementPointerPointer struct {
 	pointer
 	elementPointer        ElementPointer
-	elementPointerId      uuid.UUID
+	elementPointerId      string
 	elementPointerVersion int
 }
 
@@ -41,7 +39,7 @@ func (eppPtr *elementPointerPointer) GetElementPointer(hl *HeldLocks) ElementPoi
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(eppPtr)
-	if eppPtr.elementPointer == nil && eppPtr.GetElementPointerId(hl) != uuid.Nil && eppPtr.uOfD != nil {
+	if eppPtr.elementPointer == nil && eppPtr.GetElementPointerId(hl) != "" && eppPtr.uOfD != nil {
 		eppPtr.elementPointer = eppPtr.uOfD.GetElementPointer(eppPtr.GetElementPointerId(hl))
 	}
 	return eppPtr.elementPointer
@@ -52,7 +50,7 @@ func (eppPtr *elementPointerPointer) getLabel(hl *HeldLocks) string {
 	return "elementPointerPointer"
 }
 
-func (eppPtr *elementPointerPointer) GetElementPointerId(hl *HeldLocks) uuid.UUID {
+func (eppPtr *elementPointerPointer) GetElementPointerId(hl *HeldLocks) string {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -103,7 +101,7 @@ func (elPtr *elementPointerPointer) MarshalJSON() ([]byte, error) {
 
 func (elPtr *elementPointerPointer) maarshalElementPointerPointerFields(buffer *bytes.Buffer) error {
 	err := elPtr.pointer.marshalPointerFields(buffer)
-	buffer.WriteString(fmt.Sprintf("\"ElementPointerId\":\"%s\",", elPtr.elementPointerId.String()))
+	buffer.WriteString(fmt.Sprintf("\"ElementPointerId\":\"%s\",", elPtr.elementPointerId))
 	buffer.WriteString(fmt.Sprintf("\"ElementPointerVersion\":\"%d\"", elPtr.elementPointerVersion))
 	return err
 }
@@ -115,7 +113,7 @@ func (eppPtr *elementPointerPointer) printElementPointerPointer(prefix string, h
 	}
 	hl.LockBaseElement(eppPtr)
 	eppPtr.printPointer(prefix, hl)
-	log.Printf("%s  Indicated ElementPointerID: %s \n", prefix, eppPtr.elementPointerId.String())
+	log.Printf("%s  Indicated ElementPointerID: %s \n", prefix, eppPtr.elementPointerId)
 	log.Printf("%s  Indicated ElementPointerVersion: %d \n", prefix, eppPtr.elementPointerVersion)
 }
 
@@ -132,7 +130,7 @@ func (ep *elementPointerPointer) recoverElementPointerPointerFields(unmarshaledD
 		fmt.Printf("ElementPointerPointer's Recovery of ElementPointerId failed\n")
 		return err
 	}
-	ep.elementPointerId, err = uuid.FromString(recoveredElementPointerId)
+	ep.elementPointerId = recoveredElementPointerId
 	if err != nil {
 		fmt.Printf("ElementPointerPointer's conversion of ElementPointerId failed\n")
 		return err
@@ -169,7 +167,7 @@ func (eppPtr *elementPointerPointer) SetElementPointer(elementPointer ElementPoi
 			eppPtr.elementPointerVersion = elementPointer.GetVersion(hl)
 			eppPtr.uOfD.(*universeOfDiscourse).addElementPointerListener(elementPointer, eppPtr, hl)
 		} else {
-			eppPtr.elementPointerId = uuid.Nil
+			eppPtr.elementPointerId = ""
 			eppPtr.elementPointerVersion = 0
 		}
 		notification := NewChangeNotification(eppPtr, MODIFY, "SetElementPointer", nil)
@@ -241,7 +239,7 @@ func (epPtr *elementPointerPointer) setUri(uri string, hl *HeldLocks) {
 type ElementPointerPointer interface {
 	Pointer
 	GetElementPointer(*HeldLocks) ElementPointer
-	GetElementPointerId(*HeldLocks) uuid.UUID
+	GetElementPointerId(*HeldLocks) string
 	GetElementPointerVersion(*HeldLocks) int
 	SetElementPointer(ElementPointer, *HeldLocks)
 	setElementPointerVersion(int, *HeldLocks)

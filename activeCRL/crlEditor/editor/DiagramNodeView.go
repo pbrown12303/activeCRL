@@ -21,7 +21,7 @@ func addNodeView(httpDiagramContainerId string, be core.BaseElement, x float64, 
 	uOfD := CrlEditorSingleton.GetUofD()
 	diagramManager := CrlEditorSingleton.GetDiagramManager()
 	crlDiag := diagramManager.diagramContainerIdToCrlDiagram[httpDiagramContainerId]
-	js.Global.Get("console").Call("log", "In addNodeView CrlDiagramId is "+crlDiag.GetId(hl).String())
+	js.Global.Get("console").Call("log", "In addNodeView CrlDiagramId is "+crlDiag.GetId(hl))
 	newCrlDiagramNode, err := core.CreateReplicateAsRefinementFromUri(uOfD, crlDiagram.CrlDiagramNodeUri, hl)
 	if err != nil {
 		js.Global.Get("console").Call("log", "Failed to create CrlDiagramNode"+err.Error())
@@ -32,7 +32,7 @@ func addNodeView(httpDiagramContainerId string, be core.BaseElement, x float64, 
 
 	// Now construct the jointjs representation
 	graph := diagramManager.crlDiagramIdToJointGraph[httpDiagramContainerId]
-	jointBaseElementId := createJointBaseElementNodePrefix() + newCrlDiagramNode.GetId(hl).String()
+	jointBaseElementId := createJointBaseElementNodePrefix() + newCrlDiagramNode.GetId(hl)
 	jointBaseElement := js.Global.Get("joint").Get("shapes").Get("crl").Get("BaseElement").New(NewBeDefaultInstanceProperties(), NewBePrototypeProperties())
 	jointBaseElement.Set("crlJointId", jointBaseElementId)
 	js.Global.Set("jointBaseElement", jointBaseElement)

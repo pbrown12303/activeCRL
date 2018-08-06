@@ -6,7 +6,6 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
-	"github.com/satori/go.uuid"
 	//	"log"
 	"strconv"
 	"sync"
@@ -87,9 +86,9 @@ func TestCreateLiteralPointerPointerFunction(t *testing.T) {
 	wg.Wait()
 
 	foundReference := core.GetChildBaseElementReferenceWithAncestorUri(createElementPointePointerInstance, LiteralPointerPointerCreateLiteralPointerPointerCreatedLiteralPointerPointerRefUri, hl)
-	foundReferenceIdentifier := uuid.Nil
+	foundReferenceIdentifier := ""
 	var createdLiteralPointerPointer core.LiteralPointerPointer
-	createdLiteralPointerPointerIdentifier := uuid.Nil
+	createdLiteralPointerPointerIdentifier := ""
 	if foundReference == nil {
 		t.Error("Reference not created")
 	} else {
@@ -252,7 +251,7 @@ func TestGetLiteralPointerId(t *testing.T) {
 	if targetLiteral == nil {
 		t.Errorf("Target literal not found")
 	} else {
-		if targetLiteral.GetLiteralValue(hl) != sourceLiteralPointerPointer.GetLiteralPointerId(hl).String() {
+		if targetLiteral.GetLiteralValue(hl) != sourceLiteralPointerPointer.GetLiteralPointerId(hl) {
 			t.Errorf("Target literal value incorrect")
 		}
 	}

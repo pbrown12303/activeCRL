@@ -6,7 +6,6 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
-	"github.com/satori/go.uuid"
 	//	"log"
 	"sync"
 	"testing"
@@ -77,9 +76,9 @@ func TestCreateLiteralFunction(t *testing.T) {
 	//	core.Print(createLiteralInstance, "...", hl)
 
 	foundReference := core.GetChildLiteralReferenceWithAncestorUri(createLiteralInstance, LiteralCreateCreatedLiteralRefUri, hl)
-	foundReferenceIdentifier := uuid.Nil
+	foundReferenceIdentifier := ""
 	var createdLiteral core.Literal
-	createdLiteralIdentifier := uuid.Nil
+	createdLiteralIdentifier := ""
 	if foundReference == nil {
 		t.Error("Reference not created")
 	} else {

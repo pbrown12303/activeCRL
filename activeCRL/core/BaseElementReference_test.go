@@ -18,7 +18,7 @@ func TestNewBaseElementReference(t *testing.T) {
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl)
 	el1 := uOfD.NewBaseElementReference(hl)
-	if el1.GetId(hl) == uuid.Nil {
+	if el1.GetId(hl) == "" {
 		t.Error("Element identifier not properly initialized")
 	}
 	if el1.GetVersion(hl) != 0 {
@@ -36,7 +36,7 @@ func TestNewBaseElementReferenceUriId(t *testing.T) {
 	defer hl.ReleaseLocks()
 	uOfD := NewUniverseOfDiscourse(hl)
 	el1 := uOfD.NewBaseElementReference(hl, uri)
-	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	var expectedId string = uuid.NewV5(uuid.NamespaceURL, uri).String()
 	if expectedId != el1.GetId(hl) {
 		t.Errorf("Incorrect UUID")
 	}

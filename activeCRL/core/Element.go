@@ -8,14 +8,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/satori/go.uuid"
 	"log"
 	"reflect"
 )
 
 type element struct {
 	baseElement
-	ownedBaseElements map[uuid.UUID]BaseElement
+	ownedBaseElements map[string]BaseElement
 }
 
 // addOwnedBaseElement() adds the indicated base element as a child (owned)
@@ -30,7 +29,7 @@ func addOwnedBaseElement(elPtr Element, be BaseElement, hl *HeldLocks) {
 
 func (elPtr *element) clone() *element {
 	var cl element
-	cl.ownedBaseElements = make(map[uuid.UUID]BaseElement)
+	cl.ownedBaseElements = make(map[string]BaseElement)
 	cl.cloneAttributes(*elPtr)
 	return &cl
 }
@@ -215,7 +214,7 @@ func (elPtr *element) GetUriLiteralPointer(hl *HeldLocks) LiteralPointer {
 // nor are monitors of this element notified of changes.
 func (elPtr *element) initializeElement(uri ...string) {
 	elPtr.initializeBaseElement(uri...)
-	elPtr.ownedBaseElements = make(map[uuid.UUID]BaseElement)
+	elPtr.ownedBaseElements = make(map[string]BaseElement)
 }
 
 // internalAddOwnedBaseElement() adds the indicated base element as a child (owned)
@@ -227,7 +226,7 @@ func (elPtr *element) internalAddOwnedBaseElement(be BaseElement, hl *HeldLocks)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
-	if be != nil && be.GetId(hl) != uuid.Nil {
+	if be != nil && be.GetId(hl) != "" {
 		elPtr.ownedBaseElements[be.GetId(hl)] = be
 	}
 }
@@ -241,7 +240,7 @@ func (elPtr *element) internalRemoveOwnedBaseElement(be BaseElement, hl *HeldLoc
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
-	if be != nil && be.GetId(hl) != uuid.Nil {
+	if be != nil && be.GetId(hl) != "" {
 		delete(elPtr.ownedBaseElements, be.GetId(hl))
 	}
 }

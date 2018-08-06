@@ -82,7 +82,7 @@ func (ngPtr *notificationGraph) makeNode(be BaseElement, hl *HeldLocks) {
 }
 
 func makeGraphId(be BaseElement, hl *HeldLocks) string {
-	var graphId string = `"` + be.GetId(hl).String() + `"`
+	var graphId string = `"` + be.GetId(hl) + `"`
 	return graphId
 }
 

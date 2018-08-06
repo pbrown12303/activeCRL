@@ -11,14 +11,13 @@ import (
 	"log"
 	"reflect"
 	"strconv"
-
-	"github.com/satori/go.uuid"
+	//	"github.com/satori/go.uuid"
 )
 
 type baseElementPointer struct {
 	pointer
 	baseEl             BaseElement
-	baseElementId      uuid.UUID
+	baseElementId      string
 	baseElementVersion int
 }
 
@@ -50,7 +49,7 @@ func (bepPtr *baseElementPointer) GetBaseElement(hl *HeldLocks) BaseElement {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(&bepPtr.pointer.baseElement)
-	if bepPtr.baseEl == nil && bepPtr.GetBaseElementId(hl) != uuid.Nil && bepPtr.uOfD != nil {
+	if bepPtr.baseEl == nil && bepPtr.GetBaseElementId(hl) != "" && bepPtr.uOfD != nil {
 		bepPtr.baseEl = bepPtr.uOfD.GetBaseElement(bepPtr.GetBaseElementId(hl))
 	}
 	return bepPtr.baseEl
@@ -62,7 +61,7 @@ func (bepPtr *baseElementPointer) getLabel(hl *HeldLocks) string {
 }
 
 // GetBaseElementIdentifier() locks the vase element pointer and returns the base element identifier, releasing the lock in the process
-func (bepPtr *baseElementPointer) GetBaseElementId(hl *HeldLocks) uuid.UUID {
+func (bepPtr *baseElementPointer) GetBaseElementId(hl *HeldLocks) string {
 	if hl != nil {
 		hl.LockBaseElement(&bepPtr.pointer.baseElement)
 	}
@@ -110,7 +109,7 @@ func (elPtr *baseElementPointer) MarshalJSON() ([]byte, error) {
 
 func (elPtr *baseElementPointer) marshalBaseElementPointerFields(buffer *bytes.Buffer) error {
 	err := elPtr.pointer.marshalPointerFields(buffer)
-	buffer.WriteString(fmt.Sprintf("\"BaseElementId\":\"%s\",", elPtr.baseElementId.String()))
+	buffer.WriteString(fmt.Sprintf("\"BaseElementId\":\"%s\",", elPtr.baseElementId))
 	buffer.WriteString(fmt.Sprintf("\"BaseElementVersion\":\"%d\"", elPtr.baseElementVersion))
 	return err
 }
@@ -122,7 +121,7 @@ func (bepPtr *baseElementPointer) printBaseElementPointer(prefix string, hl *Hel
 	}
 	hl.LockBaseElement(bepPtr)
 	bepPtr.printPointer(prefix, hl)
-	log.Printf("%s  Indicated BaseElementID: %s \n", prefix, bepPtr.baseElementId.String())
+	log.Printf("%s  Indicated BaseElementID: %s \n", prefix, bepPtr.baseElementId)
 	log.Printf("%s  Indicated BaseElementVersion: %d \n", prefix, bepPtr.baseElementVersion)
 }
 
@@ -139,7 +138,7 @@ func (ep *baseElementPointer) recoverBaseElementPointerFields(unmarshaledData *m
 		fmt.Printf("BaseElementPointer's Recovery of BaseElementId failed\n")
 		return err
 	}
-	ep.baseElementId, err = uuid.FromString(recoveredElementId)
+	ep.baseElementId = recoveredElementId
 	if err != nil {
 		fmt.Printf("BaseElementPointer's conversion of BaseElementId failed\n")
 		return err
@@ -188,7 +187,7 @@ func (bepPtr *baseElementPointer) SetBaseElement(newBaseElement BaseElement, hl 
 		bepPtr.baseElementVersion = newBaseElement.GetVersion(hl)
 		bepPtr.uOfD.addBaseElementListener(newBaseElement, bepPtr, hl)
 	} else {
-		bepPtr.baseElementId = uuid.Nil
+		bepPtr.baseElementId = ""
 		bepPtr.baseElementVersion = 0
 	}
 	notification := NewChangeNotification(bepPtr, MODIFY, "SetBaseElement", nil)
@@ -247,7 +246,7 @@ type BaseElementPointer interface {
 	Pointer
 	baseElementChanged(*ChangeNotification, *HeldLocks)
 	GetBaseElement(*HeldLocks) BaseElement
-	GetBaseElementId(*HeldLocks) uuid.UUID
+	GetBaseElementId(*HeldLocks) string
 	GetBaseElementVersion(*HeldLocks) int
 	SetBaseElement(BaseElement, *HeldLocks)
 }

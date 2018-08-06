@@ -79,7 +79,7 @@ func displayDefinition(properties *js.Object, be core.BaseElement, row int, hl *
 		definitionRow.Get("cells").Index(1).Set("innerHTML", be.(core.Element).GetDefinition(hl))
 		definitionRow.Get("cells").Index(1).Set("id", "definition")
 		uri := core.GetUri(be, hl)
-		if uri != "" && core.BaseElement.GetId(be, hl) == uuid.NewV5(uuid.NamespaceURL, uri) {
+		if uri != "" && core.BaseElement.GetId(be, hl) == uuid.NewV5(uuid.NamespaceURL, uri).String() {
 			definitionRow.Get("cells").Index(1).Set("contentEditable", false)
 		} else {
 			definitionRow.Get("cells").Index(1).Set("contentEditable", true)
@@ -103,7 +103,7 @@ func displayId(properties *js.Object, be core.BaseElement, row int, hl *core.Hel
 	}
 	idRow := obtainPropertyRow(properties, row)
 	idRow.Get("cells").Index(0).Set("innerHTML", "Id")
-	idRow.Get("cells").Index(1).Set("innerHTML", core.BaseElement.GetId(be, hl).String())
+	idRow.Get("cells").Index(1).Set("innerHTML", core.BaseElement.GetId(be, hl))
 }
 
 func displayLabel(properties *js.Object, be core.BaseElement, row int, hl *core.HeldLocks) {
@@ -114,7 +114,7 @@ func displayLabel(properties *js.Object, be core.BaseElement, row int, hl *core.
 	switch be.(type) {
 	case core.Element:
 		uri := core.GetUri(be, hl)
-		if uri != "" && core.BaseElement.GetId(be, hl) == uuid.NewV5(uuid.NamespaceURL, uri) {
+		if uri != "" && core.BaseElement.GetId(be, hl) == uuid.NewV5(uuid.NamespaceURL, uri).String() {
 			labelRow.Get("cells").Index(1).Set("contentEditable", false)
 		} else {
 			labelRow.Get("cells").Index(1).Set("contentEditable", true)
@@ -135,27 +135,27 @@ func displayPointerProperties(properties *js.Object, be core.BaseElement, row in
 	switch be.(type) {
 	case core.BaseElementPointer:
 		indicatedBaseElementRow.Get("cells").Index(0).Set("innerHTML", "Indicated BaseElement Id")
-		indicatedBaseElementRow.Get("cells").Index(1).Set("innerHTML", be.(core.BaseElementPointer).GetBaseElementId(hl).String())
+		indicatedBaseElementRow.Get("cells").Index(1).Set("innerHTML", be.(core.BaseElementPointer).GetBaseElementId(hl))
 		indicatedBaseElementVersionRow.Get("cells").Index(0).Set("innerHTML", "Indicated BaseElement Version")
 		indicatedBaseElementVersionRow.Get("cells").Index(1).Set("innerHTML", strconv.Itoa(be.(core.BaseElementPointer).GetBaseElementVersion(hl)))
 	case core.ElementPointer:
 		indicatedBaseElementRow.Get("cells").Index(0).Set("innerHTML", "Indicated Element Id")
-		indicatedBaseElementRow.Get("cells").Index(1).Set("innerHTML", be.(core.ElementPointer).GetElementId(hl).String())
+		indicatedBaseElementRow.Get("cells").Index(1).Set("innerHTML", be.(core.ElementPointer).GetElementId(hl))
 		indicatedBaseElementVersionRow.Get("cells").Index(0).Set("innerHTML", "Indicated Element Version")
 		indicatedBaseElementVersionRow.Get("cells").Index(1).Set("innerHTML", strconv.Itoa(be.(core.ElementPointer).GetElementVersion(hl)))
 	case core.ElementPointerPointer:
 		indicatedBaseElementRow.Get("cells").Index(0).Set("innerHTML", "Indicated ElementPointer Id")
-		indicatedBaseElementRow.Get("cells").Index(1).Set("innerHTML", be.(core.ElementPointerPointer).GetElementPointerId(hl).String())
+		indicatedBaseElementRow.Get("cells").Index(1).Set("innerHTML", be.(core.ElementPointerPointer).GetElementPointerId(hl))
 		indicatedBaseElementVersionRow.Get("cells").Index(0).Set("innerHTML", "Indicated ElementPointer Version")
 		indicatedBaseElementVersionRow.Get("cells").Index(1).Set("innerHTML", strconv.Itoa(be.(core.ElementPointerPointer).GetElementPointerVersion(hl)))
 	case core.LiteralPointer:
 		indicatedBaseElementRow.Get("cells").Index(0).Set("innerHTML", "Indicated Literal Id")
-		indicatedBaseElementRow.Get("cells").Index(1).Set("innerHTML", be.(core.LiteralPointer).GetLiteralId(hl).String())
+		indicatedBaseElementRow.Get("cells").Index(1).Set("innerHTML", be.(core.LiteralPointer).GetLiteralId(hl))
 		indicatedBaseElementVersionRow.Get("cells").Index(0).Set("innerHTML", "Indicated Literal Version")
 		indicatedBaseElementVersionRow.Get("cells").Index(1).Set("innerHTML", strconv.Itoa(be.(core.LiteralPointer).GetLiteralVersion(hl)))
 	case core.LiteralPointerPointer:
 		indicatedBaseElementRow.Get("cells").Index(0).Set("innerHTML", "Indicated LiteralPointer Id")
-		indicatedBaseElementRow.Get("cells").Index(1).Set("innerHTML", be.(core.LiteralPointerPointer).GetLiteralPointerId(hl).String())
+		indicatedBaseElementRow.Get("cells").Index(1).Set("innerHTML", be.(core.LiteralPointerPointer).GetLiteralPointerId(hl))
 		indicatedBaseElementVersionRow.Get("cells").Index(0).Set("innerHTML", "Indicated LiteralPointer Version")
 		indicatedBaseElementVersionRow.Get("cells").Index(1).Set("innerHTML", strconv.Itoa(be.(core.LiteralPointerPointer).GetLiteralPointerVersion(hl)))
 	}
@@ -170,7 +170,7 @@ func displayType(properties *js.Object, be core.BaseElement, row int, hl *core.H
 func displayUniverseOfDiscourse(properties *js.Object, be core.BaseElement, row int, hl *core.HeldLocks) {
 	uOfDRow := obtainPropertyRow(properties, row)
 	uOfDRow.Get("cells").Index(0).Set("innerHTML", "UofD Id")
-	uOfDRow.Get("cells").Index(1).Set("innerHTML", be.GetUniverseOfDiscourse(hl).GetId(hl).String())
+	uOfDRow.Get("cells").Index(1).Set("innerHTML", be.GetUniverseOfDiscourse(hl).GetId(hl))
 }
 
 func displayUri(properties *js.Object, be core.BaseElement, row int, hl *core.HeldLocks) {
@@ -179,7 +179,7 @@ func displayUri(properties *js.Object, be core.BaseElement, row int, hl *core.He
 	uriRow.Get("cells").Index(0).Set("innerHTML", "URI")
 	uriRow.Get("cells").Index(1).Set("innerHTML", uri)
 	uriRow.Get("cells").Index(1).Set("id", "uri")
-	if uri != "" && core.BaseElement.GetId(be, hl) == uuid.NewV5(uuid.NamespaceURL, uri) {
+	if uri != "" && core.BaseElement.GetId(be, hl) == uuid.NewV5(uuid.NamespaceURL, uri).String() {
 		uriRow.Get("cells").Index(1).Set("contentEditable", false)
 	} else {
 		uriRow.Get("cells").Index(1).Set("contentEditable", true)

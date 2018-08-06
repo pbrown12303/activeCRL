@@ -6,7 +6,6 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
-	"github.com/satori/go.uuid"
 	//	"log"
 	"strconv"
 	"sync"
@@ -109,9 +108,9 @@ func TestCreateLabelLiteralPointerFunction(t *testing.T) {
 	wg.Wait()
 
 	foundLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(createLiteralPointerInstance, LiteralPointerCreateLabelLiteralPointerCreatedLiteralPointerRefUri, hl)
-	foundLiteralPointerRefIdentifier := uuid.Nil
+	foundLiteralPointerRefIdentifier := ""
 	var createdLiteralPointer core.LiteralPointer
-	createdLiteralPointerIdentifier := uuid.Nil
+	createdLiteralPointerIdentifier := ""
 	if foundLiteralPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
@@ -195,9 +194,9 @@ func TestCreateDefinitionLiteralPointerFunction(t *testing.T) {
 	wg.Wait()
 
 	foundLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(createLiteralPointerInstance, LiteralPointerCreateDefinitionLiteralPointerCreatedLiteralPointerRefUri, hl)
-	foundLiteralPointerRefIdentifier := uuid.Nil
+	foundLiteralPointerRefIdentifier := ""
 	var createdLiteralPointer core.LiteralPointer
-	createdLiteralPointerIdentifier := uuid.Nil
+	createdLiteralPointerIdentifier := ""
 	if foundLiteralPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
@@ -281,9 +280,9 @@ func TestCreateUriLiteralPointerFunction(t *testing.T) {
 	wg.Wait()
 
 	foundLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(createLiteralPointerInstance, LiteralPointerCreateUriLiteralPointerCreatedLiteralPointerRefUri, hl)
-	foundLiteralPointerRefIdentifier := uuid.Nil
+	foundLiteralPointerRefIdentifier := ""
 	var createdLiteralPointer core.LiteralPointer
-	createdLiteralPointerIdentifier := uuid.Nil
+	createdLiteralPointerIdentifier := ""
 	if foundLiteralPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
@@ -367,9 +366,9 @@ func TestCreateValueLiteralPointerFunction(t *testing.T) {
 	wg.Wait()
 
 	foundLiteralPointerRef := core.GetChildLiteralPointerReferenceWithAncestorUri(createLiteralPointerInstance, LiteralPointerCreateValueLiteralPointerCreatedLiteralPointerRefUri, hl)
-	foundLiteralPointerRefIdentifier := uuid.Nil
+	foundLiteralPointerRefIdentifier := ""
 	var createdLiteralPointer core.LiteralPointer
-	createdLiteralPointerIdentifier := uuid.Nil
+	createdLiteralPointerIdentifier := ""
 	if foundLiteralPointerRef == nil {
 		t.Error("Reference not created")
 	} else {
@@ -533,7 +532,7 @@ func TestGetLiteralId(t *testing.T) {
 	if targetLiteral == nil {
 		t.Errorf("Target literal not found")
 	} else {
-		if targetLiteral.GetLiteralValue(hl) != sourceLiteralPointer.GetLiteralId(hl).String() {
+		if targetLiteral.GetLiteralValue(hl) != sourceLiteralPointer.GetLiteralId(hl) {
 			t.Errorf("Target literal value incorrect")
 		}
 	}

@@ -35,7 +35,7 @@ func treeViewManageNodes(instance core.Element, changeNotifications []*core.Chan
 			// this is the notification we are interested in
 			// Find the changed base element
 			changedBaseElement := underlyingChangeNotification.GetChangedBaseElement()
-			changedBaseElementId := changedBaseElement.GetId(hl).String()
+			changedBaseElementId := changedBaseElement.GetId(hl)
 
 			// Tracing
 			//			underlyingChangeNotification.Print("Change Notification "+strconv.Itoa(i)+": ", hl)
@@ -56,7 +56,7 @@ func treeViewManageNodes(instance core.Element, changeNotifications []*core.Chan
 				parentTreeNodeId = "#"
 				parent := core.GetOwningElement(changedBaseElement, hl)
 				if parent != nil {
-					parentTreeNodeId = parent.GetId(hl).String() + treeNodeSuffix
+					parentTreeNodeId = parent.GetId(hl) + treeNodeSuffix
 				}
 				treeManager.AddNode(changedBaseElement, parentTreeNodeId, hl)
 			} else {
@@ -66,7 +66,7 @@ func treeViewManageNodes(instance core.Element, changeNotifications []*core.Chan
 				currentParent := core.GetOwningElement(changedBaseElement, hl)
 				currentParentId := "#" // the jstree version of a nil parent
 				if currentParent != nil {
-					currentParentId = currentParent.GetId(hl).String() + treeNodeSuffix
+					currentParentId = currentParent.GetId(hl) + treeNodeSuffix
 				}
 				if currentTreeParentId != currentParentId {
 					jquery.NewJQuery(treeManager.treeId).Call("jstree", "cut", changedBaseElementId)

@@ -36,7 +36,7 @@ func TestNewLiteral(t *testing.T) {
 
 func TestNewLiteralUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
-	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	var expectedId string = uuid.NewV5(uuid.NamespaceURL, uri).String()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()

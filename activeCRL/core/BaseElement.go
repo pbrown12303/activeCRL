@@ -18,7 +18,7 @@ import (
 
 type baseElement struct {
 	sync.Mutex
-	id      uuid.UUID
+	id      string
 	version int
 	uOfD    UniverseOfDiscourse
 }
@@ -29,14 +29,14 @@ func (bePtr *baseElement) cloneAttributes(source baseElement) {
 	bePtr.uOfD = source.uOfD
 }
 
-func (bePtr *baseElement) GetId(hl *HeldLocks) uuid.UUID {
+func (bePtr *baseElement) GetId(hl *HeldLocks) string {
 	if hl != nil {
 		hl.LockBaseElement(bePtr)
 	}
 	return bePtr.id
 }
 
-func (bePtr *baseElement) getIdNoLock() uuid.UUID {
+func (bePtr *baseElement) getIdNoLock() string {
 	return bePtr.id
 }
 
@@ -61,14 +61,14 @@ func (bePtr *baseElement) GetVersion(hl *HeldLocks) int {
 // has occurred.
 func (bePtr *baseElement) initializeBaseElement(uri ...string) {
 	if len(uri) == 0 {
-		bePtr.id = uuid.NewV4()
+		bePtr.id = uuid.NewV4().String()
 	} else {
 		if len(uri) == 1 {
 			_, err := url.ParseRequestURI(uri[0])
 			if err != nil {
 				log.Fatalf("Invalid URI provided for initializing BaseElement %s", uri)
 			}
-			bePtr.id = uuid.NewV5(uuid.NamespaceURL, uri[0])
+			bePtr.id = uuid.NewV5(uuid.NamespaceURL, uri[0]).String()
 		} else {
 			log.Fatalf("Invalid URI provided for initializing BaseElement %s", uri)
 		}
@@ -100,7 +100,7 @@ func (bePtr *baseElement) isEquivalent(be *baseElement, hl *HeldLocks) bool {
 }
 
 func (elPtr *baseElement) marshalBaseElementFields(buffer *bytes.Buffer) error {
-	buffer.WriteString(fmt.Sprintf("\"Id\":\"%s\",", elPtr.id.String()))
+	buffer.WriteString(fmt.Sprintf("\"Id\":\"%s\",", elPtr.id))
 	buffer.WriteString(fmt.Sprintf("\"Version\":\"%d\",", elPtr.version))
 	return nil
 }
@@ -111,13 +111,13 @@ func (bePtr *baseElement) printBaseElement(prefix string, hl *HeldLocks) {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(bePtr)
-	log.Printf("%s  id: %s \n", prefix, bePtr.id.String())
+	log.Printf("%s  id: %s \n", prefix, bePtr.id)
 	log.Printf("%s  version: %d \n", prefix, bePtr.version)
 	uOfD := bePtr.uOfD
 	if uOfD == nil {
 		log.Printf("%s  uOfD Identifier: %s \n", prefix, "UofD is nil")
 	} else {
-		log.Printf("%s  uOfD Identifier: %s \n", prefix, bePtr.uOfD.getIdNoLock().String())
+		log.Printf("%s  uOfD Identifier: %s \n", prefix, bePtr.uOfD.getIdNoLock())
 	}
 }
 
@@ -129,11 +129,7 @@ func (be *baseElement) recoverBaseElementFields(unmarshaledData *map[string]json
 		log.Printf("Recovery of BaseElement.id as string failed\n")
 		return err
 	}
-	be.id, err = uuid.FromString(recoveredId)
-	if err != nil {
-		log.Printf("Conversion of string to uuid failed\n")
-		return err
-	}
+	be.id = recoveredId
 	// Version
 	var recoveredVersion string
 	err = json.Unmarshal((*unmarshaledData)["Version"], &recoveredVersion)
@@ -177,8 +173,8 @@ func (bePtr *baseElement) TraceableUnlock() {
 }
 
 type BaseElement interface {
-	GetId(*HeldLocks) uuid.UUID
-	getIdNoLock() uuid.UUID
+	GetId(*HeldLocks) string
+	getIdNoLock() string
 	GetUniverseOfDiscourse(*HeldLocks) UniverseOfDiscourse
 	GetVersion(*HeldLocks) int
 	internalIncrementVersion()

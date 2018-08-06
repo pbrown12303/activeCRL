@@ -138,7 +138,7 @@ func getLiteralPointerId(replicate core.Element, changeNotifications []*core.Cha
 		}
 	}
 	if sourceLiteralPointerPointer != nil {
-		createdLiteral.SetLiteralValue(sourceLiteralPointerPointer.GetLiteralPointerId(hl).String(), hl)
+		createdLiteral.SetLiteralValue(sourceLiteralPointerPointer.GetLiteralPointerId(hl), hl)
 	}
 }
 

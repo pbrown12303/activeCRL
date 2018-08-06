@@ -5,7 +5,6 @@
 package core
 
 import (
-	"github.com/satori/go.uuid"
 	"log"
 	"sync"
 )
@@ -14,16 +13,16 @@ type elementPointerList *[]ElementPointer
 
 type UUIDElementPointerListMap struct {
 	sync.Mutex
-	elementPointerListMap map[uuid.UUID]elementPointerList
+	elementPointerListMap map[string]elementPointerList
 }
 
 func NewUUIDElementPointerListMap() *UUIDElementPointerListMap {
 	var uuidElementPointerMap UUIDElementPointerListMap
-	uuidElementPointerMap.elementPointerListMap = make(map[uuid.UUID]elementPointerList)
+	uuidElementPointerMap.elementPointerListMap = make(map[string]elementPointerList)
 	return &uuidElementPointerMap
 }
 
-func (sbeMap *UUIDElementPointerListMap) AddEntry(key uuid.UUID, value ElementPointer) {
+func (sbeMap *UUIDElementPointerListMap) AddEntry(key string, value ElementPointer) {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	currentList := sbeMap.elementPointerListMap[key]
@@ -46,7 +45,7 @@ func (sbeMap *UUIDElementPointerListMap) AddEntry(key uuid.UUID, value ElementPo
 	}
 }
 
-func (sbeMap *UUIDElementPointerListMap) RemoveEntry(key uuid.UUID, entry ElementPointer) {
+func (sbeMap *UUIDElementPointerListMap) RemoveEntry(key string, entry ElementPointer) {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	currentList := sbeMap.elementPointerListMap[key]
@@ -62,7 +61,7 @@ func (sbeMap *UUIDElementPointerListMap) RemoveEntry(key uuid.UUID, entry Elemen
 	}
 }
 
-func (sbeMap *UUIDElementPointerListMap) GetEntry(key uuid.UUID) elementPointerList {
+func (sbeMap *UUIDElementPointerListMap) GetEntry(key string) elementPointerList {
 	sbeMap.TraceableLock()
 	defer sbeMap.TraceableUnlock()
 	return sbeMap.elementPointerListMap[key]

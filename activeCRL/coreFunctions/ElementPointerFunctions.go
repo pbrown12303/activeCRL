@@ -203,7 +203,7 @@ func getElementId(replicate core.Element, changeNotifications []*core.ChangeNoti
 
 	sourceElementPointer := sourceReference.GetReferencedElementPointer(hl)
 	if sourceElementPointer != nil {
-		createdLiteral.SetLiteralValue(sourceElementPointer.GetElementId(hl).String(), hl)
+		createdLiteral.SetLiteralValue(sourceElementPointer.GetElementId(hl), hl)
 	}
 }
 

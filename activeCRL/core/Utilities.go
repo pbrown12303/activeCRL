@@ -7,7 +7,6 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/satori/go.uuid"
 	"log"
 	"reflect"
 	"runtime/debug"
@@ -583,7 +582,7 @@ func unmarshalPolymorphicBaseElement(data []byte, result *BaseElement) error {
 		err = recoveredBaseElementPointer.recoverBaseElementPointerFields(&unmarshaledData)
 	case "*core.baseElementReference":
 		var recoveredBaseElementReference baseElementReference
-		recoveredBaseElementReference.ownedBaseElements = make(map[uuid.UUID]BaseElement)
+		recoveredBaseElementReference.ownedBaseElements = make(map[string]BaseElement)
 		*result = &recoveredBaseElementReference
 		err = recoveredBaseElementReference.recoverBaseElementReferenceFields(&unmarshaledData)
 		if err != nil {
@@ -592,7 +591,7 @@ func unmarshalPolymorphicBaseElement(data []byte, result *BaseElement) error {
 	case "*core.element":
 		//		fmt.Printf("Switch choice *core.element \n")
 		var recoveredElement element
-		recoveredElement.ownedBaseElements = make(map[uuid.UUID]BaseElement)
+		recoveredElement.ownedBaseElements = make(map[string]BaseElement)
 		*result = &recoveredElement
 		err = recoveredElement.recoverElementFields(&unmarshaledData)
 	case "*core.elementPointer":
@@ -608,7 +607,7 @@ func unmarshalPolymorphicBaseElement(data []byte, result *BaseElement) error {
 	case "*core.elementPointerReference":
 		//		fmt.Printf("Switch choice *core.elementPointerReference \n")
 		var recoveredElement elementPointerReference
-		recoveredElement.ownedBaseElements = make(map[uuid.UUID]BaseElement)
+		recoveredElement.ownedBaseElements = make(map[string]BaseElement)
 		*result = &recoveredElement
 		err = recoveredElement.recoverElementPointerReferenceFields(&unmarshaledData)
 		if err != nil {
@@ -617,7 +616,7 @@ func unmarshalPolymorphicBaseElement(data []byte, result *BaseElement) error {
 	case "*core.elementReference":
 		//		fmt.Printf("Switch choice *core.elementReference \n")
 		var recoveredElement elementReference
-		recoveredElement.ownedBaseElements = make(map[uuid.UUID]BaseElement)
+		recoveredElement.ownedBaseElements = make(map[string]BaseElement)
 		*result = &recoveredElement
 		err = recoveredElement.recoverElementReferenceFields(&unmarshaledData)
 		if err != nil {
@@ -641,7 +640,7 @@ func unmarshalPolymorphicBaseElement(data []byte, result *BaseElement) error {
 	case "*core.literalPointerReference":
 		//		fmt.Printf("Switch choice *core.literalPointerReference \n")
 		var recoveredElement literalPointerReference
-		recoveredElement.ownedBaseElements = make(map[uuid.UUID]BaseElement)
+		recoveredElement.ownedBaseElements = make(map[string]BaseElement)
 		*result = &recoveredElement
 		err = recoveredElement.recoverLiteralPointerReferenceFields(&unmarshaledData)
 		if err != nil {
@@ -650,12 +649,12 @@ func unmarshalPolymorphicBaseElement(data []byte, result *BaseElement) error {
 	case "*core.literalReference":
 		//		fmt.Printf("Switch choice *core.literalPointer \n")
 		var recoveredLiteralReference literalReference
-		recoveredLiteralReference.ownedBaseElements = make(map[uuid.UUID]BaseElement)
+		recoveredLiteralReference.ownedBaseElements = make(map[string]BaseElement)
 		*result = &recoveredLiteralReference
 		err = recoveredLiteralReference.recoverLiteralReferenceFields(&unmarshaledData)
 	case "*core.refinement":
 		var recoveredRefinement refinement
-		recoveredRefinement.ownedBaseElements = make(map[uuid.UUID]BaseElement)
+		recoveredRefinement.ownedBaseElements = make(map[string]BaseElement)
 		*result = &recoveredRefinement
 		err = recoveredRefinement.recoverRefinementFields(&unmarshaledData)
 	default:

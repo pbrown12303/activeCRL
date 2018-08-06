@@ -6,7 +6,7 @@ package core
 
 import (
 	"errors"
-	"github.com/satori/go.uuid"
+	//	"github.com/satori/go.uuid"
 	"log"
 )
 
@@ -48,7 +48,7 @@ func (uOfDPtr *universeOfDiscourse) AddBaseElement(be BaseElement, hl *HeldLocks
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
-	if be.GetId(hl) == uuid.Nil {
+	if be.GetId(hl) == "" {
 		return errors.New("UniverseOfDiscource addBaseElement() failed because UUID was nil")
 	}
 	hl.LockBaseElement(be)
@@ -76,7 +76,7 @@ func (uOfDPtr *universeOfDiscourse) addBaseElementForUndo(be BaseElement, hl *He
 		hl.LockBaseElement(be)
 	}
 	if uOfDPtr.undoMgr.debugUndo == true {
-		log.Printf("Adding base element for undo, id: %s\n", be.GetId(hl).String())
+		log.Printf("Adding base element for undo, id: %s\n", be.GetId(hl))
 		Print(be, "AddedBaseElement: ", hl)
 	}
 	uOfDPtr.baseElementMap.SetEntry(be.GetId(hl), be)
@@ -198,7 +198,7 @@ func (uOfDPtr *universeOfDiscourse) GetAbstractElementsRecursively(el Element, h
 	return abstractElements
 }
 
-func (uOfDPtr *universeOfDiscourse) GetBaseElement(id uuid.UUID) BaseElement {
+func (uOfDPtr *universeOfDiscourse) GetBaseElement(id string) BaseElement {
 	return uOfDPtr.baseElementMap.GetEntry(id)
 }
 
@@ -229,7 +229,7 @@ func (uOfDPtr *universeOfDiscourse) GetCoreConceptSpace() Element {
 	return uOfDPtr.GetElementWithUri(CoreConceptSpaceUri)
 }
 
-func (uOfDPtr *universeOfDiscourse) GetElement(id uuid.UUID) Element {
+func (uOfDPtr *universeOfDiscourse) GetElement(id string) Element {
 	// No locking required
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
@@ -239,7 +239,7 @@ func (uOfDPtr *universeOfDiscourse) GetElement(id uuid.UUID) Element {
 	return nil
 }
 
-func (uOfDPtr *universeOfDiscourse) GetElementPointer(id uuid.UUID) ElementPointer {
+func (uOfDPtr *universeOfDiscourse) GetElementPointer(id string) ElementPointer {
 	// No locking required
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
@@ -330,7 +330,7 @@ func (uOfDPtr *universeOfDiscourse) getImmediateRefinements(el Element, hl *Held
 	return refinements
 }
 
-func (uOfDPtr *universeOfDiscourse) GetLiteral(id uuid.UUID) Literal {
+func (uOfDPtr *universeOfDiscourse) GetLiteral(id string) Literal {
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
 	case Literal:
@@ -348,7 +348,7 @@ func (uOfDPtr *universeOfDiscourse) GetLiteralWithUri(uri string) Literal {
 	return nil
 }
 
-func (uOfDPtr *universeOfDiscourse) GetLiteralPointer(id uuid.UUID) LiteralPointer {
+func (uOfDPtr *universeOfDiscourse) GetLiteralPointer(id string) LiteralPointer {
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
 	case LiteralPointer:
@@ -375,7 +375,7 @@ func (uOfDPtr *universeOfDiscourse) GetLiteralPointerReferenceWithUri(uri string
 	return nil
 }
 
-func (uOfDPtr *universeOfDiscourse) getRefinement(id uuid.UUID) Refinement {
+func (uOfDPtr *universeOfDiscourse) getRefinement(id string) Refinement {
 	be := uOfDPtr.baseElementMap.GetEntry(id)
 	switch be.(type) {
 	case Refinement:
@@ -803,7 +803,7 @@ func (uOfDPtr *universeOfDiscourse) removeBaseElementForUndo(be BaseElement, hl 
 	if be != nil {
 		hl.LockBaseElement(be)
 		if uOfDPtr.undoMgr.debugUndo == true {
-			log.Printf("Removing base element for undo, id: %s\n", be.GetId(hl).String())
+			log.Printf("Removing base element for undo, id: %s\n", be.GetId(hl))
 			Print(be, "RemovedBaseElement: ", hl)
 		}
 		uOfDPtr.baseElementMap.DeleteEntry(be.GetId(hl))
@@ -947,7 +947,7 @@ func (uOfD *universeOfDiscourse) updateUriIndices(be BaseElement, hl *HeldLocks)
 
 func (uOfDPtr *universeOfDiscourse) uOfDChanged(notification *ChangeNotification, hl *HeldLocks) {
 	if TraceChange == true {
-		log.Printf("uOfDChanged called, uOfD ID: %s \n", uOfDPtr.GetId(hl).String())
+		log.Printf("uOfDChanged called, uOfD ID: %s \n", uOfDPtr.GetId(hl))
 		notification.Print("uOfDChanged Incoming Notification: ", hl)
 	}
 	newNotification := NewChangeNotification(uOfDPtr, MODIFY, "uOfDChanged", notification)
@@ -960,22 +960,22 @@ type UniverseOfDiscourse interface {
 	addBaseElementListener(BaseElement, BaseElementPointer, *HeldLocks)
 	DeleteBaseElement(BaseElement, *HeldLocks)
 	GetAbstractElementsRecursively(Element, *HeldLocks) []Element
-	GetBaseElement(uuid.UUID) BaseElement
+	GetBaseElement(string) BaseElement
 	GetBaseElements() []BaseElement
 	GetBaseElementReferenceWithUri(string) BaseElementReference
 	GetBaseElementWithUri(string) BaseElement
 	GetCoreConceptSpace() Element
-	GetElement(uuid.UUID) Element
-	GetElementPointer(uuid.UUID) ElementPointer
+	GetElement(string) Element
+	GetElementPointer(string) ElementPointer
 	GetElementWithUri(string) Element
 	GetElementPointerReferenceWithUri(string) ElementPointerReference
 	GetElementReferenceWithUri(string) ElementReference
 	getImmediateAbstractElements(Element, *HeldLocks) []Element
 	getImmediateAbstractions(Element, *HeldLocks) []Refinement
 	getImmediateRefinements(Element, *HeldLocks) []Refinement
-	GetLiteral(uuid.UUID) Literal
+	GetLiteral(string) Literal
 	GetLiteralWithUri(string) Literal
-	GetLiteralPointer(uuid.UUID) LiteralPointer
+	GetLiteralPointer(string) LiteralPointer
 	GetLiteralReferenceWithUri(string) LiteralReference
 	GetLiteralPointerReferenceWithUri(string) LiteralPointerReference
 	IsRefinementOf(Element, Element, *HeldLocks) bool

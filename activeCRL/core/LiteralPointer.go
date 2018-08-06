@@ -11,8 +11,6 @@ import (
 	"log"
 	"reflect"
 	"strconv"
-
-	"github.com/satori/go.uuid"
 )
 
 type LiteralPointerRole int
@@ -42,7 +40,7 @@ func (lpr LiteralPointerRole) RoleToString() string {
 type literalPointer struct {
 	pointer
 	literal            Literal
-	literalId          uuid.UUID
+	literalId          string
 	literalVersion     int
 	literalPointerRole LiteralPointerRole
 }
@@ -70,13 +68,13 @@ func (lpPtr *literalPointer) GetLiteral(hl *HeldLocks) Literal {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lpPtr)
-	if lpPtr.literal == nil && lpPtr.GetLiteralId(hl) != uuid.Nil && lpPtr.uOfD != nil {
+	if lpPtr.literal == nil && lpPtr.GetLiteralId(hl) != "" && lpPtr.uOfD != nil {
 		lpPtr.literal = lpPtr.uOfD.GetLiteral(lpPtr.GetLiteralId(hl))
 	}
 	return lpPtr.literal
 }
 
-func (lpPtr *literalPointer) GetLiteralId(hl *HeldLocks) uuid.UUID {
+func (lpPtr *literalPointer) GetLiteralId(hl *HeldLocks) string {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -160,7 +158,7 @@ func (elPtr *literalPointer) MarshalJSON() ([]byte, error) {
 
 func (elPtr *literalPointer) marshalLiteralPointerFields(buffer *bytes.Buffer) error {
 	err := elPtr.pointer.marshalPointerFields(buffer)
-	buffer.WriteString(fmt.Sprintf("\"LiteralId\":\"%s\",", elPtr.literalId.String()))
+	buffer.WriteString(fmt.Sprintf("\"LiteralId\":\"%s\",", elPtr.literalId))
 	buffer.WriteString(fmt.Sprintf("\"LiteralVersion\":\"%d\",", elPtr.literalVersion))
 	switch elPtr.literalPointerRole {
 	case VALUE:
@@ -181,7 +179,7 @@ func (lpPtr *literalPointer) printLiteralPointer(prefix string, hl *HeldLocks) {
 		defer hl.ReleaseLocks()
 	}
 	lpPtr.printPointer(prefix, hl)
-	log.Printf("%s  Indicated LiteralId: %s \n", prefix, lpPtr.literalId.String())
+	log.Printf("%s  Indicated LiteralId: %s \n", prefix, lpPtr.literalId)
 	log.Printf("%s  Indicated LiteralVersion: %d \n", prefix, lpPtr.literalVersion)
 	role := ""
 	switch lpPtr.literalPointerRole {
@@ -210,7 +208,7 @@ func (lp *literalPointer) recoverLiteralPointerFields(unmarshaledData *map[strin
 		log.Printf("LiteralPointer's Recovery of LiteralId failed\n")
 		return err
 	}
-	lp.literalId, err = uuid.FromString(recoveredLiteralId)
+	lp.literalId = recoveredLiteralId
 	if err != nil {
 		log.Printf("LiteralPointer's conversion of LiteralId failed\n")
 		return err
@@ -264,7 +262,7 @@ func (lpPtr *literalPointer) SetLiteral(literal Literal, hl *HeldLocks) {
 			lpPtr.literalVersion = literal.GetVersion(hl)
 			lpPtr.uOfD.(*universeOfDiscourse).addLiteralListener(literal, lpPtr, hl)
 		} else {
-			lpPtr.literalId = uuid.Nil
+			lpPtr.literalId = ""
 			lpPtr.literalVersion = 0
 		}
 		notification := NewChangeNotification(lpPtr, MODIFY, "SetLiteral", nil)
@@ -336,7 +334,7 @@ func (lpPtr *literalPointer) setUri(uri string, hl *HeldLocks) {
 type LiteralPointer interface {
 	Pointer
 	GetLiteral(*HeldLocks) Literal
-	GetLiteralId(*HeldLocks) uuid.UUID
+	GetLiteralId(*HeldLocks) string
 	GetLiteralPointerRole(*HeldLocks) LiteralPointerRole
 	GetLiteralVersion(*HeldLocks) int
 	SetLiteral(Literal, *HeldLocks)

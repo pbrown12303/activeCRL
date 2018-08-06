@@ -6,7 +6,6 @@ import (
 	"github.com/gopherjs/jquery"
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/activeCRL/crlDiagram"
-	"github.com/satori/go.uuid"
 	"log"
 )
 
@@ -15,10 +14,10 @@ const diagramSuffix = "Diagram"
 
 type DiagramManager struct {
 	abstractDiagram                  core.Element
-	crlDiagramUUIDToCrlDiagram       map[uuid.UUID]core.Element
+	crlDiagramUUIDToCrlDiagram       map[string]core.Element
 	crlDiagramIdToDiagramContainer   map[string]*js.Object
 	crlDiagramIdToJointGraph         map[string]*js.Object
-	crlDiagramNodeUUIDToJointElement map[uuid.UUID]*js.Object
+	crlDiagramNodeUUIDToJointElement map[string]*js.Object
 	diagramContainerIdToCrlDiagram   map[string]core.Element
 	jointElementIdToCrlDiagramNode   map[string]core.Element
 	jointGraphIdToCrlDiagram         map[string]core.Element
@@ -28,10 +27,10 @@ type DiagramManager struct {
 func NewDiagramManager() *DiagramManager {
 	var diagramManager DiagramManager
 	diagramManager.abstractDiagram = CrlEditorSingleton.GetUofD().GetElementWithUri(crlDiagram.CrlDiagramUri)
-	diagramManager.crlDiagramUUIDToCrlDiagram = make(map[uuid.UUID]core.Element)
+	diagramManager.crlDiagramUUIDToCrlDiagram = make(map[string]core.Element)
 	diagramManager.crlDiagramIdToDiagramContainer = make(map[string]*js.Object)
 	diagramManager.crlDiagramIdToJointGraph = make(map[string]*js.Object)
-	diagramManager.crlDiagramNodeUUIDToJointElement = make(map[uuid.UUID]*js.Object)
+	diagramManager.crlDiagramNodeUUIDToJointElement = make(map[string]*js.Object)
 	diagramManager.diagramContainerIdToCrlDiagram = make(map[string]core.Element)
 	diagramManager.jointElementIdToCrlDiagramNode = make(map[string]core.Element)
 	diagramManager.jointGraphIdToCrlDiagram = make(map[string]core.Element)
@@ -56,14 +55,14 @@ func (dmPtr *DiagramManager) GetCrlDiagramIdForContainerId(containerId string) s
 	diagram := dmPtr.diagramContainerIdToCrlDiagram[containerId]
 	id := ""
 	if diagram != nil {
-		id = diagram.GetId(CrlEditorSingleton.getHeldLocks()).String()
+		id = diagram.GetId(CrlEditorSingleton.getHeldLocks())
 	}
 	return id
 }
 
 func (dmPtr *DiagramManager) DisplayDiagram(diagram core.Element, hl *core.HeldLocks) {
 	diagramId := diagram.GetId(hl)
-	diagramIdString := diagramId.String()
+	diagramIdString := diagramId
 	diagramLabel := core.GetLabel(diagram, hl)
 	httpDiagramContainer := dmPtr.crlDiagramIdToDiagramContainer[diagramIdString]
 	// Construct the container if it is not already present

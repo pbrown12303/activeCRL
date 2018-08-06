@@ -133,7 +133,7 @@ func getBaseElementId(replicate core.Element, changeNotifications []*core.Change
 		}
 	}
 	if sourceBaseElementPointer != nil {
-		createdLiteral.SetLiteralValue(sourceBaseElementPointer.GetBaseElementId(hl).String(), hl)
+		createdLiteral.SetLiteralValue(sourceBaseElementPointer.GetBaseElementId(hl), hl)
 	}
 }
 

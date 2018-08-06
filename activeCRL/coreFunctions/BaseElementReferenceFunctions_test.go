@@ -6,7 +6,6 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
-	"github.com/satori/go.uuid"
 	//	"log"
 	"sync"
 	"testing"
@@ -80,9 +79,9 @@ func TestCreateBaseElementReferenceFunction(t *testing.T) {
 	wg.Wait()
 
 	foundBaseElementReferenceReference := core.GetChildElementReferenceWithAncestorUri(createBaseElementReferenceInstance, BaseElementReferenceCreateCreatedBaseElementReferenceRefUri, hl)
-	foundBaseElementReferenceReferenceIdentifier := uuid.Nil
+	foundBaseElementReferenceReferenceIdentifier := ""
 	var createdBaseElementReference core.BaseElementReference
-	createdBaseElementReferenceIdentifier := uuid.Nil
+	createdBaseElementReferenceIdentifier := ""
 	if foundBaseElementReferenceReference == nil {
 		t.Error("BaseElementReference not created")
 	} else {

@@ -203,7 +203,7 @@ func getLiteralId(replicate core.Element, changeNotifications []*core.ChangeNoti
 
 	sourceLiteralPointer := sourceReference.GetReferencedLiteralPointer(hl)
 	if sourceLiteralPointer != nil {
-		createdLiteral.SetLiteralValue(sourceLiteralPointer.GetLiteralId(hl).String(), hl)
+		createdLiteral.SetLiteralValue(sourceLiteralPointer.GetLiteralId(hl), hl)
 	}
 }
 

@@ -45,7 +45,7 @@ func TestBaseElementPointerUriId(t *testing.T) {
 	owner := uOfD.NewBaseElementReference(hl)
 	rep := uOfD.NewBaseElementPointer(hl, uri)
 	SetOwningElement(rep, owner, hl)
-	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	var expectedId string = uuid.NewV5(uuid.NamespaceURL, uri).String()
 	if expectedId != rep.GetId(hl) {
 		t.Errorf("Incorrect UUID")
 	}

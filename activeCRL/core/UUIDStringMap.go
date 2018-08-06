@@ -5,19 +5,18 @@
 package core
 
 import (
-	"github.com/satori/go.uuid"
 	"log"
 	"sync"
 )
 
 type UUIDStringMap struct {
 	sync.Mutex
-	stringMap map[uuid.UUID]string
+	stringMap map[string]string
 }
 
 func NewUUIDStringMap() *UUIDStringMap {
 	var uuidStringMap UUIDStringMap
-	uuidStringMap.stringMap = make(map[uuid.UUID]string)
+	uuidStringMap.stringMap = make(map[string]string)
 	return &uuidStringMap
 }
 
@@ -29,19 +28,19 @@ func (ssMap *UUIDStringMap) GetRange() []string {
 	return strings
 }
 
-func (ssMap *UUIDStringMap) DeleteEntry(key uuid.UUID) {
+func (ssMap *UUIDStringMap) DeleteEntry(key string) {
 	ssMap.TraceableLock()
 	defer ssMap.TraceableUnlock()
 	delete(ssMap.stringMap, key)
 }
 
-func (ssMap *UUIDStringMap) GetEntry(key uuid.UUID) string {
+func (ssMap *UUIDStringMap) GetEntry(key string) string {
 	ssMap.TraceableLock()
 	defer ssMap.TraceableUnlock()
 	return ssMap.stringMap[key]
 }
 
-func (ssMap *UUIDStringMap) SetEntry(key uuid.UUID, value string) {
+func (ssMap *UUIDStringMap) SetEntry(key string, value string) {
 	ssMap.TraceableLock()
 	defer ssMap.TraceableUnlock()
 	ssMap.stringMap[key] = value

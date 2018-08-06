@@ -366,7 +366,7 @@ func TestUOfDNotifications(t *testing.T) {
 		t.Errorf("Notification not received")
 	}
 	if testElementFound == false {
-		t.Errorf("New Element not found in notifications, id: %s", testElement.GetId(hl).String())
+		t.Errorf("New Element not found in notifications, id: %s", testElement.GetId(hl))
 
 	}
 }

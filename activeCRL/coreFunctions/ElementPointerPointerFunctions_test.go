@@ -6,7 +6,6 @@ package coreFunctions
 
 import (
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
-	"github.com/satori/go.uuid"
 	//	"log"
 	"strconv"
 	"sync"
@@ -87,9 +86,9 @@ func TestCreateElementPointerPointerFunction(t *testing.T) {
 	wg.Wait()
 
 	foundReference := core.GetChildBaseElementReferenceWithAncestorUri(createElementPointePointerInstance, ElementPointerPointerCreateElementPointerPointerCreatedElementPointerPointerRefUri, hl)
-	foundReferenceIdentifier := uuid.Nil
+	foundReferenceIdentifier := ""
 	var createdElementPointerPointer core.ElementPointerPointer
-	createdElementPointerPointerIdentifier := uuid.Nil
+	createdElementPointerPointerIdentifier := ""
 	if foundReference == nil {
 		t.Error("Reference not created")
 	} else {
@@ -252,7 +251,7 @@ func TestGetElementPointerId(t *testing.T) {
 	if targetLiteral == nil {
 		t.Errorf("Target literal not found")
 	} else {
-		if targetLiteral.GetLiteralValue(hl) != sourceElementPointerPointer.GetElementPointerId(hl).String() {
+		if targetLiteral.GetLiteralValue(hl) != sourceElementPointerPointer.GetElementPointerId(hl) {
 			t.Errorf("Target literal value incorrect")
 		}
 	}

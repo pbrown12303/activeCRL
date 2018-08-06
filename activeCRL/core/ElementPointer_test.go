@@ -41,7 +41,7 @@ func TestNewOwningElementPointer(t *testing.T) {
 
 func TestNewOwningElementPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
-	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	var expectedId string = uuid.NewV5(uuid.NamespaceURL, uri).String()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -82,7 +82,7 @@ func TestReferencedElementPointer(t *testing.T) {
 
 func TestReferencedElementPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
-	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	var expectedId string = uuid.NewV5(uuid.NamespaceURL, uri).String()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -123,7 +123,7 @@ func TestAbstractElementPointer(t *testing.T) {
 
 func TestAbstractElementPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
-	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	var expectedId string = uuid.NewV5(uuid.NamespaceURL, uri).String()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()
@@ -164,7 +164,7 @@ func TestRefinedElementPointer(t *testing.T) {
 
 func TestRefinedElementPointerUriId(t *testing.T) {
 	var uri string = "http://TestURI/"
-	var expectedId uuid.UUID = uuid.NewV5(uuid.NamespaceURL, uri)
+	var expectedId string = uuid.NewV5(uuid.NamespaceURL, uri).String()
 	var wg sync.WaitGroup
 	hl := NewHeldLocks(&wg)
 	defer hl.ReleaseLocks()

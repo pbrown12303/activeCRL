@@ -90,7 +90,7 @@ func (vPtr *value) printValue(prefix string, hl *HeldLocks) {
 	if vPtr.getOwningElement(hl) == nil {
 		log.Printf("%s  owningElmentIdentifier: %s \n", prefix, "nil")
 	} else {
-		log.Printf("%s  owningElmentIdentifier: %s \n", prefix, vPtr.owningElement.GetId(hl).String())
+		log.Printf("%s  owningElmentIdentifier: %s \n", prefix, vPtr.owningElement.GetId(hl))
 	}
 }
 

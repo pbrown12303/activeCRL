@@ -11,8 +11,6 @@ import (
 	"log"
 	"reflect"
 	"strconv"
-
-	"github.com/satori/go.uuid"
 )
 
 type ElementPointerRole int
@@ -42,7 +40,7 @@ func (epr ElementPointerRole) RoleToString() string {
 type elementPointer struct {
 	pointer
 	element            Element
-	elementId          uuid.UUID
+	elementId          string
 	elementVersion     int
 	elementPointerRole ElementPointerRole
 }
@@ -82,7 +80,7 @@ func (epPtr *elementPointer) GetElement(hl *HeldLocks) Element {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)
-	if epPtr.element == nil && epPtr.GetElementId(hl) != uuid.Nil && epPtr.uOfD != nil {
+	if epPtr.element == nil && epPtr.GetElementId(hl) != "" && epPtr.uOfD != nil {
 		epPtr.element = epPtr.uOfD.GetElement(epPtr.GetElementId(hl))
 	}
 	return epPtr.element
@@ -108,7 +106,7 @@ func (epPtr *elementPointer) getLabel(hl *HeldLocks) string {
 }
 
 // GetElementIdentifier() locks the element pointer and returns the element identifier, releasing the lock in the process
-func (epPtr *elementPointer) GetElementId(hl *HeldLocks) uuid.UUID {
+func (epPtr *elementPointer) GetElementId(hl *HeldLocks) string {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
@@ -172,7 +170,7 @@ func (elPtr *elementPointer) MarshalJSON() ([]byte, error) {
 
 func (elPtr *elementPointer) marshalElementPointerFields(buffer *bytes.Buffer) error {
 	err := elPtr.pointer.marshalPointerFields(buffer)
-	buffer.WriteString(fmt.Sprintf("\"ElementId\":\"%s\",", elPtr.elementId.String()))
+	buffer.WriteString(fmt.Sprintf("\"ElementId\":\"%s\",", elPtr.elementId))
 	buffer.WriteString(fmt.Sprintf("\"ElementVersion\":\"%d\",", elPtr.elementVersion))
 	switch elPtr.elementPointerRole {
 	case ABSTRACT_ELEMENT:
@@ -194,7 +192,7 @@ func (epPtr *elementPointer) printElementPointer(prefix string, hl *HeldLocks) {
 	}
 	hl.LockBaseElement(epPtr)
 	epPtr.printPointer(prefix, hl)
-	log.Printf("%s  Indicated ElementID: %s \n", prefix, epPtr.elementId.String())
+	log.Printf("%s  Indicated ElementID: %s \n", prefix, epPtr.elementId)
 	log.Printf("%s  Indicated ElementVersion: %d \n", prefix, epPtr.elementVersion)
 	role := ""
 	switch epPtr.elementPointerRole {
@@ -223,7 +221,7 @@ func (ep *elementPointer) recoverElementPointerFields(unmarshaledData *map[strin
 		fmt.Printf("ElementPointer's Recovery of ElementId failed\n")
 		return err
 	}
-	ep.elementId, err = uuid.FromString(recoveredElementId)
+	ep.elementId = recoveredElementId
 	if err != nil {
 		fmt.Printf("ElementPointer's conversion of ElementId failed\n")
 		return err
@@ -297,7 +295,7 @@ func (epPtr *elementPointer) SetElement(element Element, hl *HeldLocks) {
 		epPtr.elementVersion = element.GetVersion(hl)
 		epPtr.uOfD.(*universeOfDiscourse).addElementListener(element, epPtr, hl)
 	} else {
-		epPtr.elementId = uuid.Nil
+		epPtr.elementId = ""
 		epPtr.elementVersion = 0
 	}
 	notification := NewChangeNotification(epPtr, MODIFY, "SetElement", nil)
@@ -401,7 +399,7 @@ type ElementPointer interface {
 	Pointer
 	elementChanged(*ChangeNotification, *HeldLocks)
 	GetElement(*HeldLocks) Element
-	GetElementId(*HeldLocks) uuid.UUID
+	GetElementId(*HeldLocks) string
 	GetElementPointerRole(*HeldLocks) ElementPointerRole
 	GetElementVersion(*HeldLocks) int
 	SetElement(Element, *HeldLocks)
