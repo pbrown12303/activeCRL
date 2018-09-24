@@ -1,10 +1,11 @@
 package editor
 
 import (
+	"log"
+
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/jquery"
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
-	"log"
 )
 
 const treeNodeSuffix = "TreeNode"
@@ -34,7 +35,7 @@ func NewTreeManager(uOfD core.UniverseOfDiscourse, treeId string, hl *core.HeldL
 		baseElementId := getIdWithoutSuffix(treeNodeId, "TreeNode")
 		log.Printf("Selected node id: %s", treeNodeId)
 		log.Printf("Selected base element id: %s", baseElementId)
-		CrlEditorSingleton.SelectBaseElementUsingIdString(baseElementId)
+		CrlEditorSingleton.SelectBaseElementUsingIDString(baseElementId)
 	})
 
 	// Set up the tree drag start callback

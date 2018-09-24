@@ -6,23 +6,26 @@ package core
 
 import (
 	"log"
-	"os"
+	//	"os"
 	"strconv"
 	//	"time"
 )
 
-var TraceChange bool
-var notificationsLimit int
-var notificationsCount int
-
+// NatureOfChange indicates the type of base element change: ADD, MODIFY, or REMOVE
 type NatureOfChange int
 
+// ADD indicates that the BaseElement has been added to the UniverseOfDiscourse
+// MODIFY indicates that the BaseElement has been modified
+// REMOVE indicates that the BaseElement has been removed from the UniverseOfDiscourse
 const (
 	ADD NatureOfChange = iota
 	MODIFY
 	REMOVE
 )
 
+// ChangeNotification records the metadata regarding a change to a BaseElement. It indicates
+// the BaseElement that has changed, the nature of the change (ADD, MODIFY, REMOVE), the origin of the
+// change, and the underlying change that triggered this one (if any)
 type ChangeNotification struct {
 	changedObject    BaseElement
 	natureOfChange   NatureOfChange
@@ -30,6 +33,9 @@ type ChangeNotification struct {
 	underlyingChange *ChangeNotification
 }
 
+// NewChangeNotification creates a ChangeNotification that records the reason for the change to the baseElement,
+// including the nature of the change, an indication of which component originated the change, and whether there
+// was a preceeding notification that triggered this change.
 func NewChangeNotification(baseElement BaseElement, natureOfChange NatureOfChange, origin string, underlyingChange *ChangeNotification) *ChangeNotification {
 	var notification ChangeNotification
 	notification.changedObject = baseElement
@@ -39,13 +45,7 @@ func NewChangeNotification(baseElement BaseElement, natureOfChange NatureOfChang
 	return &notification
 }
 
-// LimitNotifications() is provided as a debugging aid. It limits the number of change notifications allowed.
-// A value of 0 is unlimited.
-func LimitNotifications(limit int) {
-	notificationsLimit = limit
-	notificationsCount = 0
-}
-
+// GetDepth returns the depth of the nested notifications within the current notification
 func (cnPtr *ChangeNotification) GetDepth() int {
 	return cnPtr.getDepth(0)
 }
@@ -67,6 +67,7 @@ func (cnPtr *ChangeNotification) isReferenced(be BaseElement) bool {
 	return false
 }
 
+// GetChangedBaseElement returns the BaseElement whose change is being reported in this ChangeNotification
 func (cnPtr *ChangeNotification) GetChangedBaseElement() BaseElement {
 	return cnPtr.changedObject
 }
@@ -74,30 +75,36 @@ func (cnPtr *ChangeNotification) GetChangedBaseElement() BaseElement {
 func (cnPtr *ChangeNotification) getReferencingChangeNotification(be BaseElement) *ChangeNotification {
 	if cnPtr.changedObject == be {
 		return cnPtr
-	} else {
-		if cnPtr.underlyingChange != nil {
-			return cnPtr.underlyingChange.getReferencingChangeNotification(be)
-		}
+	}
+	if cnPtr.underlyingChange != nil {
+		return cnPtr.underlyingChange.getReferencingChangeNotification(be)
 	}
 	return nil
 }
 
+// GetUnderlyingChangeNotification returns the change notification that triggered the change being
+// reported in this ChangeNotification
 func (cnPtr *ChangeNotification) GetUnderlyingChangeNotification() *ChangeNotification {
 	return cnPtr.underlyingChange
 }
 
-func (notification *ChangeNotification) Print(prefix string, hl *HeldLocks) {
-	startCount := 0
-	notification.PrintRecursively(prefix, hl, startCount)
+// Print prints the change notification for diagnostic purposes to the log
+func (cnPtr *ChangeNotification) Print(prefix string, hl *HeldLocks) {
+	if enableNotificationPrint == true {
+		startCount := 0
+		cnPtr.printRecursively(prefix, hl, startCount)
+	}
 }
 
-func (notification *ChangeNotification) PrintRecursively(prefix string, hl *HeldLocks, startCount int) {
+// printRecursively prints the change notification for diagnostic purposes to the log. The startCount
+// indicates the depth of nesting of the print so that the printout can be indented appropriately.
+func (cnPtr *ChangeNotification) printRecursively(prefix string, hl *HeldLocks, startCount int) {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	notificationType := ""
-	switch notification.natureOfChange {
+	switch cnPtr.natureOfChange {
 	case ADD:
 		notificationType = "+++ Add"
 	case MODIFY:
@@ -106,18 +113,18 @@ func (notification *ChangeNotification) PrintRecursively(prefix string, hl *Held
 		notificationType = "--- Remove"
 	}
 	log.Printf("%s%s: \n", prefix, "### Notification Level: "+strconv.Itoa(startCount)+" Type: "+notificationType)
-	log.Printf("%s Origin: %s \n", prefix, notification.origin)
-	if notification.changedObject == nil {
+	log.Printf("%s Origin: %s \n", prefix, cnPtr.origin)
+	if cnPtr.changedObject == nil {
 		log.Printf(prefix + "Changed object is nil")
 	} else {
 		log.Printf(prefix + "Changed object is not nil")
-		log.Printf(prefix+"  Type: %T", notification.changedObject)
-		log.Printf(prefix+"  Id: %s", notification.changedObject.GetId(hl))
-		log.Printf(prefix+"  Version: %d", notification.changedObject.GetVersion(hl))
+		log.Printf(prefix+"  Type: %T", cnPtr.changedObject)
+		log.Printf(prefix+"  Id: %s", cnPtr.changedObject.GetId(hl))
+		log.Printf(prefix+"  Version: %d", cnPtr.changedObject.GetVersion(hl))
 		//		Print(notification.changedObject, prefix+"   ", hl)
 	}
-	if notification.underlyingChange != nil {
-		notification.underlyingChange.PrintRecursively(prefix+"      ", hl, startCount-1)
+	if cnPtr.underlyingChange != nil {
+		cnPtr.underlyingChange.printRecursively(prefix+"      ", hl, startCount-1)
 	}
 	log.Printf(prefix + "End of notification")
 }
@@ -192,7 +199,7 @@ func queueFunctionExecutions(be BaseElement, notification *ChangeNotification, h
 			if TraceChange == true {
 				log.Printf("queueFunctionExecutions calling function, URI: %s", functionIdentifier)
 				Print(be, string(functionIdentifier)+"Function Target: ", hl)
-				notification.Print("Notification: ", hl)
+				// notification.Print("Notification: ", hl)
 			}
 			hl.functionCallManager.AddFunctionCall(functionIdentifier, be.(Element), notification)
 		}
@@ -230,7 +237,7 @@ func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks)
 	// Increment the version
 	be.internalIncrementVersion()
 	// Update uri indices
-	updateUriIndices(be, hl)
+	updateURIIndices(be, hl)
 	// Initiate function execution
 	queueFunctionExecutions(be, notification, hl)
 	// Notify parents of change
@@ -241,7 +248,7 @@ func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks)
 	notifyListeners(be, notification, hl)
 }
 
-// indicatedBaseElementChanged(BaseElement) spreads the knowledge that the base element has changed. It does
+// indicatedBaseElementChanged spreads the knowledge that the base element has changed. It does
 // several things:
 //   1) if the receiving object is an element it checks to see whether the element has functions associated
 //      with it and queues up the calls to the functions.
@@ -254,14 +261,17 @@ func postChange(be BaseElement, notification *ChangeNotification, hl *HeldLocks)
 func indicatedBaseElementChanged(be BaseElement, notification *ChangeNotification, hl *HeldLocks) {
 	if TraceChange == true {
 		log.Printf("In indicatedBaseElementChanged, be identifier: %s \n", be.getIdNoLock())
-		notification.Print("indicatedBaseElementChanged Incoming Notification: ", hl)
-		var filename string = "NotificationGraph" + strconv.Itoa(notificationsCount)
-		file, err := os.Create(filename)
-		if err != nil {
-			log.Printf("Error: %s", err)
-		}
-		nGraph := NewNotificationGraph(notification, hl)
-		file.WriteString(nGraph.getGraph().String())
+		// notification.Print("indicatedBaseElementChanged Incoming Notification: ", hl)
+		// nGraph := NewNotificationGraph(notification, hl)
+		// notificationGraphs = append(notificationGraphs, nGraph)
+
+		//		var filename string = "NotificationGraph" + strconv.Itoa(notificationsCount)
+		//		file, err := os.Create(filename)
+		//		if err != nil {
+		//			log.Printf("Error: %s", err)
+		//		}
+		//		file.WriteString(nGraph.getGraph().String())
+
 	}
 	if notificationsLimit > 0 {
 		if notificationsCount > notificationsLimit {
@@ -269,9 +279,10 @@ func indicatedBaseElementChanged(be BaseElement, notification *ChangeNotificatio
 		}
 		notificationsCount++
 	}
+	// Safety valve for excessive notifications
 	if AdHocTrace == true {
 		if notificationsCount > 900000 {
-			TraceChange = true
+			TraceChange = false
 		}
 	}
 
@@ -317,7 +328,7 @@ func updatePointerVersions(be BaseElement, notification *ChangeNotification, hl 
 	}
 }
 
-func updateUriIndices(be BaseElement, hl *HeldLocks) {
+func updateURIIndices(be BaseElement, hl *HeldLocks) {
 	uOfD := be.GetUniverseOfDiscourse(hl)
 	if uOfD != nil {
 		uOfD.updateUriIndices(be, hl)

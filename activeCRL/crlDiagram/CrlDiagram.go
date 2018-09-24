@@ -57,6 +57,8 @@ func AddCoreDiagramToUofD(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) cor
 	return crlDiagramConceptSpace
 }
 
+// GetReferencedBaseElement is a function on a CrlDiagramNode that returns the model element represented by the
+// diagram node
 func GetReferencedBaseElement(diagramNode core.Element, hl *core.HeldLocks) (core.BaseElement, error) {
 	if diagramNode == nil {
 		return nil, errors.New("GetReferencedBaseElement called with nil diagramNode")
@@ -69,6 +71,8 @@ func GetReferencedBaseElement(diagramNode core.Element, hl *core.HeldLocks) (cor
 	}
 }
 
+// SetReferencedBaseElement is a function on a CrlDiagramNode that sets the model element represented by the
+// diagram node
 func SetReferencedBaseElement(diagramNode core.Element, be core.BaseElement, hl *core.HeldLocks) error {
 	if diagramNode == nil {
 		return errors.New("SetReferencedBaseElement called with nil diagramNode")

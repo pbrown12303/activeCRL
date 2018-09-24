@@ -50,6 +50,11 @@ func (eppPtr *elementPointerPointer) getLabel(hl *HeldLocks) string {
 	return "elementPointerPointer"
 }
 
+func (eppPtr *elementPointerPointer) getLabelNoLock() string {
+	// No locking required - it's a constant
+	return "elementPointerPointer"
+}
+
 func (eppPtr *elementPointerPointer) GetElementPointerId(hl *HeldLocks) string {
 	if hl == nil {
 		hl = NewHeldLocks(nil)

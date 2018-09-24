@@ -37,6 +37,10 @@ func (lPtr *literal) GetLiteralValue(hl *HeldLocks) string {
 	return lPtr.literalValue
 }
 
+func (lPtr *literal) getLiteralValueNoLock() string {
+	return lPtr.literalValue
+}
+
 func (lPtr *literal) getLabel(hl *HeldLocks) string {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
@@ -44,6 +48,10 @@ func (lPtr *literal) getLabel(hl *HeldLocks) string {
 	}
 	hl.LockBaseElement(lPtr)
 	return lPtr.GetLiteralValue(hl)
+}
+
+func (lPtr *literal) getLabelNoLock() string {
+	return lPtr.getLiteralValueNoLock()
 }
 
 func (lPtr *literal) initializeLiteral(uri ...string) {
@@ -177,5 +185,6 @@ func (lPtr *literal) setUri(uri string, hl *HeldLocks) {
 type Literal interface {
 	Value
 	GetLiteralValue(*HeldLocks) string
+	getLiteralValueNoLock() string
 	SetLiteralValue(string, *HeldLocks)
 }

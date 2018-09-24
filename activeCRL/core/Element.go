@@ -23,6 +23,12 @@ type element struct {
 func addOwnedBaseElement(elPtr Element, be BaseElement, hl *HeldLocks) {
 	preChange(elPtr, hl)
 	elPtr.internalAddOwnedBaseElement(be, hl)
+
+	// Tracing
+	//	if AdHocTrace == true {
+	//		log.Printf("In addOwnedBaseElement for Element %s adding child %s \n", elPtr.GetId(hl), be.GetId(hl))
+	//	}
+
 	notification := NewChangeNotification(elPtr, ADD, "addOwnedBaseElement", nil)
 	postChange(elPtr, notification, hl)
 }
@@ -103,6 +109,14 @@ func (elPtr *element) GetLabelLiteral(hl *HeldLocks) Literal {
 	return nil
 }
 
+func (elPtr *element) getLabelLiteralNoLock() Literal {
+	nlp := elPtr.getLabelLiteralPointerNoLock()
+	if nlp != nil {
+		return nlp.getLiteralNoLock()
+	}
+	return nil
+}
+
 func (elPtr *element) GetLabelLiteralPointer(hl *HeldLocks) LiteralPointer {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
@@ -120,12 +134,32 @@ func (elPtr *element) GetLabelLiteralPointer(hl *HeldLocks) LiteralPointer {
 	return nil
 }
 
+func (elPtr *element) getLabelLiteralPointerNoLock() LiteralPointer {
+	for _, be := range elPtr.getOwnedBaseElementsNoLock() {
+		switch be.(type) {
+		case LiteralPointer:
+			if be.(LiteralPointer).getLiteralPointerRoleNoLock() == NAME {
+				return be.(LiteralPointer)
+			}
+		}
+	}
+	return nil
+}
+
 func (elPtr *element) GetOwnedBaseElements(hl *HeldLocks) []BaseElement {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(elPtr)
+	var obe []BaseElement
+	for _, be := range elPtr.ownedBaseElements {
+		obe = append(obe, be)
+	}
+	return obe
+}
+
+func (elPtr *element) getOwnedBaseElementsNoLock() []BaseElement {
 	var obe []BaseElement
 	for _, be := range elPtr.ownedBaseElements {
 		obe = append(obe, be)
@@ -159,6 +193,20 @@ func (elPtr *element) GetOwningElementPointer(hl *HeldLocks) ElementPointer {
 		switch be.(type) {
 		case *elementPointer:
 			if be.(ElementPointer).GetElementPointerRole(hl) == OWNING_ELEMENT {
+				return be.(ElementPointer)
+			}
+		}
+	}
+	return nil
+}
+
+// getOwningElementPointerNoLock is provided as a means of obtaining the owning element pointer
+// during the release of held locks. It is intended for diagnotic purposes only
+func (elPtr *element) getOwningElementPointerNoLock() ElementPointer {
+	for _, be := range elPtr.ownedBaseElements {
+		switch be.(type) {
+		case *elementPointer:
+			if be.(ElementPointer).getElementPointerRoleNoLock() == OWNING_ELEMENT {
 				return be.(ElementPointer)
 			}
 		}
@@ -391,49 +439,76 @@ func SetDefinition(el Element, definition string, hl *HeldLocks) {
 }
 
 func SetLabel(el Element, name string, hl *HeldLocks) {
-	if AdHocTrace == true {
-		log.Printf("--> In SetLabel, held locks is present = %v \n", hl != nil)
-	}
+
+	// Tracing
+	//	if AdHocTrace == true {
+	//		log.Printf("--> In SetLabel, held locks is present = %v \n", hl != nil)
+	//	}
+
 	if hl == nil {
 		hl = NewHeldLocks(nil)
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(el)
-	if AdHocTrace == true {
-		log.Printf("--> In SetLabel, about to call GetLabelLiteral \n")
-	}
+
+	// Tracing
+	//	if AdHocTrace == true {
+	//		log.Printf("--> In SetLabel, about to call GetLabelLiteral \n")
+	//	}
+
 	nl := el.GetLabelLiteral(hl)
 	if nl == nil {
-		if AdHocTrace == true {
-			log.Printf("--> In SetLabel, LabelLiteral not found, about to call GetLabelLiteralPointer \n")
-		}
+
+		// Tracing
+		//		if AdHocTrace == true {
+		//			log.Printf("--> In SetLabel, LabelLiteral not found, about to call GetLabelLiteralPointer \n")
+		//		}
+
 		nlp := el.GetLabelLiteralPointer(hl)
 		if nlp == nil {
-			if AdHocTrace == true {
-				log.Printf("--> In SetLabel, LabelLiteral Pointer not found, about to create new LabelLiteralPointer \n")
-			}
+
+			// Tracing
+			//			if AdHocTrace == true {
+			//				log.Printf("--> In SetLabel, LabelLiteral Pointer not found, about to create new LabelLiteralPointer \n")
+			//			}
+
 			nlp = el.GetUniverseOfDiscourse(hl).NewLabelLiteralPointer(hl)
-			if AdHocTrace == true {
-				log.Printf("--> In SetLabel, about to SetOwningElement for new LabelLiteralPointer \n")
-			}
+
+			// Tracing
+			//			if AdHocTrace == true {
+			//				log.Printf("--> In SetLabel, about to SetOwningElement for new LabelLiteralPointer \n")
+			//			}
+
 			SetOwningElement(nlp, el, hl)
 		}
-		if AdHocTrace == true {
-			log.Printf("--> In SetLabel, LabelLiteral not found, about to create new LabelLiteral \n")
-		}
+
+		// Tracing
+		//		if AdHocTrace == true {
+		//			log.Printf("--> In SetLabel, LabelLiteral not found, about to create new LabelLiteral \n")
+		//		}
+
 		nl = el.GetUniverseOfDiscourse(hl).NewLiteral(hl)
-		if AdHocTrace == true {
-			log.Printf("--> In SetLabel, about to SetOwningElement for new LabelLiteral \n")
-		}
+
+		// Tracing
+		//		if AdHocTrace == true {
+		//			log.Printf("--> In SetLabel, about to SetOwningElement for new LabelLiteral \n")
+		//		}
+
 		SetOwningElement(nl, el, hl)
-		if AdHocTrace == true {
-			log.Printf("--> In SetLabel, about to SetLiteral on LabelLiteralPointer \n")
-		}
+
+		// Tracing
+		//		if AdHocTrace == true {
+		//			log.Printf("--> In SetLabel, about to SetLiteral on LabelLiteralPointer \n")
+		//		}
+
 		nlp.SetLiteral(nl, hl)
 	}
-	if AdHocTrace == true {
-		log.Printf("--> In SetLabel, about to SetLiteralValue on LabelLiteral \n")
-	}
+
+	// Tracing
+	//	if AdHocTrace == true {
+	//		log.Printf("--> In SetLabel, about to SetLiteralValue on LabelLiteral \n")
+	//	}
+
 	nl.SetLiteralValue(name, hl)
 }
 
@@ -443,11 +518,14 @@ type Element interface {
 	GetDefinitionLiteral(*HeldLocks) Literal
 	GetDefinitionLiteralPointer(*HeldLocks) LiteralPointer
 	GetLabelLiteral(*HeldLocks) Literal
+	getLabelLiteralNoLock() Literal
 	GetLabelLiteralPointer(*HeldLocks) LiteralPointer
 	GetOwnedBaseElements(*HeldLocks) []BaseElement
+	getOwnedBaseElementsNoLock() []BaseElement
 	GetOwnedElements(*HeldLocks) []Element
 	//	GetOwningElement(*HeldLocks) Element
 	GetOwningElementPointer(*HeldLocks) ElementPointer
+	getOwningElementPointerNoLock() ElementPointer
 	GetUriLiteral(*HeldLocks) Literal
 	GetUriLiteralPointer(*HeldLocks) LiteralPointer
 	internalAddOwnedBaseElement(BaseElement, *HeldLocks)

@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "C:\\GoWorkspace\\src\\github.com\\gopherjs\\gopherjs"
+		},
+		{
+			"path": "C:\\GoWorkspace\\src\\github.com\\gopherjs\\jquery"
+		},
+		{
+			"path": "C:\\GoWorkspace\\src\\github.com\\awalterschulze\\gographviz"
+		}
+	],
+	"settings": {}
+}

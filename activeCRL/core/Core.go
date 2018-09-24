@@ -41,19 +41,6 @@ var RefinementUri string = "http://activeCrl.com/core/Refinement"
 
 var AdHocTrace bool = false
 
-// The crlExecutionFunction is the standard signature of a function that gets called when an element (including
-// its children) experience a change. Its arguments are the element that changed, the array of ChangeNotifications, and
-// a pointer to a WaitGroup that is used to determine (on a larger scale) when the execution of the triggered functions
-// has completed.
-type crlExecutionFunction func(Element, []*ChangeNotification, *sync.WaitGroup)
-
-// The crlExecutionFunctionArrayIdentifier is expected to be the string version of the URI associated with the element.
-// It serves as the index into the array of functions associated with the core Element.
-type crlExecutionFunctionArrayIdentifier string
-
-// The functions type maps core Element identifiers to the array of crlExecutionFunctions associated with the identfier.
-type functions map[crlExecutionFunctionArrayIdentifier][]crlExecutionFunction
-
 // coreSingleton is the singleton instance of the coreConceptSpace. It provides the singular instances of all of the core
 // concepts and the mapping from Element identifiers to functions.
 var coreSingleton *coreConceptSpace
@@ -118,7 +105,7 @@ func (c *coreConceptSpace) FindFunctions(element Element, notification *ChangeNo
 }
 
 func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
-	log.Printf("*** In buildCoreConceptSpace, held locks present is %v \n", hl != nil)
+	//	log.Printf("*** In buildCoreConceptSpace, held locks present is %v \n", hl != nil)
 	// Core
 	AdHocTrace = false
 	//	log.Printf("*** In buildCoreConceptSpace, about to create Core Element \n")

@@ -1,9 +1,10 @@
 package editor_test
 
 import (
-	"fmt"
+	//	"fmt"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
 	//	"github.com/sclevine/agouti"
 	//	"github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"
 	am "github.com/sclevine/agouti/matchers"
@@ -28,12 +29,12 @@ var _ = Describe("Test CrlEditor NewDiagram Function:", func() {
 				diagram1Tab := page.First("#tabs").FindByButton("Diagram1")
 				Expect(diagram1Tab).To(am.HaveCount(1))
 				diagram1ViewId, _ := diagram1Tab.Attribute("viewid")
-				fmt.Printf("diagram1ViewId: %s \n", diagram1ViewId)
+				//				fmt.Printf("diagram1ViewId: %s \n", diagram1ViewId)
 				diagramView := page.First("#" + diagram1ViewId)
 				Expect(diagramView).To(am.HaveCount(1))
 				var diagramId string
-				Expect(page.RunScript("return DiagramManager.GetCrlDiagramIdForContainerId(\""+diagram1ViewId+"\");", nil, &diagramId)).To(Succeed())
-				fmt.Printf("diagramId: %s \n", diagramId)
+				Expect(page.RunScript("return DiagramManager.GetCrlDiagramIDForContainerID(\""+diagram1ViewId+"\");", nil, &diagramId)).To(Succeed())
+				//				fmt.Printf("diagramId: %s \n", diagramId)
 				Expect(diagramId).ToNot(Equal(""))
 			})
 		})

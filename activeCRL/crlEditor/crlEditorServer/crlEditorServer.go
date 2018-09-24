@@ -7,46 +7,52 @@ package main
 import (
 	"html/template"
 	"io/ioutil"
+
 	//	"log"
 	"net/http"
 	"regexp"
 )
 
-type Page struct {
+type page struct {
 	Title string
 	Body  []byte
 }
 
-var ROOT string = "../src/github.com/pbrown12303/activeCRL/activeCRL/"
+var root = "../src/github.com/pbrown12303/activeCRL/activeCRL/"
 
-var templates = template.Must(template.ParseFiles(ROOT+"crlEditor/tmpl/index.html", ROOT+"crlEditor/tmpl/sandbox.html"))
+var templates = template.Must(template.ParseFiles(root+"crlEditor/tmpl/index.html", root+"crlEditor/tmpl/displayTrace.html", root+"crlEditor/tmpl/sandbox.html"))
 var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 
 func editHandler(w http.ResponseWriter, r *http.Request, title string) {
 	p, err := loadPage(title)
 	if err != nil {
-		p = &Page{Title: title}
+		p = &page{Title: title}
 	}
 	renderTemplate(w, "edit", p)
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	p := &Page{Title: "CRL Editor"}
+	p := &page{Title: "CRL Editor"}
 	renderTemplate(w, "index", p)
 }
 
+func displayTraceHandler(w http.ResponseWriter, r *http.Request) {
+	p := &page{Title: "Display Trace"}
+	renderTemplate(w, "displayTrace", p)
+}
+
 func sandboxHandler(w http.ResponseWriter, r *http.Request) {
-	p := &Page{Title: "Sandbox"}
+	p := &page{Title: "Sandbox"}
 	renderTemplate(w, "sandbox", p)
 }
 
-func loadPage(title string) (*Page, error) {
-	filename := ROOT + "crlEditor/data/" + title + ".txt"
+func loadPage(title string) (*page, error) {
+	filename := root + "crlEditor/data/" + title + ".txt"
 	body, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
-	return &Page{Title: title, Body: body}, nil
+	return &page{Title: title, Body: body}, nil
 }
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
@@ -64,30 +70,31 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 
 func main() {
 	http.HandleFunc("/index/", indexHandler)
+	http.HandleFunc("/displayTrace/", displayTraceHandler)
 	http.HandleFunc("/sandbox/", sandboxHandler)
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
-	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir(ROOT+"crlEditor/js"))))
-	http.Handle("/icons/", http.StripPrefix("/icons/", http.FileServer(http.Dir(ROOT+"crlEditor/icons"))))
+	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir(root+"crlEditor/js"))))
+	http.Handle("/icons/", http.StripPrefix("/icons/", http.FileServer(http.Dir(root+"crlEditor/icons"))))
 	http.ListenAndServe(":8080", nil)
 }
 
-func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
+func renderTemplate(w http.ResponseWriter, tmpl string, p *page) {
 	err := templates.ExecuteTemplate(w, tmpl+".html", p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func (p *Page) save() error {
-	filename := ROOT + "crlEditor/data/" + p.Title + ".txt"
+func (p *page) save() error {
+	filename := root + "crlEditor/data/" + p.Title + ".txt"
 	return ioutil.WriteFile(filename, p.Body, 0600)
 }
 
 func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	body := r.FormValue("body")
-	p := &Page{Title: title, Body: []byte(body)}
+	p := &page{Title: title, Body: []byte(body)}
 	err := p.save()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

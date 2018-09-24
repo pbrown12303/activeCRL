@@ -10,20 +10,38 @@ import (
 	"sync"
 )
 
+// The crlExecutionFunction is the standard signature of a function that gets called when an element (including
+// its children) experience a change. Its arguments are the element that changed, the array of ChangeNotifications, and
+// a pointer to a WaitGroup that is used to determine (on a larger scale) when the execution of the triggered functions
+// has completed.
+type crlExecutionFunction func(Element, []*ChangeNotification, *sync.WaitGroup)
+
+// The crlExecutionFunctionArrayIdentifier is expected to be the string version of the URI associated with the element.
+// It serves as the index into the array of functions associated with the core Element.
+type crlExecutionFunctionArrayIdentifier string
+
+// The functions type maps core Element identifiers to the array of crlExecutionFunctions associated with the identfier.
+type functions map[crlExecutionFunctionArrayIdentifier][]crlExecutionFunction
+
 // Due to a compiler issue leading to a "interface Element contains embedded non-interface BaseElement" error
 // the key in this map is made a BaseElement rather than an Element.
 type elementNotificationsMap map[BaseElement][]*ChangeNotification
 
+// FunctionCallManager manages the set of pending function calls
 type FunctionCallManager struct {
 	functionTargetMap map[crlExecutionFunctionArrayIdentifier]elementNotificationsMap
 }
 
+// NewFunctionCallManager creates and initializes a FunctionCallManager
 func NewFunctionCallManager() *FunctionCallManager {
 	var fcm FunctionCallManager
 	fcm.functionTargetMap = make(map[crlExecutionFunctionArrayIdentifier]elementNotificationsMap)
 	return &fcm
 }
 
+// AddFunctionCall adds a pending function call to the manager. The function is identified by a crlExecutionFunctionArrayIdentifier, which is
+// a string. The Element is the element that will eventually "execute" the function, and the ChangeNotification is the trigger
+// that caused the function to be queued for execution.
 func (fcm *FunctionCallManager) AddFunctionCall(lf crlExecutionFunctionArrayIdentifier, el Element, notification *ChangeNotification) {
 	enm := fcm.functionTargetMap[lf]
 	if enm == nil {
@@ -35,10 +53,17 @@ func (fcm *FunctionCallManager) AddFunctionCall(lf crlExecutionFunctionArrayIden
 	fcm.functionTargetMap[lf] = enm
 }
 
-func (fcm *FunctionCallManager) ExecuteFunctions(wg *sync.WaitGroup) {
-	for labeledFunction, enm := range fcm.functionTargetMap {
+// ExecuteFunctions does not actually execute the functions: instead, for each function, it creates a goroutine
+// that executes the function asynchronously. It uses the WaitGroup from the HeldLocks to keep track of the
+// function execution completions.
+func (fcm *FunctionCallManager) ExecuteFunctions(hl *HeldLocks) {
+	for functionID, enm := range fcm.functionTargetMap {
 		for el, notifications := range enm {
-			callLabeledFunction(labeledFunction, el.(Element), notifications, wg)
+			if TraceChange == true {
+				log.Printf("Adding a function call graph \n")
+				functionCallGraphs = append(functionCallGraphs, NewFunctionCallGraph(functionID, el.(Element), notifications))
+			}
+			callLabeledFunction(functionID, el.(Element), notifications, hl.waitGroup)
 		}
 	}
 	fcm.clearFunctionCalls()
@@ -57,20 +82,21 @@ func (fcm *FunctionCallManager) clearFunctionCalls() {
 	fcm.functionTargetMap = make(map[crlExecutionFunctionArrayIdentifier]elementNotificationsMap)
 }
 
-func makeGoCall(functionId crlExecutionFunctionArrayIdentifier, el Element, notifications []*ChangeNotification, wg *sync.WaitGroup) {
+func makeGoCall(functionID crlExecutionFunctionArrayIdentifier, el Element, notifications []*ChangeNotification, wg *sync.WaitGroup) {
 	if wg != nil {
 		defer wg.Done()
 	}
-	functions := GetCore().computeFunctions[functionId]
+	functions := GetCore().computeFunctions[functionID]
 	if functions != nil {
 		for _, function := range functions {
 			function(el, notifications, wg)
 		}
 	} else {
-		log.Printf("In makeGoCall, function not found for identifier: %s ", functionId)
+		log.Printf("In makeGoCall, function not found for identifier: %s ", functionID)
 	}
 }
 
+// Print prints out the pending function calls
 func (fcm *FunctionCallManager) Print(prefix string) {
 	log.Printf(prefix + "Pending Function Calls")
 	for pendingFunctionIdentifier, enm := range fcm.functionTargetMap {

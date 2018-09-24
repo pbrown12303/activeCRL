@@ -18,6 +18,8 @@
 <!-- <script src="/js/crlShapes.js"></script>  -->
 <script src="/js/jstree.js"></script>
 <!--  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script> -->
+<script src="/js/viz.js"></script>
+<script src="/js/full.render.js"></script>
 <script src="/js/crlEditor.js"></script>
 <script>
 	$(function() {
@@ -30,47 +32,57 @@
 		var bodyHeight = jQuery("body").height();
 		var bodyWidth = jQuery("body").width();
 		// Wrapper
-		var wrapperMargin = jQuery("#wrapper").outerWidth(true) - jQuery("#wrapper").width();
+		var wrapperMargin = jQuery("#wrapper").outerWidth(true)
+				- jQuery("#wrapper").width();
 		var wrapperWidth = bodyWidth - wrapperMargin;
-		var wrapperHeight = bodyHeight - jQuery("#navbar").outerHeight(true) - wrapperMargin;
+		var wrapperHeight = bodyHeight - jQuery("#navbar").outerHeight(true)
+				- wrapperMargin;
 		jQuery("#wrapper").width(wrapperWidth);
 		jQuery("#wrapper").height(wrapperHeight);
 		// UofDBrowser
 		var uOfDBrowserOuterWidth = jQuery("#uofd-browser").outerWidth(true);
-		var uOfDBrowserMargin = uOfDBrowserOuterWidth - jQuery("#uofd-browser").width();
+		var uOfDBrowserMargin = uOfDBrowserOuterWidth
+				- jQuery("#uofd-browser").width();
 		var uOfDBrowserHeight = wrapperHeight - uOfDBrowserMargin;
 		jQuery("#uofd-browser").height(uOfDBrowserHeight);
 		// Bottom
 		jQuery("#bottom").position({
-			my: "left bottom",
-			at: "right bottom",
-			of: "#uofd-browser"
+			my : "left bottom",
+			at : "right bottom",
+			of : "#uofd-browser"
 		});
 		// Center Pane
-		var centerPaneMargin = jQuery("center-pane").outerWidth(true) - jQuery("center-pane").width();
-		var centerPaneWidth = wrapperWidth - uOfDBrowserOuterWidth - centerPaneMargin;
+		var centerPaneMargin = jQuery("center-pane").outerWidth(true)
+				- jQuery("center-pane").width();
+		var centerPaneWidth = wrapperWidth - uOfDBrowserOuterWidth
+				- centerPaneMargin;
 		jQuery("#center-pane").width(centerPaneWidth);
 		var centerPaneHeight = wrapperHeight - centerPaneMargin;
 		jQuery("#center-pane").height(centerPaneHeight);
 		jQuery("#center-pane").position({
-			my: "left top",
-			at: "right top",
-			of: "#uofd-browser"
+			my : "left top",
+			at : "right top",
+			of : "#uofd-browser"
 		})
-		
+
 		// Top Pane
-		var topPaneMargin = jQuery("#top-pane").outerWidth(true) - jQuery("#top-pane").width();
-		jQuery("#top-pane").height(centerPaneHeight - jQuery("#bottom").outerHeight(true) - topPaneMargin);
-		
+		var topPaneMargin = jQuery("#top-pane").outerWidth(true)
+				- jQuery("#top-pane").width();
+		jQuery("#top-pane").height(
+				centerPaneHeight - jQuery("#bottom").outerHeight(true)
+						- topPaneMargin);
+
 		// Toolbar
 		var toolbarOuterWidth = jQuery("#toolbar").outerWidth(true);
 		var toolbarMargin = toolbarOuterWidth - jQuery("#toolbar").width();
 		var toolbarHeight = jQuery("#top-pane").height() - toolbarMargin;
 		jQuery("#toolbar").height(toolbarHeight);
-		
+
 		// Top Content
-		var topContentMargin = jQuery("#top-content").outerWidth(true) - jQuery("#top-content").width();
-		jQuery("#top-content").width(centerPaneWidth - toolbarOuterWidth - topContentMargin);
+		var topContentMargin = jQuery("#top-content").outerWidth(true)
+				- jQuery("#top-content").width();
+		jQuery("#top-content").width(
+				centerPaneWidth - toolbarOuterWidth - topContentMargin);
 		topContentHeight = jQuery("#top-pane").height() - topContentMargin;
 		jQuery("#top-caontent").height(topContentHeight);
 
@@ -83,7 +95,7 @@
 	$(function() {
 		$(".uofd-browser").resizable({
 			handles : "e",
-			resize: sizeAll()
+			resize : sizeAll()
 		});
 		$(".bottom").resizable({
 			handles : "n",
@@ -93,24 +105,24 @@
 </script>
 
 <script type="text/javascript">
-function dropdownMenu(dropdownId) {
-    document.getElementById(dropdownId).classList.toggle("show");
-}
+	function dropdownMenu(dropdownId) {
+		document.getElementById(dropdownId).classList.toggle("show");
+	}
 
-// Close the dropdown menu if the user clicks outside of it
-window.onclick = function(event) {
-  if (!event.target.matches('.dropbtn')) {
+	// Close the dropdown menu if the user clicks outside of it
+	window.onclick = function(event) {
+		if (!event.target.matches('.dropbtn')) {
 
-    var dropdowns = document.getElementsByClassName("dropdown-content");
-    var i;
-    for (i = 0; i < dropdowns.length; i++) {
-      var openDropdown = dropdowns[i];
-      if (openDropdown.classList.contains('show')) {
-        openDropdown.classList.remove('show');
-      }
-    }
-  }
-}
+			var dropdowns = document.getElementsByClassName("dropdown-content");
+			var i;
+			for (i = 0; i < dropdowns.length; i++) {
+				var openDropdown = dropdowns[i];
+				if (openDropdown.classList.contains('show')) {
+					openDropdown.classList.remove('show');
+				}
+			}
+		}
+	}
 </script>
 
 <script type="text/javascript">
@@ -188,7 +200,7 @@ window.onclick = function(event) {
 			},
 			name : `Bar`
 		});
-		
+
 		theClass = rect3
 
 		var link = new joint.dia.Link({
@@ -207,6 +219,7 @@ window.onclick = function(event) {
 </head>
 
 <body onresize="sizeAll()" onload="sizeAll()" id="body">
+
 	<div class="navbar" id="navbar">
 		<div class="dropdown">
 			<button id="FileMenuButton" class="dropbtn" onclick="dropdownMenu('FileDropdown')">
@@ -222,9 +235,13 @@ window.onclick = function(event) {
 			</button>
 		</div>
 		<div class="dropdown">
-			<button class="dropbtn">
+			<button id="HelpMenuButton" class="dropbtn" onclick="dropdownMenu('HelpDropdown')">
 				Help <i class="fa fa-caret-down"></i>
 			</button>
+			<div class="dropdown-content" id="HelpDropdown">
+				<a id="DebugSettingsButton" class="show" onClick="CrlEditor.DebugSettings()">Debug Settings</a>
+				<a id="DisplayTracesButton" class="show" onClick="CrlEditor.DisplayGraphDialog()">Display Traces</a>
+			</div>
 		</div>
 	</div>
 	<div class="wrapper" id="wrapper">
@@ -247,20 +264,26 @@ window.onclick = function(event) {
 				</div>
 			</div>
 			<div class="bottom" id="bottom">
-					<table id="properties" class="table" border="1">
-						<thead>
-							<tr>
-								<th>Property</th>
-								<th>Value</th>
-							</tr>
-						</thead>
-						<tbody>
-						</tbody>
-					</table>
+				<table id="properties" class="table" border="1">
+					<thead>
+						<tr>
+							<th>Property</th>
+							<th>Value</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
 			</div>
 		</div>
 	</div>
 
+<Script>
+$("#notificationTraceSettingsDialog").dialog({autoOpen: false});
+//$("#DebugSettingsButton").click(function() {
+//	$("#notificationTraceSettingsDialog").dialog("open");
+//});
+</Script>
 
 </body>
 </html>

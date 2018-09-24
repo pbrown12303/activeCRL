@@ -74,6 +74,10 @@ func (lpPtr *literalPointer) GetLiteral(hl *HeldLocks) Literal {
 	return lpPtr.literal
 }
 
+func (lpPtr *literalPointer) getLiteralNoLock() Literal {
+	return lpPtr.literal
+}
+
 func (lpPtr *literalPointer) GetLiteralId(hl *HeldLocks) string {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
@@ -89,6 +93,10 @@ func (lpPtr *literalPointer) GetLiteralPointerRole(hl *HeldLocks) LiteralPointer
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(lpPtr)
+	return lpPtr.literalPointerRole
+}
+
+func (lpPtr *literalPointer) getLiteralPointerRoleNoLock() LiteralPointerRole {
 	return lpPtr.literalPointerRole
 }
 
@@ -108,6 +116,20 @@ func (lpPtr *literalPointer) getLabel(hl *HeldLocks) string {
 	}
 	hl.LockBaseElement(lpPtr)
 	switch lpPtr.GetLiteralPointerRole(hl) {
+	case NAME:
+		return "name"
+	case DEFINITION:
+		return "definition"
+	case URI:
+		return "uri"
+	case VALUE:
+		return "value"
+	}
+	return ""
+}
+
+func (lpPtr *literalPointer) getLabelNoLock() string {
+	switch lpPtr.getLiteralPointerRoleNoLock() {
 	case NAME:
 		return "name"
 	case DEFINITION:
@@ -334,8 +356,10 @@ func (lpPtr *literalPointer) setUri(uri string, hl *HeldLocks) {
 type LiteralPointer interface {
 	Pointer
 	GetLiteral(*HeldLocks) Literal
+	getLiteralNoLock() Literal
 	GetLiteralId(*HeldLocks) string
 	GetLiteralPointerRole(*HeldLocks) LiteralPointerRole
+	getLiteralPointerRoleNoLock() LiteralPointerRole
 	GetLiteralVersion(*HeldLocks) int
 	SetLiteral(Literal, *HeldLocks)
 	setLiteralVersion(int, *HeldLocks)

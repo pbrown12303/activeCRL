@@ -31,6 +31,10 @@ func (vPtr *value) getOwningElement(hl *HeldLocks) Element {
 	return vPtr.owningElement
 }
 
+func (vPtr *value) getOwningElementNoLock() Element {
+	return vPtr.owningElement
+}
+
 func (vPtr *value) getUri(hl *HeldLocks) string {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
@@ -118,7 +122,9 @@ func (el *value) setOwningElement(oe Element, hl *HeldLocks) {
 type Value interface {
 	BaseElement
 	getLabel(*HeldLocks) string
+	getLabelNoLock() string
 	getOwningElement(*HeldLocks) Element
+	getOwningElementNoLock() Element
 	getUri(*HeldLocks) string
 	setOwningElement(Element, *HeldLocks)
 	setUri(string, *HeldLocks)

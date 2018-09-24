@@ -2,6 +2,7 @@ package editor
 
 import (
 	"github.com/gopherjs/gopherjs/js"
+	//	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"strconv"
 )
 
@@ -43,16 +44,36 @@ func getDefaultDiagramLabel() string {
 
 func makeDiagramVisible(httpDiagramContainerId string) {
 	x := js.Global.Get("document").Call("getElementsByClassName", "crlDiagramContainer")
-	lengthString := strconv.Itoa(x.Length())
-	js.Global.Get("console").Call("log", "List length: "+lengthString)
+
+	// Tracing
+	//	if core.AdHocTrace == true {
+	//		lengthString := strconv.Itoa(x.Length())
+	//		js.Global.Get("console").Call("log", "List length: "+lengthString)
+	//	}
+
 	for i := 0; i < x.Length(); i++ {
-		js.Global.Get("console").Call("log", "Container id: ", x.Index(i).Get("id").String())
+
+		// Tracing
+		//		if core.AdHocTrace == true {
+		//			js.Global.Get("console").Call("log", "Container id: ", x.Index(i).Get("id").String())
+		//		}
+
 		if x.Index(i).Get("id").String() == httpDiagramContainerId {
 			x.Index(i).Get("style").Set("display", "block")
-			js.Global.Get("console").Call("log", "Showing: "+httpDiagramContainerId)
+
+			// Tracing
+			//			if core.AdHocTrace == true {
+			//				js.Global.Get("console").Call("log", "Showing: "+httpDiagramContainerId)
+			//			}
+
 		} else {
 			x.Index(i).Get("style").Set("display", "none")
-			js.Global.Get("console").Call("log", "Hiding: "+httpDiagramContainerId)
+
+			// Tracing
+			//			if core.AdHocTrace == true {
+			//				js.Global.Get("console").Call("log", "Hiding: "+httpDiagramContainerId)
+			//			}
+
 		}
 	}
 

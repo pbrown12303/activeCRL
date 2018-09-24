@@ -57,6 +57,10 @@ func (bepPtr *baseElementPointer) GetBaseElement(hl *HeldLocks) BaseElement {
 
 func (bepPtr *baseElementPointer) getLabel(hl *HeldLocks) string {
 	// No need to lock - this is a constant
+	return bepPtr.getLabelNoLock()
+}
+
+func (bepPtr *baseElementPointer) getLabelNoLock() string {
 	return "baseElementPointer"
 }
 

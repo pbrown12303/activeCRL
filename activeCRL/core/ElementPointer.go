@@ -86,6 +86,10 @@ func (epPtr *elementPointer) GetElement(hl *HeldLocks) Element {
 	return epPtr.element
 }
 
+func (epPtr *elementPointer) getElementNoLock() Element {
+	return epPtr.element
+}
+
 func (epPtr *elementPointer) getLabel(hl *HeldLocks) string {
 	if hl == nil {
 		hl = NewHeldLocks(nil)
@@ -93,6 +97,20 @@ func (epPtr *elementPointer) getLabel(hl *HeldLocks) string {
 	}
 	hl.LockBaseElement(epPtr)
 	switch epPtr.GetElementPointerRole(hl) {
+	case ABSTRACT_ELEMENT:
+		return "abstractElement"
+	case REFINED_ELEMENT:
+		return "refinedElement"
+	case OWNING_ELEMENT:
+		return "owningElement"
+	case REFERENCED_ELEMENT:
+		return "referencedElement"
+	}
+	return ""
+}
+
+func (epPtr *elementPointer) getLabelNoLock() string {
+	switch epPtr.getElementPointerRoleNoLock() {
 	case ABSTRACT_ELEMENT:
 		return "abstractElement"
 	case REFINED_ELEMENT:
@@ -121,6 +139,12 @@ func (epPtr *elementPointer) GetElementPointerRole(hl *HeldLocks) ElementPointer
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(epPtr)
+	return epPtr.elementPointerRole
+}
+
+// getElementPointerRoleNoLock returns the element pointer role without locking the Element Pointer.
+// It is intended for diagnostic use within the context of HeldLocks.ReleaseLocks
+func (epPtr *elementPointer) getElementPointerRoleNoLock() ElementPointerRole {
 	return epPtr.elementPointerRole
 }
 
@@ -399,8 +423,10 @@ type ElementPointer interface {
 	Pointer
 	elementChanged(*ChangeNotification, *HeldLocks)
 	GetElement(*HeldLocks) Element
+	getElementNoLock() Element
 	GetElementId(*HeldLocks) string
 	GetElementPointerRole(*HeldLocks) ElementPointerRole
+	getElementPointerRoleNoLock() ElementPointerRole
 	GetElementVersion(*HeldLocks) int
 	SetElement(Element, *HeldLocks)
 	setElementVersion(int, *HeldLocks)

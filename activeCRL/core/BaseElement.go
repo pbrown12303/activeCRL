@@ -205,6 +205,39 @@ func GetLabel(be BaseElement, hl *HeldLocks) string {
 	return ""
 }
 
+func getLabelNoLock(be BaseElement) string {
+	switch be.(type) {
+	case Value:
+		val := be.(Value)
+		return val.getLabelNoLock()
+	case UniverseOfDiscourse:
+		return "UniverseOfDiscourse"
+	case Element:
+		el := be.(Element)
+		nl := el.getLabelLiteralNoLock()
+		if nl != nil {
+			return nl.getLiteralValueNoLock()
+		}
+	}
+	return ""
+}
+
+func getOwningElementNoLock(be BaseElement) Element {
+	if be == nil {
+		return nil
+	}
+	switch be.(type) {
+	case Value:
+		return be.(Value).getOwningElementNoLock()
+	case Element:
+		oep := be.(Element).getOwningElementPointerNoLock()
+		if oep != nil {
+			return oep.getElementNoLock()
+		}
+	}
+	return nil
+}
+
 func GetOwningElement(be BaseElement, hl *HeldLocks) Element {
 	if be == nil {
 		return nil
@@ -253,6 +286,12 @@ func SetOwningElement(be BaseElement, parent Element, hl *HeldLocks) {
 		defer hl.ReleaseLocks()
 	}
 	hl.LockBaseElement(be)
+
+	// Tracing
+	//	if AdHocTrace == true {
+	//		log.Printf("In SetOwningElement child %s parent %s \n", be.GetId(hl), parent.GetId(hl))
+	//	}
+
 	switch be.(type) {
 	case Element:
 		elPtr := be.(Element)
@@ -265,14 +304,24 @@ func SetOwningElement(be BaseElement, parent Element, hl *HeldLocks) {
 		oep := elPtr.GetOwningElementPointer(hl)
 		if oep == nil {
 			oep = elPtr.GetUniverseOfDiscourse(hl).NewOwningElementPointer(hl)
-			//			log.Printf("In case Element of SetOwningElement, created OwningElementPointer and about to call SetOwningElement")
+
+			// Tracing
+			//			if AdHocTrace == true {
+			//				log.Printf("In case Element of SetOwningElement, created OwningElementPointer and about to call SetOwningElement")
+			//			}
+
 			SetOwningElement(oep, elPtr, hl)
 		}
 		oep.SetElement(parent, hl)
 	case Value:
-		//		log.Printf("In case Value of SetOwningElement")
-		//		Print(be, "", hl)
-		//		Print(parent, "", hl)
+
+		// Tracing
+		//		if AdHocTrace == true {
+		//			log.Printf("In case Value of SetOwningElement")
+		//			//			Print(be, "", hl)
+		//			//			Print(parent, "", hl)
+		//		}
+
 		val := be.(Value)
 		oldOwningElement := val.getOwningElement(hl)
 		if oldOwningElement == nil && parent == nil {
@@ -289,7 +338,12 @@ func SetOwningElement(be BaseElement, parent Element, hl *HeldLocks) {
 		postChange(val, notification, hl)
 
 		if val.getOwningElement(hl) != nil {
-			//			log.Printf("In case Value of SetOwningElement about to call addOwnedBaseElement")
+
+			// Tracing
+			//			if AdHocTrace == true {
+			//				log.Printf("In case Value of SetOwningElement about to call addOwnedBaseElement")
+			//			}
+
 			addOwnedBaseElement(val.getOwningElement(hl), val, hl)
 		}
 

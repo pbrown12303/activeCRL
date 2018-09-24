@@ -1,12 +1,13 @@
 package editor
 
 import (
+	"log"
+	"strconv"
+
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/jquery"
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
 	"github.com/satori/go.uuid"
-	"log"
-	"strconv"
 )
 
 type PropertiesManager struct {
@@ -186,7 +187,7 @@ func displayUri(properties *js.Object, be core.BaseElement, row int, hl *core.He
 		uriQuery := jquery.NewJQuery("#uri")
 		uriQuery.On(jquery.KEYUP, func(e jquery.Event) {
 			uri := jquery.NewJQuery(e.Target).Text()
-			CrlEditorSingleton.SetSelectionUri(uri)
+			CrlEditorSingleton.SetSelectionURI(uri)
 		})
 	}
 }

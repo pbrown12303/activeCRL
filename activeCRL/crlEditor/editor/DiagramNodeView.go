@@ -1,6 +1,9 @@
 package editor
 
 import (
+	"log"
+	"sync"
+
 	"github.com/golang/freetype/truetype"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
@@ -8,7 +11,6 @@ import (
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/gobold"
 	"golang.org/x/image/font/gofont/goregular"
-	"sync"
 )
 
 var goRegularFont *truetype.Font
@@ -20,21 +22,36 @@ func addNodeView(httpDiagramContainerId string, be core.BaseElement, x float64, 
 	//	create crlDiagramNode
 	uOfD := CrlEditorSingleton.GetUofD()
 	diagramManager := CrlEditorSingleton.GetDiagramManager()
-	crlDiag := diagramManager.diagramContainerIdToCrlDiagram[httpDiagramContainerId]
-	js.Global.Get("console").Call("log", "In addNodeView CrlDiagramId is "+crlDiag.GetId(hl))
+	crlDiag := diagramManager.diagramContainerIDToCrlDiagram[httpDiagramContainerId]
+
+	// Tracing
+	if core.AdHocTrace == true {
+		log.Printf("In addNodeView CrlDiagramId is " + crlDiag.GetId(hl))
+	}
+
 	newCrlDiagramNode, err := core.CreateReplicateAsRefinementFromUri(uOfD, crlDiagram.CrlDiagramNodeUri, hl)
 	if err != nil {
 		js.Global.Get("console").Call("log", "Failed to create CrlDiagramNode"+err.Error())
 		return nil, err
 	}
 	crlDiagram.SetReferencedBaseElement(newCrlDiagramNode, be, hl)
+
+	// Tracing
+	if core.AdHocTrace == true {
+		log.Printf("In addNodeView about to call SetOwningElement on new diagram node")
+	}
 	core.SetOwningElement(newCrlDiagramNode, crlDiag, hl)
 
+	// Tracing
+	if core.AdHocTrace == true {
+		log.Printf("In addNodeView CrlDiagramNodeId is " + newCrlDiagramNode.GetId(hl))
+	}
+
 	// Now construct the jointjs representation
-	graph := diagramManager.crlDiagramIdToJointGraph[httpDiagramContainerId]
-	jointBaseElementId := createJointBaseElementNodePrefix() + newCrlDiagramNode.GetId(hl)
+	graph := diagramManager.crlDiagramIDToJointGraph[httpDiagramContainerId]
+	jointBaseElementID := createJointBaseElementNodePrefix() + newCrlDiagramNode.GetId(hl)
 	jointBaseElement := js.Global.Get("joint").Get("shapes").Get("crl").Get("BaseElement").New(NewBeDefaultInstanceProperties(), NewBePrototypeProperties())
-	jointBaseElement.Set("crlJointId", jointBaseElementId)
+	jointBaseElement.Set("crlJointId", jointBaseElementID)
 	js.Global.Set("jointBaseElement", jointBaseElement)
 	// name
 	name := core.GetLabel(be, hl)
@@ -44,7 +61,7 @@ func addNodeView(httpDiagramContainerId string, be core.BaseElement, x float64, 
 	// image
 	jointBaseElement.Get("attributes").Get("attrs").Set("image", js.M{"xlink:href": "/icons/ElementIcon.svg"})
 
-	diagramManager.jointElementIdToCrlDiagramNode[jointBaseElementId] = newCrlDiagramNode
+	diagramManager.jointElementIDToCrlDiagramNode[jointBaseElementID] = newCrlDiagramNode
 
 	jointBaseElement.Call("updateRectangles")
 	js.Global.Set("graph", graph)

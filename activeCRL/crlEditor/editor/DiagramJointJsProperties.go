@@ -1,10 +1,12 @@
 package editor
 
 import (
-	"github.com/gopherjs/gopherjs/js"
 	"strconv"
+
+	"github.com/gopherjs/gopherjs/js"
 )
 
+// NewBeDefaultInstanceProperties constructs the default instance properties for a joint object representing a BaseElement
 func NewBeDefaultInstanceProperties() js.M {
 	crlBeDefaultInstanceProps := js.M{
 		"attrs": js.M{
@@ -47,6 +49,7 @@ func NewBeDefaultInstanceProperties() js.M {
 	return crlBeDefaultInstanceProps
 }
 
+// NewBePrototypeProperties creates the properties for the prototype of a joint element representing a CRL BaseElement
 func NewBePrototypeProperties() js.M {
 	// Create the prototype properties
 	crlBePrototypeProps := js.M{

@@ -1,16 +1,17 @@
 package editor
 
 import (
-	//	"github.com/gopherjs/gopherjs/js"
+	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/jquery"
 	"github.com/pbrown12303/activeCRL/activeCRL/core"
+
 	//	"github.com/satori/go.uuid"
 	"log"
-	//	"strconv"
+	"strconv"
 	"sync"
 )
 
-var TreeViewsUri string = EditorUri + "/TreeViews"
+var TreeViewsUri string = EditorURI + "/TreeViews"
 var ManageNodesUri string = TreeViewsUri + "/ManageNodes"
 var ManageNodesUofDReferenceUri string = ManageNodesUri + "/UofDReference"
 var ViewNodeUri string = TreeViewsUri + "/ViewNode"
@@ -21,6 +22,12 @@ var ViewNodeBaseElementReferenceUri string = ViewNodeUri + "/BaseElementReferenc
 func treeViewManageNodes(instance core.Element, changeNotifications []*core.ChangeNotification, wg *sync.WaitGroup) {
 	hl := core.NewHeldLocks(wg)
 	defer hl.ReleaseLocks()
+
+	// Tracing
+	if core.AdHocTrace == true {
+		log.Printf("In treeViewManageNodes()")
+	}
+
 	if CrlEditorSingleton == nil {
 		log.Printf("CrlEditorSingleton is nil")
 	}
@@ -29,7 +36,7 @@ func treeViewManageNodes(instance core.Element, changeNotifications []*core.Chan
 		log.Printf("TreeManager is nil")
 	}
 	log.Printf("treeViewManageNodes called, notifications length: %d", len(changeNotifications))
-	for _, changeNotification := range changeNotifications {
+	for i, changeNotification := range changeNotifications {
 		underlyingChangeNotification := treeManager.getChangeNotificationBelowUofD(changeNotification)
 		if underlyingChangeNotification != nil {
 			// this is the notification we are interested in
@@ -38,19 +45,29 @@ func treeViewManageNodes(instance core.Element, changeNotifications []*core.Chan
 			changedBaseElementId := changedBaseElement.GetId(hl)
 
 			// Tracing
-			//			underlyingChangeNotification.Print("Change Notification "+strconv.Itoa(i)+": ", hl)
-			//			js.Global.Set("changedBaseElementId", changedBaseElementId)
+			if core.AdHocTrace == true {
+				underlyingChangeNotification.Print("Change Notification "+strconv.Itoa(i)+": ", hl)
+				js.Global.Set("changedBaseElementId", changedBaseElementId)
+			}
 
 			// Now see if the node view exists
 			changedBaseElementNodeViewId := changedBaseElementId + treeNodeSuffix
 			changedBaseElementNodeView := jquery.NewJQuery(treeManager.treeId).Call("jstree", "get_node", changedBaseElementNodeViewId)
 
 			// Tracing
-			//			js.Global.Set("treeManagerJquery", jquery.NewJQuery(treeManager.treeId))
-			//			js.Global.Set("changedBaseElementNodeView", changedBaseElementNodeView)
+			if core.AdHocTrace == true {
+				js.Global.Set("treeManagerJquery", jquery.NewJQuery(treeManager.treeId))
+				js.Global.Set("changedBaseElementNodeView", changedBaseElementNodeView)
+			}
 
 			if changedBaseElementNodeView.Length == 0 {
 				// Node does not exist. Create it
+
+				// Tracing
+				if core.AdHocTrace == true {
+					log.Printf("----- Node does not exist")
+				}
+
 				// First, determine whether this is a root element or a child
 				var parentTreeNodeId string
 				parentTreeNodeId = "#"
@@ -61,6 +78,12 @@ func treeViewManageNodes(instance core.Element, changeNotifications []*core.Chan
 				treeManager.AddNode(changedBaseElement, parentTreeNodeId, hl)
 			} else {
 				// Node exists - update it
+
+				// Tracing
+				if core.AdHocTrace == true {
+					log.Printf("----- Node exists")
+				}
+
 				// See if parent has changed
 				currentTreeParentId := changedBaseElementNodeView.Attr("parent")
 				currentParent := core.GetOwningElement(changedBaseElement, hl)
