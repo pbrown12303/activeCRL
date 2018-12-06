@@ -243,14 +243,14 @@ func (undoMgr *undoManager) setRecordingUndo(newSetting bool) {
 
 func (undoMgr *undoManager) TraceableLock() {
 	if TraceLocks {
-		log.Printf("About to lock Universe of Discourse %p\n", undoMgr)
+		log.Printf("About to lock Undo Manager %p\n", undoMgr)
 	}
 	undoMgr.Lock()
 }
 
 func (undoMgr *undoManager) TraceableUnlock() {
 	if TraceLocks {
-		log.Printf("About to unlock Universe of Discourse %p\n", undoMgr)
+		log.Printf("About to unlock Undo Manager %p\n", undoMgr)
 	}
 	undoMgr.Unlock()
 }
