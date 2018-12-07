@@ -37,7 +37,7 @@ func (undoMgr *undoManager) markChangedElement(changedElement Element, hl *HeldL
 	}
 	clone := clone(changedElement, hl)
 	if undoMgr.recordingUndo {
-		undoMgr.undoStack.Push(NewUndoRedoStackEntry(Change, clone, changedElement))
+		undoMgr.undoStack.Push(newUndoRedoStackEntry(Change, clone, changedElement))
 	}
 	return nil
 }
@@ -55,7 +55,7 @@ func (undoMgr *undoManager) markNewElement(be Element, hl *HeldLocks) error {
 	}
 	if undoMgr.recordingUndo {
 		clone := clone(be, hl)
-		stackEntry := NewUndoRedoStackEntry(Creation, clone, be)
+		stackEntry := newUndoRedoStackEntry(Creation, clone, be)
 		if undoMgr.debugUndo == true {
 			PrintStackEntry(stackEntry, hl)
 		}
@@ -77,7 +77,7 @@ func (undoMgr *undoManager) markRemovedElement(be Element, hl *HeldLocks) error 
 	}
 	if undoMgr.recordingUndo {
 		clone := clone(be, hl)
-		undoMgr.undoStack.Push(NewUndoRedoStackEntry(Deletion, clone, be))
+		undoMgr.undoStack.Push(newUndoRedoStackEntry(Deletion, clone, be))
 	}
 	return nil
 }
@@ -87,10 +87,11 @@ func (undoMgr *undoManager) MarkUndoPoint() {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	if undoMgr.recordingUndo {
-		undoMgr.undoStack.Push(NewUndoRedoStackEntry(Marker, nil, nil))
+		undoMgr.undoStack.Push(newUndoRedoStackEntry(Marker, nil, nil))
 	}
 }
 
+// PrintUndoStack prints the undo stack. It is intended only for debugging.
 func PrintUndoStack(s undoStack, stackName string, uOfD UniverseOfDiscourse) {
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocks()
@@ -123,6 +124,7 @@ func PrintUndoStack(s undoStack, stackName string, uOfD UniverseOfDiscourse) {
 	}
 }
 
+// PrintStackEntry prints the entry on the stack. It is intended for use only in debugging
 func PrintStackEntry(entry *undoRedoStackEntry, hl *HeldLocks) {
 	var changeType string
 	switch entry.changeType {
@@ -151,35 +153,30 @@ func PrintStackEntry(entry *undoRedoStackEntry, hl *HeldLocks) {
 }
 
 func (undoMgr *undoManager) redo(uOfD UniverseOfDiscourse, hl *HeldLocks) {
-	// TODO:
-	// undoMgr.TraceableLock()
-	// defer undoMgr.TraceableUnlock()
-	// if hl == nil {
-	// 	hl = NewHeldLocks(nil)
-	// 	defer hl.ReleaseLocks()
-	// }
-	// for len(undoMgr.redoStack) > 0 {
-	// 	currentEntry := undoMgr.redoStack.Pop()
-	// 	if currentEntry.changeType == Marker {
-	// 		undoMgr.undoStack.Push(currentEntry)
-	// 		return
-	// 	} else if currentEntry.changeType == Creation {
-	// 		undoMgr.undoStack.Push(currentEntry)
-	// 		undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
-	// 		// this was a new element
-	// 		uOfD.(*universeOfDiscourse).addElementForUndo(currentEntry.changedElement, hl)
-	// 	} else if currentEntry.changeType == Deletion {
-	// 		undoMgr.undoStack.Push(currentEntry)
-	// 		undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
-	// 		// this was an deleted element
-	// 		uOfD.(*universeOfDiscourse).removeElementForUndo(currentEntry.changedElement, hl)
-	// 	} else {
-	// 		clone := clone(currentEntry.changedElement)
-	// 		undoEntry := NewUndoRedoStackEntry(Change, clone, currentEntry.changedElement)
-	// 		undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
-	// 		undoMgr.undoStack.Push(undoEntry)
-	// 	}
-	// }
+	undoMgr.TraceableLock()
+	defer undoMgr.TraceableUnlock()
+	for len(undoMgr.redoStack) > 0 {
+		currentEntry := undoMgr.redoStack.Pop()
+		if currentEntry.changeType == Marker {
+			undoMgr.undoStack.Push(currentEntry)
+			return
+		} else if currentEntry.changeType == Creation {
+			undoMgr.undoStack.Push(currentEntry)
+			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
+			// this was a new element
+			uOfD.(*universeOfDiscourse).addElementForUndo(currentEntry.changedElement, hl)
+		} else if currentEntry.changeType == Deletion {
+			undoMgr.undoStack.Push(currentEntry)
+			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
+			// this was an deleted element
+			uOfD.(*universeOfDiscourse).removeElementForUndo(currentEntry.changedElement, hl)
+		} else {
+			clone := clone(currentEntry.changedElement, hl)
+			undoEntry := newUndoRedoStackEntry(Change, clone, currentEntry.changedElement)
+			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
+			undoMgr.undoStack.Push(undoEntry)
+		}
+	}
 }
 
 // restoreState is used as part of the undo process. It changes the currentState object
@@ -233,33 +230,32 @@ func (undoMgr *undoManager) TraceableUnlock() {
 }
 
 func (undoMgr *undoManager) undo(uOfD UniverseOfDiscourse, hl *HeldLocks) {
-	// TODO:
-	// undoMgr.TraceableLock()
-	// defer undoMgr.TraceableUnlock()
-	// firstEntry := true
-	// for len(undoMgr.undoStack) > 0 {
-	// 	currentEntry := undoMgr.undoStack.Pop()
-	// 	if currentEntry.changeType == Marker {
-	// 		if firstEntry {
-	// 			undoMgr.redoStack.Push(currentEntry)
-	// 		} else {
-	// 			// Put it back on the undo stack
-	// 			undoMgr.undoStack.Push(currentEntry)
-	// 			return
-	// 		}
-	// 	} else if currentEntry.changeType == Creation {
-	// 		undoMgr.redoStack.Push(currentEntry)
-	// 		uOfD.(*universeOfDiscourse).removeElementForUndo(currentEntry.changedElement, hl)
-	// 	} else if currentEntry.changeType == Deletion {
-	// 		undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
-	// 		undoMgr.redoStack.Push(currentEntry)
-	// 		uOfD.(*universeOfDiscourse).addElementForUndo(currentEntry.changedElement, hl)
-	// 	} else if currentEntry.changeType == Change {
-	// 		clone := clone(currentEntry.changedElement)
-	// 		redoEntry := NewUndoRedoStackEntry(Change, clone, currentEntry.changedElement)
-	// 		undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
-	// 		undoMgr.redoStack.Push(redoEntry)
-	// 	}
-	// 	firstEntry = false
-	// }
+	undoMgr.TraceableLock()
+	defer undoMgr.TraceableUnlock()
+	firstEntry := true
+	for len(undoMgr.undoStack) > 0 {
+		currentEntry := undoMgr.undoStack.Pop()
+		if currentEntry.changeType == Marker {
+			if firstEntry {
+				undoMgr.redoStack.Push(currentEntry)
+			} else {
+				// Put it back on the undo stack
+				undoMgr.undoStack.Push(currentEntry)
+				return
+			}
+		} else if currentEntry.changeType == Creation {
+			undoMgr.redoStack.Push(currentEntry)
+			uOfD.(*universeOfDiscourse).removeElementForUndo(currentEntry.changedElement, hl)
+		} else if currentEntry.changeType == Deletion {
+			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
+			undoMgr.redoStack.Push(currentEntry)
+			uOfD.(*universeOfDiscourse).addElementForUndo(currentEntry.changedElement, hl)
+		} else if currentEntry.changeType == Change {
+			clone := clone(currentEntry.changedElement, hl)
+			redoEntry := newUndoRedoStackEntry(Change, clone, currentEntry.changedElement)
+			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
+			undoMgr.redoStack.Push(redoEntry)
+		}
+		firstEntry = false
+	}
 }

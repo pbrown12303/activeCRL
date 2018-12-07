@@ -334,6 +334,9 @@ var _ = Describe("Element internals test", func() {
 			Expect(el.SetURI(uri, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 			Expect(el.GetURI(hl) == uri).To(BeTrue())
+			Expect(uOfD.GetElementWithURI(uri)).To(Equal(el))
+			Expect(el.SetURI("", hl)).To(Succeed())
+			Expect(uOfD.GetElementWithURI(uri)).To(BeNil())
 		})
 	})
 

@@ -22,7 +22,7 @@ type refinement struct {
 func (rPtr *refinement) clone(hl *HeldLocks) Refinement {
 	hl.ReadLockElement(rPtr)
 	var ref refinement
-	ref.initializeRefinement("")
+	ref.initializeRefinement("", "")
 	ref.cloneAttributes(rPtr, hl)
 	return &ref
 }
@@ -87,8 +87,8 @@ func (rPtr *refinement) GetRefinedConceptVersion(hl *HeldLocks) int {
 	return rPtr.RefinedConceptVersion
 }
 
-func (rPtr *refinement) initializeRefinement(conceptID string) {
-	rPtr.initializeElement(conceptID)
+func (rPtr *refinement) initializeRefinement(conceptID string, uri string) {
+	rPtr.initializeElement(conceptID, uri)
 	rPtr.abstractConcept = newCachedPointer(rPtr.getConceptIDNoLock(), false)
 	rPtr.refinedConcept = newCachedPointer(rPtr.getConceptIDNoLock(), false)
 }
@@ -205,7 +205,7 @@ func (rPtr *refinement) recoverRefinementFields(unmarshaledData *map[string]json
 
 func (rPtr *refinement) SetAbstractConceptID(acID string, hl *HeldLocks) error {
 	hl.WriteLockElement(rPtr)
-	editableError := rPtr.editableError()
+	editableError := rPtr.editableError(hl)
 	if editableError != nil {
 		return editableError
 	}
@@ -237,7 +237,7 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *HeldLocks) error {
 
 func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *HeldLocks) error {
 	hl.WriteLockElement(rPtr)
-	editableError := rPtr.editableError()
+	editableError := rPtr.editableError(hl)
 	if editableError != nil {
 		return editableError
 	}

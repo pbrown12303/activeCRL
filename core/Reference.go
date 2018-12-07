@@ -20,7 +20,7 @@ type reference struct {
 func (rPtr *reference) clone(hl *HeldLocks) Reference {
 	hl.ReadLockElement(rPtr)
 	var ref reference
-	ref.initializeReference("")
+	ref.initializeReference("", "")
 	ref.cloneAttributes(rPtr, hl)
 	return &ref
 }
@@ -64,8 +64,8 @@ func (rPtr *reference) GetReferencedConceptVersion(hl *HeldLocks) int {
 	return rPtr.ReferencedConceptVersion
 }
 
-func (rPtr *reference) initializeReference(conceptID string) {
-	rPtr.initializeElement(conceptID)
+func (rPtr *reference) initializeReference(conceptID string, uri string) {
+	rPtr.initializeElement(conceptID, uri)
 	rPtr.referencedConcept = newCachedPointer(rPtr.getConceptIDNoLock(), false)
 }
 
@@ -142,7 +142,7 @@ func (rPtr *reference) recoverReferenceFields(unmarshaledData *map[string]json.R
 
 func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error {
 	hl.WriteLockElement(rPtr)
-	editableError := rPtr.editableError()
+	editableError := rPtr.editableError(hl)
 	if editableError != nil {
 		return editableError
 	}

@@ -80,7 +80,7 @@ func (ePtr *element) clone(hl *HeldLocks) *element {
 	hl.ReadLockElement(ePtr)
 	// The newly made clone never gets locked
 	var cl element
-	cl.initializeElement("")
+	cl.initializeElement("", "")
 	cl.cloneAttributes(ePtr, hl)
 	return &cl
 }
@@ -88,29 +88,31 @@ func (ePtr *element) clone(hl *HeldLocks) *element {
 // cloneAttributes is a supporting function for clone
 func (ePtr *element) cloneAttributes(source *element, hl *HeldLocks) {
 	ePtr.ConceptID = source.ConceptID
-	//	ePtr.ownedConcepts = NewStringElementMap()
-	for k, v := range *source.ownedConcepts.CopyMap() {
-		ePtr.ownedConcepts.SetEntry(k, v)
-	}
-	ePtr.OwningConceptID = source.OwningConceptID
-	//	ePtr.owningConcept = newCachedPointer(ePtr.getConceptIDNoLock(), true)
-	ePtr.owningConcept.setIndicatedConceptID(source.owningConcept.getIndicatedConceptID())
-	ePtr.owningConcept.setIndicatedConcept(source.owningConcept.getIndicatedConcept())
-	ePtr.owningConcept.parentConceptID = source.owningConcept.parentConceptID
-	ePtr.listeners = NewStringElementMap()
+	ePtr.Definition = source.Definition
+	ePtr.Label = source.Label
+	ePtr.listeners.Clear()
 	for k, v := range *source.listeners.CopyMap() {
 		ePtr.listeners.SetEntry(k, v)
 	}
-	//	ePtr.Version = newVersionCounter()
-	ePtr.Version.counter = source.Version.counter
+	ePtr.IsCore = source.IsCore
+	ePtr.ownedConcepts.Clear()
+	for k, v := range *source.ownedConcepts.CopyMap() {
+		ePtr.ownedConcepts.SetEntry(k, v)
+	}
+	ePtr.owningConcept.setIndicatedConceptID(source.owningConcept.getIndicatedConceptID())
+	ePtr.owningConcept.setIndicatedConcept(source.owningConcept.getIndicatedConcept())
+	ePtr.owningConcept.parentConceptID = source.owningConcept.parentConceptID
+	ePtr.OwningConceptID = source.OwningConceptID
 	ePtr.readOnly = source.readOnly
+	ePtr.Version.counter = source.Version.counter
 	ePtr.uOfD = source.uOfD
+	ePtr.URI = source.URI
 }
 
 // editableError checks to see if the element cannot be edited because it
 // is either a core element or has been marked readOnly.
-func (ePtr *element) editableError() error {
-	if ePtr.GetIsCore() {
+func (ePtr *element) editableError(hl *HeldLocks) error {
+	if ePtr.GetIsCore(hl) {
 		return errors.New("Element.SetOwningConceptID called on core Element")
 	}
 	if ePtr.readOnly {
@@ -174,13 +176,14 @@ func (ePtr *element) GetLabel(hl *HeldLocks) string {
 	return ePtr.Label
 }
 
+func (ePtr *element) getListeners(hl *HeldLocks) *map[string]Element {
+	hl.ReadLockElement(ePtr)
+	return ePtr.listeners.CopyMap()
+}
+
 func (ePtr *element) GetOwnedConcepts(hl *HeldLocks) *map[string]Element {
 	hl.ReadLockElement(ePtr)
-	ownedConcepts := make(map[string]Element)
-	for key, value := range *ePtr.ownedConcepts.CopyMap() {
-		ownedConcepts[key] = value
-	}
-	return &ownedConcepts
+	return ePtr.ownedConcepts.CopyMap()
 }
 
 // GetOwningConceptID returns the ID of the concept that owns this one (if any)
@@ -253,18 +256,20 @@ func (ePtr *element) incrementVersion(hl *HeldLocks) {
 // creates the abstractions, ownedConcepts, and referrencingConcpsts maps.
 // Note that initialization is not considered a change, so the version counter is not incremented
 // nor are monitors of this element notified of changes.
-func (ePtr *element) initializeElement(identifier string) {
+func (ePtr *element) initializeElement(identifier string, uri string) {
 	ePtr.ConceptID = identifier
 	ePtr.ownedConcepts = NewStringElementMap()
 	ePtr.owningConcept = newCachedPointer(ePtr.getConceptIDNoLock(), true)
 	ePtr.listeners = NewStringElementMap()
 	ePtr.Version = newVersionCounter()
+	ePtr.URI = uri
 }
 
 // GetIsCore returns true if the element is one of the core elements of CRL. The purpose of this
 // function is to prevent SetReadOnly(true) on concepts that are built-in to CRL. Locking is
 // not necessary as this value is set when the object is created and never expected to change
-func (ePtr *element) GetIsCore() bool {
+func (ePtr *element) GetIsCore(hl *HeldLocks) bool {
+	hl.ReadLockElement(ePtr)
 	return ePtr.IsCore
 }
 
@@ -352,21 +357,23 @@ func (ePtr *element) marshalElementFields(buffer *bytes.Buffer) error {
 
 func (ePtr *element) notifyListeners(underlyingNotification *ChangeNotification, hl *HeldLocks) {
 	hl.ReadLockElement(ePtr)
-	indicatedConceptChanged := ePtr.uOfD.NewForwardingChangeNotification(ePtr, IndicatedConceptChanged, underlyingNotification)
-	abstractionChanged := ePtr.uOfD.NewForwardingChangeNotification(ePtr, AbstractionChanged, underlyingNotification)
-	for _, listener := range *ePtr.listeners.CopyMap() {
-		switch listener.(type) {
-		case *refinement:
-			if listener.(*refinement).GetAbstractConcept(hl) == ePtr {
-				refinedConcept := listener.(*refinement).GetRefinedConcept(hl)
-				if refinedConcept != nil {
-					ePtr.uOfD.queueFunctionExecutions(refinedConcept, abstractionChanged, hl)
+	if ePtr.uOfD != nil {
+		indicatedConceptChanged := ePtr.uOfD.NewForwardingChangeNotification(ePtr, IndicatedConceptChanged, underlyingNotification)
+		abstractionChanged := ePtr.uOfD.NewForwardingChangeNotification(ePtr, AbstractionChanged, underlyingNotification)
+		for _, listener := range *ePtr.listeners.CopyMap() {
+			switch listener.(type) {
+			case *refinement:
+				if listener.(*refinement).GetAbstractConcept(hl) == ePtr {
+					refinedConcept := listener.(*refinement).GetRefinedConcept(hl)
+					if refinedConcept != nil {
+						ePtr.uOfD.queueFunctionExecutions(refinedConcept, abstractionChanged, hl)
+					}
+				} else {
+					ePtr.uOfD.queueFunctionExecutions(listener, indicatedConceptChanged, hl)
 				}
-			} else {
+			default:
 				ePtr.uOfD.queueFunctionExecutions(listener, indicatedConceptChanged, hl)
 			}
-		default:
-			ePtr.uOfD.queueFunctionExecutions(listener, indicatedConceptChanged, hl)
 		}
 	}
 }
@@ -464,7 +471,7 @@ func (ePtr *element) removeOwnedConcept(ownedConceptID string, hl *HeldLocks) er
 // SetDefinition sets the definition of the Element
 func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	editableError := ePtr.editableError()
+	editableError := ePtr.editableError(hl)
 	if editableError != nil {
 		return editableError
 	}
@@ -479,13 +486,18 @@ func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 
 func (ePtr *element) setIsCore(value bool, hl *HeldLocks) {
 	hl.WriteLockElement(ePtr)
-	ePtr.IsCore = value
+	if ePtr.IsCore != value {
+		ePtr.uOfD.preChange(ePtr, hl)
+		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		ePtr.IsCore = value
+	}
 }
 
 // SetLabel sets the label of the Element
 func (ePtr *element) SetLabel(label string, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	editableError := ePtr.editableError()
+	editableError := ePtr.editableError(hl)
 	if editableError != nil {
 		return editableError
 	}
@@ -506,7 +518,7 @@ func (ePtr *element) SetLabel(label string, hl *HeldLocks) error {
 // *refinement
 func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	editableError := ePtr.editableError()
+	editableError := ePtr.editableError(hl)
 	if editableError != nil {
 		return editableError
 	}
@@ -538,12 +550,12 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 // an error if there is an owner and it is read only
 func (ePtr *element) SetReadOnly(value bool, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	editableError := ePtr.editableError()
+	editableError := ePtr.editableError(hl)
 	if editableError != nil {
 		return editableError
 	}
 	if ePtr.GetOwningConcept(hl) != nil {
-		ownerEditableError := ePtr.GetOwningConcept(hl).editableError()
+		ownerEditableError := ePtr.GetOwningConcept(hl).editableError(hl)
 		if ownerEditableError != nil {
 			return ownerEditableError
 		}
@@ -566,7 +578,7 @@ func (ePtr *element) setUniverseOfDiscourse(uOfD UniverseOfDiscourse, hl *HeldLo
 // SetURI sets the URI of the Element
 func (ePtr *element) SetURI(uri string, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	editableError := ePtr.editableError()
+	editableError := ePtr.editableError(hl)
 	if editableError != nil {
 		return editableError
 	}
@@ -613,14 +625,15 @@ type Element interface {
 	addListener(string, *HeldLocks)
 	addOwnedConcept(string, *HeldLocks)
 	addRecoveredOwnedConcept(string, *HeldLocks)
-	editableError() error
+	editableError(*HeldLocks) error
 	FindAbstractions(*map[string]Element, *HeldLocks)
 	GetConceptID(*HeldLocks) string
 	getConceptIDNoLock() string
 	GetDefinition(*HeldLocks) string
 	GetFirstChildWithAbstraction(Element, *HeldLocks) Element
-	GetIsCore() bool
+	GetIsCore(*HeldLocks) bool
 	GetLabel(*HeldLocks) string
+	getListeners(*HeldLocks) *map[string]Element
 	GetOwnedConcepts(*HeldLocks) *map[string]Element
 	GetOwningConceptID(*HeldLocks) string
 	GetOwningConcept(*HeldLocks) Element

@@ -16,7 +16,7 @@ type literal struct {
 func (lPtr *literal) clone(hl *HeldLocks) Literal {
 	hl.ReadLockElement(lPtr)
 	var clonedLiteral literal
-	clonedLiteral.initializeLiteral("")
+	clonedLiteral.initializeLiteral("", "")
 	clonedLiteral.cloneAttributes(lPtr, hl)
 	return &clonedLiteral
 }
@@ -32,8 +32,8 @@ func (lPtr *literal) GetLiteralValue(hl *HeldLocks) string {
 	return lPtr.LiteralValue
 }
 
-func (lPtr *literal) initializeLiteral(conceptID string) {
-	lPtr.initializeElement(conceptID)
+func (lPtr *literal) initializeLiteral(conceptID string, uri string) {
+	lPtr.initializeElement(conceptID, uri)
 }
 
 func (lPtr *literal) isEquivalent(hl1 *HeldLocks, ref *literal, hl2 *HeldLocks) bool {
@@ -81,7 +81,7 @@ func (lPtr *literal) recoverLiteralFields(unmarshaledData *map[string]json.RawMe
 
 func (lPtr *literal) SetLiteralValue(value string, hl *HeldLocks) error {
 	hl.WriteLockElement(lPtr)
-	editableError := lPtr.editableError()
+	editableError := lPtr.editableError(hl)
 	if editableError != nil {
 		return editableError
 	}

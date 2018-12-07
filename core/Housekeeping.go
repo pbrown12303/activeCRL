@@ -59,7 +59,7 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD Univers
 			indicatedConceptChangedNotification := uOfD.NewForwardingChangeNotification(el, IndicatedConceptChanged, notification)
 			uOfD.queueFunctionExecutions(owner, indicatedConceptChangedNotification, hl)
 		}
-	case UofDChanged:
+	case UofDConceptChanged, UofDConceptAdded, UofDConceptRemoved:
 		// Send IndicatedConceptChanged to listeners
 		el.notifyListeners(notification, hl)
 	}

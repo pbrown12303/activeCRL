@@ -23,8 +23,17 @@ func NewStringElementMap() *StringElementMap {
 	return &uuidElementMap
 }
 
+// Clear clears the map
+func (seMap *StringElementMap) Clear() {
+	seMap.TraceableLock()
+	defer seMap.TraceableUnlock()
+	seMap.elementMap = make(map[string]Element)
+}
+
 // CopyMap returns a copy of the map
 func (seMap *StringElementMap) CopyMap() *map[string]Element {
+	seMap.TraceableLock()
+	defer seMap.TraceableUnlock()
 	copy := make(map[string]Element)
 	for key, value := range seMap.elementMap {
 		copy[key] = value

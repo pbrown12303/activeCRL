@@ -390,7 +390,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			found := false
 			for _, pc := range calls {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == uOfD {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(UofDChanged))
+					Expect(pc.notification.GetNatureOfChange()).To(Equal(UofDConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ConceptChanged))
 					found = true
 				}
@@ -773,8 +773,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 		})
 	})
 
-	Describe("UniverseOfDiscourseChange propagation", func() {
-		Specify("UniverseOfDiscourseChange should propagate as IndicatedConceptChanged to uOfD listeners", func() {
+	Describe("UofDConceptChanged propagation", func() {
+		Specify("UofDConceptChange should propagate as IndicatedConceptChanged to uOfD listeners", func() {
 			el, _ := uOfD.NewElement(hl)
 			newOwner, _ := uOfD.NewElement(hl)
 			listener, _ := uOfD.NewReference(hl)
@@ -797,7 +797,70 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			for _, pc := range calls {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == listener {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(UofDChanged))
+					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(UofDConceptChanged))
+					found = true
+				}
+			}
+			Expect(found).To(BeTrue())
+			uOfD.(*universeOfDiscourse).executedCalls = nil
+		})
+	})
+	Describe("UofDConceptAdded propagation", func() {
+		Specify("UofDConceptAdded should propagate as IndicatedConceptChanged to uOfD listeners", func() {
+			listener, _ := uOfD.NewReference(hl)
+			listener.SetReferencedConceptID(uOfD.getConceptIDNoLock(), hl)
+			hl.ReleaseLocksAndWait()
+			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			el, _ := uOfD.NewElement(hl)
+			hl.ReleaseLocksAndWait()
+			var calls []*pendingFunctionCall
+			done := false
+			for done == false {
+				select {
+				case pc := <-uOfD.getExecutedCalls():
+					calls = append(calls, pc)
+				default:
+					done = true
+				}
+			}
+			found := false
+			for _, pc := range calls {
+				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == listener {
+					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
+					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(UofDConceptAdded))
+					Expect(pc.notification.GetUnderlyingChange().GetPriorConceptState().getConceptIDNoLock()).To(Equal(el.getConceptIDNoLock()))
+					found = true
+				}
+			}
+			Expect(found).To(BeTrue())
+			uOfD.(*universeOfDiscourse).executedCalls = nil
+		})
+	})
+	Describe("UofDConceptRemoved propagation", func() {
+		Specify("UofDConceptRemoved should propagate as IndicatedConceptChanged to uOfD listeners", func() {
+			listener, _ := uOfD.NewReference(hl)
+			listener.SetReferencedConceptID(uOfD.getConceptIDNoLock(), hl)
+			el, _ := uOfD.NewElement(hl)
+			hl.ReleaseLocksAndWait()
+			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.ClearUniverseOfDiscourse(el, hl)
+			hl.ReleaseLocksAndWait()
+			var calls []*pendingFunctionCall
+			done := false
+			for done == false {
+				select {
+				case pc := <-uOfD.getExecutedCalls():
+					calls = append(calls, pc)
+				default:
+					done = true
+				}
+			}
+			found := false
+			for _, pc := range calls {
+				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == listener {
+					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
+					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(UofDConceptRemoved))
+					Expect(pc.notification.GetUnderlyingChange().GetPriorConceptState().getConceptIDNoLock()).To(Equal(el.getConceptIDNoLock()))
 					found = true
 				}
 			}

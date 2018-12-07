@@ -17,14 +17,16 @@ type NatureOfChange int
 // ChildChanged indicates that a child of the Element has been changed
 // ConceptChanged indicates that a field of the concept has been modified
 // IndicatedConceptChanged indicates that an Element indicated by a pointer has changed
-// UofDChanged indicates that a concept in the UofD has changed
+// UofDConceptChanged indicates that a concept in the UofD has changed
 const (
 	AbstractionChanged NatureOfChange = iota
 	ChildAbstractionChanged
 	ChildChanged
 	ConceptChanged
 	IndicatedConceptChanged
-	UofDChanged
+	UofDConceptAdded
+	UofDConceptChanged
+	UofDConceptRemoved
 )
 
 // ChangeNotification records the metadata regarding a change to a Element. It provides

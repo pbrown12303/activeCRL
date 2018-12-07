@@ -15,7 +15,6 @@ type universeOfDiscourse struct {
 	element
 	computeFunctions      functions
 	executedCalls         chan *pendingFunctionCall
-	idURIMap              *StringStringMap
 	undoManager           *undoManager
 	unresolvedPointersMap *stringCachedPointersMap
 	uriElementMap         *StringElementMap
@@ -27,15 +26,15 @@ type universeOfDiscourse struct {
 func NewUniverseOfDiscourse() UniverseOfDiscourse {
 	var uOfD universeOfDiscourse
 	uOfD.computeFunctions = make(map[string][]crlExecutionFunction)
-	uOfD.idURIMap = NewStringStringMap()
 	uOfD.undoManager = newUndoManager()
 	uOfD.unresolvedPointersMap = newStringCachedPointersMap()
 	uOfD.uriElementMap = NewStringElementMap()
 	uOfD.uuidElementMap = NewStringElementMap()
 	uOfDID, _ := uOfD.generateConceptID(UniverseOfDiscourseURI)
-	uOfD.initializeElement(uOfDID)
+	uOfD.initializeElement(uOfDID, "")
 	hl := uOfD.NewHeldLocks()
-	uOfD.SetUniverseOfDiscourse(&uOfD, hl)
+	uOfD.setUniverseOfDiscourse(&uOfD, hl)
+	uOfD.addElement(&uOfD, hl)
 	uOfD.AddFunction(coreHousekeepingURI, coreHousekeeping)
 	buildCoreConceptSpace(&uOfD, hl)
 	uOfD.SetUniverseOfDiscourse(&uOfD, hl)
@@ -48,6 +47,7 @@ func (uOfDPtr *universeOfDiscourse) addElement(el Element, hl *HeldLocks) error 
 		return errors.New("UniverseOfDiscource addElement() failed because element was nil")
 	}
 	hl.WriteLockElement(el)
+	uOfDPtr.undoManager.markNewElement(el, hl)
 	uuid := el.GetConceptID(hl)
 	if uuid == "" {
 		return errors.New("UniverseOfDiscource addBaseElement() failed because UUID was nil")
@@ -56,19 +56,35 @@ func (uOfDPtr *universeOfDiscourse) addElement(el Element, hl *HeldLocks) error 
 	uri := el.GetURI(hl)
 	if uri != "" {
 		uOfDPtr.uriElementMap.SetEntry(uri, el)
-		uOfDPtr.idURIMap.SetEntry(el.GetConceptID(hl), uri)
 	}
-	uOfDPtr.undoManager.markNewElement(el, hl)
-	// Make sure it's in the owner's ownedConcepts set
-	owner := el.GetOwningConcept(hl)
+	owner := uOfDPtr.GetElement(el.GetOwningConceptID(hl))
 	if owner != nil {
 		owner.addOwnedConcept(uuid, hl)
 	}
-	// Fix up any unresolved pointers
+	// Add element to all listener's lists
+	switch el.(type) {
+	case *reference:
+		ref := el.(*reference)
+		referencedConcept := uOfDPtr.GetElement(ref.GetReferencedConceptID(hl))
+		if referencedConcept != nil {
+			ref.referencedConcept.setIndicatedConcept(referencedConcept)
+			referencedConcept.addListener(uuid, hl)
+		}
+	case *refinement:
+		ref := el.(*refinement)
+		abstractConcept := uOfDPtr.GetElement(ref.GetAbstractConceptID(hl))
+		if abstractConcept != nil {
+			ref.abstractConcept.setIndicatedConcept(abstractConcept)
+			abstractConcept.addListener(uuid, hl)
+		}
+		refinedConcept := uOfDPtr.GetElement(ref.GetRefinedConceptID(hl))
+		if refinedConcept != nil {
+			ref.refinedConcept.setIndicatedConcept(refinedConcept)
+			refinedConcept.addListener(uuid, hl)
+		}
+	}
+	uOfDPtr.cacheUnresolvedPointers(el, hl)
 	uOfDPtr.unresolvedPointersMap.resolveCachedPointers(el, hl)
-	// TODO: FIX THIS
-	// notification := NewChangeNotification(el, ADD, "AddBaseElement", nil)
-	// uOfDPtr.uOfDChanged(notification, hl)
 	return nil
 }
 
@@ -76,14 +92,18 @@ func (uOfDPtr *universeOfDiscourse) addElementForUndo(el Element, hl *HeldLocks)
 	if el == nil {
 		return errors.New("UniverseOfDiscource addElementForUndo() failed because element was nil")
 	}
-	if el != nil {
-		hl.ReadLockElement(el)
-	}
+	hl.WriteLockElement(el)
 	if uOfDPtr.undoManager.debugUndo == true {
 		log.Printf("Adding element for undo, id: %s\n", el.GetConceptID(hl))
 		Print(el, "Added Element: ", hl)
 	}
 	uOfDPtr.uuidElementMap.SetEntry(el.GetConceptID(hl), el)
+	uri := el.GetURI(hl)
+	if uri != "" {
+		uOfDPtr.uriElementMap.SetEntry(uri, el)
+	}
+	uOfDPtr.cacheUnresolvedPointers(el, hl)
+	uOfDPtr.unresolvedPointersMap.resolveCachedPointers(el, hl)
 	return nil
 }
 
@@ -93,6 +113,27 @@ func (uOfDPtr *universeOfDiscourse) AddFunction(uri string, function crlExecutio
 
 func (uOfDPtr *universeOfDiscourse) addUnresolvedPointer(pointer *cachedPointer) {
 	uOfDPtr.unresolvedPointersMap.addCachedPointer(pointer)
+}
+
+func (uOfDPtr *universeOfDiscourse) cacheUnresolvedPointers(el Element, hl *HeldLocks) {
+	if el.GetOwningConcept(hl) == nil && el.GetOwningConceptID(hl) != "" {
+		uOfDPtr.addUnresolvedPointer(el.(*element).owningConcept)
+	}
+	switch el.(type) {
+	case *reference:
+		ref := el.(*reference)
+		if ref.GetReferencedConcept(hl) == nil && ref.GetReferencedConceptID(hl) != "" {
+			uOfDPtr.addUnresolvedPointer(ref.referencedConcept)
+		}
+	case *refinement:
+		ref := el.(*refinement)
+		if ref.GetAbstractConcept(hl) == nil && ref.GetAbstractConceptID(hl) != "" {
+			uOfDPtr.addUnresolvedPointer(ref.abstractConcept)
+		}
+		if ref.GetRefinedConcept(hl) == nil && ref.GetRefinedConceptID(hl) != "" {
+			uOfDPtr.addUnresolvedPointer(ref.refinedConcept)
+		}
+	}
 }
 
 func (uOfDPtr *universeOfDiscourse) changeURIForElement(el Element, oldURI string, newURI string) error {
@@ -113,7 +154,7 @@ func (uOfDPtr *universeOfDiscourse) changeURIForElement(el Element, oldURI strin
 // the element is operating in which the element may be able to locate other objects
 // by id.
 func (uOfDPtr *universeOfDiscourse) ClearUniverseOfDiscourse(el Element, hl *HeldLocks) error {
-	if el.GetIsCore() {
+	if el.GetIsCore(hl) {
 		return errors.New("ClearUniverseOfDiscourse called on a CRL core concept")
 	}
 	hl.WriteLockElement(el)
@@ -124,6 +165,7 @@ func (uOfDPtr *universeOfDiscourse) ClearUniverseOfDiscourse(el Element, hl *Hel
 		return errors.New("SetUniverseOfDiscourse called on read-only Element")
 	}
 	uOfDPtr.preChange(el, hl)
+	uOfDPtr.queueFunctionExecutions(uOfDPtr, uOfDPtr.newConceptRemovedNotification(el, hl), hl)
 	uOfDPtr.removeElement(el, hl)
 	el.setUniverseOfDiscourse(nil, hl)
 	return nil
@@ -271,8 +313,24 @@ func (uOfDPtr *universeOfDiscourse) getWaitGroup() *sync.WaitGroup {
 	return &uOfDPtr.waitGroup
 }
 
+// IsRecordingUndo reveals whether undo recording is on
 func (uOfDPtr *universeOfDiscourse) IsRecordingUndo() bool {
 	return uOfDPtr.undoManager.recordingUndo
+}
+
+// MarkUndoPoint marks a point on the undo stack. The next undo operation will undo everything back to this point.
+func (uOfDPtr *universeOfDiscourse) MarkUndoPoint() {
+	uOfDPtr.undoManager.MarkUndoPoint()
+}
+
+// newConceptAddedNotification creates a UniverseOfDiscourseAdded notification
+func (uOfDPtr *universeOfDiscourse) newConceptAddedNotification(concept Element, hl *HeldLocks) *ChangeNotification {
+	var notification ChangeNotification
+	notification.reportingElement = uOfDPtr
+	notification.natureOfChange = UofDConceptAdded
+	notification.priorConceptState = clone(concept, hl)
+	notification.uOfD = uOfDPtr
+	return &notification
 }
 
 // NewConceptChangeNotification creates a ChangeNotification that records state of the concept prior to the
@@ -284,6 +342,16 @@ func (uOfDPtr *universeOfDiscourse) NewConceptChangeNotification(changingConcept
 	// Since this function is invoked by the *element methods for Literals, References, and Refinements, we play a
 	// game to get the full datatype cloned
 	notification.priorConceptState = clone(uOfDPtr.GetElement(changingConcept.getConceptIDNoLock()), hl)
+	notification.uOfD = uOfDPtr
+	return &notification
+}
+
+// newConceptRemovedNotification creates a UniverseOfDiscourseRemoved notification
+func (uOfDPtr *universeOfDiscourse) newConceptRemovedNotification(concept Element, hl *HeldLocks) *ChangeNotification {
+	var notification ChangeNotification
+	notification.reportingElement = uOfDPtr
+	notification.natureOfChange = UofDConceptRemoved
+	notification.priorConceptState = clone(concept, hl)
 	notification.uOfD = uOfDPtr
 	return &notification
 }
@@ -305,8 +373,12 @@ func (uOfDPtr *universeOfDiscourse) NewElement(hl *HeldLocks, uri ...string) (El
 	if err != nil {
 		return nil, err
 	}
+	actualURI := ""
+	if len(uri) == 1 {
+		actualURI = uri[0]
+	}
 	var el element
-	el.initializeElement(conceptID)
+	el.initializeElement(conceptID, actualURI)
 	hl.WriteLockElement(&el)
 	uOfDPtr.SetUniverseOfDiscourse(&el, hl)
 	return &el, nil
@@ -328,8 +400,12 @@ func (uOfDPtr *universeOfDiscourse) NewLiteral(hl *HeldLocks, uri ...string) (Li
 	if err != nil {
 		return nil, err
 	}
+	actualURI := ""
+	if len(uri) == 1 {
+		actualURI = uri[0]
+	}
 	var lit literal
-	lit.initializeLiteral(conceptID)
+	lit.initializeLiteral(conceptID, actualURI)
 	hl.WriteLockElement(&lit)
 	uOfDPtr.SetUniverseOfDiscourse(&lit, hl)
 	return &lit, nil
@@ -340,8 +416,12 @@ func (uOfDPtr *universeOfDiscourse) NewReference(hl *HeldLocks, uri ...string) (
 	if err != nil {
 		return nil, err
 	}
+	actualURI := ""
+	if len(uri) == 1 {
+		actualURI = uri[0]
+	}
 	var ref reference
-	ref.initializeReference(conceptID)
+	ref.initializeReference(conceptID, actualURI)
 	hl.WriteLockElement(&ref)
 	uOfDPtr.SetUniverseOfDiscourse(&ref, hl)
 	return &ref, nil
@@ -352,8 +432,12 @@ func (uOfDPtr *universeOfDiscourse) NewRefinement(hl *HeldLocks, uri ...string) 
 	if err != nil {
 		return nil, err
 	}
+	actualURI := ""
+	if len(uri) == 1 {
+		actualURI = uri[0]
+	}
 	var ref refinement
-	ref.initializeRefinement(conceptID)
+	ref.initializeRefinement(conceptID, actualURI)
 	hl.WriteLockElement(&ref)
 	uOfDPtr.SetUniverseOfDiscourse(&ref, hl)
 	return &ref, nil
@@ -362,7 +446,7 @@ func (uOfDPtr *universeOfDiscourse) NewRefinement(hl *HeldLocks, uri ...string) 
 func (uOfDPtr *universeOfDiscourse) NewUniverseOfDiscourseChangeNotification(underlyingChange *ChangeNotification) *ChangeNotification {
 	var notification ChangeNotification
 	notification.reportingElement = uOfDPtr
-	notification.natureOfChange = UofDChanged
+	notification.natureOfChange = UofDConceptChanged
 	notification.underlyingChange = underlyingChange
 	notification.uOfD = uOfDPtr
 	return &notification
@@ -386,51 +470,50 @@ func (uOfDPtr *universeOfDiscourse) queueFunctionExecutions(el Element, notifica
 	}
 }
 
+// Redo redoes the last undo, if any
+func (uOfDPtr *universeOfDiscourse) Redo(hl *HeldLocks) {
+	uOfDPtr.undoManager.redo(uOfDPtr, hl)
+}
+
 func (uOfDPtr *universeOfDiscourse) removeElement(el Element, hl *HeldLocks) error {
 	if el == nil {
 		return errors.New("UniverseOfDiscource removeElement failed elcause Element was nil")
 	}
 	hl.WriteLockElement(el)
+	uOfDPtr.undoManager.markRemovedElement(el, hl)
 	uuid := el.GetConceptID(hl)
-	uOfDPtr.uuidElementMap.DeleteEntry(uuid)
 	uri := el.GetURI(hl)
 	if uri != "" {
 		uOfDPtr.uriElementMap.DeleteEntry(uri)
-		uOfDPtr.idURIMap.DeleteEntry(el.GetConceptID(hl))
 	}
-	uOfDPtr.undoManager.markRemovedElement(el, hl)
 	// Remove element from owner's child list
 	owner := el.GetOwningConcept(hl)
 	if owner != nil {
-		owner.GetOwningConcept(hl).removeOwnedConcept(uuid, hl)
+		owner.removeOwnedConcept(uuid, hl)
 	}
-	// Remove Element from all cached pointers
-	for _, listener := range *el.(*element).listeners.CopyMap() {
-		switch listener.(type) {
-		case *reference:
-			ref := listener.(*reference)
-			cachedPointer := ref.referencedConcept
-			if cachedPointer.getIndicatedConcept() == el {
-				cachedPointer.setIndicatedConcept(nil)
-				uOfDPtr.unresolvedPointersMap.addCachedPointer(cachedPointer)
-			}
-		case *refinement:
-			ref := listener.(*refinement)
-			abstractCachedPointer := ref.abstractConcept
-			if abstractCachedPointer.getIndicatedConcept() == el {
-				abstractCachedPointer.setIndicatedConcept(nil)
-				uOfDPtr.unresolvedPointersMap.addCachedPointer(abstractCachedPointer)
-			}
-			refinedCachedPointer := ref.refinedConcept
-			if refinedCachedPointer.getIndicatedConcept() == el {
-				refinedCachedPointer.setIndicatedConcept(nil)
-				uOfDPtr.unresolvedPointersMap.addCachedPointer(refinedCachedPointer)
-			}
+	// Remove element from all listener's lists
+	switch el.(type) {
+	case *reference:
+		ref := el.(*reference)
+		referencedConcept := ref.GetReferencedConcept(hl)
+		if referencedConcept != nil {
+			referencedConcept.removeListener(uuid, hl)
+		}
+	case *refinement:
+		ref := el.(*refinement)
+		abstractConcept := ref.GetAbstractConcept(hl)
+		if abstractConcept != nil {
+			abstractConcept.removeListener(uuid, hl)
+		}
+		refinedConcept := ref.GetRefinedConcept(hl)
+		if refinedConcept != nil {
+			refinedConcept.removeListener(uuid, hl)
 		}
 	}
-	// TODO: Fix notification for removeElement
-	// notification := NewChangeNotification(el, ADD, "removeBaseElement", nil)
-	// uOfDPtr.uOfDChanged(notification, hl)
+	// Remove Element from all cached pointers
+	uOfDPtr.uncacheUnresolvedPointers(el, hl)
+	uOfDPtr.unresolveIncomingPointers(el, hl)
+	uOfDPtr.uuidElementMap.DeleteEntry(uuid)
 	return nil
 }
 
@@ -465,6 +548,15 @@ func (uOfDPtr *universeOfDiscourse) RecoverElement(data []byte, hl *HeldLocks) (
 	return recoveredElement, nil
 }
 
+func (uOfDPtr *universeOfDiscourse) removeUnresolvedPointer(pointer *cachedPointer) {
+	uOfDPtr.unresolvedPointersMap.removeCachedPointer(pointer)
+}
+
+// SetRecordingUndo turns undo/redo recording on and off
+func (uOfDPtr *universeOfDiscourse) SetRecordingUndo(newSetting bool) {
+	uOfDPtr.undoManager.setRecordingUndo(newSetting)
+}
+
 // SetUniverseOfDiscourse() sets the uOfD of which this element is a member. Strictly
 // speaking, this is not an attribute of the elment, but rather a context in which
 // the element is operating in which the element may be able to locate other objects
@@ -473,7 +565,7 @@ func (uOfDPtr *universeOfDiscourse) SetUniverseOfDiscourse(el Element, hl *HeldL
 	hl.WriteLockElement(el)
 	currentUofD := el.GetUniverseOfDiscourse(hl)
 	if currentUofD != uOfDPtr {
-		if el.GetIsCore() {
+		if el.GetIsCore(hl) {
 			return errors.New("SetUniverseOfDiscourse called on a CRL core concept")
 		}
 		if currentUofD != nil {
@@ -483,14 +575,42 @@ func (uOfDPtr *universeOfDiscourse) SetUniverseOfDiscourse(el Element, hl *HeldL
 			return errors.New("SetUniverseOfDiscourse called on read-only Element")
 		}
 		uOfDPtr.preChange(el, hl)
+		uOfDPtr.queueFunctionExecutions(uOfDPtr, uOfDPtr.newConceptAddedNotification(el, hl), hl)
 		el.setUniverseOfDiscourse(uOfDPtr, hl)
 		uOfDPtr.addElement(el, hl)
 	}
 	return nil
 }
 
+// Undo undoes all the changes up to the last UndoMarker or the beginning of Undo, whichever comes first.
+func (uOfDPtr *universeOfDiscourse) Undo(hl *HeldLocks) {
+	uOfDPtr.undoManager.undo(uOfDPtr, hl)
+}
+
+// uncacheUnresolvedPointers is a support function used when removing an Element from a uOfD.
+// It removes all of the element's unresolved pointers from the uOfD cache
+func (uOfDPtr *universeOfDiscourse) uncacheUnresolvedPointers(el Element, hl *HeldLocks) {
+	if el.GetOwningConcept(hl) == nil && el.GetOwningConceptID(hl) != "" {
+		uOfDPtr.removeUnresolvedPointer(el.(*element).owningConcept)
+	}
+	switch el.(type) {
+	case *reference:
+		ref := el.(*reference)
+		if ref.GetReferencedConcept(hl) == nil && ref.GetReferencedConceptID(hl) != "" {
+			uOfDPtr.removeUnresolvedPointer(ref.referencedConcept)
+		}
+	case *refinement:
+		ref := el.(*refinement)
+		if ref.GetAbstractConcept(hl) == nil && ref.GetAbstractConceptID(hl) != "" {
+			uOfDPtr.removeUnresolvedPointer(ref.abstractConcept)
+		}
+		if ref.GetRefinedConcept(hl) == nil && ref.GetRefinedConceptID(hl) != "" {
+			uOfDPtr.removeUnresolvedPointer(ref.refinedConcept)
+		}
+	}
+}
+
 func (uOfDPtr *universeOfDiscourse) unmarshalPolymorphicElement(data []byte, result *Element, hl *HeldLocks) error {
-	// TODO: Fix unmarshall
 	var unmarshaledData map[string]json.RawMessage
 	err := json.Unmarshal(data, &unmarshaledData)
 	if err != nil {
@@ -506,7 +626,7 @@ func (uOfDPtr *universeOfDiscourse) unmarshalPolymorphicElement(data []byte, res
 		//		fmt.Printf("Switch choice *core.element \n")
 		var recoveredElement element
 		recoveredElement.uOfD = uOfDPtr
-		recoveredElement.initializeElement("")
+		recoveredElement.initializeElement("", "")
 		*result = &recoveredElement
 		err = recoveredElement.recoverElementFields(&unmarshaledData, hl)
 		if err != nil {
@@ -516,7 +636,7 @@ func (uOfDPtr *universeOfDiscourse) unmarshalPolymorphicElement(data []byte, res
 		//		fmt.Printf("Switch choice *core.elementReference \n")
 		var recoveredReference reference
 		recoveredReference.uOfD = uOfDPtr
-		recoveredReference.initializeReference("")
+		recoveredReference.initializeReference("", "")
 		*result = &recoveredReference
 		err = recoveredReference.recoverReferenceFields(&unmarshaledData, hl)
 		if err != nil {
@@ -526,7 +646,7 @@ func (uOfDPtr *universeOfDiscourse) unmarshalPolymorphicElement(data []byte, res
 		//		fmt.Printf("Switch choice *core.literal \n")
 		var recoveredLiteral literal
 		recoveredLiteral.uOfD = uOfDPtr
-		recoveredLiteral.initializeLiteral("")
+		recoveredLiteral.initializeLiteral("", "")
 		*result = &recoveredLiteral
 		err = recoveredLiteral.recoverLiteralFields(&unmarshaledData, hl)
 		if err != nil {
@@ -535,7 +655,7 @@ func (uOfDPtr *universeOfDiscourse) unmarshalPolymorphicElement(data []byte, res
 	case "*core.refinement":
 		var recoveredRefinement refinement
 		recoveredRefinement.uOfD = uOfDPtr
-		recoveredRefinement.initializeRefinement("")
+		recoveredRefinement.initializeRefinement("", "")
 		*result = &recoveredRefinement
 		err = recoveredRefinement.recoverRefinementFields(&unmarshaledData, hl)
 		if err != nil {
@@ -545,6 +665,44 @@ func (uOfDPtr *universeOfDiscourse) unmarshalPolymorphicElement(data []byte, res
 		log.Printf("No case for %s in unmarshalPolymorphicBaseElement \n", elementType)
 	}
 	return nil
+}
+
+// unresolveIncomingPointers is a support function used when removing an Element fron the uOfD.
+// It finds all incoming cachedPointers (owningConcept, referencedConcept, abstractConcept, refinedConcept),
+// sets the cachedPointer's indicatedConcept value to nil, and adds the cachedPointer to the uOfD's unresolved
+// pointers
+func (uOfDPtr *universeOfDiscourse) unresolveIncomingPointers(el Element, hl *HeldLocks) {
+	for _, ownedConcept := range *el.GetOwnedConcepts(hl) {
+		// verify that it's pointing to this Element
+		cp := ownedConcept.(*element).owningConcept
+		if cp.getIndicatedConcept() == el {
+			cp.setIndicatedConcept(nil)
+			uOfDPtr.addUnresolvedPointer(cp)
+		}
+	}
+	for _, listener := range *el.getListeners(hl) {
+		switch listener.(type) {
+		case *reference:
+			ref := listener.(*reference)
+			cp := ref.referencedConcept
+			if cp.getIndicatedConcept() == el {
+				cp.setIndicatedConcept(nil)
+				uOfDPtr.addUnresolvedPointer(cp)
+			}
+		case *refinement:
+			ref := listener.(*refinement)
+			acCp := ref.abstractConcept
+			if acCp.getIndicatedConcept() == el {
+				acCp.setIndicatedConcept(nil)
+				uOfDPtr.addUnresolvedPointer(acCp)
+			}
+			rcCP := ref.refinedConcept
+			if rcCP.getIndicatedConcept() == el {
+				rcCP.setIndicatedConcept(nil)
+				uOfDPtr.addUnresolvedPointer(rcCP)
+			}
+		}
+	}
 }
 
 func (uOfDPtr *universeOfDiscourse) uriValidForConceptID(uri ...string) error {
@@ -590,7 +748,7 @@ type UniverseOfDiscourse interface {
 	getURIElementMap() *StringElementMap
 	getWaitGroup() *sync.WaitGroup
 	IsRecordingUndo() bool
-	// MarkUndoPoint()
+	MarkUndoPoint()
 	NewConceptChangeNotification(Element, *HeldLocks) *ChangeNotification
 	NewForwardingChangeNotification(Element, NatureOfChange, *ChangeNotification) *ChangeNotification
 	NewElement(*HeldLocks, ...string) (Element, error)
@@ -605,11 +763,11 @@ type UniverseOfDiscourse interface {
 	removeElement(Element, *HeldLocks) error
 	SetUniverseOfDiscourse(Element, *HeldLocks) error
 	// RecoverElement([]byte) Element
-	// Redo(*HeldLocks)
+	Redo(*HeldLocks)
 	// SetDebugUndo(bool)
-	// SetRecordingUndo(bool)
+	SetRecordingUndo(bool)
 	// SetUniverseOfDiscourseRecursively(BaseElement, *HeldLocks)
-	// Undo(*HeldLocks)
+	Undo(*HeldLocks)
 	// uOfDChanged(*ChangeNotification, *HeldLocks)
 	// updateUriIndices(BaseElement, *HeldLocks)
 }

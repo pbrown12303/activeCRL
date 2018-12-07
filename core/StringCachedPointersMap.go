@@ -28,6 +28,33 @@ func (scpMapPtr *stringCachedPointersMap) addCachedPointer(cp *cachedPointer) er
 	return nil
 }
 
+func (scpMapPtr *stringCachedPointersMap) removeCachedPointer(cp *cachedPointer) error {
+	if cp == nil {
+		return errors.New("stringCachedPointersMap.removeCachedPointer called with nil cachedPointer")
+	}
+	id := cp.getIndicatedConceptID()
+	cpArray := scpMapPtr.scpMap[id]
+	length := len(cpArray)
+	for i, entry := range cpArray {
+		if entry == cp {
+			if length == 1 {
+				scpMapPtr.scpMap[id] = nil
+				return nil
+			}
+			if i == 0 && length > 1 {
+				scpMapPtr.scpMap[id] = cpArray[i+1:]
+				return nil
+			}
+			if i == length-1 {
+				scpMapPtr.scpMap[id] = cpArray[:i]
+				return nil
+			}
+			scpMapPtr.scpMap[id] = append(cpArray[:i], cpArray[i+1:]...)
+		}
+	}
+	return nil
+}
+
 func (scpMapPtr *stringCachedPointersMap) resolveCachedPointers(el Element, hl *HeldLocks) error {
 	if el == nil {
 		return errors.New("stringCachedPointersMap.resolveCachedPointers called with nil Element")
