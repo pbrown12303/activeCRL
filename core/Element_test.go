@@ -469,7 +469,7 @@ var _ = Describe("Element internals test", func() {
 			Expect(Equivalent(original, hl, copy, hl)).To(BeFalse())
 		})
 	})
-	// TODO: Test marshall and unmarshall
+
 	Describe("Marshal and Unmarshal Tests", func() {
 		Specify("Marshal then unmarshal should produce equivalent Elements", func() {
 			el, _ := uOfD.NewElement(hl)

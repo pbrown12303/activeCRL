@@ -120,8 +120,6 @@ func (cnPtr *ChangeNotification) printRecursively(prefix string, hl *HeldLocks, 
 		log.Printf(prefix+"  Type: %T", cnPtr.GetReportingElement())
 		log.Printf(prefix+"  Id: %s", cnPtr.reportingElement.getConceptIDNoLock())
 		log.Printf(prefix+"  Version: %d", cnPtr.GetReportingElement().GetVersion(hl))
-		// TODO: Fix this when Element serialization is complete
-		// TODO: Test Element serializaton
 		log.Printf(prefix+"  PriorConceptState: %s", "")
 		//		Print(notification.changedObject, prefix+"   ", hl)
 	}

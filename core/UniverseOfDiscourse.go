@@ -540,10 +540,6 @@ func (uOfDPtr *universeOfDiscourse) RecoverElement(data []byte, hl *HeldLocks) (
 		log.Printf("Error recovering Element: %s \n", err)
 		return nil, err
 	}
-	// TODO: Fix these
-	// uOfD.SetUniverseOfDiscourseRecursively(recoveredElement, hl)
-	// restoreValueOwningElementFieldsRecursively(recoveredElement.(Element), hl)
-	// uOfD.restoreUriIndexRecursively(recoveredElement, hl)
 	uOfDPtr.addElement(recoveredElement, hl)
 	return recoveredElement, nil
 }

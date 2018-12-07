@@ -16,6 +16,7 @@ type printMutexStruct struct {
 	sync.Mutex
 }
 
+// PrintMutex provides a mututal exclusion for print routhines shared across threads
 var PrintMutex printMutexStruct
 
 func clone(el Element, hl *HeldLocks) Element {
@@ -55,10 +56,11 @@ func CreateReplicateAsRefinement(original Element, hl *HeldLocks) Element {
 	return replicate
 }
 
-func CreateReplicateAsRefinementFromUri(uOfD UniverseOfDiscourse, originalUri string, hl *HeldLocks) (Element, error) {
-	original := uOfD.GetElementWithURI(originalUri)
+// CreateReplicateAsRefinementFromURI replicates the Element indicated by the URI
+func CreateReplicateAsRefinementFromURI(uOfD UniverseOfDiscourse, originalURI string, hl *HeldLocks) (Element, error) {
+	original := uOfD.GetElementWithURI(originalURI)
 	if original == nil {
-		return nil, fmt.Errorf("In CreateReplicateAsRefinementFromUri Element with uri %s not found", originalUri)
+		return nil, fmt.Errorf("In CreateReplicateAsRefinementFromURI Element with uri %s not found", originalURI)
 	}
 	return CreateReplicateAsRefinement(original, hl), nil
 }
@@ -98,12 +100,12 @@ func equivalent(be1 Element, hl1 *HeldLocks, be2 Element, hl2 *HeldLocks) bool {
 	return false
 }
 
+// Print prints the indicated element and its ownedConcepts, recursively
 func Print(el Element, prefix string, hl *HeldLocks) {
 	printBe(el, prefix, hl)
 }
 
 func printBe(el Element, prefix string, hl *HeldLocks) {
-	// TODO
 	// if el == nil {
 	// 	return
 	// }
@@ -129,21 +131,22 @@ func printBe(el Element, prefix string, hl *HeldLocks) {
 	// }
 }
 
-func PrintUriIndex(uOfD UniverseOfDiscourse, hl *HeldLocks) {
+// PrintURIIndex prints the URI index of the uOfD with full Element information
+func PrintURIIndex(uOfD UniverseOfDiscourse, hl *HeldLocks) {
 	uOfD.(*universeOfDiscourse).uriElementMap.Print(hl)
 }
 
-func PrintUriIndexJustIdentifiers(uOfD UniverseOfDiscourse, hl *HeldLocks) {
+// PrintURIIndexJustIdentifiers prints the URI indix with just identifiers
+func PrintURIIndexJustIdentifiers(uOfD UniverseOfDiscourse, hl *HeldLocks) {
 	uOfD.(*universeOfDiscourse).uriElementMap.PrintJustIdentifiers(hl)
 }
 
-// ReplicateAsRefinement() replicates the structure of the original in the replicate, ignoring
+// ReplicateAsRefinement replicates the structure of the original in the replicate, ignoring
 // Refinements and Values. The name from each original element is copied into the name of the
 // corresponding replicate element. This function is idempotent: if applied to an existing structure,
 // Elements of that structure that have existing Refinement relationships with original Elements
 // will not el re-created.
 func ReplicateAsRefinement(original Element, replicate Element, hl *HeldLocks) {
-	// TODO
 	// if hl == nil {
 	// 	hl = NewHeldLocks(nil)
 	// 	defer hl.ReleaseLocks()
@@ -200,7 +203,6 @@ func ReplicateAsRefinement(original Element, replicate Element, hl *HeldLocks) {
 }
 
 func restoreValueOwningElementFieldsRecursively(el Element, hl *HeldLocks) {
-	// TODO
 	// if hl == nil {
 	// 	hl = NewHeldLocks(nil)
 	// 	defer hl.ReleaseLocks()
