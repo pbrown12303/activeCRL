@@ -203,6 +203,16 @@ func (rPtr *refinement) recoverRefinementFields(unmarshaledData *map[string]json
 	return nil
 }
 
+// SetAbstractConcept sets the abstract concept using the ID of the supplied Element
+func (rPtr *refinement) SetAbstractConcept(el Element, hl *HeldLocks) error {
+	hl.WriteLockElement(rPtr)
+	id := ""
+	if el != nil {
+		id = el.getConceptIDNoLock()
+	}
+	return rPtr.SetAbstractConceptID(id, hl)
+}
+
 func (rPtr *refinement) SetAbstractConceptID(acID string, hl *HeldLocks) error {
 	hl.WriteLockElement(rPtr)
 	editableError := rPtr.editableError(hl)
@@ -233,6 +243,15 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *HeldLocks) error {
 		}
 	}
 	return nil
+}
+
+func (rPtr *refinement) SetRefinedConcept(el Element, hl *HeldLocks) error {
+	hl.WriteLockElement(rPtr)
+	id := ""
+	if el != nil {
+		id = el.getConceptIDNoLock()
+	}
+	return rPtr.SetRefinedConceptID(id, hl)
 }
 
 func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *HeldLocks) error {
@@ -276,6 +295,8 @@ type Refinement interface {
 	GetRefinedConceptID(*HeldLocks) string
 	GetRefinedConcept(*HeldLocks) Element
 	GetRefinedConceptVersion(*HeldLocks) int
+	SetAbstractConcept(Element, *HeldLocks) error
 	SetAbstractConceptID(string, *HeldLocks) error
+	SetRefinedConcept(Element, *HeldLocks) error
 	SetRefinedConceptID(string, *HeldLocks) error
 }

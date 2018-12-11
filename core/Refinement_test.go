@@ -54,6 +54,12 @@ var _ = Describe("Refinement tests", func() {
 			Expect(ref.GetAbstractConceptVersion(hl)).To(Equal(0))
 			Expect(ref.GetRefinedConceptVersion(hl)).To(Equal(0))
 		})
+		Specify("Setting abstract and refined concepts using actual elements should work", func() {
+			Expect(ref.SetAbstractConcept(abstractConcept, hl)).To(Succeed())
+			Expect(ref.GetAbstractConcept(hl)).To(Equal(abstractConcept))
+			Expect(ref.SetRefinedConcept(refinedConcept, hl)).To(Succeed())
+			Expect(ref.GetRefinedConcept(hl)).To(Equal(refinedConcept))
+		})
 		Specify("If a referenced element becomes available after it's ID is set, GetElement should find it", func() {
 			ref.(*refinement).AbstractConceptID = abstractConcept.getConceptIDNoLock()
 			Expect(ref.GetAbstractConcept(hl)).To(Equal(abstractConcept))

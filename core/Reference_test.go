@@ -47,6 +47,12 @@ var _ = Describe("Reference Tests", func() {
 			Expect(ref.getReferencedConceptNoLock()).To(BeNil())
 			Expect(ref.GetReferencedConceptVersion(hl)).To(Equal(0))
 		})
+		Specify("SetReferencedConcept should work correctly", func() {
+			ref, _ := uOfD.NewReference(hl)
+			target, _ := uOfD.NewElement(hl)
+			ref.SetReferencedConcept(target, hl)
+			Expect(ref.GetReferencedConcept(hl)).To(Equal(target))
+		})
 		Specify("Referenced element should be retrieved from uOfD if cache does not contain pointer", func() {
 			ref, _ := uOfD.NewReference(hl)
 			target, _ := uOfD.NewElement(hl)

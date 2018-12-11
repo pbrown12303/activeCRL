@@ -140,6 +140,18 @@ func (rPtr *reference) recoverReferenceFields(unmarshaledData *map[string]json.R
 	return nil
 }
 
+// SetReferencedConcept sets the referenced concept by calling SetReferencedConceptID using the ID of the
+// supplied Element
+func (rPtr *reference) SetReferencedConcept(el Element, hl *HeldLocks) error {
+	hl.WriteLockElement(rPtr)
+	id := ""
+	if el != nil {
+		id = el.getConceptIDNoLock()
+	}
+	return rPtr.SetReferencedConceptID(id, hl)
+}
+
+// SetReferencedConceptID sets the referenced concept using the supplied ID.
 func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error {
 	hl.WriteLockElement(rPtr)
 	editableError := rPtr.editableError(hl)
@@ -182,5 +194,6 @@ type Reference interface {
 	GetReferencedConceptID(*HeldLocks) string
 	GetReferencedConceptVersion(*HeldLocks) int
 	getReferencedConceptNoLock() Element
+	SetReferencedConcept(Element, *HeldLocks) error
 	SetReferencedConceptID(string, *HeldLocks) error
 }

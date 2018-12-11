@@ -240,4 +240,59 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			Expect((*target.(*element).listeners.CopyMap())[refID]).To(Equal(ref))
 		})
 	})
+
+	Describe("Test Replicate as Refinement", func() {
+		var original Element
+		var oChild1 Element
+		var oChild1Label string
+		var oChild2 Reference
+		var oChild2Label string
+		var oChild3 Literal
+		var oChild3Label string
+
+		BeforeEach(func() {
+			original, _ = uOfD.NewElement(hl)
+			original.SetLabel("Root", hl)
+			oChild1, _ = uOfD.NewElement(hl)
+			oChild1.SetOwningConcept(original, hl)
+			oChild1Label = "Element"
+			oChild1.SetLabel(oChild1Label, hl)
+			oChild2, _ = uOfD.NewReference(hl)
+			oChild2.SetOwningConcept(original, hl)
+			oChild2Label = "Reference"
+			oChild2.SetLabel(oChild2Label, hl)
+			oChild3, _ = uOfD.NewLiteral(hl)
+			oChild3.SetOwningConcept(original, hl)
+			oChild3Label = "Literal"
+			oChild3.SetLabel(oChild3Label, hl)
+		})
+		Specify("Replicate should work properly", func() {
+			replicate := uOfD.CreateReplicateAsRefinement(original, hl)
+			Expect(replicate.HasAbstraction(original, hl)).To(BeTrue())
+			var foundChild1Replicate = false
+			var foundChild2Replicate = false
+			var foundChild3Replicate = false
+			for _, replicateChild := range *replicate.GetOwnedConcepts(hl) {
+				if replicateChild.HasAbstraction(oChild1, hl) {
+					foundChild1Replicate = true
+				}
+				if replicateChild.HasAbstraction(oChild2, hl) {
+					foundChild2Replicate = true
+				}
+				if replicateChild.HasAbstraction(oChild3, hl) {
+					foundChild3Replicate = true
+				}
+			}
+			Expect(foundChild1Replicate).To(BeTrue())
+			Expect(foundChild2Replicate).To(BeTrue())
+			Expect(foundChild3Replicate).To(BeTrue())
+		})
+
+		Specify("replicateAsRefinement should be idempotent", func() {
+			replicate := uOfD.CreateReplicateAsRefinement(original, hl)
+			childCount := len(*replicate.GetOwnedConcepts(hl))
+			uOfD.(*universeOfDiscourse).replicateAsRefinement(original, replicate, hl)
+			Expect(len(*replicate.GetOwnedConcepts(hl))).To(Equal(childCount))
+		})
+	})
 })

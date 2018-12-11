@@ -5,7 +5,6 @@
 package core
 
 import (
-	"fmt"
 	"log"
 	"reflect"
 	"runtime/debug"
@@ -33,36 +32,6 @@ func clone(el Element, hl *HeldLocks) Element {
 	log.Printf("clone called with unhandled type %T\n", el)
 	debug.PrintStack()
 	return nil
-}
-
-// CreateReplicateAsRefinement replicates the indicated Element and all of its descendent Elements
-// except that descendant Refinements are not replicated.
-// For each replicated Element, a Refinement is created with the abstractElement being the original and the refinedElement
-// being the replica. The root replicated element is returned.
-func CreateReplicateAsRefinement(original Element, hl *HeldLocks) Element {
-	uOfD := original.GetUniverseOfDiscourse(hl)
-	var replicate Element
-	switch original.(type) {
-	case Literal:
-		replicate, _ = uOfD.NewLiteral(hl)
-	case Reference:
-		replicate, _ = uOfD.NewReference(hl)
-	case Refinement:
-		replicate, _ = uOfD.NewRefinement(hl)
-	case Element:
-		replicate, _ = uOfD.NewElement(hl)
-	}
-	ReplicateAsRefinement(original, replicate, hl)
-	return replicate
-}
-
-// CreateReplicateAsRefinementFromURI replicates the Element indicated by the URI
-func CreateReplicateAsRefinementFromURI(uOfD UniverseOfDiscourse, originalURI string, hl *HeldLocks) (Element, error) {
-	original := uOfD.GetElementWithURI(originalURI)
-	if original == nil {
-		return nil, fmt.Errorf("In CreateReplicateAsRefinementFromURI Element with uri %s not found", originalURI)
-	}
-	return CreateReplicateAsRefinement(original, hl), nil
 }
 
 // Equivalent returns true if the two elements are equivalent
@@ -139,67 +108,6 @@ func PrintURIIndex(uOfD UniverseOfDiscourse, hl *HeldLocks) {
 // PrintURIIndexJustIdentifiers prints the URI indix with just identifiers
 func PrintURIIndexJustIdentifiers(uOfD UniverseOfDiscourse, hl *HeldLocks) {
 	uOfD.(*universeOfDiscourse).uriElementMap.PrintJustIdentifiers(hl)
-}
-
-// ReplicateAsRefinement replicates the structure of the original in the replicate, ignoring
-// Refinements and Values. The name from each original element is copied into the name of the
-// corresponding replicate element. This function is idempotent: if applied to an existing structure,
-// Elements of that structure that have existing Refinement relationships with original Elements
-// will not el re-created.
-func ReplicateAsRefinement(original Element, replicate Element, hl *HeldLocks) {
-	// if hl == nil {
-	// 	hl = NewHeldLocks(nil)
-	// 	defer hl.ReleaseLocks()
-	// }
-	// hl.LockElement(original)
-	// hl.LockElement(replicate)
-	// uOfD := replicate.GetUniverseOfDiscourse(hl)
-
-	// SetLabel(replicate, GetLabel(original, hl), hl)
-	// if uOfD.IsRefinementOf(replicate, original, hl) == false {
-	// 	refinement := uOfD.NewRefinement(hl)
-	// 	SetOwningElement(refinement, replicate, hl)
-	// 	refinement.SetAbstractElement(original, hl)
-	// 	refinement.SetRefinedElement(replicate, hl)
-	// }
-
-	// for _, originalChild := range original.GetOwnedElements(hl) {
-	// 	var replicateChild Element
-	// 	for _, currentChild := range replicate.GetOwnedElements(hl) {
-	// 		for _, currentChildAncestor := range uOfD.GetAbstractElementsRecursively(currentChild, hl) {
-	// 			if currentChildAncestor == originalChild {
-	// 				replicateChild = currentChild
-	// 			}
-	// 		}
-	// 	}
-	// 	if replicateChild == nil {
-	// 		switch originalChild.(type) {
-	// 		case BaseElementReference:
-	// 			replicateChild = uOfD.NewBaseElementReference(hl)
-	// 		case ElementPointerReference:
-	// 			replicateChild = uOfD.NewElementPointerReference(hl)
-	// 		case ElementReference:
-	// 			replicateChild = uOfD.NewElementReference(hl)
-	// 		case LiteralPointerReference:
-	// 			replicateChild = uOfD.NewLiteralPointerReference(hl)
-	// 		case LiteralReference:
-	// 			replicateChild = uOfD.NewLiteralReference(hl)
-	// 		case Element:
-	// 			replicateChild = uOfD.NewElement(hl)
-	// 		}
-	// 		SetOwningElement(replicateChild, replicate, hl)
-	// 		refinement := uOfD.NewRefinement(hl)
-	// 		SetOwningElement(refinement, replicateChild, hl)
-	// 		refinement.SetAbstractElement(originalChild, hl)
-	// 		refinement.SetRefinedElement(replicateChild, hl)
-	// 		SetLabel(replicateChild, GetLabel(originalChild, hl), hl)
-	// 	}
-	// 	switch originalChild.(type) {
-	// 	case Element:
-	// 		ReplicateAsRefinement(originalChild.(Element), replicateChild.(Element), hl)
-	// 	}
-	// }
-
 }
 
 func restoreValueOwningElementFieldsRecursively(el Element, hl *HeldLocks) {

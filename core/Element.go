@@ -156,6 +156,149 @@ func (ePtr *element) GetFirstChildWithAbstraction(abstraction Element, hl *HeldL
 	return nil
 }
 
+// GetFirstChildWithAbstractionURI returns the first child that has the abstraction indicated
+// by the URI as one of its abstractions. Note that there is no ordering of children so in the event that
+// there is more than one child with the given abstraction the result is nondeterministic.
+func (ePtr *element) GetFirstChildWithAbstractionURI(abstractionURI string, hl *HeldLocks) Element {
+	hl.ReadLockElement(ePtr)
+	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
+	if abstraction != nil {
+		return ePtr.GetFirstChildWithAbstraction(abstraction, hl)
+	}
+	return nil
+}
+
+// GetFirstChildLiteralWithAbstraction returns the first child literal that has the indicated
+// abstraction as one of its abstractions.
+func (ePtr *element) GetFirstChildLiteralWithAbstraction(abstraction Element, hl *HeldLocks) Literal {
+	hl.ReadLockElement(ePtr)
+	for _, element := range *ePtr.ownedConcepts.CopyMap() {
+		switch element.(type) {
+		case *literal:
+			if element.HasAbstraction(abstraction, hl) {
+				return element.(*literal)
+			}
+		}
+	}
+	return nil
+}
+
+// GetFirstChildLiteralWithAbstractionURI returns the first child literal that has the abstraction indicated
+// by the URI as one of its abstractions. Note that there is no ordering of children so in the event that
+// there is more than one child with the given abstraction the result is nondeterministic.
+func (ePtr *element) GetFirstChildLiteralWithAbstractionURI(abstractionURI string, hl *HeldLocks) Literal {
+	hl.ReadLockElement(ePtr)
+	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
+	if abstraction != nil {
+		return ePtr.GetFirstChildLiteralWithAbstraction(abstraction, hl)
+	}
+	return nil
+}
+
+// GetFirstChildReferenceWithAbstraction returns the first child reference that has the indicated
+// abstraction as one of its abstractions.
+func (ePtr *element) GetFirstChildReferenceWithAbstraction(abstraction Element, hl *HeldLocks) Reference {
+	hl.ReadLockElement(ePtr)
+	for _, element := range *ePtr.ownedConcepts.CopyMap() {
+		switch element.(type) {
+		case *reference:
+			if element.HasAbstraction(abstraction, hl) {
+				return element.(*reference)
+			}
+		}
+	}
+	return nil
+}
+
+// GetFirstChildReferenceWithAbstractionURI returns the first child reference that has the abstraction indicated
+// by the URI as one of its abstractions. Note that there is no ordering of children so in the event that
+// there is more than one child with the given abstraction the result is nondeterministic.
+func (ePtr *element) GetFirstChildReferenceWithAbstractionURI(abstractionURI string, hl *HeldLocks) Reference {
+	hl.ReadLockElement(ePtr)
+	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
+	if abstraction != nil {
+		return ePtr.GetFirstChildReferenceWithAbstraction(abstraction, hl)
+	}
+	return nil
+}
+
+// GetFirstChildRefinementWithAbstraction returns the first child refinement that has the indicated
+// abstraction as one of its abstractions.
+func (ePtr *element) GetFirstChildRefinementWithAbstraction(abstraction Element, hl *HeldLocks) Refinement {
+	hl.ReadLockElement(ePtr)
+	for _, element := range *ePtr.ownedConcepts.CopyMap() {
+		switch element.(type) {
+		case *refinement:
+			if element.HasAbstraction(abstraction, hl) {
+				return element.(*refinement)
+			}
+		}
+	}
+	return nil
+}
+
+// GetFirstChildRefinementWithAbstractionURI returns the first child refinement that has the abstraction indicated
+// by the URI as one of its abstractions. Note that there is no ordering of children so in the event that
+// there is more than one child with the given abstraction the result is nondeterministic.
+func (ePtr *element) GetFirstChildRefinementWithAbstractionURI(abstractionURI string, hl *HeldLocks) Refinement {
+	hl.ReadLockElement(ePtr)
+	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
+	if abstraction != nil {
+		return ePtr.GetFirstChildRefinementWithAbstraction(abstraction, hl)
+	}
+	return nil
+}
+
+// GetFirstChildWithURI
+func (ePtr *element) GetFirstChildWithURI(uri string, hl *HeldLocks) Element {
+	hl.ReadLockElement(ePtr)
+	for _, element := range *ePtr.ownedConcepts.CopyMap() {
+		if element.GetURI(hl) == uri {
+			return element
+		}
+	}
+	return nil
+}
+
+func (ePtr *element) GetFirstChildLiteralWithURI(uri string, hl *HeldLocks) Literal {
+	hl.ReadLockElement(ePtr)
+	for _, element := range *ePtr.ownedConcepts.CopyMap() {
+		switch element.(type) {
+		case *literal:
+			if element.GetURI(hl) == uri {
+				return element.(*literal)
+			}
+		}
+	}
+	return nil
+}
+
+func (ePtr *element) GetFirstChildReferenceWithURI(uri string, hl *HeldLocks) Reference {
+	hl.ReadLockElement(ePtr)
+	for _, element := range *ePtr.ownedConcepts.CopyMap() {
+		switch element.(type) {
+		case *reference:
+			if element.GetURI(hl) == uri {
+				return element.(*reference)
+			}
+		}
+	}
+	return nil
+}
+
+func (ePtr *element) GetFirstChildRefinementWithURI(uri string, hl *HeldLocks) Refinement {
+	hl.ReadLockElement(ePtr)
+	for _, element := range *ePtr.ownedConcepts.CopyMap() {
+		switch element.(type) {
+		case *refinement:
+			if element.GetURI(hl) == uri {
+				return element.(*refinement)
+			}
+		}
+	}
+	return nil
+}
+
 // FindAbstractions adds all found abstractions to supplied map
 func (ePtr *element) FindAbstractions(abstractions *map[string]Element, hl *HeldLocks) {
 	for _, listener := range *ePtr.listeners.CopyMap() {
@@ -229,6 +372,9 @@ func (ePtr *element) HasAbstraction(abstraction Element, hl *HeldLocks) bool {
 		switch listener.(type) {
 		case *refinement:
 			foundAbstraction := listener.(*refinement).GetAbstractConcept(hl)
+			if foundAbstraction.getConceptIDNoLock() == ePtr.ConceptID {
+				continue
+			}
 			if foundAbstraction == abstraction {
 				return true
 			}
@@ -510,6 +656,16 @@ func (ePtr *element) SetLabel(label string, hl *HeldLocks) error {
 	return nil
 }
 
+// SetOwningConcept takes the ID of the supplied concept and call SetOwningConceptID
+func (ePtr *element) SetOwningConcept(el Element, hl *HeldLocks) error {
+	hl.WriteLockElement(ePtr)
+	id := ""
+	if el != nil {
+		id = el.getConceptIDNoLock()
+	}
+	return ePtr.SetOwningConceptID(id, hl)
+}
+
 // SetOwningConceptID sets the ID of the owning concept for the element
 // Design Note: the argument is the identifier rather than the Element to ensure
 // the correct type of the owning concept is recorded. For example, if a method
@@ -631,6 +787,17 @@ type Element interface {
 	getConceptIDNoLock() string
 	GetDefinition(*HeldLocks) string
 	GetFirstChildWithAbstraction(Element, *HeldLocks) Element
+	GetFirstChildWithAbstractionURI(string, *HeldLocks) Element
+	GetFirstChildLiteralWithAbstraction(Element, *HeldLocks) Literal
+	GetFirstChildLiteralWithAbstractionURI(string, *HeldLocks) Literal
+	GetFirstChildReferenceWithAbstraction(Element, *HeldLocks) Reference
+	GetFirstChildReferenceWithAbstractionURI(string, *HeldLocks) Reference
+	GetFirstChildRefinementWithAbstraction(Element, *HeldLocks) Refinement
+	GetFirstChildRefinementWithAbstractionURI(string, *HeldLocks) Refinement
+	GetFirstChildWithURI(string, *HeldLocks) Element
+	GetFirstChildLiteralWithURI(string, *HeldLocks) Literal
+	GetFirstChildReferenceWithURI(string, *HeldLocks) Reference
+	GetFirstChildRefinementWithURI(string, *HeldLocks) Refinement
 	GetIsCore(*HeldLocks) bool
 	GetLabel(*HeldLocks) string
 	getListeners(*HeldLocks) *map[string]Element
@@ -652,6 +819,7 @@ type Element interface {
 	SetDefinition(string, *HeldLocks) error
 	setIsCore(bool, *HeldLocks)
 	SetLabel(string, *HeldLocks) error
+	SetOwningConcept(Element, *HeldLocks) error
 	SetOwningConceptID(string, *HeldLocks) error
 	SetReadOnly(bool, *HeldLocks) error
 	setUniverseOfDiscourse(UniverseOfDiscourse, *HeldLocks)

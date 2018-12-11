@@ -88,6 +88,21 @@ var _ = Describe("Element internals test", func() {
 		})
 	})
 
+	Describe("Test setting ownership", func() {
+		Specify("Setting ownership via ID should work", func() {
+			el, _ := uOfD.NewElement(hl)
+			owner, _ := uOfD.NewElement(hl)
+			el.SetOwningConceptID(owner.getConceptIDNoLock(), hl)
+			Expect(el.GetOwningConcept(hl)).To(Equal(owner))
+		})
+		Specify("Setting ownership directly should work", func() {
+			el, _ := uOfD.NewElement(hl)
+			owner, _ := uOfD.NewElement(hl)
+			el.SetOwningConcept(owner, hl)
+			Expect(el.GetOwningConcept(hl)).To(Equal(owner))
+		})
+	})
+
 	Describe("Managing ownedConcepts infrastructure", func() {
 		Context("After creating an element", func() {
 			Specify("ownedConcepts should be empty", func() {
@@ -277,7 +292,7 @@ var _ = Describe("Element internals test", func() {
 		})
 	})
 
-	Describe("Version infrastructure", func() {
+	Describe("Testing Version infrastructure", func() {
 		var el Element
 		BeforeEach(func() {
 			el, _ = uOfD.NewElement(hl)
@@ -500,6 +515,132 @@ var _ = Describe("Element internals test", func() {
 			Expect(err4).To(BeNil())
 			Expect(Equivalent(el, hl, rEl, hl2)).To(BeTrue())
 			Expect(Equivalent(owner, hl, rOwner, hl2)).To(BeTrue())
+		})
+	})
+
+	Describe("Getting children with abstractions", func() {
+		Specify("Getting any child with abstraction", func() {
+			el, _ := uOfD.NewElement(hl)
+			owner, _ := uOfD.NewElement(hl)
+			el.SetOwningConceptID(owner.getConceptIDNoLock(), hl)
+			abs, _ := uOfD.NewElement(hl)
+			ref, _ := uOfD.NewRefinement(hl)
+			ref.SetAbstractConceptID(abs.getConceptIDNoLock(), hl)
+			ref.SetRefinedConceptID(el.getConceptIDNoLock(), hl)
+			Expect(owner.GetFirstChildWithAbstraction(abs, hl)).To(Equal(el))
+		})
+		Specify("Getting any child with abstractionURI", func() {
+			el, _ := uOfD.NewElement(hl)
+			owner, _ := uOfD.NewElement(hl)
+			el.SetOwningConceptID(owner.getConceptIDNoLock(), hl)
+			abs, _ := uOfD.NewElement(hl)
+			abstractionURI := "http://test.uri"
+			abs.SetURI(abstractionURI, hl)
+			ref, _ := uOfD.NewRefinement(hl)
+			ref.SetAbstractConceptID(abs.getConceptIDNoLock(), hl)
+			ref.SetRefinedConceptID(el.getConceptIDNoLock(), hl)
+			Expect(owner.GetFirstChildWithAbstractionURI(abstractionURI, hl)).To(Equal(el))
+		})
+		Specify("Getting Literal child with abstraction", func() {
+			lit, _ := uOfD.NewLiteral(hl)
+			owner, _ := uOfD.NewElement(hl)
+			lit.SetOwningConceptID(owner.getConceptIDNoLock(), hl)
+			abs, _ := uOfD.NewElement(hl)
+			ref, _ := uOfD.NewRefinement(hl)
+			ref.SetAbstractConceptID(abs.getConceptIDNoLock(), hl)
+			ref.SetRefinedConceptID(lit.getConceptIDNoLock(), hl)
+			Expect(owner.GetFirstChildLiteralWithAbstraction(abs, hl)).To(Equal(lit))
+		})
+		Specify("Getting Literal child with abstractionURI", func() {
+			lit, _ := uOfD.NewLiteral(hl)
+			owner, _ := uOfD.NewElement(hl)
+			lit.SetOwningConceptID(owner.getConceptIDNoLock(), hl)
+			abs, _ := uOfD.NewElement(hl)
+			abstractionURI := "http://test.uri"
+			abs.SetURI(abstractionURI, hl)
+			ref, _ := uOfD.NewRefinement(hl)
+			ref.SetAbstractConceptID(abs.getConceptIDNoLock(), hl)
+			ref.SetRefinedConceptID(lit.getConceptIDNoLock(), hl)
+			Expect(owner.GetFirstChildLiteralWithAbstractionURI(abstractionURI, hl)).To(Equal(lit))
+		})
+		Specify("Getting Reference child with abstraction", func() {
+			ref, _ := uOfD.NewReference(hl)
+			owner, _ := uOfD.NewElement(hl)
+			ref.SetOwningConceptID(owner.getConceptIDNoLock(), hl)
+			abs, _ := uOfD.NewElement(hl)
+			refinement, _ := uOfD.NewRefinement(hl)
+			refinement.SetAbstractConceptID(abs.getConceptIDNoLock(), hl)
+			refinement.SetRefinedConceptID(ref.getConceptIDNoLock(), hl)
+			Expect(owner.GetFirstChildReferenceWithAbstraction(abs, hl)).To(Equal(ref))
+		})
+		Specify("Getting Reference child with abstractionURI", func() {
+			ref, _ := uOfD.NewReference(hl)
+			owner, _ := uOfD.NewElement(hl)
+			ref.SetOwningConceptID(owner.getConceptIDNoLock(), hl)
+			abs, _ := uOfD.NewElement(hl)
+			abstractionURI := "http://test.uri"
+			abs.SetURI(abstractionURI, hl)
+			refinement, _ := uOfD.NewRefinement(hl)
+			refinement.SetAbstractConceptID(abs.getConceptIDNoLock(), hl)
+			refinement.SetRefinedConceptID(ref.getConceptIDNoLock(), hl)
+			Expect(owner.GetFirstChildReferenceWithAbstractionURI(abstractionURI, hl)).To(Equal(ref))
+		})
+		Specify("Getting Refinement child with abstraction", func() {
+			ref, _ := uOfD.NewRefinement(hl)
+			owner, _ := uOfD.NewElement(hl)
+			ref.SetOwningConceptID(owner.getConceptIDNoLock(), hl)
+			abs, _ := uOfD.NewElement(hl)
+			refinement, _ := uOfD.NewRefinement(hl)
+			refinement.SetAbstractConceptID(abs.getConceptIDNoLock(), hl)
+			refinement.SetRefinedConceptID(ref.getConceptIDNoLock(), hl)
+			Expect(owner.GetFirstChildRefinementWithAbstraction(abs, hl)).To(Equal(ref))
+		})
+		Specify("Getting Refinement child with abstractionURI", func() {
+			ref, _ := uOfD.NewRefinement(hl)
+			owner, _ := uOfD.NewElement(hl)
+			ref.SetOwningConceptID(owner.getConceptIDNoLock(), hl)
+			abs, _ := uOfD.NewElement(hl)
+			abstractionURI := "http://test.uri"
+			abs.SetURI(abstractionURI, hl)
+			refinement, _ := uOfD.NewRefinement(hl)
+			refinement.SetAbstractConceptID(abs.getConceptIDNoLock(), hl)
+			refinement.SetRefinedConceptID(ref.getConceptIDNoLock(), hl)
+			Expect(owner.GetFirstChildRefinementWithAbstractionURI(abstractionURI, hl)).To(Equal(ref))
+		})
+	})
+
+	Describe("Getting children with URI", func() {
+		Specify("GetFirstChildWithURI should work", func() {
+			owner, _ := uOfD.NewElement(hl)
+			child, _ := uOfD.NewElement(hl)
+			child.SetOwningConcept(owner, hl)
+			uri := "http://test.uri"
+			child.SetURI(uri, hl)
+			Expect(owner.GetFirstChildWithURI(uri, hl)).To(Equal(child))
+		})
+		Specify("GetFirstChildLiteralWithURI should work", func() {
+			owner, _ := uOfD.NewElement(hl)
+			child, _ := uOfD.NewLiteral(hl)
+			child.SetOwningConcept(owner, hl)
+			uri := "http://test.uri"
+			child.SetURI(uri, hl)
+			Expect(owner.GetFirstChildLiteralWithURI(uri, hl)).To(Equal(child))
+		})
+		Specify("GetFirstChildReferenceWithURI should work", func() {
+			owner, _ := uOfD.NewElement(hl)
+			child, _ := uOfD.NewReference(hl)
+			child.SetOwningConcept(owner, hl)
+			uri := "http://test.uri"
+			child.SetURI(uri, hl)
+			Expect(owner.GetFirstChildReferenceWithURI(uri, hl)).To(Equal(child))
+		})
+		Specify("GetFirstChildRefinementWithURI should work", func() {
+			owner, _ := uOfD.NewElement(hl)
+			child, _ := uOfD.NewRefinement(hl)
+			child.SetOwningConcept(owner, hl)
+			uri := "http://test.uri"
+			child.SetURI(uri, hl)
+			Expect(owner.GetFirstChildRefinementWithURI(uri, hl)).To(Equal(child))
 		})
 	})
 })

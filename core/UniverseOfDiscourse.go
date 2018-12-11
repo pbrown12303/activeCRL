@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/url"
 	"sync"
@@ -169,6 +170,35 @@ func (uOfDPtr *universeOfDiscourse) ClearUniverseOfDiscourse(el Element, hl *Hel
 	uOfDPtr.removeElement(el, hl)
 	el.setUniverseOfDiscourse(nil, hl)
 	return nil
+}
+
+// CreateReplicateAsRefinement replicates the indicated Element and all of its descendent Elements
+// except that descendant Refinements are not replicated.
+// For each replicated Element, a Refinement is created with the abstractElement being the original and the refinedElement
+// being the replica. The root replicated element is returned.
+func (uOfDPtr *universeOfDiscourse) CreateReplicateAsRefinement(original Element, hl *HeldLocks) Element {
+	var replicate Element
+	switch original.(type) {
+	case Literal:
+		replicate, _ = uOfDPtr.NewLiteral(hl)
+	case Reference:
+		replicate, _ = uOfDPtr.NewReference(hl)
+	case Refinement:
+		replicate, _ = uOfDPtr.NewRefinement(hl)
+	case Element:
+		replicate, _ = uOfDPtr.NewElement(hl)
+	}
+	uOfDPtr.replicateAsRefinement(original, replicate, hl)
+	return replicate
+}
+
+// CreateReplicateAsRefinementFromURI replicates the Element indicated by the URI
+func (uOfDPtr *universeOfDiscourse) CreateReplicateAsRefinementFromURI(originalURI string, hl *HeldLocks) (Element, error) {
+	original := uOfDPtr.GetElementWithURI(originalURI)
+	if original == nil {
+		return nil, fmt.Errorf("In CreateReplicateAsRefinementFromURI Element with uri %s not found", originalURI)
+	}
+	return uOfDPtr.CreateReplicateAsRefinement(original, hl), nil
 }
 
 func (uOfDPtr *universeOfDiscourse) findFunctions(element Element, notification *ChangeNotification, hl *HeldLocks) []string {
@@ -548,6 +578,57 @@ func (uOfDPtr *universeOfDiscourse) removeUnresolvedPointer(pointer *cachedPoint
 	uOfDPtr.unresolvedPointersMap.removeCachedPointer(pointer)
 }
 
+// replicateAsRefinement replicates the structure of the original in the replicate, ignoring
+// Refinements The name from each original element is copied into the name of the
+// corresponding replicate element. This function is idempotent: if applied to an existing structure,
+// Elements of that structure that have existing Refinement relationships with original Elements
+// will not el re-created.
+func (uOfDPtr *universeOfDiscourse) replicateAsRefinement(original Element, replicate Element, hl *HeldLocks) {
+	hl.ReadLockElement(original)
+	hl.WriteLockElement(replicate)
+
+	replicate.SetLabel(original.GetLabel(hl), hl)
+	if replicate.HasAbstraction(original, hl) == false {
+		refinement, _ := uOfDPtr.NewRefinement(hl)
+		refinement.SetOwningConcept(replicate, hl)
+		refinement.SetAbstractConcept(original, hl)
+		refinement.SetRefinedConcept(replicate, hl)
+	}
+
+	for _, originalChild := range *original.GetOwnedConcepts(hl) {
+		var replicateChild Element
+		for _, currentChild := range *replicate.GetOwnedConcepts(hl) {
+			currentChildAbstractions := make(map[string]Element)
+			currentChild.FindAbstractions(&currentChildAbstractions, hl)
+			for _, currentChildAbstraction := range currentChildAbstractions {
+				if currentChildAbstraction == originalChild {
+					replicateChild = currentChild
+				}
+			}
+		}
+		if replicateChild == nil {
+			switch originalChild.(type) {
+			case *reference:
+				replicateChild, _ = uOfDPtr.NewReference(hl)
+			case *literal:
+				replicateChild, _ = uOfDPtr.NewLiteral(hl)
+			case *element:
+				replicateChild, _ = uOfDPtr.NewElement(hl)
+			}
+			replicateChild.SetOwningConcept(replicate, hl)
+			refinement, _ := uOfDPtr.NewRefinement(hl)
+			refinement.SetOwningConcept(replicateChild, hl)
+			refinement.SetAbstractConcept(originalChild, hl)
+			refinement.SetRefinedConcept(replicateChild, hl)
+			replicateChild.SetLabel(originalChild.GetLabel(hl), hl)
+		}
+		switch originalChild.(type) {
+		case Element:
+			uOfDPtr.replicateAsRefinement(originalChild.(Element), replicateChild.(Element), hl)
+		}
+	}
+}
+
 // SetRecordingUndo turns undo/redo recording on and off
 func (uOfDPtr *universeOfDiscourse) SetRecordingUndo(newSetting bool) {
 	uOfDPtr.undoManager.setRecordingUndo(newSetting)
@@ -729,6 +810,8 @@ type UniverseOfDiscourse interface {
 	addUnresolvedPointer(*cachedPointer)
 	changeURIForElement(Element, string, string) error
 	ClearUniverseOfDiscourse(Element, *HeldLocks) error
+	CreateReplicateAsRefinement(Element, *HeldLocks) Element
+	CreateReplicateAsRefinementFromURI(originalURI string, hl *HeldLocks) (Element, error)
 	findFunctions(Element, *ChangeNotification, *HeldLocks) []string
 	getComputeFunctions() *functions
 	GetElement(string) Element
