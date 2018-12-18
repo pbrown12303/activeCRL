@@ -252,6 +252,10 @@ func (uOfDPtr *universeOfDiscourse) GetElement(conceptID string) Element {
 	return uOfDPtr.uuidElementMap.GetEntry(conceptID)
 }
 
+func (uOfDPtr *universeOfDiscourse) GetElements() *map[string]Element {
+	return uOfDPtr.uuidElementMap.CopyMap()
+}
+
 // GetElementWithURI returns the Element with the given URI
 func (uOfDPtr *universeOfDiscourse) GetElementWithURI(uri string) Element {
 	return uOfDPtr.uriElementMap.GetEntry(uri)
@@ -815,6 +819,7 @@ type UniverseOfDiscourse interface {
 	findFunctions(Element, *ChangeNotification, *HeldLocks) []string
 	getComputeFunctions() *functions
 	GetElement(string) Element
+	GetElements() *map[string]Element
 	GetElementWithURI(string) Element
 	getExecutedCalls() chan *pendingFunctionCall
 	GetFunctions(string) []crlExecutionFunction

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="ISO-8859-1">
+	<title>CRL Editor</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+	<!--  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">  -->
+	<link rel="stylesheet" href="/css/joint.css">
+	<link rel="stylesheet" href="/js/jquery-ui-1.12.1.custom/jquery-ui.css">
+	<link rel="stylesheet" href="/css/crlEditor.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<script src="/js/jquery-ui-1.12.1.custom/external/jquery/jquery.js"></script>
+	<script src="/js/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
+	<script src="/js/lodash.js"></script>
+	<script src="/js/backbone.js"></script>
+	<script src="/js/joint.js"></script>
+	<script src="/js/joint.shapes.uml.js"></script>
+	<!-- <script src="/js/crlShapes.js"></script>  -->
+	<script src="/js/jstree.js"></script>
+	<!--  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script> -->
+	<script src="/js/viz.js"></script>
+	<script src="/js/full.render.js"></script>
+	</script>
+	<script type="text/javascript">
+		function sizeAll() {
+			// Body
+			var bodyHeight = jQuery("body").height();
+			var bodyWidth = jQuery("body").width();
+			// Wrapper
+			var wrapperMargin = jQuery("#wrapper").outerWidth(true)
+				- jQuery("#wrapper").width();
+			var wrapperWidth = bodyWidth - wrapperMargin;
+			var wrapperHeight = bodyHeight - jQuery("#navbar").outerHeight(true)
+				- wrapperMargin;
+			jQuery("#wrapper").width(wrapperWidth);
+			jQuery("#wrapper").height(wrapperHeight);
+			// UofDBrowser
+			var uOfDBrowserOuterWidth = jQuery("#uofd-browser").outerWidth(true);
+			var uOfDBrowserMargin = uOfDBrowserOuterWidth
+				- jQuery("#uofd-browser").width();
+			var uOfDBrowserHeight = wrapperHeight - uOfDBrowserMargin;
+			jQuery("#uofd-browser").height(uOfDBrowserHeight);
+			// Bottom
+			jQuery("#bottom").position({
+				my: "left bottom",
+				at: "right bottom",
+				of: "#uofd-browser"
+			});
+			// Center Pane
+			var centerPaneMargin = jQuery("center-pane").outerWidth(true)
+				- jQuery("center-pane").width();
+			var centerPaneWidth = wrapperWidth - uOfDBrowserOuterWidth
+				- centerPaneMargin;
+			jQuery("#center-pane").width(centerPaneWidth);
+			var centerPaneHeight = wrapperHeight - centerPaneMargin;
+			jQuery("#center-pane").height(centerPaneHeight);
+			jQuery("#center-pane").position({
+				my: "left top",
+				at: "right top",
+				of: "#uofd-browser"
+			})
+
+			// Top Pane
+			var topPaneMargin = jQuery("#top-pane").outerWidth(true)
+				- jQuery("#top-pane").width();
+			jQuery("#top-pane").height(
+				centerPaneHeight - jQuery("#bottom").outerHeight(true)
+				- topPaneMargin);
+
+			// Toolbar
+			var toolbarOuterWidth = jQuery("#toolbar").outerWidth(true);
+			var toolbarMargin = toolbarOuterWidth - jQuery("#toolbar").width();
+			var toolbarHeight = jQuery("#top-pane").height() - toolbarMargin;
+			jQuery("#toolbar").height(toolbarHeight);
+
+			// Top Content
+			var topContentMargin = jQuery("#top-content").outerWidth(true)
+				- jQuery("#top-content").width();
+			jQuery("#top-content").width(
+				centerPaneWidth - toolbarOuterWidth - topContentMargin);
+			topContentHeight = jQuery("#top-pane").height() - topContentMargin;
+			jQuery("#top-caontent").height(topContentHeight);
+
+			// crlDiagramContainer
+			crlDiagramContainerHeight = topContentHeight - jQuery("#tabs").height();
+			jQuery(".crlDiagramContainer").height(crlDiagramContainerHeight);
+		};
+	</script>
+	<script type="text/javascript">
+		$(function () {
+			$(".uofd-browser").resizable({
+				handles: "e",
+				resize: sizeAll()
+			});
+			$(".bottom").resizable({
+				handles: "n",
+				resize: sizeAll()
+			});
+		});
+	</script>
+
+	<script type="text/javascript">
+		function dropdownMenu(dropdownId) {
+			document.getElementById(dropdownId).classList.toggle("show");
+		}
+
+		// Close the dropdown menu if the user clicks outside of it
+		window.onclick = function (event) {
+			if (!event.target.matches('.dropbtn')) {
+
+				var dropdowns = document.getElementsByClassName("dropdown-content");
+				var i;
+				for (i = 0; i < dropdowns.length; i++) {
+					var openDropdown = dropdowns[i];
+					if (openDropdown.classList.contains('show')) {
+						openDropdown.classList.remove('show');
+					}
+				}
+			}
+		}
+	</script>
+
+	<script type="text/javascript">
+		function openDiagramContainer(diagramContainerId) {
+			var i;
+			var x = document.getElementsByClassName("crlDiagramContainer");
+			for (i = 0; i < x.length; i++) {
+				if (x[i].id == diagramContainerId) {
+					x[i].style.display = "block";
+					console.log("Showing: " + diagramContainerId.toString())
+				} else {
+					x[i].style.display = "none";
+					console.log("Hiding: " + diagramContainerId.toString())
+				}
+			}
+		}
+	</script>
+
+	<script type="text/javascript">
+		$(function () {
+			var graph = new joint.dia.Graph;
+
+			var paper = new joint.dia.Paper({
+				el: $('#diagram'),
+				/*			width : 800,
+				 height : 800, */
+				model: graph,
+				gridSize: 1
+			});
+
+			var rect = new joint.shapes.basic.Rect({
+				position: {
+					x: 100,
+					y: 30
+				},
+				size: {
+					width: 100,
+					height: 30
+				},
+				attrs: {
+					rect: {
+						fill: 'blue'
+					},
+					text: {
+						text: 'my box',
+						fill: 'white'
+					}
+				}
+			});
+
+			var rect3 = new joint.shapes.uml.Class({
+				position: {
+					x: 500,
+					y: 30
+				},
+				size: {
+					width: 100,
+					height: 30
+				},
+				name: `Bar`
+			});
+
+			theClass = rect3
+
+			graph.addCells([rect, rect3]);
+		});
+	</script>
+
+	<script type="text/javascript">
+		function callExit() {
+			var xhr = new XMLHttpRequest();
+			var url = "request";
+			xhr.open("POST", url, true);
+			xhr.setRequestHeader("Content-Type", "application/json");
+			xhr.onreadystatechange = function () {
+				if (xhr.readyState === 4) {
+					window.close();
+				}
+			};
+			var data = JSON.stringify({ "Action": "Exit"});
+			xhr.send(data);
+		}
+	</script>
+
+</head>
+
+<body onresize="sizeAll()" onload="sizeAll()" id="body">
+	<div class="navbar" id="navbar">
+		<div class="dropdown">
+			<button id="FileMenuButton" class="dropbtn" onclick="dropdownMenu('FileDropdown')">
+				File <i class="fa fa-caret-down"></i>
+			</button>
+			<div class="dropdown-content" id="FileDropdown">
+				<a id="NewDiagramButton" class="show" onClick="DiagramManager.NewDiagram()">New Diagram</a>
+				<a id="Exit" class="show" onClick="callExit()">Exit</a>
+			</div>
+		</div>
+		<div class="dropdown">
+			<button class="dropbtn">
+				Edit <i class="fa fa-caret-down"></i>
+			</button>
+		</div>
+		<div class="dropdown">
+			<button id="HelpMenuButton" class="dropbtn" onclick="dropdownMenu('HelpDropdown')">
+				Help <i class="fa fa-caret-down"></i>
+			</button>
+			<div class="dropdown-content" id="HelpDropdown">
+				<a id="DebugSettingsButton" class="show" onClick="CrlEditor.DebugSettings()">Debug Settings</a>
+				<a id="DisplayTracesButton" class="show" onClick="CrlEditor.DisplayGraphDialog()">Display Traces</a>
+			</div>
+		</div>
+	</div>
+	<div class="wrapper" id="wrapper">
+		<div class="uofd-browser" id="uofd-browser">
+			<a>Universe of Discourse</a>
+			<div class="modelTree" id="uOfD"></div>
+		</div>
+		<div class="center-pane" id="center-pane">
+			<div class="top-pane" id="top-pane">
+				<div class="toolbar" id="toolbar">
+					<button>Element</button>
+				</div>
+				<div class="top-content" id="top-content">
+					<div id="tabs" class="w3-bar w3-black tabs">
+						<button class="w3-bar-item w3-button" onClick="openDiagramContainer('home')">Home</button>
+					</div>
+					<div id="home" class="crlDiagramContainer">
+						<div class="diagram" id="diagram"></div>
+					</div>
+				</div>
+			</div>
+			<div class="bottom" id="bottom">
+				<table id="properties" class="table" border="1">
+					<thead>
+						<tr>
+							<th>Property</th>
+							<th>Value</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+</body>
+
+</html>
