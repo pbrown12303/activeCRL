@@ -2,46 +2,158 @@ package editor_test
 
 import (
 	//	"fmt"
+
+	"log"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	//	"github.com/sclevine/agouti"
-	//	"github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"
-	am "github.com/sclevine/agouti/matchers"
+	"github.com/pbrown12303/activeCRL/core"
+	"github.com/pbrown12303/activeCRL/crldiagram"
+	"github.com/pbrown12303/activeCRL/crleditor/editor"
+	"github.com/sclevine/agouti"
+
 	//	"testing"
+	. "github.com/sclevine/agouti/matchers"
 )
 
-var _ = Describe("Test CrlEditor NewDiagram Function:", func() {
+var agoutiDriver *agouti.WebDriver
+
+var _ = Describe("Test CrlEditor", func() {
+	var uOfD core.UniverseOfDiscourse
+	var hl *core.HeldLocks
+	var diagramID string
+	var diagram core.Element
+	var newDiagramContainerID string
 
 	BeforeEach(func() {
+		// Start the editor server
+		go editor.StartServer(false)
+		// Start the browser
+		// Choose a WebDriver:
+		// agoutiDriver = agouti.PhantomJS()
+		// agoutiDriver = agouti.Selenium()
+		agoutiDriver = agouti.ChromeDriver()
+		Expect(agoutiDriver.Start()).To(Succeed())
 
+		var err error
+		page, err = agoutiDriver.NewPage(agouti.Browser("chrome"))
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(page.Navigate("http://localhost:8080/index")).To(Succeed())
+		Expect(page).To(HaveURL("http://localhost:8080/index/"))
+		Eventually(func() bool {
+			var initializationComplete interface{}
+			page.RunScript("return initializationComplete;", nil, &initializationComplete)
+			return initializationComplete.(bool)
+		}, 20).Should(BeTrue())
+		uOfD = editor.CrlEditorSingleton.GetUofD()
+		hl = uOfD.NewHeldLocks()
+		var oldCurrentDiagramContainerID string
+		Expect(page.RunScript("return currentDiagramContainerID;", nil, &oldCurrentDiagramContainerID)).To(Succeed())
+		var result interface{}
+		Expect(page.RunScript("sendNewDiagramRequest(null)", nil, &result)).To(Succeed())
+		Eventually(func() string {
+			var retrievedContainerID string
+			page.RunScript("return currentDiagramContainerID;", nil, &retrievedContainerID)
+			return retrievedContainerID
+		}).ShouldNot(Equal(oldCurrentDiagramContainerID))
+		page.RunScript("return currentDiagramContainerID;", nil, &newDiagramContainerID)
+		Expect(newDiagramContainerID).ToNot(Equal(""))
+		page.RunScript("return getConceptIDFromContainerID(containerID)", map[string]interface{}{"containerID": newDiagramContainerID}, &diagramID)
+		log.Printf("*** after getConceptIDFromContainerID")
+		Expect(diagramID).ToNot(Equal(""))
+		log.Printf("DiagramID: %s", diagramID)
+		Eventually(func() bool {
+			diagram = uOfD.GetElement(diagramID)
+			return diagram != nil
+		}, 10).Should(BeTrue())
+		diagram = uOfD.GetElement(diagramID)
+		log.Printf("Diagram: %#v", diagram)
+		hl.ReleaseLocksAndWait()
 	})
 
 	AfterEach(func() {
+		editor.Exit()
+		Expect(agoutiDriver.Stop()).To(Succeed())
 	})
 
-	Describe("File Menu:", func() {
-		Describe("New Diagram Menu Selection: ", func() {
-			It("It should create a new diagram ", func() {
-				Expect(page.First("#FileMenuButton").Click()).To(Succeed())
-				Expect(page.First("#NewDiagramButton").Click()).To(Succeed())
-				// Assumption: default diagram name and ID will  be "Diagram1"
-				diagram1Tab := page.First("#tabs").FindByButton("Diagram1")
-				Expect(diagram1Tab).To(am.HaveCount(1))
-				diagram1ViewId, _ := diagram1Tab.Attribute("viewid")
-				//				fmt.Printf("diagram1ViewId: %s \n", diagram1ViewId)
-				diagramView := page.First("#" + diagram1ViewId)
-				Expect(diagramView).To(am.HaveCount(1))
-				var diagramId string
-				Expect(page.RunScript("return DiagramManager.GetCrlDiagramIDForContainerID(\""+diagram1ViewId+"\");", nil, &diagramId)).To(Succeed())
-				//				fmt.Printf("diagramId: %s \n", diagramId)
-				Expect(diagramId).ToNot(Equal(""))
-			})
+	Describe("Testing CrlEditor functionality", func() {
+		Specify("The editor should be initialized", func() {
+			Expect(editor.CrlEditorSingleton.IsInitialized()).To(BeTrue())
+			var initializationComplete interface{}
+			page.RunScript("return initializationComplete;", nil, &initializationComplete)
+			Expect(initializationComplete).To(BeTrue())
+			coreConceptSpace := uOfD.GetElementWithURI(core.CoreConceptSpaceURI)
+			var treeNodeID string
+			page.RunScript("return getTreeNodeIDFromConceptID(conceptID);",
+				map[string]interface{}{"conceptID": coreConceptSpace.GetConceptID(hl)},
+				&treeNodeID)
+			Expect(page.FindByID(treeNodeID)).To(BeFound())
+		})
+		Specify("NewDiagram should work", func() {
+			var oldCurrentDiagramContainerID string
+			Expect(page.RunScript("return currentDiagramContainerID;", nil, &oldCurrentDiagramContainerID)).To(Succeed())
+			var result interface{}
+			Expect(page.RunScript("sendNewDiagramRequest(null)", nil, &result)).To(Succeed())
+			var newDiagramContainerID string
+			Eventually(func() bool {
+				page.RunScript("return currentDiagramContainerID;", nil, &newDiagramContainerID)
+				return newDiagramContainerID != oldCurrentDiagramContainerID
+			}).Should(BeTrue())
+			Expect(newDiagramContainerID).ToNot(Equal(""))
+			var diagramID string
+			page.RunScript("return getConceptIDFromContainerID(containerID)", map[string]interface{}{"containerID": newDiagramContainerID}, &diagramID)
+			Expect(diagramID).ToNot(Equal(""))
+			diagram := uOfD.GetElement(diagramID)
+			Expect(diagram).ToNot(BeNil())
+		})
+		Specify("Tree selection should work", func() {
+			coreConceptSpace := uOfD.GetElementWithURI(core.CoreConceptSpaceURI)
+			var treeNodeID string
+			page.RunScript("return getTreeNodeIDFromConceptID(conceptID);",
+				map[string]interface{}{"conceptID": coreConceptSpace.GetConceptID(hl)},
+				&treeNodeID)
+			treeNode := page.FindByID(treeNodeID)
+			treeNode.MouseToElement()
+			page.Click(agouti.SingleClick, agouti.LeftButton)
+			Eventually(func() bool {
+				return editor.CrlEditorSingleton.GetCurrentSelection() == coreConceptSpace
+			}).Should(BeTrue())
+		})
+		PSpecify("Drag TreeNode into Diagram should work", func() {
+			coreConceptSpace := uOfD.GetElementWithURI(core.CoreConceptSpaceURI)
+			var treeNodeID string
+			page.RunScript("return getTreeNodeIDFromConceptID(conceptID);",
+				map[string]interface{}{"conceptID": coreConceptSpace.GetConceptID(hl)},
+				&treeNodeID)
+			treeNode := page.FindByID(treeNodeID)
+			treeNode.MouseToElement()
+			page.Click(agouti.HoldClick, agouti.LeftButton)
+			//				container := page.FindByID(newDiagramContainerID)
+			treeNode.FlickFinger(-100, -300, 50)
+			// page.MoveMouseBy(-100, -200)
+			Eventually(func() bool {
+				return editor.CrlEditorSingleton.GetTreeDragSelection() == coreConceptSpace
+			}).Should(BeTrue())
+			//				container.MouseToElement()
+			page.Click(agouti.ReleaseClick, agouti.LeftButton)
+			hl.ReleaseLocksAndWait()
+		})
+		Specify("DiagramDrop should produce proper results", func() {
+			coreConceptSpace := uOfD.GetElementWithURI(core.CoreConceptSpaceURI)
+			Expect(page.RunScript("sendSetTreeDragSelection(ID)", map[string]interface{}{"ID": coreConceptSpace.GetConceptID(hl)}, nil)).To(Succeed())
+			Expect(page.RunScript("sendDiagramDrop(ID, x, y)", map[string]interface{}{"ID": diagramID, "x": "100", "y": "100"}, nil)).To(Succeed())
+			// Some form of sleep is required here as this thread blocks socket communications. Eventually accomplishes this as it will not
+			// be true until after all of the expected client communication has completed.
+			Eventually(func() bool {
+				return editor.CrlEditorSingleton.GetTreeDragSelection() == nil
+			}, 60).Should(BeTrue())
+			Expect(len(diagram.GetOwnedConceptsRefinedFromURI(crldiagram.CrlDiagramNodeURI, hl))).To(Equal(1))
+			newNode := diagram.GetFirstOwnedConceptRefinedFromURI(crldiagram.CrlDiagramNodeURI, hl)
+			Expect(newNode).ToNot(BeNil())
+			Expect(newNode.GetLabel(hl)).To(Equal(coreConceptSpace.GetLabel(hl)))
+			Expect(crldiagram.GetDisplayLabel(newNode, hl)).To(Equal(coreConceptSpace.GetLabel(hl)))
 		})
 	})
 })
-
-//var _ = Describe("Test RunTest", func() {
-//	var result interface{}
-//	Expect(page.RunScript("return CrlEditor.RunTest();", nil, &result)).To(Succeed())
-//})

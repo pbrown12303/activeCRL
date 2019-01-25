@@ -12,8 +12,8 @@
             "program": "${fileDirname}",
             "env": {},
             "args": []
-        //    "trace": "verbose",
-        //     "showLog": true
+            // "trace": "verbose",
+            // "showLog": true
         }
     ]
 }

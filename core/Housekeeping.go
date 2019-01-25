@@ -6,7 +6,7 @@ var coreHousekeepingURI = CorePrefix + "coreHousekeeping"
 func coreHousekeeping(el Element, notification *ChangeNotification, uOfD UniverseOfDiscourse) {
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocks()
-	hl.WriteLockElement(el)
+	hl.ReadLockElement(el)
 	switch notification.GetNatureOfChange() {
 	case ConceptChanged:
 		// Notify Universe of Discourse

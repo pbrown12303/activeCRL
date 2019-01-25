@@ -189,7 +189,7 @@ body {
 .wrapper {
 	position: relative;
 	background-color: fuchsia;
-	overflow: hidden;
+	overflow: hidden; 
 }
 
 .uofd-browser {
@@ -258,3 +258,10 @@ body {
 	text-align: left;
 }
 
+.node {
+	background:none !important;
+}
+
+.node-read-only {
+	background:rgb(218, 217, 217) !important;
+}

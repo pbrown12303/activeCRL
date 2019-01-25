@@ -20,6 +20,8 @@
 package crldiagram
 
 import (
+	"strconv"
+
 	"github.com/pbrown12303/activeCRL/core"
 )
 
@@ -62,26 +64,162 @@ var CrlDiagramNodeWidthURI = CrlDiagramNodeURI + "/" + "Width"
 // CrlDiagramLinkURI identifies the concept of a link
 var CrlDiagramLinkURI = CrlDiagramConceptSpaceURI + "/" + "CrlDiagramLink"
 
-// GetReferencedElement is a function on a CrlDiagramNode that returns the model element represented by the
+// GetDisplayLabel is a convenience function for getting the DisplayLabel value of a node's position
+func GetDisplayLabel(diagramNode core.Element, hl *core.HeldLocks) string {
+	if diagramNode == nil {
+		return ""
+	}
+	displayLabelLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeDisplayLabelURI, hl)
+	if displayLabelLiteral != nil {
+		return displayLabelLiteral.GetLiteralValue(hl)
+	}
+	return ""
+}
+
+// GetNodeHeight is a convenience function for getting the Height value of a node's position
+func GetNodeHeight(diagramNode core.Element, hl *core.HeldLocks) float64 {
+	if diagramNode == nil {
+		return 0.0
+	}
+	heightLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeHeightURI, hl)
+	if heightLiteral != nil {
+		value := heightLiteral.GetLiteralValue(hl)
+		numericValue, err := strconv.ParseFloat(value, 64)
+		if err == nil {
+			return numericValue
+		}
+	}
+	return 0.0
+}
+
+// GetNodeWidth is a convenience function for getting the Width value of a node's position
+func GetNodeWidth(diagramNode core.Element, hl *core.HeldLocks) float64 {
+	if diagramNode == nil {
+		return 0.0
+	}
+	widthLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeWidthURI, hl)
+	if widthLiteral != nil {
+		value := widthLiteral.GetLiteralValue(hl)
+		numericValue, err := strconv.ParseFloat(value, 64)
+		if err == nil {
+			return numericValue
+		}
+	}
+	return 0.0
+}
+
+// GetNodeX is a convenience function for getting the X value of a node's position
+func GetNodeX(diagramNode core.Element, hl *core.HeldLocks) float64 {
+	if diagramNode == nil {
+		return 0.0
+	}
+	xLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeXURI, hl)
+	if xLiteral != nil {
+		value := xLiteral.GetLiteralValue(hl)
+		numericValue, err := strconv.ParseFloat(value, 64)
+		if err == nil {
+			return numericValue
+		}
+	}
+	return 0.0
+}
+
+// GetNodeY is a convenience function for getting the X value of a node's position
+func GetNodeY(diagramNode core.Element, hl *core.HeldLocks) float64 {
+	if diagramNode == nil {
+		return 0.0
+	}
+	yLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeYURI, hl)
+	if yLiteral != nil {
+		value := yLiteral.GetLiteralValue(hl)
+		numericValue, err := strconv.ParseFloat(value, 64)
+		if err == nil {
+			return numericValue
+		}
+	}
+	return 0.0
+}
+
+// GetReferencedModelElement is a function on a CrlDiagramNode that returns the model element represented by the
 // diagram node
-func GetReferencedElement(diagramNode core.Element, hl *core.HeldLocks) core.Element {
+func GetReferencedModelElement(diagramNode core.Element, hl *core.HeldLocks) core.Element {
 	if diagramNode == nil {
 		return nil
 	}
-	reference := diagramNode.GetFirstChildReferenceWithAbstractionURI(CrlDiagramNodeModelReferenceURI, hl)
+	reference := diagramNode.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramNodeModelReferenceURI, hl)
 	if reference != nil {
 		return reference.GetReferencedConcept(hl)
 	}
 	return nil
 }
 
-// SetReferencedElement is a function on a CrlDiagramNode that sets the model element represented by the
-// diagram node
-func SetReferencedElement(diagramNode core.Element, el core.Element, hl *core.HeldLocks) {
+// SetDisplayLabel is a function on a CrlDiagramNode that sets the display label of the diagram node
+func SetDisplayLabel(diagramNode core.Element, value string, hl *core.HeldLocks) {
 	if diagramNode == nil {
 		return
 	}
-	reference := diagramNode.GetFirstChildReferenceWithAbstractionURI(CrlDiagramNodeModelReferenceURI, hl)
+	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeDisplayLabelURI, hl)
+	if literal == nil {
+		return
+	}
+	literal.SetLiteralValue(value, hl)
+}
+
+// SetNodeHeight is a function on a CrlDiagramNode that sets the height of the diagram node
+func SetNodeHeight(diagramNode core.Element, value float64, hl *core.HeldLocks) {
+	if diagramNode == nil {
+		return
+	}
+	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeHeightURI, hl)
+	if literal == nil {
+		return
+	}
+	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), hl)
+}
+
+// SetNodeWidth is a function on a CrlDiagramNode that sets the width of the diagram node
+func SetNodeWidth(diagramNode core.Element, value float64, hl *core.HeldLocks) {
+	if diagramNode == nil {
+		return
+	}
+	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeWidthURI, hl)
+	if literal == nil {
+		return
+	}
+	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), hl)
+}
+
+// SetNodeX is a function on a CrlDiagramNode that sets the x of the diagram node
+func SetNodeX(diagramNode core.Element, value float64, hl *core.HeldLocks) {
+	if diagramNode == nil {
+		return
+	}
+	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeXURI, hl)
+	if literal == nil {
+		return
+	}
+	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), hl)
+}
+
+// SetNodeY is a function on a CrlDiagramNode that sets the y of the diagram node
+func SetNodeY(diagramNode core.Element, value float64, hl *core.HeldLocks) {
+	if diagramNode == nil {
+		return
+	}
+	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeYURI, hl)
+	if literal == nil {
+		return
+	}
+	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), hl)
+}
+
+// SetReferencedModelElement is a function on a CrlDiagramNode that sets the model element represented by the
+// diagram node
+func SetReferencedModelElement(diagramNode core.Element, el core.Element, hl *core.HeldLocks) {
+	if diagramNode == nil {
+		return
+	}
+	reference := diagramNode.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramNodeModelReferenceURI, hl)
 	if reference == nil {
 		return
 	}
@@ -92,66 +230,78 @@ func SetReferencedElement(diagramNode core.Element, el core.Element, hl *core.He
 func BuildCrlDiagramConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	// CrlDiagramConceptSpace
 	crlDiagramConceptSpace, _ := uOfD.NewElement(hl, CrlDiagramConceptSpaceURI)
-	crlDiagramConceptSpace.SetLabel("CrlDiagramConceptSpaceURI", hl)
+	crlDiagramConceptSpace.SetLabel("CrlDiagramConceptSpace", hl)
 	crlDiagramConceptSpace.SetURI(CrlDiagramConceptSpaceURI, hl)
+	crlDiagramConceptSpace.SetIsCore(hl)
 
 	// CrlDiagram
 	crlDiagram, _ := uOfD.NewElement(hl, CrlDiagramURI)
 	crlDiagram.SetLabel("CrlDiagram", hl)
 	crlDiagram.SetURI(CrlDiagramURI, hl)
 	crlDiagram.SetOwningConcept(crlDiagramConceptSpace, hl)
+	crlDiagram.SetIsCore(hl)
 
 	crlDiagramWidth, _ := uOfD.NewLiteral(hl, CrlDiagramWidthURI)
 	crlDiagramWidth.SetLabel("Width", hl)
 	crlDiagramWidth.SetURI(CrlDiagramWidthURI, hl)
 	crlDiagramWidth.SetOwningConcept(crlDiagram, hl)
+	crlDiagramWidth.SetIsCore(hl)
 
 	crlDiagramHeight, _ := uOfD.NewLiteral(hl, CrlDiagramHeightURI)
 	crlDiagramHeight.SetLabel("Height", hl)
 	crlDiagramHeight.SetURI(CrlDiagramHeightURI, hl)
 	crlDiagramHeight.SetOwningConcept(crlDiagram, hl)
+	crlDiagramHeight.SetIsCore(hl)
 
 	// CrlDiagramNode
 	crlDiagramNode, _ := uOfD.NewElement(hl, CrlDiagramNodeURI)
 	crlDiagramNode.SetLabel("CrlDiagramNode", hl)
 	crlDiagramNode.SetURI(CrlDiagramNodeURI, hl)
 	crlDiagramNode.SetOwningConcept(crlDiagramConceptSpace, hl)
+	crlDiagramNode.SetIsCore(hl)
 
 	crlDiagramNodeModelReference, _ := uOfD.NewReference(hl, CrlDiagramNodeModelReferenceURI)
 	crlDiagramNodeModelReference.SetLabel("ModelReference", hl)
 	crlDiagramNodeModelReference.SetURI(CrlDiagramNodeModelReferenceURI, hl)
 	crlDiagramNodeModelReference.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeModelReference.SetIsCore(hl)
 
 	crlDiagramNodeDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramNodeDisplayLabelURI)
 	crlDiagramNodeDisplayLabel.SetLabel("DisplayLabel", hl)
 	crlDiagramNodeDisplayLabel.SetURI(CrlDiagramNodeDisplayLabelURI, hl)
 	crlDiagramNodeDisplayLabel.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeDisplayLabel.SetIsCore(hl)
 
 	crlDiagramNodeX, _ := uOfD.NewLiteral(hl, CrlDiagramNodeXURI)
 	crlDiagramNodeX.SetLabel("X", hl)
 	crlDiagramNodeX.SetURI(CrlDiagramNodeXURI, hl)
 	crlDiagramNodeX.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeX.SetIsCore(hl)
 
 	crlDiagramNodeY, _ := uOfD.NewLiteral(hl, CrlDiagramNodeYURI)
 	crlDiagramNodeY.SetLabel("Y", hl)
 	crlDiagramNodeY.SetURI(CrlDiagramNodeYURI, hl)
 	crlDiagramNodeY.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeY.SetIsCore(hl)
 
 	crlDiagramNodeHeight, _ := uOfD.NewLiteral(hl, CrlDiagramNodeHeightURI)
 	crlDiagramNodeHeight.SetLabel("Height", hl)
 	crlDiagramNodeHeight.SetURI(CrlDiagramNodeHeightURI, hl)
 	crlDiagramNodeHeight.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeHeight.SetIsCore(hl)
 
 	crlDiagramNodeWidth, _ := uOfD.NewLiteral(hl, CrlDiagramNodeWidthURI)
 	crlDiagramNodeWidth.SetLabel("Width", hl)
 	crlDiagramNodeWidth.SetURI(CrlDiagramNodeWidthURI, hl)
 	crlDiagramNodeWidth.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeWidth.SetIsCore(hl)
 
 	// CrlDiagramLink
 	crlDiagramLink, _ := uOfD.NewElement(hl, CrlDiagramLinkURI)
 	crlDiagramLink.SetLabel("CrlDiagramLink", hl)
 	crlDiagramLink.SetURI(CrlDiagramLinkURI, hl)
 	crlDiagramLink.SetOwningConcept(crlDiagramConceptSpace, hl)
+	crlDiagramLink.SetIsCore(hl)
 
 	return crlDiagramConceptSpace
 }

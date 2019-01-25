@@ -36,7 +36,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocks()
+		hl.ReleaseLocksAndWait()
 	})
 
 	Describe("Test Element ConceptChanged generation", func() {
@@ -44,7 +44,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			el, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
 			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
-			el.SetDefinition("Definition", hl)
+			definition := "Definition"
+			el.SetDefinition(definition, hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
 			done := false
@@ -61,6 +62,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+					Expect(pc.notification.GetConceptState().GetDefinition(hl)).To(Equal(definition))
 					found = true
 				}
 			}
@@ -71,7 +73,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			el, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
 			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
-			el.SetLabel("Label", hl)
+			label := "Label"
+			el.SetLabel(label, hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
 			done := false
@@ -88,6 +91,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+					Expect(pc.notification.GetConceptState().GetLabel(hl)).To(Equal(label))
 					found = true
 				}
 			}
@@ -116,6 +120,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+					Expect(pc.notification.GetConceptState().GetOwningConceptID(hl)).To(Equal(newOwner.getConceptIDNoLock()))
 					found = true
 				}
 			}
@@ -143,6 +148,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+					Expect(pc.notification.GetConceptState().IsReadOnly(hl)).To(BeTrue())
 					found = true
 				}
 			}
@@ -153,7 +159,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			el, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
 			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
-			el.SetURI("URI", hl)
+			uri := "URI"
+			el.SetURI(uri, hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
 			done := false
@@ -170,6 +177,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+					Expect(pc.notification.GetConceptState().GetURI(hl)).To(Equal(uri))
 					found = true
 				}
 			}
@@ -183,7 +191,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			lit, _ := uOfD.NewLiteral(hl)
 			hl.ReleaseLocksAndWait()
 			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
-			lit.SetLiteralValue("LiteralValue", hl)
+			literalValue := "LiteralValue"
+			lit.SetLiteralValue(literalValue, hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
 			done := false
@@ -200,6 +209,12 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == lit {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+					switch pc.notification.GetConceptState().(type) {
+					case Literal:
+						Expect(pc.notification.GetConceptState().(Literal).GetLiteralValue(hl)).To(Equal(literalValue))
+					default:
+						Fail("Notification concept state is not a Literal")
+					}
 					found = true
 				}
 			}
@@ -231,6 +246,12 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == ref {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+					switch pc.notification.GetConceptState().(type) {
+					case Reference:
+						Expect(pc.notification.GetConceptState().(Reference).GetReferencedConceptID(hl)).To(Equal(target.getConceptIDNoLock()))
+					default:
+						Fail("Notification concept state is not a Reference")
+					}
 					found = true
 				}
 			}
@@ -262,6 +283,12 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == ref {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+					switch pc.notification.GetConceptState().(type) {
+					case Refinement:
+						Expect(pc.notification.GetConceptState().(Refinement).GetAbstractConceptID(hl)).To(Equal(target.getConceptIDNoLock()))
+					default:
+						Fail("Notification concept state is not a Refinement")
+					}
 					found = true
 				}
 			}
@@ -290,6 +317,12 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == ref {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+					switch pc.notification.GetConceptState().(type) {
+					case Refinement:
+						Expect(pc.notification.GetConceptState().(Refinement).GetRefinedConceptID(hl)).To(Equal(target.getConceptIDNoLock()))
+					default:
+						Fail("Notification concept state is not a Refinement")
+					}
 					found = true
 				}
 			}
@@ -828,7 +861,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == listener {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(UofDConceptAdded))
-					Expect(pc.notification.GetUnderlyingChange().GetPriorConceptState().getConceptIDNoLock()).To(Equal(el.getConceptIDNoLock()))
+					Expect(pc.notification.GetUnderlyingChange().GetConceptState().getConceptIDNoLock()).To(Equal(el.getConceptIDNoLock()))
 					found = true
 				}
 			}
@@ -843,7 +876,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			el, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
 			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
-			uOfD.ClearUniverseOfDiscourse(el, hl)
+			uOfD.RemoveElement(el, hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
 			done := false
@@ -860,7 +893,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == listener {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(UofDConceptRemoved))
-					Expect(pc.notification.GetUnderlyingChange().GetPriorConceptState().getConceptIDNoLock()).To(Equal(el.getConceptIDNoLock()))
+					Expect(pc.notification.GetUnderlyingChange().GetConceptState().getConceptIDNoLock()).To(Equal(el.getConceptIDNoLock()))
 					found = true
 				}
 			}

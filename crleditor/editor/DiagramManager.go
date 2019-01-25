@@ -1,12 +1,14 @@
 package editor
 
 import (
+	"errors"
+	"strconv"
+
 	"github.com/pbrown12303/activeCRL/crldiagram"
 	//	"fmt"
 	"log"
 
 	"github.com/gopherjs/gopherjs/js"
-	"github.com/gopherjs/jquery"
 	"github.com/pbrown12303/activeCRL/core"
 )
 
@@ -15,144 +17,105 @@ const diagramSuffix = "Diagram"
 
 // DiagramManager manages the diagram portion of the UI and all interactions with it
 type DiagramManager struct {
-	abstractDiagram                  core.Element
-	crlDiagramUUIDToCrlDiagram       map[string]core.Element
-	crlDiagramIDToDiagramContainer   map[string]*js.Object
-	crlDiagramIDToJointGraph         map[string]*js.Object
-	crlDiagramNodeUUIDToJointElement map[string]*js.Object
-	diagramContainerIDToCrlDiagram   map[string]core.Element
-	jointElementIDToCrlDiagramNode   map[string]core.Element
-	jointGraphIDToCrlDiagram         map[string]core.Element
-	jointPapers                      map[string]*js.Object
+	abstractDiagram core.Element
+	crlEditor       *CrlEditor
 }
 
-func newDiagramManager() *DiagramManager {
+func newDiagramManager(crlEditor *CrlEditor) *DiagramManager {
 	var diagramManager DiagramManager
+	diagramManager.crlEditor = crlEditor
 	diagramManager.abstractDiagram = CrlEditorSingleton.GetUofD().GetElementWithURI(crldiagram.CrlDiagramURI)
-	diagramManager.crlDiagramUUIDToCrlDiagram = make(map[string]core.Element)
-	diagramManager.crlDiagramIDToDiagramContainer = make(map[string]*js.Object)
-	diagramManager.crlDiagramIDToJointGraph = make(map[string]*js.Object)
-	diagramManager.crlDiagramNodeUUIDToJointElement = make(map[string]*js.Object)
-	diagramManager.diagramContainerIDToCrlDiagram = make(map[string]core.Element)
-	diagramManager.jointElementIDToCrlDiagramNode = make(map[string]core.Element)
-	diagramManager.jointGraphIDToCrlDiagram = make(map[string]core.Element)
-	diagramManager.jointPapers = make(map[string]*js.Object)
 	uOfD := CrlEditorSingleton.GetUofD()
 	uOfD.AddFunction(crldiagram.CrlDiagramNodeURI, updateDiagramNodeView)
-	defineNodeViews()
 	return &diagramManager
 }
 
-func (dmPtr *DiagramManager) addViewFunctionsToUofD() {
+func (dmPtr *DiagramManager) addNodeView(request *Request, hl *core.HeldLocks) (core.Element, error) {
+	uOfD := dmPtr.crlEditor.GetUofD()
+	diagramID := request.AdditionalParameters["DiagramID"]
+	el := uOfD.GetElement(dmPtr.crlEditor.GetTreeDragSelectionID(hl))
+	if el == nil {
+		return nil, errors.New("Indicated model element not found in addNodeView, ID: " + request.RequestConceptID)
+	}
+	x, err := strconv.ParseFloat(request.AdditionalParameters["NodeX"], 64)
+	if err != nil {
+		return nil, err
+	}
+	y, err2 := strconv.ParseFloat(request.AdditionalParameters["NodeY"], 64)
+	if err2 != nil {
+		return nil, err
+	}
+
+	newNode, err := uOfD.CreateReplicateAsRefinementFromURI(crldiagram.CrlDiagramNodeURI, hl)
+	if err != nil {
+		js.Global.Get("console").Call("log", "Failed to create CrlDiagramNode"+err.Error())
+		return nil, err
+	}
+	newNode.SetLabel(el.GetLabel(hl), hl)
+	crldiagram.SetReferencedModelElement(newNode, el, hl)
+	crldiagram.SetDisplayLabel(newNode, el.GetLabel(hl), hl)
+	// crldiagram.SetNodeHeight(newNode,,hl)
+	// crlDiagram.SetNodeWidth(newNode,,hl)
+	crldiagram.SetNodeX(newNode, x, hl)
+	crldiagram.SetNodeY(newNode, y, hl)
+
+	newNode.SetOwningConceptID(diagramID, hl)
+	hl.ReleaseLocksAndWait()
+
+	// Tell the interface to add the diagram node
+	additionalParameters := map[string]string{
+		"DisplayLabel": crldiagram.GetDisplayLabel(newNode, hl),
+		"NodeHeight":   strconv.FormatFloat(crldiagram.GetNodeHeight(newNode, hl), 'f', -1, 64),
+		"NodeWidth":    strconv.FormatFloat(crldiagram.GetNodeWidth(newNode, hl), 'f', -1, 64),
+		"NodeX":        strconv.FormatFloat(crldiagram.GetNodeX(newNode, hl), 'f', -1, 64),
+		"NodeY":        strconv.FormatFloat(crldiagram.GetNodeY(newNode, hl), 'f', -1, 64),
+		"Icon":         GetIconPath(crldiagram.GetReferencedModelElement(newNode, hl), hl),
+		"OwnerID":      newNode.GetOwningConceptID(hl)}
+	CrlEditorSingleton.GetClientNotificationManager().SendNotification("AddDiagramNode", newNode.GetConceptID(hl), newNode, additionalParameters)
+
+	return newNode, nil
+}
+
+func (dmPtr *DiagramManager) addViewFunctionsToUofD(hl *core.HeldLocks) {
 	uOfD := CrlEditorSingleton.GetUofD()
-	hl := CrlEditorSingleton.getHeldLocks()
 	addDiagramViewFunctionsToUofD(uOfD, hl)
 	//	addDiagramNodeViewFunctionsToUofD(uOfD, hl)
 	//	addDiagramLinkViewFunctionsToUofD(uOfD, hl)
 }
 
-// GetCrlDiagramForContainerID returns the CrlDiagram being displayed in the container
-func (dmPtr *DiagramManager) GetCrlDiagramForContainerID(containerID string) core.Element {
-	return dmPtr.diagramContainerIDToCrlDiagram[containerID]
-}
-
-// GetCrlDiagramIDForContainerID returns the identifier of the CrlDiagram being displayed in the container
-func (dmPtr *DiagramManager) GetCrlDiagramIDForContainerID(containerID string) string {
-	diagram := dmPtr.diagramContainerIDToCrlDiagram[containerID]
-	id := ""
-	if diagram != nil {
-		id = diagram.GetConceptID(CrlEditorSingleton.getHeldLocks())
+// DiagramDrop evaluates the request resulting from a drop in the diagram
+func (dmPtr *DiagramManager) DiagramDrop(request *Request, hl *core.HeldLocks) error {
+	_, err := dmPtr.addNodeView(request, hl)
+	if err != nil {
+		return err
 	}
-	return id
+	dmPtr.crlEditor.SetTreeDragSelection("")
+	return nil
 }
 
-// DisplayDiagram display diagram creates a diagram tab, if one does not exist, and then displays the diagram.
-// If the tab already exists, it simply shows it.
+// DisplayDiagram tells the client to display the indicated diagram.
 func (dmPtr *DiagramManager) DisplayDiagram(diagram core.Element, hl *core.HeldLocks) {
-	diagramID := diagram.GetConceptID(hl)
-	diagramIDString := diagramID
-	diagramLabel := diagram.GetLabel(hl)
-	httpDiagramContainer := dmPtr.crlDiagramIDToDiagramContainer[diagramIDString]
-	// Construct the container if it is not already present
-	if httpDiagramContainer == nil {
-
-		// Tracing
-		//		if core.AdHocTrace == true {
-		//			js.Global.Get("console").Call("log", "Creating httpDiagramContainer")
-		//		}
-
-		httpDiagramContainerID := createDiagramContainerPrefix() + diagramIDString
-		topContent := js.Global.Get("top-content")
-		httpDiagramContainer = js.Global.Get("document").Call("createElement", "DIV")
-		httpDiagramContainer.Set("id", httpDiagramContainerID)
-		httpDiagramContainer.Call("setAttribute", "class", "crlDiagramContainer")
-		// It is not clear why, but the ondrop callback does not get called unless the ondragover callback is used,
-		// even though the callback just calls preventDefault on the dragover event
-		httpDiagramContainer.Set("ondragover", onDragover)
-		httpDiagramContainer.Set("ondrop", onDiagramManagerDrop)
-		httpDiagramContainer.Get("style").Set("display", "none")
-		dmPtr.crlDiagramIDToDiagramContainer[diagramIDString] = httpDiagramContainer
-		dmPtr.diagramContainerIDToCrlDiagram[httpDiagramContainerID] = diagram
-		topContent.Call("appendChild", httpDiagramContainer)
-		// Create the new tab
-		tabs := js.Global.Get("tabs")
-		newTab := js.Global.Get("document").Call("createElement", "button")
-		newTab.Set("innerHTML", diagramLabel)
-		newTab.Set("className", "w3-bar-item w3-button")
-		newTabID := createDiagramTabPrefix() + diagramIDString
-		newTab.Set("id", newTabID)
-		newTab.Call("setAttribute", "viewId", httpDiagramContainerID)
-		newTab.Call("addEventListener", "click", func(e jquery.Event) {
-			onMakeDiagramVisible(e)
-		})
-		tabs.Call("appendChild", newTab, -1)
-
-		jointGraph := dmPtr.crlDiagramIDToJointGraph[httpDiagramContainerID]
-		if jointGraph == nil {
-			jointGraphID := createJointGraphPrefix() + diagramIDString
-			jointGraph = js.Global.Get("joint").Get("dia").Get("Graph").New()
-			jointGraph.Set("id", jointGraphID)
-			dmPtr.crlDiagramIDToJointGraph[httpDiagramContainerID] = jointGraph
-			dmPtr.jointGraphIDToCrlDiagram[jointGraphID] = diagram
-		}
-
-		jointPaper := dmPtr.jointPapers[httpDiagramContainerID]
-		if jointPaper == nil {
-			diagramPaperDiv := js.Global.Get("document").Call("createElement", "DIV")
-			httpDiagramContainer.Call("appendChild", diagramPaperDiv)
-			jointPaper = js.Global.Get("joint").Get("dia").Get("Paper").New(js.M{
-				"el":       []*js.Object{diagramPaperDiv},
-				"width":    1000,
-				"height":   1000,
-				"model":    jointGraph,
-				"gridSize": 1})
-			dmPtr.jointPapers[httpDiagramContainerID] = jointPaper
-			jointPaper.Call("on", "cell:pointerdown", onDiagramManagerCellPointerDown)
-		}
+	notificationResponse, err := CrlEditorSingleton.GetClientNotificationManager().SendNotification("DisplayDiagram", diagram.GetConceptID(hl), diagram, nil)
+	if err != nil {
+		log.Printf(err.Error())
+		return
 	}
-	makeDiagramVisible(httpDiagramContainer.Get("id").String())
+	if notificationResponse.Result != 0 {
+		log.Print(notificationResponse.ErrorMessage)
+	}
 }
 
 // NewDiagram creates a new crldiagram
-func (dmPtr *DiagramManager) NewDiagram() core.Element {
+func (dmPtr *DiagramManager) NewDiagram(hl *core.HeldLocks) core.Element {
 	// Insert name prompt here
 	name := getDefaultDiagramLabel()
-	hl := CrlEditorSingleton.getHeldLocks()
-	defer hl.ReleaseLocks()
 	uOfD := CrlEditorSingleton.GetUofD()
 	diagram, err := uOfD.CreateReplicateAsRefinementFromURI(crldiagram.CrlDiagramURI, hl)
 	if err != nil {
 		log.Print(err)
 	}
 	diagram.SetLabel(name, hl)
-	dmPtr.crlDiagramUUIDToCrlDiagram[diagram.GetConceptID(hl)] = diagram
-
-	// Tracing
-	//	if core.AdHocTrace == true {
-	//		log.Printf("Created diagram with name: %s", name)
-	//	}
-
-	dmPtr.DisplayDiagram(diagram, hl)
+	hl.ReleaseLocksAndWait()
 	return diagram
 }
 

@@ -173,8 +173,6 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 				newReferencedConcept.addListener(rPtr.ConceptID, hl)
 			}
 		}
-		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, hl)
-		rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
 		rPtr.ReferencedConceptID = rcID
 		rPtr.referencedConcept.setIndicatedConcept(newReferencedConcept)
 		rPtr.referencedConcept.setIndicatedConceptID(rcID)
@@ -183,6 +181,8 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 		} else {
 			rPtr.ReferencedConceptVersion = newReferencedConcept.GetVersion(hl)
 		}
+		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, hl)
+		rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
 	}
 	return nil
 }

@@ -2,7 +2,7 @@
  * 
  */
 
-joint.shapes.basic.Generic.define('crl.BaseElement', {
+joint.shapes.basic.Generic.define('crl.Element', {
     attrs: {
         rect: { width: 300  },
 
@@ -77,7 +77,7 @@ joint.shapes.basic.Generic.define('crl.BaseElement', {
 
         attrs['.label-text'].text = lines.join('\n');
         attrs['.label-rect'].height = rectHeight;
-        var rectWidth = CalculateTextWidth(attrs['.label-text'].text) + 6;
+        var rectWidth = calculateTextWidth(attrs['.label-text'].text) + 6;
         attrs['.label-rect'].transform = 'translate(0,' + offsetY + ')';
         this.resize(rectWidth, rectHeight);
 

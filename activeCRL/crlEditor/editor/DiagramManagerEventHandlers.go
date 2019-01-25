@@ -50,6 +50,6 @@ func onDiagramManagerCellPointerDown(cellView *js.Object, event *js.Object, x *j
 }
 
 func onMakeDiagramVisible(e jquery.Event) {
-	httpDiagramContainerID := e.Get("target").Call("getAttribute", "viewId").String()
+	httpDiagramContainerID := e.Get("target").Call("getAttribute", "diagramContainerID").String()
 	makeDiagramVisible(httpDiagramContainerID)
 }

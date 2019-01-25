@@ -11,20 +11,13 @@ import (
 )
 
 // HeldLocks maintains a record of which elements are currently read and write locked and provides facilities
-// for locking additional elements. It also contains a waitGroup that is used to verify the
-// completion of asynchronous function executions.
+// for locking additional elements.
 type HeldLocks struct {
 	sync.Mutex
 	functionCallManager *functionCallManager
 	readLocks           map[string]Element
 	uOfD                UniverseOfDiscourse
 	writeLocks          map[string]Element
-	waitGroup           *sync.WaitGroup
-}
-
-// GetWaitGroup returns the WaitGroup being used by HeldLocks
-func (hlPtr *HeldLocks) GetWaitGroup() *sync.WaitGroup {
-	return hlPtr.waitGroup
 }
 
 // GetUniverseOfDiscourse returns the UniverseOfDiscourse to which this HeldLocks belongs
@@ -101,11 +94,13 @@ func (hlPtr *HeldLocks) ReleaseLocks() {
 // to wait for all of the side effects for some change to complete before proceeding with additonal changes.
 func (hlPtr *HeldLocks) ReleaseLocksAndWait() {
 	if TraceLocks {
-		log.Printf("HL %p about to ReleaseLocksAndWait", hlPtr)
+		log.Printf("HL %p about to ReleaseLocksAndWait 11111111111111111111111111111111111111111111", hlPtr)
 	}
 	hlPtr.ReleaseLocks()
 	if TraceLocks {
-		log.Printf("HL %p about to Wait *******************************************", hlPtr)
+		log.Printf("HL %p locks released, about to Wait 2222222222222222222222222222222222222222222", hlPtr)
 	}
-	hlPtr.waitGroup.Wait()
+	if TraceLocks {
+		log.Printf("HL %p finished waiting 33333333333333333333333333333333333333333333333333333333", hlPtr)
+	}
 }

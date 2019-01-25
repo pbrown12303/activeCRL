@@ -19,25 +19,47 @@ type NatureOfChange int
 // IndicatedConceptChanged indicates that an Element indicated by a pointer has changed
 // UofDConceptChanged indicates that a concept in the UofD has changed
 const (
-	AbstractionChanged NatureOfChange = iota
-	ChildAbstractionChanged
-	ChildChanged
-	ConceptChanged
-	IndicatedConceptChanged
-	UofDConceptAdded
-	UofDConceptChanged
-	UofDConceptRemoved
+	AbstractionChanged      = NatureOfChange(1)
+	ChildAbstractionChanged = NatureOfChange(2)
+	ChildChanged            = NatureOfChange(3)
+	ConceptChanged          = NatureOfChange(4)
+	IndicatedConceptChanged = NatureOfChange(5)
+	UofDConceptAdded        = NatureOfChange(6)
+	UofDConceptChanged      = NatureOfChange(7)
+	UofDConceptRemoved      = NatureOfChange(8)
 )
+
+func (noc NatureOfChange) String() string {
+	switch noc {
+	case AbstractionChanged:
+		return "AbstractionChanged"
+	case ChildAbstractionChanged:
+		return "ChildAbstractionChanged"
+	case ChildChanged:
+		return "ChildChanged"
+	case ConceptChanged:
+		return "ConceptChanged"
+	case IndicatedConceptChanged:
+		return "IndicatedConceptChanged"
+	case UofDConceptAdded:
+		return "UofDConceptAdded"
+	case UofDConceptChanged:
+		return "UofDConceptChanged"
+	case UofDConceptRemoved:
+		return "UofDConceptRemoved"
+	}
+	return "Undefined"
+}
 
 // ChangeNotification records the metadata regarding a change to a Element. It provides
 // the nature of the change, the old and new values, and the reporting Element.
 // It also provides the underlying change that triggered this one (if any)
 type ChangeNotification struct {
-	priorConceptState Element
-	natureOfChange    NatureOfChange
-	reportingElement  Element
-	underlyingChange  *ChangeNotification
-	uOfD              UniverseOfDiscourse
+	conceptState     Element
+	natureOfChange   NatureOfChange
+	reportingElement Element
+	underlyingChange *ChangeNotification
+	uOfD             UniverseOfDiscourse
 }
 
 // GetDepth returns the depth of the nested notifications within the current notification
@@ -67,10 +89,11 @@ func (cnPtr *ChangeNotification) GetNatureOfChange() NatureOfChange {
 	return cnPtr.natureOfChange
 }
 
-// GetPriorConceptState returns the state, which is a clone of the Element prior to the change
+// GetConceptState returns the state, which is a clone of the Element after the change
+// except for deletion operations which give the state prior to deletion
 // Note that while this is an Element, it is NOT a member of the UniverseOfDiscourse
-func (cnPtr *ChangeNotification) GetPriorConceptState() Element {
-	return cnPtr.priorConceptState
+func (cnPtr *ChangeNotification) GetConceptState() Element {
+	return cnPtr.conceptState
 }
 
 // GetReportingElement returns the Element reporting the change
@@ -91,7 +114,7 @@ func (cnPtr *ChangeNotification) GetUnderlyingChange() *ChangeNotification {
 
 // Print prints the change notification for diagnostic purposes to the log
 func (cnPtr *ChangeNotification) Print(prefix string, hl *HeldLocks) {
-	if enableNotificationPrint == true {
+	if EnableNotificationPrint == true {
 		startCount := 0
 		cnPtr.printRecursively(prefix, hl, startCount)
 	}
@@ -100,28 +123,22 @@ func (cnPtr *ChangeNotification) Print(prefix string, hl *HeldLocks) {
 // printRecursively prints the change notification for diagnostic purposes to the log. The startCount
 // indicates the depth of nesting of the print so that the printout can el indented appropriately.
 func (cnPtr *ChangeNotification) printRecursively(prefix string, hl *HeldLocks, startCount int) {
-	notificationType := ""
-	switch cnPtr.natureOfChange {
-	case AbstractionChanged:
-		notificationType = "+++ AbstractionChanged"
-	case ChildAbstractionChanged:
-		notificationType = "+++ ChildAbstractionChanged"
-	case ChildChanged:
-		notificationType = "+++ ChildChanged"
-	case ConceptChanged:
-		notificationType = "+++ ConceptChanged"
-	case IndicatedConceptChanged:
-		notificationType = "+++ IndicatedConceptChanged"
-	}
+	notificationType := "+++ " + cnPtr.natureOfChange.String()
 	log.Printf("%s%s: \n", prefix, "### Notification Level: "+strconv.Itoa(startCount)+" Type: "+notificationType)
 	if cnPtr.reportingElement == nil {
 		log.Printf(prefix + "Reporting Element is nil")
 	} else {
-		log.Printf(prefix+"  Type: %T", cnPtr.GetReportingElement())
-		log.Printf(prefix+"  Id: %s", cnPtr.reportingElement.getConceptIDNoLock())
-		log.Printf(prefix+"  Version: %d", cnPtr.GetReportingElement().GetVersion(hl))
-		log.Printf(prefix+"  PriorConceptState: %s", "")
-		//		Print(notification.changedObject, prefix+"   ", hl)
+		log.Printf(prefix+"  Reporting Element: %T", cnPtr.GetReportingElement())
+		log.Printf(prefix+"  Reporting Element ID: %s", cnPtr.reportingElement.getConceptIDNoLock())
+		log.Printf(prefix+"  Reporting Element Version: %d", cnPtr.GetReportingElement().GetVersion(hl))
+		log.Printf(prefix+"  Reporting Element Label: %s", cnPtr.GetReportingElement().GetLabel(hl))
+		conceptState := cnPtr.GetConceptState()
+		if conceptState != nil {
+			jsonString, _ := conceptState.MarshalJSON()
+			log.Printf(prefix+"  ConceptState: %s", jsonString)
+		} else {
+			log.Printf(prefix + "  ConceptState is nil")
+		}
 	}
 	if cnPtr.underlyingChange != nil {
 		cnPtr.underlyingChange.printRecursively(prefix+"      ", hl, startCount-1)

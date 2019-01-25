@@ -16,7 +16,7 @@ func updateDiagramView(el core.Element, changeNotifications *core.ChangeNotifica
 
 func updateDiagramViewInternal(el core.Element, changeNotifications *core.ChangeNotification, uOfD core.UniverseOfDiscourse) {
 	hl := uOfD.NewHeldLocks()
-	defer hl.ReleaseLocks()
+	defer hl.ReleaseLocksAndWait()
 	// changeNotification.Print("updateDiagramView ", hl)
 	// Check whether the name has changed
 	// Check to see whether a diagram node or edge has been added or removed from the diagram

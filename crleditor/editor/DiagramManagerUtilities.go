@@ -1,7 +1,6 @@
 package editor
 
 import (
-	"github.com/gopherjs/gopherjs/js"
 	//	"github.com/pbrown12303/activeCRL/core"
 	"strconv"
 )
@@ -12,69 +11,45 @@ var diagramContainerCount int
 var jointGraphCount int
 var jointBaseElementNodeCount int
 
-func createDiagramTabPrefix() string {
-	diagramTabCount++
-	countString := strconv.Itoa(diagramTabCount)
-	return "DiagramTab" + countString
-}
-
-func createDiagramContainerPrefix() string {
-	diagramContainerCount++
-	countString := strconv.Itoa(diagramContainerCount)
-	return "DiagramView" + countString
-}
-
-func createJointBaseElementNodePrefix() string {
-	jointBaseElementNodeCount++
-	countString := strconv.Itoa(jointGraphCount)
-	return "JointBaseElementNode" + countString
-}
-
-func createJointGraphPrefix() string {
-	jointGraphCount++
-	countString := strconv.Itoa(jointGraphCount)
-	return "DiagramGraph" + countString
-}
-
 func getDefaultDiagramLabel() string {
 	defaultLabelCount++
 	countString := strconv.Itoa(defaultLabelCount)
 	return "Diagram" + countString
 }
 
-func makeDiagramVisible(httpDiagramContainerID string) {
-	x := js.Global.Get("document").Call("getElementsByClassName", "crlDiagramContainer")
+// func makeDiagramVisible(httpDiagramContainerID string) {
+// 	x := js.Global.Get("document").Call("getElementsByClassName", "crlDiagramContainer")
 
-	// Tracing
-	//	if core.AdHocTrace == true {
-	//		lengthString := strconv.Itoa(x.Length())
-	//		js.Global.Get("console").Call("log", "List length: "+lengthString)
-	//	}
+// 	// Tracing
+// 	//	if core.AdHocTrace == true {
+// 	//		lengthString := strconv.Itoa(x.Length())
+// 	//		js.Global.Get("console").Call("log", "List length: "+lengthString)
+// 	//	}
 
-	for i := 0; i < x.Length(); i++ {
+// 	for i := 0; i < x.Length(); i++ {
 
-		// Tracing
-		//		if core.AdHocTrace == true {
-		//			js.Global.Get("console").Call("log", "Container id: ", x.Index(i).Get("id").String())
-		//		}
+// 		// Tracing
+// 		//		if core.AdHocTrace == true {
+// 		//			js.Global.Get("console").Call("log", "Container id: ", x.Index(i).Get("id").String())
+// 		//		}
 
-		if x.Index(i).Get("id").String() == httpDiagramContainerID {
-			x.Index(i).Get("style").Set("display", "block")
+// 		if x.Index(i).Get("id").String() == httpDiagramContainerID {
+// 			x.Index(i).Get("style").Set("display", "block")
 
-			// Tracing
-			//			if core.AdHocTrace == true {
-			//				js.Global.Get("console").Call("log", "Showing: "+httpDiagramContainerID)
-			//			}
+// 			// Tracing
+// 			//			if core.AdHocTrace == true {
+// 			//				js.Global.Get("console").Call("log", "Showing: "+httpDiagramContainerID)
+// 			//			}
 
-		} else {
-			x.Index(i).Get("style").Set("display", "none")
+// 		} else {
+// 			x.Index(i).Get("style").Set("display", "none")
 
-			// Tracing
-			//			if core.AdHocTrace == true {
-			//				js.Global.Get("console").Call("log", "Hiding: "+httpDiagramContainerID)
-			//			}
+// 			// Tracing
+// 			//			if core.AdHocTrace == true {
+// 			//				js.Global.Get("console").Call("log", "Hiding: "+httpDiagramContainerID)
+// 			//			}
 
-		}
-	}
+// 		}
+// 	}
 
-}
+// }

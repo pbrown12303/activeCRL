@@ -94,7 +94,7 @@ func (undoMgr *undoManager) MarkUndoPoint() {
 // PrintUndoStack prints the undo stack. It is intended only for debugging.
 func PrintUndoStack(s undoStack, stackName string, uOfD UniverseOfDiscourse) {
 	hl := uOfD.NewHeldLocks()
-	defer hl.ReleaseLocks()
+	defer hl.ReleaseLocksAndWait()
 	log.Printf("%s:", stackName)
 	for _, entry := range s {
 		var changeType string

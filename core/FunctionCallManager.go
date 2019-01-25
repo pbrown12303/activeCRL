@@ -6,6 +6,7 @@ package core
 
 import (
 	"errors"
+	"log"
 	"sync"
 )
 
@@ -130,20 +131,16 @@ func (fcm *functionCallManager) addFunctionCall(functionID string, targetElement
 	}
 }
 
-// callQueuedFunctions spawns a goroutine for each function on the pending function queue
+// callQueuedFunctions calls each function on the pending function queue
 func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
 	for fcm.functionCallQueue.queueHead != nil {
 		pendingCall := fcm.functionCallQueue.dequeue()
 		if fcm.uOfD.getExecutedCalls() != nil {
 			fcm.uOfD.getExecutedCalls() <- pendingCall
 		}
-		hl.GetWaitGroup().Add(1)
-		go executeFunction(pendingCall, fcm.uOfD)
+		if TraceLocks == true {
+			log.Printf("About to execute %s with notification %s target %p", pendingCall.functionID, pendingCall.notification.GetNatureOfChange().String(), pendingCall.target)
+		}
+		pendingCall.function(pendingCall.target, pendingCall.notification, fcm.uOfD)
 	}
-}
-
-// executeFunction executes the pending function and then call Done on the wait group
-func executeFunction(pendingCall *pendingFunctionCall, uOfD UniverseOfDiscourse) {
-	pendingCall.function(pendingCall.target, pendingCall.notification, uOfD)
-	uOfD.getWaitGroup().Done()
 }

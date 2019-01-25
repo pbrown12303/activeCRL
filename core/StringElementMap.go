@@ -31,14 +31,14 @@ func (seMap *StringElementMap) Clear() {
 }
 
 // CopyMap returns a copy of the map
-func (seMap *StringElementMap) CopyMap() *map[string]Element {
+func (seMap *StringElementMap) CopyMap() map[string]Element {
 	seMap.TraceableLock()
 	defer seMap.TraceableUnlock()
 	copy := make(map[string]Element)
 	for key, value := range seMap.elementMap {
 		copy[key] = value
 	}
-	return &copy
+	return copy
 }
 
 // DeleteEntry removes the map entry for the indicated UUID

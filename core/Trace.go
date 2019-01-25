@@ -6,14 +6,16 @@ var TraceChange bool
 // TraceLocks is a boolean that, when true, turns on the tracing of locks
 var TraceLocks = false
 
-// traceNotifications determines whether individual notifications will be traced. Its primary purpose
+// TraceNotifications determines whether individual notifications will be traced. Its primary purpose
 // is to track down cycles in notifications. When true, every time a notification is created a graph of
 // the notification and its antecedents will be created and added to the notificationGraphs. In addition,
 // if enableNotificationPrint is true, every time a notification is created it and its antecedents are
 // printed
-var traceNotifications bool
+var TraceNotifications bool
 var notificationGraphs []*NotificationGraph
-var enableNotificationPrint bool
+
+// EnableNotificationPrint turns on the printing of notifications during tracing.
+var EnableNotificationPrint bool
 
 // traceFunctionCalls determines whether individual function calls will be graced. Its primary purpose is
 // to understand what notifications resulted in the call to the function. When true, every time a function call
