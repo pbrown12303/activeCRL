@@ -188,7 +188,7 @@ func (uOfDPtr *universeOfDiscourse) findFunctions(element Element, notification 
 	functionIdentifiers = append(functionIdentifiers, coreHousekeepingURI)
 	// Now find functions associated with abstractions
 	abstractions := make(map[string]Element)
-	element.FindAbstractions(&abstractions, hl)
+	element.FindAbstractions(abstractions, hl)
 	for _, abstraction := range abstractions {
 		uri := abstraction.GetURI(hl)
 		if uri != "" {
@@ -597,7 +597,7 @@ func (uOfDPtr *universeOfDiscourse) replicateAsRefinement(original Element, repl
 		var replicateChild Element
 		for _, currentChild := range replicate.GetOwnedConcepts(hl) {
 			currentChildAbstractions := make(map[string]Element)
-			currentChild.FindAbstractions(&currentChildAbstractions, hl)
+			currentChild.FindAbstractions(currentChildAbstractions, hl)
 			for _, currentChildAbstraction := range currentChildAbstractions {
 				if currentChildAbstraction == originalChild {
 					replicateChild = currentChild

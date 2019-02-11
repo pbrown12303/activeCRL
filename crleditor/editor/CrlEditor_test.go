@@ -4,6 +4,7 @@ import (
 	//	"fmt"
 
 	"log"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -57,15 +58,16 @@ var _ = Describe("Test CrlEditor", func() {
 			var retrievedContainerID string
 			page.RunScript("return currentDiagramContainerID;", nil, &retrievedContainerID)
 			return retrievedContainerID
-		}).ShouldNot(Equal(oldCurrentDiagramContainerID))
+		}, 10).ShouldNot(Equal(oldCurrentDiagramContainerID))
 		page.RunScript("return currentDiagramContainerID;", nil, &newDiagramContainerID)
 		Expect(newDiagramContainerID).ToNot(Equal(""))
 		page.RunScript("return getConceptIDFromContainerID(containerID)", map[string]interface{}{"containerID": newDiagramContainerID}, &diagramID)
 		log.Printf("*** after getConceptIDFromContainerID")
 		Expect(diagramID).ToNot(Equal(""))
 		log.Printf("DiagramID: %s", diagramID)
+		time.Sleep(10 * time.Second)
 		Eventually(func() bool {
-			diagram = uOfD.GetElement(diagramID)
+			diagram := editor.CrlEditorSingleton.GetUofD().GetElement(diagramID)
 			return diagram != nil
 		}, 10).Should(BeTrue())
 		diagram = uOfD.GetElement(diagramID)
@@ -140,7 +142,7 @@ var _ = Describe("Test CrlEditor", func() {
 			page.Click(agouti.ReleaseClick, agouti.LeftButton)
 			hl.ReleaseLocksAndWait()
 		})
-		Specify("DiagramDrop should produce proper results", func() {
+		FSpecify("DiagramDrop should produce proper results", func() {
 			coreConceptSpace := uOfD.GetElementWithURI(core.CoreConceptSpaceURI)
 			Expect(page.RunScript("sendSetTreeDragSelection(ID)", map[string]interface{}{"ID": coreConceptSpace.GetConceptID(hl)}, nil)).To(Succeed())
 			Expect(page.RunScript("sendDiagramDrop(ID, x, y)", map[string]interface{}{"ID": diagramID, "x": "100", "y": "100"}, nil)).To(Succeed())
@@ -154,6 +156,49 @@ var _ = Describe("Test CrlEditor", func() {
 			Expect(newNode).ToNot(BeNil())
 			Expect(newNode.GetLabel(hl)).To(Equal(coreConceptSpace.GetLabel(hl)))
 			Expect(crldiagram.GetDisplayLabel(newNode, hl)).To(Equal(coreConceptSpace.GetLabel(hl)))
+			// Verify the tree structure
+			var treeNodeID string
+			Expect(page.RunScript("return getTreeNodeIDFromConceptID(conceptID);",
+				map[string]interface{}{"conceptID": newNode.GetConceptID(hl)},
+				&treeNodeID)).To(Succeed())
+			var treeNodeParentID string
+			Expect(page.RunScript("return $(\"#uOfD\").jstree(true).get_parent(treeNodeID);",
+				map[string]interface{}{"treeNodeID": treeNodeID},
+				&treeNodeParentID)).To(Succeed())
+			var diagramTreeNodeID string
+			Expect(page.RunScript("return getTreeNodeIDFromConceptID(conceptID);",
+				map[string]interface{}{"conceptID": diagramID},
+				&diagramTreeNodeID)).To(Succeed())
+			Expect(treeNodeParentID).To(Equal(diagramTreeNodeID))
+			// Now drop a second instance
+			Expect(page.RunScript("sendSetTreeDragSelection(ID)", map[string]interface{}{"ID": coreConceptSpace.GetConceptID(hl)}, nil)).To(Succeed())
+			Expect(page.RunScript("sendDiagramDrop(ID, x, y)", map[string]interface{}{"ID": diagramID, "x": "200", "y": "200"}, nil)).To(Succeed())
+			// Some form of sleep is required here as this thread blocks socket communications. Eventually accomplishes this as it will not
+			// be true until after all of the expected client communication has completed.
+			Eventually(func() bool {
+				return editor.CrlEditorSingleton.GetTreeDragSelection() == nil
+			}, 60).Should(BeTrue())
+			Expect(len(diagram.GetOwnedConceptsRefinedFromURI(crldiagram.CrlDiagramNodeURI, hl))).To(Equal(2))
+			var newNode2 core.Element
+			for _, el := range diagram.GetOwnedConceptsRefinedFromURI(crldiagram.CrlDiagramNodeURI, hl) {
+				if el != newNode {
+					newNode2 = el
+				}
+			}
+			Expect(newNode2).ToNot(BeNil())
+			Expect(newNode2.GetLabel(hl)).To(Equal(coreConceptSpace.GetLabel(hl)))
+			Expect(crldiagram.GetDisplayLabel(newNode2, hl)).To(Equal(coreConceptSpace.GetLabel(hl)))
+			hl.ReleaseLocksAndWait()
+			// Verify the tree structure
+			var treeNode2ID string
+			Expect(page.RunScript("return getTreeNodeIDFromConceptID(conceptID);",
+				map[string]interface{}{"conceptID": newNode2.GetConceptID(hl)},
+				&treeNode2ID)).To(Succeed())
+			var treeNode2ParentID string
+			Expect(page.RunScript("return $(\"#uOfD\").jstree(true).get_parent(treeNodeID);",
+				map[string]interface{}{"treeNodeID": treeNode2ID},
+				&treeNode2ParentID)).To(Succeed())
+			Expect(treeNode2ParentID).To(Equal(diagramTreeNodeID))
 		})
 	})
 })

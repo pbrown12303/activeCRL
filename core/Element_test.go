@@ -418,7 +418,7 @@ var _ = Describe("Element internals test", func() {
 			Expect(child.IsRefinementOfURI(firstAbstractionURI, hl)).To(BeTrue())
 			Expect(owner.GetFirstOwnedConceptRefinedFrom(firstAbstraction, hl)).To(Equal(child))
 			foundAbstractions := make(map[string]Element)
-			child.FindAbstractions(&foundAbstractions, hl)
+			child.FindAbstractions(foundAbstractions, hl)
 			Expect(foundAbstractions[firstAbstraction.getConceptIDNoLock()]).To(Equal(firstAbstraction))
 		})
 		Specify("After adding second-level abstraction, child and owner abstraction-related methods should work", func() {
@@ -432,7 +432,7 @@ var _ = Describe("Element internals test", func() {
 			Expect(child.IsRefinementOfURI(secondAbstractionURI, hl)).To(BeTrue())
 			Expect(owner.GetFirstOwnedConceptRefinedFrom(secondAbstraction, hl)).To(Equal(child))
 			foundAbstractions := make(map[string]Element)
-			child.FindAbstractions(&foundAbstractions, hl)
+			child.FindAbstractions(foundAbstractions, hl)
 			Expect(foundAbstractions[firstAbstraction.getConceptIDNoLock()]).To(Equal(firstAbstraction))
 			Expect(foundAbstractions[secondAbstraction.getConceptIDNoLock()]).To(Equal(secondAbstraction))
 		})

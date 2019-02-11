@@ -6,16 +6,16 @@
 	<title>CRL Editor</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
 	<!--  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">  -->
-	<link rel="stylesheet" href="/css/joint.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jointjs/2.1.0/joint.css">
 	<link rel="stylesheet" href="/js/jquery-ui-1.12.1.custom/jquery-ui.css">
 	<link rel="stylesheet" href="/css/crlEditor.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 	<script src="/js/jquery-ui-1.12.1.custom/external/jquery/jquery.js"></script>
 	<script src="/js/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
-	<script src="/js/lodash.js"></script>
-	<script src="/js/backbone.js"></script>
-	<script src="/js/joint.js"></script>
-	<script src="/js/joint.shapes.uml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.3.3/backbone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jointjs/2.1.0/joint.js"></script>
 	<script src="/js/crlShapes.js"></script>
 	<script src="/js/jstree.js"></script>
 	<!--  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script> -->
@@ -25,15 +25,15 @@
 	<script src="/js/crleditor.js"></script>
 </head>
 
-<body onresize="sizeAll()" onload="sizeAll();initializeClient()" onunload="closeWebsocket()" id="body">
+<body onresize="crlSizeAll()" onload="crlSizeAll();crlInitializeClient()" onunload="crlCloseWebsocket()" id="body">
 	<div class="navbar" id="navbar">
 		<div class="dropdown">
-			<button id="FileMenuButton" class="dropbtn" onclick="dropdownMenu('FileDropdown')">
+			<button id="FileMenuButton" class="dropbtn" onclick="crlDropdownMenu('FileDropdown')">
 				File <i class="fa fa-caret-down"></i>
 			</button>
 			<div class="dropdown-content" id="FileDropdown">
-				<a id="NewDiagramButton" class="show" onClick="sendNewDiagramRequest()">New Diagram</a>
-				<a id="Exit" class="show" onClick="callExit()">Exit</a>
+				<a id="NewDiagramButton" class="show" onClick="crlSendNewDiagramRequest()">New Diagram</a>
+				<a id="Exit" class="show" onClick="crlCallExit()">Exit</a>
 			</div>
 		</div>
 		<div class="dropdown">

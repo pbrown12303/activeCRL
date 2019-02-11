@@ -339,6 +339,11 @@ func (edPtr *CrlEditor) SelectElementUsingIDString(id string, hl *core.HeldLocks
 	return edPtr.currentSelection
 }
 
+// SendNotification calls the ClientNotificationManager method of the same name and returns the result.
+func (edPtr *CrlEditor) SendNotification(notificationDescription string, id string, el core.Element, additionalParameters map[string]string) (*NotificationResponse, error) {
+	return edPtr.GetClientNotificationManager().SendNotification(notificationDescription, id, el, additionalParameters)
+}
+
 // SetAdHocTrace sets the value of the core.AdHocTrace variable used in troubleshooting
 func (edPtr *CrlEditor) SetAdHocTrace(status bool) {
 	core.AdHocTrace = status

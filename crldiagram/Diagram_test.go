@@ -4,6 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pbrown12303/activeCRL/core"
+	"golang.org/x/image/math/fixed"
 )
 
 var _ = Describe("CrlDiagramtest", func() {
@@ -44,6 +45,8 @@ var _ = Describe("CrlDiagramtest", func() {
 			Expect(crlDiagramNode).ToNot(BeNil())
 			crlDiagramNodeModelReference := crlDiagramNode.GetFirstOwnedReferenceWithURI(CrlDiagramNodeModelReferenceURI, hl)
 			Expect(crlDiagramNodeModelReference).ToNot(BeNil())
+			crlDiagramNodeAbstractionDisplayLabel := crlDiagramNode.GetFirstOwnedLiteralWithURI(CrlDiagramNodeAbstractionDisplayLabelURI, hl)
+			Expect(crlDiagramNodeAbstractionDisplayLabel).ToNot(BeNil())
 			crlDiagramNodeDisplayLabel := crlDiagramNode.GetFirstOwnedLiteralWithURI(CrlDiagramNodeDisplayLabelURI, hl)
 			Expect(crlDiagramNodeDisplayLabel).ToNot(BeNil())
 			crlDiagramNodeX := crlDiagramNode.GetFirstOwnedLiteralWithURI(CrlDiagramNodeXURI, hl)
@@ -85,6 +88,14 @@ var _ = Describe("CrlDiagramtest", func() {
 			node, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, hl)
 			SetReferencedModelElement(node, nil, hl)
 		})
+		Specify("Test GetAbstractionDisplayLabel and SetAbstractionDisplayLabel", func() {
+			BuildCrlDiagramConceptSpace(uOfD, hl)
+			hl.ReleaseLocksAndWait()
+			node, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, hl)
+			displayLabel := "displayLabel"
+			SetAbstractionDisplayLabel(node, displayLabel, hl)
+			Expect(GetAbstractionDisplayLabel(node, hl)).To(Equal(displayLabel))
+		})
 		Specify("Test GetDisplayLabel and SetDisplayLabel", func() {
 			BuildCrlDiagramConceptSpace(uOfD, hl)
 			hl.ReleaseLocksAndWait()
@@ -124,6 +135,29 @@ var _ = Describe("CrlDiagramtest", func() {
 			value := 123.45
 			SetNodeY(node, value, hl)
 			Expect(GetNodeY(node, hl)).To(Equal(value))
+		})
+	})
+	Describe("Test Fixed-to-Float conversions", func() {
+		Specify("Zero should equal zero", func() {
+			fixedX := fixed.I(0)
+			floatX := Int26_6ToFloat(fixedX)
+			Expect(floatX).To(Equal(0.0))
+		})
+		Specify("One should equal one", func() {
+			fixedX := fixed.I(1)
+			floatX := Int26_6ToFloat(fixedX)
+			Expect(floatX).To(Equal(1.0))
+		})
+		Specify("Minus One should equal minus one", func() {
+			fixedX := fixed.I(-1)
+			floatX := Int26_6ToFloat(fixedX)
+			Expect(floatX).To(Equal(-1.0))
+		})
+		Specify("0.5 should equal 0.5", func() {
+			var fixedX fixed.Int26_6
+			fixedX = 1 << 5
+			floatX := Int26_6ToFloat(fixedX)
+			Expect(floatX).To(Equal(0.5))
 		})
 	})
 })

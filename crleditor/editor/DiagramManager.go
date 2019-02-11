@@ -54,24 +54,11 @@ func (dmPtr *DiagramManager) addNodeView(request *Request, hl *core.HeldLocks) (
 	newNode.SetLabel(el.GetLabel(hl), hl)
 	crldiagram.SetReferencedModelElement(newNode, el, hl)
 	crldiagram.SetDisplayLabel(newNode, el.GetLabel(hl), hl)
-	// crldiagram.SetNodeHeight(newNode,,hl)
-	// crlDiagram.SetNodeWidth(newNode,,hl)
 	crldiagram.SetNodeX(newNode, x, hl)
 	crldiagram.SetNodeY(newNode, y, hl)
 
 	newNode.SetOwningConceptID(diagramID, hl)
 	hl.ReleaseLocksAndWait()
-
-	// Tell the interface to add the diagram node
-	additionalParameters := map[string]string{
-		"DisplayLabel": crldiagram.GetDisplayLabel(newNode, hl),
-		"NodeHeight":   strconv.FormatFloat(crldiagram.GetNodeHeight(newNode, hl), 'f', -1, 64),
-		"NodeWidth":    strconv.FormatFloat(crldiagram.GetNodeWidth(newNode, hl), 'f', -1, 64),
-		"NodeX":        strconv.FormatFloat(crldiagram.GetNodeX(newNode, hl), 'f', -1, 64),
-		"NodeY":        strconv.FormatFloat(crldiagram.GetNodeY(newNode, hl), 'f', -1, 64),
-		"Icon":         GetIconPath(crldiagram.GetReferencedModelElement(newNode, hl), hl),
-		"OwnerID":      newNode.GetOwningConceptID(hl)}
-	CrlEditorSingleton.GetClientNotificationManager().SendNotification("AddDiagramNode", newNode.GetConceptID(hl), newNode, additionalParameters)
 
 	return newNode, nil
 }
@@ -102,6 +89,20 @@ func (dmPtr *DiagramManager) DisplayDiagram(diagram core.Element, hl *core.HeldL
 	}
 	if notificationResponse.Result != 0 {
 		log.Print(notificationResponse.ErrorMessage)
+		return
+	}
+	nodes := diagram.GetOwnedConceptsRefinedFromURI(crldiagram.CrlDiagramNodeURI, hl)
+	for _, node := range nodes {
+		additionalParameters := getNodeAdditionalParameters(node, hl)
+		notificationResponse, err = CrlEditorSingleton.SendNotification("AddDiagramNode", node.GetConceptID(hl), node, additionalParameters)
+		if err != nil {
+			log.Printf(err.Error())
+			break
+		}
+		if notificationResponse.Result != 0 {
+			log.Print(notificationResponse.ErrorMessage)
+			break
+		}
 	}
 }
 

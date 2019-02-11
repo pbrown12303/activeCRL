@@ -300,14 +300,27 @@ func (ePtr *element) GetFirstOwnedRefinementWithURI(uri string, hl *HeldLocks) R
 }
 
 // FindAbstractions adds all found abstractions to supplied map
-func (ePtr *element) FindAbstractions(abstractions *map[string]Element, hl *HeldLocks) {
+func (ePtr *element) FindAbstractions(abstractions map[string]Element, hl *HeldLocks) {
 	for _, listener := range ePtr.listeners.CopyMap() {
 		switch listener.(type) {
 		case *refinement:
 			abstraction := listener.(*refinement).GetAbstractConcept(hl)
 			if abstraction != nil && abstraction.getConceptIDNoLock() != ePtr.getConceptIDNoLock() {
-				(*abstractions)[abstraction.GetConceptID(hl)] = abstraction
+				abstractions[abstraction.GetConceptID(hl)] = abstraction
 				abstraction.FindAbstractions(abstractions, hl)
+			}
+		}
+	}
+}
+
+// FindImmediateAbstractions adds all immediate abstractions to supplied map
+func (ePtr *element) FindImmediateAbstractions(abstractions map[string]Element, hl *HeldLocks) {
+	for _, listener := range ePtr.listeners.CopyMap() {
+		switch listener.(type) {
+		case *refinement:
+			abstraction := listener.(*refinement).GetAbstractConcept(hl)
+			if abstraction != nil && abstraction.getConceptIDNoLock() != ePtr.getConceptIDNoLock() {
+				abstractions[abstraction.GetConceptID(hl)] = abstraction
 			}
 		}
 	}
@@ -949,7 +962,8 @@ type Element interface {
 	addOwnedConcept(string, *HeldLocks)
 	addRecoveredOwnedConcept(string, *HeldLocks)
 	editableError(*HeldLocks) error
-	FindAbstractions(*map[string]Element, *HeldLocks)
+	FindAbstractions(map[string]Element, *HeldLocks)
+	FindImmediateAbstractions(map[string]Element, *HeldLocks)
 	GetConceptID(*HeldLocks) string
 	getConceptIDNoLock() string
 	GetDefinition(*HeldLocks) string
