@@ -15,64 +15,103 @@ import (
 const diagramContainerSuffix = "DiagramContainer"
 const diagramSuffix = "Diagram"
 
-// DiagramManager manages the diagram portion of the UI and all interactions with it
-type DiagramManager struct {
-	abstractDiagram core.Element
-	crlEditor       *CrlEditor
+// diagramManager manages the diagram portion of the UI and all interactions with it
+type diagramManager struct {
+	crlEditor *CrlEditor
 }
 
-func newDiagramManager(crlEditor *CrlEditor) *DiagramManager {
-	var diagramManager DiagramManager
-	diagramManager.crlEditor = crlEditor
-	diagramManager.abstractDiagram = CrlEditorSingleton.GetUofD().GetElementWithURI(crldiagram.CrlDiagramURI)
+func newDiagramManager(crlEditor *CrlEditor) *diagramManager {
+	var dm diagramManager
+	dm.crlEditor = crlEditor
 	uOfD := CrlEditorSingleton.GetUofD()
-	uOfD.AddFunction(crldiagram.CrlDiagramNodeURI, updateDiagramNodeView)
-	return &diagramManager
+	addDiagramViewFunctionsToUofD(uOfD)
+	return &dm
 }
 
-func (dmPtr *DiagramManager) addNodeView(request *Request, hl *core.HeldLocks) (core.Element, error) {
+func (dmPtr *diagramManager) addConceptView(request *Request, hl *core.HeldLocks) (core.Element, error) {
 	uOfD := dmPtr.crlEditor.GetUofD()
 	diagramID := request.AdditionalParameters["DiagramID"]
+	diagram := uOfD.GetElement(diagramID)
 	el := uOfD.GetElement(dmPtr.crlEditor.GetTreeDragSelectionID(hl))
 	if el == nil {
 		return nil, errors.New("Indicated model element not found in addNodeView, ID: " + request.RequestConceptID)
 	}
-	x, err := strconv.ParseFloat(request.AdditionalParameters["NodeX"], 64)
+	var x, y float64
+	var err error
+	x, err = strconv.ParseFloat(request.AdditionalParameters["NodeX"], 64)
 	if err != nil {
 		return nil, err
 	}
-	y, err2 := strconv.ParseFloat(request.AdditionalParameters["NodeY"], 64)
-	if err2 != nil {
-		return nil, err
-	}
-
-	newNode, err := uOfD.CreateReplicateAsRefinementFromURI(crldiagram.CrlDiagramNodeURI, hl)
+	y, err = strconv.ParseFloat(request.AdditionalParameters["NodeY"], 64)
 	if err != nil {
-		js.Global.Get("console").Call("log", "Failed to create CrlDiagramNode"+err.Error())
 		return nil, err
 	}
-	newNode.SetLabel(el.GetLabel(hl), hl)
-	crldiagram.SetReferencedModelElement(newNode, el, hl)
-	crldiagram.SetDisplayLabel(newNode, el.GetLabel(hl), hl)
-	crldiagram.SetNodeX(newNode, x, hl)
-	crldiagram.SetNodeY(newNode, y, hl)
 
-	newNode.SetOwningConceptID(diagramID, hl)
+	createAsLink := false
+	switch el.(type) {
+	case core.Reference:
+		createAsLink = CrlEditorSingleton.GetEditorSettings().DropReferenceAsLink
+	case core.Refinement:
+		createAsLink = CrlEditorSingleton.GetEditorSettings().DropRefinementAsLink
+	}
+
+	var newElement core.Element
+	if createAsLink {
+		newElement, err = uOfD.CreateReplicateAsRefinementFromURI(crldiagram.CrlDiagramLinkURI, hl)
+		if err != nil {
+			return nil, err
+		}
+		var modelSourceConcept core.Element
+		var modelTargetConcept core.Element
+		switch el.(type) {
+		case core.Reference:
+			reference := el.(core.Reference)
+			modelSourceConcept = reference.GetOwningConcept(hl)
+			modelTargetConcept = reference.GetReferencedConcept(hl)
+		case core.Refinement:
+			refinement := el.(core.Refinement)
+			modelSourceConcept = refinement.GetRefinedConcept(hl)
+			modelTargetConcept = refinement.GetAbstractConcept(hl)
+		}
+		if modelSourceConcept == nil {
+			return nil, errors.New("In addConceptView for link, modelSourceConcept is nil")
+		}
+		if modelTargetConcept == nil {
+			return nil, errors.New("In addConceptView for link, modelTargetConcept is nil")
+		}
+		diagramSourceElement := crldiagram.GetFirstElementRepresentingConcept(diagram, modelSourceConcept, hl)
+		if diagramSourceElement == nil {
+			return nil, errors.New("In addConceptView for reference link, diagramSourceElement is nil")
+		}
+		diagramTargetElement := crldiagram.GetFirstElementRepresentingConcept(diagram, modelTargetConcept, hl)
+		if diagramTargetElement == nil {
+			return nil, errors.New("In addConceptView for reference link, diagramTargetElement is nil")
+		}
+		crldiagram.SetLinkSource(newElement, diagramSourceElement, hl)
+		crldiagram.SetLinkTarget(newElement, diagramTargetElement, hl)
+	} else {
+		newElement, err = uOfD.CreateReplicateAsRefinementFromURI(crldiagram.CrlDiagramNodeURI, hl)
+		if err != nil {
+			js.Global.Get("console").Call("log", "Failed to create CrlDiagramNode"+err.Error())
+			return nil, err
+		}
+		crldiagram.SetNodeX(newElement, x, hl)
+		crldiagram.SetNodeY(newElement, y, hl)
+	}
+
+	newElement.SetLabel(el.GetLabel(hl), hl)
+	crldiagram.SetReferencedModelElement(newElement, el, hl)
+	crldiagram.SetDisplayLabel(newElement, el.GetLabel(hl), hl)
+
+	newElement.SetOwningConceptID(diagramID, hl)
 	hl.ReleaseLocksAndWait()
 
-	return newNode, nil
+	return newElement, nil
 }
 
-func (dmPtr *DiagramManager) addViewFunctionsToUofD(hl *core.HeldLocks) {
-	uOfD := CrlEditorSingleton.GetUofD()
-	addDiagramViewFunctionsToUofD(uOfD, hl)
-	//	addDiagramNodeViewFunctionsToUofD(uOfD, hl)
-	//	addDiagramLinkViewFunctionsToUofD(uOfD, hl)
-}
-
-// DiagramDrop evaluates the request resulting from a drop in the diagram
-func (dmPtr *DiagramManager) DiagramDrop(request *Request, hl *core.HeldLocks) error {
-	_, err := dmPtr.addNodeView(request, hl)
+// diagramDrop evaluates the request resulting from a drop in the diagram
+func (dmPtr *diagramManager) diagramDrop(request *Request, hl *core.HeldLocks) error {
+	_, err := dmPtr.addConceptView(request, hl)
 	if err != nil {
 		return err
 	}
@@ -80,8 +119,8 @@ func (dmPtr *DiagramManager) DiagramDrop(request *Request, hl *core.HeldLocks) e
 	return nil
 }
 
-// DisplayDiagram tells the client to display the indicated diagram.
-func (dmPtr *DiagramManager) DisplayDiagram(diagram core.Element, hl *core.HeldLocks) {
+// displayDiagram tells the client to display the indicated diagram.
+func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.HeldLocks) {
 	notificationResponse, err := CrlEditorSingleton.GetClientNotificationManager().SendNotification("DisplayDiagram", diagram.GetConceptID(hl), diagram, nil)
 	if err != nil {
 		log.Printf(err.Error())
@@ -104,10 +143,24 @@ func (dmPtr *DiagramManager) DisplayDiagram(diagram core.Element, hl *core.HeldL
 			break
 		}
 	}
+	links := diagram.GetOwnedConceptsRefinedFromURI(crldiagram.CrlDiagramLinkURI, hl)
+	for _, link := range links {
+		additionalParameters := getLinkAdditionalParameters(link, hl)
+		notificationResponse, err = CrlEditorSingleton.SendNotification("AddDiagramLink", link.GetConceptID(hl), link, additionalParameters)
+		if err != nil {
+			log.Printf(err.Error())
+			break
+		}
+		if notificationResponse.Result != 0 {
+			log.Print(notificationResponse.ErrorMessage)
+			break
+		}
+	}
+
 }
 
-// NewDiagram creates a new crldiagram
-func (dmPtr *DiagramManager) NewDiagram(hl *core.HeldLocks) core.Element {
+// newDiagram creates a new crldiagram
+func (dmPtr *diagramManager) newDiagram(hl *core.HeldLocks) core.Element {
 	// Insert name prompt here
 	name := getDefaultDiagramLabel()
 	uOfD := CrlEditorSingleton.GetUofD()
@@ -120,24 +173,13 @@ func (dmPtr *DiagramManager) NewDiagram(hl *core.HeldLocks) core.Element {
 	return diagram
 }
 
-// SetSize sets the size of the diagram rectangle
-func (dmPtr *DiagramManager) SetSize() {
-	// A test rectangle
-	rect := js.Global.Get("joint").Get("shapes").Get("basic").Get("Rect").New(js.M{
-		"position": js.M{
-			"x": 100,
-			"y": 30},
-		"size": js.M{
-			"width":  100,
-			"height": 30},
-		"attrs": js.M{
-			"rect": js.M{
-				"fill": "blue"},
-			"text": js.M{
-				"text": "my box",
-				"fill": "white"}}})
-
-	js.Global.Set("diagramRect", rect)
-	js.Global.Get("jointGraph").Call("addCell", rect)
-
+// setDiagramNodePosition sets the position of the diagram node
+func (dmPtr *diagramManager) setDiagramNodePosition(nodeID string, x float64, y float64, hl *core.HeldLocks) {
+	node := CrlEditorSingleton.GetUofD().GetElement(nodeID)
+	if node == nil {
+		log.Print("In SetDiagramNodePosition node not found for nodeID: " + nodeID)
+		return
+	}
+	crldiagram.SetNodeX(node, x, hl)
+	crldiagram.SetNodeY(node, y, hl)
 }

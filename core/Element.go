@@ -521,8 +521,11 @@ func (ePtr *element) IsRefinementOf(abstraction Element, hl *HeldLocks) bool {
 	hl.ReadLockElement(ePtr)
 	for _, listener := range ePtr.listeners.CopyMap() {
 		switch listener.(type) {
-		case *refinement:
-			foundAbstraction := listener.(*refinement).GetAbstractConcept(hl)
+		case Refinement:
+			foundAbstraction := listener.(Refinement).GetAbstractConcept(hl)
+			if foundAbstraction == nil {
+				continue
+			}
 			if foundAbstraction.getConceptIDNoLock() == ePtr.ConceptID {
 				continue
 			}
@@ -542,6 +545,10 @@ func (ePtr *element) IsRefinementOf(abstraction Element, hl *HeldLocks) bool {
 
 func (ePtr *element) IsRefinementOfURI(uri string, hl *HeldLocks) bool {
 	hl.ReadLockElement(ePtr)
+	if ePtr.uOfD == nil {
+		log.Printf("element.IsRefinementOfURI called with nil uOfD")
+		return false
+	}
 	abstraction := ePtr.uOfD.GetElementWithURI(uri)
 	if abstraction == nil {
 		return false
@@ -905,6 +912,13 @@ func (ePtr *element) SetReadOnly(value bool, hl *HeldLocks) error {
 	return nil
 }
 
+func (ePtr *element) SetReadOnlyRecursively(value bool, hl *HeldLocks) {
+	ePtr.SetReadOnly(value, hl)
+	for _, el := range ePtr.GetOwnedConcepts(hl) {
+		el.SetReadOnlyRecursively(value, hl)
+	}
+}
+
 // setUniverseOfDiscourse is intended to be called only by the UniverseOfDiscourse
 func (ePtr *element) setUniverseOfDiscourse(uOfD UniverseOfDiscourse, hl *HeldLocks) {
 	hl.WriteLockElement(ePtr)
@@ -1014,6 +1028,7 @@ type Element interface {
 	SetOwningConcept(Element, *HeldLocks) error
 	SetOwningConceptID(string, *HeldLocks) error
 	SetReadOnly(bool, *HeldLocks) error
+	SetReadOnlyRecursively(bool, *HeldLocks)
 	setUniverseOfDiscourse(UniverseOfDiscourse, *HeldLocks)
 	SetURI(string, *HeldLocks) error
 	TraceableReadLock(*HeldLocks)

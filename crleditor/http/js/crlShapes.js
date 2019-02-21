@@ -68,20 +68,14 @@ joint.shapes.basic.Generic.define('crl.Element',
         "</g>",
 
         initialize: function () {
-
             this.on('change:name change:abstractions change:icon change:displayLabelYOffset', function () {
                this.updateRectangles();
                this.trigger('crl-update');
             }, this);
-
+            this.on("change:position", crlOnChangePosition);
             this.updateRectangles();
-
             joint.shapes.basic.Generic.prototype.initialize.apply(this, arguments);
         },
-
-        // getClassName: function () {
-        //     return this.get('name');
-        // },
 
         updateRectangles: function () {
             var attrs = this.get('attrs');
@@ -91,55 +85,94 @@ joint.shapes.basic.Generic.define('crl.Element',
             attrs['.abstractions-text'].text = this.get("abstractions");
             attrs['.labelText']['ref-y'] = this.get("displayLabelYOffset");
             this.resize(boundingRectAttr.width , boundingRectAttr.height);
-
-
-            // var attrs = this.get('attrs');
-
-            // var rects = [
-            //     { type: 'name', text: this.getClassName() } /*,
-            // { type: 'attrs', text: this.get('attributes') },
-            // { type: 'methods', text: this.get('methods') } */
-            // ];
-
-            // var offsetY = 0;
-
-            // var lines = [this.getClassName()];
-            // var rectHeight = 1 * 12 + 6;
-
-            // attrs['.label-text'].text = lines.join('\n');
-            // attrs['.label-rect'].height = rectHeight;
-            // var rectWidth = calculateTextWidth(attrs['.label-text'].text) + 6;
-            // attrs['.label-rect'].transform = 'translate(0,' + offsetY + ')';
-            // this.resize(rectWidth, rectHeight);
-
-            // offsetY += rectHeight;
-
-            /*        rects.forEach(function(rect) {
-            
-                        var lines = Array.isArray(rect.text) ? rect.text : [rect.text];
-                        var rectHeight = lines.length * 20 + 20;
-            
-                        attrs['.uml-class-' + rect.type + '-text'].text = lines.join('\n');
-                        attrs['.uml-class-' + rect.type + '-rect'].height = rectHeight;
-                        attrs['.uml-class-' + rect.type + '-rect'].transform = 'translate(0,' + offsetY + ')';
-            
-                        offsetY += rectHeight;
-                    });
-                    */
         }
-
     });
 
     joint.shapes.crl.ElementView = joint.dia.ElementView.extend({}, {
-
         initialize: function() {
-    
             joint.dia.ElementView.prototype.initialize.apply(this, arguments);
-    
             this.listenTo(this.model, 'crl-update', function() {
                 this.update();
                 this.resize();
             });
         }
     });
+
+    joint.dia.Link.define('crl.ReferenceLink', {
+        attrs: {
+            line: {
+                connection: true,
+                stroke: '#333333',
+                strokeWidth: 2,
+                strokeLinejoin: 'round',
+                targetMarker: {
+                    'type': 'path',
+                    'd': 'M 10 -5 0 0 10 5 z'
+                },
+                sourceMarker: {
+                    "type": "path",
+                    "d": "M 10 -5 0 0 10 5 20 0 z"
+                }
+            },
+            wrapper: {
+                connection: true,
+                strokeWidth: 10,
+                strokeLinejoin: 'round'
+            }
+        }
+    }, {
+        markup: [{
+            tagName: 'path',
+            selector: 'wrapper',
+            attributes: {
+                'fill': 'none',
+                'cursor': 'pointer',
+                'stroke': 'transparent'
+            }
+        }, {
+            tagName: 'path',
+            selector: 'line',
+            attributes: {
+                'fill': 'none',
+                'pointer-events': 'none'
+            }
+        }]
+    });
     
+    joint.dia.Link.define('crl.RefinementLink', {
+        attrs: {
+            line: {
+                connection: true,
+                stroke: 'black',
+                strokeWidth: 2,
+                strokeLinejoin: 'round',
+                targetMarker: {
+                    'type': 'path',
+                    "fill":"white",
+                    'd': 'M 15 -7 0 0 15 7 z'
+                }
+            },
+            wrapper: {
+                connection: true,
+                strokeWidth: 10,
+                strokeLinejoin: 'round'
+            }
+        }
+    }, {
+        markup: [{
+            tagName: 'path',
+            selector: 'wrapper',
+            attributes: {
+                'fill': 'none',
+                'cursor': 'pointer',
+                'stroke': 'transparent'
+            }
+        }, {
+            tagName: 'path',
+            selector: 'line',
+            attributes: {
+                'fill': 'none',
+                'pointer-events': 'none'
+            }
+        }]
+    });

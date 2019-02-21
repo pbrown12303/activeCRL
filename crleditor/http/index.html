@@ -1,30 +1,28 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-	<meta charset="ISO-8859-1">
-	<title>CRL Editor</title>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
-	<!--  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">  -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jointjs/2.1.0/joint.css">
-	<link rel="stylesheet" href="/js/jquery-ui-1.12.1.custom/jquery-ui.css">
-	<link rel="stylesheet" href="/css/crlEditor.css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-	<script src="/js/jquery-ui-1.12.1.custom/external/jquery/jquery.js"></script>
-	<script src="/js/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.3.3/backbone.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jointjs/2.1.0/joint.js"></script>
-	<script src="/js/crlShapes.js"></script>
-	<script src="/js/jstree.js"></script>
-	<!--  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script> -->
-	<script src="/js/viz.js"></script>
-	<script src="/js/full.render.js"></script>
-	</script>
-	<script src="/js/crleditor.js"></script>
-</head>
-
+	<head>
+		<meta charset="ISO-8859-1">
+		<title>CRL Editor</title>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+		<link rel="stylesheet" href="/css/joint.css">
+		<link rel="stylesheet" href="/js/jquery-ui-1.12.1.custom/jquery-ui.css">
+		<link rel="stylesheet" href="/css/crlEditor.css">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+		<script src="/js/jquery-ui-1.12.1.custom/external/jquery/jquery.js"></script>
+		<script src="/js/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
+		<script src="/js/lodash.js"></script>
+		<script src="/js/backbone.js"></script>
+		<script src="/js/joint.js"></script>
+		<script src="/js/joint.shapes.standard.js"></script>
+		<script src="/js/joint.shapes.uml.js"></script>
+		<script src="/js/crlShapes.js"></script>
+		<script src="/js/jstree.js"></script>
+		<script src="/js/viz.js"></script>
+		<script src="/js/full.render.js"></script>
+		<script src="/js/crleditor.js"></script>
+	</head>
+	
 <body onresize="crlSizeAll()" onload="crlSizeAll();crlInitializeClient()" onunload="crlCloseWebsocket()" id="body">
 	<div class="navbar" id="navbar">
 		<div class="dropdown">
@@ -32,7 +30,11 @@
 				File <i class="fa fa-caret-down"></i>
 			</button>
 			<div class="dropdown-content" id="FileDropdown">
+				<a id="NewConceptSpaceButton" class = "show" onClick="crlSendNewConceptSpaceRequest()">New Concept Space</a>
 				<a id="NewDiagramButton" class="show" onClick="crlSendNewDiagramRequest()">New Diagram</a>
+				<a id="SaveWorkspaceButton" class = "show" onClick="crlSendSaveWorkspace()">Save Workspace</a>
+				<a id="OpenWorkspaceButton" class = "show" onClick="crlOpenWorkspace()">Open Workspace</a>
+				<a id="EditorSettingsButton" class = "show" onClick="crlEditorSettings()">Editor Settings</a>
 				<a id="Exit" class="show" onClick="crlCallExit()">Exit</a>
 			</div>
 		</div>
@@ -42,11 +44,11 @@
 			</button>
 		</div>
 		<div class="dropdown">
-			<button id="HelpMenuButton" class="dropbtn" onclick="dropdownMenu('HelpDropdown')">
+			<button id="HelpMenuButton" class="dropbtn" onclick="crlDropdownMenu('HelpDropdown')">
 				Help <i class="fa fa-caret-down"></i>
 			</button>
 			<div class="dropdown-content" id="HelpDropdown">
-				<a id="DebugSettingsButton" class="show" onClick="CrlEditor.DebugSettings()">Debug Settings</a>
+				<a id="DebugSettingsButton" class="show" onClick="crlDebugSettings()">Debug Settings</a>
 				<a id="DisplayTracesButton" class="show" onClick="CrlEditor.DisplayGraphDialog()">Display Traces</a>
 			</div>
 		</div>
@@ -84,6 +86,39 @@
 			</div>
 		</div>
 	</div>
+
+	<div id = "debugSettingsDialog" class='dialog' title='Notification Trace Settings'>
+		<form>
+			<fieldset>
+					<label for='enableTracing'>Enable Notification Tracing</label>
+					<input type='checkbox' id='enableTracing'> <br>
+			</fieldset>
+		</form>
+	</div>
+
+
+	<div id = "editorSettingsDialog" class="dialog" title="Editor Settings">
+		<form>
+			<fieldset>
+					<label for="dropReferenceAsLink">Drop Reference As link</label>
+					<input type="checkbox" id = "dropReferenceAsLink"><br>
+					<label for="dropRefinementAsLink">Drop Refinement As link</label>
+				<input type="checkbox" id = "dropRefinementAsLink">
+			</fieldset>
+		</form>
+	</div>
+	
+	<div id = "openWorkspaceDialog" class = "dialog" title = "Select Workspace">
+		<form>
+			<fieldset>
+				<p>Use the file selector to locate the folder you want to use for your workspace. Copy the path in the top of the browser and then paste it into the indicated box.</p>
+				Identify Workspace Folder:<input type="file"><br>
+				Paste Directory Path Here:<input type="text" id = "selectedWorkspaceFolder"> 
+			</fieldset>
+		</form>
+	</div>
+
 </body> 
+
 
 </html>

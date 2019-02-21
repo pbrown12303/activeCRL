@@ -8,6 +8,7 @@ import (
 	"log"
 	"os/exec"
 	"runtime"
+	"strconv"
 
 	//	"log"
 	"net/http"
@@ -117,6 +118,34 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	hl := CrlEditorSingleton.GetUofD().NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	switch request.Action {
+	case "AddElementChild":
+		el, _ := CrlEditorSingleton.GetUofD().NewElement(hl)
+		el.SetLabel("newElement", hl)
+		el.SetOwningConceptID(request.RequestConceptID, hl)
+		sendReply(w, 0, "Processed AddElementChild", el.GetConceptID(hl), el)
+	case "AddDiagramChild":
+		diagramManager := CrlEditorSingleton.getDiagramManager()
+		diagram := diagramManager.newDiagram(hl)
+		diagram.SetOwningConceptID(request.RequestConceptID, hl)
+		hl.ReleaseLocksAndWait()
+		diagramManager.displayDiagram(diagram, hl)
+		hl.ReleaseLocksAndWait()
+		sendReply(w, 0, "Processed AddDiagramChild", diagram.GetConceptID(hl), diagram)
+	case "AddLiteralChild":
+		el, _ := CrlEditorSingleton.GetUofD().NewLiteral(hl)
+		el.SetLabel("newLiteral", hl)
+		el.SetOwningConceptID(request.RequestConceptID, hl)
+		sendReply(w, 0, "Processed AddLiteralChild", el.GetConceptID(hl), el)
+	case "AddReferenceChild":
+		el, _ := CrlEditorSingleton.GetUofD().NewReference(hl)
+		el.SetLabel("newReference", hl)
+		el.SetOwningConceptID(request.RequestConceptID, hl)
+		sendReply(w, 0, "Processed AddReferenceChild", el.GetConceptID(hl), el)
+	case "AddRefinementChild":
+		el, _ := CrlEditorSingleton.GetUofD().NewRefinement(hl)
+		el.SetLabel("newRefinement", hl)
+		el.SetOwningConceptID(request.RequestConceptID, hl)
+		sendReply(w, 0, "Processed AddRefinementChild", el.GetConceptID(hl), el)
 	case "DefinitionChanged":
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil {
@@ -125,16 +154,34 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed DefinitionChanged", request.RequestConceptID, el)
 	case "DiagramDrop":
-		CrlEditorSingleton.GetDiagramManager().DiagramDrop(request, hl)
-		sendReply(w, 0, "Processed DiagramDrop", request.RequestConceptID, nil)
+		err := CrlEditorSingleton.getDiagramManager().diagramDrop(request, hl)
+		if err != nil {
+			sendReply(w, 1, err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed DiagramDrop", request.RequestConceptID, nil)
+		}
+	case "DiagramNodeNewPosition":
+		x, err := strconv.ParseFloat(request.AdditionalParameters["NodeX"], 64)
+		if err != nil {
+			sendReply(w, 1, err.Error(), "", nil)
+		}
+		y, err2 := strconv.ParseFloat(request.AdditionalParameters["NodeY"], 64)
+		if err2 != nil {
+			sendReply(w, 1, err2.Error(), "", nil)
+		} else {
+			CrlEditorSingleton.getDiagramManager().setDiagramNodePosition(request.RequestConceptID, x, y, hl)
+			sendReply(w, 0, "Processed DiagramNodeNewPosition", "", nil)
+		}
 	case "DiagramNodeSelected":
-		// TODO: Finish DiagramNodeSelected
-		sendReply(w, 0, "Processed DiagramNodeSelected", "", nil)
+		elementID := request.RequestConceptID
+		log.Printf("Selected node id: %s", request.RequestConceptID)
+		CrlEditorSingleton.SelectElementUsingIDString(elementID, hl)
+		sendReply(w, 0, "Processed DiagramNodeSelected", elementID, CrlEditorSingleton.GetUofD().GetElement(elementID))
 	case "DisplayDiagramSelected":
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil && el.IsRefinementOfURI(crldiagram.CrlDiagramURI, hl) {
-			diagramManager := CrlEditorSingleton.GetDiagramManager()
-			diagramManager.DisplayDiagram(el, hl)
+			diagramManager := CrlEditorSingleton.getDiagramManager()
+			diagramManager.displayDiagram(el, hl)
 		}
 		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed DisplayDiagramSelected", request.RequestConceptID, el)
@@ -168,20 +215,31 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed LiteralValueChanged", request.RequestConceptID, el)
-	case "URIChanged":
-		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
-		if el != nil {
-			el.SetURI(request.AdditionalParameters["NewValue"], hl)
-		}
-		hl.ReleaseLocksAndWait()
-		sendReply(w, 0, "Processed URI changed", request.RequestConceptID, el)
+	case "NewConceptSpaceRequest":
+		cs, _ := CrlEditorSingleton.GetUofD().NewElement(hl)
+		cs.SetLabel("newConceptSpace", hl)
+		sendReply(w, 0, "Processed NewDiagramRequest", cs.GetConceptID(hl), cs)
 	case "NewDiagramRequest":
-		diagramManager := CrlEditorSingleton.GetDiagramManager()
-		diagram := diagramManager.NewDiagram(hl)
+		diagramManager := CrlEditorSingleton.getDiagramManager()
+		diagram := diagramManager.newDiagram(hl)
 		hl.ReleaseLocksAndWait()
-		diagramManager.DisplayDiagram(diagram, hl)
+		diagramManager.displayDiagram(diagram, hl)
 		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed NewDiagramRequest", diagram.GetConceptID(hl), diagram)
+	case "OpenWorkspace":
+		err := CrlEditorSingleton.openWorkspace(request.AdditionalParameters["WorkspacePath"], hl)
+		if err != nil {
+			sendReply(w, 1, "Error processing OpenWorkspace: "+err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed OpenWorkspace", "", nil)
+		}
+	case "SaveWorkspace":
+		err := CrlEditorSingleton.SaveWorkspace(hl)
+		if err != nil {
+			sendReply(w, 1, "SaveWorkspace failed: "+err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed SaveWorkspace", "", nil)
+		}
 	case "SetTreeDragSelection":
 		CrlEditorSingleton.SetTreeDragSelection(request.RequestConceptID)
 		sendReply(w, 0, "Processed SetTreeDragSelection", request.RequestConceptID, CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID))
@@ -198,7 +256,20 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		elementID := request.RequestConceptID
 		log.Printf("Selected node id: %s", request.RequestConceptID)
 		CrlEditorSingleton.SelectElementUsingIDString(elementID, hl)
-		sendReply(w, 0, "Element has been selected", elementID, CrlEditorSingleton.GetUofD().GetElement(elementID))
+		sendReply(w, 0, "Processed TreeNodeSelected", elementID, CrlEditorSingleton.GetUofD().GetElement(elementID))
+	case "UpdateDebugSettings":
+		CrlEditorSingleton.UpdateDebugSettings(request)
+		sendReply(w, 0, "Processed UpdateDebugSettings", "", nil)
+	case "UpdateEditorSettings":
+		CrlEditorSingleton.UpdateEditorSettings(request)
+		sendReply(w, 0, "Processed UpdateEditorSettings", "", nil)
+	case "URIChanged":
+		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
+		if el != nil {
+			el.SetURI(request.AdditionalParameters["NewValue"], hl)
+		}
+		hl.ReleaseLocksAndWait()
+		sendReply(w, 0, "Processed URI changed", request.RequestConceptID, el)
 	default:
 		log.Printf("Unhandled request: %s", request.Action)
 		sendReply(w, 1, "Unhandled request: "+request.Action, "", nil)

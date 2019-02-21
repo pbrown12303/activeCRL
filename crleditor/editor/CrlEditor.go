@@ -1,7 +1,12 @@
 package editor
 
 import (
+	"errors"
+	"io/ioutil"
 	"log"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pbrown12303/activeCRL/crldiagram"
@@ -11,27 +16,40 @@ import (
 	"github.com/pbrown12303/activeCRL/core"
 )
 
-// EditorURI is the URI for accessing the CrlEditor
-var EditorURI = "http://activeCrl.com/crlEditor/Editor"
+// editorURI is the URI for accessing the CrlEditor
+var editorURI = "http://activeCrl.com/crlEditor/Editor"
 
 // CrlEditorSingleton is the singleton instance of the CrlEditor
 var CrlEditorSingleton *CrlEditor
 
-var debugSettingsDialog jquery.JQuery
-var displayGraphDialog jquery.JQuery
+// CrlEditorSettings are the configurable behaviors of the editor
+type CrlEditorSettings struct {
+	DropReferenceAsLink  bool
+	DropRefinementAsLink bool
+}
 
-// CrlEditor type is the central component of the CrlEditor. It manages the subordinate managers (Property, Tree, Diagram)
+type workspaceFile struct {
+	File          *os.File
+	LoadedVersion int
+	Info          os.FileInfo
+	ConceptSpace  core.Element
+}
+
+// CrlEditor is the central component of the CrlEditor. It manages the subordinate managers (Property, Tree, Diagram)
 // and the singleton instances of the Universe of Discourse and HeldLocks shared by all editing operations.
 type CrlEditor struct {
 	clientNotificationManager *ClientNotificationManager
+	crlEditorSettings         *CrlEditorSettings
 	currentSelection          core.Element
 	cutBuffer                 map[string]core.Element
-	diagramManager            *DiagramManager
+	diagramManager            *diagramManager
 	initialized               bool
 	propertiesManager         *PropertiesManager
 	treeDragSelection         core.Element
-	treeManager               *TreeManager
+	treeManager               *treeManager
 	uOfD                      core.UniverseOfDiscourse
+	workspaceFiles            map[string]*workspaceFile
+	workspacePath             string
 }
 
 // InitializeCrlEditorSingleton initializes the CrlEditor singleton instance. It should be called once
@@ -39,6 +57,11 @@ type CrlEditor struct {
 func InitializeCrlEditorSingleton() {
 	var editor CrlEditor
 	editor.initialized = false
+	var settings CrlEditorSettings
+	editor.crlEditorSettings = &settings
+	editor.cutBuffer = make(map[string]core.Element)
+	editor.workspaceFiles = make(map[string]*workspaceFile)
+
 	editor.uOfD = core.NewUniverseOfDiscourse()
 	hl := editor.uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
@@ -46,36 +69,25 @@ func InitializeCrlEditorSingleton() {
 	// Set the value of the singleton
 	CrlEditorSingleton = &editor
 
-	// Set up the Universe of Discourse
-	crldiagram.BuildCrlDiagramConceptSpace(editor.uOfD, hl)
-	hl.ReleaseLocksAndWait()
-	AddEditorViewsToUofD(editor.uOfD, hl)
-	hl.ReleaseLocksAndWait()
-
-	editor.cutBuffer = make(map[string]core.Element)
-
-	// Set up the diagram manager
+	editor.treeManager = newTreeManager(&editor, "#uOfD")
 	editor.diagramManager = newDiagramManager(&editor)
-
-	// Set up the tree manager
-	editor.treeManager = NewTreeManager(editor.uOfD, "#uOfD", hl)
-
-	// Set up the properties manager
 	editor.propertiesManager = NewPropertiesManager(&editor)
-
-	// Create the ClientNotificationManager
 	editor.clientNotificationManager = newClientNotificationManager()
 
-	// TODO: Move this onDrop function to the client
-	// Add the event listeners
-	// editorQuery := jquery.NewJQuery("body")
-	// editorQuery.On("ondrop", func(e jquery.Event, data *js.Object) {
-	// 	onEditorDrop(e, data)
-	// })
-	hl.ReleaseLocksAndWait()
-	registerTreeViewFunctions(editor.uOfD)
+	editor.initializeUofD(hl)
+
 	editor.initialized = true
 	log.Printf("Editor initialized")
+}
+
+func (edPtr *CrlEditor) initializeUofD(hl *core.HeldLocks) {
+	crldiagram.BuildCrlDiagramConceptSpace(edPtr.uOfD, hl)
+	hl.ReleaseLocksAndWait()
+	AddEditorViewsToUofD(edPtr.uOfD, hl)
+	hl.ReleaseLocksAndWait()
+	edPtr.treeManager.configureUofD(hl)
+	hl.ReleaseLocksAndWait()
+	registerTreeViewFunctions(edPtr.uOfD)
 }
 
 // InitializeClient sets the client state after a browser refresh.
@@ -86,14 +98,16 @@ func InitializeClient() {
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	if CrlEditorSingleton.IsInitialized() == false {
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
-	CrlEditorSingleton.GetTreeManager().InitializeTree(hl)
+	CrlEditorSingleton.getTreeManager().initializeTree(hl)
+	CrlEditorSingleton.SendEditorSettings()
+	CrlEditorSingleton.SendDebugSettings()
 }
 
 // AddEditorViewsToUofD adds the concepts representing the various editor views to the universe of discurse
 func AddEditorViewsToUofD(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
-	conceptSpace := uOfD.GetElementWithURI(EditorURI)
+	conceptSpace := uOfD.GetElementWithURI(editorURI)
 	if conceptSpace == nil {
 		conceptSpace = BuildEditorConceptSpace(uOfD, hl)
 		if conceptSpace == nil {
@@ -103,52 +117,19 @@ func AddEditorViewsToUofD(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) cor
 	return conceptSpace
 }
 
-// DebugSettingsOK is the callback function for the Debug Settings dialog OK button.
-// It updaates the debug settings with the values from the dialog
-func DebugSettingsOK(e jquery.Event, data *js.Object) {
-	// TODO: Reimplement DebugSettingsOK
-	// //	log.Printf("DebugSettingsOK called")
-	// //	js.Global.Set("maxTracingDepth", debugSettingsDialog.Find("#maxTracingDepth"))
-	// maxTracingDepth, err1 := strconv.Atoi(debugSettingsDialog.Find("#maxTracingDepth").Val())
-	// if err1 != nil {
-	// 	log.Printf(err1.Error())
-	// 	return
-	// }
-	// //	js.Global.Set("enableTracing", debugSettingsDialog.Find("#enableTracing"))
-	// enableTracing, err2 := strconv.ParseBool(debugSettingsDialog.Find("#enableTracing").Val())
-	// if err2 != nil {
-	// 	log.Printf(err2.Error())
-	// 	return
-	// }
-	// //	log.Printf("Debug Settings depth: %d enabled: %t \n", maxTracingDepth, enableTracing)
-	// //	js.Global.Set("debugSettingsDialog", debugSettingsDialog)
-	// core.TraceChange = enableTracing
-	// if enableTracing == true {
-	// 	core.SetNotificationsLimit(maxTracingDepth)
-	// } else {
-	// 	core.SetNotificationsLimit(0)
-	// }
-	// debugSettingsDialog.Call("dialog", "close")
-}
-
-// DebugSettings creates and displays the Debug Settings dialog so that the debug settings can be updated from the UI
-func (edPtr *CrlEditor) DebugSettings() {
-	// TODO: Reimplement DebugSettings
-	// //	log.Printf("DebugSettings called")
-	// if jquery.IsEmptyObject(debugSettingsDialog) {
-	// 	debugSettingsDialog = jquery.NewJQuery("<div class='dialog' title='Notification Trace Settings'></div>").Call("dialog", js.M{
-	// 		"resizable": false,
-	// 		"height":    200,
-	// 		"modal":     true,
-	// 		"buttons":   js.M{"OK": DebugSettingsOK}})
-	// 	debugSettingsDialog.SetHtml("<label for='maxTracingDepth'>Max Depth</label>" +
-	// 		"<input type='number' id='maxTracingDepth' placeholder='1'> <br>" +
-	// 		"<label for='enableTracing'>Enable Notification Tracing</label>" +
-	// 		"<input type='checkbox' id='enableTracing' value='1'> <br>")
-	// }
-	// //	js.Global.Set("newDialog", debugSettingsDialog)
-	// debugSettingsDialog.Call("dialog", "open")
-	// //	jquery.NewJQuery("#notificationTraceSettingsDialog").Call("dialog", "open")
+// CloseWorkspace closes the current workspace, saving the root elements
+func (edPtr *CrlEditor) CloseWorkspace(hl *core.HeldLocks) error {
+	err := edPtr.SaveWorkspace(hl)
+	if err != nil {
+		return err
+	}
+	hl.ReleaseLocksAndWait()
+	edPtr.uOfD = core.NewUniverseOfDiscourse()
+	hl2 := edPtr.uOfD.NewHeldLocks()
+	defer hl2.ReleaseLocksAndWait()
+	edPtr.initializeUofD(hl2)
+	edPtr.treeManager.configureUofD(hl2)
+	return nil
 }
 
 // Delete removes the element from the UniverseOfDiscourse
@@ -164,6 +145,12 @@ func (edPtr *CrlEditor) Delete(elID string) error {
 		return uOfD.RemoveElement(el, hl)
 	}
 	return nil
+}
+
+// deleteFile deletes the file from the os
+func (edPtr *CrlEditor) deleteFile(wf *workspaceFile, hl *core.HeldLocks) error {
+	qualifiedFilename := edPtr.workspacePath + "/" + wf.Info.Name()
+	return os.Remove(qualifiedFilename)
 }
 
 // DisplayGraph opens a new tab and displays the selected graph
@@ -255,8 +242,8 @@ func (edPtr *CrlEditor) GetCurrentSelectionID(hl *core.HeldLocks) string {
 	return edPtr.currentSelection.GetConceptID(hl)
 }
 
-// GetDiagramManager returns the DiagramManager
-func (edPtr *CrlEditor) GetDiagramManager() *DiagramManager {
+// getDiagramManager returns the DiagramManager
+func (edPtr *CrlEditor) getDiagramManager() *diagramManager {
 	return edPtr.diagramManager
 }
 
@@ -277,7 +264,7 @@ func (edPtr *CrlEditor) GetTraceChange() bool {
 
 // GetIconPath returns the path to the icon to be used in representing the given Element
 func GetIconPath(el core.Element, hl *core.HeldLocks) string {
-	isDiagram := IsDiagram(el, hl)
+	isDiagram := crldiagram.IsDiagram(el, hl)
 	switch el.(type) {
 	case core.Reference:
 		return "/icons/ElementReferenceIcon.svg"
@@ -299,6 +286,11 @@ func (edPtr *CrlEditor) GetNotificationsLimit() int {
 	return core.GetNotificationsLimit()
 }
 
+// GetEditorSettings returns the settings that impact editor behavior
+func (edPtr *CrlEditor) GetEditorSettings() *CrlEditorSettings {
+	return edPtr.crlEditorSettings
+}
+
 // GetTreeDragSelection returns the Element currently being dragged from the tree
 func (edPtr *CrlEditor) GetTreeDragSelection() core.Element {
 	return edPtr.treeDragSelection
@@ -309,8 +301,8 @@ func (edPtr *CrlEditor) GetTreeDragSelectionID(hl *core.HeldLocks) string {
 	return edPtr.treeDragSelection.GetConceptID(hl)
 }
 
-// GetTreeManager returns the TreeManager
-func (edPtr *CrlEditor) GetTreeManager() *TreeManager {
+// getTreeManager returns the TreeManager
+func (edPtr *CrlEditor) getTreeManager() *treeManager {
 	return edPtr.treeManager
 }
 
@@ -322,6 +314,142 @@ func (edPtr *CrlEditor) GetUofD() core.UniverseOfDiscourse {
 // IsInitialized returns true if the editor's initialization is complete
 func (edPtr *CrlEditor) IsInitialized() bool {
 	return edPtr.initialized
+}
+
+// newFile creates a file with the name being the ConceptID of the supplied Element and returns the workspaceFile struct
+func (edPtr *CrlEditor) newFile(el core.Element, hl *core.HeldLocks) (*workspaceFile, error) {
+	if edPtr.workspacePath == "" {
+		return nil, errors.New("CrlEditor.NewFile called with no workspacePath defined")
+	}
+	filename := edPtr.workspacePath + "/" + el.GetConceptID(hl) + ".acrl"
+	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return nil, err
+	}
+	fileInfo, err2 := os.Stat(filename)
+	if err2 != nil {
+		return nil, err2
+	}
+	var wf workspaceFile
+	wf.ConceptSpace = el
+	wf.File = file
+	wf.LoadedVersion = el.GetVersion(hl)
+	wf.Info = fileInfo
+	return &wf, nil
+}
+
+// openFile opens the file and returns a workspaceFile struct
+func (edPtr *CrlEditor) openFile(fileInfo os.FileInfo, hl *core.HeldLocks) (*workspaceFile, error) {
+	writable := (fileInfo.Mode().Perm() & 0200) > 0
+	mode := os.O_RDONLY
+	if writable {
+		mode = os.O_RDWR
+	}
+	file, err := os.OpenFile(edPtr.workspacePath+"/"+fileInfo.Name(), mode, fileInfo.Mode())
+	if err != nil {
+		return nil, err
+	}
+	fileContent := make([]byte, fileInfo.Size())
+	_, err = file.Read(fileContent)
+	if err != nil {
+		return nil, err
+	}
+	element, err2 := edPtr.uOfD.RecoverConceptSpace(fileContent, hl)
+	if err2 != nil {
+		return nil, err2
+	}
+	if !writable {
+		element.SetReadOnlyRecursively(true, hl)
+	}
+	edPtr.treeManager.addNodeRecursively(element, hl)
+	var wf workspaceFile
+	wf.ConceptSpace = element
+	wf.Info = fileInfo
+	wf.LoadedVersion = element.GetVersion(hl)
+	wf.File = file
+	return &wf, nil
+}
+
+// openWorkspace sets the path to the folder to be used as a workspace
+func (edPtr *CrlEditor) openWorkspace(path string, hl *core.HeldLocks) error {
+	if path != edPtr.workspacePath && edPtr.workspacePath != "" {
+		return errors.New("Cannot open another workspace in the same editor. A new editor must be started.")
+	}
+	edPtr.workspacePath = path
+	edPtr.SendWorkspacePath()
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return err
+	}
+
+	for _, f := range files {
+		if strings.HasSuffix(f.Name(), ".acrl") {
+			workspaceFile, err := edPtr.openFile(f, hl)
+			if err != nil {
+				return err
+			}
+			edPtr.workspaceFiles[workspaceFile.ConceptSpace.GetConceptID(hl)] = workspaceFile
+		}
+	}
+	return nil
+}
+
+// saveFile saves the file and updates the fileInfo
+func (edPtr *CrlEditor) saveFile(wf *workspaceFile, hl *core.HeldLocks) error {
+	hl.ReadLockElement(wf.ConceptSpace)
+	if wf.File == nil {
+		return errors.New("CrlEditor.SaveFile called with nil file")
+	}
+	byteArray, err := edPtr.uOfD.MarshalConceptSpace(wf.ConceptSpace, hl)
+	if err != nil {
+		return err
+	}
+	var length int
+	length, err = wf.File.WriteAt(byteArray, 0)
+	if err != nil {
+		return err
+	}
+	err = wf.File.Truncate(int64(length))
+	if err != nil {
+		return err
+	}
+	return wf.File.Sync()
+}
+
+// SaveWorkspace saves all top-level concepts whose versions are different than the last retrieved version.
+func (edPtr *CrlEditor) SaveWorkspace(hl *core.HeldLocks) error {
+	rootElements := edPtr.uOfD.GetRootElements(hl)
+	var err error
+	for id, el := range rootElements {
+		if el.GetIsCore(hl) == false {
+			workspaceFile := edPtr.workspaceFiles[id]
+			if workspaceFile != nil && workspaceFile.LoadedVersion < el.GetVersion(hl) {
+				err = edPtr.saveFile(workspaceFile, hl)
+				if err != nil {
+					return err
+				}
+				break
+			}
+			if workspaceFile == nil {
+				workspaceFile, err = edPtr.newFile(el, hl)
+				if err != nil {
+					return err
+				}
+				edPtr.workspaceFiles[id] = workspaceFile
+				err = edPtr.saveFile(workspaceFile, hl)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	for id, wf := range edPtr.workspaceFiles {
+		if rootElements[id] == nil {
+			edPtr.deleteFile(wf, hl)
+			delete(edPtr.workspaceFiles, id)
+		}
+	}
+	return nil
 }
 
 // SelectElement selects the indicated Element in the tree, displays the Element in the Properties window, and selects it in the
@@ -339,9 +467,31 @@ func (edPtr *CrlEditor) SelectElementUsingIDString(id string, hl *core.HeldLocks
 	return edPtr.currentSelection
 }
 
+// SendDebugSettings sends the trace settings to the client so that they can be edited
+func (edPtr *CrlEditor) SendDebugSettings() {
+	params := make(map[string]string)
+	params["EnableNotificationTracing"] = strconv.FormatBool(edPtr.GetTraceChange())
+	edPtr.SendNotification("DebugSettings", "", nil, params)
+}
+
+// SendEditorSettings sends the editor settings to the client so that they can be edited
+func (edPtr *CrlEditor) SendEditorSettings() {
+	params := make(map[string]string)
+	params["DropReferenceAsLink"] = strconv.FormatBool(edPtr.crlEditorSettings.DropReferenceAsLink)
+	params["DropRefinementAsLink"] = strconv.FormatBool(edPtr.crlEditorSettings.DropRefinementAsLink)
+	edPtr.SendNotification("EditorSettings", "", nil, params)
+}
+
 // SendNotification calls the ClientNotificationManager method of the same name and returns the result.
 func (edPtr *CrlEditor) SendNotification(notificationDescription string, id string, el core.Element, additionalParameters map[string]string) (*NotificationResponse, error) {
 	return edPtr.GetClientNotificationManager().SendNotification(notificationDescription, id, el, additionalParameters)
+}
+
+// SendWorkspacePath sends the new workspace path to the client
+func (edPtr *CrlEditor) SendWorkspacePath() {
+	params := make(map[string]string)
+	params["WorkspacePath"] = edPtr.workspacePath
+	edPtr.SendNotification("WorkspacePath", "", nil, params)
 }
 
 // SetAdHocTrace sets the value of the core.AdHocTrace variable used in troubleshooting
@@ -385,12 +535,30 @@ func (edPtr *CrlEditor) SetTreeDragSelection(elID string) {
 	edPtr.treeDragSelection = edPtr.GetUofD().GetElement(elID)
 }
 
+// UpdateDebugSettings updates the debug-related settings and sends a notification to the client
+func (edPtr *CrlEditor) UpdateDebugSettings(request *Request) {
+	traceChange, err := strconv.ParseBool(request.AdditionalParameters["EnableNotificationTracing"])
+	if err != nil {
+		log.Printf(err.Error())
+		return
+	}
+	edPtr.SetTraceChange(traceChange)
+	edPtr.SendDebugSettings()
+}
+
+// UpdateEditorSettings updates the values of the editor settings and sends a notification of the change to the client.
+func (edPtr *CrlEditor) UpdateEditorSettings(request *Request) {
+	edPtr.crlEditorSettings.DropReferenceAsLink, _ = strconv.ParseBool(request.AdditionalParameters["DropReferenceAsLink"])
+	edPtr.crlEditorSettings.DropRefinementAsLink, _ = strconv.ParseBool(request.AdditionalParameters["DropRefinementAsLink"])
+	edPtr.SendEditorSettings()
+}
+
 // BuildEditorConceptSpace programmatically constructs the EditorConceptSpace
 func BuildEditorConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	// EditorConceptSpace
-	conceptSpace, _ := uOfD.NewElement(hl, EditorURI)
+	conceptSpace, _ := uOfD.NewElement(hl, editorURI)
 	conceptSpace.SetLabel("EditorConceptSpace", hl)
-	conceptSpace.SetURI(EditorURI, hl)
+	conceptSpace.SetURI(editorURI, hl)
 	conceptSpace.SetIsCore(hl)
 
 	BuildTreeViews(conceptSpace, hl)

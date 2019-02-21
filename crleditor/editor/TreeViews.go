@@ -8,7 +8,7 @@ import (
 )
 
 // TreeViewsURI identifies the TreeViews concept
-var TreeViewsURI = EditorURI + "/TreeViews"
+var TreeViewsURI = editorURI + "/TreeViews"
 
 // ManageTreeNodesURI identifies the ManageNodes concept
 var ManageTreeNodesURI = TreeViewsURI + "/ManageTreeNodes"
@@ -33,7 +33,7 @@ func treeViewManageNodes(instance core.Element, changeNotification *core.ChangeN
 		log.Printf("In treeViewManageNodes()")
 	}
 
-	treeManager := CrlEditorSingleton.GetTreeManager()
+	treeManager := CrlEditorSingleton.getTreeManager()
 
 	switch changeNotification.GetNatureOfChange() {
 	case core.IndicatedConceptChanged:
@@ -52,7 +52,7 @@ func treeViewManageNodes(instance core.Element, changeNotification *core.ChangeN
 			switch secondUnderlyingChange.GetNatureOfChange() {
 			case core.UofDConceptAdded:
 				changedElement := secondUnderlyingChange.GetConceptState()
-				treeManager.AddNode(changedElement, hl)
+				treeManager.addNode(changedElement, hl)
 			case core.UofDConceptChanged:
 				thirdUnderlyingChange := secondUnderlyingChange.GetUnderlyingChange()
 				if thirdUnderlyingChange == nil {
@@ -60,10 +60,10 @@ func treeViewManageNodes(instance core.Element, changeNotification *core.ChangeN
 					return
 				}
 				changedElement := thirdUnderlyingChange.GetConceptState()
-				treeManager.ChangeNode(changedElement, hl)
+				treeManager.changeNode(changedElement, hl)
 			case core.UofDConceptRemoved:
 				changedElement := secondUnderlyingChange.GetConceptState()
-				treeManager.RemoveNode(changedElement, hl)
+				treeManager.removeNode(changedElement, hl)
 			}
 		}
 	}

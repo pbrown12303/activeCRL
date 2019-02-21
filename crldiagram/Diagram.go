@@ -28,6 +28,7 @@ import (
 
 	"github.com/golang/freetype/truetype"
 	"github.com/pbrown12303/activeCRL/core"
+
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/gobold"
 	"golang.org/x/image/font/gofont/goitalic"
@@ -65,17 +66,29 @@ var CrlDiagramWidthURI = CrlDiagramURI + "/" + "Width"
 // CrlDiagramHeightURI identifies the CrlDiagramHeight concept
 var CrlDiagramHeightURI = CrlDiagramURI + "/" + "Height"
 
-// CrlDiagramNodeURI identifies teh CrlDiagramNode conceot
+// CrlDiagramElementURI identifies the CrlDiagramElement concept
+var CrlDiagramElementURI = CrlDiagramConceptSpaceURI + "/" + "CrlDiagramElement"
+
+// CrlDiagramElementModelReferenceURI identifies the reference to the model element represented by the node
+var CrlDiagramElementModelReferenceURI = CrlDiagramElementURI + "/" + "ModelReference"
+
+// CrlDiagramElementDisplayLabelURI identifies the display label concept to be used when displaying the node
+var CrlDiagramElementDisplayLabelURI = CrlDiagramElementURI + "/" + "DisplayLabel"
+
+// CrlDiagramElementAbstractionDisplayLabelURI identifies the abstraction display label concept to be used when displaying the node
+var CrlDiagramElementAbstractionDisplayLabelURI = CrlDiagramElementURI + "/" + "AbstractionDisplayLabel"
+
+// CrlDiagramLinkURI identifies the CrlDiagramLink concept
+var CrlDiagramLinkURI = CrlDiagramConceptSpaceURI + "/" + "CrlDiagramLink"
+
+// CrlDiagramLinkSourceURI identifies the concept that is the source of the link
+var CrlDiagramLinkSourceURI = CrlDiagramLinkURI + "/" + "Source"
+
+// CrlDiagramLinkTargetURI identifies the concept that is the target of the link
+var CrlDiagramLinkTargetURI = CrlDiagramLinkURI + "/" + "Target"
+
+// CrlDiagramNodeURI identifies the CrlDiagramNode concept
 var CrlDiagramNodeURI = CrlDiagramConceptSpaceURI + "/" + "CrlDiagramNode"
-
-// CrlDiagramNodeModelReferenceURI identifies the reference to the model element represented by the node
-var CrlDiagramNodeModelReferenceURI = CrlDiagramNodeURI + "/" + "ModelReference"
-
-// CrlDiagramNodeDisplayLabelURI identifies the display label concept to be used when displaying the node
-var CrlDiagramNodeDisplayLabelURI = CrlDiagramNodeURI + "/" + "DisplayLabel"
-
-// CrlDiagramNodeAbstractionDisplayLabelURI identifies the abstraction display label concept to be used when displaying the node
-var CrlDiagramNodeAbstractionDisplayLabelURI = CrlDiagramNodeURI + "/" + "AbstractionDisplayLabel"
 
 // CrlDiagramNodeXURI identifies the X coordinate of the node
 var CrlDiagramNodeXURI = CrlDiagramNodeURI + "/" + "X"
@@ -92,35 +105,12 @@ var CrlDiagramNodeWidthURI = CrlDiagramNodeURI + "/" + "Width"
 // CrlDiagramNodeDisplayLabelYOffsetURI identifies the Y offset for the display label within the node
 var CrlDiagramNodeDisplayLabelYOffsetURI = CrlDiagramNodeURI + "/" + "DisplayLabelYOffset"
 
-// CrlDiagramLinkURI identifies the concept of a link
-var CrlDiagramLinkURI = CrlDiagramConceptSpaceURI + "/" + "CrlDiagramLink"
-
-// // computeNodeSize recalcualtes the size of the node based on the string sizes for the display label and
-// // abstractions listed
-
-// func computeNodeSize(node core.Element, hl *core.HeldLocks) {
-// 	displayLabel := GetDisplayLabel(node, hl)
-// 	displayLabelBounds, _ := font.BoundString(go12PtBoldFace, displayLabel)
-// 	displayLabelHeight := Int26_6ToFloat(displayLabelBounds.Max.Y)
-// 	displayLabelWidth := Int26_6ToFloat(displayLabelBounds.Max.X)
-// 	abstractionDisplayLabel := GetAbstractionDisplayLabel(node, hl)
-// 	abstractionDisplayLabelBounds, _ := font.BoundString(go10PtItalicFace, abstractionDisplayLabel)
-// 	abstractionDisplayLabelWidth := Int26_6ToFloat(abstractionDisplayLabelBounds.Max.X)
-// 	abstractionDisplayLabelHeight := Int26_6ToFloat(abstractionDisplayLabelBounds.Max.Y)
-// 	topHeight := math.Max(12.0, abstractionDisplayLabelHeight)
-// 	height := topHeight + displayLabelHeight + 2*NodeLineWidth + 3*NodePadWidth
-// 	topWidth := IconSize + 1*NodePadWidth + abstractionDisplayLabelWidth
-// 	width := math.Max(topWidth, displayLabelWidth)
-// 	SetNodeHeight(node, height, hl)
-// 	SetNodeWidth(node, width, hl)
-// }
-
-// GetDisplayLabel is a convenience function for getting the DisplayLabel value of a node's position
-func GetDisplayLabel(diagramNode core.Element, hl *core.HeldLocks) string {
-	if diagramNode == nil {
+// GetDisplayLabel is a convenience function for getting the DisplayLabel value of a DiagramElement
+func GetDisplayLabel(diagramElement core.Element, hl *core.HeldLocks) string {
+	if diagramElement == nil {
 		return ""
 	}
-	displayLabelLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeDisplayLabelURI, hl)
+	displayLabelLiteral := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementDisplayLabelURI, hl)
 	if displayLabelLiteral != nil {
 		return displayLabelLiteral.GetLiteralValue(hl)
 	}
@@ -128,15 +118,67 @@ func GetDisplayLabel(diagramNode core.Element, hl *core.HeldLocks) string {
 }
 
 // GetAbstractionDisplayLabel is a convenience function for getting the DisplayLabel value of a node's position
-func GetAbstractionDisplayLabel(diagramNode core.Element, hl *core.HeldLocks) string {
-	if diagramNode == nil {
+func GetAbstractionDisplayLabel(diagramElement core.Element, hl *core.HeldLocks) string {
+	if diagramElement == nil {
 		return ""
 	}
-	abstractionDisplayLabelLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeAbstractionDisplayLabelURI, hl)
+	abstractionDisplayLabelLiteral := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementAbstractionDisplayLabelURI, hl)
 	if abstractionDisplayLabelLiteral != nil {
 		return abstractionDisplayLabelLiteral.GetLiteralValue(hl)
 	}
 	return ""
+}
+
+// GetFirstElementRepresentingConcept returns the first diagram element that represents the indicated concept
+func GetFirstElementRepresentingConcept(diagram core.Element, concept core.Element, hl *core.HeldLocks) core.Element {
+	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+		log.Printf("GetFirstElementRepresentingConcept called with diagram of incorrect type")
+		return nil
+	}
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, hl) {
+		if GetReferencedModelElement(el, hl) == concept {
+			return el
+		}
+	}
+	return nil
+}
+
+// GetFirstElementRepresentingConceptID returns the first diagram element that represents the indicated concept
+func GetFirstElementRepresentingConceptID(diagram core.Element, conceptID string, hl *core.HeldLocks) core.Element {
+	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+		log.Printf("GetFirstElementRepresentingConcept called with diagram of incorrect type")
+		return nil
+	}
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, hl) {
+		if GetReferencedModelElement(el, hl).GetConceptID(hl) == conceptID {
+			return el
+		}
+	}
+	return nil
+}
+
+// GetLinkSource is a convenience function for getting the source concept of a link
+func GetLinkSource(diagramLink core.Element, hl *core.HeldLocks) core.Element {
+	if diagramLink == nil {
+		return nil
+	}
+	sourceReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, hl)
+	if sourceReference != nil {
+		return sourceReference.GetReferencedConcept(hl)
+	}
+	return nil
+}
+
+// GetLinkTarget is a convenience function for getting the target concept of a link
+func GetLinkTarget(diagramLink core.Element, hl *core.HeldLocks) core.Element {
+	if diagramLink == nil {
+		return nil
+	}
+	targetReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, hl)
+	if targetReference != nil {
+		return targetReference.GetReferencedConcept(hl)
+	}
+	return nil
 }
 
 // GetNodeHeight is a convenience function for getting the Height value of a node's position
@@ -221,11 +263,11 @@ func GetDisplayLabelYOffset(diagramNode core.Element, hl *core.HeldLocks) float6
 
 // GetReferencedModelElement is a function on a CrlDiagramNode that returns the model element represented by the
 // diagram node
-func GetReferencedModelElement(diagramNode core.Element, hl *core.HeldLocks) core.Element {
-	if diagramNode == nil {
+func GetReferencedModelElement(diagramElement core.Element, hl *core.HeldLocks) core.Element {
+	if diagramElement == nil {
 		return nil
 	}
-	reference := diagramNode.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramNodeModelReferenceURI, hl)
+	reference := diagramElement.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, hl)
 	if reference != nil {
 		return reference.GetReferencedConcept(hl)
 	}
@@ -264,30 +306,61 @@ func Int26_6ToFloat(val fixed.Int26_6) float64 {
 	return float64(val) / 64.0
 }
 
+// IsDiagram returns true if the supplied element is a crldiagram
+func IsDiagram(el core.Element, hl *core.HeldLocks) bool {
+	switch el.(type) {
+	case core.Element:
+		return el.IsRefinementOfURI(CrlDiagramURI, hl)
+	}
+	return false
+}
+
 // SetAbstractionDisplayLabel is a function on a CrlDiagramNode that sets the display label of the diagram node
-func SetAbstractionDisplayLabel(diagramNode core.Element, value string, hl *core.HeldLocks) {
-	if diagramNode == nil {
+func SetAbstractionDisplayLabel(diagramElement core.Element, value string, hl *core.HeldLocks) {
+	if diagramElement == nil {
 		return
 	}
-	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeAbstractionDisplayLabelURI, hl)
+	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementAbstractionDisplayLabelURI, hl)
 	if literal == nil {
 		return
 	}
 	literal.SetLiteralValue(value, hl)
-	updateNodeSize(diagramNode, hl)
+	updateNodeSize(diagramElement, hl)
 }
 
 // SetDisplayLabel is a function on a CrlDiagramNode that sets the display label of the diagram node
-func SetDisplayLabel(diagramNode core.Element, value string, hl *core.HeldLocks) {
-	if diagramNode == nil {
+func SetDisplayLabel(diagramElement core.Element, value string, hl *core.HeldLocks) {
+	if diagramElement == nil {
 		return
 	}
-	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeDisplayLabelURI, hl)
+	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementDisplayLabelURI, hl)
 	if literal == nil {
 		return
 	}
 	literal.SetLiteralValue(value, hl)
-	updateNodeSize(diagramNode, hl)
+	updateNodeSize(diagramElement, hl)
+}
+
+// SetLinkSource is a convenience function for setting the source concept of a link
+func SetLinkSource(diagramLink core.Element, source core.Element, hl *core.HeldLocks) {
+	if diagramLink == nil {
+		return
+	}
+	sourceReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, hl)
+	if sourceReference != nil {
+		sourceReference.SetReferencedConcept(source, hl)
+	}
+}
+
+// SetLinkTarget is a convenience function for setting the target concept of a link
+func SetLinkTarget(diagramLink core.Element, target core.Element, hl *core.HeldLocks) {
+	if diagramLink == nil {
+		return
+	}
+	targetReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, hl)
+	if targetReference != nil {
+		targetReference.SetReferencedConcept(target, hl)
+	}
 }
 
 // SetNodeHeight is a function on a CrlDiagramNode that sets the height of the diagram node
@@ -352,11 +425,11 @@ func SetNodeDisplayLabelYOffset(diagramNode core.Element, value float64, hl *cor
 
 // SetReferencedModelElement is a function on a CrlDiagramNode that sets the model element represented by the
 // diagram node
-func SetReferencedModelElement(diagramNode core.Element, el core.Element, hl *core.HeldLocks) {
-	if diagramNode == nil {
+func SetReferencedModelElement(diagramElement core.Element, el core.Element, hl *core.HeldLocks) {
+	if diagramElement == nil {
 		return
 	}
-	reference := diagramNode.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramNodeModelReferenceURI, hl)
+	reference := diagramElement.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, hl)
 	if reference == nil {
 		return
 	}
@@ -390,6 +463,13 @@ func BuildCrlDiagramConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLoc
 	crlDiagramHeight.SetOwningConcept(crlDiagram, hl)
 	crlDiagramHeight.SetIsCore(hl)
 
+	// CrlDiagramElement
+	crlDiagramElement, _ := uOfD.NewElement(hl, CrlDiagramElementURI)
+	crlDiagramElement.SetLabel("CrlDiagramElement", hl)
+	crlDiagramElement.SetURI(CrlDiagramElementURI, hl)
+	crlDiagramElement.SetOwningConcept(crlDiagramConceptSpace, hl)
+	crlDiagramElement.SetIsCore(hl)
+
 	// CrlDiagramNode
 	crlDiagramNode, _ := uOfD.NewElement(hl, CrlDiagramNodeURI)
 	crlDiagramNode.SetLabel("CrlDiagramNode", hl)
@@ -397,21 +477,27 @@ func BuildCrlDiagramConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLoc
 	crlDiagramNode.SetOwningConcept(crlDiagramConceptSpace, hl)
 	crlDiagramNode.SetIsCore(hl)
 
-	crlDiagramNodeModelReference, _ := uOfD.NewReference(hl, CrlDiagramNodeModelReferenceURI)
+	crlDiagramNodeElementRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramNodeElementRefinement.SetLabel("CrlDiagramNode refines CrlDiagramElement", hl)
+	crlDiagramNodeElementRefinement.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeElementRefinement.SetAbstractConcept(crlDiagramElement, hl)
+	crlDiagramNodeElementRefinement.SetRefinedConcept(crlDiagramNode, hl)
+
+	crlDiagramNodeModelReference, _ := uOfD.NewReference(hl, CrlDiagramElementModelReferenceURI)
 	crlDiagramNodeModelReference.SetLabel("ModelReference", hl)
-	crlDiagramNodeModelReference.SetURI(CrlDiagramNodeModelReferenceURI, hl)
+	crlDiagramNodeModelReference.SetURI(CrlDiagramElementModelReferenceURI, hl)
 	crlDiagramNodeModelReference.SetOwningConcept(crlDiagramNode, hl)
 	crlDiagramNodeModelReference.SetIsCore(hl)
 
-	crlDiagramNodeDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramNodeDisplayLabelURI)
+	crlDiagramNodeDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramElementDisplayLabelURI)
 	crlDiagramNodeDisplayLabel.SetLabel("DisplayLabel", hl)
-	crlDiagramNodeDisplayLabel.SetURI(CrlDiagramNodeDisplayLabelURI, hl)
+	crlDiagramNodeDisplayLabel.SetURI(CrlDiagramElementDisplayLabelURI, hl)
 	crlDiagramNodeDisplayLabel.SetOwningConcept(crlDiagramNode, hl)
 	crlDiagramNodeDisplayLabel.SetIsCore(hl)
 
-	crlDiagramNodeAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramNodeAbstractionDisplayLabelURI)
+	crlDiagramNodeAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramElementAbstractionDisplayLabelURI)
 	crlDiagramNodeAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
-	crlDiagramNodeAbstractionDisplayLabel.SetURI(CrlDiagramNodeAbstractionDisplayLabelURI, hl)
+	crlDiagramNodeAbstractionDisplayLabel.SetURI(CrlDiagramElementAbstractionDisplayLabelURI, hl)
 	crlDiagramNodeAbstractionDisplayLabel.SetOwningConcept(crlDiagramNode, hl)
 	crlDiagramNodeAbstractionDisplayLabel.SetIsCore(hl)
 
@@ -452,6 +538,42 @@ func BuildCrlDiagramConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLoc
 	crlDiagramLink.SetOwningConcept(crlDiagramConceptSpace, hl)
 	crlDiagramLink.SetIsCore(hl)
 
+	crlDiagramLinkElementRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramLinkElementRefinement.SetLabel("CrlDiagramLink refines CrlDiagramElement", hl)
+	crlDiagramLinkElementRefinement.SetOwningConcept(crlDiagramLink, hl)
+	crlDiagramLinkElementRefinement.SetAbstractConcept(crlDiagramElement, hl)
+	crlDiagramLinkElementRefinement.SetRefinedConcept(crlDiagramLink, hl)
+
+	crlDiagramLinkModelReference, _ := uOfD.NewReference(hl, CrlDiagramElementModelReferenceURI)
+	crlDiagramLinkModelReference.SetLabel("ModelReference", hl)
+	crlDiagramLinkModelReference.SetURI(CrlDiagramElementModelReferenceURI, hl)
+	crlDiagramLinkModelReference.SetOwningConcept(crlDiagramLink, hl)
+	crlDiagramLinkModelReference.SetIsCore(hl)
+
+	crlDiagramLinkSource, _ := uOfD.NewReference(hl, CrlDiagramLinkSourceURI)
+	crlDiagramLinkSource.SetLabel("Source", hl)
+	crlDiagramLinkSource.SetURI(CrlDiagramLinkSourceURI, hl)
+	crlDiagramLinkSource.SetOwningConcept(crlDiagramLink, hl)
+	crlDiagramLinkSource.SetIsCore(hl)
+
+	crlDiagramLinkTarget, _ := uOfD.NewReference(hl, CrlDiagramLinkTargetURI)
+	crlDiagramLinkTarget.SetLabel("Target", hl)
+	crlDiagramLinkTarget.SetURI(CrlDiagramLinkTargetURI, hl)
+	crlDiagramLinkTarget.SetOwningConcept(crlDiagramLink, hl)
+	crlDiagramLinkTarget.SetIsCore(hl)
+
+	crlDiagramLinkDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramElementDisplayLabelURI)
+	crlDiagramLinkDisplayLabel.SetLabel("DisplayLabel", hl)
+	crlDiagramLinkDisplayLabel.SetURI(CrlDiagramElementDisplayLabelURI, hl)
+	crlDiagramLinkDisplayLabel.SetOwningConcept(crlDiagramLink, hl)
+	crlDiagramLinkDisplayLabel.SetIsCore(hl)
+
+	crlDiagramLinkAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramElementAbstractionDisplayLabelURI)
+	crlDiagramLinkAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
+	crlDiagramLinkAbstractionDisplayLabel.SetURI(CrlDiagramElementAbstractionDisplayLabelURI, hl)
+	crlDiagramLinkAbstractionDisplayLabel.SetOwningConcept(crlDiagramLink, hl)
+	crlDiagramLinkAbstractionDisplayLabel.SetIsCore(hl)
+
 	uOfD.AddFunction(CrlDiagramNodeURI, updateDiagramNode)
 
 	return crlDiagramConceptSpace
@@ -464,7 +586,7 @@ func updateDiagramNode(node core.Element, notification *core.ChangeNotification,
 	// There are two notifications of interest here: the label of the referenced model element
 	// and the list of immediate abstractions of the referenced model element.
 	// First, determine whether it is the referenced model element that has changed
-	reference := node.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramNodeModelReferenceURI, hl)
+	reference := node.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, hl)
 	modelElement := GetReferencedModelElement(node, hl)
 	switch notification.GetNatureOfChange() {
 	case core.IndicatedConceptChanged:

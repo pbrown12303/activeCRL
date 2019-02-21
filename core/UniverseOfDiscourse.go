@@ -317,6 +317,18 @@ func (uOfDPtr *universeOfDiscourse) GetRefinementWithURI(uri string) Refinement 
 	return nil
 }
 
+// GetRootElements returns all elements that do not have owners
+func (uOfDPtr *universeOfDiscourse) GetRootElements(hl *HeldLocks) map[string]Element {
+	allElements := uOfDPtr.GetElements()
+	rootElements := make(map[string]Element)
+	for id, el := range allElements {
+		if el.GetOwningConceptID(hl) == "" {
+			rootElements[id] = el
+		}
+	}
+	return rootElements
+}
+
 func (uOfDPtr *universeOfDiscourse) getURIElementMap() *StringElementMap {
 	return uOfDPtr.uriElementMap
 }
@@ -329,6 +341,41 @@ func (uOfDPtr *universeOfDiscourse) IsRecordingUndo() bool {
 // MarkUndoPoint marks a point on the undo stack. The next undo operation will undo everything back to this point.
 func (uOfDPtr *universeOfDiscourse) MarkUndoPoint() {
 	uOfDPtr.undoManager.MarkUndoPoint()
+}
+
+// MarshalConceptSpace creates a JSON representation of an element and all of its descendants
+func (uOfDPtr *universeOfDiscourse) MarshalConceptSpace(el Element, hl *HeldLocks) ([]byte, error) {
+	var result []byte
+	result = append(result, []byte("[")...)
+	marshaledConcept, err := uOfDPtr.marshalConceptRecursively(el, hl)
+	if err != nil {
+		return result, err
+	}
+	// The last byte of marshaledConcept is going to be a comma we don't want
+	result = append(result, marshaledConcept[0:len(marshaledConcept)-1]...)
+	result = append(result, []byte("]")...)
+	return result, nil
+}
+
+func (uOfDPtr *universeOfDiscourse) marshalConceptRecursively(el Element, hl *HeldLocks) ([]byte, error) {
+	var result []byte
+	if el == nil {
+		return result, errors.New("UniverseOfDiscourse.marshalConceptRecursively called with nil concept")
+	}
+	marshaledElement, err := el.MarshalJSON()
+	if err != nil {
+		return result, err
+	}
+	result = append(result, marshaledElement...)
+	result = append(result, []byte(",")...)
+	for _, child := range el.GetOwnedConcepts(hl) {
+		marshaledChild, err := uOfDPtr.marshalConceptRecursively(child, hl)
+		if err != nil {
+			return result, err
+		}
+		result = append(result, marshaledChild...)
+	}
+	return result, nil
 }
 
 // newConceptAddedNotification creates a UniverseOfDiscourseAdded notification
@@ -466,6 +513,10 @@ func (uOfDPtr *universeOfDiscourse) preChange(el Element, hl *HeldLocks) {
 }
 
 func (uOfDPtr *universeOfDiscourse) queueFunctionExecutions(el Element, notification *ChangeNotification, hl *HeldLocks) {
+	if el.GetUniverseOfDiscourse(hl) == nil {
+		log.Printf("universeOfDiscourse.queueFunctionExecution called with an Element that does not have an assigned UniverseOfDiscourse")
+		return
+	}
 	functionIdentifiers := uOfDPtr.findFunctions(el, notification, hl)
 	for _, functionIdentifier := range functionIdentifiers {
 		if TraceChange == true {
@@ -555,6 +606,31 @@ func (uOfDPtr *universeOfDiscourse) removeElementForUndo(el Element, hl *HeldLoc
 	}
 }
 
+// RecoverConceptSpace reconstructs a concept space from its JSON representation
+func (uOfDPtr *universeOfDiscourse) RecoverConceptSpace(data []byte, hl *HeldLocks) (Element, error) {
+	var unmarshaledData []json.RawMessage
+	var conceptSpace Element
+	err := json.Unmarshal(data, &unmarshaledData)
+	if err != nil {
+		return nil, err
+	}
+	for _, data := range unmarshaledData {
+		var el Element
+		el, err = uOfDPtr.RecoverElement(data, hl)
+		if err != nil {
+			return nil, err
+		}
+		if el.GetOwningConceptID(hl) == "" {
+			if conceptSpace == nil {
+				conceptSpace = el
+			} else {
+				return nil, errors.New("In UniverseOfDiscourse.RecoverConceptSpace more than one element does not have an owner")
+			}
+		}
+	}
+	return conceptSpace, nil
+}
+
 // RecoverElement reconstructs an Element (or subclass) from its JSON representation
 func (uOfDPtr *universeOfDiscourse) RecoverElement(data []byte, hl *HeldLocks) (Element, error) {
 	if len(data) == 0 {
@@ -595,6 +671,8 @@ func (uOfDPtr *universeOfDiscourse) replicateAsRefinement(original Element, repl
 
 	for _, originalChild := range original.GetOwnedConcepts(hl) {
 		var replicateChild Element
+		// For each original child, determine whether there is already a replicate child that
+		// has the original child as one of its abstractions. This is replicateChild
 		for _, currentChild := range replicate.GetOwnedConcepts(hl) {
 			currentChildAbstractions := make(map[string]Element)
 			currentChild.FindAbstractions(currentChildAbstractions, hl)
@@ -604,13 +682,15 @@ func (uOfDPtr *universeOfDiscourse) replicateAsRefinement(original Element, repl
 				}
 			}
 		}
+		// If the replicate child is nil at this point, there is no existing replicate child that corresponds
+		// to the original child - create one.
 		if replicateChild == nil {
 			switch originalChild.(type) {
-			case *reference:
+			case Reference:
 				replicateChild, _ = uOfDPtr.NewReference(hl)
-			case *literal:
+			case Literal:
 				replicateChild, _ = uOfDPtr.NewLiteral(hl)
-			case *element:
+			case Element:
 				replicateChild, _ = uOfDPtr.NewElement(hl)
 			}
 			replicateChild.SetOwningConcept(replicate, hl)
@@ -823,9 +903,11 @@ type UniverseOfDiscourse interface {
 	GetReferenceWithURI(string) Reference
 	GetRefinement(string) Refinement
 	GetRefinementWithURI(string) Refinement
+	GetRootElements(*HeldLocks) map[string]Element
 	getURIElementMap() *StringElementMap
 	IsRecordingUndo() bool
 	MarkUndoPoint()
+	MarshalConceptSpace(Element, *HeldLocks) ([]byte, error)
 	NewConceptChangeNotification(Element, *HeldLocks) *ChangeNotification
 	NewForwardingChangeNotification(Element, NatureOfChange, *ChangeNotification) *ChangeNotification
 	NewElement(*HeldLocks, ...string) (Element, error)
@@ -837,6 +919,7 @@ type UniverseOfDiscourse interface {
 	preChange(Element, *HeldLocks)
 	queueFunctionExecutions(Element, *ChangeNotification, *HeldLocks)
 	RecoverElement([]byte, *HeldLocks) (Element, error)
+	RecoverConceptSpace([]byte, *HeldLocks) (Element, error)
 	removeElement(Element, *HeldLocks) error
 	RemoveElement(Element, *HeldLocks) error
 	SetUniverseOfDiscourse(Element, *HeldLocks) error

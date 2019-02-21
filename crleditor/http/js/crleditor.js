@@ -1,8 +1,34 @@
-var crlCanvasGlobal
+// crlCurrentDiagramContainerIDGlobal is the identifier for the diagram container currently being displayed
 var crlCurrentDiagramContainerIDGlobal
+// crlDebugSettingsDialog is the initialized dialog used for editing debug settings
+var crlDebugSettingsDialog
+// crlDropReferenceAsLink when true causes references dragged from the tree into the diagram to be added as links
+var crlDropReferenceAsLink = false
+// crlDropRefinementAsLink when true causes refinements dragged from the tree into the diagram to be added as links
+var crlDropRefinementAsLink = false
+// crlEditorSettingsDialog is the initialized dialog used for editing editor settings
+var crlEditorSettingsDialog
+// crlEnableTracing is the client-side copy of the server-side value that turns on notification tracing
+var crlEnableTracing = false
+// crlGraphsGlobal is an array of existing graphs that is used to look up a graph given its identifier
 var crlGraphsGlobal = {}
+// crlInitializationCompleteGlobal indicates whether the server-side initialization has been completed
 var crlInitializationCompleteGlobal = false
+// crlMovedNodes is an array of nodes that have been moved. This is a temporary cache that is used to update the 
+// server once a mouse up has occurred
+var crlMovedNodes = {}
+// crlOpenWorkspaceDialog is the initialized dialog used for opening a workspace
+var crlOpenWorkspaceDialog
+// crlPaperGlobal is an array of existing papers that is used to look up a paper given its identifier
 var crlPapersGlobal = {}
+// crlSelectedConceptIDGlobal contains the model identifier of the currently selected concept
+var crlSelectedConceptIDGlobal
+// crlTreeDragSelectionIDGlobal contains the model identifier of the concept currently being dragged from the tree
+var crlTreeDragSelectionIDGlobal
+// CrlWebSocketGlobal is the web socket being used for server-side communications
+var crlWebsocketGlobal
+// crlWorkspacePath is the path to the current workspace
+var crlWorkspacePath
 
 // <!-- Set css parameters -->
 $(function () {
@@ -38,6 +64,59 @@ $(function () {
             "items": function ($node) {
                 var tree = $("uOfD").jstree(true);
                 var items = {
+                    addChild: {
+                        "label": "Add Child",
+                        "action": false,
+                        "submenu": {
+                            Element: {
+                                "label": "Element",
+                                "action": function (obj) {
+                                    if ($node != undefined) {
+                                        var xhr = crlCreateEmptyRequest();
+                                        var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
+                                        var data = JSON.stringify({ "Action": "AddElementChild", "RequestConceptID": conceptID });
+                                        xhr.send(data);
+                                    }
+                                }
+                            },
+                            Diagram: {
+                                "label": "Diagram",
+                                "action": function (obj) {
+                                    var xhr = crlCreateEmptyRequest();
+                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
+                                    var data = JSON.stringify({ "Action": "AddDiagramChild", "RequestConceptID": conceptID });
+                                    xhr.send(data);
+                            }
+                            },
+                            Literal: {
+                                "label": "Literal",
+                                "action": function (obj) {
+                                    var xhr = crlCreateEmptyRequest();
+                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
+                                    var data = JSON.stringify({ "Action": "AddLiteralChild", "RequestConceptID": conceptID });
+                                    xhr.send(data);
+                           }
+                            },
+                            Reference: {
+                                "label": "Reference",
+                                "action": function (obj) {
+                                    var xhr = crlCreateEmptyRequest();
+                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
+                                    var data = JSON.stringify({ "Action": "AddReferenceChild", "RequestConceptID": conceptID });
+                                    xhr.send(data);
+                           }
+                            },
+                            Refinement: {
+                                "label": "Refinement",
+                                "action": function (obj) {
+                                    var xhr = crlCreateEmptyRequest();
+                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
+                                    var data = JSON.stringify({ "Action": "AddRefinementChild", "RequestConceptID": conceptID });
+                                    xhr.send(data);
+                            }
+                            }
+                        }
+                    },
                     display: {
                         "label": "Display Diagram",
                         "action": function (obj) {
@@ -73,8 +152,29 @@ $(function () {
     });
     $("#uOfD").on("select_node.jstree", crlSendTreeNodeSelected);
     $("#uOfD").on("dragstart", crlOnTreeDragStart);
-    $("#body").on("ondrop", crlOnEditorDrop)
-    crlCanvasGlobal = document.createElement("canvas");
+    $("#body").on("ondrop", crlOnEditorDrop);
+    crlDebugSettingsDialog = $("#debugSettingsDialog").dialog({
+        "resizable": false,
+        "height": 200,
+        "modal": true,
+        "buttons": { "OK": crlDebugSettingsOK }
+    });
+    crlDebugSettingsDialog.dialog("close");
+    crlEditorSettingsDialog = $("#editorSettingsDialog").dialog({
+        "resizable": false,
+        "height": 200,
+        "modal": true,
+        "buttons": { "OK": crlEditorSettingsOK }
+    });
+    crlEditorSettingsDialog.dialog("close");
+    crlOpenWorkspaceDialog = $("#openWorkspaceDialog").dialog({
+        "resizable": true,
+        "width": 650,
+        "height": 300,
+        "modal": true,
+        "buttons": { "OK": crlOpenWorkspaceOK }
+    });
+    crlOpenWorkspaceDialog.dialog("close");
 });
 
 
@@ -128,12 +228,43 @@ $(function () {
 });
 
 
-var crlWebsocketGlobal
-var crlSelectedConceptIDGlobal
-var crlTreeDragSelectionIDGlobal
+
+function crlAddDiagramLink(data) {
+    crlUpdateDiagramLink(data);
+}
 
 function crlAddDiagramNode(data) {
     crlUpdateDiagramNode(data);
+}
+
+function crlConstructDiagramLink(data, graphID, crlJointID) {
+    var sourceJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkSourceID"])
+    var targetJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkTargetID"])
+    if (sourceJointID != "" && targetJointID != "") {
+        var linkSource = crlFindElementInGraph(graphID, sourceJointID)
+        var linkTarget = crlFindElementInGraph(graphID, targetJointID)
+        if (linkSource != undefined && linkTarget != undefined) {
+            var newLink;
+            switch (data.AdditionalParameters["LinkType"]) {
+                case "*core.reference":
+                    newLink = new joint.shapes.crl.ReferenceLink({
+                        source: { id: linkSource.id },
+                        target: { id: linkTarget.id }
+                    });
+                    break;
+                case "*core.refinement":
+                    var newLink = new joint.shapes.crl.RefinementLink({
+                        source: { id: linkSource.id },
+                        target: { id: linkTarget.id }
+                    });
+                    break;
+            }
+            newLink.set("crlJointID", crlJointID);
+            crlGraphsGlobal[graphID].addCell(newLink);
+            return newLink;
+        }
+    }
+    return undefined
 }
 
 function crlConstructDiagramNode(data, graphID, crlJointID) {
@@ -147,12 +278,23 @@ function crlConstructDiagramNode(data, graphID, crlJointID) {
     jointElement.set("crlJointID", crlJointID);
     jointElement.set("name", data.AdditionalParameters["DisplayLabel"]);
     jointElement.set("position", { "x": Number(data.AdditionalParameters["NodeX"]), "y": Number(data.AdditionalParameters["NodeY"]) });
-    jointElement.set("size", {"width":Number(data.AdditionalParameters["NodeWidth"]), "height":Number(data.AdditionalParameters["NodeHeight"])});
+    jointElement.set("size", { "width": Number(data.AdditionalParameters["NodeWidth"]), "height": Number(data.AdditionalParameters["NodeHeight"]) });
     jointElement.set("icon", data.AdditionalParameters["Icon"]);
     jointElement.set("abstractions", data.AdditionalParameters["Abstractions"]);
-    // jointElement.updateRectangles();
-    crlGraphsGlobal[graphID].addCell(jointElement);
+    var graph = crlGraphsGlobal[graphID];
+    graph.addCell(jointElement);
     return jointElement;
+}
+
+function crlFindCellInGraph(graphID, crlJointID) {
+    var cells = crlGraphsGlobal[graphID].getCells();
+    var cell = null;
+    cells.forEach(function (item) {
+        if (item.get("crlJointID") == crlJointID) {
+            cell = item;
+        }
+    })
+    return cell
 }
 
 function crlFindElementInGraph(graphID, crlJointID) {
@@ -164,6 +306,17 @@ function crlFindElementInGraph(graphID, crlJointID) {
         }
     })
     return elem
+}
+
+function crlFindLinkInGraph(graphID, crlJointID) {
+    var links = crlGraphsGlobal[graphID].getLinks();
+    var link = null;
+    links.forEach(function (item) {
+        if (item.get("crlJointID") == crlJointID) {
+            link = item;
+        }
+    })
+    return link
 }
 
 // <!-- Set up the websockets connection and callbacks -->
@@ -196,10 +349,6 @@ function crlAddTreeNode(data) {
         },
         'last');
     crlSendNormalResponse();
-}
-
-var crlCalculateTextWidth = function (text) {
-    return crlGetTextWidth(text, "go12PtBoldFace")
 }
 
 function crlCallExit() {
@@ -253,11 +402,29 @@ function crlCreateEmptyRequest() {
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
+            var response = JSON.parse(xhr.responseText)
+            if (response.Result == 1) {
+                alert(response.ResultDescription);
+            }
             console.log(xhr.responseText)
         };
     }
     return xhr
 }
+
+// crlDebugSettings creates and displays the Debug Settings dialog so that the debug settings can be updated from the UI
+var crlDebugSettings = function () {
+    $("#enableTracing").prop("checked", crlEnableTracing);
+    crlDebugSettingsDialog.dialog("open");
+}
+
+// crlDebugSettingsOK is the callback function for the Debug Settings dialog OK button.
+// It updaates the debug settings with the values from the dialog
+var crlDebugSettingsOK = function () {
+    crlSendDebugSettings();
+    crlDebugSettingsDialog.dialog("close");
+};
+
 
 function crlDeleteTreeNode(data) {
     var concept = data.NotificationConcept;
@@ -341,6 +508,7 @@ function crlDisplayDiagram(data) {
                 "gridSize": 1
             });
             jointPaper.on("cell:pointerdown", crlOnDiagramCellPointerDown);
+            jointPaper.on("cell:pointerup", crlOnDiagramCellPointerUp);
             crlPapersGlobal[jointPaperID] = jointPaper;
         };
     }
@@ -424,6 +592,21 @@ function crlDropdownMenu(dropdownId) {
     document.getElementById(dropdownId).classList.toggle("show");
 }
 
+// crlEditorSettingsOK is the callback function for the Editor Settings dialog OK button.
+// It updaates the debug settings with the values from the dialog
+var crlEditorSettingsOK = function () {
+    crlSendEditorSettings();
+    crlEditorSettingsDialog.dialog("close");
+};
+
+// crlEditorSettings creates and displays the Editor Settings dialog so that the debug settings can be updated from the UI
+var crlEditorSettings = function () {
+    $("#dropReferenceAsLink").prop("checked", crlDropReferenceAsLink);
+    $("#dropRefinementAsLink").prop("checked", crlDropRefinementAsLink);
+    crlEditorSettingsDialog.dialog("open");
+}
+
+
 function crlElementSelected(data) {
     if (data.NotificationConceptID != crlSelectedConceptIDGlobal) {
         selectedConceptId = data.NotificationConceptID
@@ -493,13 +676,6 @@ function crlGetJointGraphIDFromDiagramID(diagramID) {
     return "JointGraph" + diagramID;
 }
 
-function crlGetTextWidth(text, font) {
-    var context = crlCanvasGlobal.getContext("2d");
-    context.font = font;
-    var metrics = context.measureText(text);
-    return metrics.width;
-}
-
 function crlGetTreeNodeIDFromConceptID(conceptID) {
     return "TreeNode" + conceptID;
 }
@@ -509,7 +685,7 @@ function crlGetConceptIDFromJointElementID(jointElementID) {
     return jointElementID.replace("JointElement", "")
 }
 
-function crlGetJointElementIDFromConceptID(conceptID) {
+function crlGetJointCellIDFromConceptID(conceptID) {
     return "JointElement" + conceptID
 }
 
@@ -530,6 +706,9 @@ function crlInitializeWebSocket() {
         var data = JSON.parse(e.data)
         console.log("Notification:" + data.Notification)
         switch (data.Notification) {
+            case 'AddDiagramLink':
+                crlAddDiagramLink(data);
+                break;
             case 'AddDiagramNode':
                 crlAddDiagramNode(data);
                 break;
@@ -539,11 +718,17 @@ function crlInitializeWebSocket() {
             case "ChangeTreeNode":
                 crlChangeTreeNode(data);
                 break;
+            case "DebugSettings":
+                crlSaveDebugSettings(data);
+                break;
             case "DeleteTreeNode":
                 crlDeleteTreeNode(data);
                 break;
             case "DisplayDiagram":
                 crlDisplayDiagram(data);
+                break;
+            case "EditorSettings":
+                crlSaveEditorSettings(data);
                 break;
             case "ElementSelected":
                 crlElementSelected(data);
@@ -553,8 +738,14 @@ function crlInitializeWebSocket() {
                 console.log("Initialization Complete")
                 crlSendNormalResponse("Processed InitializationComplete")
                 break;
+            case "UpdateDiagramLink":
+                crlUpdateDiagramLink(data);
+                break;
             case "UpdateDiagramNode":
                 crlUpdateDiagramNode(data);
+                break;
+            case "WorkspacePath":
+                crlUpdateWorkspacePath(data);
                 break;
             default:
                 console.log('Unhandled notification: ' + e.data);
@@ -604,13 +795,26 @@ window.onclick = function (event) {
     }
 }
 
-function crlOnDiagramCellPointerDown(cellView, event, x, y) {
+var crlOnChangePosition = function (modelElement, position) {
+    var jointElementID = modelElement.get("crlJointID");
+    var diagramNodeID = crlGetConceptIDFromJointElementID(jointElementID);
+    crlMovedNodes[diagramNodeID] = position;
+    //    crlSendDiagramNodeNewPosition(diagramNodeID, position)
+}
+
+var crlOnDiagramCellPointerDown = function (cellView, event, x, y) {
     var jointElementID = cellView.model.get("crlJointID");
     var diagramNodeID = crlGetConceptIDFromJointElementID(jointElementID);
     if (diagramNodeID == "") {
         console.log("In onDiagramManagerCellPointerDown diagramNodeID is empty")
     }
     crlSendDiagramNodeSelected(diagramNodeID)
+}
+
+var crlOnDiagramCellPointerUp = function (cellView, event, x, y) {
+    $.each(crlMovedNodes, function (nodeID, position) {
+        crlSendDiagramNodeNewPosition(nodeID, position)
+    })
 }
 
 function crlOnDiagramDrop(event) {
@@ -660,6 +864,44 @@ function crlOpenDiagramContainer(diagramContainerId) {
     }
 }
 
+var crlOpenWorkspace = function () {
+    $("#selectedWorkspaceFolder").val(crlWorkspacePath);
+    crlOpenWorkspaceDialog.dialog("open");
+}
+
+function crlOpenWorkspaceOK() {
+    crlSendOpenWorkspace($("#selectedWorkspaceFolder").val());
+    crlOpenWorkspaceDialog.dialog("close");
+}
+
+function crlSaveDebugSettings(data) {
+    crlEnableTracing = JSON.parse(data.AdditionalParameters["EnableNotificationTracing"]);
+    crlSendNormalResponse();
+}
+
+function crlSaveEditorSettings(data) {
+    crlDropReferenceAsLink = JSON.parse(data.AdditionalParameters["DropReferenceAsLink"]);
+    crlDropRefinementAsLink = JSON.parse(data.AdditionalParameters["DropRefinementAsLink"]);
+    crlSendNormalResponse();
+}
+
+function crlSendDebugSettings() {
+    var xhr = crlCreateEmptyRequest()
+    var enableNotificationTracing = "false";
+    if ($("#enableTracing").prop("checked") == true) {
+        enableNotificationTracing = "true"
+    };
+    var maxTracingDepth = $("#maxTracingDepth").val()
+    var data = JSON.stringify({
+        "Action": "UpdateDebugSettings",
+        "AdditionalParameters": {
+            "EnableNotificationTracing": enableNotificationTracing,
+            "MaxTracingDepth": maxTracingDepth
+        }
+    });
+    xhr.send(data);
+}
+
 function crlSendDefinitionChanged(evt, obj) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
@@ -668,7 +910,27 @@ function crlSendDefinitionChanged(evt, obj) {
         "AdditionalParameters":
             { "NewValue": evt.currentTarget.textContent }
     });
-    xhr.send(data)
+    xhr.send(data);
+}
+
+function crlSendEditorSettings() {
+    var xhr = crlCreateEmptyRequest()
+    var dropReferenceAsLink = "false";
+    var dropRefinementAsLink = "false";
+    if ($("#dropReferenceAsLink").prop("checked") == true) {
+        dropReferenceAsLink = "true";
+    }
+    if ($("#dropRefinementAsLink").prop("checked") == true) {
+        dropRefinementAsLink = "true";
+    }
+    var data = JSON.stringify({
+        "Action": "UpdateEditorSettings",
+        "AdditionalParameters": {
+            "DropReferenceAsLink": dropReferenceAsLink,
+            "DropRefinementAsLink": dropRefinementAsLink
+        }
+    });
+    xhr.send(data);
 }
 
 function crlSendLabelChanged(evt, obj) {
@@ -693,6 +955,25 @@ function crlSendLiteralValueChanged(evt, obj) {
     xhr.send(data)
 }
 
+function crlSendOpenWorkspace(workspacePath) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "OpenWorkspace",
+        "AdditionalParameters": {
+            "WorkspacePath": workspacePath
+        }
+    });
+    xhr.send(data);
+}
+
+function crlSendSaveWorkspace() {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "SaveWorkspace"
+    });
+    xhr.send(data);
+}
+
 function crlSendURIChanged(evt, obj) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
@@ -701,6 +982,12 @@ function crlSendURIChanged(evt, obj) {
         "AdditionalParameters":
             { "NewValue": evt.currentTarget.textContent }
     });
+    xhr.send(data)
+}
+
+function crlSendNewConceptSpaceRequest(evt) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "NewConceptSpaceRequest" });
     xhr.send(data)
 }
 
@@ -723,6 +1010,19 @@ function crlSendDiagramDrop(diagramID, x, y) {
         }
     });
     console.log(data);
+    xhr.send(data);
+}
+
+function crlSendDiagramNodeNewPosition(nodeID, position) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "DiagramNodeNewPosition",
+        "RequestConceptID": nodeID,
+        "AdditionalParameters": {
+            "NodeX": position.x.toString(),
+            "NodeY": position.y.toString()
+        }
+    })
     xhr.send(data);
 }
 
@@ -822,23 +1122,46 @@ function crlSizeAll() {
     });
 };
 
+var crlUpdateDiagramLink = function (data) {
+    var concept = data.NotificationConcept;
+    var params = data.AdditionalParameters;
+    var owningConceptID = concept.OwningConceptID;
+    var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
+    var linkID = crlGetJointCellIDFromConceptID(concept.ConceptID);
+    var link = crlFindLinkInGraph(graphID, linkID)
+    if (link == undefined) {
+        link = crlConstructDiagramLink(data, graphID, linkID);
+    }
+    link.label(0, {
+        attrs: {
+            text: {
+                text: data.AdditionalParameters["DisplayLabel"]
+            }
+        }
+    });
+    crlSendNormalResponse()
+}
+
 var crlUpdateDiagramNode = function (data) {
     var concept = data.NotificationConcept;
     var params = data.AdditionalParameters;
     var owningConceptID = concept.OwningConceptID;
     var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
-    var nodeID = crlGetJointElementIDFromConceptID(concept.ConceptID);
-    var node = crlFindElementInGraph(graphID, nodeID)
+    var nodeID = crlGetJointCellIDFromConceptID(concept.ConceptID);
+    var node = crlFindElementInGraph(graphID, nodeID);
     if (node == undefined) {
         node = crlConstructDiagramNode(data, graphID, nodeID);
-    }
+    };
     node.set("displayLabelYOffset", Number(params["DisplayLabelYOffset"]));
     node.set('position', { "x": Number(params["NodeX"]), "y": Number(params["NodeY"]) });
-    node.set('size', {"width":Number(params["NodeWidth"]), "height":Number(params["NodeHeight"])});
+    node.set('size', { "width": Number(params["NodeWidth"]), "height": Number(params["NodeHeight"]) });
     node.set('icon', params["Icon"]);
     node.set('name', params["DisplayLabel"]);
     node.set("abstractions", params["Abstractions"]);
+    crlSendNormalResponse();
+}
 
-//    node.updateRectangles();
-    crlSendNormalResponse()
+var crlUpdateWorkspacePath = function (data) {
+    crlWorkspacePath = data.AdditionalParameters["WorkspacePath"];
+    crlSendNormalResponse();
 }

@@ -1,6 +1,7 @@
 package editor
 
 import (
+	"reflect"
 	"strconv"
 
 	"github.com/pbrown12303/activeCRL/core"
@@ -8,9 +9,26 @@ import (
 	//	"log"
 )
 
-func addDiagramViewFunctionsToUofD(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func addDiagramViewFunctionsToUofD(uOfD core.UniverseOfDiscourse) {
 	uOfD.AddFunction(crldiagram.CrlDiagramURI, updateDiagramView)
-	uOfD.AddFunction(crldiagram.CrlDiagramNodeURI, updateDiagramNodeView)
+	uOfD.AddFunction(crldiagram.CrlDiagramElementURI, updateDiagramElementView)
+}
+
+func getLinkAdditionalParameters(link core.Element, hl *core.HeldLocks) map[string]string {
+	modelElement := crldiagram.GetReferencedModelElement(link, hl)
+	modelElementType := ""
+	if modelElement != nil {
+		modelElementType = reflect.TypeOf(modelElement).String()
+	}
+	additionalParameters := map[string]string{
+		"DisplayLabel": crldiagram.GetDisplayLabel(link, hl),
+		"Icon":         GetIconPath(crldiagram.GetReferencedModelElement(link, hl), hl),
+		"OwnerID":      link.GetOwningConceptID(hl),
+		"Abstractions": crldiagram.GetAbstractionDisplayLabel(link, hl),
+		"LinkType":     modelElementType,
+		"LinkSourceID": crldiagram.GetLinkSource(link, hl).GetConceptID(hl),
+		"LinkTargetID": crldiagram.GetLinkTarget(link, hl).GetConceptID(hl)}
+	return additionalParameters
 }
 
 func getNodeAdditionalParameters(node core.Element, hl *core.HeldLocks) map[string]string {
@@ -27,14 +45,24 @@ func getNodeAdditionalParameters(node core.Element, hl *core.HeldLocks) map[stri
 	return additionalParameters
 }
 
-func updateDiagramNodeView(node core.Element, changeNotification *core.ChangeNotification, uOfD core.UniverseOfDiscourse) {
+func updateDiagramElementView(diagramElement core.Element, changeNotification *core.ChangeNotification, uOfD core.UniverseOfDiscourse) {
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
-	hl.ReadLockElement(node)
-	switch changeNotification.GetNatureOfChange() {
-	case core.ChildChanged:
-		additionalParameters := getNodeAdditionalParameters(node, hl)
-		CrlEditorSingleton.GetClientNotificationManager().SendNotification("UpdateDiagramNode", node.GetConceptID(hl), node, additionalParameters)
+	hl.ReadLockElement(diagramElement)
+	if diagramElement.IsRefinementOfURI(crldiagram.CrlDiagramNodeURI, hl) {
+		switch changeNotification.GetNatureOfChange() {
+		case core.ChildChanged:
+			additionalParameters := getNodeAdditionalParameters(diagramElement, hl)
+			CrlEditorSingleton.SendNotification("UpdateDiagramNode", diagramElement.GetConceptID(hl), diagramElement, additionalParameters)
+		}
+		return
+	} else if diagramElement.IsRefinementOfURI(crldiagram.CrlDiagramLinkURI, hl) {
+		switch changeNotification.GetNatureOfChange() {
+		case core.ChildChanged:
+			additionalParameters := getLinkAdditionalParameters(diagramElement, hl)
+			CrlEditorSingleton.SendNotification("UpdateDiagramLink", diagramElement.GetConceptID(hl), diagramElement, additionalParameters)
+		}
+		return
 	}
 }
 
@@ -48,8 +76,4 @@ func updateDiagramViewInternal(el core.Element, changeNotifications *core.Change
 	// changeNotification.Print("updateDiagramView ", hl)
 	// Check whether the name has changed
 	// Check to see whether a diagram node or edge has been added or removed from the diagram
-}
-
-func init() {
-	//	core.GetCore().AddFunction(crlDiagram.CrlDiagramUri, updateDiagramView)
 }
