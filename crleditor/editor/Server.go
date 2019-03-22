@@ -21,6 +21,7 @@ import (
 )
 
 var server *http.Server
+var wsServer *http.Server
 var webSocketReady = make(chan bool)
 
 // Request is the data structure submitted by the client browser as part of an http request
@@ -37,7 +38,7 @@ func newRequest() *Request {
 	return &request
 }
 
-// Reply is the data structure returned by the editor server in response to an Request
+// Reply is the data structure returned by the editor server in response to a Request
 type Reply struct {
 	Result            int
 	ResultDescription string
@@ -67,8 +68,12 @@ var upgrader = websocket.Upgrader{
 }
 
 // Exit is used as a programmatic shutdown of the server. It is primarily intended to support testing scenarios.
-func Exit() {
-	server.Shutdown(context.Background())
+func Exit() error {
+	err := server.Shutdown(context.Background())
+	if err != nil {
+		return err
+	}
+	return wsServer.Shutdown(context.Background())
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
@@ -153,6 +158,20 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed DefinitionChanged", request.RequestConceptID, el)
+	case "DeleteView":
+		err := CrlEditorSingleton.getDiagramManager().deleteView(request.RequestConceptID, hl)
+		if err != nil {
+			sendReply(w, 1, err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed DeleteView", request.RequestConceptID, nil)
+		}
+	case "DiagramClick":
+		err := CrlEditorSingleton.getDiagramManager().diagramClick(request, hl)
+		if err != nil {
+			sendReply(w, 1, err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed DiagramClick", request.RequestConceptID, nil)
+		}
 	case "DiagramDrop":
 		err := CrlEditorSingleton.getDiagramManager().diagramDrop(request, hl)
 		if err != nil {
@@ -172,10 +191,13 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			CrlEditorSingleton.getDiagramManager().setDiagramNodePosition(request.RequestConceptID, x, y, hl)
 			sendReply(w, 0, "Processed DiagramNodeNewPosition", "", nil)
 		}
-	case "DiagramNodeSelected":
+	case "DiagramCellSelected":
 		elementID := request.RequestConceptID
-		log.Printf("Selected node id: %s", request.RequestConceptID)
-		CrlEditorSingleton.SelectElementUsingIDString(elementID, hl)
+		element := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
+		if element != nil {
+			modelElement := crldiagram.GetReferencedModelElement(element, hl)
+			CrlEditorSingleton.SelectElement(modelElement, hl)
+		}
 		sendReply(w, 0, "Processed DiagramNodeSelected", elementID, CrlEditorSingleton.GetUofD().GetElement(elementID))
 	case "DisplayDiagramSelected":
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
@@ -189,9 +211,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Exit requested")
 		sendReply(w, 0, "Server will close", "", nil)
 		time.Sleep(5 * time.Second)
-		if err := server.Shutdown(context.Background()); err != nil {
+		if err := Exit(); err != nil {
 			// Error from closing listeners, or context timeout:
-			log.Printf("HTTP server Shutdown: %v", err)
+			log.Printf("HTTP server Shutdown error: %s", err.Error())
 		}
 	case "InitializeClient":
 		log.Printf("InitializeClient requested")
@@ -233,6 +255,25 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			sendReply(w, 0, "Processed OpenWorkspace", "", nil)
 		}
+	case "OwnerPointerChanged":
+		linkID, err := CrlEditorSingleton.getDiagramManager().ownerPointerChanged(
+			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
+		if err != nil {
+			sendReply(w, 1, "Error processing OwnerPointerChanged: "+err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed OwnerPointerChanged", linkID, nil)
+		}
+	case "RefinementLinkChanged":
+		linkID, err := CrlEditorSingleton.getDiagramManager().RefinementLinkChanged(
+			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
+		if err != nil {
+			sendReply(w, 1, "Error processing RefinementLinkChanged: "+err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed OpenWorRefinementLinkChangedkspace", linkID, nil)
+		}
+	case "RefreshDiagram":
+		err := CrlEditorSingleton.getDiagramManager().refreshDiagramUsingURI(request.RequestConceptID, hl)
+		reply(w, "RefreshDiagram", err)
 	case "SaveWorkspace":
 		err := CrlEditorSingleton.SaveWorkspace(hl)
 		if err != nil {
@@ -243,6 +284,13 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	case "SetTreeDragSelection":
 		CrlEditorSingleton.SetTreeDragSelection(request.RequestConceptID)
 		sendReply(w, 0, "Processed SetTreeDragSelection", request.RequestConceptID, CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID))
+	case "ShowOwner":
+		err := CrlEditorSingleton.getDiagramManager().showOwner(request.RequestConceptID, hl)
+		if err != nil {
+			sendReply(w, 1, "ShowOwner failed: "+err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed ShowOwner", "", nil)
+		}
 	case "TreeNodeDelete":
 		elementID := request.RequestConceptID
 		log.Printf("TreeNodeDelete called for node id: %s for elementID: %s", request.RequestConceptID, elementID)
@@ -276,33 +324,53 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func reply(w http.ResponseWriter, requestName string, err error) {
+	if err != nil {
+		sendReply(w, 1, requestName+": "+err.Error(), "", nil)
+	} else {
+		sendReply(w, 0, " Processed "+requestName, "", nil)
+	}
+}
+
 func sendReply(w http.ResponseWriter, code int, message string, resultConceptID string, resultConcept core.Element) {
 	reply := newReply()
 	reply.Result = code
 	reply.ResultDescription = message
 	reply.ResultConceptID = resultConceptID
 	reply.ResultConcept = resultConcept
-	json.NewEncoder(w).Encode(reply)
+	err := json.NewEncoder(w).Encode(reply)
+	if err != nil {
+		log.Printf(err.Error())
+	}
 }
 
 // StartServer starts the editor server. This will automatically launch a browser as an interface
 func StartServer(startBrowser bool) {
 	InitializeCrlEditorSingleton()
+	// WebSocketts server
+	go startWsServer()
+	// RequestServer
 	mux := http.NewServeMux()
 	mux.HandleFunc("/index/", indexHandler)
 	mux.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir(root+"crleditor/http/js"))))
 	mux.Handle("/icons/", http.StripPrefix("/icons/", http.FileServer(http.Dir(root+"crleditor/http/images/icons"))))
 	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir(root+"crleditor/http/css"))))
-	mux.HandleFunc("/index/ws", wsHandler)
 	mux.HandleFunc("/index/request", requestHandler)
 
 	if startBrowser == true {
-		openBrowser("http://localhost:8080/index")
+		openBrowser("http://localhost:8082/index")
 	}
 
-	server = &http.Server{Addr: "127.0.0.1:8080", Handler: mux}
+	server = &http.Server{Addr: "127.0.0.1:8082", Handler: mux}
 
 	server.ListenAndServe()
+}
+
+func startWsServer() {
+	wsMux := http.NewServeMux()
+	wsMux.HandleFunc("/index/ws", wsHandler)
+	wsServer = &http.Server{Addr: "127.0.0.1:8081", Handler: wsMux}
+	wsServer.ListenAndServe()
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *page) {
@@ -318,6 +386,8 @@ var wsConnection *websocket.Conn
 func wsHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("wsHandler invoked")
 	var err error
+	// TODO: Fix the upgrader.CheckOrigin() to do something intelligent
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	wsConnection, err = upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)

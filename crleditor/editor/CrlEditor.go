@@ -142,7 +142,8 @@ func (edPtr *CrlEditor) Delete(elID string) error {
 		edPtr.cutBuffer = make(map[string]core.Element)
 		edPtr.cutBuffer[elID] = el
 		uOfD.MarkUndoPoint()
-		return uOfD.RemoveElement(el, hl)
+		dEls := map[string]core.Element{el.GetConceptID(hl): el}
+		return uOfD.DeleteElements(dEls, hl)
 	}
 	return nil
 }
@@ -267,7 +268,7 @@ func GetIconPath(el core.Element, hl *core.HeldLocks) string {
 	isDiagram := crldiagram.IsDiagram(el, hl)
 	switch el.(type) {
 	case core.Reference:
-		return "/icons/ElementReferenceIcon.svg"
+		return "/icons/ReferenceIcon.svg"
 	case core.Literal:
 		return "/icons/LiteralIcon.svg"
 	case core.Refinement:
@@ -373,7 +374,7 @@ func (edPtr *CrlEditor) openFile(fileInfo os.FileInfo, hl *core.HeldLocks) (*wor
 // openWorkspace sets the path to the folder to be used as a workspace
 func (edPtr *CrlEditor) openWorkspace(path string, hl *core.HeldLocks) error {
 	if path != edPtr.workspacePath && edPtr.workspacePath != "" {
-		return errors.New("Cannot open another workspace in the same editor. A new editor must be started.")
+		return errors.New("Cannot open another workspace in the same editor - a new editor must be started")
 	}
 	edPtr.workspacePath = path
 	edPtr.SendWorkspacePath()

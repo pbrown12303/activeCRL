@@ -138,7 +138,7 @@ func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
 		if fcm.uOfD.getExecutedCalls() != nil {
 			fcm.uOfD.getExecutedCalls() <- pendingCall
 		}
-		if TraceLocks == true {
+		if TraceLocks == true || TraceChange == true {
 			log.Printf("About to execute %s with notification %s target %p", pendingCall.functionID, pendingCall.notification.GetNatureOfChange().String(), pendingCall.target)
 		}
 		pendingCall.function(pendingCall.target, pendingCall.notification, fcm.uOfD)

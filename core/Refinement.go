@@ -231,6 +231,7 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *HeldLocks) error {
 				newAbstractConcept.addListener(rPtr.ConceptID, hl)
 			}
 		}
+		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, hl)
 		rPtr.AbstractConceptID = acID
 		rPtr.abstractConcept.setIndicatedConcept(newAbstractConcept)
 		rPtr.abstractConcept.setIndicatedConceptID(acID)
@@ -239,7 +240,6 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *HeldLocks) error {
 		} else {
 			rPtr.AbstractConceptVersion = 0
 		}
-		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, hl)
 		rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
 	}
 	return nil
@@ -272,6 +272,7 @@ func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *HeldLocks) error {
 				newRefinedConcept.addListener(rPtr.ConceptID, hl)
 			}
 		}
+		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, hl)
 		rPtr.RefinedConceptID = rcID
 		rPtr.refinedConcept.setIndicatedConcept(newRefinedConcept)
 		rPtr.refinedConcept.setIndicatedConceptID(rcID)
@@ -280,7 +281,6 @@ func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *HeldLocks) error {
 		} else {
 			rPtr.RefinedConceptVersion = 0
 		}
-		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, hl)
 		rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
 	}
 	return nil

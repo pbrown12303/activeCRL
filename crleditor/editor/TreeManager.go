@@ -62,7 +62,11 @@ func (tmPtr *treeManager) addNodeRecursively(el core.Element, hl *core.HeldLocks
 
 // changeNode updates the tree node
 func (tmPtr *treeManager) changeNode(el core.Element, hl *core.HeldLocks) {
-	notificationResponse, err := CrlEditorSingleton.GetClientNotificationManager().SendNotification("ChangeTreeNode", el.GetConceptID(hl), el, nil)
+	icon := GetIconPath(el, hl)
+	additionalParameters := map[string]string{
+		"icon":      icon,
+		"isDiagram": strconv.FormatBool(crldiagram.IsDiagram(el, hl))}
+	notificationResponse, err := CrlEditorSingleton.GetClientNotificationManager().SendNotification("ChangeTreeNode", el.GetConceptID(hl), el, additionalParameters)
 	if err != nil {
 		log.Printf(err.Error())
 		return

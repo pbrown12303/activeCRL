@@ -327,7 +327,8 @@ var _ = Describe("Element internals test", func() {
 			Expect(el.(*element).uOfD == uOfD).To(BeTrue())
 			// Can't set new uOfD without removing it from the old uOfD first
 			Expect(uOfD2.SetUniverseOfDiscourse(el, hl)).ToNot(Succeed())
-			Expect(uOfD.RemoveElement(el, hl)).To(Succeed())
+			deleteElements := map[string]Element{el.GetConceptID(hl): el}
+			Expect(uOfD.DeleteElements(deleteElements, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 			Expect(uOfD2.SetUniverseOfDiscourse(el, hl2)).To(Succeed())
 			Expect(el.GetUniverseOfDiscourse(hl2) == uOfD2).To(BeTrue())

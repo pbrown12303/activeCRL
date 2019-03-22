@@ -18,6 +18,12 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD Univers
 			childChangedNotification := uOfD.NewForwardingChangeNotification(el, ChildChanged, notification)
 			uOfD.queueFunctionExecutions(owner, childChangedNotification, hl)
 		}
+		// If owner has changed, send ChildChanged to old owner as well
+		oldOwner := notification.GetPriorState().GetOwningConcept(hl)
+		if oldOwner != nil && oldOwner != owner {
+			childChangedNotification := uOfD.NewForwardingChangeNotification(el, ChildChanged, notification)
+			uOfD.queueFunctionExecutions(oldOwner, childChangedNotification, hl)
+		}
 		// Send IndicatedConceptChanged to listeners
 		el.notifyListeners(notification, hl)
 	case AbstractionChanged:

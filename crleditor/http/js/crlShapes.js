@@ -10,6 +10,7 @@ joint.shapes.basic.Generic.define('crl.Element',
             },
             '.bounding-rect': {
                 stroke: "black",
+                magnet: true,
                 'stroke-width': 2,
                 fill: "#ffffff",
                 height: 40,
@@ -97,6 +98,47 @@ joint.shapes.basic.Generic.define('crl.Element',
             });
         }
     });
+
+    joint.dia.Link.define('crl.OwnerPointer', {
+        attrs: {
+            line: {
+                connection: true,
+                stroke: '#333333',
+                strokeWidth: 2,
+                strokeLinejoin: 'round',
+                targetMarker: {
+                    "type": "path",
+                    "d": "M 10 -5 0 0 10 5 20 0 z"
+                }
+            },
+            wrapper: {
+                connection: true,
+                strokeWidth: 10,
+                strokeLinejoin: 'round'
+            }
+        },
+        crlJointID: ""
+    }, {
+        markup: [{
+            tagName: 'path',
+            selector: 'wrapper',
+            attributes: {
+                'fill': 'none',
+                'cursor': 'pointer',
+                'stroke': 'transparent'
+            }
+        }, {
+            tagName: 'path',
+            selector: 'line',
+            attributes: {
+                'fill': 'none',
+                'pointer-events': 'none'
+            }
+        }]
+    });
+    
+
+
 
     joint.dia.Link.define('crl.ReferenceLink', {
         attrs: {

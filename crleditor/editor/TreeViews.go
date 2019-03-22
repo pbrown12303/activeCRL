@@ -51,7 +51,7 @@ func treeViewManageNodes(instance core.Element, changeNotification *core.ChangeN
 			}
 			switch secondUnderlyingChange.GetNatureOfChange() {
 			case core.UofDConceptAdded:
-				changedElement := secondUnderlyingChange.GetConceptState()
+				changedElement := secondUnderlyingChange.GetPriorState()
 				treeManager.addNode(changedElement, hl)
 			case core.UofDConceptChanged:
 				thirdUnderlyingChange := secondUnderlyingChange.GetUnderlyingChange()
@@ -59,66 +59,15 @@ func treeViewManageNodes(instance core.Element, changeNotification *core.ChangeN
 					log.Printf("treeViewManageNodes called with UofDConceptChanged but no thirdUnderlyingChange chanage")
 					return
 				}
-				changedElement := thirdUnderlyingChange.GetConceptState()
+				changedElement := thirdUnderlyingChange.GetReportingElement()
 				treeManager.changeNode(changedElement, hl)
 			case core.UofDConceptRemoved:
-				changedElement := secondUnderlyingChange.GetConceptState()
+				changedElement := secondUnderlyingChange.GetPriorState()
 				treeManager.removeNode(changedElement, hl)
 			}
 		}
 	}
 
-	// // this is the notification we are interested in
-	// // Find the changed base element
-	// changedElement := changeNotification.GetReportingElement()
-	// changedElementID := changeNotification.GetReportingElementID()
-
-	// // Now see if the node view exists
-	// changedElementNodeViewID := changedElementID + treeNodeSuffix
-	// changedElementNodeView := jquery.NewJQuery(treeManager.treeID).Call("jstree", "get_node", changedElementNodeViewID)
-
-	// if changedElementNodeView.Length == 0 {
-	// 	// Node does not exist. Create it
-
-	// 	// Tracing
-	// 	if core.AdHocTrace == true {
-	// 		log.Printf("----- Node does not exist")
-	// 	}
-
-	// 	// First, determine whether this is a root element or a child
-	// 	var parentTreeNodeID string
-	// 	parentTreeNodeID = "#"
-	// 	parent := changedElement.GetOwningConcept(hl)
-	// 	if parent != nil {
-	// 		parentTreeNodeID = parent.GetConceptID(hl) + treeNodeSuffix
-	// 	}
-	// 	treeManager.AddNode(changedElement, parentTreeNodeID, hl)
-	// } else {
-	// 	// Node exists - update it
-
-	// 	// Tracing
-	// 	if core.AdHocTrace == true {
-	// 		log.Printf("----- Node exists")
-	// 	}
-
-	// 	// See if parent has changed
-	// 	currentTreeParentID := changedElementNodeView.Attr("parent")
-	// 	currentParent := changedElement.GetOwningConcept(hl)
-	// 	currentParentID := "#" // the jstree version of a nil parent
-	// 	if currentParent != nil {
-	// 		currentParentID = currentParent.GetConceptID(hl) + treeNodeSuffix
-	// 	}
-	// 	if currentTreeParentID != currentParentID {
-	// 		jquery.NewJQuery(treeManager.treeID).Call("jstree", "cut", changedElementID)
-	// 		jquery.NewJQuery(treeManager.treeID).Call("jstree", "paste", currentParentID, "last")
-	// 	}
-
-	// 	// See if the name has changed
-	// 	changedBaseElementLabel := changedElement.GetLabel(hl)
-	// 	if changedElementNodeView.Attr("text") != changedBaseElementLabel {
-	// 		jquery.NewJQuery(treeManager.treeID).Call("jstree", "rename_node", changedElementNodeViewID, changedBaseElementLabel)
-	// 	}
-	// }
 }
 
 // BuildTreeViews builds the concepts related to TreeViews and adds them to the uOfD

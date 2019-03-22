@@ -16,6 +16,7 @@ type NatureOfChange int
 // ChildAbstractionChanged indicates that an abstracton of the indicated child has been modified
 // ChildChanged indicates that a child of the Element has been changed
 // ConceptChanged indicates that a field of the concept has been modified
+// ConceptDeleted indicates that the concept has been deleted
 // IndicatedConceptChanged indicates that an Element indicated by a pointer has changed
 // UofDConceptChanged indicates that a concept in the UofD has changed
 const (
@@ -55,7 +56,7 @@ func (noc NatureOfChange) String() string {
 // the nature of the change, the old and new values, and the reporting Element.
 // It also provides the underlying change that triggered this one (if any)
 type ChangeNotification struct {
-	conceptState     Element
+	priorState       Element
 	natureOfChange   NatureOfChange
 	reportingElement Element
 	underlyingChange *ChangeNotification
@@ -89,11 +90,10 @@ func (cnPtr *ChangeNotification) GetNatureOfChange() NatureOfChange {
 	return cnPtr.natureOfChange
 }
 
-// GetConceptState returns the state, which is a clone of the Element after the change
-// except for deletion operations which give the state prior to deletion
+// GetPriorState returns the state, which is a clone of the Element prior to the change
 // Note that while this is an Element, it is NOT a member of the UniverseOfDiscourse
-func (cnPtr *ChangeNotification) GetConceptState() Element {
-	return cnPtr.conceptState
+func (cnPtr *ChangeNotification) GetPriorState() Element {
+	return cnPtr.priorState
 }
 
 // GetReportingElement returns the Element reporting the change
@@ -132,12 +132,12 @@ func (cnPtr *ChangeNotification) printRecursively(prefix string, hl *HeldLocks, 
 		log.Printf(prefix+"  Reporting Element ID: %s", cnPtr.reportingElement.getConceptIDNoLock())
 		log.Printf(prefix+"  Reporting Element Version: %d", cnPtr.GetReportingElement().GetVersion(hl))
 		log.Printf(prefix+"  Reporting Element Label: %s", cnPtr.GetReportingElement().GetLabel(hl))
-		conceptState := cnPtr.GetConceptState()
-		if conceptState != nil {
-			jsonString, _ := conceptState.MarshalJSON()
-			log.Printf(prefix+"  ConceptState: %s", jsonString)
+		priorState := cnPtr.GetPriorState()
+		if priorState != nil {
+			jsonString, _ := priorState.MarshalJSON()
+			log.Printf(prefix+"  PriorState: %s", jsonString)
 		} else {
-			log.Printf(prefix + "  ConceptState is nil")
+			log.Printf(prefix + "  PriorState is nil")
 		}
 	}
 	if cnPtr.underlyingChange != nil {

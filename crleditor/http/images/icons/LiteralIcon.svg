@@ -17,7 +17,7 @@
   </font>
  </defs>
  <defs class="TextShapeIndex">
-  <g ooo:slide="id1" ooo:id-list="id3"/>
+  <g ooo:slide="id1" ooo:id-list="id3 id4"/>
  </defs>
  <defs class="EmbeddedBulletChars">
   <g id="bullet-char-template(57356)" transform="scale(0.00048828125,-0.00048828125)">
@@ -66,7 +66,13 @@
       <g class="com.sun.star.drawing.TextShape">
        <g id="id3">
         <rect class="BoundingBox" stroke="none" fill="none" x="508" y="508" width="4090" height="4065"/>
-        <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="2328px" font-weight="400"><tspan class="TextPosition" x="1905" y="3347"><tspan fill="rgb(0,0,0)" stroke="none">L</tspan></tspan></tspan></text>
+        <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="3387px" font-weight="400"><tspan class="TextPosition" x="1611" y="3715"><tspan fill="rgb(0,0,0)" stroke="none">L</tspan></tspan></tspan></text>
+       </g>
+      </g>
+      <g class="com.sun.star.drawing.CustomShape">
+       <g id="id4">
+        <rect class="BoundingBox" stroke="none" fill="none" x="407" y="407" width="4270" height="4270"/>
+        <path fill="none" stroke="rgb(0,0,0)" stroke-width="203" stroke-linejoin="round" d="M 2541,509 C 3693,509 4573,1389 4573,2541 4573,3693 3693,4573 2541,4573 1389,4573 509,3693 509,2541 509,1389 1389,509 2541,509 Z"/>
        </g>
       </g>
      </g>

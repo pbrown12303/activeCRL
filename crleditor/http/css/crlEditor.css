@@ -6,6 +6,8 @@ html {
 
 
 body {
+	display:flex;
+	flex-direction: column;
 	height: 100%;
 	width: 100%;
 	margin: 0;
@@ -182,68 +184,132 @@ body {
     background-color: #ddd;
 }
 
+
+
 .show {
     display: block;
 }
 
+.contextmenu {
+	box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
+	position: absolute;
+	display: none;
+} 
+.contextmenu-options {
+		padding: 10px 0;
+    background-color: #f9f9f9;
+}  
+
+.contextmenu-options a {
+		font-weight: 500;
+		font-size: 14px;
+		background-color: white;
+		color:black;
+		padding: 10px 40px 10px 20px;
+		cursor: pointer;
+} 
+
+.contextmenu-options a:hover {
+	background-color:#ddd;
+}
+
+/* &:hover {
+		  background: rgba(0, 0, 0, 0.2);
+		}
+	  }
+	}
+  } */
+
 .wrapper {
-	position: relative;
+	flex: 1 1 auto;
+	display:flex;
+	flex-direction:row;
+	height: 100%;
+	border: 1px solid silver;
 	background-color: fuchsia;
 	overflow: hidden; 
 }
 
 .uofd-browser {
-  	display: inline-block;
-  	position: absolute;
-  	top: 0;
-  	left: 0;
-  	width: 200px;
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction:column;
+	width: 200px;
+	min-width: 50px;
+	height:100%;
 	background-color: #fbfec2;
 	overflow: auto;
 	border: 2px solid black;
 	padding: 2px;
 }
 
-.center-pane {
- 	display: inline-block;
- 	position: absolute;
+.uofd-label {
+	flex: 0 0 auto;
+}
+
+.model-tree {
+	flex: 1 1 auto;
+}
+
+.right-pane {
+	flex: 1 1 auto;
+	display:flex;
+	flex-direction:column;
+	width: 100%;
+	min-height: 200px;
 	background-color: lightblue;
 }
 
+.splitter-vertical {
+	flex: 0 0 auto;
+	width: 5px;  
+	cursor: col-resize;  
+	background:black;
+  }
+  
 .top-pane {
+	flex:1 1 auto;
+	display: flex;
+	flex-direction:row;
 	background-color: lightcoral;
 	width: 100%;
 }
 
 .toolbar {
- 	display: inline-block; 
+	flex: 0 0 auto;
+	 display: flex;
+	 flex-direction:column; 
 	width:32px;
 	border: 1px solid black;
 	overflow: auto;
 }
 
 .top-content {
-	position:absolute;
- 	display: inline-block; 
+	flex: 1 1 auto;
+	 display: flex; 
+	 flex-direction:column;
 	width: 100%;
 	background-color: green;
 	overflow: hidden;
 }
 
 .tabs {
-	display: block;
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction: row;
 	width: 100%;
 }
 
 .crlDiagramContainer{
-	display: block;
-	position: relative;
- 	width:100%;
+	flex:1 1 auto;
+	display: flex;
+	width:100%;
 	border: 1px solid red;
 	overflow: auto;
 }
 
 .bottom {
+	flex: 0 0 auto;
 	background-color: #fbfec2;
 	height: 200px;
 	overflow: auto;
@@ -264,4 +330,16 @@ body {
 
 .node-read-only {
 	background:rgb(218, 217, 217) !important;
+}
+
+.toolbar-button {
+	border-width: 2px;
+	padding: 1px 1px;
+	height:32px;
+	width:32px;
+}
+
+.toolbar-button-icon {
+	height:26px;
+	width:26px;
 }

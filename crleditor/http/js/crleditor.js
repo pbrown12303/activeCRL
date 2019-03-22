@@ -1,49 +1,59 @@
 // crlCurrentDiagramContainerIDGlobal is the identifier for the diagram container currently being displayed
-var crlCurrentDiagramContainerIDGlobal
+var crlCurrentDiagramContainerID;
+// crlCurrentToolbarButton is the id of the last toolbar button pressed
+var crlCurrentToolbarButton;
 // crlDebugSettingsDialog is the initialized dialog used for editing debug settings
-var crlDebugSettingsDialog
+var crlDebugSettingsDialog;
 // crlDropReferenceAsLink when true causes references dragged from the tree into the diagram to be added as links
-var crlDropReferenceAsLink = false
+var crlDropReferenceAsLink = false;
 // crlDropRefinementAsLink when true causes refinements dragged from the tree into the diagram to be added as links
-var crlDropRefinementAsLink = false
+var crlDropRefinementAsLink = false;
 // crlEditorSettingsDialog is the initialized dialog used for editing editor settings
-var crlEditorSettingsDialog
+var crlEditorSettingsDialog;
 // crlEnableTracing is the client-side copy of the server-side value that turns on notification tracing
-var crlEnableTracing = false
+var crlEnableTracing = false;
 // crlGraphsGlobal is an array of existing graphs that is used to look up a graph given its identifier
-var crlGraphsGlobal = {}
+var crlGraphsGlobal = {};
 // crlInitializationCompleteGlobal indicates whether the server-side initialization has been completed
-var crlInitializationCompleteGlobal = false
+var crlInitializationComplete = false;
 // crlMovedNodes is an array of nodes that have been moved. This is a temporary cache that is used to update the 
 // server once a mouse up has occurred
-var crlMovedNodes = {}
+var crlMovedNodes = {};
 // crlOpenWorkspaceDialog is the initialized dialog used for opening a workspace
-var crlOpenWorkspaceDialog
+var crlOpenWorkspaceDialog;
 // crlPaperGlobal is an array of existing papers that is used to look up a paper given its identifier
-var crlPapersGlobal = {}
+var crlPapersGlobal = {};
 // crlSelectedConceptIDGlobal contains the model identifier of the currently selected concept
-var crlSelectedConceptIDGlobal
+var crlSelectedConceptIDGlobal;
 // crlTreeDragSelectionIDGlobal contains the model identifier of the concept currently being dragged from the tree
-var crlTreeDragSelectionIDGlobal
+var crlTreeDragSelectionIDGlobal;
 // CrlWebSocketGlobal is the web socket being used for server-side communications
-var crlWebsocketGlobal
+var crlWebsocketGlobal;
 // crlWorkspacePath is the path to the current workspace
-var crlWorkspacePath
+var crlWorkspacePath;
 
-// <!-- Set css parameters -->
-$(function () {
-    $(".uofd-browser").resizable({
-        handles: "e",
-        resize: crlSizeAll()
-    });
-    $(".bottom").resizable({
-        handles: "n",
-        resize: crlSizeAll()
-    });
-});
+var crlCursorToolbarButtonID = "cursorToolbarButton";
+var crlElementToolbarButtonID = "elementToolbarButton";
+var crlLiteralToolbarButtonID = "literalToolbarButton";
+var crlReferenceToolbarButtonID = "referenceToolbarButton";
+var crlReferenceLinkToolbarButtonID = "referenceLinkToolbarButton";
+var crlRefinementToolbarButtonID = "refinementToolbarButton";
+var crlRefinementLinkToolbarButtonID = "refinementLinkToolbarButton";
+var crlDiagramToolbarButtonID = "diagramToolbarButton";
+var crlOwnerPointerToolbarButtonID = "ownerPointerToolbarButton";
+var crlElementPointerToolbarButtonID = "elementPointerToolbarButton";
+var crlAbstractPointerToolbarButtonID = "abstractPointerToolbarButton";
+var crlRefinedPointerToolbarButtonID = "refinedPointerToolbarButton";
+
+var crlDiagramCellDropdownMenu = null;
+
+var crlInCrlElementSelected = false;
 
 // Initialize
 $(function () {
+    $(".uofd-browser").resizable({
+        resizeHeight: false
+    });
     $("#uOfD").jstree({
         'core': {
             'check_callback': true,
@@ -75,7 +85,7 @@ $(function () {
                                         var xhr = crlCreateEmptyRequest();
                                         var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
                                         var data = JSON.stringify({ "Action": "AddElementChild", "RequestConceptID": conceptID });
-                                        xhr.send(data);
+                                        crlSendRequest(xhr, data);
                                     }
                                 }
                             },
@@ -85,8 +95,8 @@ $(function () {
                                     var xhr = crlCreateEmptyRequest();
                                     var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
                                     var data = JSON.stringify({ "Action": "AddDiagramChild", "RequestConceptID": conceptID });
-                                    xhr.send(data);
-                            }
+                                    crlSendRequest(xhr, data);
+                                }
                             },
                             Literal: {
                                 "label": "Literal",
@@ -94,8 +104,8 @@ $(function () {
                                     var xhr = crlCreateEmptyRequest();
                                     var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
                                     var data = JSON.stringify({ "Action": "AddLiteralChild", "RequestConceptID": conceptID });
-                                    xhr.send(data);
-                           }
+                                    crlSendRequest(xhr, data);
+                                }
                             },
                             Reference: {
                                 "label": "Reference",
@@ -103,8 +113,8 @@ $(function () {
                                     var xhr = crlCreateEmptyRequest();
                                     var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
                                     var data = JSON.stringify({ "Action": "AddReferenceChild", "RequestConceptID": conceptID });
-                                    xhr.send(data);
-                           }
+                                    crlSendRequest(xhr, data);
+                                }
                             },
                             Refinement: {
                                 "label": "Refinement",
@@ -112,8 +122,8 @@ $(function () {
                                     var xhr = crlCreateEmptyRequest();
                                     var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
                                     var data = JSON.stringify({ "Action": "AddRefinementChild", "RequestConceptID": conceptID });
-                                    xhr.send(data);
-                            }
+                                    crlSendRequest(xhr, data);
+                                }
                             }
                         }
                     },
@@ -121,10 +131,11 @@ $(function () {
                         "label": "Display Diagram",
                         "action": function (obj) {
                             if ($node != undefined) {
-                                var xhr = crlCreateEmptyRequest();
+                                //                                var xhr = crlCreateEmptyRequest();
                                 var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
-                                var data = JSON.stringify({ "Action": "DisplayDiagramSelected", "RequestConceptID": conceptID });
-                                xhr.send(data);
+                                crlSendDisplayDiagramSelected(conceptID);
+                                //     var data = JSON.stringify({ "Action": "DisplayDiagramSelected", "RequestConceptID": conceptID });
+                                //     crlSendRequest(xhr, data);
                             }
                         }
                     },
@@ -135,7 +146,7 @@ $(function () {
                                 var xhr = crlCreateEmptyRequest();
                                 var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
                                 var data = JSON.stringify({ "Action": "TreeNodeDelete", "RequestConceptID": conceptID });
-                                xhr.send(data);
+                                crlSendRequest(xhr, data);
                             };
                         }
                     }
@@ -153,138 +164,434 @@ $(function () {
     $("#uOfD").on("select_node.jstree", crlSendTreeNodeSelected);
     $("#uOfD").on("dragstart", crlOnTreeDragStart);
     $("#body").on("ondrop", crlOnEditorDrop);
-    crlDebugSettingsDialog = $("#debugSettingsDialog").dialog({
-        "resizable": false,
-        "height": 200,
-        "modal": true,
-        "buttons": { "OK": crlDebugSettingsOK }
-    });
-    crlDebugSettingsDialog.dialog("close");
-    crlEditorSettingsDialog = $("#editorSettingsDialog").dialog({
-        "resizable": false,
-        "height": 200,
-        "modal": true,
-        "buttons": { "OK": crlEditorSettingsOK }
-    });
-    crlEditorSettingsDialog.dialog("close");
-    crlOpenWorkspaceDialog = $("#openWorkspaceDialog").dialog({
-        "resizable": true,
-        "width": 650,
-        "height": 300,
-        "modal": true,
-        "buttons": { "OK": crlOpenWorkspaceOK }
-    });
-    crlOpenWorkspaceDialog.dialog("close");
-});
-
-
-// <!-- Display an example graph - this is throw-away code -->
-$(function () {
-    var graph = new joint.dia.Graph;
-
-    var paper = new joint.dia.Paper({
-        el: $('#diagram'),
-        /*			width : 800,
-         height : 800, */
-        model: graph,
-        gridSize: 1
-    });
-
-    var rect = new joint.shapes.basic.Rect({
-        position: {
-            x: 100,
-            y: 30
+    crlPopulateToolbar();
+    crlDiagramCellDropdownMenu = document.getElementById("diagramCellDropdown");
+    if (crlDiagramCellDropdownMenu) {
+        crlDiagramCellDropdownMenu.addEventListener("mouseleave", function () {
+            crlDiagramCellDropdownMenu.style.display = "none";
+        })
+        crlDiagramCellDropdownMenu.addEventListener("mouseup", function () {
+            crlDiagramCellDropdownMenu.style.display = "none";
+        })
+    };
+    crlDebugSettingsDialog = new jBox("Confirm", {
+        title: "Notification Trace Settings",
+        confirmButton: "OK",
+        cancelButton: "Cancel",
+        content: "" +
+            "<form>" +
+            "	<fieldset>" +
+            "		<label for='enableTracing'>Enable Notification Tracing</label>" +
+            "		<input type='checkbox' id='enableTracing'> <br> " +
+            "	</fieldset> " +
+            "</form>",
+        confirm: function () {
+            var enableNotificationTracing = "false";
+            if ($("#enableTracing").prop("checked") == true) {
+                enableNotificationTracing = "true"
+            };
+            crlSendDebugSettings(enableNotificationTracing, "0");
         },
-        size: {
-            width: 100,
-            height: 30
-        },
-        attrs: {
-            rect: {
-                fill: 'blue'
-            },
-            text: {
-                text: 'my box',
-                fill: 'white'
-            }
+        onOpen: function () {
+            $("#enableTracing").prop("checked", crlEnableTracing);
         }
     });
-
-    var rect3 = new joint.shapes.uml.Class({
-        position: {
-            x: 500,
-            y: 30
+    crlEditorSettingsDialog = new jBox("Confirm", {
+        title: "Editor Settings",
+        confirmButton: "OK",
+        cancelButton: "Cancel",
+        content: "" +
+            "<form>" +
+            "	<fieldset>" +
+            "		<label for='dropReferenceAsLink'>Drop Reference As link</label>" +
+            "		<input type='checkbox' id='dropReferenceAsLink'><br>" +
+            "		<label for='dropRefinementAsLink'>Drop Refinement As link</label>" +
+            "		<input type='checkbox' id='dropRefinementAsLink'>" +
+            "	</fieldset>" +
+            "</form>",
+        confirm: function () {
+            crlSendEditorSettings();
         },
-        size: {
-            width: 100,
-            height: 30
-        },
-        name: `Bar`
+        onOpen: function () {
+            $("#dropReferenceAsLink").prop("checked", crlDropReferenceAsLink);
+            $("#dropRefinementAsLink").prop("checked", crlDropRefinementAsLink);
+        }
     });
-
-    theClass = rect3
-
-    graph.addCells([rect, rect3]);
+    crlOpenWorkspaceDialog = new jBox("Confirm", {
+        title: "Select Workspace",
+        confirmButton: "OK",
+        cancelButton: "Cancel",
+        content: "" +
+            "<form>" +
+            "	<fieldset>" +
+            "		<p>Use the file selector to locate the folder you want to use for your workspace. Copy the path in the" +
+            "			top of the browser and then paste it into the indicated box.</p>" +
+            "		Identify Workspace Folder:<input type='file'><br>" +
+            "		Paste Directory Path Here:<input type='text' id='selectedWorkspaceFolder'>" +
+            "	</fieldset>" +
+            "</form>",
+        confirm: function () {
+            crlSendOpenWorkspace($("#selectedWorkspaceFolder").val());
+        },
+        onOpen: function () {
+            $("#selectedWorkspaceFolder").val(crlWorkspacePath);
+        }
+    });
 });
 
 
-
-function crlAddDiagramLink(data) {
-    crlUpdateDiagramLink(data);
+function crlConstructDiagramContainer(diagramContainer, diagramContainerID, diagramLabel, diagramID) {
+    var topContent = document.getElementById("top-content");
+    diagramContainer = document.createElement("DIV");
+    diagramContainer.id = diagramContainerID;
+    diagramContainer.className = "crlDiagramContainer";
+    diagramContainer.onclick = crlOnDiagramClick;
+    // It is not clear why, but the ondrop callback does not get called unless the ondragover callback is used,
+    // even though the callback just calls preventDefault on the dragover event
+    diagramContainer.ondragover = crlOnDragover;
+    diagramContainer.onmouseover = crlOnDiagramMouseOver;
+    diagramContainer.ondrop = crlOnDiagramDrop;
+    diagramContainer.style.display = "none";
+    topContent.appendChild(diagramContainer);
+    // Create the new tab
+    var tabs = document.getElementById("tabs");
+    var newTab = document.createElement("BUTTON");
+    newTab.innerHTML = diagramLabel;
+    newTab.className = "w3-bar-item w3-button";
+    var newTabID = crlGetDiagramTabIDFromDiagramID(diagramID);
+    newTab.id = newTabID;
+    newTab.setAttribute("diagramContainerID", diagramContainerID);
+    newTab.onclick = crlOnMakeDiagramVisible;
+    tabs.appendChild(newTab, -1);
+    var jointGraphID = crlGetJointGraphIDFromDiagramID(diagramID);
+    var jointGraph = crlGraphsGlobal[jointGraphID];
+    //        jointGraph = document.getElementById(jointGraphID);
+    if (jointGraph == undefined) {
+        jointGraph = new joint.dia.Graph;
+        jointGraph.id = jointGraphID;
+        crlGraphsGlobal[jointGraphID] = jointGraph;
+    }
+    ;
+    var jointPaperID = crlGetJointPaperIDFromDiagramID(diagramID);
+    var jointPaper = crlPapersGlobal[jointPaperID];
+    if (jointPaper == undefined) {
+        jointPaper = crlConstructPaper(diagramContainer, jointGraph, jointPaperID);
+    }
+    ;
+    return diagramContainer;
 }
 
-function crlAddDiagramNode(data) {
-    crlUpdateDiagramNode(data);
-}
-
-function crlConstructDiagramLink(data, graphID, crlJointID) {
+function crlConstructDiagramLink(data, graph, crlJointID) {
     var sourceJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkSourceID"])
     var targetJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkTargetID"])
     if (sourceJointID != "" && targetJointID != "") {
-        var linkSource = crlFindElementInGraph(graphID, sourceJointID)
-        var linkTarget = crlFindElementInGraph(graphID, targetJointID)
+        var linkSource = crlFindElementInGraph(graph, sourceJointID)
+        var linkTarget = crlFindElementInGraph(graph, targetJointID)
         if (linkSource != undefined && linkTarget != undefined) {
             var newLink;
             switch (data.AdditionalParameters["LinkType"]) {
-                case "*core.reference":
+                case "ReferenceLink":
                     newLink = new joint.shapes.crl.ReferenceLink({
-                        source: { id: linkSource.id },
-                        target: { id: linkTarget.id }
+                        source: linkSource,
+                        target: linkTarget
                     });
                     break;
-                case "*core.refinement":
-                    var newLink = new joint.shapes.crl.RefinementLink({
-                        source: { id: linkSource.id },
-                        target: { id: linkTarget.id }
+                case "RefinementLink":
+                    newLink = new joint.shapes.crl.RefinementLink({
+                        source: linkSource,
+                        target: linkTarget
+                    });
+                    break;
+                case "OwnerPointer":
+                    newLink = new joint.shapes.crl.OwnerPointer({
+                        source: linkSource,
+                        target: linkTarget
+                    });
+                    break;
+                case "ElementPointer":
+                    newLink = new joint.shapes.crl.ElementPointer({
+                        source: linkSource,
+                        target: linkTarget
+                    });
+                    break;
+                case "AbstractPointer":
+                    newLink = new joint.shapes.crl.AbstractPointer({
+                        source: linkSource,
+                        target: linkTarget
+                    });
+                    break;
+                case "RefinedPointer":
+                    newLink = new joint.shapes.crl.RefinedPointer({
+                        source: linkSource,
+                        target: linkTarget
                     });
                     break;
             }
             newLink.set("crlJointID", crlJointID);
-            crlGraphsGlobal[graphID].addCell(newLink);
+            newLink.set("represents", data.AdditionalParameters["Represents"])
+            graph.addCell(newLink);
+
             return newLink;
         }
     }
     return undefined
 }
 
-function crlConstructDiagramNode(data, graphID, crlJointID) {
-    var jointElement = new joint.shapes.crl.Element({
-        attrs: {
-            rect: {
-                width: 300
-            }
-        }
-    });
+function crlConstructDiagramNode(data, graph, crlJointID) {
+    var jointElement = new joint.shapes.crl.Element({});
     jointElement.set("crlJointID", crlJointID);
     jointElement.set("name", data.AdditionalParameters["DisplayLabel"]);
     jointElement.set("position", { "x": Number(data.AdditionalParameters["NodeX"]), "y": Number(data.AdditionalParameters["NodeY"]) });
     jointElement.set("size", { "width": Number(data.AdditionalParameters["NodeWidth"]), "height": Number(data.AdditionalParameters["NodeHeight"]) });
     jointElement.set("icon", data.AdditionalParameters["Icon"]);
     jointElement.set("abstractions", data.AdditionalParameters["Abstractions"]);
-    var graph = crlGraphsGlobal[graphID];
+    jointElement.set("represents", data.AdditionalParameters["Represents"])
     graph.addCell(jointElement);
     return jointElement;
 }
+
+function crlConstructPaper(diagramContainer, jointGraph, jointPaperID) {
+    var diagramPaperDiv = document.createElement("DIV");
+    diagramContainer.appendChild(diagramPaperDiv);
+    jointPaper = new joint.dia.Paper({
+        "el": diagramPaperDiv,
+        "width": 1000,
+        "height": 1000,
+        defaultLink: undefined,
+        validateMagnet: crlValidateLinkStart,
+        "model": jointGraph,
+        "gridSize": 1
+    });
+    jointPaper.on("cell:pointerdown", crlOnDiagramCellPointerDown);
+    jointPaper.on("cell:pointerup", crlOnDiagramCellPointerUp);
+    jointPaper.on("element:contextmenu", function (cellView, evt, x, y) {
+        evt.preventDefault();
+        crlDiagramCellDropdownMenu.attributes.cellView = cellView;
+        crlDiagramCellDropdownMenu.style.left = evt.pageX.toString() + "px";
+        crlDiagramCellDropdownMenu.style.top = evt.pageY.toString() + "px";
+        crlDiagramCellDropdownMenu.style.display = "block";
+    });
+    jointPaper.on("link:connect", crlLinkConnected);
+    jointPaper.on("validateMagnet", crlValidateLinkStart);
+    jointPaper.on('link:mouseenter', function (linkView) {
+        var toolsView = linkView._toolsView;
+        if (!toolsView) {
+            var verticesTool = new joint.linkTools.Vertices();
+            var segmentsTool = new joint.linkTools.Segments();
+            var targetArrowheadTool = new joint.linkTools.TargetArrowhead();
+            var sourceArrowheadTool = null;
+            if (!crlLinkViewRepresentsPointer(linkView)) {
+                sourceArrowheadTool = new joint.linkTools.SourceArrowhead();
+            }
+            toolsView = new joint.dia.ToolsView({
+                tools: [verticesTool, segmentsTool, targetArrowheadTool, sourceArrowheadTool]
+            });
+            linkView.addTools(toolsView);
+        }
+        linkView.showTools();
+    });
+    jointPaper.on('link:mouseleave', function (linkView) {
+        linkView.hideTools();
+    });
+    crlPapersGlobal[jointPaperID] = jointPaper;
+    return jointPaper;
+}
+
+function crlCallExit() {
+    console.log("Requesting Exit");
+    var xhr = crlCreateEmptyRequest();
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            window.close();
+        }
+    };
+    var data = JSON.stringify({ "Action": "Exit" });
+    crlSendRequest(xhr, data);
+}
+
+function crlPropertiesClearRow(row) {
+    var properties = document.getElementById("properties");
+    var propertyRow = properties.rows[row]
+    if (propertyRow != undefined) {
+        properties.deleteRow(row);
+    }
+}
+
+var crlCloseWebsocket = function () {
+    console.log("Closing websocket")
+    crlWebsocketGlobal.close()
+}
+
+function crlCreateEmptyRequest() {
+    var xhr = new XMLHttpRequest();
+    var url = "request";
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+            var response = JSON.parse(xhr.responseText)
+            if (response.Result == 1) {
+                alert(response.ResultDescription);
+            }
+            console.log(response)
+        };
+    }
+    return xhr
+}
+
+function crlCreateLink() {
+    var link;
+    switch (crlCurrentToolbarButton) {
+        case crlCursorToolbarButtonID:
+            link = undefined;
+            break;
+        case crlElementToolbarButtonID:
+            link = undefined;
+            break;
+        case crlLiteralToolbarButtonID:
+            link = undefined;
+            break;
+        case crlReferenceToolbarButtonID:
+            link = undefined;
+            break;
+        case crlReferenceLinkToolbarButtonID:
+            link = new joint.shapes.crl.ReferenceLink({});
+            break;
+        case crlRefinementToolbarButtonID:
+            link = undefined;
+            break;
+        case crlRefinementLinkToolbarButtonID:
+            link = new joint.shapes.crl.RefinementLink({});
+            break;
+        case crlDiagramToolbarButtonID:
+            link = undefined;
+            break;
+        case crlOwnerPointerToolbarButtonID:
+            link = new joint.shapes.crl.OwnerPointer({});
+            break;
+        case crlElementPointerToolbarButtonID:
+            link = new joint.shapes.crl.ElementPointer({});
+            break;
+        case crlAbstractPointerToolbarButtonID:
+            link = new joint.shapes.crl.AbstractionLink({});
+            break;
+        case crlRefinedPointerToolbarButtonID:
+            link = new joint.shapes.crl.RefinedPointer({});
+            break;
+    }
+
+    return link;
+}
+
+
+
+
+function crlDeleteView(evt) {
+    var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
+    var jointID = cellView.model.attributes.crlJointID;
+    var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "DeleteView", "RequestConceptID": diagramElementID });
+    crlSendRequest(xhr, data);
+}
+
+function crlPropertiesDisplayAbstractConcept(data, row) {
+    var typeRow = crlObtainPropertyRow(row);
+    typeRow.cells[0].innerHTML = "Abstract Concept ID";
+    typeRow.cells[1].innerHTML = data.NotificationConcept.AbstractConceptID;
+}
+
+function crlPropertiesDisplayDefinition(data, row) {
+    var definitionRow = crlObtainPropertyRow(row)
+    definitionRow.cells[0].innerHTML = "Definition";
+    definitionRow.cells[1].innerHTML = data.NotificationConcept.Definition;
+    definitionRow.cells[1].id = "definition";
+    if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
+        definitionRow.cells[1].contentEditable = true;
+        $("#definition").on("keyup", crlSendDefinitionChanged);
+    } else {
+        definitionRow.cells[1].contentEditable = false;
+
+    };
+}
+
+
+function crlPropertiesDisplayID(data, row) {
+    var idRow = crlObtainPropertyRow(row)
+    idRow.cells[0].innerHTML = "ID";
+    idRow.cells[1].innerHTML = data.NotificationConceptID;
+}
+
+function crlPropertiesDisplayLabel(data, row) {
+    var labelRow = crlObtainPropertyRow(row);
+    labelRow.cells[0].innerHTML = "Label";
+    labelRow.cells[1].innerHTML = data.NotificationConcept.Label;
+    labelRow.cells[1].id = "elementLabel";
+    if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
+        labelRow.cells[1].contentEditable = true;
+        $("#elementLabel").on("keyup", crlSendLabelChanged);
+    } else {
+        labelRow.cells[1].contentEditable = false;
+    };
+}
+
+function crlPropertiesDisplayLiteralValue(data, row) {
+    var labelRow = crlObtainPropertyRow(row);
+    labelRow.cells[0].innerHTML = "Literal Value";
+    labelRow.cells[1].innerHTML = data.NotificationConcept.LiteralValue;
+    labelRow.cells[1].id = "literalValue";
+    if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
+        labelRow.cells[1].contentEditable = true;
+        $("#literalValue").on("keyup", crlSendLiteralValueChanged);
+    } else {
+        labelRow.cells[1].contentEditable = false;
+    };
+}
+
+function crlPropertiesDisplayReferencedConcept(data, row) {
+    var typeRow = crlObtainPropertyRow(row);
+    typeRow.cells[0].innerHTML = "Referenced Concept ID";
+    typeRow.cells[1].innerHTML = data.NotificationConcept.ReferencedConceptID;
+}
+
+function crlPropertiesDisplayRefinedConcept(data, row) {
+    var typeRow = crlObtainPropertyRow(row);
+    typeRow.cells[0].innerHTML = "Refined Concept ID";
+    typeRow.cells[1].innerHTML = data.NotificationConcept.RefinedConceptID;
+}
+
+function crlPropertiesDisplayType(data, row) {
+    var typeRow = crlObtainPropertyRow(row);
+    typeRow.cells[0].innerHTML = "Type";
+    typeRow.cells[1].innerHTML = data.NotificationConcept.Type;
+}
+
+function crlPropertiesDisplayURI(data, row) {
+    var uriRow = crlObtainPropertyRow(row);
+    uriRow.cells[0].innerHTML = "URI";
+    uriRow.cells[1].innerHTML = data.NotificationConcept.URI;
+    uriRow.cells[1].id = "uri";
+    if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
+        uriRow.cells[1].contentEditable = true;
+        $("#uri").on("keyup", crlSendURIChanged);
+    } else {
+        uriRow.cells[1].contentEditable = false;
+    }
+}
+
+
+function crlPropertiesDisplayVersion(data, row) {
+    var versionRow = crlObtainPropertyRow(row)
+    versionRow.cells[0].innerHTML = "Version";
+    versionRow.cells[1].innerHTML = data.NotificationConcept.Version;
+}
+
+function crlDropdownMenu(dropdownId) {
+    document.getElementById(dropdownId).classList.toggle("show");
+}
+
+
+
 
 function crlFindCellInGraph(graphID, crlJointID) {
     var cells = crlGraphsGlobal[graphID].getCells();
@@ -297,8 +604,8 @@ function crlFindCellInGraph(graphID, crlJointID) {
     return cell
 }
 
-function crlFindElementInGraph(graphID, crlJointID) {
-    var elements = crlGraphsGlobal[graphID].getElements();
+function crlFindElementInGraph(graph, crlJointID) {
+    var elements = graph.getElements();
     var elem = null;
     elements.forEach(function (item) {
         if (item.get("crlJointID") == crlJointID) {
@@ -317,327 +624,6 @@ function crlFindLinkInGraph(graphID, crlJointID) {
         }
     })
     return link
-}
-
-// <!-- Set up the websockets connection and callbacks -->
-function crlAddTreeNode(data) {
-    var concept = data.NotificationConcept;
-    var params = data.AdditionalParameters;
-    var owningConceptID = concept.OwningConceptID;
-    if (owningConceptID == "") {
-        owningConceptID = "#"
-    } else {
-        owningConceptID = "TreeNode" + owningConceptID
-    }
-    var nodeClass
-    if (concept.ReadOnly == "true" || concept.IsCore == "true") {
-        nodeClass = "node-read-only";
-    } else {
-        nodeClass = "node"
-    }
-    var nodeID = $('#uOfD').jstree().create_node(owningConceptID,
-        {
-            'id': "TreeNode" + concept.ConceptID,
-            'text': concept.Label,
-            'icon': params.icon,
-            'li_attr': {
-                "read_only": concept.ReadOnly,
-                "is_core": concept.IsCore,
-                "is_diagram": params.isDiagram,
-                "class": nodeClass
-            }
-        },
-        'last');
-    crlSendNormalResponse();
-}
-
-function crlCallExit() {
-    console.log("Requesting Exit");
-    var xhr = crlCreateEmptyRequest();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            window.close();
-        }
-    };
-    var data = JSON.stringify({ "Action": "Exit" });
-    xhr.send(data);
-}
-
-function crlChangeTreeNode(data) {
-    var concept = data.NotificationConcept;
-    var params = data.AdditionalParameters;
-    var owningConceptID = concept.OwningConceptID;
-    var treeNodeOwnerID = ""
-    if (owningConceptID == "") {
-        treeNodeOwnerID = "#";
-    } else {
-        treeNodeOwnerID = crlGetTreeNodeIDFromConceptID(owningConceptID);
-    }
-    var nodeID = crlGetTreeNodeIDFromConceptID(concept.ConceptID);
-    if ($('#uOfD').jstree().get_parent(nodeID) != treeNodeOwnerID) {
-        $('#uOfD').jstree().move_node(nodeID, treeNodeOwnerID)
-    }
-    $('#uOfD').jstree().rename_node(nodeID, concept.Label)
-    crlSendNormalResponse()
-}
-
-function crlClearRow(row) {
-    var properties = document.getElementById("properties");
-    var propertyRow = properties.rows[row]
-    if (propertyRow != undefined) {
-        properties.deleteRow(row);
-    }
-}
-
-
-var crlCloseWebsocket = function () {
-    console.log("Closing websocket")
-    crlWebsocketGlobal.close()
-}
-
-function crlCreateEmptyRequest() {
-    var xhr = new XMLHttpRequest();
-    var url = "request";
-    xhr.open("POST", url, true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            var response = JSON.parse(xhr.responseText)
-            if (response.Result == 1) {
-                alert(response.ResultDescription);
-            }
-            console.log(xhr.responseText)
-        };
-    }
-    return xhr
-}
-
-// crlDebugSettings creates and displays the Debug Settings dialog so that the debug settings can be updated from the UI
-var crlDebugSettings = function () {
-    $("#enableTracing").prop("checked", crlEnableTracing);
-    crlDebugSettingsDialog.dialog("open");
-}
-
-// crlDebugSettingsOK is the callback function for the Debug Settings dialog OK button.
-// It updaates the debug settings with the values from the dialog
-var crlDebugSettingsOK = function () {
-    crlSendDebugSettings();
-    crlDebugSettingsDialog.dialog("close");
-};
-
-
-function crlDeleteTreeNode(data) {
-    var concept = data.NotificationConcept;
-    var params = data.AdditionalParameters;
-    var nodeID = crlGetTreeNodeIDFromConceptID(concept.ConceptID);
-    $('#uOfD').jstree().delete_node(nodeID);
-    var data = {};
-    data["Result"] = 0;
-    data["ErrorMessage"] = "none"
-    crlWebsocketGlobal.send(JSON.stringify(data))
-}
-
-function crlDisplayAbstractConcept(data, row) {
-    var typeRow = crlObtainPropertyRow(row);
-    typeRow.cells[0].innerHTML = "Abstract Concept ID";
-    typeRow.cells[1].innerHTML = data.NotificationConcept.AbstractConceptID;
-}
-
-function crlDisplayDefinition(data, row) {
-    var definitionRow = crlObtainPropertyRow(row)
-    definitionRow.cells[0].innerHTML = "Definition";
-    definitionRow.cells[1].innerHTML = data.NotificationConcept.Definition;
-    definitionRow.cells[1].id = "definition";
-    if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
-        definitionRow.cells[1].contentEditable = true;
-        $("#definition").on("keyup", crlSendDefinitionChanged);
-    } else {
-        definitionRow.cells[1].contentEditable = false;
-
-    };
-}
-
-
-function crlDisplayDiagram(data) {
-    var diagramID = data.NotificationConceptID;
-    var diagramLabel = data.NotificationConcept.Label;
-    var diagramContainerID = crlGetDiagramContainerIDFromDiagramID(diagramID);
-    var diagramContainer = document.getElementById(diagramContainerID);
-    // Construct the container if it is not already present
-    if (diagramContainer == undefined) {
-        var topContent = document.getElementById("top-content");
-        diagramContainer = document.createElement("DIV");
-        diagramContainer.id = diagramContainerID;
-        diagramContainer.className = "crlDiagramContainer";
-        // It is not clear why, but the ondrop callback does not get called unless the ondragover callback is used,
-        // even though the callback just calls preventDefault on the dragover event
-        diagramContainer.ondragover = crlOnDragover;
-        diagramContainer.ondrop = crlOnDiagramDrop;
-        diagramContainer.style.display = "none";
-        topContent.appendChild(diagramContainer);
-        // Create the new tab
-        var tabs = document.getElementById("tabs");
-        var newTab = document.createElement("BUTTON");
-        newTab.innerHTML = diagramLabel;
-        newTab.className = "w3-bar-item w3-button";
-        var newTabID = "DiagramTab" + diagramID;
-        newTab.id = newTabID;
-        newTab.setAttribute("diagramContainerID", diagramContainerID);
-        newTab.onclick = crlOnMakeDiagramVisible;
-        tabs.appendChild(newTab, -1);
-
-        var jointGraphID = crlGetJointGraphIDFromDiagramID(diagramID);
-        var jointGraph = crlGraphsGlobal[jointGraphID];
-        //        jointGraph = document.getElementById(jointGraphID);
-        if (jointGraph == undefined) {
-            jointGraph = new joint.dia.Graph;
-            jointGraph.id = jointGraphID;
-            crlGraphsGlobal[jointGraphID] = jointGraph;
-        };
-
-        var jointPaperID = crlGetJointPaperIDFromDiagramID(diagramID);
-        var jointPaper = crlPapersGlobal[jointPaperID];
-        if (jointPaper == undefined) {
-            var diagramPaperDiv = document.createElement("DIV");
-            diagramContainer.appendChild(diagramPaperDiv);
-            jointPaper = new joint.dia.Paper({
-                "el": diagramPaperDiv,
-                "width": 1000,
-                "height": 1000,
-                "model": jointGraph,
-                "gridSize": 1
-            });
-            jointPaper.on("cell:pointerdown", crlOnDiagramCellPointerDown);
-            jointPaper.on("cell:pointerup", crlOnDiagramCellPointerUp);
-            crlPapersGlobal[jointPaperID] = jointPaper;
-        };
-    }
-    crlMakeDiagramVisible(diagramContainer.id);
-    crlCurrentDiagramContainerIDGlobal = diagramContainerID
-    crlSendNormalResponse()
-}
-
-
-function crlDisplayID(data, row) {
-    var idRow = crlObtainPropertyRow(row)
-    idRow.cells[0].innerHTML = "ID";
-    idRow.cells[1].innerHTML = data.NotificationConceptID;
-}
-
-function crlDisplayLabel(data, row) {
-    var labelRow = crlObtainPropertyRow(row);
-    labelRow.cells[0].innerHTML = "Label";
-    labelRow.cells[1].innerHTML = data.NotificationConcept.Label;
-    labelRow.cells[1].id = "elementLabel";
-    if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
-        labelRow.cells[1].contentEditable = true;
-        $("#elementLabel").on("keyup", crlSendLabelChanged);
-    } else {
-        labelRow.cells[1].contentEditable = false;
-    };
-}
-
-function crlDisplayLiteralValue(data, row) {
-    var labelRow = crlObtainPropertyRow(row);
-    labelRow.cells[0].innerHTML = "Literal Value";
-    labelRow.cells[1].innerHTML = data.NotificationConcept.LiteralValue;
-    labelRow.cells[1].id = "literalValue";
-    if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
-        labelRow.cells[1].contentEditable = true;
-        $("#literalValue").on("keyup", crlSendLiteralValueChanged);
-    } else {
-        labelRow.cells[1].contentEditable = false;
-    };
-}
-
-function crlDisplayReferencedConcept(data, row) {
-    var typeRow = crlObtainPropertyRow(row);
-    typeRow.cells[0].innerHTML = "Referenced Concept ID";
-    typeRow.cells[1].innerHTML = data.NotificationConcept.ReferencedConceptID;
-}
-
-function crlDisplayRefinedConcept(data, row) {
-    var typeRow = crlObtainPropertyRow(row);
-    typeRow.cells[0].innerHTML = "Refined Concept ID";
-    typeRow.cells[1].innerHTML = data.NotificationConcept.RefinedConceptID;
-}
-
-function crlDisplayType(data, row) {
-    var typeRow = crlObtainPropertyRow(row);
-    typeRow.cells[0].innerHTML = "Type";
-    typeRow.cells[1].innerHTML = data.NotificationConcept.Type;
-}
-
-function crlDisplayURI(data, row) {
-    var uriRow = crlObtainPropertyRow(row);
-    uriRow.cells[0].innerHTML = "URI";
-    uriRow.cells[1].innerHTML = data.NotificationConcept.URI;
-    uriRow.cells[1].id = "uri";
-    if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
-        uriRow.cells[1].contentEditable = true;
-        $("#uri").on("keyup", crlSendURIChanged);
-    } else {
-        uriRow.cells[1].contentEditable = false;
-    }
-}
-
-
-function crlDisplayVersion(data, row) {
-    var versionRow = crlObtainPropertyRow(row)
-    versionRow.cells[0].innerHTML = "Version";
-    versionRow.cells[1].innerHTML = data.NotificationConcept.Version;
-}
-
-function crlDropdownMenu(dropdownId) {
-    document.getElementById(dropdownId).classList.toggle("show");
-}
-
-// crlEditorSettingsOK is the callback function for the Editor Settings dialog OK button.
-// It updaates the debug settings with the values from the dialog
-var crlEditorSettingsOK = function () {
-    crlSendEditorSettings();
-    crlEditorSettingsDialog.dialog("close");
-};
-
-// crlEditorSettings creates and displays the Editor Settings dialog so that the debug settings can be updated from the UI
-var crlEditorSettings = function () {
-    $("#dropReferenceAsLink").prop("checked", crlDropReferenceAsLink);
-    $("#dropRefinementAsLink").prop("checked", crlDropRefinementAsLink);
-    crlEditorSettingsDialog.dialog("open");
-}
-
-
-function crlElementSelected(data) {
-    if (data.NotificationConceptID != crlSelectedConceptIDGlobal) {
-        selectedConceptId = data.NotificationConceptID
-
-        // Update the properties
-        crlDisplayType(data, 1);
-        crlDisplayID(data, 2);
-        crlDisplayVersion(data, 3);
-        crlDisplayLabel(data, 4);
-        crlDisplayDefinition(data, 5);
-        crlDisplayURI(data, 6);
-        switch (data.NotificationConcept.Type) {
-            case "*core.element":
-                crlClearRow(7);
-                crlClearRow(8);
-                break;
-            case "*core.literal":
-                crlDisplayLiteralValue(data, 7);
-                crlClearRow(8);
-                break
-            case "*core.reference":
-                crlDisplayReferencedConcept(data, 7);
-                crlClearRow(8);
-                break;
-            case "*core.refinement":
-                crlDisplayAbstractConcept(data, 7);
-                crlDisplayRefinedConcept(data, 8);
-                break;
-        };
-    }
-    crlSendNormalResponse()
 }
 
 function crlGetConceptIDFromContainerID(containerID) {
@@ -668,6 +654,10 @@ function crlGetDiagramIDFromJointPaperID(jointPaperID) {
     return jointPaperID.replace("JointPaper", "")
 }
 
+function crlGetDiagramTabIDFromDiagramID(diagramID) {
+    return "DiagramTab" + diagramID;
+}
+
 function crlGetJointPaperIDFromDiagramID(diagramID) {
     return "JointPaper" + diagramID;
 }
@@ -694,58 +684,64 @@ function crlInitializeClient() {
     console.log("Requesting InitializeClient");
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({ "Action": "InitializeClient" });
-    xhr.send(data);
+    crlSendRequest(xhr, data);
 }
 
 function crlInitializeWebSocket() {
     console.log("Initializing Web Socket")
     // ws initialization
-    crlWebsocketGlobal = new WebSocket("ws://localhost:8080/index/ws");
+    crlWebsocketGlobal = new WebSocket("ws://localhost:8081/index/ws");
     console.log("Web Socket Initialization complete")
     crlWebsocketGlobal.onmessage = function (e) {
         var data = JSON.parse(e.data)
-        console.log("Notification:" + data.Notification)
+        console.log(data)
         switch (data.Notification) {
             case 'AddDiagramLink':
-                crlAddDiagramLink(data);
+                crlNotificationAddDiagramLink(data);
                 break;
             case 'AddDiagramNode':
-                crlAddDiagramNode(data);
+                crlNotificationAddDiagramNode(data);
                 break;
             case 'AddTreeNode':
-                crlAddTreeNode(data);
+                crlNotificationAddTreeNode(data);
                 break;
             case "ChangeTreeNode":
-                crlChangeTreeNode(data);
+                crlNotificationChangeTreeNode(data);
+                break;
+            case "ClearToolbarSelection":
+                crlNotificationClearToolbarSelection(data);
                 break;
             case "DebugSettings":
-                crlSaveDebugSettings(data);
+                crlNotificationSaveDebugSettings(data);
+                break;
+            case "DeleteDiagramElement":
+                crlNotificationDeleteDiagramCell(data);
                 break;
             case "DeleteTreeNode":
-                crlDeleteTreeNode(data);
+                crlNotificationDeleteTreeNode(data);
                 break;
             case "DisplayDiagram":
-                crlDisplayDiagram(data);
+                crlNotificationDisplayDiagram(data);
                 break;
             case "EditorSettings":
-                crlSaveEditorSettings(data);
+                crlNotificationSaveEditorSettings(data);
                 break;
             case "ElementSelected":
-                crlElementSelected(data);
+                crlNotificationElementSelected(data);
                 break;
             case "InitializationComplete":
-                crlInitializationCompleteGlobal = true;
+                crlInitializationComplete = true;
                 console.log("Initialization Complete")
                 crlSendNormalResponse("Processed InitializationComplete")
                 break;
             case "UpdateDiagramLink":
-                crlUpdateDiagramLink(data);
+                crlNotificationUpdateDiagramLink(data);
                 break;
             case "UpdateDiagramNode":
-                crlUpdateDiagramNode(data);
+                crlNotificationUpdateDiagramNode(data);
                 break;
             case "WorkspacePath":
-                crlUpdateWorkspacePath(data);
+                crlNotificationUpdateWorkspacePath(data);
                 break;
             default:
                 console.log('Unhandled notification: ' + e.data);
@@ -757,17 +753,334 @@ function crlInitializeWebSocket() {
     };
 };
 
+function crlLinkConnected(evt, cellView, magnet, arrowhead) {
+    crlSelectToolbarButton(crlCursorToolbarButtonID);
+    var linkType = evt.model.attributes.type;
+    var linkJointID = evt.model.attributes.crlJointID;
+    var linkID = "";
+    if (linkJointID != "" && linkJointID != undefined) {
+        linkID = crlGetConceptIDFromJointElementID(linkJointID);
+    }
+    switch (linkType) {
+        case "crl.RefinementLink":
+            var sourceJointID = evt.sourceView.model.attributes.crlJointID;
+            var targetJointID = evt.targetView.model.attributes.crlJointID;
+            var sourceID = crlGetConceptIDFromJointElementID(sourceJointID);
+            var targetID = crlGetConceptIDFromJointElementID(targetJointID);
+            crlSendRefinementLinkChanged(evt.model, linkID, sourceID, targetID);
+            break;
+        case "crl.OwnerPointer":
+            var sourceJointID = evt.sourceView.model.attributes.crlJointID;
+            var targetJointID = evt.targetView.model.attributes.crlJointID;
+            var sourceID = crlGetConceptIDFromJointElementID(sourceJointID);
+            var targetID = crlGetConceptIDFromJointElementID(targetJointID);
+            crlSendOwnerPointerChanged(evt.model, linkID, sourceID, targetID);
+            break;
+    }
+    if (linkID == "") {
+        evt.model.remove();
+    }
+}
+
+function crlLinkViewRepresentsPointer(linkView) {
+    var represents = linkView.model.attributes.represents
+    if (represents == "OwnerPointer" || represents == "ElementPointer" || represents == "AbstractPointer" || represents == "RefinedPointer") {
+        return true;
+    }
+    return false;
+}
+
+function crlNotificationSaveDebugSettings(data) {
+    crlEnableTracing = JSON.parse(data.AdditionalParameters["EnableNotificationTracing"]);
+    crlSendNormalResponse();
+}
+
 function crlMakeDiagramVisible(diagramContainerID) {
     var x = document.getElementsByClassName("crlDiagramContainer");
     for (i = 0; i < x.length; i++) {
-        if (x.item(i).id == diagramContainerID) {
-            x.item(i).style.display = "block";
+        var container = x.item(i);
+        var diagramID = crlGetDiagramIDFromDiagramContainerID(container.id);
+        var tabID = crlGetDiagramTabIDFromDiagramID(diagramID);
+        var tab = document.getElementById(tabID);
+        if (container.id == diagramContainerID) {
+            container.style.display = "block";
+            tab.style.backgroundColor = "white";
+            var graphID = crlGetJointGraphIDFromDiagramID(diagramID);
+            var graph = crlGraphsGlobal[graphID]
+            if (graph) {
+                graph.resetCells(graph.getCells());
+            }
         } else {
-            x.item(i).style.display = "none";
+            container.style.display = "none";
+            tab.style.backgroundColor = "grey";
         }
     }
 }
 
+function crlNotificationAddDiagramLink(data) {
+    var concept = data.NotificationConcept;
+    var params = data.AdditionalParameters;
+    var owningConceptID = concept.OwningConceptID;
+    var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
+    var graph = crlGraphsGlobal[graphID];
+    if (graph != null) {
+        // The absence of a graph indicates that there is no view of the diagram at present
+        var linkID = crlGetJointCellIDFromConceptID(concept.ConceptID);
+        var link = crlFindLinkInGraph(graphID, linkID)
+        var sourceJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkSourceID"]);
+        var targetJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkTargetID"]);
+        var linkSource = crlFindElementInGraph(graph, sourceJointID)
+        var linkTarget = crlFindElementInGraph(graph, targetJointID)
+        if ((link == undefined || link == null) && (linkSource != null && linkTarget != null)) {
+            link = crlConstructDiagramLink(data, graph, linkID);
+        }
+        crlNotificationUpdateDiagramLink(data);
+    }
+}
+function crlNotificationAddDiagramNode(data) {
+    var concept = data.NotificationConcept;
+    var params = data.AdditionalParameters;
+    var owningConceptID = concept.OwningConceptID;
+    var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
+    var graph = crlGraphsGlobal[graphID];
+    if (graph != null) {
+        // The absence of a graph indicates the diagram is not being viewed
+        var nodeID = crlGetJointCellIDFromConceptID(concept.ConceptID);
+        var node = crlFindElementInGraph(graph, nodeID);
+        if (node == undefined) {
+            node = crlConstructDiagramNode(data, graph, nodeID);
+        };
+        crlNotificationUpdateDiagramNode(data);
+        return; // crlNotificationUpdateDiagramNode will send the normal response
+    }
+    crlSendNormalResponse();
+}
+
+// <!-- Set up the websockets connection and callbacks -->
+function crlNotificationAddTreeNode(data) {
+    var concept = data.NotificationConcept;
+    var params = data.AdditionalParameters;
+    var owningConceptID = concept.OwningConceptID;
+    if (owningConceptID == "") {
+        owningConceptID = "#"
+    } else {
+        owningConceptID = "TreeNode" + owningConceptID
+    }
+    var nodeClass
+    if (concept.ReadOnly == "true" || concept.IsCore == "true") {
+        nodeClass = "node-read-only";
+    } else {
+        nodeClass = "node"
+    }
+    var nodeID = $('#uOfD').jstree().create_node(owningConceptID,
+        {
+            'id': crlGetTreeNodeIDFromConceptID(concept.ConceptID),
+            'text': concept.Label,
+            'icon': params.icon,
+            'li_attr': {
+                "read_only": concept.ReadOnly,
+                "is_core": concept.IsCore,
+                "is_diagram": params.isDiagram,
+                "class": nodeClass
+            }
+        },
+        'last');
+    crlSendNormalResponse();
+}
+
+function crlNotificationChangeTreeNode(data) {
+    var concept = data.NotificationConcept;
+    var params = data.AdditionalParameters;
+    var owningConceptID = concept.OwningConceptID;
+    var treeNodeOwnerID = ""
+    if (owningConceptID == "") {
+        treeNodeOwnerID = "#";
+    } else {
+        treeNodeOwnerID = crlGetTreeNodeIDFromConceptID(owningConceptID);
+    };
+    var nodeID = crlGetTreeNodeIDFromConceptID(concept.ConceptID);
+    var tree = $('#uOfD').jstree();
+    if (tree.get_parent(nodeID) != treeNodeOwnerID) {
+        tree.move_node(nodeID, treeNodeOwnerID);
+    }
+    var nodeClass
+    if (concept.ReadOnly == "true" || concept.IsCore == "true") {
+        nodeClass = "node-read-only";
+    } else {
+        nodeClass = "node"
+    }
+    tree.rename_node(nodeID, concept.Label);
+    tree.set_icon(nodeID, params.icon);
+    var node = tree.get_node(nodeID);
+    if (node) {
+        node.li_attr.read_only = concept.ReadOnly;
+        node.li_attr.is_core = concept.IsCore;
+        node.li_attr.is_diagram = params.isDiagram;
+        node.li_attr.class = nodeClass;
+    }
+    crlSendNormalResponse()
+}
+
+function crlNotificationClearToolbarSelection(data) {
+    crlSelectToolbarButton("cursorToolbarButton");
+    crlSendNormalResponse();
+}
+
+function crlNotificationDeleteDiagramCell(data) {
+    var concept = data.NotificationConcept;
+    var elementID = crlGetJointCellIDFromConceptID(concept.ConceptID);
+    var owningConceptID = data.AdditionalParameters["OwnerID"];
+    var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
+    var graph = crlGraphsGlobal[graphID];
+    if (graph != null) {
+        var element = crlFindElementInGraph(graphID, elementID);
+        element.remove()
+    }
+}
+
+function crlNotificationDeleteTreeNode(data) {
+    var concept = data.NotificationConcept;
+    var params = data.AdditionalParameters;
+    var nodeID = crlGetTreeNodeIDFromConceptID(concept.ConceptID);
+    $('#uOfD').jstree().delete_node(nodeID);
+    var data = {};
+    data["Result"] = 0;
+    data["ErrorMessage"] = "none"
+    crlWebsocketGlobal.send(JSON.stringify(data))
+}
+
+function crlNotificationDisplayDiagram(data) {
+    var diagramID = data.NotificationConceptID;
+    var diagramLabel = data.NotificationConcept.Label;
+    var diagramContainerID = crlGetDiagramContainerIDFromDiagramID(diagramID);
+    var diagramContainer = document.getElementById(diagramContainerID);
+    // Construct the container if it is not already present
+    if (diagramContainer == undefined) {
+        diagramContainer = crlConstructDiagramContainer(diagramContainer, diagramContainerID, diagramLabel, diagramID);
+    }
+    crlMakeDiagramVisible(diagramContainer.id);
+    crlCurrentDiagramContainerID = diagramContainerID;
+    crlSetDefaultLink();
+    //    crlSendRefreshDiagram(diagramID);
+    crlSendNormalResponse();
+}
+
+function crlNotificationElementSelected(data) {
+    if (data.NotificationConceptID != crlSelectedConceptIDGlobal) {
+        crlSelectedConceptIDGlobal = data.NotificationConceptID
+
+        // Update the properties
+        crlPropertiesDisplayType(data, 1);
+        crlPropertiesDisplayID(data, 2);
+        crlPropertiesDisplayVersion(data, 3);
+        crlPropertiesDisplayLabel(data, 4);
+        crlPropertiesDisplayDefinition(data, 5);
+        crlPropertiesDisplayURI(data, 6);
+        switch (data.NotificationConcept.Type) {
+            case "*core.element":
+                crlPropertiesClearRow(7);
+                crlPropertiesClearRow(8);
+                break;
+            case "*core.literal":
+                crlPropertiesDisplayLiteralValue(data, 7);
+                crlPropertiesClearRow(8);
+                break
+            case "*core.reference":
+                crlPropertiesDisplayReferencedConcept(data, 7);
+                crlPropertiesClearRow(8);
+                break;
+            case "*core.refinement":
+                crlPropertiesDisplayAbstractConcept(data, 7);
+                crlPropertiesDisplayRefinedConcept(data, 8);
+                break;
+        };
+
+        // Update the tree
+        var treeNodeID = crlGetTreeNodeIDFromConceptID(crlSelectedConceptIDGlobal);
+        $("#uOfD").jstree(true).deselect_all(true);
+        // a hack tp prevent infinite recursion
+        crlInCrlElementSelected = true;
+        $("#uOfD").jstree(true).select_node(treeNodeID, true);
+        crlInCrlElementSelected = false;
+
+    }
+    crlSendNormalResponse()
+}
+
+function crlNotificationSaveEditorSettings(data) {
+    crlDropReferenceAsLink = JSON.parse(data.AdditionalParameters["DropReferenceAsLink"]);
+    crlDropRefinementAsLink = JSON.parse(data.AdditionalParameters["DropRefinementAsLink"]);
+    crlSendNormalResponse();
+}
+
+var crlNotificationUpdateDiagramLink = function (data) {
+    var concept = data.NotificationConcept;
+    var params = data.AdditionalParameters;
+    var owningConceptID = concept.OwningConceptID;
+    var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
+    var graph = crlGraphsGlobal[graphID];
+    if (graph != null) {
+        // The absence of a graph indicates that there is no view of the diagram at present
+        var linkID = crlGetJointCellIDFromConceptID(concept.ConceptID);
+        var link = crlFindLinkInGraph(graphID, linkID)
+        var sourceJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkSourceID"]);
+        var targetJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkTargetID"]);
+        var linkSource = crlFindElementInGraph(graph, sourceJointID)
+        var linkTarget = crlFindElementInGraph(graph, targetJointID)
+        if ((link == undefined || link == null) && (linkSource != null && linkTarget != null)) {
+            crlSendNormalResponse()
+            return;
+        }
+        if ((linkSource == null || linkTarget == null) && (link != null && link != undefined)) {
+            link.remove();
+            crlSendNormalResponse()
+            return;
+        }
+        link.label(0, {
+            attrs: {
+                text: {
+                    text: data.AdditionalParameters["DisplayLabel"]
+                }
+            }
+        });
+        if (link.source().id != linkSource.id) {
+            link.set("source", linkSource);
+        }
+        if (link.target().id != linkTarget.id) {
+            link.set("target", linkTarget);
+        }
+    }
+    crlSendNormalResponse()
+}
+
+var crlNotificationUpdateDiagramNode = function (data) {
+    var concept = data.NotificationConcept;
+    var params = data.AdditionalParameters;
+    var owningConceptID = concept.OwningConceptID;
+    var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
+    var graph = crlGraphsGlobal[graphID];
+    if (graph != null) {
+        // The absence of a graph indicates the diagram is not being viewed
+        var nodeID = crlGetJointCellIDFromConceptID(concept.ConceptID);
+        var node = crlFindElementInGraph(graph, nodeID);
+        if (node == undefined) {
+            crlSendNormalResponse();
+            return;
+        };
+        node.set("displayLabelYOffset", Number(params["DisplayLabelYOffset"]));
+        node.set('position', { "x": Number(params["NodeX"]), "y": Number(params["NodeY"]) });
+        node.set('size', { "width": Number(params["NodeWidth"]), "height": Number(params["NodeHeight"]) });
+        node.set('icon', params["Icon"]);
+        node.set('name', params["DisplayLabel"]);
+        node.set("abstractions", params["Abstractions"]);
+    }
+    crlSendNormalResponse();
+}
+
+var crlNotificationUpdateWorkspacePath = function (data) {
+    crlWorkspacePath = data.AdditionalParameters["WorkspacePath"];
+    crlSendNormalResponse();
+}
 
 function crlObtainPropertyRow(row) {
     var properties = document.getElementById("properties");
@@ -808,13 +1121,64 @@ var crlOnDiagramCellPointerDown = function (cellView, event, x, y) {
     if (diagramNodeID == "") {
         console.log("In onDiagramManagerCellPointerDown diagramNodeID is empty")
     }
-    crlSendDiagramNodeSelected(diagramNodeID)
+    crlSendDiagramCellSelected(diagramNodeID)
 }
 
 var crlOnDiagramCellPointerUp = function (cellView, event, x, y) {
     $.each(crlMovedNodes, function (nodeID, position) {
         crlSendDiagramNodeNewPosition(nodeID, position)
     })
+    crlMovedNodes = {};
+}
+
+function crlOnDiagramClick(event) {
+    var nodeType = ""
+    switch (crlCurrentToolbarButton) {
+        case "cursorToolbarButton": {
+            break;
+        }
+        case "elementToolbarButton": {
+            nodeType = "Element";
+            break;
+        }
+        case "literalToolbarButton": {
+            nodeType = "Literal";
+            break;
+        }
+        case "referenceToolbarButton": {
+            nodeType = "Reference";
+            break;
+        }
+        case "referenceLinkToolbarButton": {
+            break;
+        }
+        case "refinementToolbarButton": {
+            nodeType = "Refinement";
+            break;
+        }
+        case "refinementLinkToolbarButton": {
+            break;
+        }
+        case "diagramToolbarButton": {
+            nodeType = "Diagram";
+            break;
+        }
+        case "ownerLinkToolbarButton": {
+            break;
+        }
+        case "pointerToolbarButton": {
+            break;
+        }
+        case "abstractionLinkToolbarButton": {
+            break;
+        }
+    }
+    if (nodeType != "") {
+        var conceptID = crlGetConceptIDFromContainerID(event.target.parentElement.parentElement.id);
+        var x = event.layerX.toString();
+        var y = event.layerY.toString();
+        crlSendDiagramClick(nodeType, conceptID, x, y);
+    }
 }
 
 function crlOnDiagramDrop(event) {
@@ -836,10 +1200,46 @@ function crlOnEditorDrop(e, data) {
 
 
 function crlOnMakeDiagramVisible(e) {
-    var diagramContainerId = e.target.getAttribute("diagramContainerID")
-    crlMakeDiagramVisible(diagramContainerId)
+    var diagramContainerID = e.target.getAttribute("diagramContainerID")
+    var diagramID = crlGetDiagramIDFromDiagramContainerID(diagramContainerID);
+    crlSendDisplayDiagramSelected(diagramID);
 }
 
+var crlOnToolbarButtonSelected = function (e, data) {
+    var img = e.target;
+    var btn = img.parentElement;
+    var id = btn.id;
+    crlSelectToolbarButton(id);
+}
+
+function crlOnDiagramMouseOver(mouseEvent) {
+    var diagram = mouseEvent.currentTarget;
+    if (crlCurrentToolbarButton == crlElementToolbarButtonID ||
+        crlCurrentToolbarButton == crlLiteralToolbarButtonID ||
+        crlCurrentToolbarButton == crlReferenceToolbarButtonID ||
+        crlCurrentToolbarButton == crlRefinementToolbarButtonID ||
+        crlCurrentToolbarButton == crlDiagramToolbarButtonID) {
+        diagram.style.cursor = "cell";
+    } else {
+        diagram.style.cursor = "default";
+    }
+}
+
+function crlSelectToolbarButton(id) {
+    crlCurrentToolbarButton = id;
+    var toolbar = document.getElementById("toolbar");
+    var buttons = toolbar.children;
+    for (var i = 0; i < buttons.length; i++) {
+        var button = buttons[i];
+        if (button.id == id) {
+            button.children[0].style.backgroundColor = "white";
+        }
+        else {
+            button.children[0].style.backgroundColor = "grey";
+        }
+    }
+    crlSetDefaultLink();
+}
 
 function crlOnTreeDragStart(e, data) {
     var parentID = e.target.parentElement.id;
@@ -864,34 +1264,40 @@ function crlOpenDiagramContainer(diagramContainerId) {
     }
 }
 
-var crlOpenWorkspace = function () {
-    $("#selectedWorkspaceFolder").val(crlWorkspacePath);
-    crlOpenWorkspaceDialog.dialog("open");
+
+
+function crlPopulateToolbar() {
+    var toolbar = document.getElementById("toolbar");
+    crlAppendToolbarButton(toolbar, crlCursorToolbarButtonID, "/icons/CursorIcon.svg");
+    crlAppendToolbarButton(toolbar, crlElementToolbarButtonID, "/icons/ElementIcon.svg");
+    crlAppendToolbarButton(toolbar, crlLiteralToolbarButtonID, "/icons/LiteralIcon.svg");
+    crlAppendToolbarButton(toolbar, crlReferenceToolbarButtonID, "/icons/ReferenceIcon.svg");
+    crlAppendToolbarButton(toolbar, crlReferenceLinkToolbarButtonID, "/icons/ReferenceLinkIcon.svg");
+    crlAppendToolbarButton(toolbar, crlRefinementToolbarButtonID, "/icons/RefinementIcon.svg");
+    crlAppendToolbarButton(toolbar, crlRefinementLinkToolbarButtonID, "/icons/RefinementLinkIcon.svg");
+    crlAppendToolbarButton(toolbar, crlDiagramToolbarButtonID, "/icons/DiagramIcon.svg");
+    crlAppendToolbarButton(toolbar, crlOwnerPointerToolbarButtonID, "/icons/OwnerPointerIcon.svg");
+    crlAppendToolbarButton(toolbar, crlElementPointerToolbarButtonID, "/icons/ElementPointerIcon.svg");
+    crlAppendToolbarButton(toolbar, crlAbstractPointerToolbarButtonID, "/icons/AbstractPointerIcon.svg");
+    crlAppendToolbarButton(toolbar, crlRefinedPointerToolbarButtonID, "/icons/RefinedPointerIcon.svg");
+    crlSelectToolbarButton(crlCursorToolbarButtonID);
 }
 
-function crlOpenWorkspaceOK() {
-    crlSendOpenWorkspace($("#selectedWorkspaceFolder").val());
-    crlOpenWorkspaceDialog.dialog("close");
+function crlAppendToolbarButton(toolbar, id, icon) {
+    var btn = document.createElement("BUTTON");
+    btn.setAttribute("class", "toolbar-button");
+    btn.setAttribute("id", id);
+    btn.onclick = crlOnToolbarButtonSelected;
+    var image = document.createElement("IMG");
+    image.setAttribute("class", "toolbar-button-icon");
+    image.setAttribute("src", icon);
+    image.style.backgroundColor = "grey";
+    btn.appendChild(image);
+    toolbar.appendChild(btn);
 }
 
-function crlSaveDebugSettings(data) {
-    crlEnableTracing = JSON.parse(data.AdditionalParameters["EnableNotificationTracing"]);
-    crlSendNormalResponse();
-}
-
-function crlSaveEditorSettings(data) {
-    crlDropReferenceAsLink = JSON.parse(data.AdditionalParameters["DropReferenceAsLink"]);
-    crlDropRefinementAsLink = JSON.parse(data.AdditionalParameters["DropRefinementAsLink"]);
-    crlSendNormalResponse();
-}
-
-function crlSendDebugSettings() {
+function crlSendDebugSettings(enableNotificationTracing, maxTracingDepth) {
     var xhr = crlCreateEmptyRequest()
-    var enableNotificationTracing = "false";
-    if ($("#enableTracing").prop("checked") == true) {
-        enableNotificationTracing = "true"
-    };
-    var maxTracingDepth = $("#maxTracingDepth").val()
     var data = JSON.stringify({
         "Action": "UpdateDebugSettings",
         "AdditionalParameters": {
@@ -899,7 +1305,7 @@ function crlSendDebugSettings() {
             "MaxTracingDepth": maxTracingDepth
         }
     });
-    xhr.send(data);
+    crlSendRequest(xhr, data);
 }
 
 function crlSendDefinitionChanged(evt, obj) {
@@ -910,7 +1316,61 @@ function crlSendDefinitionChanged(evt, obj) {
         "AdditionalParameters":
             { "NewValue": evt.currentTarget.textContent }
     });
-    xhr.send(data);
+    crlSendRequest(xhr, data);
+}
+
+function crlSendDiagramClick(nodeType, diagramID, x, y) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "DiagramClick",
+        "AdditionalParameters":
+        {
+            "DiagramID": diagramID,
+            "NodeType": nodeType,
+            "NodeX": x,
+            "NodeY": y
+        }
+    });
+    crlSendRequest(xhr, data);
+}
+
+function crlSendDiagramDrop(diagramID, x, y) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "DiagramDrop",
+        "AdditionalParameters":
+        {
+            "DiagramID": diagramID,
+            "NodeX": x,
+            "NodeY": y
+        }
+    });
+    crlSendRequest(xhr, data);
+}
+
+function crlSendDiagramNodeNewPosition(nodeID, position) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "DiagramNodeNewPosition",
+        "RequestConceptID": nodeID,
+        "AdditionalParameters": {
+            "NodeX": position.x.toString(),
+            "NodeY": position.y.toString()
+        }
+    })
+    crlSendRequest(xhr, data);
+}
+
+function crlSendDiagramCellSelected(nodeID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "DiagramCellSelected", "RequestConceptID": nodeID });
+    crlSendRequest(xhr, data);
+}
+
+function crlSendDisplayDiagramSelected(diagramID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "DisplayDiagramSelected", "RequestConceptID": diagramID });
+    crlSendRequest(xhr, data);
 }
 
 function crlSendEditorSettings() {
@@ -930,18 +1390,18 @@ function crlSendEditorSettings() {
             "DropRefinementAsLink": dropRefinementAsLink
         }
     });
-    xhr.send(data);
+    crlSendRequest(xhr, data);
 }
 
 function crlSendLabelChanged(evt, obj) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
         "Action": "LabelChanged",
-        "RequestConceptID": selectedConceptId,
+        "RequestConceptID": crlSelectedConceptIDGlobal,
         "AdditionalParameters":
             { "NewValue": evt.currentTarget.textContent }
     });
-    xhr.send(data)
+    crlSendRequest(xhr, data)
 }
 
 function crlSendLiteralValueChanged(evt, obj) {
@@ -952,7 +1412,19 @@ function crlSendLiteralValueChanged(evt, obj) {
         "AdditionalParameters":
             { "NewValue": evt.currentTarget.textContent }
     });
-    xhr.send(data)
+    crlSendRequest(xhr, data)
+}
+
+function crlSendNewConceptSpaceRequest(evt) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "NewConceptSpaceRequest" });
+    crlSendRequest(xhr, data)
+}
+
+function crlSendNewDiagramRequest(evt) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "NewDiagramRequest" });
+    crlSendRequest(xhr, data)
 }
 
 function crlSendOpenWorkspace(workspacePath) {
@@ -963,6 +1435,46 @@ function crlSendOpenWorkspace(workspacePath) {
             "WorkspacePath": workspacePath
         }
     });
+    crlSendRequest(xhr, data);
+}
+
+function crlSendOwnerPointerChanged(jointLink, linkID, sourceID, targetID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "OwnerPointerChanged",
+        "RequestConceptID": linkID,
+        "AdditionalParameters": {
+            "SourceID": sourceID,
+            "TargetID": targetID
+        }
+    })
+    crlSendRequest(xhr, data);
+}
+
+function crlSendRefinementLinkChanged(jointLink, linkID, sourceID, targetID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "RefinementLinkChanged",
+        "RequestConceptID": linkID,
+        "AdditionalParameters": {
+            "SourceID": sourceID,
+            "TargetID": targetID
+        }
+    })
+    crlSendRequest(xhr, data);
+}
+
+function crlSendRefreshDiagram(diagramID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "RefreshDiagram",
+        "RequestConceptID": diagramID
+    });
+    crlSendRequest(xhr, data);
+}
+
+function crlSendRequest(xhr, data) {
+    console.log(data);
     xhr.send(data);
 }
 
@@ -971,7 +1483,7 @@ function crlSendSaveWorkspace() {
     var data = JSON.stringify({
         "Action": "SaveWorkspace"
     });
-    xhr.send(data);
+    crlSendRequest(xhr, data);
 }
 
 function crlSendURIChanged(evt, obj) {
@@ -982,54 +1494,7 @@ function crlSendURIChanged(evt, obj) {
         "AdditionalParameters":
             { "NewValue": evt.currentTarget.textContent }
     });
-    xhr.send(data)
-}
-
-function crlSendNewConceptSpaceRequest(evt) {
-    var xhr = crlCreateEmptyRequest();
-    var data = JSON.stringify({ "Action": "NewConceptSpaceRequest" });
-    xhr.send(data)
-}
-
-function crlSendNewDiagramRequest(evt) {
-    var xhr = crlCreateEmptyRequest();
-    var data = JSON.stringify({ "Action": "NewDiagramRequest" });
-    xhr.send(data)
-}
-
-function crlSendDiagramDrop(diagramID, x, y) {
-    console.log("Diagram Drop ID, x, y: " + diagramID + "  " + x.toString() + "  " + y.toString());
-    var xhr = crlCreateEmptyRequest();
-    var data = JSON.stringify({
-        "Action": "DiagramDrop",
-        "AdditionalParameters":
-        {
-            "DiagramID": diagramID,
-            "NodeX": x,
-            "NodeY": y
-        }
-    });
-    console.log(data);
-    xhr.send(data);
-}
-
-function crlSendDiagramNodeNewPosition(nodeID, position) {
-    var xhr = crlCreateEmptyRequest();
-    var data = JSON.stringify({
-        "Action": "DiagramNodeNewPosition",
-        "RequestConceptID": nodeID,
-        "AdditionalParameters": {
-            "NodeX": position.x.toString(),
-            "NodeY": position.y.toString()
-        }
-    })
-    xhr.send(data);
-}
-
-function crlSendDiagramNodeSelected(nodeID) {
-    var xhr = crlCreateEmptyRequest();
-    var data = JSON.stringify({ "Action": "DiagramNodeSelected", "RequestConceptID": nodeID });
-    xhr.send(data);
+    crlSendRequest(xhr, data)
 }
 
 function crlSendNormalResponse() {
@@ -1037,131 +1502,98 @@ function crlSendNormalResponse() {
     data["Result"] = 0;
     data["ErrorMessage"] = "none"
     crlWebsocketGlobal.send(JSON.stringify(data))
-    console.log('Sent normal response');
+    console.log(data);
 }
 
 function crlSendSetTreeDragSelection(id) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({ "Action": "SetTreeDragSelection", "RequestConceptID": id });
-    xhr.send(data);
+    crlSendRequest(xhr, data);
 }
 
 function crlSendTreeNodeSelected(evt, obj) {
     if (obj != undefined) {
-        var xhr = crlCreateEmptyRequest();
         var conceptID = crlGetConceptIDFromTreeNodeID(obj.node.id)
-        var data = JSON.stringify({ "Action": "TreeNodeSelected", "RequestConceptID": conceptID });
-        xhr.send(data);
-    };
-}
-
-// <!-- Define sizeAll() to manage sizes of display components -->
-function crlSizeAll() {
-    // Body
-    var bodyHeight = jQuery("body").height();
-    var bodyWidth = jQuery("body").width();
-    // Wrapper
-    var wrapperMargin = jQuery("#wrapper").outerWidth(true)
-        - jQuery("#wrapper").width();
-    var wrapperWidth = bodyWidth - wrapperMargin;
-    var wrapperHeight = bodyHeight - jQuery("#navbar").outerHeight(true)
-        - wrapperMargin;
-    jQuery("#wrapper").width(wrapperWidth);
-    jQuery("#wrapper").height(wrapperHeight);
-    // UofDBrowser
-    var uOfDBrowserOuterWidth = jQuery("#uofd-browser").outerWidth(true);
-    var uOfDBrowserMargin = uOfDBrowserOuterWidth
-        - jQuery("#uofd-browser").width();
-    var uOfDBrowserHeight = wrapperHeight - uOfDBrowserMargin;
-    jQuery("#uofd-browser").height(uOfDBrowserHeight);
-    // Center Pane
-    var centerPaneMargin = jQuery("center-pane").outerWidth(true)
-        - jQuery("center-pane").width();
-    var centerPaneWidth = wrapperWidth - uOfDBrowserOuterWidth
-        - centerPaneMargin;
-    jQuery("#center-pane").width(centerPaneWidth);
-    var centerPaneHeight = wrapperHeight - centerPaneMargin;
-    jQuery("#center-pane").height(centerPaneHeight);
-    jQuery("#center-pane").position({
-        my: "left top",
-        at: "right top",
-        of: "#uofd-browser"
-    })
-
-    // Top Pane
-    var topPaneMargin = jQuery("#top-pane").outerWidth(true)
-        - jQuery("#top-pane").width();
-    jQuery("#top-pane").height(
-        centerPaneHeight - jQuery("#bottom").outerHeight(true)
-        - topPaneMargin);
-
-    // Toolbar
-    var toolbarOuterWidth = jQuery("#toolbar").outerWidth(true);
-    var toolbarMargin = toolbarOuterWidth - jQuery("#toolbar").width();
-    var toolbarHeight = jQuery("#top-pane").height() - toolbarMargin;
-    jQuery("#toolbar").height(toolbarHeight);
-
-    // Top Content
-    var topContentMargin = jQuery("#top-content").outerWidth(true)
-        - jQuery("#top-content").width();
-    jQuery("#top-content").width(
-        centerPaneWidth - toolbarOuterWidth - topContentMargin);
-    topContentHeight = jQuery("#top-pane").height() - topContentMargin;
-    jQuery("#top-caontent").height(topContentHeight);
-
-    // crlDiagramContainer
-    crlDiagramContainerHeight = topContentHeight - jQuery("#tabs").height();
-    jQuery(".crlDiagramContainer").height(crlDiagramContainerHeight);
-
-    // Bottom
-    jQuery("#bottom").position({
-        my: "left bottom",
-        at: "right bottom",
-        of: "#uofd-browser",
-        collision: "fit"
-    });
-};
-
-var crlUpdateDiagramLink = function (data) {
-    var concept = data.NotificationConcept;
-    var params = data.AdditionalParameters;
-    var owningConceptID = concept.OwningConceptID;
-    var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
-    var linkID = crlGetJointCellIDFromConceptID(concept.ConceptID);
-    var link = crlFindLinkInGraph(graphID, linkID)
-    if (link == undefined) {
-        link = crlConstructDiagramLink(data, graphID, linkID);
-    }
-    link.label(0, {
-        attrs: {
-            text: {
-                text: data.AdditionalParameters["DisplayLabel"]
-            }
+        if (conceptID != crlSelectedConceptIDGlobal && crlInCrlElementSelected == false) {
+            var xhr = crlCreateEmptyRequest();
+            var data = JSON.stringify({ "Action": "TreeNodeSelected", "RequestConceptID": conceptID });
+            crlSendRequest(xhr, data);
         }
-    });
-    crlSendNormalResponse()
-}
-
-var crlUpdateDiagramNode = function (data) {
-    var concept = data.NotificationConcept;
-    var params = data.AdditionalParameters;
-    var owningConceptID = concept.OwningConceptID;
-    var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
-    var nodeID = crlGetJointCellIDFromConceptID(concept.ConceptID);
-    var node = crlFindElementInGraph(graphID, nodeID);
-    if (node == undefined) {
-        node = crlConstructDiagramNode(data, graphID, nodeID);
     };
-    node.set("displayLabelYOffset", Number(params["DisplayLabelYOffset"]));
-    node.set('position', { "x": Number(params["NodeX"]), "y": Number(params["NodeY"]) });
-    node.set('size', { "width": Number(params["NodeWidth"]), "height": Number(params["NodeHeight"]) });
-    node.set('icon', params["Icon"]);
-    node.set('name', params["DisplayLabel"]);
-    node.set("abstractions", params["Abstractions"]);
-    crlSendNormalResponse();
 }
 
-var crlUpdateWorkspacePath = function (data) {
-    crlWorkspacePath = data.AdditionalParameters["WorkspacePath"];
-    crlSendNormalResponse();
+function crlSetDefaultLink() {
+    var paper
+    if (crlCurrentDiagramContainerID) {
+        var diagramID = crlGetDiagramIDFromDiagramContainerID(crlCurrentDiagramContainerID);
+        var paperID = crlGetJointPaperIDFromDiagramID(diagramID);
+        paper = crlPapersGlobal[paperID]
+        paper.options.defaultLink = crlCreateLink;
+    }
 }
+
+var crlShowOwner = function (evt) {
+    var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
+    var jointID = cellView.model.attributes.crlJointID;
+    var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "ShowOwner", "RequestConceptID": diagramElementID });
+    crlSendRequest(xhr, data);
+}
+
+function crlValidateLinkStart(cellView, magnet) {
+    var represents = cellView.model.attributes.represents;
+    switch (crlCurrentToolbarButton) {
+        case crlCursorToolbarButtonID:
+            return false;
+        case crlElementToolbarButtonID:
+            return false;
+        case crlLiteralToolbarButtonID:
+            return false;
+        case crlReferenceToolbarButtonID:
+            return false;
+        case crlReferenceLinkToolbarButtonID:
+            if (represents == "Element" || represents == "Literal" || represents == "Refinement" || represents == "Reference") {
+                return true;
+            } else {
+                return false;
+            }
+        case crlRefinementToolbarButtonID:
+            return false;
+        case crlRefinementLinkToolbarButtonID:
+            if (represents == "Element" || represents == "Literal" || represents == "Refinement" || represents == "Reference") {
+                return true;
+            } else {
+                return false;
+            }
+        case crlDiagramToolbarButtonID:
+            return false;
+        case crlOwnerPointerToolbarButtonID:
+            if (represents == "Element" || represents == "Literal" || represents == "Refinement" || represents == "Reference") {
+                return true;
+            } else {
+                return false;
+            }
+        case crlElementPointerToolbarButtonID:
+            if (represents == "Reference") {
+                return true;
+            } else {
+                return false;
+            }
+        case crlAbstractPointerToolbarButtonID:
+            if (represents == "Refinement") {
+                return true;
+            } else {
+                return false;
+            }
+        case crlRefinedPointerToolbarButtonID:
+            if (represents == "Refinement") {
+                return true;
+            } else {
+                return false;
+            }
+
+    }
+    return false;
+}
+

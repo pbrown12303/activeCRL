@@ -53,7 +53,11 @@ func (cnMgr *ClientNotificationManager) setConnection(conn *websocket.Conn) {
 // SendNotification sends the supplied Notification to the client and returns the Notification response.
 // If there is no client connection or there is a problem in sending the Notification or receiving the NotificationResponse,
 // an error is returned.
-func (cnMgr *ClientNotificationManager) SendNotification(notificationDescription string, conceptID string, concept core.Element, params map[string]string) (*NotificationResponse, error) {
+func (cnMgr *ClientNotificationManager) SendNotification(
+	notificationDescription string, conceptID string, concept core.Element, params map[string]string) (*NotificationResponse, error) {
+	if cnMgr.conn == nil {
+		return nil, nil
+	}
 	notification := NewNotification()
 	notification.Notification = notificationDescription
 	notification.NotificationConceptID = conceptID

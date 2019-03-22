@@ -215,7 +215,11 @@ func (ePtr *element) GetFirstOwnedReferenceRefinedFrom(abstraction Element, hl *
 // there is more than one child with the given abstraction the result is nondeterministic.
 func (ePtr *element) GetFirstOwnedReferenceRefinedFromURI(abstractionURI string, hl *HeldLocks) Reference {
 	hl.ReadLockElement(ePtr)
-	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
+	uOfD := ePtr.uOfD
+	if uOfD == nil {
+		return nil
+	}
+	abstraction := uOfD.GetElementWithURI(abstractionURI)
 	if abstraction != nil {
 		return ePtr.GetFirstOwnedReferenceRefinedFrom(abstraction, hl)
 	}
@@ -256,6 +260,28 @@ func (ePtr *element) GetFirstOwnedConceptWithURI(uri string, hl *HeldLocks) Elem
 		if element.GetURI(hl) == uri {
 			return element
 		}
+	}
+	return nil
+}
+
+func (ePtr *element) GetFirstOwnedLiteralRefinedFrom(abstraction Element, hl *HeldLocks) Literal {
+	hl.ReadLockElement(ePtr)
+	for _, element := range ePtr.ownedConcepts.CopyMap() {
+		switch element.(type) {
+		case Literal:
+			if element.IsRefinementOf(abstraction, hl) {
+				return element.(Literal)
+			}
+		}
+	}
+	return nil
+}
+
+func (ePtr *element) GetFirstOwnedLiteralRefinedFromURI(uri string, hl *HeldLocks) Literal {
+	hl.ReadLockElement(ePtr)
+	abstraction := ePtr.uOfD.GetElementWithURI(uri)
+	if abstraction != nil {
+		return ePtr.GetFirstOwnedLiteralRefinedFrom(abstraction, hl)
 	}
 	return nil
 }
@@ -546,7 +572,6 @@ func (ePtr *element) IsRefinementOf(abstraction Element, hl *HeldLocks) bool {
 func (ePtr *element) IsRefinementOfURI(uri string, hl *HeldLocks) bool {
 	hl.ReadLockElement(ePtr)
 	if ePtr.uOfD == nil {
-		log.Printf("element.IsRefinementOfURI called with nil uOfD")
 		return false
 	}
 	abstraction := ePtr.uOfD.GetElementWithURI(uri)
@@ -803,8 +828,8 @@ func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 	}
 	if ePtr.Definition != def {
 		ePtr.uOfD.preChange(ePtr, hl)
-		ePtr.Definition = def
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		ePtr.Definition = def
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
 	return nil
@@ -821,8 +846,8 @@ func (ePtr *element) SetIsCore(hl *HeldLocks) {
 	hl.WriteLockElement(ePtr)
 	if ePtr.IsCore != true {
 		ePtr.uOfD.preChange(ePtr, hl)
-		ePtr.IsCore = true
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		ePtr.IsCore = true
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
 }
@@ -836,8 +861,8 @@ func (ePtr *element) SetLabel(label string, hl *HeldLocks) error {
 	}
 	if ePtr.Label != label {
 		ePtr.uOfD.preChange(ePtr, hl)
-		ePtr.Label = label
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		ePtr.Label = label
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
 	return nil
@@ -872,6 +897,7 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 		if oldOwner != nil {
 			oldOwner.removeOwnedConcept(ePtr.ConceptID, hl)
 		}
+		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
 		var newOwner Element
 		ePtr.OwningConceptID = ocID
 		ePtr.owningConcept.setIndicatedConceptID(ocID)
@@ -882,7 +908,6 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 		} else {
 			ePtr.owningConcept.setIndicatedConcept(nil)
 		}
-		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
 	return nil
@@ -905,8 +930,8 @@ func (ePtr *element) SetReadOnly(value bool, hl *HeldLocks) error {
 	}
 	if ePtr.ReadOnly != value {
 		ePtr.uOfD.preChange(ePtr, hl)
-		ePtr.ReadOnly = value
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		ePtr.ReadOnly = value
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
 	return nil
@@ -935,8 +960,8 @@ func (ePtr *element) SetURI(uri string, hl *HeldLocks) error {
 	if ePtr.URI != uri {
 		ePtr.uOfD.preChange(ePtr, hl)
 		ePtr.uOfD.changeURIForElement(ePtr, ePtr.URI, uri)
-		ePtr.URI = uri
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		ePtr.URI = uri
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
 	return nil
@@ -990,6 +1015,8 @@ type Element interface {
 	GetFirstOwnedRefinementRefinedFrom(Element, *HeldLocks) Refinement
 	GetFirstOwnedRefinementRefinedFromURI(string, *HeldLocks) Refinement
 	GetFirstOwnedConceptWithURI(string, *HeldLocks) Element
+	GetFirstOwnedLiteralRefinedFrom(Element, *HeldLocks) Literal
+	GetFirstOwnedLiteralRefinedFromURI(string, *HeldLocks) Literal
 	GetFirstOwnedLiteralWithURI(string, *HeldLocks) Literal
 	GetFirstOwnedReferenceWithURI(string, *HeldLocks) Reference
 	GetFirstOwnedRefinementWithURI(string, *HeldLocks) Refinement
