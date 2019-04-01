@@ -23,7 +23,8 @@
 	<script src="/js/viz.js"></script>
 	<script src="/js/full.render.js"></script>
 	<script src="/js/crleditor.js"></script>
-	<!-- <script src="//cdn.jsdelivr.net/jquery.ui-contextmenu/1.16.0/jquery.ui-contextmenu.min.js"></script> -->
+    <script src="/js/viz.js"> </script>
+    <script src="/js/full.render.js"> </script>
 </head>
 
 <body onload="crlInitializeClient()" onunload="crlCloseWebsocket()" id="body">
@@ -36,8 +37,8 @@
 				<a id="NewConceptSpaceButton" class="show" onClick="crlSendNewConceptSpaceRequest()">New Concept
 					Space</a>
 				<a id="SaveWorkspaceButton" class="show" onClick="crlSendSaveWorkspace()">Save Workspace</a>
-				<a id="OpenWorkspaceButton" class="show" onClick="crlOpenWorkspaceDialog.open()">Open Workspace</a>
-				<a id="EditorSettingsButton" class="show" onClick="crlEditorSettingsDialog.open()">Editor Settings</a>
+				<a id="OpenWorkspaceButton" class="show" onClick="crlOpenWorkspaceDialog.open()">Open Workspace ...</a>
+				<a id="EditorSettingsButton" class="show" onClick="crlEditorSettingsDialog.open()">Editor Settings ...</a>
 				<a id="Exit" class="show" onClick="crlCallExit()">Exit</a>
 			</div>
 		</div>
@@ -51,8 +52,8 @@
 				Help <i class="fa fa-caret-down"></i>
 			</button>
 			<div class="dropdown-content" id="HelpDropdown">
-				<a id="DebugSettingsButton" class="show" onClick="crlDebugSettingsDialog.open()">Debug Settings</a>
-				<a id="DisplayTracesButton" class="show" onClick="CrlEditor.DisplayGraphDialog()">Display Traces</a>
+				<a id="DebugSettingsButton" class="show" onClick="crlDebugSettingsDialog.open()">Debug Settings ...</a>
+				<a id="DisplayTracesButton" class="show" onClick="crlInitiateGraphsDialogDisplay()">Display Call Graphs ...</a>
 			</div>
 		</div>
 	</div>

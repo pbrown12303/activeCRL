@@ -55,8 +55,16 @@ func (rPtr *refinement) GetAbstractConcept(hl *HeldLocks) Element {
 	return cachedConcept
 }
 
+func (rPtr *refinement) getAbstractConceptNoLock() Element {
+	return rPtr.abstractConcept.getIndicatedConcept()
+}
+
 func (rPtr *refinement) GetAbstractConceptID(hl *HeldLocks) string {
 	hl.ReadLockElement(rPtr)
+	return rPtr.AbstractConceptID
+}
+
+func (rPtr *refinement) getAbstractConceptIDNoLock() string {
 	return rPtr.AbstractConceptID
 }
 
@@ -77,8 +85,16 @@ func (rPtr *refinement) GetRefinedConcept(hl *HeldLocks) Element {
 	return cachedConcept
 }
 
+func (rPtr *refinement) getRefinedConceptNoLock() Element {
+	return rPtr.refinedConcept.getIndicatedConcept()
+}
+
 func (rPtr *refinement) GetRefinedConceptID(hl *HeldLocks) string {
 	hl.ReadLockElement(rPtr)
+	return rPtr.RefinedConceptID
+}
+
+func (rPtr *refinement) getRefinedConceptIDNoLock() string {
 	return rPtr.RefinedConceptID
 }
 
@@ -290,10 +306,14 @@ func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *HeldLocks) error {
 type Refinement interface {
 	Element
 	GetAbstractConceptID(*HeldLocks) string
+	getAbstractConceptIDNoLock() string
 	GetAbstractConcept(*HeldLocks) Element
+	getAbstractConceptNoLock() Element
 	GetAbstractConceptVersion(*HeldLocks) int
 	GetRefinedConceptID(*HeldLocks) string
+	getRefinedConceptIDNoLock() string
 	GetRefinedConcept(*HeldLocks) Element
+	getRefinedConceptNoLock() Element
 	GetRefinedConceptVersion(*HeldLocks) int
 	SetAbstractConcept(Element, *HeldLocks) error
 	SetAbstractConceptID(string, *HeldLocks) error

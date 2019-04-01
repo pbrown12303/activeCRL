@@ -12,6 +12,8 @@ var crlDropRefinementAsLink = false;
 var crlEditorSettingsDialog;
 // crlEnableTracing is the client-side copy of the server-side value that turns on notification tracing
 var crlEnableTracing = false;
+// crlOmitHousekeepingCalls indicates whether housekeeping calls shouldl be included when tracing is enabled
+var crlOmitHousekeepingCalls = false;
 // crlGraphsGlobal is an array of existing graphs that is used to look up a graph given its identifier
 var crlGraphsGlobal = {};
 // crlInitializationCompleteGlobal indicates whether the server-side initialization has been completed
@@ -183,19 +185,42 @@ $(function () {
             "	<fieldset>" +
             "		<label for='enableTracing'>Enable Notification Tracing</label>" +
             "		<input type='checkbox' id='enableTracing'> <br> " +
+            "       <label>Omit Houskeeping Calls</label>" +
+            "       <input type='checkbox' id='omitHousekeepingCalls'>" +
             "	</fieldset> " +
             "</form>",
         confirm: function () {
             var enableNotificationTracing = "false";
             if ($("#enableTracing").prop("checked") == true) {
-                enableNotificationTracing = "true"
+                enableNotificationTracing = "true";
             };
-            crlSendDebugSettings(enableNotificationTracing, "0");
+            var omitHousekeepingCalls = "false"
+            if ($("#omitHousekeepingCalls").prop("checked") == true) {
+                omitHousekeepingCalls = "true";
+            }
+            crlSendDebugSettings(enableNotificationTracing, omitHousekeepingCalls, "0");
         },
         onOpen: function () {
             $("#enableTracing").prop("checked", crlEnableTracing);
+            $("#omitHousekeepingCalls").prop("checked", crlOmitHousekeepingCalls);
         }
     });
+    crlDisplayCallGraphsDialog = new jBox("Confirm", {
+        title: "Display Call Graphs",
+        confirmButton: "OK",
+        cancelButton: "Cancel",
+        content: "" +
+            "<form>" +
+            "    <fieldseet>" +
+            "        <label>Number of available call graphs: </label> <label id='numberOfAvailableGraphs'></label><br>" +
+            "        <label>Selected Graph:</label><input id='selectedGraph' type='number'>" +
+            "	</fieldset> " +
+            "</form>",
+        confirm: function () {
+            var selectedNumber = $("#selectedGraph").val();
+            crlSendDisplayCallGraph(selectedNumber);
+        }
+    })
     crlEditorSettingsDialog = new jBox("Confirm", {
         title: "Editor Settings",
         confirmButton: "OK",
@@ -239,6 +264,19 @@ $(function () {
     });
 });
 
+
+function crlAppendToolbarButton(toolbar, id, icon) {
+    var btn = document.createElement("BUTTON");
+    btn.setAttribute("class", "toolbar-button");
+    btn.setAttribute("id", id);
+    btn.onclick = crlOnToolbarButtonSelected;
+    var image = document.createElement("IMG");
+    image.setAttribute("class", "toolbar-button-icon");
+    image.setAttribute("src", icon);
+    image.style.backgroundColor = "grey";
+    btn.appendChild(image);
+    toolbar.appendChild(btn);
+}
 
 function crlConstructDiagramContainer(diagramContainer, diagramContainerID, diagramLabel, diagramID) {
     var topContent = document.getElementById("top-content");
@@ -285,8 +323,8 @@ function crlConstructDiagramLink(data, graph, crlJointID) {
     var sourceJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkSourceID"])
     var targetJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkTargetID"])
     if (sourceJointID != "" && targetJointID != "") {
-        var linkSource = crlFindElementInGraph(graph, sourceJointID)
-        var linkTarget = crlFindElementInGraph(graph, targetJointID)
+        var linkSource = crlFindCellInGraph(graph, sourceJointID)
+        var linkTarget = crlFindCellInGraph(graph, targetJointID)
         if (linkSource != undefined && linkTarget != undefined) {
             var newLink;
             switch (data.AdditionalParameters["LinkType"]) {
@@ -590,8 +628,10 @@ function crlDropdownMenu(dropdownId) {
     document.getElementById(dropdownId).classList.toggle("show");
 }
 
-
-
+function crlDisplayGraphDialog(numberOfAvailableGraphs) {
+    crlDisplayCallGraphsDialog.open();
+    $("#numberOfAvailableGraphs").text(numberOfAvailableGraphs);
+}
 
 function crlFindCellInGraph(graphID, crlJointID) {
     var cells = crlGraphsGlobal[graphID].getCells();
@@ -604,15 +644,15 @@ function crlFindCellInGraph(graphID, crlJointID) {
     return cell
 }
 
-function crlFindElementInGraph(graph, crlJointID) {
-    var elements = graph.getElements();
-    var elem = null;
-    elements.forEach(function (item) {
+function crlFindCellInGraph(graph, crlJointID) {
+    var cells = graph.getCells();
+    var cell = null;
+    cells.forEach(function (item) {
         if (item.get("crlJointID") == crlJointID) {
-            elem = item;
+            cell = item;
         }
     })
-    return elem
+    return cell
 }
 
 function crlFindLinkInGraph(graphID, crlJointID) {
@@ -723,6 +763,9 @@ function crlInitializeWebSocket() {
             case "DisplayDiagram":
                 crlNotificationDisplayDiagram(data);
                 break;
+            case "DisplayGraph":
+                crlNotificationDisplayGraph(data);
+                break;
             case "EditorSettings":
                 crlNotificationSaveEditorSettings(data);
                 break;
@@ -752,6 +795,28 @@ function crlInitializeWebSocket() {
         }
     };
 };
+
+var crlInitiateGraphsDialogDisplay = function () {
+    var xhr = new XMLHttpRequest();
+    var url = "request";
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+            var response = JSON.parse(xhr.responseText)
+            console.log(response)
+            if (response.Result == 1) {
+                alert(response.ResultDescription);
+            } else {
+                crlDisplayGraphDialog(response.AdditionalParameters["NumberOfAvailableGraphs"]);
+            }
+        };
+    }
+    var data = JSON.stringify({
+        "Action": "ReturnAvailableGraphCount"
+    });
+    crlSendRequest(xhr, data);
+}
 
 function crlLinkConnected(evt, cellView, magnet, arrowhead) {
     crlSelectToolbarButton(crlCursorToolbarButtonID);
@@ -792,6 +857,7 @@ function crlLinkViewRepresentsPointer(linkView) {
 
 function crlNotificationSaveDebugSettings(data) {
     crlEnableTracing = JSON.parse(data.AdditionalParameters["EnableNotificationTracing"]);
+    crlOmitHousekeepingCalls = JSON.parse(data.AdditionalParameters["OmitHousekeepingCalls"]);
     crlSendNormalResponse();
 }
 
@@ -829,8 +895,8 @@ function crlNotificationAddDiagramLink(data) {
         var link = crlFindLinkInGraph(graphID, linkID)
         var sourceJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkSourceID"]);
         var targetJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkTargetID"]);
-        var linkSource = crlFindElementInGraph(graph, sourceJointID)
-        var linkTarget = crlFindElementInGraph(graph, targetJointID)
+        var linkSource = crlFindCellInGraph(graph, sourceJointID)
+        var linkTarget = crlFindCellInGraph(graph, targetJointID)
         if ((link == undefined || link == null) && (linkSource != null && linkTarget != null)) {
             link = crlConstructDiagramLink(data, graph, linkID);
         }
@@ -846,7 +912,7 @@ function crlNotificationAddDiagramNode(data) {
     if (graph != null) {
         // The absence of a graph indicates the diagram is not being viewed
         var nodeID = crlGetJointCellIDFromConceptID(concept.ConceptID);
-        var node = crlFindElementInGraph(graph, nodeID);
+        var node = crlFindCellInGraph(graph, nodeID);
         if (node == undefined) {
             node = crlConstructDiagramNode(data, graph, nodeID);
         };
@@ -933,9 +999,10 @@ function crlNotificationDeleteDiagramCell(data) {
     var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
     var graph = crlGraphsGlobal[graphID];
     if (graph != null) {
-        var element = crlFindElementInGraph(graphID, elementID);
+        var element = crlFindCellInGraph(graph, elementID);
         element.remove()
     }
+    crlSendNormalResponse()
 }
 
 function crlNotificationDeleteTreeNode(data) {
@@ -943,10 +1010,7 @@ function crlNotificationDeleteTreeNode(data) {
     var params = data.AdditionalParameters;
     var nodeID = crlGetTreeNodeIDFromConceptID(concept.ConceptID);
     $('#uOfD').jstree().delete_node(nodeID);
-    var data = {};
-    data["Result"] = 0;
-    data["ErrorMessage"] = "none"
-    crlWebsocketGlobal.send(JSON.stringify(data))
+    crlSendNormalResponse();
 }
 
 function crlNotificationDisplayDiagram(data) {
@@ -961,14 +1025,31 @@ function crlNotificationDisplayDiagram(data) {
     crlMakeDiagramVisible(diagramContainer.id);
     crlCurrentDiagramContainerID = diagramContainerID;
     crlSetDefaultLink();
-    //    crlSendRefreshDiagram(diagramID);
+    crlSendNormalResponse();
+}
+
+function crlNotificationDisplayGraph(data) {
+    var graphString = data.AdditionalParameters["GraphString"];
+    const workerURL = '/js/full.render.js';
+    let viz = new Viz({ workerURL });
+    var newTab = window.open("graph.html");
+    viz.renderSVGElement(graphString)
+        .then(function (element) {
+            newTab.document.body.appendChild(element);
+        })
+        .catch(error => {
+            // Create a new Viz instance (@see Caveats page for more info)
+            viz = new Viz({ workerURL });
+
+            // Possibly display the error
+            console.error(error);
+        });
     crlSendNormalResponse();
 }
 
 function crlNotificationElementSelected(data) {
     if (data.NotificationConceptID != crlSelectedConceptIDGlobal) {
         crlSelectedConceptIDGlobal = data.NotificationConceptID
-
         // Update the properties
         crlPropertiesDisplayType(data, 1);
         crlPropertiesDisplayID(data, 2);
@@ -1002,7 +1083,6 @@ function crlNotificationElementSelected(data) {
         crlInCrlElementSelected = true;
         $("#uOfD").jstree(true).select_node(treeNodeID, true);
         crlInCrlElementSelected = false;
-
     }
     crlSendNormalResponse()
 }
@@ -1025,8 +1105,8 @@ var crlNotificationUpdateDiagramLink = function (data) {
         var link = crlFindLinkInGraph(graphID, linkID)
         var sourceJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkSourceID"]);
         var targetJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkTargetID"]);
-        var linkSource = crlFindElementInGraph(graph, sourceJointID)
-        var linkTarget = crlFindElementInGraph(graph, targetJointID)
+        var linkSource = crlFindCellInGraph(graph, sourceJointID)
+        var linkTarget = crlFindCellInGraph(graph, targetJointID)
         if ((link == undefined || link == null) && (linkSource != null && linkTarget != null)) {
             crlSendNormalResponse()
             return;
@@ -1062,7 +1142,7 @@ var crlNotificationUpdateDiagramNode = function (data) {
     if (graph != null) {
         // The absence of a graph indicates the diagram is not being viewed
         var nodeID = crlGetJointCellIDFromConceptID(concept.ConceptID);
-        var node = crlFindElementInGraph(graph, nodeID);
+        var node = crlFindCellInGraph(graph, nodeID);
         if (node == undefined) {
             crlSendNormalResponse();
             return;
@@ -1283,25 +1363,13 @@ function crlPopulateToolbar() {
     crlSelectToolbarButton(crlCursorToolbarButtonID);
 }
 
-function crlAppendToolbarButton(toolbar, id, icon) {
-    var btn = document.createElement("BUTTON");
-    btn.setAttribute("class", "toolbar-button");
-    btn.setAttribute("id", id);
-    btn.onclick = crlOnToolbarButtonSelected;
-    var image = document.createElement("IMG");
-    image.setAttribute("class", "toolbar-button-icon");
-    image.setAttribute("src", icon);
-    image.style.backgroundColor = "grey";
-    btn.appendChild(image);
-    toolbar.appendChild(btn);
-}
-
-function crlSendDebugSettings(enableNotificationTracing, maxTracingDepth) {
+function crlSendDebugSettings(enableNotificationTracing, omitHousekeepingCalls, maxTracingDepth) {
     var xhr = crlCreateEmptyRequest()
     var data = JSON.stringify({
         "Action": "UpdateDebugSettings",
         "AdditionalParameters": {
             "EnableNotificationTracing": enableNotificationTracing,
+            "OmitHousekeepingCalls" : omitHousekeepingCalls,
             "MaxTracingDepth": maxTracingDepth
         }
     });
@@ -1364,6 +1432,17 @@ function crlSendDiagramNodeNewPosition(nodeID, position) {
 function crlSendDiagramCellSelected(nodeID) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({ "Action": "DiagramCellSelected", "RequestConceptID": nodeID });
+    crlSendRequest(xhr, data);
+}
+
+function crlSendDisplayCallGraph(index) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "DisplayCallGraph",
+        "AdditionalParameters": {
+            "GraphIndex": index
+        }
+    });
     crlSendRequest(xhr, data);
 }
 

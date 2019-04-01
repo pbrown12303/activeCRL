@@ -63,6 +63,7 @@ func (cnMgr *ClientNotificationManager) SendNotification(
 	notification.NotificationConceptID = conceptID
 	notification.NotificationConcept = concept
 	notification.AdditionalParameters = params
+
 	err := cnMgr.conn.WriteJSON(&notification)
 	if err != nil {
 		switch err.(type) {

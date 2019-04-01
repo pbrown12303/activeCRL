@@ -273,6 +273,7 @@ body {
 	flex-direction:row;
 	background-color: lightcoral;
 	width: 100%;
+	overflow:auto;
 }
 
 .toolbar {

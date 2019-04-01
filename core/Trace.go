@@ -3,6 +3,9 @@ package core
 // TraceChange is a boolean that, when true, turns on the tracing of ChangeNotifications
 var TraceChange bool
 
+// OmitHousekeepingCalls is a boolean that indicates whether housekeeping calls should be omitted when TraceChanve is enabled.
+var OmitHousekeepingCalls bool
+
 // TraceLocks is a boolean that, when true, turns on the tracing of locks
 var TraceLocks = false
 

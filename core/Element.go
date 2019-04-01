@@ -358,6 +358,10 @@ func (ePtr *element) GetLabel(hl *HeldLocks) string {
 	return ePtr.Label
 }
 
+func (ePtr *element) getLabelNoLock() string {
+	return ePtr.Label
+}
+
 func (ePtr *element) getListeners(hl *HeldLocks) map[string]Element {
 	hl.ReadLockElement(ePtr)
 	return ePtr.listeners.CopyMap()
@@ -1022,6 +1026,7 @@ type Element interface {
 	GetFirstOwnedRefinementWithURI(string, *HeldLocks) Refinement
 	GetIsCore(*HeldLocks) bool
 	GetLabel(*HeldLocks) string
+	getLabelNoLock() string
 	getListeners(*HeldLocks) map[string]Element
 	GetOwnedConcepts(*HeldLocks) map[string]Element
 	GetOwnedConceptsRefinedFrom(Element, *HeldLocks) map[string]Element

@@ -139,7 +139,10 @@ func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
 			fcm.uOfD.getExecutedCalls() <- pendingCall
 		}
 		if TraceLocks == true || TraceChange == true {
-			log.Printf("About to execute %s with notification %s target %p", pendingCall.functionID, pendingCall.notification.GetNatureOfChange().String(), pendingCall.target)
+			if (OmitHousekeepingCalls && pendingCall.functionID == "http://activeCrl.com/core/coreHousekeeping") == false {
+				log.Printf("About to execute %s with notification %s target %p", pendingCall.functionID, pendingCall.notification.GetNatureOfChange().String(), pendingCall.target)
+				functionCallGraphs = append(functionCallGraphs, NewFunctionCallGraph(pendingCall.functionID, pendingCall.target, pendingCall.notification, hl))
+			}
 		}
 		pendingCall.function(pendingCall.target, pendingCall.notification, fcm.uOfD)
 	}

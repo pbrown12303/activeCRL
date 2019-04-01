@@ -40,10 +40,11 @@ func newRequest() *Request {
 
 // Reply is the data structure returned by the editor server in response to a Request
 type Reply struct {
-	Result            int
-	ResultDescription string
-	ResultConceptID   string
-	ResultConcept     core.Element
+	Result               int
+	ResultDescription    string
+	ResultConceptID      string
+	ResultConcept        core.Element
+	AdditionalParameters map[string]string
 }
 
 func newReply() *Reply {
@@ -58,7 +59,7 @@ type page struct {
 
 var root = "C:/GoWorkspace/src/github.com/pbrown12303/activeCRL/"
 
-var templates = template.Must(template.ParseFiles(root + "crleditor/http/index.html"))
+var templates = template.Must(template.ParseFiles(root+"crleditor/http/index.html", root+"crleditor/http/graph.html"))
 var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 
 // WebSocket upgrader
@@ -74,6 +75,11 @@ func Exit() error {
 		return err
 	}
 	return wsServer.Shutdown(context.Background())
+}
+
+func graphHandler(w http.ResponseWriter, r *http.Request) {
+	p := &page{Title: "Function Call Notification Graph"}
+	renderTemplate(w, "graph", p)
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
@@ -199,6 +205,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			CrlEditorSingleton.SelectElement(modelElement, hl)
 		}
 		sendReply(w, 0, "Processed DiagramNodeSelected", elementID, CrlEditorSingleton.GetUofD().GetElement(elementID))
+	case "DisplayCallGraph":
+		err := CrlEditorSingleton.DisplayCallGraph(request.AdditionalParameters["GraphIndex"], hl)
+		reply(w, "DisplayCallGraph", err)
 	case "DisplayDiagramSelected":
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil && el.IsRefinementOfURI(crldiagram.CrlDiagramURI, hl) {
@@ -274,6 +283,18 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	case "RefreshDiagram":
 		err := CrlEditorSingleton.getDiagramManager().refreshDiagramUsingURI(request.RequestConceptID, hl)
 		reply(w, "RefreshDiagram", err)
+	case "ReturnAvailableGraphCount":
+		count := CrlEditorSingleton.GetAvailableGraphCount()
+		reply := newReply()
+		reply.Result = 0
+		reply.ResultDescription = "Processed ReturnAvailableGraphCount"
+		reply.ResultConceptID = ""
+		reply.ResultConcept = nil
+		reply.AdditionalParameters = map[string]string{"NumberOfAvailableGraphs": strconv.Itoa(count)}
+		err := json.NewEncoder(w).Encode(reply)
+		if err != nil {
+			log.Printf(err.Error())
+		}
 	case "SaveWorkspace":
 		err := CrlEditorSingleton.SaveWorkspace(hl)
 		if err != nil {
@@ -351,6 +372,7 @@ func StartServer(startBrowser bool) {
 	go startWsServer()
 	// RequestServer
 	mux := http.NewServeMux()
+	mux.HandleFunc("/index/graph.html", graphHandler)
 	mux.HandleFunc("/index/", indexHandler)
 	mux.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir(root+"crleditor/http/js"))))
 	mux.Handle("/icons/", http.StripPrefix("/icons/", http.FileServer(http.Dir(root+"crleditor/http/images/icons"))))

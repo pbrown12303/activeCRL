@@ -11,8 +11,6 @@ import (
 
 	"github.com/pbrown12303/activeCRL/crldiagram"
 
-	"github.com/gopherjs/gopherjs/js"
-	"github.com/gopherjs/jquery"
 	"github.com/pbrown12303/activeCRL/core"
 )
 
@@ -154,8 +152,32 @@ func (edPtr *CrlEditor) deleteFile(wf *workspaceFile, hl *core.HeldLocks) error 
 	return os.Remove(qualifiedFilename)
 }
 
-// DisplayGraph opens a new tab and displays the selected graph
-func DisplayGraph(e jquery.Event, data *js.Object) {
+// DisplayCallGraph opens a new tab and displays the selected graph
+func (edPtr *CrlEditor) DisplayCallGraph(indexString string, hl *core.HeldLocks) error {
+	index, err := strconv.ParseInt(indexString, 10, 32)
+	if err != nil {
+		return err
+	}
+	numberOfGraphs := len(core.GetFunctionCallGraphs())
+	if index < 0 || index > int64(numberOfGraphs-1) {
+		return errors.New("In CrlEditor.DisplayCallGraph, index is out of bounds")
+	}
+	functionCallGraph := core.GetFunctionCallGraphs()[index]
+	if functionCallGraph == nil {
+		return errors.New("In CrlEditor.DisplayCallGraph, function call graph is nil for index " + indexString)
+	}
+	graph := functionCallGraph.GetGraph()
+	if graph == nil {
+		return errors.New("In CrlEditor.DisplayCallGraph, graph is nil for index " + indexString)
+	}
+	graphString := graph.String()
+	if strings.Contains(graphString, "error") {
+		return errors.New("In CrlEditor.DisplayCallGraph the graph string contained an error: " + graphString)
+	}
+	_, err2 := SendNotification("DisplayGraph", "", nil, map[string]string{"GraphString": graphString})
+
+	return err2
+
 	// TODO Reimplement DisplayGraph
 	// selectedGraphIndexString := displayGraphDialog.Find("#selectedGraph").Val()
 	// selectedGraphIndex, err := strconv.Atoi(selectedGraphIndexString)
@@ -233,6 +255,11 @@ func (edPtr *CrlEditor) GetClientNotificationManager() *ClientNotificationManage
 	return edPtr.clientNotificationManager
 }
 
+// GetAvailableGraphCount returns the number of available call graphs
+func (edPtr *CrlEditor) GetAvailableGraphCount() int {
+	return len(core.GetFunctionCallGraphs())
+}
+
 // GetCurrentSelection returns the Element that is the current selection in the editor
 func (edPtr *CrlEditor) GetCurrentSelection() core.Element {
 	return edPtr.currentSelection
@@ -251,6 +278,11 @@ func (edPtr *CrlEditor) getDiagramManager() *diagramManager {
 // GetNumberOfFunctionCalls returns the number of function calls in the graph
 func (edPtr *CrlEditor) GetNumberOfFunctionCalls() int {
 	return len(core.GetFunctionCallGraphs())
+}
+
+// GetOmitHousekeepingCalls returns the valuce of core.OmitHousekeepingCalls used in troubleshooting
+func (edPtr *CrlEditor) GetOmitHousekeepingCalls() bool {
+	return core.OmitHousekeepingCalls
 }
 
 // GetPropertiesManager returns the PropertiesManager
@@ -472,6 +504,7 @@ func (edPtr *CrlEditor) SelectElementUsingIDString(id string, hl *core.HeldLocks
 func (edPtr *CrlEditor) SendDebugSettings() {
 	params := make(map[string]string)
 	params["EnableNotificationTracing"] = strconv.FormatBool(edPtr.GetTraceChange())
+	params["OmitHousekeepingCalls"] = strconv.FormatBool(edPtr.GetOmitHousekeepingCalls())
 	edPtr.SendNotification("DebugSettings", "", nil, params)
 }
 
@@ -522,8 +555,10 @@ func (edPtr *CrlEditor) SetSelectionURI(uri string, hl *core.HeldLocks) {
 }
 
 // SetTraceChange sets the value of the core.TraceChange variable used in troubleshooting
-func (edPtr *CrlEditor) SetTraceChange(newValue bool) {
+func (edPtr *CrlEditor) SetTraceChange(newValue bool, omitHousekeepingCalls bool) {
 	core.TraceChange = newValue
+	core.OmitHousekeepingCalls = omitHousekeepingCalls
+	core.ClearFunctionCallGraphs()
 }
 
 // SetTraceChangeLimit sets the value of the TraceChangeLimit used in troubleshooting
@@ -543,7 +578,12 @@ func (edPtr *CrlEditor) UpdateDebugSettings(request *Request) {
 		log.Printf(err.Error())
 		return
 	}
-	edPtr.SetTraceChange(traceChange)
+	omitHousekeeingCalls, err := strconv.ParseBool(request.AdditionalParameters["OmitHousekeepingCalls"])
+	if err != nil {
+		log.Printf(err.Error())
+		return
+	}
+	edPtr.SetTraceChange(traceChange, omitHousekeeingCalls)
 	edPtr.SendDebugSettings()
 }
 

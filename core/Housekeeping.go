@@ -61,7 +61,7 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD Univers
 		el.notifyListeners(notification, hl)
 	case IndicatedConceptChanged:
 		owner := el.GetOwningConcept(hl)
-		if owner != nil {
+		if owner != nil && !notification.isReferenced(owner) {
 			indicatedConceptChangedNotification := uOfD.NewForwardingChangeNotification(el, IndicatedConceptChanged, notification)
 			uOfD.queueFunctionExecutions(owner, indicatedConceptChangedNotification, hl)
 		}

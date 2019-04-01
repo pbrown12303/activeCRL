@@ -53,7 +53,7 @@ var go10PtRegularFace font.Face
 var go10PtItalicFace font.Face
 
 // CrlDiagramPrefix is the prefix for all URIs related to CrlDiagram
-var CrlDiagramPrefix = "http://activeCrl.com/coreDiagram/"
+var CrlDiagramPrefix = "http://activeCrl.com/corediagram/"
 
 // CrlDiagramConceptSpaceURI identifies concept space containing all concepts related to the CrlDiagram
 var CrlDiagramConceptSpaceURI = CrlDiagramPrefix + "CoreDiagram"
@@ -710,6 +710,7 @@ func BuildCrlDiagramConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLoc
 
 	uOfD.AddFunction(CrlDiagramNodeURI, updateDiagramNode)
 	uOfD.AddFunction(CrlDiagramOwnerPointerURI, updateDiagramOwnerPointer)
+	// uOfD.AddFunction(CrlDiagramURI, updateDiagram)
 
 	return crlDiagramConceptSpace
 }
@@ -719,21 +720,25 @@ func updateDiagramNode(node core.Element, notification *core.ChangeNotification,
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	hl.WriteLockElement(node)
-	// There are two notifications of interest here: the label of the referenced model element
-	// and the list of immediate abstractions of the referenced model element.
+	// There are several notifications of interest here:
+	//   - the deletion of the referenced model element
+	//   - the label of the referenced model element
+	//   - the list of immediate abstractions of the referenced model element.
 	// First, determine whether it is the referenced model element that has changed
-	reference := node.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, hl)
+	diagramElementModelReference := node.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, hl)
 	modelElement := GetReferencedModelElement(node, hl)
 	switch notification.GetNatureOfChange() {
 	case core.IndicatedConceptChanged:
-		if notification.GetReportingElement() == reference {
-			underlyingNotification := notification.GetUnderlyingChange()
-			switch underlyingNotification.GetNatureOfChange() {
+		if notification.GetReportingElement() == diagramElementModelReference {
+			modelReferenceNotification := notification.GetUnderlyingChange()
+			switch modelReferenceNotification.GetNatureOfChange() {
 			case core.IndicatedConceptChanged:
-				secondUnderlyingNotification := underlyingNotification.GetUnderlyingChange()
-				switch secondUnderlyingNotification.GetNatureOfChange() {
+				modelElementNotification := modelReferenceNotification.GetUnderlyingChange()
+				switch modelElementNotification.GetNatureOfChange() {
 				case core.ConceptChanged:
-					if secondUnderlyingNotification.GetReportingElement() == modelElement {
+					currentModelElement := modelElementNotification.GetReportingElement()
+					previousModelElement := modelElementNotification.GetPriorState()
+					if currentModelElement != nil && previousModelElement != nil {
 						updateNodeForModelElementChange(node, modelElement, hl)
 					}
 				case core.AbstractionChanged:
@@ -743,19 +748,22 @@ func updateDiagramNode(node core.Element, notification *core.ChangeNotification,
 		}
 
 	case core.ChildChanged:
-		// We are looking for the model reference reporting a ConceptChanged which would be the result of setting the referencedConcept
-		if notification.GetReportingElement() != reference {
+		// We are looking for the model diagramElementModelReference reporting a ConceptChanged which would be the result of setting the referencedConcept
+		if notification.GetReportingElement() != diagramElementModelReference {
 			break
 		}
-		underlyingNotification := notification.GetUnderlyingChange()
-		switch underlyingNotification.GetNatureOfChange() {
+		modelReferenceNotification := notification.GetUnderlyingChange()
+		switch modelReferenceNotification.GetNatureOfChange() {
 		case core.ConceptChanged:
-			if underlyingNotification.GetReportingElement() != reference {
+			if modelReferenceNotification.GetReportingElement() != diagramElementModelReference {
 				break
 			}
-			updateNodeForModelElementChange(node, modelElement, hl)
+			if diagramElementModelReference.(core.Reference).GetReferencedConceptID(hl) == "" {
+				uOfD.DeleteElement(node, hl)
+			} else {
+				updateNodeForModelElementChange(node, modelElement, hl)
+			}
 		}
-
 	}
 }
 

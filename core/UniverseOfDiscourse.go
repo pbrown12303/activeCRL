@@ -261,6 +261,12 @@ func (uOfDPtr *universeOfDiscourse) deleteElement(el Element, deletedElements ma
 	return nil
 }
 
+// DeleteElement() removes a single element from the uOfD. Pointers to the element from other elements are set to nil.
+func (uOfDPtr *universeOfDiscourse) DeleteElement(element Element, hl *HeldLocks) error {
+	elements := map[string]Element{element.GetConceptID(hl): element}
+	return uOfDPtr.DeleteElements(elements, hl)
+}
+
 // DeleteElements() removes the elements from the uOfD. Pointers to the elements from elements not being deleted are set to nil.
 func (uOfDPtr *universeOfDiscourse) DeleteElements(elements map[string]Element, hl *HeldLocks) error {
 	for _, el := range elements {
@@ -474,12 +480,15 @@ func (uOfDPtr *universeOfDiscourse) newConceptAddedNotification(concept Element,
 // NewConceptChangeNotification creates a ChangeNotification that records state of the concept prior to the
 // change. Note that this MUST be called prior to making any changes to the concept.
 func (uOfDPtr *universeOfDiscourse) NewConceptChangeNotification(changingConcept Element, hl *HeldLocks) *ChangeNotification {
+	// Since this function is invoked by the *element methods for Literals, References, and Refinements, we play a
+	// game to get the full datatype
+	correctedChangingConcept := uOfDPtr.GetElement(changingConcept.getConceptIDNoLock())
 	var notification ChangeNotification
-	notification.reportingElement = changingConcept
+	notification.reportingElement = correctedChangingConcept
 	notification.natureOfChange = ConceptChanged
 	// Since this function is invoked by the *element methods for Literals, References, and Refinements, we play a
 	// game to get the full datatype cloned
-	notification.priorState = clone(uOfDPtr.GetElement(changingConcept.getConceptIDNoLock()), hl)
+	notification.priorState = clone(correctedChangingConcept, hl)
 	notification.uOfD = uOfDPtr
 	return &notification
 }
@@ -604,6 +613,10 @@ func (uOfDPtr *universeOfDiscourse) queueFunctionExecutions(el Element, notifica
 		log.Printf("universeOfDiscourse.queueFunctionExecution called with an Element that does not have an assigned UniverseOfDiscourse")
 		return
 	}
+	if notification.GetNatureOfChange() == 0 {
+		log.Printf("universeOfDiscourse.queueFunctionExecution called without of NatureOfChange")
+		return
+	}
 	functionIdentifiers := uOfDPtr.findFunctions(el, notification, hl)
 	for _, functionIdentifier := range functionIdentifiers {
 		if TraceChange == true {
@@ -695,6 +708,10 @@ func (uOfDPtr *universeOfDiscourse) replicateAsRefinement(original Element, repl
 	}
 
 	for _, originalChild := range original.GetOwnedConcepts(hl) {
+		switch originalChild.(type) {
+		case Refinement:
+			continue
+		}
 		var replicateChild Element
 		// For each original child, determine whether there is already a replicate child that
 		// has the original child as one of its abstractions. This is replicateChild
@@ -916,6 +933,7 @@ type UniverseOfDiscourse interface {
 	CreateReplicateAsRefinement(Element, *HeldLocks, ...string) Element
 	CreateReplicateAsRefinementFromURI(string, *HeldLocks, ...string) (Element, error)
 	deleteElement(Element, map[string]Element, *HeldLocks) error
+	DeleteElement(Element, *HeldLocks) error
 	DeleteElements(map[string]Element, *HeldLocks) error
 	findFunctions(Element, *ChangeNotification, *HeldLocks) []string
 	getComputeFunctions() *functions

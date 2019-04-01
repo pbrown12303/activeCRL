@@ -4,6 +4,7 @@ import (
 	//	"fmt"
 
 	"log"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -133,6 +134,7 @@ var _ = Describe("Test CrlEditor", func() {
 			}
 			//				container := page.FindByID(newDiagramContainerID)
 			ffError := treeNode.FlickFinger(-100, -300, 50)
+			time.Sleep(10 * time.Second)
 			if ffError != nil {
 				log.Printf(ffError.Error())
 			}

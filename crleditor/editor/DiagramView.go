@@ -93,6 +93,11 @@ func updateDiagramElementView(diagramElement core.Element, changeNotification *c
 	hl.ReadLockElement(diagramElement)
 	if diagramElement.GetUniverseOfDiscourse(hl) != uOfD {
 		// The diagram element has been removed from the universe of discourse
+		priorState := changeNotification.GetPriorState()
+		if priorState != nil {
+			additionalParameters := map[string]string{"OwnerID": priorState.GetOwningConceptID(hl)}
+			CrlEditorSingleton.SendNotification("DeleteDiagramElement", diagramElement.GetConceptID(hl), priorState, additionalParameters)
+		}
 		return
 	}
 	if crldiagram.IsDiagramNode(diagramElement, hl) {
