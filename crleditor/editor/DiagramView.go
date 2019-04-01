@@ -96,7 +96,7 @@ func updateDiagramElementView(diagramElement core.Element, changeNotification *c
 		priorState := changeNotification.GetPriorState()
 		if priorState != nil {
 			additionalParameters := map[string]string{"OwnerID": priorState.GetOwningConceptID(hl)}
-			CrlEditorSingleton.SendNotification("DeleteDiagramElement", diagramElement.GetConceptID(hl), priorState, additionalParameters)
+			SendNotification("DeleteDiagramElement", diagramElement.GetConceptID(hl), priorState, additionalParameters)
 		}
 		return
 	}
@@ -104,14 +104,14 @@ func updateDiagramElementView(diagramElement core.Element, changeNotification *c
 		switch changeNotification.GetNatureOfChange() {
 		case core.ChildChanged:
 			additionalParameters := getNodeAdditionalParameters(diagramElement, hl)
-			CrlEditorSingleton.SendNotification("UpdateDiagramNode", diagramElement.GetConceptID(hl), diagramElement, additionalParameters)
+			SendNotification("UpdateDiagramNode", diagramElement.GetConceptID(hl), diagramElement, additionalParameters)
 		}
 		return
 	} else if crldiagram.IsDiagramLink(diagramElement, hl) {
 		switch changeNotification.GetNatureOfChange() {
 		case core.ChildChanged:
 			additionalParameters := getLinkAdditionalParameters(diagramElement, hl)
-			CrlEditorSingleton.SendNotification("UpdateDiagramLink", diagramElement.GetConceptID(hl), diagramElement, additionalParameters)
+			SendNotification("UpdateDiagramLink", diagramElement.GetConceptID(hl), diagramElement, additionalParameters)
 		}
 		return
 	}
@@ -137,19 +137,38 @@ func updateDiagramView(diagram core.Element, changeNotification *core.ChangeNoti
 					if oldChildOwner == diagram && currentChildOwner != diagram {
 						priorState := underlyingChange.GetPriorState()
 						additionalParameters := map[string]string{"OwnerID": diagram.GetConceptID(hl)}
-						CrlEditorSingleton.SendNotification("DeleteDiagramElement", priorState.GetConceptID(hl), priorState, additionalParameters)
+						SendNotification("DeleteDiagramElement", priorState.GetConceptID(hl), priorState, additionalParameters)
 					} else if oldChildOwner != diagram && currentChildOwner == diagram {
 						newElement := underlyingChange.GetReportingElement()
 						if crldiagram.IsDiagramNode(newElement, hl) {
 							additionalParameters := getNodeAdditionalParameters(newElement, hl)
-							CrlEditorSingleton.SendNotification("AddDiagramNode", newElement.GetConceptID(hl), newElement, additionalParameters)
+							SendNotification("AddDiagramNode", newElement.GetConceptID(hl), newElement, additionalParameters)
 						} else if crldiagram.IsDiagramLink(newElement, hl) {
 							additionalParameters := getLinkAdditionalParameters(newElement, hl)
-							CrlEditorSingleton.SendNotification("AddDiagramLink", newElement.GetConceptID(hl), newElement, additionalParameters)
+							SendNotification("AddDiagramLink", newElement.GetConceptID(hl), newElement, additionalParameters)
+						}
+					}
+				case core.ChildChanged:
+					// a Child of the diagram element changed. Check to see whether it is a model reference and, if so, whether the model elemment still exists
+					if crldiagram.IsModelReference(underlyingChange.GetReportingElement(), hl) {
+						secondUnderlyingChange := underlyingChange.GetUnderlyingChange()
+						switch secondUnderlyingChange.GetNatureOfChange() {
+						case core.ConceptChanged:
+							// check to see whether the modelElement is nil
+							modelReference := secondUnderlyingChange.GetReportingElement().(core.Reference)
+							if modelReference.GetReferencedConcept(hl) == nil {
+								additionalParameters := map[string]string{"OwnerID": diagram.GetConceptID(hl)}
+								SendNotification("DeleteDiagramElement", reportingElement.GetConceptID(hl), reportingElement, additionalParameters)
+							}
 						}
 					}
 				}
 			}
+		}
+	case core.ConceptChanged:
+		// The diagram itself has changed. Check to see whether is has been deleted
+		if diagram.GetOwningConcept(hl) == nil {
+			SendNotification("DeleteDiagram", diagram.GetConceptID(hl), diagram, nil)
 		}
 	}
 }

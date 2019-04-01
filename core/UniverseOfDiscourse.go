@@ -261,9 +261,10 @@ func (uOfDPtr *universeOfDiscourse) deleteElement(el Element, deletedElements ma
 	return nil
 }
 
-// DeleteElement() removes a single element from the uOfD. Pointers to the element from other elements are set to nil.
+// DeleteElement() removes a single element and its descentants from the uOfD. Pointers to the elements from other elements are set to nil.
 func (uOfDPtr *universeOfDiscourse) DeleteElement(element Element, hl *HeldLocks) error {
 	elements := map[string]Element{element.GetConceptID(hl): element}
+	element.GetOwnedConceptsRecursively(elements, hl)
 	return uOfDPtr.DeleteElements(elements, hl)
 }
 
@@ -789,7 +790,7 @@ func (uOfDPtr *universeOfDiscourse) Undo(hl *HeldLocks) {
 // It removes all of the element's unresolved pointers from the uOfD cache
 func (uOfDPtr *universeOfDiscourse) uncacheUnresolvedPointers(el Element, hl *HeldLocks) {
 	if el.GetOwningConcept(hl) == nil && el.GetOwningConceptID(hl) != "" {
-		uOfDPtr.removeUnresolvedPointer(el.(*element).owningConcept)
+		uOfDPtr.removeUnresolvedPointer(el.getOwningConceptPointer())
 	}
 	switch el.(type) {
 	case *reference:

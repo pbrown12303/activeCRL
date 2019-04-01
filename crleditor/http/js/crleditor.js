@@ -754,6 +754,9 @@ function crlInitializeWebSocket() {
             case "DebugSettings":
                 crlNotificationSaveDebugSettings(data);
                 break;
+            case "DeleteDiagram":
+                crlNotificationDeleteDiagram(data);
+                break;
             case "DeleteDiagramElement":
                 crlNotificationDeleteDiagramCell(data);
                 break;
@@ -992,6 +995,34 @@ function crlNotificationClearToolbarSelection(data) {
     crlSendNormalResponse();
 }
 
+function crlNotificationDeleteDiagram(data) {
+    var diagramID = data.NotificationConceptID;
+    var diagramContainerID = crlGetDiagramContainerIDFromDiagramID(diagramID);
+    var diagramContainer = document.getElementById(diagramContainerID);
+    if (crlCurrentDiagramContainerID == diagramContainerID) {
+        crlCurrentDiagramContainerID = "";
+    }
+    // Remove the graph
+    var jointGraphID = crlGetJointGraphIDFromDiagramID(diagramID);
+    delete crlGraphsGlobal[jointGraphID]
+    // Remove the paper
+    var jointPaperID = crlGetJointPaperIDFromDiagramID(diagramID);
+    delete crlPapersGlobal[jointPaperID];
+    // Delete the diagram container
+    var topContent = document.getElementById("top-content");
+    if (diagramContainer) {
+        topContent.removeChild(diagramContainer);
+    }
+    // Delete the tab
+    var tabs = document.getElementById("tabs");
+    var tabID = crlGetDiagramTabIDFromDiagramID(diagramID);
+    var tab = document.getElementById(tabID)
+    if (tab) {
+        tabs.removeChild(tab);
+    }
+    crlSendNormalResponse();
+}
+
 function crlNotificationDeleteDiagramCell(data) {
     var concept = data.NotificationConcept;
     var elementID = crlGetJointCellIDFromConceptID(concept.ConceptID);
@@ -1000,7 +1031,11 @@ function crlNotificationDeleteDiagramCell(data) {
     var graph = crlGraphsGlobal[graphID];
     if (graph != null) {
         var element = crlFindCellInGraph(graph, elementID);
-        element.remove()
+        if (element) {
+            element.remove();
+        }
+    } else {
+        console.log("************* In crlNotificationDeleteDiagramCell with null graph");
     }
     crlSendNormalResponse()
 }
@@ -1107,7 +1142,7 @@ var crlNotificationUpdateDiagramLink = function (data) {
         var targetJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkTargetID"]);
         var linkSource = crlFindCellInGraph(graph, sourceJointID)
         var linkTarget = crlFindCellInGraph(graph, targetJointID)
-        if ((link == undefined || link == null) && (linkSource != null && linkTarget != null)) {
+        if (link == undefined || link == null) {
             crlSendNormalResponse()
             return;
         }
@@ -1369,7 +1404,7 @@ function crlSendDebugSettings(enableNotificationTracing, omitHousekeepingCalls, 
         "Action": "UpdateDebugSettings",
         "AdditionalParameters": {
             "EnableNotificationTracing": enableNotificationTracing,
-            "OmitHousekeepingCalls" : omitHousekeepingCalls,
+            "OmitHousekeepingCalls": omitHousekeepingCalls,
             "MaxTracingDepth": maxTracingDepth
         }
     });

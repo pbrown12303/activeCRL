@@ -367,9 +367,19 @@ func (ePtr *element) getListeners(hl *HeldLocks) map[string]Element {
 	return ePtr.listeners.CopyMap()
 }
 
+// GetOwnedConcepts returns the concepts owned by this concept
 func (ePtr *element) GetOwnedConcepts(hl *HeldLocks) map[string]Element {
 	hl.ReadLockElement(ePtr)
 	return ePtr.ownedConcepts.CopyMap()
+}
+
+// GetOwnedConceptsRecursively
+func (ePtr *element) GetOwnedConceptsRecursively(descendants map[string]Element, hl *HeldLocks) {
+	hl.ReadLockElement(ePtr)
+	for k, v := range ePtr.ownedConcepts.CopyMap() {
+		descendants[k] = v
+		v.GetOwnedConceptsRecursively(descendants, hl)
+	}
 }
 
 // GetOwningConceptID returns the ID of the concept that owns this one (if any)
@@ -1029,6 +1039,7 @@ type Element interface {
 	getLabelNoLock() string
 	getListeners(*HeldLocks) map[string]Element
 	GetOwnedConcepts(*HeldLocks) map[string]Element
+	GetOwnedConceptsRecursively(map[string]Element, *HeldLocks)
 	GetOwnedConceptsRefinedFrom(Element, *HeldLocks) map[string]Element
 	GetOwnedConceptsRefinedFromURI(string, *HeldLocks) map[string]Element
 	GetOwnedLiteralsRefinedFrom(Element, *HeldLocks) map[string]Literal

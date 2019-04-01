@@ -391,6 +391,11 @@ func IsDiagramRefinedPointer(el core.Element, hl *core.HeldLocks) bool {
 	return el.IsRefinementOfURI(CrlDiagramRefinedPointerURI, hl)
 }
 
+// IsModelReference returns true if the supplied element is a ModelReference
+func IsModelReference(el core.Element, hl *core.HeldLocks) bool {
+	return el.IsRefinementOfURI(CrlDiagramElementModelReferenceURI, hl)
+}
+
 // NewDiagram creates a new diagram
 func NewDiagram(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
 	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramURI, hl)
@@ -710,7 +715,6 @@ func BuildCrlDiagramConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLoc
 
 	uOfD.AddFunction(CrlDiagramNodeURI, updateDiagramNode)
 	uOfD.AddFunction(CrlDiagramOwnerPointerURI, updateDiagramOwnerPointer)
-	// uOfD.AddFunction(CrlDiagramURI, updateDiagram)
 
 	return crlDiagramConceptSpace
 }
@@ -773,12 +777,13 @@ func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.C
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	hl.WriteLockElement(diagramPointer)
-	reference := diagramPointer.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, hl)
+	reportingElement := notification.GetReportingElement()
+	modelElementReference := diagramPointer.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, hl)
 	diagram := diagramPointer.GetOwningConcept(hl)
 	modelElement := GetReferencedModelElement(diagramPointer, hl)
 	switch notification.GetNatureOfChange() {
 	case core.IndicatedConceptChanged:
-		if notification.GetReportingElement() == reference {
+		if reportingElement == modelElementReference {
 			underlyingNotification := notification.GetUnderlyingChange()
 			switch underlyingNotification.GetNatureOfChange() {
 			case core.IndicatedConceptChanged:
@@ -803,6 +808,22 @@ func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.C
 								SetLinkTarget(diagramPointer, newDiagramTarget, hl)
 							}
 						}
+					}
+				}
+			}
+		}
+	case core.ChildChanged:
+		// If either source or target are nil, delete the pointer
+		sourceReference := diagramPointer.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, hl)
+		targetReference := diagramPointer.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, hl)
+		if reportingElement == sourceReference || reportingElement == targetReference {
+			underlyingNotification := notification.GetUnderlyingChange()
+			switch underlyingNotification.GetNatureOfChange() {
+			case core.ConceptChanged:
+				switch reportingElement.(type) {
+				case core.Reference:
+					if reportingElement.(core.Reference).GetReferencedConcept(hl) == nil {
+						uOfD.DeleteElement(diagramPointer, hl)
 					}
 				}
 			}
