@@ -33,6 +33,17 @@ var _ = Describe("UniverseOfDiscourse", func() {
 		})
 	})
 
+	Describe("Deriving UUIDs from URIs", func() {
+		Specify("The same UUID should be generated each time", func() {
+			testURI := "http://activeCrl.com/foo"
+			uuid1, err1 := uOfD.generateConceptID(testURI)
+			uuid2, err2 := uOfD.generateConceptID(testURI)
+			Expect(err1).To(BeNil())
+			Expect(err2).To(BeNil())
+			Expect(uuid1).To(Equal(uuid2))
+		})
+	})
+
 	Describe("Creating a Literal", func() {
 		Context("without URI specified", func() {
 			It("should not be nil", func() {

@@ -937,6 +937,7 @@ type UniverseOfDiscourse interface {
 	DeleteElement(Element, *HeldLocks) error
 	DeleteElements(map[string]Element, *HeldLocks) error
 	findFunctions(Element, *ChangeNotification, *HeldLocks) []string
+	generateConceptID(...string) (string, error)
 	getComputeFunctions() *functions
 	GetElement(string) Element
 	GetElements() map[string]Element

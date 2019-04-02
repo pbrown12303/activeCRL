@@ -546,10 +546,12 @@ function crlPropertiesDisplayDefinition(data, row) {
     definitionRow.cells[1].id = "definition";
     if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
         definitionRow.cells[1].contentEditable = true;
-        $("#definition").on("keyup", crlSendDefinitionChanged);
+        if (!definitionRow.cells[1].callbackAssigned) {
+            definitionRow.cells[1].callbackAssigned = true;
+            $("#definition").on("keyup", crlSendDefinitionChanged);
+        }
     } else {
         definitionRow.cells[1].contentEditable = false;
-
     };
 }
 
@@ -567,7 +569,10 @@ function crlPropertiesDisplayLabel(data, row) {
     labelRow.cells[1].id = "elementLabel";
     if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
         labelRow.cells[1].contentEditable = true;
-        $("#elementLabel").on("keyup", crlSendLabelChanged);
+        if (!labelRow.cells[1].callbackAssigned) {
+            labelRow.cells[1].callbackAssigned = true;
+            $("#elementLabel").on("keyup", crlSendLabelChanged);
+        }
     } else {
         labelRow.cells[1].contentEditable = false;
     };
@@ -580,7 +585,10 @@ function crlPropertiesDisplayLiteralValue(data, row) {
     labelRow.cells[1].id = "literalValue";
     if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
         labelRow.cells[1].contentEditable = true;
-        $("#literalValue").on("keyup", crlSendLiteralValueChanged);
+        if (!labelRow.cells[1].callbackAssigned) {
+            labelRow.cells[1].callbackAssigned = true;
+            $("#literalValue").on("keyup", crlSendLiteralValueChanged);
+        }
     } else {
         labelRow.cells[1].contentEditable = false;
     };
@@ -611,7 +619,10 @@ function crlPropertiesDisplayURI(data, row) {
     uriRow.cells[1].id = "uri";
     if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
         uriRow.cells[1].contentEditable = true;
-        $("#uri").on("keyup", crlSendURIChanged);
+        if (!uriRow.cells[1].callbackAssigned) {
+            uriRow.cells[1].callbackAssigned = true;
+            $("#uri").on("keyup", crlSendURIChanged);
+        }
     } else {
         uriRow.cells[1].contentEditable = false;
     }
@@ -1415,7 +1426,7 @@ function crlSendDefinitionChanged(evt, obj) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
         "Action": "DefinitionChanged",
-        "RequestConceptID": selectedConceptId,
+        "RequestConceptID": crlSelectedConceptIDGlobal,
         "AdditionalParameters":
             { "NewValue": evt.currentTarget.textContent }
     });
@@ -1522,7 +1533,7 @@ function crlSendLiteralValueChanged(evt, obj) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
         "Action": "LiteralValueChanged",
-        "RequestConceptID": selectedConceptId,
+        "RequestConceptID": crlSelectedConceptIDGlobal,
         "AdditionalParameters":
             { "NewValue": evt.currentTarget.textContent }
     });
@@ -1604,7 +1615,7 @@ function crlSendURIChanged(evt, obj) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
         "Action": "URIChanged",
-        "RequestConceptID": selectedConceptId,
+        "RequestConceptID": crlSelectedConceptIDGlobal,
         "AdditionalParameters":
             { "NewValue": evt.currentTarget.textContent }
     });

@@ -34,7 +34,7 @@ var _ = Describe("Verify function call graph generation", func() {
 	})
 
 	Describe("Test FunctionCallGraph for Element ConceptChanged generation", func() {
-		FSpecify("SetDefinition should generate a FunctionCallGraph for ConceptChanged", func() {
+		Specify("SetDefinition should generate a FunctionCallGraph for ConceptChanged", func() {
 			el, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
 			// Initiate the graph capture

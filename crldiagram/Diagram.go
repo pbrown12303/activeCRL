@@ -91,6 +91,15 @@ var CrlDiagramLinkTargetURI = CrlDiagramLinkURI + "/" + "Target"
 // CrlDiagramNodeURI identifies the CrlDiagramNode concept
 var CrlDiagramNodeURI = CrlDiagramConceptSpaceURI + "/" + "CrlDiagramNode"
 
+// CrlDiagramNodeModelReferenceURI identifies the reference to the model element represented by the node
+var CrlDiagramNodeModelReferenceURI = CrlDiagramNodeURI + "/" + "ModelReference"
+
+// CrlDiagramNodeDisplayLabelURI identifies the display label concept to be used when displaying the node
+var CrlDiagramNodeDisplayLabelURI = CrlDiagramNodeURI + "/" + "DisplayLabel"
+
+// CrlDiagramNodeAbstractionDisplayLabelURI identifies the abstraction display label concept to be used when displaying the node
+var CrlDiagramNodeAbstractionDisplayLabelURI = CrlDiagramNodeURI + "/" + "AbstractionDisplayLabel"
+
 // CrlDiagramNodeXURI identifies the X coordinate of the node
 var CrlDiagramNodeXURI = CrlDiagramNodeURI + "/" + "X"
 
@@ -112,20 +121,110 @@ var CrlDiagramPointerURI = CrlDiagramConceptSpaceURI + "/" + "Pointer"
 // CrlDiagramAbstractPointerURI identifies the Abstract of an Element represented as a link
 var CrlDiagramAbstractPointerURI = CrlDiagramConceptSpaceURI + "/" + "AbstractPointer"
 
+// CrlDiagramAbstractPointerModelReferenceURI identifies the reference to the model element represented by the link
+var CrlDiagramAbstractPointerModelReferenceURI = CrlDiagramAbstractPointerURI + "/" + "ModelReference"
+
+// CrlDiagramAbstractPointerDisplayLabelURI identifies the display label concept to be used when displaying the link
+var CrlDiagramAbstractPointerDisplayLabelURI = CrlDiagramAbstractPointerURI + "/" + "DisplayLabel"
+
+// CrlDiagramAbstractPointerAbstractionDisplayLabelURI identifies the abstraction display label concept to be used when displaying the link
+var CrlDiagramAbstractPointerAbstractionDisplayLabelURI = CrlDiagramAbstractPointerURI + "/" + "AbstractionDisplayLabel"
+
+// CrlDiagramAbstractPointerSourceURI identifies the concept that is the source of the link
+var CrlDiagramAbstractPointerSourceURI = CrlDiagramAbstractPointerURI + "/" + "Source"
+
+// CrlDiagramAbstractPointerTargetURI identifies the concept that is the target of the link
+var CrlDiagramAbstractPointerTargetURI = CrlDiagramAbstractPointerURI + "/" + "Target"
+
 // CrlDiagramElementPointerURI identifies the element pointer of a Reference represented as a link
 var CrlDiagramElementPointerURI = CrlDiagramConceptSpaceURI + "/" + "ElementPointer"
+
+// CrlDiagramElementPointerModelReferenceURI identifies the reference to the model element represented by the link
+var CrlDiagramElementPointerModelReferenceURI = CrlDiagramElementPointerURI + "/" + "ModelReference"
+
+// CrlDiagramElementPointerDisplayLabelURI identifies the display label concept to be used when displaying the link
+var CrlDiagramElementPointerDisplayLabelURI = CrlDiagramElementPointerURI + "/" + "DisplayLabel"
+
+// CrlDiagramElementPointerAbstractionDisplayLabelURI identifies the abstraction display label concept to be used when displaying the link
+var CrlDiagramElementPointerAbstractionDisplayLabelURI = CrlDiagramElementPointerURI + "/" + "AbstractionDisplayLabel"
+
+// CrlDiagramElementPointerSourceURI identifies the concept that is the source of the link
+var CrlDiagramElementPointerSourceURI = CrlDiagramElementPointerURI + "/" + "Source"
+
+// CrlDiagramElementPointerTargetURI identifies the concept that is the target of the link
+var CrlDiagramElementPointerTargetURI = CrlDiagramElementPointerURI + "/" + "Target"
 
 // CrlDiagramOwnerPointerURI identifies the owner of an Element represented as a link
 var CrlDiagramOwnerPointerURI = CrlDiagramConceptSpaceURI + "/" + "OwnerPointer"
 
+// CrlDiagramOwnerPointerModelReferenceURI identifies the reference to the model element represented by the link
+var CrlDiagramOwnerPointerModelReferenceURI = CrlDiagramOwnerPointerURI + "/" + "ModelReference"
+
+// CrlDiagramOwnerPointerDisplayLabelURI identifies the display label concept to be used when displaying the link
+var CrlDiagramOwnerPointerDisplayLabelURI = CrlDiagramOwnerPointerURI + "/" + "DisplayLabel"
+
+// CrlDiagramOwnerPointerAbstractionDisplayLabelURI identifies the abstraction display label concept to be used when displaying the link
+var CrlDiagramOwnerPointerAbstractionDisplayLabelURI = CrlDiagramOwnerPointerURI + "/" + "AbstractionDisplayLabel"
+
+// CrlDiagramOwnerPointerSourceURI identifies the concept that is the source of the link
+var CrlDiagramOwnerPointerSourceURI = CrlDiagramOwnerPointerURI + "/" + "Source"
+
+// CrlDiagramOwnerPointerTargetURI identifies the concept that is the target of the link
+var CrlDiagramOwnerPointerTargetURI = CrlDiagramOwnerPointerURI + "/" + "Target"
+
 // CrlDiagramRefinedPointerURI identifies the refined element of a Refinement represented as a link
 var CrlDiagramRefinedPointerURI = CrlDiagramConceptSpaceURI + "/" + "RefinedPointer"
+
+// CrlDiagramRefinedPointerModelReferenceURI identifies the reference to the model element represented by the link
+var CrlDiagramRefinedPointerModelReferenceURI = CrlDiagramRefinedPointerURI + "/" + "ModelReference"
+
+// CrlDiagramRefinedPointerDisplayLabelURI identifies the display label concept to be used when displaying the link
+var CrlDiagramRefinedPointerDisplayLabelURI = CrlDiagramRefinedPointerURI + "/" + "DisplayLabel"
+
+// CrlDiagramRefinedPointerAbstractionDisplayLabelURI identifies the abstraction display label concept to be used when displaying the link
+var CrlDiagramRefinedPointerAbstractionDisplayLabelURI = CrlDiagramRefinedPointerURI + "/" + "AbstractionDisplayLabel"
+
+// CrlDiagramRefinedPointerSourceURI identifies the concept that is the source of the link
+var CrlDiagramRefinedPointerSourceURI = CrlDiagramRefinedPointerURI + "/" + "Source"
+
+// CrlDiagramRefinedPointerTargetURI identifies the concept that is the target of the link
+var CrlDiagramRefinedPointerTargetURI = CrlDiagramRefinedPointerURI + "/" + "Target"
 
 // CrlDiagramReferenceLinkURI identifies the Reference represented as a link in the diagram
 var CrlDiagramReferenceLinkURI = CrlDiagramConceptSpaceURI + "/" + "ReferenceLink"
 
+// CrlDiagramReferenceLinkModelReferenceURI identifies the reference to the model element represented by the link
+var CrlDiagramReferenceLinkModelReferenceURI = CrlDiagramReferenceLinkURI + "/" + "ModelReference"
+
+// CrlDiagramReferenceLinkDisplayLabelURI identifies the display label concept to be used when displaying the link
+var CrlDiagramReferenceLinkDisplayLabelURI = CrlDiagramReferenceLinkURI + "/" + "DisplayLabel"
+
+// CrlDiagramReferenceLinkAbstractionDisplayLabelURI identifies the abstraction display label concept to be used when displaying the link
+var CrlDiagramReferenceLinkAbstractionDisplayLabelURI = CrlDiagramReferenceLinkURI + "/" + "AbstractionDisplayLabel"
+
+// CrlDiagramReferenceLinkSourceURI identifies the concept that is the source of the link
+var CrlDiagramReferenceLinkSourceURI = CrlDiagramReferenceLinkURI + "/" + "Source"
+
+// CrlDiagramReferenceLinkTargetURI identifies the concept that is the target of the link
+var CrlDiagramReferenceLinkTargetURI = CrlDiagramReferenceLinkURI + "/" + "Target"
+
 // CrlDiagramRefinementLinkURI identifies the Refinement represented as a link in the diagram
 var CrlDiagramRefinementLinkURI = CrlDiagramConceptSpaceURI + "/" + "RefinementLink"
+
+// CrlDiagramRefinementLinkModelReferenceURI identifies the reference to the model element represented by the link
+var CrlDiagramRefinementLinkModelReferenceURI = CrlDiagramRefinementLinkURI + "/" + "ModelReference"
+
+// CrlDiagramRefinementLinkDisplayLabelURI identifies the display label concept to be used when displaying the link
+var CrlDiagramRefinementLinkDisplayLabelURI = CrlDiagramRefinementLinkURI + "/" + "DisplayLabel"
+
+// CrlDiagramRefinementLinkAbstractionDisplayLabelURI identifies the abstraction display label concept to be used when displaying the link
+var CrlDiagramRefinementLinkAbstractionDisplayLabelURI = CrlDiagramRefinementLinkURI + "/" + "AbstractionDisplayLabel"
+
+// CrlDiagramRefinementLinkSourceURI identifies the concept that is the source of the link
+var CrlDiagramRefinementLinkSourceURI = CrlDiagramRefinementLinkURI + "/" + "Source"
+
+// CrlDiagramRefinementLinkTargetURI identifies the concept that is the target of the link
+var CrlDiagramRefinementLinkTargetURI = CrlDiagramRefinementLinkURI + "/" + "Target"
 
 // GetDisplayLabel is a convenience function for getting the DisplayLabel value of a DiagramElement
 func GetDisplayLabel(diagramElement core.Element, hl *core.HeldLocks) string {
@@ -609,10 +708,45 @@ func BuildCrlDiagramConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLoc
 	//
 	// CrlDiagramNode
 	//
-	crlDiagramNode := uOfD.CreateReplicateAsRefinement(crlDiagramElement, hl, CrlDiagramNodeURI)
+	crlDiagramNode, _ := uOfD.NewElement(hl, CrlDiagramNodeURI)
 	crlDiagramNode.SetLabel("CrlDiagramNode", hl)
 	crlDiagramNode.SetOwningConcept(crlDiagramConceptSpace, hl)
 	crlDiagramNode.SetIsCoreRecursively(hl)
+
+	crlDiagramNodeRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramNodeRefinement.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeRefinement.SetAbstractConcept(crlDiagramElement, hl)
+	crlDiagramNodeRefinement.SetRefinedConcept(crlDiagramNode, hl)
+
+	crlDiagramNodeModelReference, _ := uOfD.NewReference(hl, CrlDiagramNodeModelReferenceURI)
+	crlDiagramNodeModelReference.SetLabel("ModelReference", hl)
+	crlDiagramNodeModelReference.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeModelReference.SetIsCore(hl)
+
+	crlDiagramNodeModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramNodeModelReferenceRefinement.SetOwningConcept(crlDiagramNodeModelReference, hl)
+	crlDiagramNodeModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, hl)
+	crlDiagramNodeModelReferenceRefinement.SetRefinedConcept(crlDiagramNodeModelReference, hl)
+
+	crlDiagramNodeDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramNodeDisplayLabelURI)
+	crlDiagramNodeDisplayLabel.SetLabel("DisplayLabel", hl)
+	crlDiagramNodeDisplayLabel.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeDisplayLabel.SetIsCore(hl)
+
+	crlDiagramNodeDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramNodeDisplayLabelRefinement.SetOwningConcept(crlDiagramNodeDisplayLabel, hl)
+	crlDiagramNodeDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, hl)
+	crlDiagramNodeDisplayLabelRefinement.SetRefinedConcept(crlDiagramNodeDisplayLabel, hl)
+
+	crlDiagramNodeAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramNodeAbstractionDisplayLabelURI)
+	crlDiagramNodeAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
+	crlDiagramNodeAbstractionDisplayLabel.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeAbstractionDisplayLabel.SetIsCore(hl)
+
+	crlDiagramNodeAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramNodeAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramNodeAbstractionDisplayLabel, hl)
+	crlDiagramNodeAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
+	crlDiagramNodeAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramNodeAbstractionDisplayLabel, hl)
 
 	crlDiagramNodeX, _ := uOfD.NewLiteral(hl, CrlDiagramNodeXURI)
 	crlDiagramNodeX.SetLabel("X", hl)
@@ -642,10 +776,15 @@ func BuildCrlDiagramConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLoc
 	//
 	// CrlDiagramLink
 	//
-	crlDiagramLink := uOfD.CreateReplicateAsRefinement(crlDiagramElement, hl, CrlDiagramLinkURI)
+	crlDiagramLink, _ := uOfD.NewElement(hl, CrlDiagramLinkURI)
 	crlDiagramLink.SetLabel("CrlDiagramLink", hl)
 	crlDiagramLink.SetOwningConcept(crlDiagramConceptSpace, hl)
 	crlDiagramLink.SetIsCoreRecursively(hl)
+
+	crlDiagramLinkRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramLinkRefinement.SetOwningConcept(crlDiagramLink, hl)
+	crlDiagramLinkRefinement.SetAbstractConcept(crlDiagramElement, hl)
+	crlDiagramLinkRefinement.SetRefinedConcept(crlDiagramLink, hl)
 
 	crlDiagramLinkSource, _ := uOfD.NewReference(hl, CrlDiagramLinkSourceURI)
 	crlDiagramLinkSource.SetLabel("Source", hl)
@@ -660,58 +799,393 @@ func BuildCrlDiagramConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLoc
 	//
 	// Pointer
 	//
-	crlDiagramPointer := uOfD.CreateReplicateAsRefinement(crlDiagramLink, hl, CrlDiagramPointerURI)
+	crlDiagramPointer, _ := uOfD.NewElement(hl, CrlDiagramPointerURI)
 	crlDiagramPointer.SetLabel("Pointer", hl)
 	crlDiagramPointer.SetOwningConcept(crlDiagramConceptSpace, hl)
 	crlDiagramPointer.SetIsCoreRecursively(hl)
 
+	crlDiagramPointerRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramPointerRefinement.SetOwningConcept(crlDiagramPointer, hl)
+	crlDiagramPointerRefinement.SetAbstractConcept(crlDiagramLink, hl)
+	crlDiagramPointerRefinement.SetRefinedConcept(crlDiagramPointer, hl)
+
 	//
 	// AbstractPointer
 	//
-	crlDiagramAbstractPointer := uOfD.CreateReplicateAsRefinement(crlDiagramPointer, hl, CrlDiagramAbstractPointerURI)
+	crlDiagramAbstractPointer, _ := uOfD.NewElement(hl, CrlDiagramAbstractPointerURI)
 	crlDiagramAbstractPointer.SetLabel("AbstractPointer", hl)
 	crlDiagramAbstractPointer.SetOwningConcept(crlDiagramConceptSpace, hl)
 	crlDiagramAbstractPointer.SetIsCore(hl)
 
+	crlDiagramAbstractPointerRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramAbstractPointerRefinement.SetOwningConcept(crlDiagramAbstractPointer, hl)
+	crlDiagramAbstractPointerRefinement.SetAbstractConcept(crlDiagramPointer, hl)
+	crlDiagramAbstractPointerRefinement.SetRefinedConcept(crlDiagramAbstractPointer, hl)
+
+	crlDiagramAbstractPointerModelReference, _ := uOfD.NewReference(hl, CrlDiagramAbstractPointerModelReferenceURI)
+	crlDiagramAbstractPointerModelReference.SetLabel("ModelReference", hl)
+	crlDiagramAbstractPointerModelReference.SetOwningConcept(crlDiagramAbstractPointer, hl)
+	crlDiagramAbstractPointerModelReference.SetIsCore(hl)
+
+	crlDiagramAbstractPointerModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramAbstractPointerModelReferenceRefinement.SetOwningConcept(crlDiagramAbstractPointerModelReference, hl)
+	crlDiagramAbstractPointerModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, hl)
+	crlDiagramAbstractPointerModelReferenceRefinement.SetRefinedConcept(crlDiagramAbstractPointerModelReference, hl)
+
+	crlDiagramAbstractPointerDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramAbstractPointerDisplayLabelURI)
+	crlDiagramAbstractPointerDisplayLabel.SetLabel("DisplayLabel", hl)
+	crlDiagramAbstractPointerDisplayLabel.SetOwningConcept(crlDiagramAbstractPointer, hl)
+	crlDiagramAbstractPointerDisplayLabel.SetIsCore(hl)
+
+	crlDiagramAbstractPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramAbstractPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramAbstractPointerDisplayLabel, hl)
+	crlDiagramAbstractPointerDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, hl)
+	crlDiagramAbstractPointerDisplayLabelRefinement.SetRefinedConcept(crlDiagramAbstractPointerDisplayLabel, hl)
+
+	crlDiagramAbstractPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramAbstractPointerAbstractionDisplayLabelURI)
+	crlDiagramAbstractPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
+	crlDiagramAbstractPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramAbstractPointer, hl)
+	crlDiagramAbstractPointerAbstractionDisplayLabel.SetIsCore(hl)
+
+	crlDiagramAbstractPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramAbstractPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramAbstractPointerAbstractionDisplayLabel, hl)
+	crlDiagramAbstractPointerAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
+	crlDiagramAbstractPointerAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramAbstractPointerAbstractionDisplayLabel, hl)
+
+	crlDiagramAbstractPointerSource, _ := uOfD.NewReference(hl, CrlDiagramAbstractPointerSourceURI)
+	crlDiagramAbstractPointerSource.SetLabel("Source", hl)
+	crlDiagramAbstractPointerSource.SetOwningConcept(crlDiagramAbstractPointer, hl)
+	crlDiagramAbstractPointerSource.SetIsCore(hl)
+
+	crlDiagramAbstractPointerSourceRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramAbstractPointerSourceRefinement.SetOwningConcept(crlDiagramAbstractPointerSource, hl)
+	crlDiagramAbstractPointerSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, hl)
+	crlDiagramAbstractPointerSourceRefinement.SetRefinedConcept(crlDiagramAbstractPointerSource, hl)
+
+	crlDiagramAbstractPointerTarget, _ := uOfD.NewReference(hl, CrlDiagramAbstractPointerTargetURI)
+	crlDiagramAbstractPointerTarget.SetLabel("Target", hl)
+	crlDiagramAbstractPointerTarget.SetOwningConcept(crlDiagramAbstractPointer, hl)
+	crlDiagramAbstractPointerTarget.SetIsCore(hl)
+
+	crlDiagramAbstractPointerTargetRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramAbstractPointerTargetRefinement.SetOwningConcept(crlDiagramAbstractPointerTarget, hl)
+	crlDiagramAbstractPointerTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, hl)
+	crlDiagramAbstractPointerTargetRefinement.SetRefinedConcept(crlDiagramAbstractPointerTarget, hl)
+
 	//
 	// ElementPointer
 	//
-	crlDiagramElementPointer := uOfD.CreateReplicateAsRefinement(crlDiagramPointer, hl, CrlDiagramElementPointerURI)
+	crlDiagramElementPointer, _ := uOfD.NewElement(hl, CrlDiagramElementPointerURI)
 	crlDiagramElementPointer.SetLabel("ElementPointer", hl)
 	crlDiagramElementPointer.SetOwningConcept(crlDiagramConceptSpace, hl)
 	crlDiagramElementPointer.SetIsCore(hl)
 
+	crlDiagramElementPointerRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramElementPointerRefinement.SetOwningConcept(crlDiagramElementPointer, hl)
+	crlDiagramElementPointerRefinement.SetAbstractConcept(crlDiagramPointer, hl)
+	crlDiagramElementPointerRefinement.SetRefinedConcept(crlDiagramElementPointer, hl)
+
+	crlDiagramElementPointerModelReference, _ := uOfD.NewReference(hl, CrlDiagramElementPointerModelReferenceURI)
+	crlDiagramElementPointerModelReference.SetLabel("ModelReference", hl)
+	crlDiagramElementPointerModelReference.SetOwningConcept(crlDiagramElementPointer, hl)
+	crlDiagramElementPointerModelReference.SetIsCore(hl)
+
+	crlDiagramElementPointerModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramElementPointerModelReferenceRefinement.SetOwningConcept(crlDiagramElementPointerModelReference, hl)
+	crlDiagramElementPointerModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, hl)
+	crlDiagramElementPointerModelReferenceRefinement.SetRefinedConcept(crlDiagramElementPointerModelReference, hl)
+
+	crlDiagramElementPointerDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramElementPointerDisplayLabelURI)
+	crlDiagramElementPointerDisplayLabel.SetLabel("DisplayLabel", hl)
+	crlDiagramElementPointerDisplayLabel.SetOwningConcept(crlDiagramElementPointer, hl)
+	crlDiagramElementPointerDisplayLabel.SetIsCore(hl)
+
+	crlDiagramElementPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramElementPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramElementPointerDisplayLabel, hl)
+	crlDiagramElementPointerDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, hl)
+	crlDiagramElementPointerDisplayLabelRefinement.SetRefinedConcept(crlDiagramElementPointerDisplayLabel, hl)
+
+	crlDiagramElementPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramElementPointerAbstractionDisplayLabelURI)
+	crlDiagramElementPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
+	crlDiagramElementPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramElementPointer, hl)
+	crlDiagramElementPointerAbstractionDisplayLabel.SetIsCore(hl)
+
+	crlDiagramElementPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramElementPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramElementPointerAbstractionDisplayLabel, hl)
+	crlDiagramElementPointerAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
+	crlDiagramElementPointerAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramElementPointerAbstractionDisplayLabel, hl)
+
+	crlDiagramElementPointerSource, _ := uOfD.NewReference(hl, CrlDiagramElementPointerSourceURI)
+	crlDiagramElementPointerSource.SetLabel("Source", hl)
+	crlDiagramElementPointerSource.SetOwningConcept(crlDiagramElementPointer, hl)
+	crlDiagramElementPointerSource.SetIsCore(hl)
+
+	crlDiagramElementPointerSourceRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramElementPointerSourceRefinement.SetOwningConcept(crlDiagramElementPointerSource, hl)
+	crlDiagramElementPointerSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, hl)
+	crlDiagramElementPointerSourceRefinement.SetRefinedConcept(crlDiagramElementPointerSource, hl)
+
+	crlDiagramElementPointerTarget, _ := uOfD.NewReference(hl, CrlDiagramElementPointerTargetURI)
+	crlDiagramElementPointerTarget.SetLabel("Target", hl)
+	crlDiagramElementPointerTarget.SetOwningConcept(crlDiagramElementPointer, hl)
+	crlDiagramElementPointerTarget.SetIsCore(hl)
+
+	crlDiagramElementPointerTargetRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramElementPointerTargetRefinement.SetOwningConcept(crlDiagramElementPointerTarget, hl)
+	crlDiagramElementPointerTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, hl)
+	crlDiagramElementPointerTargetRefinement.SetRefinedConcept(crlDiagramElementPointerTarget, hl)
+
 	//
 	// OwnerPointer
 	//
-	crlDiagramOwnerPointer := uOfD.CreateReplicateAsRefinement(crlDiagramPointer, hl, CrlDiagramOwnerPointerURI)
+	crlDiagramOwnerPointer, _ := uOfD.NewElement(hl, CrlDiagramOwnerPointerURI)
 	crlDiagramOwnerPointer.SetLabel("OwnerPointer", hl)
 	crlDiagramOwnerPointer.SetOwningConcept(crlDiagramConceptSpace, hl)
 	crlDiagramOwnerPointer.SetIsCore(hl)
 
+	crlDiagramOwnerPointerRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramOwnerPointerRefinement.SetOwningConcept(crlDiagramOwnerPointer, hl)
+	crlDiagramOwnerPointerRefinement.SetAbstractConcept(crlDiagramPointer, hl)
+	crlDiagramOwnerPointerRefinement.SetRefinedConcept(crlDiagramOwnerPointer, hl)
+
+	crlDiagramOwnerPointerModelReference, _ := uOfD.NewReference(hl, CrlDiagramOwnerPointerModelReferenceURI)
+	crlDiagramOwnerPointerModelReference.SetLabel("ModelReference", hl)
+	crlDiagramOwnerPointerModelReference.SetOwningConcept(crlDiagramOwnerPointer, hl)
+	crlDiagramOwnerPointerModelReference.SetIsCore(hl)
+
+	crlDiagramOwnerPointerModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramOwnerPointerModelReferenceRefinement.SetOwningConcept(crlDiagramOwnerPointerModelReference, hl)
+	crlDiagramOwnerPointerModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, hl)
+	crlDiagramOwnerPointerModelReferenceRefinement.SetRefinedConcept(crlDiagramOwnerPointerModelReference, hl)
+
+	crlDiagramOwnerPointerDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramOwnerPointerDisplayLabelURI)
+	crlDiagramOwnerPointerDisplayLabel.SetLabel("DisplayLabel", hl)
+	crlDiagramOwnerPointerDisplayLabel.SetOwningConcept(crlDiagramOwnerPointer, hl)
+	crlDiagramOwnerPointerDisplayLabel.SetIsCore(hl)
+
+	crlDiagramOwnerPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramOwnerPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramOwnerPointerDisplayLabel, hl)
+	crlDiagramOwnerPointerDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, hl)
+	crlDiagramOwnerPointerDisplayLabelRefinement.SetRefinedConcept(crlDiagramOwnerPointerDisplayLabel, hl)
+
+	crlDiagramOwnerPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramOwnerPointerAbstractionDisplayLabelURI)
+	crlDiagramOwnerPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
+	crlDiagramOwnerPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramOwnerPointer, hl)
+	crlDiagramOwnerPointerAbstractionDisplayLabel.SetIsCore(hl)
+
+	crlDiagramOwnerPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramOwnerPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramOwnerPointerAbstractionDisplayLabel, hl)
+	crlDiagramOwnerPointerAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
+	crlDiagramOwnerPointerAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramOwnerPointerAbstractionDisplayLabel, hl)
+
+	crlDiagramOwnerPointerSource, _ := uOfD.NewReference(hl, CrlDiagramOwnerPointerSourceURI)
+	crlDiagramOwnerPointerSource.SetLabel("Source", hl)
+	crlDiagramOwnerPointerSource.SetOwningConcept(crlDiagramOwnerPointer, hl)
+	crlDiagramOwnerPointerSource.SetIsCore(hl)
+
+	crlDiagramOwnerPointerSourceRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramOwnerPointerSourceRefinement.SetOwningConcept(crlDiagramOwnerPointerSource, hl)
+	crlDiagramOwnerPointerSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, hl)
+	crlDiagramOwnerPointerSourceRefinement.SetRefinedConcept(crlDiagramOwnerPointerSource, hl)
+
+	crlDiagramOwnerPointerTarget, _ := uOfD.NewReference(hl, CrlDiagramOwnerPointerTargetURI)
+	crlDiagramOwnerPointerTarget.SetLabel("Target", hl)
+	crlDiagramOwnerPointerTarget.SetOwningConcept(crlDiagramOwnerPointer, hl)
+	crlDiagramOwnerPointerTarget.SetIsCore(hl)
+
+	crlDiagramOwnerPointerTargetRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramOwnerPointerTargetRefinement.SetOwningConcept(crlDiagramOwnerPointerTarget, hl)
+	crlDiagramOwnerPointerTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, hl)
+	crlDiagramOwnerPointerTargetRefinement.SetRefinedConcept(crlDiagramOwnerPointerTarget, hl)
+
 	//
 	// RefinedPointer
 	//
-	crlDiagramRefinedPointer := uOfD.CreateReplicateAsRefinement(crlDiagramPointer, hl, CrlDiagramRefinedPointerURI)
+	crlDiagramRefinedPointer, _ := uOfD.NewElement(hl, CrlDiagramRefinedPointerURI)
 	crlDiagramRefinedPointer.SetLabel("RefinedPointer", hl)
 	crlDiagramRefinedPointer.SetOwningConcept(crlDiagramConceptSpace, hl)
 	crlDiagramRefinedPointer.SetIsCore(hl)
 
+	crlDiagramRefinedPointerRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramRefinedPointerRefinement.SetOwningConcept(crlDiagramRefinedPointer, hl)
+	crlDiagramRefinedPointerRefinement.SetAbstractConcept(crlDiagramPointer, hl)
+	crlDiagramRefinedPointerRefinement.SetRefinedConcept(crlDiagramRefinedPointer, hl)
+
+	crlDiagramRefinedPointerModelReference, _ := uOfD.NewReference(hl, CrlDiagramRefinedPointerModelReferenceURI)
+	crlDiagramRefinedPointerModelReference.SetLabel("ModelReference", hl)
+	crlDiagramRefinedPointerModelReference.SetOwningConcept(crlDiagramRefinedPointer, hl)
+	crlDiagramRefinedPointerModelReference.SetIsCore(hl)
+
+	crlDiagramRefinedPointerModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramRefinedPointerModelReferenceRefinement.SetOwningConcept(crlDiagramRefinedPointerModelReference, hl)
+	crlDiagramRefinedPointerModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, hl)
+	crlDiagramRefinedPointerModelReferenceRefinement.SetRefinedConcept(crlDiagramRefinedPointerModelReference, hl)
+
+	crlDiagramRefinedPointerDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramRefinedPointerDisplayLabelURI)
+	crlDiagramRefinedPointerDisplayLabel.SetLabel("DisplayLabel", hl)
+	crlDiagramRefinedPointerDisplayLabel.SetOwningConcept(crlDiagramRefinedPointer, hl)
+	crlDiagramRefinedPointerDisplayLabel.SetIsCore(hl)
+
+	crlDiagramRefinedPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramRefinedPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinedPointerDisplayLabel, hl)
+	crlDiagramRefinedPointerDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, hl)
+	crlDiagramRefinedPointerDisplayLabelRefinement.SetRefinedConcept(crlDiagramRefinedPointerDisplayLabel, hl)
+
+	crlDiagramRefinedPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramRefinedPointerAbstractionDisplayLabelURI)
+	crlDiagramRefinedPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
+	crlDiagramRefinedPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramRefinedPointer, hl)
+	crlDiagramRefinedPointerAbstractionDisplayLabel.SetIsCore(hl)
+
+	crlDiagramRefinedPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramRefinedPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinedPointerAbstractionDisplayLabel, hl)
+	crlDiagramRefinedPointerAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
+	crlDiagramRefinedPointerAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramRefinedPointerAbstractionDisplayLabel, hl)
+
+	crlDiagramRefinedPointerSource, _ := uOfD.NewReference(hl, CrlDiagramRefinedPointerSourceURI)
+	crlDiagramRefinedPointerSource.SetLabel("Source", hl)
+	crlDiagramRefinedPointerSource.SetOwningConcept(crlDiagramRefinedPointer, hl)
+	crlDiagramRefinedPointerSource.SetIsCore(hl)
+
+	crlDiagramRefinedPointerSourceRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramRefinedPointerSourceRefinement.SetOwningConcept(crlDiagramRefinedPointerSource, hl)
+	crlDiagramRefinedPointerSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, hl)
+	crlDiagramRefinedPointerSourceRefinement.SetRefinedConcept(crlDiagramRefinedPointerSource, hl)
+
+	crlDiagramRefinedPointerTarget, _ := uOfD.NewReference(hl, CrlDiagramRefinedPointerTargetURI)
+	crlDiagramRefinedPointerTarget.SetLabel("Target", hl)
+	crlDiagramRefinedPointerTarget.SetOwningConcept(crlDiagramRefinedPointer, hl)
+	crlDiagramRefinedPointerTarget.SetIsCore(hl)
+
+	crlDiagramRefinedPointerTargetRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramRefinedPointerTargetRefinement.SetOwningConcept(crlDiagramRefinedPointerTarget, hl)
+	crlDiagramRefinedPointerTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, hl)
+	crlDiagramRefinedPointerTargetRefinement.SetRefinedConcept(crlDiagramRefinedPointerTarget, hl)
+
 	//
 	// ReferenceLink
 	//
-	crlDiagramReferenceLink := uOfD.CreateReplicateAsRefinement(crlDiagramLink, hl, CrlDiagramReferenceLinkURI)
+	crlDiagramReferenceLink, _ := uOfD.NewElement(hl, CrlDiagramReferenceLinkURI)
 	crlDiagramReferenceLink.SetLabel("ReferenceLink", hl)
 	crlDiagramReferenceLink.SetOwningConcept(crlDiagramConceptSpace, hl)
 	crlDiagramReferenceLink.SetIsCore(hl)
 
+	crlDiagramReferenceLinkRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramReferenceLinkRefinement.SetOwningConcept(crlDiagramReferenceLink, hl)
+	crlDiagramReferenceLinkRefinement.SetAbstractConcept(crlDiagramLink, hl)
+	crlDiagramReferenceLinkRefinement.SetRefinedConcept(crlDiagramReferenceLink, hl)
+
+	crlDiagramReferenceLinkModelReference, _ := uOfD.NewReference(hl, CrlDiagramReferenceLinkModelReferenceURI)
+	crlDiagramReferenceLinkModelReference.SetLabel("ModelReference", hl)
+	crlDiagramReferenceLinkModelReference.SetOwningConcept(crlDiagramReferenceLink, hl)
+	crlDiagramReferenceLinkModelReference.SetIsCore(hl)
+
+	crlDiagramReferenceLinkModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramReferenceLinkModelReferenceRefinement.SetOwningConcept(crlDiagramReferenceLinkModelReference, hl)
+	crlDiagramReferenceLinkModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, hl)
+	crlDiagramReferenceLinkModelReferenceRefinement.SetRefinedConcept(crlDiagramReferenceLinkModelReference, hl)
+
+	crlDiagramReferenceLinkDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramReferenceLinkDisplayLabelURI)
+	crlDiagramReferenceLinkDisplayLabel.SetLabel("DisplayLabel", hl)
+	crlDiagramReferenceLinkDisplayLabel.SetOwningConcept(crlDiagramReferenceLink, hl)
+	crlDiagramReferenceLinkDisplayLabel.SetIsCore(hl)
+
+	crlDiagramReferenceLinkDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramReferenceLinkDisplayLabelRefinement.SetOwningConcept(crlDiagramReferenceLinkDisplayLabel, hl)
+	crlDiagramReferenceLinkDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, hl)
+	crlDiagramReferenceLinkDisplayLabelRefinement.SetRefinedConcept(crlDiagramReferenceLinkDisplayLabel, hl)
+
+	crlDiagramReferenceLinkAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramReferenceLinkAbstractionDisplayLabelURI)
+	crlDiagramReferenceLinkAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
+	crlDiagramReferenceLinkAbstractionDisplayLabel.SetOwningConcept(crlDiagramReferenceLink, hl)
+	crlDiagramReferenceLinkAbstractionDisplayLabel.SetIsCore(hl)
+
+	crlDiagramReferenceLinkAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramReferenceLinkAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramReferenceLinkAbstractionDisplayLabel, hl)
+	crlDiagramReferenceLinkAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
+	crlDiagramReferenceLinkAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramReferenceLinkAbstractionDisplayLabel, hl)
+
+	crlDiagramReferenceLinkSource, _ := uOfD.NewReference(hl, CrlDiagramReferenceLinkSourceURI)
+	crlDiagramReferenceLinkSource.SetLabel("Source", hl)
+	crlDiagramReferenceLinkSource.SetOwningConcept(crlDiagramReferenceLink, hl)
+	crlDiagramReferenceLinkSource.SetIsCore(hl)
+
+	crlDiagramReferenceLinkSourceRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramReferenceLinkSourceRefinement.SetOwningConcept(crlDiagramReferenceLinkSource, hl)
+	crlDiagramReferenceLinkSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, hl)
+	crlDiagramReferenceLinkSourceRefinement.SetRefinedConcept(crlDiagramReferenceLinkSource, hl)
+
+	crlDiagramReferenceLinkTarget, _ := uOfD.NewReference(hl, CrlDiagramReferenceLinkTargetURI)
+	crlDiagramReferenceLinkTarget.SetLabel("Target", hl)
+	crlDiagramReferenceLinkTarget.SetOwningConcept(crlDiagramReferenceLink, hl)
+	crlDiagramReferenceLinkTarget.SetIsCore(hl)
+
+	crlDiagramReferenceLinkTargetRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramReferenceLinkTargetRefinement.SetOwningConcept(crlDiagramReferenceLinkTarget, hl)
+	crlDiagramReferenceLinkTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, hl)
+	crlDiagramReferenceLinkTargetRefinement.SetRefinedConcept(crlDiagramReferenceLinkTarget, hl)
+
 	//
 	// RefinementLink
 	//
-	crlDiagramRefinementLink := uOfD.CreateReplicateAsRefinement(crlDiagramLink, hl, CrlDiagramRefinementLinkURI)
+	crlDiagramRefinementLink, _ := uOfD.NewElement(hl, CrlDiagramRefinementLinkURI)
 	crlDiagramRefinementLink.SetLabel("RefinementLink", hl)
 	crlDiagramRefinementLink.SetOwningConcept(crlDiagramConceptSpace, hl)
 	crlDiagramRefinementLink.SetIsCore(hl)
+
+	crlDiagramRefinementLinkRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramRefinementLinkRefinement.SetOwningConcept(crlDiagramRefinementLink, hl)
+	crlDiagramRefinementLinkRefinement.SetAbstractConcept(crlDiagramLink, hl)
+	crlDiagramRefinementLinkRefinement.SetRefinedConcept(crlDiagramRefinementLink, hl)
+
+	crlDiagramRefinementLinkModelReference, _ := uOfD.NewReference(hl, CrlDiagramRefinementLinkModelReferenceURI)
+	crlDiagramRefinementLinkModelReference.SetLabel("ModelReference", hl)
+	crlDiagramRefinementLinkModelReference.SetOwningConcept(crlDiagramRefinementLink, hl)
+	crlDiagramRefinementLinkModelReference.SetIsCore(hl)
+
+	crlDiagramRefinementLinkModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramRefinementLinkModelReferenceRefinement.SetOwningConcept(crlDiagramRefinementLinkModelReference, hl)
+	crlDiagramRefinementLinkModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, hl)
+	crlDiagramRefinementLinkModelReferenceRefinement.SetRefinedConcept(crlDiagramRefinementLinkModelReference, hl)
+
+	crlDiagramRefinementLinkDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramRefinementLinkDisplayLabelURI)
+	crlDiagramRefinementLinkDisplayLabel.SetLabel("DisplayLabel", hl)
+	crlDiagramRefinementLinkDisplayLabel.SetOwningConcept(crlDiagramRefinementLink, hl)
+	crlDiagramRefinementLinkDisplayLabel.SetIsCore(hl)
+
+	crlDiagramRefinementLinkDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramRefinementLinkDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinementLinkDisplayLabel, hl)
+	crlDiagramRefinementLinkDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, hl)
+	crlDiagramRefinementLinkDisplayLabelRefinement.SetRefinedConcept(crlDiagramRefinementLinkDisplayLabel, hl)
+
+	crlDiagramRefinementLinkAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramRefinementLinkAbstractionDisplayLabelURI)
+	crlDiagramRefinementLinkAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
+	crlDiagramRefinementLinkAbstractionDisplayLabel.SetOwningConcept(crlDiagramRefinementLink, hl)
+	crlDiagramRefinementLinkAbstractionDisplayLabel.SetIsCore(hl)
+
+	crlDiagramRefinementLinkAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramRefinementLinkAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinementLinkAbstractionDisplayLabel, hl)
+	crlDiagramRefinementLinkAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
+	crlDiagramRefinementLinkAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramRefinementLinkAbstractionDisplayLabel, hl)
+
+	crlDiagramRefinementLinkSource, _ := uOfD.NewReference(hl, CrlDiagramRefinementLinkSourceURI)
+	crlDiagramRefinementLinkSource.SetLabel("Source", hl)
+	crlDiagramRefinementLinkSource.SetOwningConcept(crlDiagramRefinementLink, hl)
+	crlDiagramRefinementLinkSource.SetIsCore(hl)
+
+	crlDiagramRefinementLinkSourceRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramRefinementLinkSourceRefinement.SetOwningConcept(crlDiagramRefinementLinkSource, hl)
+	crlDiagramRefinementLinkSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, hl)
+	crlDiagramRefinementLinkSourceRefinement.SetRefinedConcept(crlDiagramRefinementLinkSource, hl)
+
+	crlDiagramRefinementLinkTarget, _ := uOfD.NewReference(hl, CrlDiagramRefinementLinkTargetURI)
+	crlDiagramRefinementLinkTarget.SetLabel("Target", hl)
+	crlDiagramRefinementLinkTarget.SetOwningConcept(crlDiagramRefinementLink, hl)
+	crlDiagramRefinementLinkTarget.SetIsCore(hl)
+
+	crlDiagramRefinementLinkTargetRefinement, _ := uOfD.NewRefinement(hl)
+	crlDiagramRefinementLinkTargetRefinement.SetOwningConcept(crlDiagramRefinementLinkTarget, hl)
+	crlDiagramRefinementLinkTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, hl)
+	crlDiagramRefinementLinkTargetRefinement.SetRefinedConcept(crlDiagramRefinementLinkTarget, hl)
 
 	uOfD.AddFunction(CrlDiagramNodeURI, updateDiagramNode)
 	uOfD.AddFunction(CrlDiagramOwnerPointerURI, updateDiagramOwnerPointer)
