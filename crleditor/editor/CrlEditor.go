@@ -137,11 +137,11 @@ func (edPtr *CrlEditor) Delete(elID string) error {
 	defer hl.ReleaseLocksAndWait()
 	el := uOfD.GetElement(elID)
 	if el != nil {
-		edPtr.cutBuffer = make(map[string]core.Element)
-		edPtr.cutBuffer[elID] = el
+		// TODO: Populate cut buffer with full set of deleted elements
+		// edPtr.cutBuffer = make(map[string]core.Element)
+		// edPtr.cutBuffer[elID] = el
 		uOfD.MarkUndoPoint()
-		dEls := map[string]core.Element{el.GetConceptID(hl): el}
-		return uOfD.DeleteElements(dEls, hl)
+		return uOfD.DeleteElement(el, hl)
 	}
 	return nil
 }
@@ -280,9 +280,14 @@ func (edPtr *CrlEditor) GetNumberOfFunctionCalls() int {
 	return len(core.GetFunctionCallGraphs())
 }
 
-// GetOmitHousekeepingCalls returns the valuce of core.OmitHousekeepingCalls used in troubleshooting
+// GetOmitHousekeepingCalls returns the value of core.OmitHousekeepingCalls used in troubleshooting
 func (edPtr *CrlEditor) GetOmitHousekeepingCalls() bool {
 	return core.OmitHousekeepingCalls
+}
+
+// GetOmitManageTreeNodesCalls returns the value of core.OmitManageTreeNodesCalls used in troubleshooting
+func (edPtr *CrlEditor) GetOmitManageTreeNodesCalls() bool {
+	return core.OmitManageTreeNodesCalls
 }
 
 // GetPropertiesManager returns the PropertiesManager
@@ -505,6 +510,7 @@ func (edPtr *CrlEditor) SendDebugSettings() {
 	params := make(map[string]string)
 	params["EnableNotificationTracing"] = strconv.FormatBool(edPtr.GetTraceChange())
 	params["OmitHousekeepingCalls"] = strconv.FormatBool(edPtr.GetOmitHousekeepingCalls())
+	params["OmitManageTreeNodesCalls"] = strconv.FormatBool(edPtr.GetOmitManageTreeNodesCalls())
 	edPtr.SendNotification("DebugSettings", "", nil, params)
 }
 
@@ -555,9 +561,10 @@ func (edPtr *CrlEditor) SetSelectionURI(uri string, hl *core.HeldLocks) {
 }
 
 // SetTraceChange sets the value of the core.TraceChange variable used in troubleshooting
-func (edPtr *CrlEditor) SetTraceChange(newValue bool, omitHousekeepingCalls bool) {
+func (edPtr *CrlEditor) SetTraceChange(newValue bool, omitHousekeepingCalls bool, omitManageTreeNodesCalls bool) {
 	core.TraceChange = newValue
 	core.OmitHousekeepingCalls = omitHousekeepingCalls
+	core.OmitManageTreeNodesCalls = omitManageTreeNodesCalls
 	core.ClearFunctionCallGraphs()
 }
 
@@ -583,7 +590,12 @@ func (edPtr *CrlEditor) UpdateDebugSettings(request *Request) {
 		log.Printf(err.Error())
 		return
 	}
-	edPtr.SetTraceChange(traceChange, omitHousekeeingCalls)
+	omitManageTreeNodesCalls, err := strconv.ParseBool(request.AdditionalParameters["OmitManageTreeNodesCalls"])
+	if err != nil {
+		log.Printf(err.Error())
+		return
+	}
+	edPtr.SetTraceChange(traceChange, omitHousekeeingCalls, omitManageTreeNodesCalls)
 	edPtr.SendDebugSettings()
 }
 

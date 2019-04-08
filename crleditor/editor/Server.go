@@ -129,6 +129,14 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	hl := CrlEditorSingleton.GetUofD().NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	switch request.Action {
+	case "AbstractPointerChanged":
+		linkID, err := CrlEditorSingleton.getDiagramManager().abstractPointerChanged(
+			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
+		if err != nil {
+			sendReply(w, 1, "Error processing AbstractPointerChanged: "+err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed AbstractPointerChanged", linkID, nil)
+		}
 	case "AddElementChild":
 		el, _ := CrlEditorSingleton.GetUofD().NewElement(hl)
 		el.SetLabel("newElement", hl)
@@ -197,14 +205,14 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			CrlEditorSingleton.getDiagramManager().setDiagramNodePosition(request.RequestConceptID, x, y, hl)
 			sendReply(w, 0, "Processed DiagramNodeNewPosition", "", nil)
 		}
-	case "DiagramCellSelected":
+	case "DiagramElementSelected":
 		elementID := request.RequestConceptID
 		element := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if element != nil {
 			modelElement := crldiagram.GetReferencedModelElement(element, hl)
 			CrlEditorSingleton.SelectElement(modelElement, hl)
 		}
-		sendReply(w, 0, "Processed DiagramNodeSelected", elementID, CrlEditorSingleton.GetUofD().GetElement(elementID))
+		sendReply(w, 0, "Processed DiagramElementSelected", elementID, CrlEditorSingleton.GetUofD().GetElement(elementID))
 	case "DisplayCallGraph":
 		err := CrlEditorSingleton.DisplayCallGraph(request.AdditionalParameters["GraphIndex"], hl)
 		reply(w, "DisplayCallGraph", err)
@@ -216,6 +224,14 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed DisplayDiagramSelected", request.RequestConceptID, el)
+	case "ElementPointerChanged":
+		linkID, err := CrlEditorSingleton.getDiagramManager().elementPointerChanged(
+			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
+		if err != nil {
+			sendReply(w, 1, "Error processing ElementPointerChanged: "+err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed ElementPointerChanged", linkID, nil)
+		}
 	case "Exit":
 		log.Printf("Exit requested")
 		sendReply(w, 0, "Server will close", "", nil)
@@ -272,13 +288,29 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			sendReply(w, 0, "Processed OwnerPointerChanged", linkID, nil)
 		}
+	case "RefinedPointerChanged":
+		linkID, err := CrlEditorSingleton.getDiagramManager().refinedPointerChanged(
+			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
+		if err != nil {
+			sendReply(w, 1, "Error processing RefinedPointerChanged: "+err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed RefinedPointerChanged", linkID, nil)
+		}
+	case "ReferenceLinkChanged":
+		linkID, err := CrlEditorSingleton.getDiagramManager().ReferenceLinkChanged(
+			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
+		if err != nil {
+			sendReply(w, 1, "Error processing ReferenceLinkChanged: "+err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed ReferenceLinkChanged", linkID, nil)
+		}
 	case "RefinementLinkChanged":
 		linkID, err := CrlEditorSingleton.getDiagramManager().RefinementLinkChanged(
 			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
 		if err != nil {
 			sendReply(w, 1, "Error processing RefinementLinkChanged: "+err.Error(), "", nil)
 		} else {
-			sendReply(w, 0, "Processed OpenWorRefinementLinkChangedkspace", linkID, nil)
+			sendReply(w, 0, "Processed RefinementLinkChanged", linkID, nil)
 		}
 	case "RefreshDiagram":
 		err := CrlEditorSingleton.getDiagramManager().refreshDiagramUsingURI(request.RequestConceptID, hl)
@@ -305,6 +337,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	case "SetTreeDragSelection":
 		CrlEditorSingleton.SetTreeDragSelection(request.RequestConceptID)
 		sendReply(w, 0, "Processed SetTreeDragSelection", request.RequestConceptID, CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID))
+	case "ShowAbstractConcept":
+		err := CrlEditorSingleton.getDiagramManager().showAbstractConcept(request.RequestConceptID, hl)
+		reply(w, "ShowAbstractConcept", err)
 	case "ShowOwner":
 		err := CrlEditorSingleton.getDiagramManager().showOwner(request.RequestConceptID, hl)
 		if err != nil {
@@ -312,6 +347,12 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			sendReply(w, 0, "Processed ShowOwner", "", nil)
 		}
+	case "ShowReferencedConcept":
+		err := CrlEditorSingleton.getDiagramManager().showReferencedConcept(request.RequestConceptID, hl)
+		reply(w, "ShowReferencedConcept", err)
+	case "ShowRefinedConcept":
+		err := CrlEditorSingleton.getDiagramManager().showRefinedConcept(request.RequestConceptID, hl)
+		reply(w, "ShowRefinedConcept", err)
 	case "TreeNodeDelete":
 		elementID := request.RequestConceptID
 		log.Printf("TreeNodeDelete called for node id: %s for elementID: %s", request.RequestConceptID, elementID)

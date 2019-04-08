@@ -139,7 +139,9 @@ func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
 			fcm.uOfD.getExecutedCalls() <- pendingCall
 		}
 		if TraceLocks == true || TraceChange == true {
-			if (OmitHousekeepingCalls && pendingCall.functionID == "http://activeCrl.com/core/coreHousekeeping") == false {
+			omitCall := (OmitHousekeepingCalls && pendingCall.functionID == "http://activeCrl.com/core/coreHousekeeping") ||
+				(OmitManageTreeNodesCalls && pendingCall.functionID == "http://activeCrl.com/crlEditor/Editor/TreeViews/ManageTreeNodes")
+			if omitCall == false {
 				log.Printf("About to execute %s with notification %s target %p", pendingCall.functionID, pendingCall.notification.GetNatureOfChange().String(), pendingCall.target)
 				functionCallGraphs = append(functionCallGraphs, NewFunctionCallGraph(pendingCall.functionID, pendingCall.target, pendingCall.notification, hl))
 			}

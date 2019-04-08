@@ -51,6 +51,8 @@ var crlDiagramCellDropdownMenu = null;
 
 var crlInCrlElementSelected = false;
 
+var crlKeyPressed = { 16: false };
+
 // Initialize
 $(function () {
     $(".uofd-browser").resizable({
@@ -186,7 +188,9 @@ $(function () {
             "		<label for='enableTracing'>Enable Notification Tracing</label>" +
             "		<input type='checkbox' id='enableTracing'> <br> " +
             "       <label>Omit Houskeeping Calls</label>" +
-            "       <input type='checkbox' id='omitHousekeepingCalls'>" +
+            "       <input type='checkbox' id='omitHousekeepingCalls'> <br>" +
+            "       <label>Omit ManageTreeNodes Calls</label>" +
+            "       <input type='checkbox' id='omitManageTreeNodesCalls'>" +
             "	</fieldset> " +
             "</form>",
         confirm: function () {
@@ -198,7 +202,11 @@ $(function () {
             if ($("#omitHousekeepingCalls").prop("checked") == true) {
                 omitHousekeepingCalls = "true";
             }
-            crlSendDebugSettings(enableNotificationTracing, omitHousekeepingCalls, "0");
+            var omitManageTreeNodesCalls = "false"
+            if ($("#omitManageTreeNodesCalls").prop("checked") == true) {
+                omitManageTreeNodesCalls = "true";
+            }
+            crlSendDebugSettings(enableNotificationTracing, omitHousekeepingCalls, omitManageTreeNodesCalls, "0");
         },
         onOpen: function () {
             $("#enableTracing").prop("checked", crlEnableTracing);
@@ -262,6 +270,30 @@ $(function () {
             $("#selectedWorkspaceFolder").val(crlWorkspacePath);
         }
     });
+    // Close the dropdown menu if the user clicks outside of it
+    window.onkeydown = function (e) {
+        e = e || window.event;
+        crlKeyPressed[e.keyCode] = true;
+    };
+    window.onkeyup = function (e) {
+        e = e || window.event;
+        crlKeyPressed[e.keyCode] = false;
+    };
+    window.onclick = function (event) {
+        if (!event.target.matches('.dropbtn')) {
+
+            var dropdowns = document.getElementsByClassName("dropdown-content");
+            var i;
+            for (i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+    }
+
+
 });
 
 
@@ -402,8 +434,26 @@ function crlConstructPaper(diagramContainer, jointGraph, jointPaperID) {
     });
     jointPaper.on("cell:pointerdown", crlOnDiagramCellPointerDown);
     jointPaper.on("cell:pointerup", crlOnDiagramCellPointerUp);
-    jointPaper.on("element:contextmenu", function (cellView, evt, x, y) {
+    jointPaper.on("cell:contextmenu", function (cellView, evt, x, y) {
         evt.preventDefault();
+        var represents = cellView.model.attributes.represents;
+        if (represents == "Reference") {
+            document.getElementById("showReferencedConcept").style.display = "block";
+        } else {
+            document.getElementById("showReferencedConcept").style.display = "none";
+        }
+        if (represents == "OwnerPointer" || represents == "ElementPointer" || represents == "AbstractPointer" || represents == "RefinedPointer") {
+            document.getElementById("showOwner").style.display = "none";
+        } else {
+            document.getElementById("showOwner").style.display = "block";
+        }
+        if (represents == "Refinement") {
+            document.getElementById("showAbstractConcept").style.display = "block";
+            document.getElementById("showRefinedConcept").style.display = "block";
+        } else {
+            document.getElementById("showAbstractConcept").style.display = "none";
+            document.getElementById("showRefinedConcept").style.display = "none";
+        }
         crlDiagramCellDropdownMenu.attributes.cellView = cellView;
         crlDiagramCellDropdownMenu.style.left = evt.pageX.toString() + "px";
         crlDiagramCellDropdownMenu.style.top = evt.pageY.toString() + "px";
@@ -426,7 +476,11 @@ function crlConstructPaper(diagramContainer, jointGraph, jointPaperID) {
             });
             linkView.addTools(toolsView);
         }
-        linkView.showTools();
+        if (crlKeyPressed[16]) {
+            linkView.showTools();
+        } else {
+            linkView.hideTools();
+        }
     });
     jointPaper.on('link:mouseleave', function (linkView) {
         linkView.hideTools();
@@ -511,7 +565,7 @@ function crlCreateLink() {
             link = new joint.shapes.crl.ElementPointer({});
             break;
         case crlAbstractPointerToolbarButtonID:
-            link = new joint.shapes.crl.AbstractionLink({});
+            link = new joint.shapes.crl.AbstractPointer({});
             break;
         case crlRefinedPointerToolbarButtonID:
             link = new joint.shapes.crl.RefinedPointer({});
@@ -527,10 +581,12 @@ function crlCreateLink() {
 function crlDeleteView(evt) {
     var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
     var jointID = cellView.model.attributes.crlJointID;
-    var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
-    var xhr = crlCreateEmptyRequest();
-    var data = JSON.stringify({ "Action": "DeleteView", "RequestConceptID": diagramElementID });
-    crlSendRequest(xhr, data);
+    if (jointID) {
+        var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
+        var xhr = crlCreateEmptyRequest();
+        var data = JSON.stringify({ "Action": "DeleteView", "RequestConceptID": diagramElementID });
+        crlSendRequest(xhr, data);
+    }
 }
 
 function crlPropertiesDisplayAbstractConcept(data, row) {
@@ -841,6 +897,13 @@ function crlLinkConnected(evt, cellView, magnet, arrowhead) {
         linkID = crlGetConceptIDFromJointElementID(linkJointID);
     }
     switch (linkType) {
+        case "crl.ReferenceLink":
+            var sourceJointID = evt.sourceView.model.attributes.crlJointID;
+            var targetJointID = evt.targetView.model.attributes.crlJointID;
+            var sourceID = crlGetConceptIDFromJointElementID(sourceJointID);
+            var targetID = crlGetConceptIDFromJointElementID(targetJointID);
+            crlSendReferenceLinkChanged(evt.model, linkID, sourceID, targetID);
+            break;
         case "crl.RefinementLink":
             var sourceJointID = evt.sourceView.model.attributes.crlJointID;
             var targetJointID = evt.targetView.model.attributes.crlJointID;
@@ -854,6 +917,27 @@ function crlLinkConnected(evt, cellView, magnet, arrowhead) {
             var sourceID = crlGetConceptIDFromJointElementID(sourceJointID);
             var targetID = crlGetConceptIDFromJointElementID(targetJointID);
             crlSendOwnerPointerChanged(evt.model, linkID, sourceID, targetID);
+            break;
+        case "crl.ElementPointer":
+            var sourceJointID = evt.sourceView.model.attributes.crlJointID;
+            var targetJointID = evt.targetView.model.attributes.crlJointID;
+            var sourceID = crlGetConceptIDFromJointElementID(sourceJointID);
+            var targetID = crlGetConceptIDFromJointElementID(targetJointID);
+            crlSendElementPointerChanged(evt.model, linkID, sourceID, targetID);
+            break;
+        case "crl.AbstractPointer":
+            var sourceJointID = evt.sourceView.model.attributes.crlJointID;
+            var targetJointID = evt.targetView.model.attributes.crlJointID;
+            var sourceID = crlGetConceptIDFromJointElementID(sourceJointID);
+            var targetID = crlGetConceptIDFromJointElementID(targetJointID);
+            crlSendAbstractPointerChanged(evt.model, linkID, sourceID, targetID);
+            break;
+        case "crl.RefinedPointer":
+            var sourceJointID = evt.sourceView.model.attributes.crlJointID;
+            var targetJointID = evt.targetView.model.attributes.crlJointID;
+            var sourceID = crlGetConceptIDFromJointElementID(sourceJointID);
+            var targetID = crlGetConceptIDFromJointElementID(targetJointID);
+            crlSendRefinedPointerChanged(evt.model, linkID, sourceID, targetID);
             break;
     }
     if (linkID == "") {
@@ -872,6 +956,7 @@ function crlLinkViewRepresentsPointer(linkView) {
 function crlNotificationSaveDebugSettings(data) {
     crlEnableTracing = JSON.parse(data.AdditionalParameters["EnableNotificationTracing"]);
     crlOmitHousekeepingCalls = JSON.parse(data.AdditionalParameters["OmitHousekeepingCalls"]);
+    crlOmitManageTreeNodesCalls = JSON.parse(data.AdditionalParameters["OmitManageTreeNodesCalls"]);
     crlSendNormalResponse();
 }
 
@@ -1219,21 +1304,6 @@ function crlObtainPropertyRow(row) {
     return propertyRow
 }
 
-// Close the dropdown menu if the user clicks outside of it
-window.onclick = function (event) {
-    if (!event.target.matches('.dropbtn')) {
-
-        var dropdowns = document.getElementsByClassName("dropdown-content");
-        var i;
-        for (i = 0; i < dropdowns.length; i++) {
-            var openDropdown = dropdowns[i];
-            if (openDropdown.classList.contains('show')) {
-                openDropdown.classList.remove('show');
-            }
-        }
-    }
-}
-
 var crlOnChangePosition = function (modelElement, position) {
     var jointElementID = modelElement.get("crlJointID");
     var diagramNodeID = crlGetConceptIDFromJointElementID(jointElementID);
@@ -1243,11 +1313,13 @@ var crlOnChangePosition = function (modelElement, position) {
 
 var crlOnDiagramCellPointerDown = function (cellView, event, x, y) {
     var jointElementID = cellView.model.get("crlJointID");
-    var diagramNodeID = crlGetConceptIDFromJointElementID(jointElementID);
-    if (diagramNodeID == "") {
-        console.log("In onDiagramManagerCellPointerDown diagramNodeID is empty")
+    if (jointElementID && jointElementID != "") {
+        var diagramNodeID = crlGetConceptIDFromJointElementID(jointElementID);
+        if (diagramNodeID == "") {
+            console.log("In onDiagramCellPointerDown diagramNodeID is empty")
+        }
+        crlSendDiagramElementSelected(diagramNodeID)
     }
-    crlSendDiagramCellSelected(diagramNodeID)
 }
 
 var crlOnDiagramCellPointerUp = function (cellView, event, x, y) {
@@ -1409,13 +1481,27 @@ function crlPopulateToolbar() {
     crlSelectToolbarButton(crlCursorToolbarButtonID);
 }
 
-function crlSendDebugSettings(enableNotificationTracing, omitHousekeepingCalls, maxTracingDepth) {
+function crlSendAbstractPointerChanged(jointLink, linkID, sourceID, targetID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "AbstractPointerChanged",
+        "RequestConceptID": linkID,
+        "AdditionalParameters": {
+            "SourceID": sourceID,
+            "TargetID": targetID
+        }
+    })
+    crlSendRequest(xhr, data);
+}
+
+function crlSendDebugSettings(enableNotificationTracing, omitHousekeepingCalls, omitManageTreeNodesCalls, maxTracingDepth) {
     var xhr = crlCreateEmptyRequest()
     var data = JSON.stringify({
         "Action": "UpdateDebugSettings",
         "AdditionalParameters": {
             "EnableNotificationTracing": enableNotificationTracing,
             "OmitHousekeepingCalls": omitHousekeepingCalls,
+            "OmitManageTreeNodesCalls": omitManageTreeNodesCalls,
             "MaxTracingDepth": maxTracingDepth
         }
     });
@@ -1475,9 +1561,9 @@ function crlSendDiagramNodeNewPosition(nodeID, position) {
     crlSendRequest(xhr, data);
 }
 
-function crlSendDiagramCellSelected(nodeID) {
+function crlSendDiagramElementSelected(nodeID) {
     var xhr = crlCreateEmptyRequest();
-    var data = JSON.stringify({ "Action": "DiagramCellSelected", "RequestConceptID": nodeID });
+    var data = JSON.stringify({ "Action": "DiagramElementSelected", "RequestConceptID": nodeID });
     crlSendRequest(xhr, data);
 }
 
@@ -1515,6 +1601,19 @@ function crlSendEditorSettings() {
             "DropRefinementAsLink": dropRefinementAsLink
         }
     });
+    crlSendRequest(xhr, data);
+}
+
+function crlSendElementPointerChanged(jointLink, linkID, sourceID, targetID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "ElementPointerChanged",
+        "RequestConceptID": linkID,
+        "AdditionalParameters": {
+            "SourceID": sourceID,
+            "TargetID": targetID
+        }
+    })
     crlSendRequest(xhr, data);
 }
 
@@ -1576,6 +1675,19 @@ function crlSendOwnerPointerChanged(jointLink, linkID, sourceID, targetID) {
     crlSendRequest(xhr, data);
 }
 
+function crlSendReferenceLinkChanged(jointLink, linkID, sourceID, targetID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "ReferenceLinkChanged",
+        "RequestConceptID": linkID,
+        "AdditionalParameters": {
+            "SourceID": sourceID,
+            "TargetID": targetID
+        }
+    })
+    crlSendRequest(xhr, data);
+}
+
 function crlSendRefinementLinkChanged(jointLink, linkID, sourceID, targetID) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
@@ -1595,6 +1707,19 @@ function crlSendRefreshDiagram(diagramID) {
         "Action": "RefreshDiagram",
         "RequestConceptID": diagramID
     });
+    crlSendRequest(xhr, data);
+}
+
+function crlSendRefinedPointerChanged(jointLink, linkID, sourceID, targetID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "RefinedPointerChanged",
+        "RequestConceptID": linkID,
+        "AdditionalParameters": {
+            "SourceID": sourceID,
+            "TargetID": targetID
+        }
+    })
     crlSendRequest(xhr, data);
 }
 
@@ -1657,12 +1782,39 @@ function crlSetDefaultLink() {
     }
 }
 
+var crlShowAbstractConcept = function (evt) {
+    var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
+    var jointID = cellView.model.attributes.crlJointID;
+    var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "ShowAbstractConcept", "RequestConceptID": diagramElementID });
+    crlSendRequest(xhr, data);
+}
+
 var crlShowOwner = function (evt) {
     var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
     var jointID = cellView.model.attributes.crlJointID;
     var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({ "Action": "ShowOwner", "RequestConceptID": diagramElementID });
+    crlSendRequest(xhr, data);
+}
+
+var crlShowReferencedConcept = function (evt) {
+    var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
+    var jointID = cellView.model.attributes.crlJointID;
+    var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "ShowReferencedConcept", "RequestConceptID": diagramElementID });
+    crlSendRequest(xhr, data);
+}
+
+var crlShowRefinedConcept = function (evt) {
+    var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
+    var jointID = cellView.model.attributes.crlJointID;
+    var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "ShowRefinedConcept", "RequestConceptID": diagramElementID });
     crlSendRequest(xhr, data);
 }
 

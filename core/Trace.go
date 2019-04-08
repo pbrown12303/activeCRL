@@ -6,6 +6,9 @@ var TraceChange bool
 // OmitHousekeepingCalls is a boolean that indicates whether housekeeping calls should be omitted when TraceChanve is enabled.
 var OmitHousekeepingCalls bool
 
+// OmitManageTreeNodesCalls is a boolean that indicates whether tree node management calls should be omitted when TraceChanve is enabled.
+var OmitManageTreeNodesCalls bool
+
 // TraceLocks is a boolean that, when true, turns on the tracing of locks
 var TraceLocks = false
 

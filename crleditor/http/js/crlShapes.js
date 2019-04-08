@@ -137,6 +137,126 @@ joint.shapes.basic.Generic.define('crl.Element',
         }]
     });
     
+    joint.dia.Link.define('crl.ElementPointer', {
+        attrs: {
+            line: {
+                connection: true,
+                stroke: '#333333',
+                strokeWidth: 2,
+                strokeLinejoin: 'round',
+                targetMarker: {
+                    "type": "path",
+                    "d": "M 10 -5 0 0 10 5 z"
+                }
+            },
+            wrapper: {
+                connection: true,
+                strokeWidth: 10,
+                strokeLinejoin: 'round'
+            }
+        },
+        crlJointID: ""
+    }, {
+        markup: [{
+            tagName: 'path',
+            selector: 'wrapper',
+            attributes: {
+                'fill': 'none',
+                'cursor': 'pointer',
+                'stroke': 'transparent'
+            }
+        }, {
+            tagName: 'path',
+            selector: 'line',
+            attributes: {
+                'fill': 'none',
+                'pointer-events': 'none'
+            }
+        }]
+    });
+    
+    joint.dia.Link.define('crl.AbstractPointer', {
+        attrs: {
+            line: {
+                connection: true,
+                stroke: '#333333',
+                strokeWidth: 2,
+                strokeLinejoin: 'round',
+                sourceMarker: {
+                    "type": "path",
+                    "fill": "white",
+                    "d": "M 0 -8 15 0 0 8 z"
+                }
+            },
+            wrapper: {
+                connection: true,
+                strokeWidth: 10,
+                strokeLinejoin: 'round'
+            }
+        },
+        crlJointID: ""
+    }, {
+        markup: [{
+            tagName: 'path',
+            selector: 'wrapper',
+            attributes: {
+                'fill': 'none',
+                'cursor': 'pointer',
+                'stroke': 'transparent'
+            }
+        }, {
+            tagName: 'path',
+            selector: 'line',
+            attributes: {
+                'fill': 'none',
+                'pointer-events': 'none'
+            }
+        }]
+    });
+    
+    joint.dia.Link.define('crl.RefinedPointer', {
+        attrs: {
+            line: {
+                connection: true,
+                stroke: '#333333',
+                strokeWidth: 2,
+                strokeLinejoin: 'round',
+                sourceMarker: {
+                    "type": "path",
+                    "fill": "white",
+                    "d": "M 15 -8 0 0 15 8 z"
+                },
+                targetMarker: {
+                    "type":"path",
+                    "d": "M 10 -5 0 0 10 5 z"
+                }
+            },
+            wrapper: {
+                connection: true,
+                strokeWidth: 10,
+                strokeLinejoin: 'round'
+            }
+        },
+        crlJointID: ""
+    }, {
+        markup: [{
+            tagName: 'path',
+            selector: 'wrapper',
+            attributes: {
+                'fill': 'none',
+                'cursor': 'pointer',
+                'stroke': 'transparent'
+            }
+        }, {
+            tagName: 'path',
+            selector: 'line',
+            attributes: {
+                'fill': 'none',
+                'pointer-events': 'none'
+            }
+        }]
+    });
+    
 
 
 
