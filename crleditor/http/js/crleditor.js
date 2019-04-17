@@ -310,6 +310,11 @@ function crlAppendToolbarButton(toolbar, id, icon) {
     toolbar.appendChild(btn);
 }
 
+function crlBringToFront(evt) {
+    var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
+    cellView.model.toFront();
+}
+
 function crlConstructDiagramContainer(diagramContainer, diagramContainerID, diagramLabel, diagramID) {
     var topContent = document.getElementById("top-content");
     diagramContainer = document.createElement("DIV");
@@ -594,7 +599,7 @@ function crlCreateLink() {
     return link;
 }
 
-var crlCustomLinkView = joint.dia.LinkView.extend({
+var  crlCustomLinkView = joint.dia.LinkView.extend({
     onmagnet: function (evt, x, y) {
         this.dragMagnetStart(evt, x, y);
     },
