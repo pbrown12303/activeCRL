@@ -398,7 +398,8 @@ function crlConstructDiagramLink(data, graph, crlJointID) {
                     break;
             }
             newLink.set("crlJointID", crlJointID);
-            newLink.set("represents", data.AdditionalParameters["Represents"])
+            newLink.set("represents", data.AdditionalParameters["Represents"]);
+            newLink.set("dummyEndChangeToggle", false);
             graph.addCell(newLink);
 
             return newLink;
@@ -428,10 +429,28 @@ function crlConstructPaper(diagramContainer, jointGraph, jointPaperID) {
         "width": 1000,
         "height": 1000,
         defaultLink: undefined,
+        linkView: crlCustomLinkView,
         validateMagnet: crlValidateLinkStart,
+        validateConnection: crlValidateConnection,
         "model": jointGraph,
         "gridSize": 1
     });
+    jointPaper.options.connectionStrategy = joint.connectionStrategies.centerPort;
+    // ConnectionPoint
+    var linkConnectionPoint = function (linkView, view, magnet, reference) {
+        var model = view.model;
+        var spot;
+        if (model.isElement()) {
+            var bbox = model.getBBox();
+            spot = bbox.intersectionWithLineFromCenterToPoint(reference);
+        } else if (model.isLink()) {
+            var label = model.labels()[0];
+            spot = view.getLabelCoordinates(0.5);
+        }
+        return spot || model.getBBox();
+    };
+    jointPaper.options.linkConnectionPoint = linkConnectionPoint;
+    // Event handlers
     jointPaper.on("cell:pointerdown", crlOnDiagramCellPointerDown);
     jointPaper.on("cell:pointerup", crlOnDiagramCellPointerUp);
     jointPaper.on("cell:contextmenu", function (cellView, evt, x, y) {
@@ -575,6 +594,288 @@ function crlCreateLink() {
     return link;
 }
 
+var crlCustomLinkView = joint.dia.LinkView.extend({
+    onmagnet: function (evt, x, y) {
+        this.dragMagnetStart(evt, x, y);
+    },
+    dragMagnetStart: function (evt, x, y) {
+
+        if (!this.can('addLinkFromMagnet')) return;
+
+        var magnet = evt.currentTarget;
+        var paper = this.paper;
+        this.eventData(evt, { targetMagnet: magnet });
+        evt.stopPropagation();
+
+        if (paper.options.validateMagnet(this, magnet)) {
+
+            if (paper.options.magnetThreshold <= 0) {
+                this.dragLinkStart(evt, magnet, x, y);
+            }
+
+            this.eventData(evt, { action: 'magnet' });
+            this.stopPropagation(evt);
+
+        } else {
+
+            this.pointerdown(evt, x, y);
+        }
+
+        paper.delegateDragEvents(this, evt.data);
+    },
+    dragLinkStart: function (evt, magnet, x, y) {
+
+        this.model.startBatch('add-link');
+
+        var linkView = this.addLinkFromMagnet(magnet, x, y);
+
+        // backwards compatiblity events
+        joint.dia.CellView.prototype.pointerdown.apply(linkView, arguments);
+        linkView.notify('link:pointerdown', evt, x, y);
+
+        linkView.eventData(evt, linkView.startArrowheadMove('target', { whenNotAllowed: 'remove' }));
+        this.eventData(evt, { linkView: linkView });
+    },
+
+    addLinkFromMagnet: function (magnet, x, y) {
+
+        var paper = this.paper;
+        var graph = paper.model;
+
+        var link = paper.getDefaultLink(this, magnet);
+        link.set({
+            source: this.getLinkEnd(magnet, x, y, link, 'source'),
+            target: { x: x, y: y }
+        }).addTo(graph, {
+            async: false,
+            ui: true
+        });
+
+        return link.findView(paper);
+    },
+    getBBox: function (opt) {
+
+        var bbox;
+        if (opt && opt.useModelGeometry) {
+            var model = this.model;
+            bbox = model.getBBox().bbox(model.angle());
+        } else {
+            bbox = this.getNodeBBox(this.el);
+        }
+
+        return this.paper.localToPaperRect(bbox);
+    },
+    getNodeBBox: function (magnet) {
+
+        var rect = this.getNodeBoundingRect(magnet);
+        var magnetMatrix = this.getNodeMatrix(magnet);
+        // var translateMatrix = this.getRootTranslateMatrix();
+        // var rotateMatrix = this.getRootRotateMatrix();
+        // return V.transformRect(rect, translateMatrix.multiply(rotateMatrix).multiply(magnetMatrix));
+        return V.transformRect(rect, magnetMatrix);
+    },
+    getNodeBoundingRect: function (magnet) {
+
+        var metrics = this.nodeCache(magnet);
+        if (metrics.boundingRect === undefined) metrics.boundingRect = V(magnet).getBBox();
+        return new g.Rect(metrics.boundingRect);
+    },
+    getBBox: function (opt) {
+
+        var bbox;
+        if (opt && opt.useModelGeometry) {
+            var model = this.model;
+            bbox = model.getBBox().bbox(model.angle());
+        } else {
+            bbox = this.getNodeBBox(this.el);
+        }
+
+        return this.paper.localToPaperRect(bbox);
+    },
+    nodeCache: function (magnet) {
+
+        var metrics = this.metrics;
+        if (!metrics) {
+            // don't use cache
+            // it most likely a custom view with overridden update
+            return {};
+        }
+
+        var id = V.ensureId(magnet);
+
+        var value = metrics[id];
+        if (!value) value = metrics[id] = {};
+        return value;
+    },
+    getNodeMatrix: function (magnet) {
+
+        var metrics = this.nodeCache(magnet);
+        if (metrics.magnetMatrix === undefined) {
+            var target = this.rotatableNode || this.el;
+            metrics.magnetMatrix = V(magnet).getTransformToElement(target);
+        }
+        return V.createSVGMatrix(metrics.magnetMatrix);
+    },
+    getRootTranslateMatrix: function () {
+
+        var model = this.model;
+        var position = model.position();
+        var mt = V.createSVGMatrix().translate(position.x, position.y);
+        return mt;
+    },
+    dragMagnet: function (evt, x, y) {
+
+        var data = this.eventData(evt);
+        var linkView = data.linkView;
+        if (linkView) {
+            linkView.pointermove(evt, x, y);
+        } else {
+            var paper = this.paper;
+            var magnetThreshold = paper.options.magnetThreshold;
+            var currentTarget = this.getEventTarget(evt);
+            var targetMagnet = data.targetMagnet;
+            if (magnetThreshold === 'onleave') {
+                // magnetThreshold when the pointer leaves the magnet
+                if (targetMagnet === currentTarget || V(targetMagnet).contains(currentTarget)) return;
+            } else {
+                // magnetThreshold defined as a number of movements
+                if (paper.eventData(evt).mousemoved <= magnetThreshold) return;
+            }
+            this.dragLinkStart(evt, targetMagnet, x, y);
+        }
+    },
+    pointermove: function (evt, x, y) {
+
+        // Backwards compatibility
+        var dragData = this._dragData;
+        if (dragData) this.eventData(evt, dragData);
+
+        var data = this.eventData(evt);
+        switch (data.action) {
+            case 'magnet':
+                this.dragMagnet(evt, x, y);
+                break;
+            case 'vertex-move':
+                this.dragVertex(evt, x, y);
+                break;
+
+            case 'label-move':
+                this.dragLabel(evt, x, y);
+                break;
+
+            case 'arrowhead-move':
+                this.dragArrowhead(evt, x, y);
+                break;
+
+            case 'move':
+                this.drag(evt, x, y);
+                break;
+        }
+        // Backwards compatibility
+        if (dragData) joint.util.assign(dragData, this.eventData(evt));
+
+        joint.dia.CellView.prototype.pointermove.apply(this, arguments);
+        this.notify('link:pointermove', evt, x, y);
+    },
+    pointerup: function (evt, x, y) {
+
+        // Backwards compatibility
+        var dragData = this._dragData;
+        if (dragData) {
+            this.eventData(evt, dragData);
+            this._dragData = null;
+        }
+
+        var data = this.eventData(evt);
+        switch (data.action) {
+            case 'magnet':
+                this.dragMagnetEnd(evt, x, y);
+                break;
+            case 'vertex-move':
+                this.dragVertexEnd(evt, x, y);
+                break;
+
+            case 'label-move':
+                this.dragLabelEnd(evt, x, y);
+                break;
+
+            case 'arrowhead-move':
+                this.dragArrowheadEnd(evt, x, y);
+                break;
+
+            case 'move':
+                this.dragEnd(evt, x, y);
+        }
+
+        var magnet = data.targetMagnet;
+        if (magnet) this.magnetpointerclick(evt, magnet, x, y);
+
+
+        this.notify('link:pointerup', evt, x, y);
+        joint.dia.CellView.prototype.pointerup.apply(this, arguments);
+    },
+    dragMagnetEnd: function (evt, x, y) {
+
+        var data = this.eventData(evt);
+        var linkView = data.linkView;
+        if (!linkView) return;
+        linkView.pointerup(evt, x, y);
+        this.model.stopBatch('add-link');
+    },
+    magnetpointerclick: function (evt, magnet, x, y) {
+        var paper = this.paper;
+        if (paper.eventData(evt).mousemoved > paper.options.clickThreshold) return;
+        this.notify('element:magnet:pointerclick', evt, magnet, x, y);
+    },
+    startListening: function () {
+
+        var model = this.model;
+
+        this.listenTo(model, 'change:markup', this.render);
+        this.listenTo(model, 'change:smooth change:manhattan change:router change:connector', this.update);
+        this.listenTo(model, 'change:toolMarkup', this.onToolsChange);
+        this.listenTo(model, 'change:labels change:labelMarkup', this.onLabelsChange);
+        this.listenTo(model, 'change:vertices change:vertexMarkup', this.onVerticesChange);
+        this.listenTo(model, 'change:source', this.onSourceChange);
+        this.listenTo(model, 'change:target', this.onTargetChange);
+    },
+    // The custom update function adds a hack to ensure that changes to links that are endpoints of other links trigger updates of those other links
+    // Default is to process the `attrs` object and set attributes on subelements based on the selectors.
+    update: function (model, attributes, opt) {
+
+        // Change the value of dummyEndChangeToggle. The change to this attribute is enough to notify links for which this is an endpoint that a change has 
+        // occurred. The specific case being addressed is the movement of an Element (node) that is an endpoint of this link. Such movement does not actually
+        // cause a change to the link model (without this hack): only the link view is changed.
+        this.model.set("dummyEndChangeToggle", !this.model.get("dummyEndChangeToggle"));
+
+        opt || (opt = {});
+
+
+        // update the link path
+        this.updateConnection(opt);
+
+        // update SVG attributes defined by 'attrs/'.
+        this.updateDOMSubtreeAttributes(this.el, this.model.attr(), { selectors: this.selectors });
+
+        this.updateDefaultConnectionPath();
+
+        // update the label position etc.
+        this.updateLabelPositions();
+        this.updateToolsPosition();
+        this.updateArrowheadMarkers();
+
+        this.updateTools(opt);
+        // Local perpendicular flag (as opposed to one defined on paper).
+        // Could be enabled inside a connector/router. It's valid only
+        // during the update execution.
+        this.options.perpendicular = null;
+        // Mark that postponed update has been already executed.
+        this.updatePostponed = false;
+
+        return this;
+    },
+
+});
 
 
 
@@ -982,6 +1283,54 @@ function crlMakeDiagramVisible(diagramContainerID) {
     }
 }
 
+var crlPendingLinks = {};
+
+function crlAddPendingLink(linkID, data) {
+    crlPendingLinks[linkID] = data;
+}
+
+function crlProcessPendingLinks() {
+    var beforeSize = _.size(crlPendingLinks);
+    for (const linkID in crlPendingLinks) {
+        data = crlPendingLinks[linkID];
+        newlyCreatedLink = crlAddPendingDiagramLink(data);
+        if (newlyCreatedLink) {
+            delete crlPendingLinks[linkID];
+        }
+    }
+    var afterSize = _.size(crlPendingLinks);
+    if (afterSize < beforeSize) {
+        crlProcessPendingLinks();
+    }
+}
+
+function crlAddPendingDiagramLink(data) {
+    var concept = data.NotificationConcept;
+    var params = data.AdditionalParameters;
+    var owningConceptID = concept.OwningConceptID;
+    var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
+    var graph = crlGraphsGlobal[graphID];
+    if (graph != null) {
+        // The absence of a graph indicates that there is no view of the diagram at present
+        var linkID = crlGetJointCellIDFromConceptID(concept.ConceptID);
+        var link = crlFindLinkInGraph(graphID, linkID)
+        var sourceJointID = crlGetJointCellIDFromConceptID(params["LinkSourceID"]);
+        var targetJointID = crlGetJointCellIDFromConceptID(params["LinkTargetID"]);
+        var linkSource = crlFindCellInGraph(graph, sourceJointID)
+        var linkTarget = crlFindCellInGraph(graph, targetJointID)
+        if (linkSource == null || linkTarget == null) {
+            // the missing source or target still have not been created
+            return null;
+        }
+        if (link == undefined || link == null) {
+            link = crlConstructDiagramLink(data, graph, linkID);
+            crlNotificationUpdateDiagramLink(data);
+            return link;
+        }
+    }
+}
+
+
 function crlNotificationAddDiagramLink(data) {
     var concept = data.NotificationConcept;
     var params = data.AdditionalParameters;
@@ -992,16 +1341,25 @@ function crlNotificationAddDiagramLink(data) {
         // The absence of a graph indicates that there is no view of the diagram at present
         var linkID = crlGetJointCellIDFromConceptID(concept.ConceptID);
         var link = crlFindLinkInGraph(graphID, linkID)
-        var sourceJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkSourceID"]);
-        var targetJointID = crlGetJointCellIDFromConceptID(data.AdditionalParameters["LinkTargetID"]);
+        var sourceJointID = crlGetJointCellIDFromConceptID(params["LinkSourceID"]);
+        var targetJointID = crlGetJointCellIDFromConceptID(params["LinkTargetID"]);
         var linkSource = crlFindCellInGraph(graph, sourceJointID)
         var linkTarget = crlFindCellInGraph(graph, targetJointID)
-        if ((link == undefined || link == null) && (linkSource != null && linkTarget != null)) {
+        if (linkSource == null || linkTarget == null) {
+            // This case can arise when either the source or target is a link that has not yet been created
+            crlPendingLinks[linkID] = data;
+            crlSendNormalResponse();
+            return;
+        }
+        if (link == undefined || link == null) {
             link = crlConstructDiagramLink(data, graph, linkID);
+            newlyCreatedLink = link;
         }
         crlNotificationUpdateDiagramLink(data);
     }
+    crlProcessPendingLinks();
 }
+
 function crlNotificationAddDiagramNode(data) {
     var concept = data.NotificationConcept;
     var params = data.AdditionalParameters;
@@ -1377,7 +1735,7 @@ function crlOnDiagramClick(event) {
         var y = event.layerY.toString();
         crlSendDiagramClick(nodeType, conceptID, x, y);
     }
-}
+};
 
 function crlOnDiagramDrop(event) {
     event.preventDefault();
@@ -1386,29 +1744,32 @@ function crlOnDiagramDrop(event) {
     var x = event.layerX.toString();
     var y = event.layerY.toString();
     crlSendDiagramDrop(conceptID, x, y);
-}
+};
 
 function crlOnDragover(event, data) {
-    event.preventDefault()
-}
+    event.preventDefault();
+};
 
 function crlOnEditorDrop(e, data) {
-    crlSendSetTreeDragSelection("")
-}
+    crlSendSetTreeDragSelection("");
+};
 
+function crlOnMagnet(evt, x, y) {
+    this.dragMagnetStart(evt, x, y);
+};
 
 function crlOnMakeDiagramVisible(e) {
     var diagramContainerID = e.target.getAttribute("diagramContainerID")
     var diagramID = crlGetDiagramIDFromDiagramContainerID(diagramContainerID);
     crlSendDisplayDiagramSelected(diagramID);
-}
+};
 
 var crlOnToolbarButtonSelected = function (e, data) {
     var img = e.target;
     var btn = img.parentElement;
     var id = btn.id;
     crlSelectToolbarButton(id);
-}
+};
 
 function crlOnDiagramMouseOver(mouseEvent) {
     var diagram = mouseEvent.currentTarget;
@@ -1421,7 +1782,7 @@ function crlOnDiagramMouseOver(mouseEvent) {
     } else {
         diagram.style.cursor = "default";
     }
-}
+};
 
 function crlSelectToolbarButton(id) {
     crlCurrentToolbarButton = id;
@@ -1437,7 +1798,7 @@ function crlSelectToolbarButton(id) {
         }
     }
     crlSetDefaultLink();
-}
+};
 
 function crlOnTreeDragStart(e, data) {
     var parentID = e.target.parentElement.id;
@@ -1445,7 +1806,7 @@ function crlOnTreeDragStart(e, data) {
     var selectedElementID = crlGetConceptIDFromTreeNodeID(parentID);
     console.log("selectedElementID = " + selectedElementID)
     crlSendSetTreeDragSelection(selectedElementID);
-}
+};
 
 
 function crlOpenDiagramContainer(diagramContainerId) {
@@ -1816,6 +2177,25 @@ var crlShowRefinedConcept = function (evt) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({ "Action": "ShowRefinedConcept", "RequestConceptID": diagramElementID });
     crlSendRequest(xhr, data);
+}
+
+// The default validate connection allows connections to ElementViews only. CRL allows connections
+// to links as well.
+function crlValidateConnection(cellViewS, magnetS, cellViewT, magnetT, end, linkView) {
+    var represents = linkView.model.attributes.represents;
+    if (!cellViewT) {
+        return false;
+    }
+    var targetRepresents = cellViewT.model.attributes.represents;
+    switch (represents) {
+        case "Reference":
+            return true;
+        case "Refinement":
+            return targetRepresents == "Element" || targetRepresents == "Literal" || targetRepresents == "Refinement" || targetRepresents == "Reference";
+        default:
+            // Must be a pointer
+            return targetRepresents == "Element" || targetRepresents == "Literal" || targetRepresents == "Refinement" || targetRepresents == "Reference";
+    }
 }
 
 function crlValidateLinkStart(cellView, magnet) {
