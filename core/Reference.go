@@ -3,17 +3,74 @@ package core
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
 	"strconv"
 )
 
+// AttributeName indicates the attribute being referenced (if any):
+type AttributeName int
+
+// NoAttribute indicates that no attribute is being referenced
+// OwningConceptID     indicates that the OwningConceptID is being referenced
+// ReferencedConceptID indicates that the ReferencedConceptID is being referenced
+// AbstractConceptID   indicates that the AbstractConceptID is being referenced
+// RefinedConceptID    indicates that the RefinedConceptID is being referenced
+// LiteralValue       indicates that the LiteralValue is being referenced
+const (
+	NoAttribute         = AttributeName(0)
+	OwningConceptID     = AttributeName(1)
+	ReferencedConceptID = AttributeName(2)
+	AbstractConceptID   = AttributeName(3)
+	RefinedConceptID    = AttributeName(4)
+	LiteralValue        = AttributeName(5)
+)
+
+func (an AttributeName) String() string {
+	switch an {
+	case NoAttribute:
+		return "NoAttribute"
+	case OwningConceptID:
+		return "OwningConceptID"
+	case ReferencedConceptID:
+		return "ReferencedConceptID"
+	case AbstractConceptID:
+		return "AbstractConceptID"
+	case RefinedConceptID:
+		return "RefinedConceptID"
+	case LiteralValue:
+		return "LiteralValue"
+	}
+	return "Undefined"
+}
+
+// FindAttributeName takes a string version of the name and returns the corresponding AttributeName enumeration value
+func FindAttributeName(stringName string) (AttributeName, error) {
+	switch stringName {
+	case "NoAttribute":
+		return NoAttribute, nil
+	case "OwningConceptID":
+		return OwningConceptID, nil
+	case "ReferencedConceptID":
+		return ReferencedConceptID, nil
+	case "AbstractConceptID":
+		return AbstractConceptID, nil
+	case "RefinedConceptID":
+		return RefinedConceptID, nil
+	case "LiteralValue":
+		return LiteralValue, nil
+	}
+	return NoAttribute, errors.New("NewAttribute value not found for stringName: " + stringName)
+}
+
 type reference struct {
 	element
 	ReferencedConceptID string
 	// referencedConcept is a cache for convenience
 	referencedConcept        *cachedPointer
+	ReferencedAttributeName  AttributeName
 	ReferencedConceptVersion int
 }
 
@@ -58,6 +115,12 @@ func (rPtr *reference) GetReferencedConceptID(hl *HeldLocks) string {
 	return rPtr.ReferencedConceptID
 }
 
+// GetReferencedConceptAttribute returns an indicator of which attribute is being referenced (if any)
+func (rPtr *reference) GetReferencedAttributeName(hl *HeldLocks) AttributeName {
+	hl.ReadLockElement(rPtr)
+	return rPtr.ReferencedAttributeName
+}
+
 // GetReferencedConceptVersion returns the last known version of the referenced concept
 func (rPtr *reference) GetReferencedConceptVersion(hl *HeldLocks) int {
 	hl.ReadLockElement(rPtr)
@@ -73,6 +136,9 @@ func (rPtr *reference) isEquivalent(hl1 *HeldLocks, el *reference, hl2 *HeldLock
 	hl1.ReadLockElement(rPtr)
 	hl2.ReadLockElement(el)
 	if rPtr.ReferencedConceptID != el.ReferencedConceptID {
+		return false
+	}
+	if rPtr.ReferencedAttributeName != el.ReferencedAttributeName {
 		return false
 	}
 	if rPtr.referencedConcept.isEquivalent(el.referencedConcept) != true {
@@ -96,6 +162,7 @@ func (rPtr *reference) MarshalJSON() ([]byte, error) {
 
 func (rPtr *reference) marshalReferenceFields(buffer *bytes.Buffer) error {
 	buffer.WriteString(fmt.Sprintf("\"ReferencedConceptID\":\"%s\",", rPtr.ReferencedConceptID))
+	buffer.WriteString(fmt.Sprintf("\"ReferencedAttributeName\":\"%s\",", rPtr.ReferencedAttributeName.String()))
 	buffer.WriteString(fmt.Sprintf("\"ReferencedConceptVersion\":\"%d\",", rPtr.ReferencedConceptVersion))
 	rPtr.element.marshalElementFields(buffer)
 	return nil
@@ -125,6 +192,20 @@ func (rPtr *reference) recoverReferenceFields(unmarshaledData *map[string]json.R
 	} else {
 		rPtr.referencedConcept.setIndicatedConcept(foundReferencedConcept)
 	}
+	// ReferencedAttributeName
+	var recoveredReferencedConceptAttributeName string
+	err = json.Unmarshal((*unmarshaledData)["ReferencedAttributeName"], &recoveredReferencedConceptAttributeName)
+	if err != nil {
+		log.Printf("Recovery of Reference.ReferencedAttributeName as string failed\n")
+		return err
+	}
+	var attributeName AttributeName
+	attributeName, err = FindAttributeName(recoveredReferencedConceptAttributeName)
+	if err != nil {
+		log.Printf("Conversion of Reference.ReferencedAttributeName to AttributeName failed\n")
+		return err
+	}
+	rPtr.ReferencedAttributeName = attributeName
 	// ReferencedConceptVersion
 	var recoveredReferencedConceptVersion string
 	err = json.Unmarshal((*unmarshaledData)["ReferencedConceptVersion"], &recoveredReferencedConceptVersion)
@@ -187,13 +268,32 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 	return nil
 }
 
+// SetReferencedConceptAttribute sets the value indicating whether a specific attribute of the referenced concept is being
+// referenced
+func (rPtr *reference) SetReferencedAttributeName(attributeName AttributeName, hl *HeldLocks) error {
+	hl.WriteLockElement(rPtr)
+	editableError := rPtr.editableError(hl)
+	if editableError != nil {
+		return editableError
+	}
+	if rPtr.ReferencedAttributeName != attributeName {
+		rPtr.uOfD.preChange(rPtr, hl)
+		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, hl)
+		rPtr.ReferencedAttributeName = attributeName
+		rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
+	}
+	return nil
+}
+
 // Reference represents a concept that is a pointer to another concept
 type Reference interface {
 	Element
 	GetReferencedConcept(*HeldLocks) Element
 	GetReferencedConceptID(*HeldLocks) string
+	GetReferencedAttributeName(*HeldLocks) AttributeName
 	GetReferencedConceptVersion(*HeldLocks) int
 	getReferencedConceptNoLock() Element
 	SetReferencedConcept(Element, *HeldLocks) error
+	SetReferencedAttributeName(attributeName AttributeName, hl *HeldLocks) error
 	SetReferencedConceptID(string, *HeldLocks) error
 }

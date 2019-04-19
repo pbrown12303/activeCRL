@@ -18,15 +18,15 @@ var _ = Describe("Reference Tests", func() {
 		hl.ReleaseLocksAndWait()
 	})
 
-	Describe("Setting and getting the ReferencedElement", func() {
-		Specify("Referenced element should initially be nil", func() {
+	Describe("Setting and getting the ReferencedConcept", func() {
+		Specify("Referenced concept should initially be nil", func() {
 			ref, _ := uOfD.NewReference(hl)
 			Expect(ref.GetReferencedConceptID(hl)).To(Equal(""))
 			Expect(ref.GetReferencedConcept(hl)).To(BeNil())
 			Expect(ref.getReferencedConceptNoLock()).To(BeNil())
 			Expect(ref.GetReferencedConceptVersion(hl)).To(Equal(0))
 		})
-		Specify("Referenced element should set correctly", func() {
+		Specify("Referenced concept should set correctly", func() {
 			ref, _ := uOfD.NewReference(hl)
 			target, _ := uOfD.NewElement(hl)
 			target.(*element).Version.counter = 66
@@ -36,7 +36,7 @@ var _ = Describe("Reference Tests", func() {
 			Expect(ref.getReferencedConceptNoLock()).To(Equal(target))
 			Expect(ref.GetReferencedConceptVersion(hl)).To(Equal(target.GetVersion(hl)))
 		})
-		Specify("Referenced element should clear correctly", func() {
+		Specify("Referenced concept should clear correctly", func() {
 			ref, _ := uOfD.NewReference(hl)
 			target, _ := uOfD.NewElement(hl)
 			target.(*element).Version.counter = 66
@@ -58,6 +58,20 @@ var _ = Describe("Reference Tests", func() {
 			target, _ := uOfD.NewElement(hl)
 			ref.(*reference).ReferencedConceptID = target.getConceptIDNoLock()
 			Expect(ref.GetReferencedConcept(hl)).To(Equal(target))
+		})
+	})
+
+	Describe("Setting and getting the ReferencedConcept AttributeName", func() {
+		Specify("ReferencedConcept AttributeName should initially be the empty string", func() {
+			ref, _ := uOfD.NewReference(hl)
+			Expect(ref.GetReferencedAttributeName(hl)).To(Equal(NoAttribute))
+		})
+		Specify("ReferencedConcept AttributeName should set correctly", func() {
+			ref, _ := uOfD.NewReference(hl)
+			ref.SetReferencedAttributeName(OwningConceptID, hl)
+			Expect(ref.GetReferencedAttributeName(hl)).To(Equal(OwningConceptID))
+			ref.SetReferencedAttributeName(NoAttribute, hl)
+			Expect(ref.GetReferencedAttributeName(hl)).To(Equal(NoAttribute))
 		})
 	})
 
@@ -99,6 +113,13 @@ var _ = Describe("Reference Tests", func() {
 			ref.(*reference).referencedConcept.indicatedConcept = nil
 			Expect(Equivalent(ref, hl, clonedReference, hl)).To(BeFalse())
 		})
+		Specify("Equivalent should fail if there is a difference in the ReferencedConceptAttributeName", func() {
+			ref, _ := uOfD.NewReference(hl)
+			ref.SetReferencedAttributeName(OwningConceptID, hl)
+			clonedReference := clone(ref, hl)
+			ref.SetReferencedAttributeName(ReferencedConceptID, hl)
+			Expect(Equivalent(ref, hl, clonedReference, hl)).To(BeFalse())
+		})
 		Specify("Equivalent should fail if there is a difference in the ReferencedConcept version", func() {
 			ref, _ := uOfD.NewReference(hl)
 			target, _ := uOfD.NewElement(hl)
@@ -120,6 +141,7 @@ var _ = Describe("Reference Tests", func() {
 			ref, _ := uOfD.NewReference(hl)
 			target, _ := uOfD.NewElement(hl)
 			ref.SetReferencedConceptID(target.getConceptIDNoLock(), hl)
+			ref.SetReferencedAttributeName(OwningConceptID, hl)
 			mRef, err1 := ref.MarshalJSON()
 			Expect(err1).To(BeNil())
 			mTarget, err3 := target.MarshalJSON()
@@ -133,5 +155,28 @@ var _ = Describe("Reference Tests", func() {
 			Expect(Equivalent(ref, hl, rRef, hl2)).To(BeTrue())
 			Expect(Equivalent(target, hl, rTarget, hl2)).To(BeTrue())
 		})
+	})
+})
+
+var _ = Describe("Test FindAttributeName", func() {
+	Specify("The correct values should be returned", func() {
+		foundAttribute, err := FindAttributeName("NoAttribute")
+		Expect(err).To(BeNil())
+		Expect(foundAttribute).To(Equal(NoAttribute))
+		foundAttribute, err = FindAttributeName("OwningConceptID")
+		Expect(err).To(BeNil())
+		Expect(foundAttribute).To(Equal(OwningConceptID))
+		foundAttribute, err = FindAttributeName("ReferencedConceptID")
+		Expect(err).To(BeNil())
+		Expect(foundAttribute).To(Equal(ReferencedConceptID))
+		foundAttribute, err = FindAttributeName("AbstractConceptID")
+		Expect(err).To(BeNil())
+		Expect(foundAttribute).To(Equal(AbstractConceptID))
+		foundAttribute, err = FindAttributeName("RefinedConceptID")
+		Expect(err).To(BeNil())
+		Expect(foundAttribute).To(Equal(RefinedConceptID))
+		foundAttribute, err = FindAttributeName("garbage")
+		Expect(err).ToNot(BeNil())
+		Expect(foundAttribute).To(Equal(NoAttribute))
 	})
 })
