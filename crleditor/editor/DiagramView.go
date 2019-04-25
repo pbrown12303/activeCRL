@@ -8,6 +8,9 @@ import (
 	//	"log"
 )
 
+// DiagramViewMonitorURI identifies the diagram view monitor
+var DiagramViewMonitorURI = editorURI + "/DiagramViewMonitor"
+
 func addDiagramViewFunctionsToUofD(uOfD core.UniverseOfDiscourse) {
 	uOfD.AddFunction(crldiagram.CrlDiagramURI, updateDiagramView)
 	uOfD.AddFunction(crldiagram.CrlDiagramElementURI, updateDiagramElementView)
@@ -117,6 +120,9 @@ func updateDiagramElementView(diagramElement core.Element, changeNotification *c
 	}
 }
 
+// updateDiagramView attaches to the diagram view and handles additions and removals of diagram elements from the diagram view
+// Note that it cannot delete the diagram view in the GUI because this function will never get called: once the diagram has been
+// deleted, queuing of functions related to it is suppressed. That's what the DiagramViewMonitor is for.
 func updateDiagramView(diagram core.Element, changeNotification *core.ChangeNotification, uOfD core.UniverseOfDiscourse) {
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
@@ -165,10 +171,46 @@ func updateDiagramView(diagram core.Element, changeNotification *core.ChangeNoti
 				}
 			}
 		}
+	}
+}
+
+// diagramViewMonitor is the callback function that manages the diagram view in the gui. Its sole purpose is to
+// detect the deletion of the diagram and then remove the correspondidng diagram view (if any) from the client GUI
+func diagramViewMonitor(instance core.Element, changeNotification *core.ChangeNotification, uOfD core.UniverseOfDiscourse) {
+	// The instance here is the reference that is monitoring the diagram
+	hl := uOfD.NewHeldLocks()
+	defer hl.ReleaseLocks()
+
+	switch changeNotification.GetNatureOfChange() {
 	case core.ConceptChanged:
-		// The diagram itself has changed. Check to see whether is has been deleted
-		if diagram.GetOwningConcept(hl) == nil {
-			SendNotification("DeleteDiagram", diagram.GetConceptID(hl), diagram, nil)
+		// When the diagram is deleted, the reference to it in this object becomes nil resulting in a ConceptChanged
+		switch instance.(type) {
+		case core.Reference:
+			reference := instance.(core.Reference)
+			if reference.GetReferencedConcept(hl) == nil {
+				oldReferencedID := changeNotification.GetPriorState().(core.Reference).GetReferencedConceptID(hl)
+				if oldReferencedID != "" {
+					CrlEditorSingleton.getDiagramManager().closeDiagramView(oldReferencedID, hl)
+					uOfD.DeleteElement(instance, hl)
+				}
+			}
 		}
 	}
+}
+
+// BuildDiagramViewMonitor builds the concepts needed to manage the diagrams. The specific need is to
+// monitor existing diagrams so that when one is deleted from the uOfD the diagram view (display) is
+// removed from the client GUI
+func BuildDiagramViewMonitor(conceptSpace core.Element, hl *core.HeldLocks) {
+	uOfD := conceptSpace.GetUniverseOfDiscourse(hl)
+
+	// DiagramViewMonitor
+	diagramViewMonitor, _ := uOfD.NewReference(hl, DiagramViewMonitorURI)
+	diagramViewMonitor.SetLabel("DiagramViewMonitor", hl)
+	diagramViewMonitor.SetOwningConcept(conceptSpace, hl)
+	diagramViewMonitor.SetIsCore(hl)
+}
+
+func registerDiagramViewMonitorFunctions(uOfD core.UniverseOfDiscourse) {
+	uOfD.AddFunction(DiagramViewMonitorURI, diagramViewMonitor)
 }

@@ -26,9 +26,9 @@ var crlOpenWorkspaceDialog;
 // crlPaperGlobal is an array of existing papers that is used to look up a paper given its identifier
 var crlPapersGlobal = {};
 // crlSelectedConceptIDGlobal contains the model identifier of the currently selected concept
-var crlSelectedConceptIDGlobal;
+var crlSelectedConceptID;
 // crlTreeDragSelectionIDGlobal contains the model identifier of the concept currently being dragged from the tree
-var crlTreeDragSelectionIDGlobal;
+var crlTreeDragSelectionID;
 // CrlWebSocketGlobal is the web socket being used for server-side communications
 var crlWebsocketGlobal;
 // crlWorkspacePath is the path to the current workspace
@@ -48,6 +48,7 @@ var crlAbstractPointerToolbarButtonID = "abstractPointerToolbarButton";
 var crlRefinedPointerToolbarButtonID = "refinedPointerToolbarButton";
 
 var crlDiagramCellDropdownMenu = null;
+var crlDiagramTabDropdownMenu = null;
 
 var crlInCrlElementSelected = false;
 
@@ -86,47 +87,37 @@ $(function () {
                                 "label": "Element",
                                 "action": function (obj) {
                                     if ($node != undefined) {
-                                        var xhr = crlCreateEmptyRequest();
-                                        var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
-                                        var data = JSON.stringify({ "Action": "AddElementChild", "RequestConceptID": conceptID });
-                                        crlSendRequest(xhr, data);
+                                        var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
+                                        crlSendAddElementChild(conceptID);
                                     }
                                 }
                             },
                             Diagram: {
                                 "label": "Diagram",
                                 "action": function (obj) {
-                                    var xhr = crlCreateEmptyRequest();
-                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
-                                    var data = JSON.stringify({ "Action": "AddDiagramChild", "RequestConceptID": conceptID });
-                                    crlSendRequest(xhr, data);
+                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
+                                    crlSendAddDiagramChild(conceptID);
                                 }
                             },
                             Literal: {
                                 "label": "Literal",
                                 "action": function (obj) {
-                                    var xhr = crlCreateEmptyRequest();
-                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
-                                    var data = JSON.stringify({ "Action": "AddLiteralChild", "RequestConceptID": conceptID });
-                                    crlSendRequest(xhr, data);
+                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
+                                    crlSendAddLiteralChild(conceptID);
                                 }
                             },
                             Reference: {
                                 "label": "Reference",
                                 "action": function (obj) {
-                                    var xhr = crlCreateEmptyRequest();
-                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
-                                    var data = JSON.stringify({ "Action": "AddReferenceChild", "RequestConceptID": conceptID });
-                                    crlSendRequest(xhr, data);
+                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
+                                    crlSendAddReferenceChild(conceptID);
                                 }
                             },
                             Refinement: {
                                 "label": "Refinement",
                                 "action": function (obj) {
-                                    var xhr = crlCreateEmptyRequest();
-                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
-                                    var data = JSON.stringify({ "Action": "AddRefinementChild", "RequestConceptID": conceptID });
-                                    crlSendRequest(xhr, data);
+                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
+                                    crlSendAddRefinementChild(conceptID);
                                 }
                             }
                         }
@@ -135,11 +126,8 @@ $(function () {
                         "label": "Display Diagram",
                         "action": function (obj) {
                             if ($node != undefined) {
-                                //                                var xhr = crlCreateEmptyRequest();
-                                var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
+                                var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
                                 crlSendDisplayDiagramSelected(conceptID);
-                                //     var data = JSON.stringify({ "Action": "DisplayDiagramSelected", "RequestConceptID": conceptID });
-                                //     crlSendRequest(xhr, data);
                             }
                         }
                     },
@@ -147,10 +135,8 @@ $(function () {
                         "label": "Delete",
                         "action": function (obj) {
                             if ($node != undefined) {
-                                var xhr = crlCreateEmptyRequest();
-                                var conceptID = crlGetConceptIDFromTreeNodeID($node.id)
-                                var data = JSON.stringify({ "Action": "TreeNodeDelete", "RequestConceptID": conceptID });
-                                crlSendRequest(xhr, data);
+                                var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
+                                crlSendTreeNodeDelete(conceptID);
                             };
                         }
                     }
@@ -173,10 +159,19 @@ $(function () {
     if (crlDiagramCellDropdownMenu) {
         crlDiagramCellDropdownMenu.addEventListener("mouseleave", function () {
             crlDiagramCellDropdownMenu.style.display = "none";
-        })
+        });
         crlDiagramCellDropdownMenu.addEventListener("mouseup", function () {
             crlDiagramCellDropdownMenu.style.display = "none";
-        })
+        });
+    };
+    crlDiagramTabDropdownMenu = document.getElementById("diagramTabDropdown");
+    if (crlDiagramTabDropdownMenu) {
+        crlDiagramTabDropdownMenu.addEventListener("mouseleave", function () {
+            crlDiagramTabDropdownMenu.style.display = "none";
+        });
+        crlDiagramTabDropdownMenu.addEventListener("mouseup", function () {
+            crlDiagramTabDropdownMenu.style.display = "none";
+        });
     };
     crlDebugSettingsDialog = new jBox("Confirm", {
         title: "Notification Trace Settings",
@@ -313,6 +308,32 @@ function crlAppendToolbarButton(toolbar, id, icon) {
 function crlBringToFront(evt) {
     var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
     cellView.model.toFront();
+}
+
+function crlCloseDiagramView(diagramID) {
+    var diagramContainerID = crlGetDiagramContainerIDFromDiagramID(diagramID);
+    var diagramContainer = document.getElementById(diagramContainerID);
+    if (crlCurrentDiagramContainerID == diagramContainerID) {
+        crlCurrentDiagramContainerID = "";
+    }
+    // Remove the graph
+    var jointGraphID = crlGetJointGraphIDFromDiagramID(diagramID);
+    delete crlGraphsGlobal[jointGraphID];
+    // Remove the paper
+    var jointPaperID = crlGetJointPaperIDFromDiagramID(diagramID);
+    delete crlPapersGlobal[jointPaperID];
+    // Delete the diagram container
+    var topContent = document.getElementById("top-content");
+    if (diagramContainer) {
+        topContent.removeChild(diagramContainer);
+    }
+    // Delete the tab
+    var tabs = document.getElementById("tabs");
+    var tabID = crlGetDiagramTabIDFromDiagramID(diagramID);
+    var tab = document.getElementById(tabID);
+    if (tab) {
+        tabs.removeChild(tab);
+    }
 }
 
 function crlConstructDiagramContainer(diagramContainer, diagramContainerID, diagramLabel, diagramID) {
@@ -599,7 +620,7 @@ function crlCreateLink() {
     return link;
 }
 
-var  crlCustomLinkView = joint.dia.LinkView.extend({
+var crlCustomLinkView = joint.dia.LinkView.extend({
     onmagnet: function (evt, x, y) {
         this.dragMagnetStart(evt, x, y);
     },
@@ -1001,6 +1022,35 @@ function crlDropdownMenu(dropdownId) {
     document.getElementById(dropdownId).classList.toggle("show");
 }
 
+function crlDisplayDiagram(diagramContainerID) {
+    var x = document.getElementsByClassName("crlDiagramContainer");
+    for (i = 0; i < x.length; i++) {
+        var container = x.item(i);
+        var diagramID = crlGetDiagramIDFromDiagramContainerID(container.id);
+        var tabID = crlGetDiagramTabIDFromDiagramID(diagramID);
+        var tab = document.getElementById(tabID);
+        if (container.id == diagramContainerID) {
+            container.style.display = "block";
+            tab.style.backgroundColor = "white";
+            tab.oncontextmenu = function (evt) {
+                evt.preventDefault();
+                crlDiagramTabDropdownMenu.setAttribute("diagramID", diagramID);
+                crlDiagramTabDropdownMenu.style.left = evt.pageX.toString() + "px";
+                crlDiagramTabDropdownMenu.style.top = evt.pageY.toString() + "px";
+                crlDiagramTabDropdownMenu.style.display = "block";
+            };
+            var graphID = crlGetJointGraphIDFromDiagramID(diagramID);
+            var graph = crlGraphsGlobal[graphID]
+            if (graph) {
+                graph.resetCells(graph.getCells());
+            }
+        } else {
+            container.style.display = "none";
+            tab.style.backgroundColor = "grey";
+        }
+    }
+}
+
 function crlDisplayGraphDialog(numberOfAvailableGraphs) {
     crlDisplayCallGraphsDialog.open();
     $("#numberOfAvailableGraphs").text(numberOfAvailableGraphs);
@@ -1124,11 +1174,11 @@ function crlInitializeWebSocket() {
             case "ClearToolbarSelection":
                 crlNotificationClearToolbarSelection(data);
                 break;
+            case "CloseDiagramView":
+                crlNotificationCloseDiagramView(data);
+                break;
             case "DebugSettings":
                 crlNotificationSaveDebugSettings(data);
-                break;
-            case "DeleteDiagram":
-                crlNotificationDeleteDiagram(data);
                 break;
             case "DeleteDiagramElement":
                 crlNotificationDeleteDiagramCell(data);
@@ -1264,28 +1314,6 @@ function crlNotificationSaveDebugSettings(data) {
     crlOmitHousekeepingCalls = JSON.parse(data.AdditionalParameters["OmitHousekeepingCalls"]);
     crlOmitManageTreeNodesCalls = JSON.parse(data.AdditionalParameters["OmitManageTreeNodesCalls"]);
     crlSendNormalResponse();
-}
-
-function crlMakeDiagramVisible(diagramContainerID) {
-    var x = document.getElementsByClassName("crlDiagramContainer");
-    for (i = 0; i < x.length; i++) {
-        var container = x.item(i);
-        var diagramID = crlGetDiagramIDFromDiagramContainerID(container.id);
-        var tabID = crlGetDiagramTabIDFromDiagramID(diagramID);
-        var tab = document.getElementById(tabID);
-        if (container.id == diagramContainerID) {
-            container.style.display = "block";
-            tab.style.backgroundColor = "white";
-            var graphID = crlGetJointGraphIDFromDiagramID(diagramID);
-            var graph = crlGraphsGlobal[graphID]
-            if (graph) {
-                graph.resetCells(graph.getCells());
-            }
-        } else {
-            container.style.display = "none";
-            tab.style.backgroundColor = "grey";
-        }
-    }
 }
 
 var crlPendingLinks = {};
@@ -1454,31 +1482,9 @@ function crlNotificationClearToolbarSelection(data) {
     crlSendNormalResponse();
 }
 
-function crlNotificationDeleteDiagram(data) {
+function crlNotificationCloseDiagramView(data) {
     var diagramID = data.NotificationConceptID;
-    var diagramContainerID = crlGetDiagramContainerIDFromDiagramID(diagramID);
-    var diagramContainer = document.getElementById(diagramContainerID);
-    if (crlCurrentDiagramContainerID == diagramContainerID) {
-        crlCurrentDiagramContainerID = "";
-    }
-    // Remove the graph
-    var jointGraphID = crlGetJointGraphIDFromDiagramID(diagramID);
-    delete crlGraphsGlobal[jointGraphID]
-    // Remove the paper
-    var jointPaperID = crlGetJointPaperIDFromDiagramID(diagramID);
-    delete crlPapersGlobal[jointPaperID];
-    // Delete the diagram container
-    var topContent = document.getElementById("top-content");
-    if (diagramContainer) {
-        topContent.removeChild(diagramContainer);
-    }
-    // Delete the tab
-    var tabs = document.getElementById("tabs");
-    var tabID = crlGetDiagramTabIDFromDiagramID(diagramID);
-    var tab = document.getElementById(tabID)
-    if (tab) {
-        tabs.removeChild(tab);
-    }
+    crlCloseDiagramView(diagramID);
     crlSendNormalResponse();
 }
 
@@ -1516,7 +1522,7 @@ function crlNotificationDisplayDiagram(data) {
     if (diagramContainer == undefined) {
         diagramContainer = crlConstructDiagramContainer(diagramContainer, diagramContainerID, diagramLabel, diagramID);
     }
-    crlMakeDiagramVisible(diagramContainer.id);
+    crlDisplayDiagram(diagramContainer.id);
     crlCurrentDiagramContainerID = diagramContainerID;
     crlSetDefaultLink();
     crlSendNormalResponse();
@@ -1542,8 +1548,8 @@ function crlNotificationDisplayGraph(data) {
 }
 
 function crlNotificationElementSelected(data) {
-    if (data.NotificationConceptID != crlSelectedConceptIDGlobal) {
-        crlSelectedConceptIDGlobal = data.NotificationConceptID
+    if (data.NotificationConceptID != crlSelectedConceptID) {
+        crlSelectedConceptID = data.NotificationConceptID
         // Update the properties
         crlPropertiesDisplayType(data, 1);
         crlPropertiesDisplayID(data, 2);
@@ -1571,7 +1577,7 @@ function crlNotificationElementSelected(data) {
         };
 
         // Update the tree
-        var treeNodeID = crlGetTreeNodeIDFromConceptID(crlSelectedConceptIDGlobal);
+        var treeNodeID = crlGetTreeNodeIDFromConceptID(crlSelectedConceptID);
         $("#uOfD").jstree(true).deselect_all(true);
         // a hack tp prevent infinite recursion
         crlInCrlElementSelected = true;
@@ -1672,6 +1678,11 @@ var crlOnChangePosition = function (modelElement, position) {
     var diagramNodeID = crlGetConceptIDFromJointElementID(jointElementID);
     crlMovedNodes[diagramNodeID] = position;
     //    crlSendDiagramNodeNewPosition(diagramNodeID, position)
+}
+
+var crlOnCloseDiagramView = function () {
+    var diagramID = document.getElementById("diagramTabDropdown").getAttribute("diagramID");
+    crlCloseDiagramView(diagramID);
 }
 
 var crlOnDiagramCellPointerDown = function (cellView, event, x, y) {
@@ -1860,6 +1871,36 @@ function crlSendAbstractPointerChanged(jointLink, linkID, sourceID, targetID) {
     crlSendRequest(xhr, data);
 }
 
+function crlSendAddDiagramChild(conceptID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "AddDiagramChild", "RequestConceptID": conceptID });
+    crlSendRequest(xhr, data);
+}
+
+function crlSendAddElementChild(conceptID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "AddElementChild", "RequestConceptID": conceptID });
+    crlSendRequest(xhr, data);
+}
+
+function crlSendAddLiteralChild(conceptID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "AddLiteralChild", "RequestConceptID": conceptID });
+    crlSendRequest(xhr, data);
+}
+
+function crlSendAddReferenceChild(conceptID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "AddReferenceChild", "RequestConceptID": conceptID });
+    crlSendRequest(xhr, data);
+}
+
+function crlSendAddRefinementChild(conceptID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "AddRefinementChild", "RequestConceptID": conceptID });
+    crlSendRequest(xhr, data);
+}
+
 function crlSendDebugSettings(enableNotificationTracing, omitHousekeepingCalls, omitManageTreeNodesCalls, maxTracingDepth) {
     var xhr = crlCreateEmptyRequest()
     var data = JSON.stringify({
@@ -1878,7 +1919,7 @@ function crlSendDefinitionChanged(evt, obj) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
         "Action": "DefinitionChanged",
-        "RequestConceptID": crlSelectedConceptIDGlobal,
+        "RequestConceptID": crlSelectedConceptID,
         "AdditionalParameters":
             { "NewValue": evt.currentTarget.textContent }
     });
@@ -1987,7 +2028,7 @@ function crlSendLabelChanged(evt, obj) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
         "Action": "LabelChanged",
-        "RequestConceptID": crlSelectedConceptIDGlobal,
+        "RequestConceptID": crlSelectedConceptID,
         "AdditionalParameters":
             { "NewValue": evt.currentTarget.textContent }
     });
@@ -1998,7 +2039,7 @@ function crlSendLiteralValueChanged(evt, obj) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
         "Action": "LiteralValueChanged",
-        "RequestConceptID": crlSelectedConceptIDGlobal,
+        "RequestConceptID": crlSelectedConceptID,
         "AdditionalParameters":
             { "NewValue": evt.currentTarget.textContent }
     });
@@ -2008,12 +2049,6 @@ function crlSendLiteralValueChanged(evt, obj) {
 function crlSendNewConceptSpaceRequest(evt) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({ "Action": "NewConceptSpaceRequest" });
-    crlSendRequest(xhr, data)
-}
-
-function crlSendNewDiagramRequest(evt) {
-    var xhr = crlCreateEmptyRequest();
-    var data = JSON.stringify({ "Action": "NewDiagramRequest" });
     crlSendRequest(xhr, data)
 }
 
@@ -2106,7 +2141,7 @@ function crlSendURIChanged(evt, obj) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
         "Action": "URIChanged",
-        "RequestConceptID": crlSelectedConceptIDGlobal,
+        "RequestConceptID": crlSelectedConceptID,
         "AdditionalParameters":
             { "NewValue": evt.currentTarget.textContent }
     });
@@ -2127,10 +2162,16 @@ function crlSendSetTreeDragSelection(id) {
     crlSendRequest(xhr, data);
 }
 
+function crlSendTreeNodeDelete(id) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "TreeNodeDelete", "RequestConceptID": id });
+    crlSendRequest(xhr, data);
+}
+
 function crlSendTreeNodeSelected(evt, obj) {
     if (obj != undefined) {
         var conceptID = crlGetConceptIDFromTreeNodeID(obj.node.id)
-        if (conceptID != crlSelectedConceptIDGlobal && crlInCrlElementSelected == false) {
+        if (conceptID != crlSelectedConceptID && crlInCrlElementSelected == false) {
             var xhr = crlCreateEmptyRequest();
             var data = JSON.stringify({ "Action": "TreeNodeSelected", "RequestConceptID": conceptID });
             crlSendRequest(xhr, data);

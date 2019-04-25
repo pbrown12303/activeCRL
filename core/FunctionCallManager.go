@@ -146,6 +146,8 @@ func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
 				functionCallGraphs = append(functionCallGraphs, NewFunctionCallGraph(pendingCall.functionID, pendingCall.target, pendingCall.notification, hl))
 			}
 		}
+		// if pendingCall.target.getUniverseOfDiscourseNoLock() != nil {
 		pendingCall.function(pendingCall.target, pendingCall.notification, fcm.uOfD)
+		// }
 	}
 }

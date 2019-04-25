@@ -76,7 +76,9 @@ func (cnMgr *ClientNotificationManager) SendNotification(
 			return nil, err
 		}
 	}
-	log.Printf("Sent notification: %#v", notification)
+	if CrlLogClientDialog {
+		log.Printf("Sent notification: %#v", notification)
+	}
 	var notificationResponse NotificationResponse
 	cnMgr.conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 	err = cnMgr.conn.ReadJSON(&notificationResponse)
@@ -91,7 +93,9 @@ func (cnMgr *ClientNotificationManager) SendNotification(
 			return nil, fmt.Errorf("Error %s in parsing response to WebSocket notification: %#v", err.Error(), notification)
 		}
 	}
-	log.Printf("Received notification response %#v", notificationResponse)
+	if CrlLogClientDialog {
+		log.Printf("Received notification response %#v", notificationResponse)
+	}
 	return &notificationResponse, nil
 }
 

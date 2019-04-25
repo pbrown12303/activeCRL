@@ -14,6 +14,7 @@ import (
 const diagramContainerSuffix = "DiagramContainer"
 const diagramSuffix = "Diagram"
 
+var defaultConceptSpaceLabelCount int
 var defaultDiagramLabelCount int
 var defaultElementLabelCount int
 var defaultLiteralLabelCount int
@@ -178,6 +179,11 @@ func (dmPtr *diagramManager) addConceptView(request *Request, hl *core.HeldLocks
 	return newElement, nil
 }
 
+func (dmPtr *diagramManager) closeDiagramView(diagramID string, hl *core.HeldLocks) error {
+	_, err := SendNotification("CloseDiagramView", diagramID, nil, map[string]string{})
+	return err
+}
+
 func (dmPtr *diagramManager) deleteView(elementID string, hl *core.HeldLocks) error {
 	diagramElement := dmPtr.crlEditor.uOfD.GetElement(elementID)
 	if diagramElement == nil {
@@ -222,6 +228,7 @@ func (dmPtr *diagramManager) diagramClick(request *Request, hl *core.HeldLocks) 
 		return err
 	}
 	el.SetOwningConceptID(diagram.GetOwningConceptID(hl), hl)
+	dmPtr.crlEditor.SelectElement(el, hl)
 
 	// Now the view
 	var x, y float64
@@ -263,6 +270,8 @@ func (dmPtr *diagramManager) diagramDrop(request *Request, hl *core.HeldLocks) e
 
 // displayDiagram tells the client to display the indicated diagram.
 func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.HeldLocks) error {
+	// First make sure there is a monitor on the diagram so we know when it has been deleted
+	dmPtr.verifyMonitorPresent(diagram, hl)
 	notificationResponse, err := CrlEditorSingleton.GetClientNotificationManager().SendNotification("DisplayDiagram", diagram.GetConceptID(hl), diagram, nil)
 	if err != nil {
 		return err
@@ -271,6 +280,12 @@ func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.HeldL
 		return err
 	}
 	return dmPtr.refreshDiagram(diagram, hl)
+}
+
+func getDefaultConceptSpaceLabel() string {
+	defaultConceptSpaceLabelCount++
+	countString := strconv.Itoa(defaultConceptSpaceLabelCount)
+	return "ConceptSpace" + countString
 }
 
 func getDefaultElementLabel() string {
@@ -829,4 +844,15 @@ func (dmPtr *diagramManager) showRefinedConcept(elementID string, hl *core.HeldL
 		crldiagram.SetLinkTarget(elementPointer, diagramRefinedConcept, hl)
 	}
 	return nil
+}
+
+func (dmPtr *diagramManager) verifyMonitorPresent(diagram core.Element, hl *core.HeldLocks) {
+	for _, monitor := range diagram.GetOwnedReferencesRefinedFromURI(DiagramViewMonitorURI, hl) {
+		if monitor.GetReferencedConcept(hl) == diagram {
+			return
+		}
+	}
+	newMonitor, _ := dmPtr.crlEditor.uOfD.CreateReplicateAsRefinementFromURI(DiagramViewMonitorURI, hl)
+	newMonitor.SetOwningConcept(dmPtr.crlEditor.workingConceptSpace, hl)
+	newMonitor.(core.Reference).SetReferencedConcept(diagram, hl)
 }

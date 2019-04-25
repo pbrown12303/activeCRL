@@ -12,9 +12,9 @@ const treeNodeSuffix = "TreeNode"
 
 // treeManager manages the client's tree display of the uOfD
 type treeManager struct {
-	manageNodesFunction core.Element
-	treeID              string
-	editor              *CrlEditor
+	treeNodeManager core.Element
+	treeID          string
+	editor          *CrlEditor
 }
 
 // newTreeManager creates an instance of the TreeManager
@@ -76,16 +76,16 @@ func (tmPtr *treeManager) changeNode(el core.Element, hl *core.HeldLocks) {
 	}
 }
 
-func (tmPtr *treeManager) configureUofD(hl *core.HeldLocks) {
+func (tmPtr *treeManager) configureUofD(hl *core.HeldLocks) (core.Element, error) {
 	// Set up the tree view
 	var err error
-	tmPtr.manageNodesFunction, err = tmPtr.editor.uOfD.CreateReplicateAsRefinementFromURI(ManageTreeNodesURI, hl)
+	tmPtr.treeNodeManager, err = tmPtr.editor.uOfD.CreateReplicateAsRefinementFromURI(ManageTreeNodesURI, hl)
 	if err != nil {
-		log.Print(err)
+		return nil, err
 	}
-	uOfDReference := tmPtr.manageNodesFunction.GetFirstOwnedReferenceRefinedFromURI(ManageNodesUofDReferenceURI, hl)
+	uOfDReference := tmPtr.treeNodeManager.GetFirstOwnedReferenceRefinedFromURI(ManageNodesUofDReferenceURI, hl)
 	uOfDReference.SetReferencedConcept(tmPtr.editor.uOfD, hl)
-	tmPtr.manageNodesFunction.SetIsCoreRecursively(hl)
+	return tmPtr.treeNodeManager, nil
 }
 
 // removeNode removes the tree node

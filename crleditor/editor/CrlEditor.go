@@ -20,6 +20,9 @@ var editorURI = "http://activeCrl.com/crlEditor/Editor"
 // CrlEditorSingleton is the singleton instance of the CrlEditor
 var CrlEditorSingleton *CrlEditor
 
+// CrlLogClientDialog enables logging of client interactions when set to true
+var CrlLogClientDialog = false
+
 // CrlEditorSettings are the configurable behaviors of the editor
 type CrlEditorSettings struct {
 	DropReferenceAsLink  bool
@@ -42,12 +45,12 @@ type CrlEditor struct {
 	cutBuffer                 map[string]core.Element
 	diagramManager            *diagramManager
 	initialized               bool
-	propertiesManager         *PropertiesManager
 	treeDragSelection         core.Element
 	treeManager               *treeManager
 	uOfD                      core.UniverseOfDiscourse
 	workspaceFiles            map[string]*workspaceFile
 	workspacePath             string
+	workingConceptSpace       core.Element
 }
 
 // InitializeCrlEditorSingleton initializes the CrlEditor singleton instance. It should be called once
@@ -69,7 +72,6 @@ func InitializeCrlEditorSingleton() {
 
 	editor.treeManager = newTreeManager(&editor, "#uOfD")
 	editor.diagramManager = newDiagramManager(&editor)
-	editor.propertiesManager = NewPropertiesManager(&editor)
 	editor.clientNotificationManager = newClientNotificationManager()
 
 	editor.initializeUofD(hl)
@@ -78,14 +80,24 @@ func InitializeCrlEditorSingleton() {
 	log.Printf("Editor initialized")
 }
 
-func (edPtr *CrlEditor) initializeUofD(hl *core.HeldLocks) {
+func (edPtr *CrlEditor) initializeUofD(hl *core.HeldLocks) error {
 	crldiagram.BuildCrlDiagramConceptSpace(edPtr.uOfD, hl)
 	hl.ReleaseLocksAndWait()
-	AddEditorViewsToUofD(edPtr.uOfD, hl)
+	AddEditorConceptSpaceToUofD(edPtr.uOfD, hl)
 	hl.ReleaseLocksAndWait()
-	edPtr.treeManager.configureUofD(hl)
+	// Create editor working concept space
+	edPtr.workingConceptSpace, _ = edPtr.uOfD.NewElement(hl)
+	edPtr.workingConceptSpace.SetLabel("EditorWorkingCS", hl)
+	treeNodeManager, err := edPtr.treeManager.configureUofD(hl)
+	if err != nil {
+		return err
+	}
+	treeNodeManager.SetOwningConcept(edPtr.workingConceptSpace, hl)
+	treeNodeManager.SetIsCoreRecursively(hl)
 	hl.ReleaseLocksAndWait()
 	registerTreeViewFunctions(edPtr.uOfD)
+	registerDiagramViewMonitorFunctions(edPtr.uOfD)
+	return nil
 }
 
 // InitializeClient sets the client state after a browser refresh.
@@ -103,8 +115,8 @@ func InitializeClient() {
 	CrlEditorSingleton.SendDebugSettings()
 }
 
-// AddEditorViewsToUofD adds the concepts representing the various editor views to the universe of discurse
-func AddEditorViewsToUofD(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
+// AddEditorConceptSpaceToUofD adds the concepts representing the various editor views to the universe of discurse
+func AddEditorConceptSpaceToUofD(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	conceptSpace := uOfD.GetElementWithURI(editorURI)
 	if conceptSpace == nil {
 		conceptSpace = BuildEditorConceptSpace(uOfD, hl)
@@ -125,9 +137,7 @@ func (edPtr *CrlEditor) CloseWorkspace(hl *core.HeldLocks) error {
 	edPtr.uOfD = core.NewUniverseOfDiscourse()
 	hl2 := edPtr.uOfD.NewHeldLocks()
 	defer hl2.ReleaseLocksAndWait()
-	edPtr.initializeUofD(hl2)
-	edPtr.treeManager.configureUofD(hl2)
-	return nil
+	return edPtr.initializeUofD(hl2)
 }
 
 // Delete removes the element from the UniverseOfDiscourse
@@ -158,91 +168,41 @@ func (edPtr *CrlEditor) DisplayCallGraph(indexString string, hl *core.HeldLocks)
 	if err != nil {
 		return err
 	}
+	if index == -1 {
+		// Display them all
+		for _, functionCallGraph := range core.GetFunctionCallGraphs() {
+			err := edPtr.displayCallGraph(functionCallGraph, hl)
+			if err != nil {
+				return err
+			}
+			time.Sleep(1 * time.Second)
+		}
+	}
+
 	numberOfGraphs := len(core.GetFunctionCallGraphs())
 	if index < 0 || index > int64(numberOfGraphs-1) {
 		return errors.New("In CrlEditor.DisplayCallGraph, index is out of bounds")
 	}
+
 	functionCallGraph := core.GetFunctionCallGraphs()[index]
 	if functionCallGraph == nil {
 		return errors.New("In CrlEditor.DisplayCallGraph, function call graph is nil for index " + indexString)
 	}
+	return edPtr.displayCallGraph(functionCallGraph, hl)
+
+}
+
+func (edPtr *CrlEditor) displayCallGraph(functionCallGraph *core.FunctionCallGraph, hl *core.HeldLocks) error {
 	graph := functionCallGraph.GetGraph()
 	if graph == nil {
-		return errors.New("In CrlEditor.DisplayCallGraph, graph is nil for index " + indexString)
+		return errors.New("In CrlEditor.displayCallGraph, graph is nil")
 	}
 	graphString := graph.String()
 	if strings.Contains(graphString, "error") {
-		return errors.New("In CrlEditor.DisplayCallGraph the graph string contained an error: " + graphString)
+		return errors.New("In CrlEditor.displayCallGraph the graph string contained an error: " + graphString)
 	}
-	_, err2 := SendNotification("DisplayGraph", "", nil, map[string]string{"GraphString": graphString})
-
-	return err2
-
-	// TODO Reimplement DisplayGraph
-	// selectedGraphIndexString := displayGraphDialog.Find("#selectedGraph").Val()
-	// selectedGraphIndex, err := strconv.Atoi(selectedGraphIndexString)
-	// if err != nil {
-	// 	log.Printf(err.Error())
-	// }
-	// displayGraphDialog.Call("dialog", "close")
-	// graphs := core.GetFunctionCallGraphs()
-	// log.Printf("Number of function call graphs: %d\n", len(graphs))
-	// log.Printf("Graphs: %#v\n", graphs)
-	// if selectedGraphIndex > 0 && selectedGraphIndex <= len(graphs) {
-	// 	newTab := js.Global.Get("window").Call("open", "", "_blank")
-	// 	log.Printf("Selected Graph: %#v\n", graphs[selectedGraphIndex-1])
-	// 	graphString := graphs[selectedGraphIndex-1].GetGraph().String()
-	// 	log.Printf("Graph String: %s\n", graphString)
-	// 	graphStringEscapedQuotes := strings.Replace(graphString, "\"", "\\\"", -1)
-	// 	graphStringEscapedQuotesNoNL := strings.Replace(graphStringEscapedQuotes, "\n", "", -1)
-	// 	htmlString := "<head>" +
-	// 		"  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n" +
-	// 		"  <meta charset=\"utf-8\">\n" +
-	// 		"  <title>Function Call Graph Display</title>\n" +
-	// 		"  <link rel=\"stylesheet\" href=\"/js/jquery-ui-1.12.1.custom/jquery-ui.css\">\n" +
-	// 		"  <script src=\"/js/jquery-ui-1.12.1.custom/external/jquery/jquery.js\"></script>\n" +
-	// 		"  <script src=\"/js/viz.js\"></script>\n" +
-	// 		"  <script src=\"/js/full.render.js\"></script>\n" +
-	// 		"</head>\n" +
-	// 		"<body>\n" +
-	// 		"  <script>\n" +
-	// 		"    var graphString =\"" + graphStringEscapedQuotesNoNL + "\"\n" +
-	// 		"    var viz = new Viz();\n" +
-	// 		"    viz.renderSVGElement(graphString)\n" +
-	// 		"    .then(function(element) {\n" +
-	// 		"      document.body.appendChild(element);\n" +
-	// 		"    })\n" +
-	// 		"    .catch(error => {\n" +
-	// 		"      // Create a new Viz instance (@see Caveats page for more info) \n" +
-	// 		"      viz = new Viz();\n" +
-	// 		"      // Possibly display the error\n" +
-	// 		"      console.error(error);\n" +
-	// 		"    });\n" +
-	// 		"  </script>\n" +
-	// 		"</body>\n"
-	// 	js.Global.Set("htmlString", htmlString)
-	// 	newTab.Get("document").Call("write", htmlString)
-	// }
-}
-
-// DisplayGraphDialog opens a dialog in which a trace can be selected for display
-func (edPtr *CrlEditor) DisplayGraphDialog() {
-	// TODO: Reimplement  DisplayGraphDialog
-	// if jquery.IsEmptyObject(displayGraphDialog) {
-	// 	displayGraphDialog = jquery.NewJQuery("<div class='dialog' title='Display Function Call Graph'></div>").Call("dialog", js.M{
-	// 		"resizable": false,
-	// 		"height":    300,
-	// 		"width":     400,
-	// 		"modal":     true,
-	// 		"buttons":   js.M{"DisplaySelectedTrace": DisplayGraph}})
-	// }
-	// displayGraphDialog.SetHtml("<p id=\"numberOfAvailableFunctionCallGraphs\">Number of available function calls: " + strconv.Itoa(len(core.GetFunctionCallGraphs())) + " </output><br>" +
-	// 	"<label for=\"selectedGraph\">Graph To Display</label>\n" +
-	// 	"<input type=\"number\" id=\"selectedGraph\" placeholder=\"0\" min=\"0\" max=\"CrlEditor.GetNumberOfFunctionCalls()\">")
-	// js.Global.Set("displayTraceDialog", displayGraphDialog)
-	// js.Global.Set("numberOfAvailableFunctionCallGraphs", displayGraphDialog.Find("#numberOfAvailableFunctionCallGraphs"))
-	// //	displayTraceDialog.Find("#numberOfAvailableFunctionCallGraphs").SetText("Number of available traces: " + strconv.Itoa(len(core.GetNotificationGraphs())))
-	// displayGraphDialog.Call("dialog", "open")
+	_, err := SendNotification("DisplayGraph", "", nil, map[string]string{"GraphString": graphString})
+	return err
 }
 
 // GetAdHocTrace returns the value of the AdHocTrace variable used in troubleshooting
@@ -288,11 +248,6 @@ func (edPtr *CrlEditor) GetOmitHousekeepingCalls() bool {
 // GetOmitManageTreeNodesCalls returns the value of core.OmitManageTreeNodesCalls used in troubleshooting
 func (edPtr *CrlEditor) GetOmitManageTreeNodesCalls() bool {
 	return core.OmitManageTreeNodesCalls
-}
-
-// GetPropertiesManager returns the PropertiesManager
-func (edPtr *CrlEditor) GetPropertiesManager() *PropertiesManager {
-	return edPtr.propertiesManager
 }
 
 // GetTraceChange returns the value of the core.TraceChange variable used in troubleshooting
@@ -492,17 +447,23 @@ func (edPtr *CrlEditor) SaveWorkspace(hl *core.HeldLocks) error {
 
 // SelectElement selects the indicated Element in the tree, displays the Element in the Properties window, and selects it in the
 // current diagram (if present).
-func (edPtr *CrlEditor) SelectElement(be core.Element, hl *core.HeldLocks) core.Element {
-	edPtr.currentSelection = be
-	edPtr.propertiesManager.ElementSelected(edPtr.currentSelection, hl)
+func (edPtr *CrlEditor) SelectElement(el core.Element, hl *core.HeldLocks) core.Element {
+	if el == nil {
+		log.Printf("SelectElement called with nil argument")
+		return nil
+	}
+	edPtr.currentSelection = el
+	_, err := SendNotification("ElementSelected", el.GetConceptID(hl), el, nil)
+	if err != nil {
+		log.Printf(err.Error())
+	}
 	return edPtr.currentSelection
 }
 
 // SelectElementUsingIDString selects the Element whose ConceptID matches the supplied string
 func (edPtr *CrlEditor) SelectElementUsingIDString(id string, hl *core.HeldLocks) core.Element {
-	edPtr.currentSelection = edPtr.uOfD.GetElement(id)
-	edPtr.propertiesManager.ElementSelected(edPtr.currentSelection, hl)
-	return edPtr.currentSelection
+	foundElement := edPtr.uOfD.GetElement(id)
+	return edPtr.SelectElement(foundElement, hl)
 }
 
 // SendDebugSettings sends the trace settings to the client so that they can be edited
@@ -615,6 +576,7 @@ func BuildEditorConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) 
 	conceptSpace.SetIsCore(hl)
 
 	BuildTreeViews(conceptSpace, hl)
+	BuildDiagramViewMonitor(conceptSpace, hl)
 
 	return conceptSpace
 }

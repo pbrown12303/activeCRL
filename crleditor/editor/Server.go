@@ -139,31 +139,36 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case "AddElementChild":
 		el, _ := CrlEditorSingleton.GetUofD().NewElement(hl)
-		el.SetLabel("newElement", hl)
+		el.SetLabel(getDefaultElementLabel(), hl)
 		el.SetOwningConceptID(request.RequestConceptID, hl)
+		CrlEditorSingleton.SelectElement(el, hl)
 		sendReply(w, 0, "Processed AddElementChild", el.GetConceptID(hl), el)
 	case "AddDiagramChild":
 		diagramManager := CrlEditorSingleton.getDiagramManager()
 		diagram := diagramManager.newDiagram(hl)
 		diagram.SetOwningConceptID(request.RequestConceptID, hl)
+		CrlEditorSingleton.SelectElement(diagram, hl)
 		hl.ReleaseLocksAndWait()
 		diagramManager.displayDiagram(diagram, hl)
 		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed AddDiagramChild", diagram.GetConceptID(hl), diagram)
 	case "AddLiteralChild":
 		el, _ := CrlEditorSingleton.GetUofD().NewLiteral(hl)
-		el.SetLabel("newLiteral", hl)
+		el.SetLabel(getDefaultLiteralLabel(), hl)
 		el.SetOwningConceptID(request.RequestConceptID, hl)
+		CrlEditorSingleton.SelectElement(el, hl)
 		sendReply(w, 0, "Processed AddLiteralChild", el.GetConceptID(hl), el)
 	case "AddReferenceChild":
 		el, _ := CrlEditorSingleton.GetUofD().NewReference(hl)
-		el.SetLabel("newReference", hl)
+		el.SetLabel(getDefaultReferenceLabel(), hl)
 		el.SetOwningConceptID(request.RequestConceptID, hl)
+		CrlEditorSingleton.SelectElement(el, hl)
 		sendReply(w, 0, "Processed AddReferenceChild", el.GetConceptID(hl), el)
 	case "AddRefinementChild":
 		el, _ := CrlEditorSingleton.GetUofD().NewRefinement(hl)
-		el.SetLabel("newRefinement", hl)
+		el.SetLabel(getDefaultRefinementLabel(), hl)
 		el.SetOwningConceptID(request.RequestConceptID, hl)
+		CrlEditorSingleton.SelectElement(el, hl)
 		sendReply(w, 0, "Processed AddRefinementChild", el.GetConceptID(hl), el)
 	case "DefinitionChanged":
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
@@ -264,15 +269,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		sendReply(w, 0, "Processed LiteralValueChanged", request.RequestConceptID, el)
 	case "NewConceptSpaceRequest":
 		cs, _ := CrlEditorSingleton.GetUofD().NewElement(hl)
-		cs.SetLabel("newConceptSpace", hl)
-		sendReply(w, 0, "Processed NewDiagramRequest", cs.GetConceptID(hl), cs)
-	case "NewDiagramRequest":
-		diagramManager := CrlEditorSingleton.getDiagramManager()
-		diagram := diagramManager.newDiagram(hl)
-		hl.ReleaseLocksAndWait()
-		diagramManager.displayDiagram(diagram, hl)
-		hl.ReleaseLocksAndWait()
-		sendReply(w, 0, "Processed NewDiagramRequest", diagram.GetConceptID(hl), diagram)
+		cs.SetLabel(getDefaultConceptSpaceLabel(), hl)
+		CrlEditorSingleton.SelectElement(cs, hl)
+		sendReply(w, 0, "Processed NewConceptSpaceRequest", cs.GetConceptID(hl), cs)
 	case "OpenWorkspace":
 		err := CrlEditorSingleton.openWorkspace(request.AdditionalParameters["WorkspacePath"], hl)
 		if err != nil {
@@ -364,7 +363,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case "TreeNodeSelected":
 		elementID := request.RequestConceptID
-		log.Printf("Selected node id: %s", request.RequestConceptID)
+		if CrlLogClientDialog {
+			log.Printf("Selected node id: %s", request.RequestConceptID)
+		}
 		CrlEditorSingleton.SelectElementUsingIDString(elementID, hl)
 		sendReply(w, 0, "Processed TreeNodeSelected", elementID, CrlEditorSingleton.GetUofD().GetElement(elementID))
 	case "UpdateDebugSettings":
