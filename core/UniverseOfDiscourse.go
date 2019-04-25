@@ -611,7 +611,7 @@ func (uOfDPtr *universeOfDiscourse) queueFunctionExecutions(el Element, notifica
 		return
 	}
 	if el.GetUniverseOfDiscourse(hl) == nil {
-		log.Printf("universeOfDiscourse.queueFunctionExecution called with an Element that does not have an assigned UniverseOfDiscourse")
+		// Functions do not get executed on elements that are no longer in a Universe of Discourse
 		return
 	}
 	if notification.GetNatureOfChange() == 0 {

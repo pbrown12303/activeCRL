@@ -24,6 +24,7 @@ var _ = Describe("Test CrlEditor", func() {
 	var cs1 core.Element
 	var diagramID string
 	var diagram core.Element
+	var diagramContainerID string
 
 	BeforeEach(func() {
 		hl = uOfD.NewHeldLocks()
@@ -46,7 +47,7 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(cs1).ToNot(BeNil())
 		// At this point the newly created concept space is the selected concept
 
-		// Expect(page.RunScript("console.log('About to add child'); crlSendAddDiagramChild("+cs1ID+");", nil, nil)).To(Succeed())
+		// Now add a diagram
 		page.RunScript("crlSendAddDiagramChild(conceptSpaceID);", map[string]interface{}{"conceptSpaceID": cs1ID}, nil)
 		Eventually(func() string {
 			var retrievedSelectionID string
@@ -56,6 +57,7 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(page.RunScript("return crlSelectedConceptID", nil, &diagramID)).To(Succeed())
 		diagram = uOfD.GetElement(diagramID)
 		Expect(diagram).ToNot(BeNil())
+		Expect(page.RunScript("return crlGetContainerIDFromConceptID(conceptID)", map[string]interface{}{"conceptID": diagramID}, &diagramContainerID)).To(Succeed())
 
 		hl.ReleaseLocksAndWait()
 	})
@@ -65,7 +67,7 @@ var _ = Describe("Test CrlEditor", func() {
 		hl.ReleaseLocksAndWait()
 	})
 
-	Describe("Testing CrlEditor functionality", func() {
+	Describe("Testing CrlEditor basic functionality", func() {
 		Specify("The editor should be initialized", func() {
 			Expect(editor.CrlEditorSingleton.IsInitialized()).To(BeTrue())
 			var initializationComplete interface{}
@@ -77,23 +79,6 @@ var _ = Describe("Test CrlEditor", func() {
 				map[string]interface{}{"conceptID": coreConceptSpace.GetConceptID(hl)},
 				&treeNodeID)
 			Expect(page.FindByID(treeNodeID)).To(BeFound())
-		})
-		Specify("NewDiagram should work", func() {
-			var oldCurrentDiagramContainerID string
-			Expect(page.RunScript("return crlCurrentDiagramContainerID;", nil, &oldCurrentDiagramContainerID)).To(Succeed())
-			var result interface{}
-			Expect(page.RunScript("crlSendNewDiagramRequest(null)", nil, &result)).To(Succeed())
-			var newDiagramContainerID string
-			Eventually(func() bool {
-				page.RunScript("return crlCurrentDiagramContainerID;", nil, &newDiagramContainerID)
-				return newDiagramContainerID != oldCurrentDiagramContainerID
-			}).Should(BeTrue())
-			Expect(newDiagramContainerID).ToNot(Equal(""))
-			var diagramID string
-			page.RunScript("return crlGetConceptIDFromContainerID(containerID)", map[string]interface{}{"containerID": newDiagramContainerID}, &diagramID)
-			Expect(diagramID).ToNot(Equal(""))
-			diagram := uOfD.GetElement(diagramID)
-			Expect(diagram).ToNot(BeNil())
 		})
 		Specify("Tree selection should work", func() {
 			coreConceptSpace := uOfD.GetElementWithURI(core.CoreConceptSpaceURI)
@@ -136,7 +121,7 @@ var _ = Describe("Test CrlEditor", func() {
 			page.Click(agouti.ReleaseClick, agouti.LeftButton)
 			hl.ReleaseLocksAndWait()
 		})
-		Specify("DiagramDrop should produce proper results", func() {
+		Specify("DiagramDrop should produce view of treeDragSelection", func() {
 			coreConceptSpace := uOfD.GetElementWithURI(core.CoreConceptSpaceURI)
 			Expect(page.RunScript("crlSendSetTreeDragSelection(ID)", map[string]interface{}{"ID": coreConceptSpace.GetConceptID(hl)}, nil)).To(Succeed())
 			Expect(page.RunScript("crlSendDiagramDrop(ID, x, y)", map[string]interface{}{"ID": diagramID, "x": "100", "y": "100"}, nil)).To(Succeed())
@@ -193,6 +178,232 @@ var _ = Describe("Test CrlEditor", func() {
 				map[string]interface{}{"treeNodeID": treeNode2ID},
 				&treeNode2ParentID)).To(Succeed())
 			Expect(treeNode2ParentID).To(Equal(diagramTreeNodeID))
+		})
+	})
+
+	Describe("Test AddChild functionality", func() {
+		Specify("AddChild Diagram should work", func() {
+			var initialSelectionID string
+			Expect(page.RunScript("return crlSelectedConceptID", nil, &initialSelectionID)).To(Succeed())
+			Expect(page.RunScript("crlSendAddDiagramChild(conceptSpaceID);", map[string]interface{}{"conceptSpaceID": cs1ID}, nil)).To(Succeed())
+			Eventually(func() string {
+				var retrievedSelectionID string
+				Expect(page.RunScript("return crlSelectedConceptID;", nil, &retrievedSelectionID)).To(Succeed())
+				return retrievedSelectionID
+			}, 10).ShouldNot(Equal(initialSelectionID))
+			var newDiagramID string
+			Expect(page.RunScript("return crlSelectedConceptID", nil, &newDiagramID)).To(Succeed())
+			newDiagram := uOfD.GetElement(newDiagramID)
+			Expect(newDiagram).ToNot(BeNil())
+			Expect(newDiagram.IsRefinementOfURI(crldiagram.CrlDiagramURI, hl)).To(BeTrue())
+			Expect(newDiagram.GetOwningConcept(hl)).To(Equal(cs1))
+		})
+		Specify("AddChild Element should work", func() {
+			var initialSelectionID string
+			Expect(page.RunScript("return crlSelectedConceptID", nil, &initialSelectionID)).To(Succeed())
+			Expect(page.RunScript("crlSendAddElementChild(conceptSpaceID);", map[string]interface{}{"conceptSpaceID": cs1ID}, nil)).To(Succeed())
+			Eventually(func() string {
+				var retrievedSelectionID string
+				Expect(page.RunScript("return crlSelectedConceptID;", nil, &retrievedSelectionID)).To(Succeed())
+				return retrievedSelectionID
+			}, 10).ShouldNot(Equal(initialSelectionID))
+			var newID string
+			Expect(page.RunScript("return crlSelectedConceptID", nil, &newID)).To(Succeed())
+			el := uOfD.GetElement(newID)
+			Expect(el).ToNot(BeNil())
+			Expect(el.GetOwningConcept(hl)).To(Equal(cs1))
+		})
+		Specify("AddChild Literal should work", func() {
+			var initialSelectionID string
+			Expect(page.RunScript("return crlSelectedConceptID", nil, &initialSelectionID)).To(Succeed())
+			Expect(page.RunScript("crlSendAddLiteralChild(conceptSpaceID);", map[string]interface{}{"conceptSpaceID": cs1ID}, nil)).To(Succeed())
+			Eventually(func() string {
+				var retrievedSelectionID string
+				Expect(page.RunScript("return crlSelectedConceptID;", nil, &retrievedSelectionID)).To(Succeed())
+				return retrievedSelectionID
+			}, 10).ShouldNot(Equal(initialSelectionID))
+			var newID string
+			Expect(page.RunScript("return crlSelectedConceptID", nil, &newID)).To(Succeed())
+			el := uOfD.GetElement(newID)
+			Expect(el).ToNot(BeNil())
+			Expect(el.GetOwningConcept(hl)).To(Equal(cs1))
+			isLiteral := false
+			switch el.(type) {
+			case core.Literal:
+				isLiteral = true
+			}
+			Expect(isLiteral).To(BeTrue())
+		})
+		Specify("AddChild Reference should work", func() {
+			var initialSelectionID string
+			Expect(page.RunScript("return crlSelectedConceptID", nil, &initialSelectionID)).To(Succeed())
+			Expect(page.RunScript("crlSendAddReferenceChild(conceptSpaceID);", map[string]interface{}{"conceptSpaceID": cs1ID}, nil)).To(Succeed())
+			Eventually(func() string {
+				var retrievedSelectionID string
+				Expect(page.RunScript("return crlSelectedConceptID;", nil, &retrievedSelectionID)).To(Succeed())
+				return retrievedSelectionID
+			}, 10).ShouldNot(Equal(initialSelectionID))
+			var newID string
+			Expect(page.RunScript("return crlSelectedConceptID", nil, &newID)).To(Succeed())
+			el := uOfD.GetElement(newID)
+			Expect(el).ToNot(BeNil())
+			Expect(el.GetOwningConcept(hl)).To(Equal(cs1))
+			isReference := false
+			switch el.(type) {
+			case core.Reference:
+				isReference = true
+			}
+			Expect(isReference).To(BeTrue())
+		})
+		Specify("AddChild Refinement should work", func() {
+			var initialSelectionID string
+			Expect(page.RunScript("return crlSelectedConceptID", nil, &initialSelectionID)).To(Succeed())
+			Expect(page.RunScript("crlSendAddRefinementChild(conceptSpaceID);", map[string]interface{}{"conceptSpaceID": cs1ID}, nil)).To(Succeed())
+			Eventually(func() string {
+				var retrievedSelectionID string
+				Expect(page.RunScript("return crlSelectedConceptID;", nil, &retrievedSelectionID)).To(Succeed())
+				return retrievedSelectionID
+			}, 10).ShouldNot(Equal(initialSelectionID))
+			var newID string
+			Expect(page.RunScript("return crlSelectedConceptID", nil, &newID)).To(Succeed())
+			el := uOfD.GetElement(newID)
+			Expect(el).ToNot(BeNil())
+			Expect(el.GetOwningConcept(hl)).To(Equal(cs1))
+			isRefinement := false
+			switch el.(type) {
+			case core.Refinement:
+				isRefinement = true
+			}
+			Expect(isRefinement).To(BeTrue())
+		})
+	})
+
+	Describe("Test Toolbar Functionality", func() {
+		Specify("Element node creation should work", func() {
+			var toolbarID string
+			Expect(page.RunScript("return crlElementToolbarButtonID", nil, &toolbarID)).To(Succeed())
+			Expect(page.FindByID(toolbarID).MouseToElement()).To(Succeed())
+			Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
+			var correctToolbarSelection bool
+			Expect(page.RunScript("return crlCurrentToolbarButton == crlElementToolbarButtonID;", nil, &correctToolbarSelection)).To(Succeed())
+			Expect(correctToolbarSelection).To(BeTrue())
+			// Now move mouse to correct position
+			// Expect(page.FindByID(diagramContainerID).MouseToElement()).To(Succeed())
+			Expect(page.MoveMouseBy(100, 100)).To(Succeed())
+			Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
+			Eventually(func() bool {
+				var correctToolbarSelection bool
+				page.RunScript("return crlCurrentToolbarButton == crlCursorToolbarButtonID;", nil, &correctToolbarSelection)
+				return correctToolbarSelection
+			}, 60).Should(BeTrue())
+			var currentSelectionID string
+			Expect(page.RunScript("return crlSelectedConceptID", nil, &currentSelectionID)).To(Succeed())
+			newNode := uOfD.GetElement(currentSelectionID)
+			Expect(newNode).ToNot(BeNil())
+			Expect(newNode.GetOwningConcept(hl)).To(Equal(cs1))
+			// Check to see that the diagram view of the element has been created correctly
+			diagramView := crldiagram.GetFirstElementRepresentingConcept(diagram, newNode, hl)
+			Expect(diagramView).ToNot(BeNil())
+			Expect(crldiagram.GetReferencedModelElement(diagramView, hl)).To(Equal(newNode))
+		})
+		Specify("Literal node creation should work", func() {
+			var toolbarID string
+			Expect(page.RunScript("return crlLiteralToolbarButtonID", nil, &toolbarID)).To(Succeed())
+			Expect(page.FindByID(toolbarID).MouseToElement()).To(Succeed())
+			Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
+			var correctToolbarSelection bool
+			Expect(page.RunScript("return crlCurrentToolbarButton == crlLiteralToolbarButtonID;", nil, &correctToolbarSelection)).To(Succeed())
+			Expect(correctToolbarSelection).To(BeTrue())
+			// Now move mouse to correct position
+			// Expect(page.FindByID(diagramContainerID).MouseToElement()).To(Succeed())
+			Expect(page.MoveMouseBy(100, 100)).To(Succeed())
+			Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
+			Eventually(func() bool {
+				var correctToolbarSelection bool
+				page.RunScript("return crlCurrentToolbarButton == crlCursorToolbarButtonID;", nil, &correctToolbarSelection)
+				return correctToolbarSelection
+			}, 60).Should(BeTrue())
+			var currentSelectionID string
+			Expect(page.RunScript("return crlSelectedConceptID", nil, &currentSelectionID)).To(Succeed())
+			newNode := uOfD.GetElement(currentSelectionID)
+			Expect(newNode).ToNot(BeNil())
+			Expect(newNode.GetOwningConcept(hl)).To(Equal(cs1))
+			correctType := false
+			switch newNode.(type) {
+			case core.Literal:
+				correctType = true
+			}
+			Expect(correctType).To(BeTrue())
+			// Check to see that the diagram view of the element has been created correctly
+			diagramView := crldiagram.GetFirstElementRepresentingConcept(diagram, newNode, hl)
+			Expect(diagramView).ToNot(BeNil())
+			Expect(crldiagram.GetReferencedModelElement(diagramView, hl)).To(Equal(newNode))
+		})
+		Specify("Reference node creation should work", func() {
+			var toolbarID string
+			Expect(page.RunScript("return crlReferenceToolbarButtonID", nil, &toolbarID)).To(Succeed())
+			Expect(page.FindByID(toolbarID).MouseToElement()).To(Succeed())
+			Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
+			var correctToolbarSelection bool
+			Expect(page.RunScript("return crlCurrentToolbarButton == crlReferenceToolbarButtonID;", nil, &correctToolbarSelection)).To(Succeed())
+			Expect(correctToolbarSelection).To(BeTrue())
+			// Now move mouse to correct position
+			// Expect(page.FindByID(diagramContainerID).MouseToElement()).To(Succeed())
+			Expect(page.MoveMouseBy(100, 100)).To(Succeed())
+			Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
+			Eventually(func() bool {
+				var correctToolbarSelection bool
+				page.RunScript("return crlCurrentToolbarButton == crlCursorToolbarButtonID;", nil, &correctToolbarSelection)
+				return correctToolbarSelection
+			}, 60).Should(BeTrue())
+			var currentSelectionID string
+			Expect(page.RunScript("return crlSelectedConceptID", nil, &currentSelectionID)).To(Succeed())
+			newNode := uOfD.GetElement(currentSelectionID)
+			Expect(newNode).ToNot(BeNil())
+			Expect(newNode.GetOwningConcept(hl)).To(Equal(cs1))
+			correctType := false
+			switch newNode.(type) {
+			case core.Reference:
+				correctType = true
+			}
+			Expect(correctType).To(BeTrue())
+			// Check to see that the diagram view of the element has been created correctly
+			diagramView := crldiagram.GetFirstElementRepresentingConcept(diagram, newNode, hl)
+			Expect(diagramView).ToNot(BeNil())
+			Expect(crldiagram.GetReferencedModelElement(diagramView, hl)).To(Equal(newNode))
+		})
+		Specify("Refinement node creation should work", func() {
+			var toolbarID string
+			Expect(page.RunScript("return crlRefinementToolbarButtonID", nil, &toolbarID)).To(Succeed())
+			Expect(page.FindByID(toolbarID).MouseToElement()).To(Succeed())
+			Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
+			var correctToolbarSelection bool
+			Expect(page.RunScript("return crlCurrentToolbarButton == crlRefinementToolbarButtonID;", nil, &correctToolbarSelection)).To(Succeed())
+			Expect(correctToolbarSelection).To(BeTrue())
+			// Now move mouse to correct position
+			// Expect(page.FindByID(diagramContainerID).MouseToElement()).To(Succeed())
+			Expect(page.MoveMouseBy(100, 100)).To(Succeed())
+			Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
+			Eventually(func() bool {
+				var correctToolbarSelection bool
+				page.RunScript("return crlCurrentToolbarButton == crlCursorToolbarButtonID;", nil, &correctToolbarSelection)
+				return correctToolbarSelection
+			}, 60).Should(BeTrue())
+			var currentSelectionID string
+			Expect(page.RunScript("return crlSelectedConceptID", nil, &currentSelectionID)).To(Succeed())
+			newNode := uOfD.GetElement(currentSelectionID)
+			Expect(newNode).ToNot(BeNil())
+			Expect(newNode.GetOwningConcept(hl)).To(Equal(cs1))
+			correctType := false
+			switch newNode.(type) {
+			case core.Refinement:
+				correctType = true
+			}
+			Expect(correctType).To(BeTrue())
+			// Check to see that the diagram view of the element has been created correctly
+			diagramView := crldiagram.GetFirstElementRepresentingConcept(diagram, newNode, hl)
+			Expect(diagramView).ToNot(BeNil())
+			Expect(crldiagram.GetReferencedModelElement(diagramView, hl)).To(Equal(newNode))
 		})
 	})
 })
