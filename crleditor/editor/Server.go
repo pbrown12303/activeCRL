@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"log"
+	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -20,6 +21,7 @@ import (
 	"github.com/pbrown12303/activeCRL/crldiagram"
 )
 
+var home string
 var server *http.Server
 var wsServer *http.Server
 var webSocketReady = make(chan bool)
@@ -70,11 +72,16 @@ var upgrader = websocket.Upgrader{
 
 // Exit is used as a programmatic shutdown of the server. It is primarily intended to support testing scenarios.
 func Exit() error {
-	err := server.Shutdown(context.Background())
+	// Save the settings
+	err := CrlEditorSingleton.saveSettings()
+	if err != nil {
+		log.Printf(err.Error())
+	}
+	err = server.Shutdown(context.Background())
 	if err != nil {
 		return err
 	}
-	return wsServer.Shutdown(context.Background())
+	return nil
 }
 
 func graphHandler(w http.ResponseWriter, r *http.Request) {
@@ -128,6 +135,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	hl := CrlEditorSingleton.GetUofD().NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
+	if CrlLogClientRequests {
+		log.Printf("Received request: %#v", request)
+	}
 	switch request.Action {
 	case "AbstractPointerChanged":
 		linkID, err := CrlEditorSingleton.getDiagramManager().abstractPointerChanged(
@@ -177,12 +187,12 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed DefinitionChanged", request.RequestConceptID, el)
-	case "DeleteView":
-		err := CrlEditorSingleton.getDiagramManager().deleteView(request.RequestConceptID, hl)
+	case "DeleteDiagramElementView":
+		err := CrlEditorSingleton.getDiagramManager().deleteDiagramElementView(request.RequestConceptID, hl)
 		if err != nil {
 			sendReply(w, 1, err.Error(), "", nil)
 		} else {
-			sendReply(w, 0, "Processed DeleteView", request.RequestConceptID, nil)
+			sendReply(w, 0, "Processed DeleteDiagramElementView", request.RequestConceptID, nil)
 		}
 	case "DiagramClick":
 		err := CrlEditorSingleton.getDiagramManager().diagramClick(request, hl)
@@ -231,7 +241,10 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		sendReply(w, 0, "Processed DisplayDiagramSelected", request.RequestConceptID, el)
 	case "ElementPointerChanged":
 		linkID, err := CrlEditorSingleton.getDiagramManager().elementPointerChanged(
-			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
+			request.RequestConceptID,
+			request.AdditionalParameters["SourceID"],
+			request.AdditionalParameters["TargetID"],
+			request.AdditionalParameters["TargetAttributeName"], hl)
 		if err != nil {
 			sendReply(w, 1, "Error processing ElementPointerChanged: "+err.Error(), "", nil)
 		} else {
@@ -249,7 +262,15 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("InitializeClient requested")
 		sendReply(w, 0, "Client will be initialized", "", nil)
 		InitializeClient()
-		CrlEditorSingleton.GetClientNotificationManager().SendNotification("InitializationComplete", "", nil, nil)
+		SendNotification("InitializationComplete", "", nil, nil)
+		if CrlEditorSingleton.settings.WorkspacePath != "" {
+			err = CrlEditorSingleton.openWorkspace(CrlEditorSingleton.settings.WorkspacePath, hl)
+			if err != nil {
+				log.Print(err)
+			}
+			hl.ReleaseLocksAndWait()
+		}
+
 	case "LabelChanged":
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil {
@@ -297,7 +318,10 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case "ReferenceLinkChanged":
 		linkID, err := CrlEditorSingleton.getDiagramManager().ReferenceLinkChanged(
-			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
+			request.RequestConceptID,
+			request.AdditionalParameters["SourceID"],
+			request.AdditionalParameters["TargetID"],
+			request.AdditionalParameters["TargetAttributeName"], hl)
 		if err != nil {
 			sendReply(w, 1, "Error processing ReferenceLinkChanged: "+err.Error(), "", nil)
 		} else {
@@ -354,7 +378,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		reply(w, "ShowRefinedConcept", err)
 	case "TreeNodeDelete":
 		elementID := request.RequestConceptID
-		log.Printf("TreeNodeDelete called for node id: %s for elementID: %s", request.RequestConceptID, elementID)
+		// log.Printf("TreeNodeDelete called for node id: %s for elementID: %s", request.RequestConceptID, elementID)
 		err := CrlEditorSingleton.Delete(elementID)
 		if err == nil {
 			sendReply(w, 0, "Element has been deleted", elementID, nil)
@@ -363,7 +387,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case "TreeNodeSelected":
 		elementID := request.RequestConceptID
-		if CrlLogClientDialog {
+		if CrlLogClientNotifications {
 			log.Printf("Selected node id: %s", request.RequestConceptID)
 		}
 		CrlEditorSingleton.SelectElementUsingIDString(elementID, hl)
@@ -409,7 +433,16 @@ func sendReply(w http.ResponseWriter, code int, message string, resultConceptID 
 
 // StartServer starts the editor server. This will automatically launch a browser as an interface
 func StartServer(startBrowser bool) {
+	var err error
+	home, err = os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("User home directory not found")
+	}
 	InitializeCrlEditorSingleton()
+	err = CrlEditorSingleton.loadSettings()
+	if err != nil {
+		log.Fatal(err)
+	}
 	// WebSocketts server
 	go startWsServer()
 	// RequestServer

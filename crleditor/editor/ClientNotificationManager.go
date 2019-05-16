@@ -55,6 +55,8 @@ func (cnMgr *ClientNotificationManager) setConnection(conn *websocket.Conn) {
 // an error is returned.
 func (cnMgr *ClientNotificationManager) SendNotification(
 	notificationDescription string, conceptID string, concept core.Element, params map[string]string) (*NotificationResponse, error) {
+	cnMgr.Lock()
+	defer cnMgr.Unlock()
 	if cnMgr.conn == nil {
 		return nil, nil
 	}
@@ -76,7 +78,7 @@ func (cnMgr *ClientNotificationManager) SendNotification(
 			return nil, err
 		}
 	}
-	if CrlLogClientDialog {
+	if CrlLogClientNotifications {
 		log.Printf("Sent notification: %#v", notification)
 	}
 	var notificationResponse NotificationResponse
@@ -93,7 +95,7 @@ func (cnMgr *ClientNotificationManager) SendNotification(
 			return nil, fmt.Errorf("Error %s in parsing response to WebSocket notification: %#v", err.Error(), notification)
 		}
 	}
-	if CrlLogClientDialog {
+	if CrlLogClientNotifications {
 		log.Printf("Received notification response %#v", notificationResponse)
 	}
 	return &notificationResponse, nil

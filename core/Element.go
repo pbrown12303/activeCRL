@@ -597,10 +597,17 @@ func (ePtr *element) IsRefinementOfURI(uri string, hl *HeldLocks) bool {
 
 func (ePtr *element) incrementVersion(hl *HeldLocks) {
 	hl.ReadLockElement(ePtr)
-	ePtr.uOfD.preChange(ePtr, hl)
-	ePtr.Version.incrementVersion()
-	if ePtr.OwningConceptID != "" {
-		ePtr.uOfD.GetElement(ePtr.OwningConceptID).incrementVersion(hl)
+	if ePtr.uOfD != nil {
+		// UofD may be nil during the deletion of this element
+		ePtr.uOfD.preChange(ePtr, hl)
+		ePtr.Version.incrementVersion()
+		if ePtr.OwningConceptID != "" {
+			owningConcept := ePtr.uOfD.GetElement(ePtr.OwningConceptID)
+			// the owning concept may also be in the process of deletion
+			if owningConcept != nil {
+				owningConcept.incrementVersion(hl)
+			}
+		}
 	}
 }
 
@@ -918,7 +925,9 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 		if ocID != "" {
 			newOwner = ePtr.uOfD.GetElement(ocID)
 			ePtr.owningConcept.setIndicatedConcept(newOwner)
-			newOwner.addOwnedConcept(ePtr.ConceptID, hl)
+			if newOwner != nil {
+				newOwner.addOwnedConcept(ePtr.ConceptID, hl)
+			}
 		} else {
 			ePtr.owningConcept.setIndicatedConcept(nil)
 		}

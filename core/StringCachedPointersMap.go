@@ -20,6 +20,8 @@ func newStringCachedPointersMap() *stringCachedPointersMap {
 }
 
 func (scpMapPtr *stringCachedPointersMap) addCachedPointer(cp *cachedPointer) error {
+	scpMapPtr.Lock()
+	defer scpMapPtr.Unlock()
 	if cp == nil {
 		return errors.New("stringCachedPointersMap.addCachedPointer called with nil cachedPointer")
 	}
@@ -29,6 +31,8 @@ func (scpMapPtr *stringCachedPointersMap) addCachedPointer(cp *cachedPointer) er
 }
 
 func (scpMapPtr *stringCachedPointersMap) removeCachedPointer(cp *cachedPointer) error {
+	scpMapPtr.Lock()
+	defer scpMapPtr.Unlock()
 	if cp == nil {
 		return errors.New("stringCachedPointersMap.removeCachedPointer called with nil cachedPointer")
 	}
@@ -56,6 +60,8 @@ func (scpMapPtr *stringCachedPointersMap) removeCachedPointer(cp *cachedPointer)
 }
 
 func (scpMapPtr *stringCachedPointersMap) resolveCachedPointers(el Element, hl *HeldLocks) error {
+	scpMapPtr.Lock()
+	defer scpMapPtr.Unlock()
 	if el == nil {
 		return errors.New("stringCachedPointersMap.resolveCachedPointers called with nil Element")
 	}

@@ -267,11 +267,123 @@ func GetFirstElementRepresentingConcept(diagram core.Element, concept core.Eleme
 // GetFirstElementRepresentingConceptID returns the first diagram element that represents the indicated concept
 func GetFirstElementRepresentingConceptID(diagram core.Element, conceptID string, hl *core.HeldLocks) core.Element {
 	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
-		log.Printf("GetFirstElementRepresentingConcept called with diagram of incorrect type")
+		log.Printf("GetFirstElementRepresentingConceptID called with diagram of incorrect type")
 		return nil
 	}
 	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, hl) {
 		if GetReferencedModelElement(el, hl).GetConceptID(hl) == conceptID && !el.IsRefinementOfURI(CrlDiagramPointerURI, hl) {
+			return el
+		}
+	}
+	return nil
+}
+
+// GetFirstElementRepresentingConceptOwnerPointer returns the first diagram element that represents the indicated concept's OwnerPointer
+func GetFirstElementRepresentingConceptOwnerPointer(diagram core.Element, concept core.Element, hl *core.HeldLocks) core.Element {
+	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+		log.Printf("GetFirstElementRepresentingConceptOwnerPointer called with diagram of incorrect type")
+		return nil
+	}
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, hl) {
+		if GetReferencedModelElement(el, hl) == concept {
+			return el
+		}
+	}
+	return nil
+}
+
+// GetFirstElementRepresentingConceptIDOwnerPointer returns the first diagram element that represents the indicated concept's OwnerPointer
+func GetFirstElementRepresentingConceptIDOwnerPointer(diagram core.Element, conceptID string, hl *core.HeldLocks) core.Element {
+	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+		log.Printf("GetFirstElementRepresentingConceptIDOwnerPointer called with diagram of incorrect type")
+		return nil
+	}
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, hl) {
+		if GetReferencedModelElement(el, hl).GetConceptID(hl) == conceptID {
+			return el
+		}
+	}
+	return nil
+}
+
+// GetFirstElementRepresentingConceptElementPointer returns the first diagram element that represents the indicated concept's ElementPointer
+func GetFirstElementRepresentingConceptElementPointer(diagram core.Element, concept core.Reference, hl *core.HeldLocks) core.Element {
+	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+		log.Printf("GetFirstElementRepresentingConceptElementPointer called with diagram of incorrect type")
+		return nil
+	}
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, hl) {
+		if GetReferencedModelElement(el, hl) == concept {
+			return el
+		}
+	}
+	return nil
+}
+
+// GetFirstElementRepresentingConceptIDElementPointer returns the first diagram element that represents the indicated concept's ElementPointer
+func GetFirstElementRepresentingConceptIDElementPointer(diagram core.Element, conceptID string, hl *core.HeldLocks) core.Element {
+	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+		log.Printf("GetFirstElementRepresentingConceptIDElementPointer called with diagram of incorrect type")
+		return nil
+	}
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, hl) {
+		if GetReferencedModelElement(el, hl).GetConceptID(hl) == conceptID {
+			return el
+		}
+	}
+	return nil
+}
+
+// GetFirstElementRepresentingConceptAbstractPointer returns the first diagram element that represents the indicated concept's AbstractPointer
+func GetFirstElementRepresentingConceptAbstractPointer(diagram core.Element, concept core.Refinement, hl *core.HeldLocks) core.Element {
+	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+		log.Printf("GetFirstElementRepresentingConceptAbstractPointer called with diagram of incorrect type")
+		return nil
+	}
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramAbstractPointerURI, hl) {
+		if GetReferencedModelElement(el, hl) == concept {
+			return el
+		}
+	}
+	return nil
+}
+
+// GetFirstElementRepresentingConceptIDAbstractPointer returns the first diagram element that represents the indicated concept's AbstractPointer
+func GetFirstElementRepresentingConceptIDAbstractPointer(diagram core.Element, conceptID string, hl *core.HeldLocks) core.Element {
+	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+		log.Printf("GetFirstElementRepresentingConceptIDAbstractPointer called with diagram of incorrect type")
+		return nil
+	}
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramAbstractPointerURI, hl) {
+		if GetReferencedModelElement(el, hl).GetConceptID(hl) == conceptID {
+			return el
+		}
+	}
+	return nil
+}
+
+// GetFirstElementRepresentingConceptRefinedPointer returns the first diagram element that represents the indicated concept's RefinedPointer
+func GetFirstElementRepresentingConceptRefinedPointer(diagram core.Element, concept core.Refinement, hl *core.HeldLocks) core.Element {
+	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+		log.Printf("GetFirstElementRepresentingConceptRefinedPointer called with diagram of incorrect type")
+		return nil
+	}
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramRefinedPointerURI, hl) {
+		if GetReferencedModelElement(el, hl) == concept {
+			return el
+		}
+	}
+	return nil
+}
+
+// GetFirstElementRepresentingConceptIDRefinedPointer returns the first diagram element that represents the indicated concept's RefinedPointer
+func GetFirstElementRepresentingConceptIDRefinedPointer(diagram core.Element, conceptID string, hl *core.HeldLocks) core.Element {
+	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+		log.Printf("GetFirstElementRepresentingConceptIDRefinedPointer called with diagram of incorrect type")
+		return nil
+	}
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramRefinedPointerURI, hl) {
+		if GetReferencedModelElement(el, hl).GetConceptID(hl) == conceptID {
 			return el
 		}
 	}
@@ -1299,6 +1411,8 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 									newTargetModelElement = refinement.GetAbstractConcept(hl)
 								} else if IsDiagramRefinedPointer(diagramElement, hl) {
 									newTargetModelElement = refinement.GetRefinedConcept(hl)
+								} else if IsDiagramOwnerPointer(diagramElement, hl) {
+									newTargetModelElement = refinement.GetOwningConcept(hl)
 								}
 								if oldTargetModelElement != newTargetModelElement {
 									if newTargetModelElement == nil {

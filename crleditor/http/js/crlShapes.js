@@ -108,6 +108,7 @@ joint.dia.Link.define('crl.OwnerPointer', {
             connection: true,
             stroke: 'grey',
             strokeWidth: 1,
+            'pointer-events':'none',
             strokeLinejoin: 'round',
             targetMarker: {
                 "type": "path",
@@ -121,7 +122,8 @@ joint.dia.Link.define('crl.OwnerPointer', {
             strokeLinejoin: 'round'
         }
     },
-    crlJointID: ""
+    crlJointID: "",
+    represents: "OwnerPointer"
 }, {
         markup: [{
             tagName: 'path',
@@ -147,6 +149,7 @@ joint.dia.Link.define('crl.ElementPointer', {
             connection: true,
             stroke: 'grey',
             strokeWidth: 1,
+            'pointer-events':'none',
             strokeLinejoin: 'round',
             targetMarker: {
                 "type": "path",
@@ -160,7 +163,8 @@ joint.dia.Link.define('crl.ElementPointer', {
             strokeLinejoin: 'round'
         }
     },
-    crlJointID: ""
+    crlJointID: "",
+    represents:"ElementPointer"
 }, {
         markup: [{
             tagName: 'path',
@@ -186,6 +190,7 @@ joint.dia.Link.define('crl.AbstractPointer', {
             connection: true,
             stroke: 'grey',
             strokeWidth: 1,
+            'pointer-events':'none',
             strokeLinejoin: 'round',
             sourceMarker: {
                 "type": "path",
@@ -200,7 +205,8 @@ joint.dia.Link.define('crl.AbstractPointer', {
             strokeLinejoin: 'round'
         }
     },
-    crlJointID: ""
+    crlJointID: "",
+    represents:"AbstractPointer"
 }, {
         markup: [{
             tagName: 'path',
@@ -226,6 +232,7 @@ joint.dia.Link.define('crl.RefinedPointer', {
             connection: true,
             stroke: 'grey',
             strokeWidth: 1,
+            'pointer-events':'none',
             strokeLinejoin: 'round',
             sourceMarker: {
                 "type": "path",
@@ -244,7 +251,8 @@ joint.dia.Link.define('crl.RefinedPointer', {
             strokeLinejoin: 'round'
         }
     },
-    crlJointID: ""
+    crlJointID: "",
+    represents:"RefinedPointer"
 }, {
         markup: [{
             tagName: 'path',
@@ -270,6 +278,7 @@ joint.dia.Link.define('crl.ReferenceLink', {
             connection: true,
             stroke: 'black',
             strokeWidth: 2,
+            'pointer-events':'none',
             strokeLinejoin: 'round',
             targetMarker: {
                 'type': 'path',
@@ -286,7 +295,8 @@ joint.dia.Link.define('crl.ReferenceLink', {
             strokeWidth: 10,
             strokeLinejoin: 'round'
         }
-    }
+    },
+    represents:"Reference"
 },
     {
         markup: [{
@@ -312,6 +322,7 @@ joint.dia.Link.define('crl.RefinementLink', {
             connection: true,
             stroke: 'black',
             strokeWidth: 2,
+            'pointer-events':'none',
             strokeLinejoin: 'round',
             targetMarker: {
                 'type': 'path',
@@ -325,7 +336,8 @@ joint.dia.Link.define('crl.RefinementLink', {
             strokeWidth: 10,
             strokeLinejoin: 'round'
         }
-    }
+    },
+    represents:"Refinement"
 }, {
         markup: [{
             tagName: 'path',

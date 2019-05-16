@@ -73,6 +73,7 @@ func (dmPtr *diagramManager) abstractPointerChanged(linkID string, sourceID stri
 		crldiagram.SetLinkSource(diagramPointer, diagramSource, hl)
 		crldiagram.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		modelRefinement.SetAbstractConcept(modelTarget, hl)
+		dmPtr.crlEditor.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramPointer = uOfD.GetElement(linkID)
 		if diagramPointer == nil {
@@ -184,10 +185,10 @@ func (dmPtr *diagramManager) closeDiagramView(diagramID string, hl *core.HeldLoc
 	return err
 }
 
-func (dmPtr *diagramManager) deleteView(elementID string, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) deleteDiagramElementView(elementID string, hl *core.HeldLocks) error {
 	diagramElement := dmPtr.crlEditor.uOfD.GetElement(elementID)
 	if diagramElement == nil {
-		return errors.New("diagramManager.deleteView diagramElement not found for elementID " + elementID)
+		return errors.New("diagramManager.deleteDiagramElementView diagramElement not found for elementID " + elementID)
 	}
 	dEls := map[string]core.Element{diagramElement.GetConceptID(hl): diagramElement}
 	return dmPtr.crlEditor.uOfD.DeleteElements(dEls, hl)
@@ -318,7 +319,7 @@ func getDefaultDiagramLabel() string {
 	return "Diagram" + countString
 }
 
-func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID string, targetID string, hl *core.HeldLocks) (string, error) {
+func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID string, targetID string, targetAttributeName string, hl *core.HeldLocks) (string, error) {
 	uOfD := dmPtr.crlEditor.uOfD
 	diagramSource := uOfD.GetElement(sourceID)
 	if diagramSource == nil {
@@ -346,6 +347,18 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 	}
 	var err error
 	var diagramPointer core.Element
+	attributeName := core.NoAttribute
+	switch targetAttributeName {
+	case "OwningConceptID":
+		attributeName = core.OwningConceptID
+	case "ReferencedConceptID":
+		attributeName = core.ReferencedConceptID
+	case "AbstractConceptID":
+		attributeName = core.AbstractConceptID
+	case "RefinedConceptID":
+		attributeName = core.RefinedConceptID
+	}
+	modelReference.SetReferencedAttributeName(attributeName, hl)
 	if linkID == "" {
 		// this is a new link
 		diagramPointer, err = crldiagram.NewDiagramElementPointer(uOfD, hl)
@@ -357,6 +370,7 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 		crldiagram.SetLinkSource(diagramPointer, diagramSource, hl)
 		crldiagram.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		modelReference.SetReferencedConcept(modelTarget, hl)
+		dmPtr.crlEditor.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramPointer = uOfD.GetElement(linkID)
 		if diagramPointer == nil {
@@ -424,6 +438,7 @@ func (dmPtr *diagramManager) ownerPointerChanged(linkID string, sourceID string,
 		crldiagram.SetLinkSource(diagramPointer, diagramSource, hl)
 		crldiagram.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		modelSource.SetOwningConcept(modelTarget, hl)
+		dmPtr.crlEditor.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramPointer = uOfD.GetElement(linkID)
 		if diagramPointer == nil {
@@ -485,6 +500,7 @@ func (dmPtr *diagramManager) refinedPointerChanged(linkID string, sourceID strin
 		crldiagram.SetLinkSource(diagramPointer, diagramSource, hl)
 		crldiagram.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		modelRefinement.SetRefinedConcept(modelTarget, hl)
+		dmPtr.crlEditor.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramPointer = uOfD.GetElement(linkID)
 		if diagramPointer == nil {
@@ -507,7 +523,7 @@ func (dmPtr *diagramManager) refinedPointerChanged(linkID string, sourceID strin
 	return diagramPointer.GetConceptID(hl), nil
 }
 
-func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string, targetID string, hl *core.HeldLocks) (string, error) {
+func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string, targetID string, targetAttributeName string, hl *core.HeldLocks) (string, error) {
 	uOfD := dmPtr.crlEditor.uOfD
 	diagramSource := uOfD.GetElement(sourceID)
 	if diagramSource == nil {
@@ -528,11 +544,24 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 	diagram := diagramSource.GetOwningConcept(hl)
 	var err error
 	var diagramLink core.Element
+	var modelElement core.Element
+	attributeName := core.NoAttribute
+	switch targetAttributeName {
+	case "OwningConceptID":
+		attributeName = core.OwningConceptID
+	case "ReferencedConceptID":
+		attributeName = core.ReferencedConceptID
+	case "AbstractConceptID":
+		attributeName = core.AbstractConceptID
+	case "RefinedConceptID":
+		attributeName = core.RefinedConceptID
+	}
 	if linkID == "" {
 		// this is a new reference
 		newReference, _ := uOfD.NewReference(hl)
 		newReference.SetReferencedConcept(modelTarget, hl)
 		newReference.SetOwningConcept(modelSource, hl)
+		newReference.SetReferencedAttributeName(attributeName, hl)
 		diagramLink, err = crldiagram.NewDiagramReferenceLink(uOfD, hl)
 		if err != nil {
 			return "", err
@@ -541,13 +570,15 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 		crldiagram.SetReferencedModelElement(diagramLink, newReference, hl)
 		crldiagram.SetLinkSource(diagramLink, diagramSource, hl)
 		crldiagram.SetLinkTarget(diagramLink, diagramTarget, hl)
+		modelElement = newReference
+		dmPtr.crlEditor.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramLink = uOfD.GetElement(linkID)
-		referencedModelElement := crldiagram.GetReferencedModelElement(diagramLink, hl)
-		if referencedModelElement != nil {
-			switch referencedModelElement.(type) {
+		modelElement = crldiagram.GetReferencedModelElement(diagramLink, hl)
+		if modelElement != nil {
+			switch modelElement.(type) {
 			case core.Reference:
-				reference := referencedModelElement.(core.Reference)
+				reference := modelElement.(core.Reference)
 				if diagramLink == nil {
 					return "", errors.New("diagramManager.refinementLinkChanged called with diagramPointer not found in diagram")
 				}
@@ -557,9 +588,11 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 				if diagramTarget != crldiagram.GetLinkTarget(diagramLink, hl) {
 					reference.SetReferencedConcept(modelTarget, hl)
 				}
+				reference.SetReferencedAttributeName(attributeName, hl)
 			}
 		}
 	}
+	dmPtr.crlEditor.SelectElement(modelElement, hl)
 
 	return diagramLink.GetConceptID(hl), nil
 }
@@ -586,6 +619,7 @@ func (dmPtr *diagramManager) RefinementLinkChanged(linkID string, sourceID strin
 	diagramOwner := diagram.GetOwningConcept(hl)
 	var err error
 	var diagramLink core.Element
+	var modelElement core.Element
 	if linkID == "" {
 		// this is a new refinement
 		newRefinement, _ := uOfD.NewRefinement(hl)
@@ -600,13 +634,15 @@ func (dmPtr *diagramManager) RefinementLinkChanged(linkID string, sourceID strin
 		crldiagram.SetReferencedModelElement(diagramLink, newRefinement, hl)
 		crldiagram.SetLinkSource(diagramLink, diagramSource, hl)
 		crldiagram.SetLinkTarget(diagramLink, diagramTarget, hl)
+		modelElement = newRefinement
+		dmPtr.crlEditor.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramLink = uOfD.GetElement(linkID)
-		referencedModelElement := crldiagram.GetReferencedModelElement(diagramLink, hl)
-		if referencedModelElement != nil {
-			switch referencedModelElement.(type) {
+		modelElement = crldiagram.GetReferencedModelElement(diagramLink, hl)
+		if modelElement != nil {
+			switch modelElement.(type) {
 			case core.Refinement:
-				refinement := referencedModelElement.(core.Refinement)
+				refinement := modelElement.(core.Refinement)
 				if diagramLink == nil {
 					return "", errors.New("diagramManager.refinementLinkChanged called with diagramPointer not found in diagram")
 				}
@@ -619,6 +655,7 @@ func (dmPtr *diagramManager) RefinementLinkChanged(linkID string, sourceID strin
 			}
 		}
 	}
+	dmPtr.crlEditor.SelectElement(modelElement, hl)
 
 	return diagramLink.GetConceptID(hl), nil
 }
@@ -663,7 +700,8 @@ func (dmPtr *diagramManager) refreshDiagram(diagram core.Element, hl *core.HeldL
 func (dmPtr *diagramManager) setDiagramNodePosition(nodeID string, x float64, y float64, hl *core.HeldLocks) {
 	node := CrlEditorSingleton.GetUofD().GetElement(nodeID)
 	if node == nil {
-		log.Print("In SetDiagramNodePosition node not found for nodeID: " + nodeID)
+		// This can happen when the concept space containing the diagram is deleted???
+		log.Print("In setDiagramNodePosition node not found for nodeID: " + nodeID)
 		return
 	}
 	crldiagram.SetNodeX(node, x, hl)

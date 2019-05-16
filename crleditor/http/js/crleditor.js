@@ -1,34 +1,43 @@
+// Current State Variables
 // crlCurrentDiagramContainerIDGlobal is the identifier for the diagram container currently being displayed
 var crlCurrentDiagramContainerID;
 // crlCurrentToolbarButton is the id of the last toolbar button pressed
 var crlCurrentToolbarButton;
-// crlDebugSettingsDialog is the initialized dialog used for editing debug settings
-var crlDebugSettingsDialog;
-// crlDropReferenceAsLink when true causes references dragged from the tree into the diagram to be added as links
-var crlDropReferenceAsLink = false;
-// crlDropRefinementAsLink when true causes refinements dragged from the tree into the diagram to be added as links
-var crlDropRefinementAsLink = false;
-// crlEditorSettingsDialog is the initialized dialog used for editing editor settings
-var crlEditorSettingsDialog;
-// crlEnableTracing is the client-side copy of the server-side value that turns on notification tracing
-var crlEnableTracing = false;
-// crlOmitHousekeepingCalls indicates whether housekeeping calls shouldl be included when tracing is enabled
-var crlOmitHousekeepingCalls = false;
-// crlGraphsGlobal is an array of existing graphs that is used to look up a graph given its identifier
-var crlGraphsGlobal = {};
 // crlInitializationCompleteGlobal indicates whether the server-side initialization has been completed
 var crlInitializationComplete = false;
 // crlMovedNodes is an array of nodes that have been moved. This is a temporary cache that is used to update the 
 // server once a mouse up has occurred
 var crlMovedNodes = {};
-// crlOpenWorkspaceDialog is the initialized dialog used for opening a workspace
-var crlOpenWorkspaceDialog;
-// crlPaperGlobal is an array of existing papers that is used to look up a paper given its identifier
-var crlPapersGlobal = {};
 // crlSelectedConceptIDGlobal contains the model identifier of the currently selected concept
 var crlSelectedConceptID;
 // crlTreeDragSelectionIDGlobal contains the model identifier of the concept currently being dragged from the tree
 var crlTreeDragSelectionID;
+
+// Editor Settings
+// crlDropReferenceAsLink when true causes references dragged from the tree into the diagram to be added as links
+var crlDropReferenceAsLink = false;
+// crlDropRefinementAsLink when true causes refinements dragged from the tree into the diagram to be added as links
+var crlDropRefinementAsLink = false;
+// crlEnableTracing is the client-side copy of the server-side value that turns on notification tracing
+var crlEnableTracing = false;
+// crlOmitHousekeepingCalls indicates whether housekeeping calls shouldl be included when tracing is enabled
+var crlOmitHousekeepingCalls = false;
+
+// Debug Settings
+// crlDebugSettingsDialog is the initialized dialog used for editing debug settings
+var crlDebugSettingsDialog;
+
+// Dialogs
+// crlEditorSettingsDialog is the initialized dialog used for editing editor settings
+var crlEditorSettingsDialog;
+// crlOpenWorkspaceDialog is the initialized dialog used for opening a workspace
+var crlOpenWorkspaceDialog;
+
+// Lookup structures
+// crlGraphsGlobal is an array of existing graphs that is used to look up a graph given its identifier
+var crlGraphsGlobal = {};
+// crlPaperGlobal is an array of existing papers that is used to look up a paper given its identifier
+var crlPapersGlobal = {};
 // CrlWebSocketGlobal is the web socket being used for server-side communications
 var crlWebsocketGlobal;
 // crlWorkspacePath is the path to the current workspace
@@ -53,6 +62,8 @@ var crlDiagramTabDropdownMenu = null;
 var crlInCrlElementSelected = false;
 
 var crlKeyPressed = { 16: false };
+var crlMouseButtonPressed = { 0: false };
+var crlMousePosition = { "x": 0, "y": 0 }
 
 // Initialize
 $(function () {
@@ -265,7 +276,6 @@ $(function () {
             $("#selectedWorkspaceFolder").val(crlWorkspacePath);
         }
     });
-    // Close the dropdown menu if the user clicks outside of it
     window.onkeydown = function (e) {
         e = e || window.event;
         crlKeyPressed[e.keyCode] = true;
@@ -274,6 +284,21 @@ $(function () {
         e = e || window.event;
         crlKeyPressed[e.keyCode] = false;
     };
+    window.onmousedown = function (e) {
+        e = e || window.event;
+        crlMouseButtonPressed[e.button] = true;
+        console.log(e);
+    }
+    window.onmouseup = function (e) {
+        e = e || window.event;
+        crlMouseButtonPressed[e.button] = false;
+    }
+    window.onmousemove = function (e) {
+        e = e || window.event;
+        crlMousePosition["x"] = e.pageX;
+        crlMousePosition["y"] = e.pageY;
+    }
+    // Close the dropdown menu if the user clicks outside of it
     window.onclick = function (event) {
         if (!event.target.matches('.dropbtn')) {
 
@@ -316,6 +341,8 @@ function crlCloseDiagramView(diagramID) {
     if (crlCurrentDiagramContainerID == diagramContainerID) {
         crlCurrentDiagramContainerID = "";
     }
+    // Finalize any node moves
+    crlFinalizeNodeMoves()
     // Remove the graph
     var jointGraphID = crlGetJointGraphIDFromDiagramID(diagramID);
     delete crlGraphsGlobal[jointGraphID];
@@ -479,6 +506,9 @@ function crlConstructPaper(diagramContainer, jointGraph, jointPaperID) {
     // Event handlers
     jointPaper.on("cell:pointerdown", crlOnDiagramCellPointerDown);
     jointPaper.on("cell:pointerup", crlOnDiagramCellPointerUp);
+    jointPaper.on("blank:pointerup", function (evt) {
+        crlMouseButtonPressed[evt.button] = false;
+    })
     jointPaper.on("cell:contextmenu", function (cellView, evt, x, y) {
         evt.preventDefault();
         var represents = cellView.model.attributes.represents;
@@ -905,13 +935,13 @@ var crlCustomLinkView = joint.dia.LinkView.extend({
 
 
 
-function crlDeleteView(evt) {
+function crlDeleteDiagramElementView(evt) {
     var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
     var jointID = cellView.model.attributes.crlJointID;
     if (jointID) {
         var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
         var xhr = crlCreateEmptyRequest();
-        var data = JSON.stringify({ "Action": "DeleteView", "RequestConceptID": diagramElementID });
+        var data = JSON.stringify({ "Action": "DeleteDiagramElementView", "RequestConceptID": diagramElementID });
         crlSendRequest(xhr, data);
     }
 }
@@ -919,15 +949,27 @@ function crlDeleteView(evt) {
 function crlPropertiesDisplayAbstractConcept(data, row) {
     var typeRow = crlObtainPropertyRow(row);
     typeRow.cells[0].innerHTML = "Abstract Concept ID";
-    typeRow.cells[1].innerHTML = data.NotificationConcept.AbstractConceptID;
+    var abstractConceptID = ""
+    if (data.NotificationConcept) {
+        abstractConceptID = data.NotificationConcept.AbstractConceptID
+    }
+    typeRow.cells[1].innerHTML = abstractConceptID;
 }
 
 function crlPropertiesDisplayDefinition(data, row) {
     var definitionRow = crlObtainPropertyRow(row)
     definitionRow.cells[0].innerHTML = "Definition";
-    definitionRow.cells[1].innerHTML = data.NotificationConcept.Definition;
+    var definition = ""
+    var isCore = false
+    var isReadOnly = false
+    if (data.NotificationConcept) {
+        definition = data.NotificationConcept.Definition
+        isCore = data.NotificationConcept.IsCore
+        isReadOnly = data.NotificationConcept.ReadOnly
+    }
+    definitionRow.cells[1].innerHTML = definition;
     definitionRow.cells[1].id = "definition";
-    if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
+    if (isCore == "false" && isReadOnly == "false") {
         definitionRow.cells[1].contentEditable = true;
         if (!definitionRow.cells[1].callbackAssigned) {
             definitionRow.cells[1].callbackAssigned = true;
@@ -938,7 +980,6 @@ function crlPropertiesDisplayDefinition(data, row) {
     };
 }
 
-
 function crlPropertiesDisplayID(data, row) {
     var idRow = crlObtainPropertyRow(row)
     idRow.cells[0].innerHTML = "ID";
@@ -948,9 +989,17 @@ function crlPropertiesDisplayID(data, row) {
 function crlPropertiesDisplayLabel(data, row) {
     var labelRow = crlObtainPropertyRow(row);
     labelRow.cells[0].innerHTML = "Label";
-    labelRow.cells[1].innerHTML = data.NotificationConcept.Label;
+    var label = ""
+    var isCore = false
+    var isReadOnly = false
+    if (data.NotificationConcept) {
+        label = data.NotificationConcept.Label
+        isCore = data.NotificationConcept.IsCore
+        isReadOnly = data.NotificationConcept.ReadOnly
+    }
+    labelRow.cells[1].innerHTML = label;
     labelRow.cells[1].id = "elementLabel";
-    if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
+    if (isCore == "false" && isReadOnly == "false") {
         labelRow.cells[1].contentEditable = true;
         if (!labelRow.cells[1].callbackAssigned) {
             labelRow.cells[1].callbackAssigned = true;
@@ -964,9 +1013,17 @@ function crlPropertiesDisplayLabel(data, row) {
 function crlPropertiesDisplayLiteralValue(data, row) {
     var labelRow = crlObtainPropertyRow(row);
     labelRow.cells[0].innerHTML = "Literal Value";
-    labelRow.cells[1].innerHTML = data.NotificationConcept.LiteralValue;
+    var literalValue = ""
+    var isCore = false
+    var isReadOnly = false
+    if (data.NotificationConcept) {
+        literalValue = data.NotificationConcept.LiteralValue
+        isCore = data.NotificationConcept.IsCore
+        isReadOnly = data.NotificationConcept.ReadOnly
+    }
+    labelRow.cells[1].innerHTML = literalValue;
     labelRow.cells[1].id = "literalValue";
-    if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
+    if (isCore == "false" && isReadOnly == "false") {
         labelRow.cells[1].contentEditable = true;
         if (!labelRow.cells[1].callbackAssigned) {
             labelRow.cells[1].callbackAssigned = true;
@@ -980,27 +1037,47 @@ function crlPropertiesDisplayLiteralValue(data, row) {
 function crlPropertiesDisplayReferencedConcept(data, row) {
     var typeRow = crlObtainPropertyRow(row);
     typeRow.cells[0].innerHTML = "Referenced Concept ID";
-    typeRow.cells[1].innerHTML = data.NotificationConcept.ReferencedConceptID;
+    var referencedConceptID = ""
+    if (data.NotificationConcept) {
+        referencedConceptID = data.NotificationConcept.ReferencedConceptID
+    }
+    typeRow.cells[1].innerHTML = referencedConceptID;
 }
 
 function crlPropertiesDisplayRefinedConcept(data, row) {
     var typeRow = crlObtainPropertyRow(row);
     typeRow.cells[0].innerHTML = "Refined Concept ID";
-    typeRow.cells[1].innerHTML = data.NotificationConcept.RefinedConceptID;
+    var refinedConceptID = ""
+    if (data.NotificationConcept) {
+        refinedConceptID = data.NotificationConcept.RefinedConceptID
+    }
+    typeRow.cells[1].innerHTML = refinedConceptID;
 }
 
 function crlPropertiesDisplayType(data, row) {
     var typeRow = crlObtainPropertyRow(row);
     typeRow.cells[0].innerHTML = "Type";
-    typeRow.cells[1].innerHTML = data.NotificationConcept.Type;
+    var type = ""
+    if (data.NotificationConcept) {
+        type = data.NotificationConcept.Type
+    }
+    typeRow.cells[1].innerHTML = type;
 }
 
 function crlPropertiesDisplayURI(data, row) {
     var uriRow = crlObtainPropertyRow(row);
     uriRow.cells[0].innerHTML = "URI";
-    uriRow.cells[1].innerHTML = data.NotificationConcept.URI;
+    var uri = ""
+    var isCore = false
+    var isReadOnly = false
+    if (data.NotificationConcept) {
+        uri = data.NotificationConcept.URI
+        isCore = data.NotificationConcept.IsCore
+        isReadOnly = data.NotificationConcept.ReadOnly
+    }
+    uriRow.cells[1].innerHTML = uri;
     uriRow.cells[1].id = "uri";
-    if (data.NotificationConcept.IsCore == "false" && data.NotificationConcept.ReadOnly == "false") {
+    if (isCore == "false" && isReadOnly == "false") {
         uriRow.cells[1].contentEditable = true;
         if (!uriRow.cells[1].callbackAssigned) {
             uriRow.cells[1].callbackAssigned = true;
@@ -1015,7 +1092,11 @@ function crlPropertiesDisplayURI(data, row) {
 function crlPropertiesDisplayVersion(data, row) {
     var versionRow = crlObtainPropertyRow(row)
     versionRow.cells[0].innerHTML = "Version";
-    versionRow.cells[1].innerHTML = data.NotificationConcept.Version;
+    var version = ""
+    if (data.NotificationConcept) {
+        version = data.NotificationConcept.Version
+    }
+    versionRow.cells[1].innerHTML = version;
 }
 
 function crlDropdownMenu(dropdownId) {
@@ -1056,26 +1137,30 @@ function crlDisplayGraphDialog(numberOfAvailableGraphs) {
     $("#numberOfAvailableGraphs").text(numberOfAvailableGraphs);
 }
 
-function crlFindCellInGraph(graphID, crlJointID) {
-    var cells = crlGraphsGlobal[graphID].getCells();
-    var cell = null;
-    cells.forEach(function (item) {
-        if (item.get("crlJointID") == crlJointID) {
-            cell = item;
-        }
-    })
-    return cell
+function crlFindCellInGraphID(graphID, crlJointID) {
+    var graph = crlGraphsGlobal[graphID];
+    return crlFindCellInGraph(graph, crlJointID);
 }
 
 function crlFindCellInGraph(graph, crlJointID) {
     var cells = graph.getCells();
-    var cell = null;
+    var cell
     cells.forEach(function (item) {
         if (item.get("crlJointID") == crlJointID) {
             cell = item;
         }
     })
-    return cell
+    return cell;
+}
+
+function crlFindCellViewInPaperByDiagramID(diagramID, jointCellID) {
+    var jointPaperID = crlGetJointPaperIDFromDiagramID(diagramID);
+    var paper = crlPapersGlobal[jointPaperID];
+    return crlFindCellViewInPaper(paper, jointCellID);
+}
+
+function crlFindCellViewInPaper(paper, jointCellID) {
+    return paper.findViewByModel(jointCellID)
 }
 
 function crlFindLinkInGraph(graphID, crlJointID) {
@@ -1245,7 +1330,6 @@ var crlInitiateGraphsDialogDisplay = function () {
 }
 
 function crlLinkConnected(evt, cellView, magnet, arrowhead) {
-    crlSelectToolbarButton(crlCursorToolbarButtonID);
     var linkType = evt.model.attributes.type;
     var linkJointID = evt.model.attributes.crlJointID;
     var linkID = "";
@@ -1258,7 +1342,21 @@ function crlLinkConnected(evt, cellView, magnet, arrowhead) {
             var targetJointID = evt.targetView.model.attributes.crlJointID;
             var sourceID = crlGetConceptIDFromJointElementID(sourceJointID);
             var targetID = crlGetConceptIDFromJointElementID(targetJointID);
-            crlSendReferenceLinkChanged(evt.model, linkID, sourceID, targetID);
+            var targetAttributeName = "NoAttribute";
+            switch (evt.targetView.model.attributes.represents) {
+                case "OwnerPointer":
+                    targetAttributeName = "OwningConceptID";
+                    break;
+                case "ElementPointer":
+                    targetAttributeName = "ReferencedConceptID";
+                    break;
+                case "AbstractPointer":
+                    targetAttributeName = "AbstractConceptID";
+                    break;
+                case "RefinedPointer":
+                    targetAttributeName = "RefinedConceptID";
+            }
+            crlSendReferenceLinkChanged(evt.model, linkID, sourceID, targetID, targetAttributeName);
             break;
         case "crl.RefinementLink":
             var sourceJointID = evt.sourceView.model.attributes.crlJointID;
@@ -1279,7 +1377,21 @@ function crlLinkConnected(evt, cellView, magnet, arrowhead) {
             var targetJointID = evt.targetView.model.attributes.crlJointID;
             var sourceID = crlGetConceptIDFromJointElementID(sourceJointID);
             var targetID = crlGetConceptIDFromJointElementID(targetJointID);
-            crlSendElementPointerChanged(evt.model, linkID, sourceID, targetID);
+            var targetAttributeName = "NoAttribute";
+            switch (evt.targetView.model.attributes.represents) {
+                case "OwnerPointer":
+                    targetAttributeName = "OwningConceptID";
+                    break;
+                case "ElementPointer":
+                    targetAttributeName = "ReferencedConceptID";
+                    break;
+                case "AbstractPointer":
+                    targetAttributeName = "AbstractConceptID";
+                    break;
+                case "RefinedPointer":
+                    targetAttributeName = "RefinedConceptID";
+            }
+            crlSendElementPointerChanged(evt.model, linkID, sourceID, targetID, targetAttributeName);
             break;
         case "crl.AbstractPointer":
             var sourceJointID = evt.sourceView.model.attributes.crlJointID;
@@ -1557,10 +1669,14 @@ function crlNotificationElementSelected(data) {
         crlPropertiesDisplayLabel(data, 4);
         crlPropertiesDisplayDefinition(data, 5);
         crlPropertiesDisplayURI(data, 6);
-        switch (data.NotificationConcept.Type) {
+        var type = ""
+        if (data.NotificationConcept) {
+            type = data.NotificationConcept.Type
+        }
+        switch (type) {
             case "*core.element":
-                crlPropertiesClearRow(7);
                 crlPropertiesClearRow(8);
+                crlPropertiesClearRow(7);
                 break;
             case "*core.literal":
                 crlPropertiesDisplayLiteralValue(data, 7);
@@ -1574,6 +1690,9 @@ function crlNotificationElementSelected(data) {
                 crlPropertiesDisplayAbstractConcept(data, 7);
                 crlPropertiesDisplayRefinedConcept(data, 8);
                 break;
+            default:
+                crlPropertiesClearRow(8);
+                crlPropertiesClearRow(7);
         };
 
         // Update the tree
@@ -1674,10 +1793,11 @@ function crlObtainPropertyRow(row) {
 }
 
 var crlOnChangePosition = function (modelElement, position) {
-    var jointElementID = modelElement.get("crlJointID");
-    var diagramNodeID = crlGetConceptIDFromJointElementID(jointElementID);
-    crlMovedNodes[diagramNodeID] = position;
-    //    crlSendDiagramNodeNewPosition(diagramNodeID, position)
+    if (crlMouseButtonPressed[0] == true) {
+        var jointElementID = modelElement.get("crlJointID");
+        var diagramNodeID = crlGetConceptIDFromJointElementID(jointElementID);
+        crlMovedNodes[diagramNodeID] = position;
+    }
 }
 
 var crlOnCloseDiagramView = function () {
@@ -1686,6 +1806,8 @@ var crlOnCloseDiagramView = function () {
 }
 
 var crlOnDiagramCellPointerDown = function (cellView, event, x, y) {
+    console.log("In crlOnDiagramCellPointerDown")
+    crlMouseButtonPressed[event.button] = true;
     var jointElementID = cellView.model.get("crlJointID");
     if (jointElementID && jointElementID != "") {
         var diagramNodeID = crlGetConceptIDFromJointElementID(jointElementID);
@@ -1697,9 +1819,15 @@ var crlOnDiagramCellPointerDown = function (cellView, event, x, y) {
 }
 
 var crlOnDiagramCellPointerUp = function (cellView, event, x, y) {
+    console.log("In crlOnDiagramCellPointerUp")
+    crlMouseButtonPressed[event.button] = false;
+    crlFinalizeNodeMoves();
+}
+
+function crlFinalizeNodeMoves() {
     $.each(crlMovedNodes, function (nodeID, position) {
-        crlSendDiagramNodeNewPosition(nodeID, position)
-    })
+        crlSendDiagramNodeNewPosition(nodeID, position);
+    });
     crlMovedNodes = {};
 }
 
@@ -1735,15 +1863,20 @@ function crlOnDiagramClick(event) {
             nodeType = "Diagram";
             break;
         }
-        case "ownerLinkToolbarButton": {
+        case "ownerPointerToolbarButton": {
             break;
         }
-        case "pointerToolbarButton": {
+        case "elementPointerToolbarButton": {
             break;
         }
-        case "abstractionLinkToolbarButton": {
+        case "abstractPointerToolbarButton": {
             break;
         }
+        case "refinedPointerToolbarButton": {
+            break;
+        }
+        default:
+            console.log("In crlOnDiagramClick, unknown toolbar button type: " + crlCurrentToolbarButton)
     }
     if (nodeType != "") {
         var conceptID = crlGetConceptIDFromContainerID(event.target.parentElement.parentElement.id);
@@ -2011,14 +2144,15 @@ function crlSendEditorSettings() {
     crlSendRequest(xhr, data);
 }
 
-function crlSendElementPointerChanged(jointLink, linkID, sourceID, targetID) {
+function crlSendElementPointerChanged(jointLink, linkID, sourceID, targetID, targetAttributeName) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
         "Action": "ElementPointerChanged",
         "RequestConceptID": linkID,
         "AdditionalParameters": {
             "SourceID": sourceID,
-            "TargetID": targetID
+            "TargetID": targetID,
+            "TargetAttributeName": targetAttributeName
         }
     })
     crlSendRequest(xhr, data);
@@ -2076,14 +2210,15 @@ function crlSendOwnerPointerChanged(jointLink, linkID, sourceID, targetID) {
     crlSendRequest(xhr, data);
 }
 
-function crlSendReferenceLinkChanged(jointLink, linkID, sourceID, targetID) {
+function crlSendReferenceLinkChanged(jointLink, linkID, sourceID, targetID, targetAttributeName) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
         "Action": "ReferenceLinkChanged",
         "RequestConceptID": linkID,
         "AdditionalParameters": {
             "SourceID": sourceID,
-            "TargetID": targetID
+            "TargetID": targetID,
+            "TargetAttributeName": targetAttributeName
         }
     })
     crlSendRequest(xhr, data);
@@ -2236,11 +2371,19 @@ function crlValidateConnection(cellViewS, magnetS, cellViewT, magnetT, end, link
     switch (represents) {
         case "Reference":
             return true;
+        case "ElementPointer":
+            return true;
         case "Refinement":
-            return targetRepresents == "Element" || targetRepresents == "Literal" || targetRepresents == "Refinement" || targetRepresents == "Reference";
+            return targetRepresents == "Element" ||
+                targetRepresents == "Literal" ||
+                targetRepresents == "Refinement" ||
+                targetRepresents == "Reference";
         default:
-            // Must be a pointer
-            return targetRepresents == "Element" || targetRepresents == "Literal" || targetRepresents == "Refinement" || targetRepresents == "Reference";
+            // Must be an owner, abstract, or refined pointer
+            return targetRepresents == "Element" ||
+                targetRepresents == "Literal" ||
+                targetRepresents == "Refinement" ||
+                targetRepresents == "Reference";
     }
 }
 

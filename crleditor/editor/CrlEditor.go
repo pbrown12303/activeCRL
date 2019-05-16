@@ -1,6 +1,7 @@
 package editor
 
 import (
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"log"
@@ -20,13 +21,17 @@ var editorURI = "http://activeCrl.com/crlEditor/Editor"
 // CrlEditorSingleton is the singleton instance of the CrlEditor
 var CrlEditorSingleton *CrlEditor
 
-// CrlLogClientDialog enables logging of client interactions when set to true
-var CrlLogClientDialog = false
+// CrlLogClientNotifications enables logging of client notifications when set to true
+var CrlLogClientNotifications = false
+
+// CrlLogClientRequests enables the logging of client requests when set to true
+var CrlLogClientRequests = false
 
 // CrlEditorSettings are the configurable behaviors of the editor
 type CrlEditorSettings struct {
 	DropReferenceAsLink  bool
 	DropRefinementAsLink bool
+	WorkspacePath        string
 }
 
 type workspaceFile struct {
@@ -40,7 +45,7 @@ type workspaceFile struct {
 // and the singleton instances of the Universe of Discourse and HeldLocks shared by all editing operations.
 type CrlEditor struct {
 	clientNotificationManager *ClientNotificationManager
-	crlEditorSettings         *CrlEditorSettings
+	settings                  *CrlEditorSettings
 	currentSelection          core.Element
 	cutBuffer                 map[string]core.Element
 	diagramManager            *diagramManager
@@ -49,7 +54,6 @@ type CrlEditor struct {
 	treeManager               *treeManager
 	uOfD                      core.UniverseOfDiscourse
 	workspaceFiles            map[string]*workspaceFile
-	workspacePath             string
 	workingConceptSpace       core.Element
 }
 
@@ -59,7 +63,7 @@ func InitializeCrlEditorSingleton() {
 	var editor CrlEditor
 	editor.initialized = false
 	var settings CrlEditorSettings
-	editor.crlEditorSettings = &settings
+	editor.settings = &settings
 	editor.cutBuffer = make(map[string]core.Element)
 	editor.workspaceFiles = make(map[string]*workspaceFile)
 
@@ -151,14 +155,18 @@ func (edPtr *CrlEditor) Delete(elID string) error {
 		// edPtr.cutBuffer = make(map[string]core.Element)
 		// edPtr.cutBuffer[elID] = el
 		uOfD.MarkUndoPoint()
-		return uOfD.DeleteElement(el, hl)
+		err := uOfD.DeleteElement(el, hl)
+		if err != nil {
+			return err
+		}
+		edPtr.SelectElement(nil, hl)
 	}
 	return nil
 }
 
 // deleteFile deletes the file from the os
 func (edPtr *CrlEditor) deleteFile(wf *workspaceFile, hl *core.HeldLocks) error {
-	qualifiedFilename := edPtr.workspacePath + "/" + wf.Info.Name()
+	qualifiedFilename := edPtr.settings.WorkspacePath + "/" + wf.Info.Name()
 	return os.Remove(qualifiedFilename)
 }
 
@@ -281,7 +289,7 @@ func (edPtr *CrlEditor) GetNotificationsLimit() int {
 
 // GetEditorSettings returns the settings that impact editor behavior
 func (edPtr *CrlEditor) GetEditorSettings() *CrlEditorSettings {
-	return edPtr.crlEditorSettings
+	return edPtr.settings
 }
 
 // GetTreeDragSelection returns the Element currently being dragged from the tree
@@ -309,12 +317,31 @@ func (edPtr *CrlEditor) IsInitialized() bool {
 	return edPtr.initialized
 }
 
+// loadSettings loads the settings saved in the user's home directory
+func (edPtr *CrlEditor) loadSettings() error {
+	path := home + "/.crleditorsettings"
+	_, err := os.Stat(path)
+	if err != nil {
+		// it is OK to not find the file
+		return nil
+	}
+	fileSettings, err2 := ioutil.ReadFile(path)
+	if err2 != nil {
+		return err
+	}
+	err = json.Unmarshal(fileSettings, edPtr.settings)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // newFile creates a file with the name being the ConceptID of the supplied Element and returns the workspaceFile struct
 func (edPtr *CrlEditor) newFile(el core.Element, hl *core.HeldLocks) (*workspaceFile, error) {
-	if edPtr.workspacePath == "" {
-		return nil, errors.New("CrlEditor.NewFile called with no workspacePath defined")
+	if edPtr.settings.WorkspacePath == "" {
+		return nil, errors.New("CrlEditor.NewFile called with no settings.WorkspacePath defined")
 	}
-	filename := edPtr.workspacePath + "/" + el.GetConceptID(hl) + ".acrl"
+	filename := edPtr.settings.WorkspacePath + "/" + el.GetConceptID(hl) + ".acrl"
 	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
@@ -338,7 +365,7 @@ func (edPtr *CrlEditor) openFile(fileInfo os.FileInfo, hl *core.HeldLocks) (*wor
 	if writable {
 		mode = os.O_RDWR
 	}
-	file, err := os.OpenFile(edPtr.workspacePath+"/"+fileInfo.Name(), mode, fileInfo.Mode())
+	file, err := os.OpenFile(edPtr.settings.WorkspacePath+"/"+fileInfo.Name(), mode, fileInfo.Mode())
 	if err != nil {
 		return nil, err
 	}
@@ -365,10 +392,10 @@ func (edPtr *CrlEditor) openFile(fileInfo os.FileInfo, hl *core.HeldLocks) (*wor
 
 // openWorkspace sets the path to the folder to be used as a workspace
 func (edPtr *CrlEditor) openWorkspace(path string, hl *core.HeldLocks) error {
-	if path != edPtr.workspacePath && edPtr.workspacePath != "" {
+	if path != edPtr.settings.WorkspacePath && edPtr.settings.WorkspacePath != "" {
 		return errors.New("Cannot open another workspace in the same editor - a new editor must be started")
 	}
-	edPtr.workspacePath = path
+	edPtr.settings.WorkspacePath = path
 	edPtr.SendWorkspacePath()
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
@@ -409,12 +436,33 @@ func (edPtr *CrlEditor) saveFile(wf *workspaceFile, hl *core.HeldLocks) error {
 	return wf.File.Sync()
 }
 
+// saveSettings saves the current settings to the user's home directory
+func (edPtr *CrlEditor) saveSettings() error {
+	path := home + "/.crleditorsettings"
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0755)
+	if err != nil {
+		return err
+	}
+	serializedSettings, err2 := json.Marshal(edPtr.settings)
+	if err2 != nil {
+		return err2
+	}
+	_, err = f.Write(serializedSettings)
+	if err != nil {
+		return err
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
 // SaveWorkspace saves all top-level concepts whose versions are different than the last retrieved version.
 func (edPtr *CrlEditor) SaveWorkspace(hl *core.HeldLocks) error {
 	rootElements := edPtr.uOfD.GetRootElements(hl)
 	var err error
 	for id, el := range rootElements {
-		if el.GetIsCore(hl) == false {
+		if el.GetIsCore(hl) == false && edPtr.workingConceptSpace != el {
 			workspaceFile := edPtr.workspaceFiles[id]
 			if workspaceFile != nil && workspaceFile.LoadedVersion < el.GetVersion(hl) {
 				err = edPtr.saveFile(workspaceFile, hl)
@@ -448,12 +496,12 @@ func (edPtr *CrlEditor) SaveWorkspace(hl *core.HeldLocks) error {
 // SelectElement selects the indicated Element in the tree, displays the Element in the Properties window, and selects it in the
 // current diagram (if present).
 func (edPtr *CrlEditor) SelectElement(el core.Element, hl *core.HeldLocks) core.Element {
-	if el == nil {
-		log.Printf("SelectElement called with nil argument")
-		return nil
-	}
 	edPtr.currentSelection = el
-	_, err := SendNotification("ElementSelected", el.GetConceptID(hl), el, nil)
+	selectedID := ""
+	if el != nil {
+		selectedID = el.GetConceptID(hl)
+	}
+	_, err := SendNotification("ElementSelected", selectedID, el, nil)
 	if err != nil {
 		log.Printf(err.Error())
 	}
@@ -478,8 +526,8 @@ func (edPtr *CrlEditor) SendDebugSettings() {
 // SendEditorSettings sends the editor settings to the client so that they can be edited
 func (edPtr *CrlEditor) SendEditorSettings() {
 	params := make(map[string]string)
-	params["DropReferenceAsLink"] = strconv.FormatBool(edPtr.crlEditorSettings.DropReferenceAsLink)
-	params["DropRefinementAsLink"] = strconv.FormatBool(edPtr.crlEditorSettings.DropRefinementAsLink)
+	params["DropReferenceAsLink"] = strconv.FormatBool(edPtr.settings.DropReferenceAsLink)
+	params["DropRefinementAsLink"] = strconv.FormatBool(edPtr.settings.DropRefinementAsLink)
 	edPtr.SendNotification("EditorSettings", "", nil, params)
 }
 
@@ -491,7 +539,7 @@ func (edPtr *CrlEditor) SendNotification(notificationDescription string, id stri
 // SendWorkspacePath sends the new workspace path to the client
 func (edPtr *CrlEditor) SendWorkspacePath() {
 	params := make(map[string]string)
-	params["WorkspacePath"] = edPtr.workspacePath
+	params["WorkspacePath"] = edPtr.settings.WorkspacePath
 	edPtr.SendNotification("WorkspacePath", "", nil, params)
 }
 
@@ -562,8 +610,8 @@ func (edPtr *CrlEditor) UpdateDebugSettings(request *Request) {
 
 // UpdateEditorSettings updates the values of the editor settings and sends a notification of the change to the client.
 func (edPtr *CrlEditor) UpdateEditorSettings(request *Request) {
-	edPtr.crlEditorSettings.DropReferenceAsLink, _ = strconv.ParseBool(request.AdditionalParameters["DropReferenceAsLink"])
-	edPtr.crlEditorSettings.DropRefinementAsLink, _ = strconv.ParseBool(request.AdditionalParameters["DropRefinementAsLink"])
+	edPtr.settings.DropReferenceAsLink, _ = strconv.ParseBool(request.AdditionalParameters["DropReferenceAsLink"])
+	edPtr.settings.DropRefinementAsLink, _ = strconv.ParseBool(request.AdditionalParameters["DropRefinementAsLink"])
 	edPtr.SendEditorSettings()
 }
 
