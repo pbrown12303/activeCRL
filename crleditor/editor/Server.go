@@ -180,6 +180,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		el.SetOwningConceptID(request.RequestConceptID, hl)
 		CrlEditorSingleton.SelectElement(el, hl)
 		sendReply(w, 0, "Processed AddRefinementChild", el.GetConceptID(hl), el)
+	case "CloseWorkspace":
+		err := CrlEditorSingleton.CloseWorkspace(hl)
+		reply(w, "CloseWorkspace", err)
 	case "DefinitionChanged":
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil {

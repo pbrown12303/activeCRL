@@ -48,6 +48,7 @@ var _ = Describe("Verify function call graph generation", func() {
 			Expect(fcgZero.functionName).To(Equal("http://activeCrl.com/core/coreHousekeeping"))
 			graphString := fcgZero.GetGraph().String()
 			Expect(strings.Contains(graphString, "error")).To(BeFalse())
+			TraceChange = false
 		})
 	})
 })

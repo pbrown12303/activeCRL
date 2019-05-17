@@ -832,10 +832,11 @@ func (ePtr *element) removeListener(listeningConceptID string, hl *HeldLocks) {
 // removeOwnedConcept removes the indicated Element as a child (owned) concept.
 func (ePtr *element) removeOwnedConcept(ownedConceptID string, hl *HeldLocks) error {
 	hl.ReadLockElement(ePtr)
-	ePtr.uOfD.preChange(ePtr, hl)
 	if ePtr.IsReadOnly(hl) {
 		return errors.New("Element.removedOwnedConcept called on read-only Element")
 	}
+	ePtr.uOfD.preChange(ePtr, hl)
+	ePtr.incrementVersion(hl)
 	ePtr.ownedConcepts.DeleteEntry(ownedConceptID)
 	return nil
 }
@@ -849,6 +850,7 @@ func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 	}
 	if ePtr.Definition != def {
 		ePtr.uOfD.preChange(ePtr, hl)
+		ePtr.incrementVersion(hl)
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
 		ePtr.Definition = def
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
@@ -867,6 +869,7 @@ func (ePtr *element) SetIsCore(hl *HeldLocks) {
 	hl.WriteLockElement(ePtr)
 	if ePtr.IsCore != true {
 		ePtr.uOfD.preChange(ePtr, hl)
+		ePtr.incrementVersion(hl)
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
 		ePtr.IsCore = true
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
@@ -882,6 +885,7 @@ func (ePtr *element) SetLabel(label string, hl *HeldLocks) error {
 	}
 	if ePtr.Label != label {
 		ePtr.uOfD.preChange(ePtr, hl)
+		ePtr.incrementVersion(hl)
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
 		ePtr.Label = label
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
@@ -914,6 +918,7 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 	// Do nothing if there is no change
 	if ePtr.OwningConceptID != ocID {
 		ePtr.uOfD.preChange(ePtr, hl)
+		ePtr.incrementVersion(hl)
 		oldOwner := ePtr.GetOwningConcept(hl)
 		if oldOwner != nil {
 			oldOwner.removeOwnedConcept(ePtr.ConceptID, hl)
@@ -953,6 +958,7 @@ func (ePtr *element) SetReadOnly(value bool, hl *HeldLocks) error {
 	}
 	if ePtr.ReadOnly != value {
 		ePtr.uOfD.preChange(ePtr, hl)
+		ePtr.incrementVersion(hl)
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
 		ePtr.ReadOnly = value
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
@@ -982,6 +988,7 @@ func (ePtr *element) SetURI(uri string, hl *HeldLocks) error {
 	}
 	if ePtr.URI != uri {
 		ePtr.uOfD.preChange(ePtr, hl)
+		ePtr.incrementVersion(hl)
 		ePtr.uOfD.changeURIForElement(ePtr, ePtr.URI, uri)
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
 		ePtr.URI = uri

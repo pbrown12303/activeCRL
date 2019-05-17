@@ -137,11 +137,18 @@ func (edPtr *CrlEditor) CloseWorkspace(hl *core.HeldLocks) error {
 	if err != nil {
 		return err
 	}
+	edPtr.settings.WorkspacePath = ""
+	edPtr.workspaceFiles = make(map[string]*workspaceFile)
 	hl.ReleaseLocksAndWait()
 	edPtr.uOfD = core.NewUniverseOfDiscourse()
 	hl2 := edPtr.uOfD.NewHeldLocks()
 	defer hl2.ReleaseLocksAndWait()
-	return edPtr.initializeUofD(hl2)
+	err = edPtr.initializeUofD(hl2)
+	if err != nil {
+		return err
+	}
+	_, err = SendNotification("Refresh", "", nil, nil)
+	return err
 }
 
 // Delete removes the element from the UniverseOfDiscourse

@@ -237,6 +237,7 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *HeldLocks) error {
 	}
 	if rPtr.AbstractConceptID != acID {
 		rPtr.uOfD.preChange(rPtr, hl)
+		rPtr.incrementVersion(hl)
 		if rPtr.AbstractConceptID != "" {
 			rPtr.uOfD.GetElement(rPtr.AbstractConceptID).removeListener(rPtr.ConceptID, hl)
 		}
@@ -278,6 +279,7 @@ func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *HeldLocks) error {
 	}
 	if rPtr.RefinedConceptID != rcID {
 		rPtr.uOfD.preChange(rPtr, hl)
+		rPtr.incrementVersion(hl)
 		if rPtr.RefinedConceptID != "" {
 			rPtr.uOfD.GetElement(rPtr.RefinedConceptID).removeListener(rPtr.ConceptID, hl)
 		}

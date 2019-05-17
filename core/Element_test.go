@@ -228,21 +228,25 @@ var _ = Describe("Element internals test", func() {
 		})
 		Context("After setting the concept owner", func() {
 			Specify("conceptOwner should indicate the owner", func() {
+				initialVersion := el.GetVersion(hl)
 				el.SetOwningConceptID(ownerID, hl)
 				Expect(el.GetOwningConceptID(hl) == owner.GetConceptID(hl)).To(BeTrue())
 				Expect(el.GetOwningConcept(hl) == owner).To(BeTrue())
 				Expect(el.(*element).OwningConceptID == owner.GetConceptID(hl)).To(BeTrue())
 				Expect(owner.IsOwnedConcept(el, hl)).To(BeTrue())
+				Expect(el.GetVersion(hl)).To(Equal(initialVersion + 1))
 			})
 		})
 		Context("After setting the concept owner and then setting it to nil", func() {
 			Specify("conceptOwner should indicate nil", func() {
 				el.SetOwningConceptID(ownerID, hl)
+				initialVersion := el.GetVersion(hl)
 				el.SetOwningConceptID("", hl)
 				Expect(el.GetOwningConceptID(hl) == "").To(BeTrue())
 				Expect(el.GetOwningConcept(hl) == nil).To(BeTrue())
 				Expect(el.(*element).OwningConceptID == "").To(BeTrue())
 				Expect(owner.IsOwnedConcept(el, hl)).To(BeFalse())
+				Expect(el.GetVersion(hl)).To(Equal(initialVersion + 1))
 			})
 		})
 		Context("if Element is read-only", func() {
@@ -279,7 +283,9 @@ var _ = Describe("Element internals test", func() {
 			It("should fail", func() {
 				child, _ = uOfD.NewElement(hl)
 				parent, _ = uOfD.NewElement(hl)
+				initialVersion := parent.GetVersion(hl)
 				parent.SetReadOnly(true, hl)
+				Expect(parent.GetVersion(hl)).To(Equal(initialVersion + 1))
 				child.SetOwningConceptID(parent.getConceptIDNoLock(), hl)
 				Expect(child.SetReadOnly(true, hl)).ToNot(Succeed())
 			})
@@ -347,10 +353,12 @@ var _ = Describe("Element internals test", func() {
 		})
 		Specify("Setting to a valid URI should succeed", func() {
 			uri := CorePrefix + "test"
+			initialVersion := el.GetVersion(hl)
 			Expect(el.SetURI(uri, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 			Expect(el.GetURI(hl) == uri).To(BeTrue())
 			Expect(uOfD.GetElementWithURI(uri)).To(Equal(el))
+			Expect(el.GetVersion(hl)).To(Equal(initialVersion + 1))
 			Expect(el.SetURI("", hl)).To(Succeed())
 			Expect(uOfD.GetElementWithURI(uri)).To(BeNil())
 		})
@@ -367,9 +375,11 @@ var _ = Describe("Element internals test", func() {
 		})
 		Specify("Setting to a valid Label should succeed", func() {
 			label := CorePrefix + "test"
+			initialVersion := el.GetVersion(hl)
 			Expect(el.SetLabel(label, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 			Expect(el.GetLabel(hl) == label).To(BeTrue())
+			Expect(el.GetVersion(hl)).To(Equal(initialVersion + 1))
 		})
 	})
 
@@ -384,9 +394,11 @@ var _ = Describe("Element internals test", func() {
 		})
 		Specify("Setting to a valid Definition should succeed", func() {
 			definition := CorePrefix + "test"
+			initialVersion := el.GetVersion(hl)
 			Expect(el.SetDefinition(definition, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 			Expect(el.GetDefinition(hl) == definition).To(BeTrue())
+			Expect(el.GetVersion(hl)).To(Equal(initialVersion + 1))
 		})
 	})
 

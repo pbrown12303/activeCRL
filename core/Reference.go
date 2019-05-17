@@ -241,6 +241,7 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 	}
 	if rPtr.ReferencedConceptID != rcID {
 		rPtr.uOfD.preChange(rPtr, hl)
+		rPtr.incrementVersion(hl)
 		if rPtr.ReferencedConceptID != "" {
 			oldReferencedConcept := rPtr.uOfD.GetElement(rPtr.ReferencedConceptID)
 			if oldReferencedConcept != nil {
@@ -278,6 +279,7 @@ func (rPtr *reference) SetReferencedAttributeName(attributeName AttributeName, h
 	}
 	if rPtr.ReferencedAttributeName != attributeName {
 		rPtr.uOfD.preChange(rPtr, hl)
+		rPtr.incrementVersion(hl)
 		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, hl)
 		rPtr.ReferencedAttributeName = attributeName
 		rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)

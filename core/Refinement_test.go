@@ -36,8 +36,12 @@ var _ = Describe("Refinement tests", func() {
 		Specify("After assignment, abstract and refined concepts should be correctly set", func() {
 			abstractConcept.incrementVersion(hl)
 			refinedConcept.incrementVersion(hl)
+			initialVersion := ref.GetVersion(hl)
 			ref.SetAbstractConceptID(abstractConcept.getConceptIDNoLock(), hl)
+			Expect(ref.GetVersion(hl)).To(Equal(initialVersion + 1))
+			initialVersion = ref.GetVersion(hl)
 			ref.SetRefinedConceptID(refinedConcept.getConceptIDNoLock(), hl)
+			Expect(ref.GetVersion(hl)).To(Equal(initialVersion + 1))
 			Expect(ref.GetAbstractConcept(hl)).To(Equal(abstractConcept))
 			Expect(ref.GetRefinedConcept(hl)).To(Equal(refinedConcept))
 			Expect(ref.GetAbstractConceptID(hl)).To(Equal(abstractConcept.getConceptIDNoLock()))

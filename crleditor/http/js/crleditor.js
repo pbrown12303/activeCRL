@@ -1288,6 +1288,9 @@ function crlInitializeWebSocket() {
                 console.log("Initialization Complete")
                 crlSendNormalResponse("Processed InitializationComplete")
                 break;
+                case "Refresh":
+                crlNotificationRefresh()
+                break;
             case "UpdateDiagramLink":
                 crlNotificationUpdateDiagramLink(data);
                 break;
@@ -1421,6 +1424,11 @@ function crlLinkViewRepresentsPointer(linkView) {
     return false;
 }
 
+function crlNotificationRefresh() {
+    crlSendNormalResponse();
+    window.location.reload();
+}
+
 function crlNotificationSaveDebugSettings(data) {
     crlEnableTracing = JSON.parse(data.AdditionalParameters["EnableNotificationTracing"]);
     crlOmitHousekeepingCalls = JSON.parse(data.AdditionalParameters["OmitHousekeepingCalls"]);
@@ -1540,9 +1548,16 @@ function crlNotificationAddTreeNode(data) {
     } else {
         nodeClass = "node"
     }
-    var nodeID = $('#uOfD').jstree().create_node(owningConceptID,
+    var tree = $('#uOfD').jstree();
+    var nodeID = crlGetTreeNodeIDFromConceptID(concept.ConceptID);
+    var node = tree.get_node(nodeID);
+    if (node) {
+        crlSendNormalResponse();
+        return;
+    }
+    tree.create_node(owningConceptID,
         {
-            'id': crlGetTreeNodeIDFromConceptID(concept.ConceptID),
+            'id': nodeID,
             'text': concept.Label,
             'icon': params.icon,
             'li_attr': {
@@ -2031,6 +2046,14 @@ function crlSendAddReferenceChild(conceptID) {
 function crlSendAddRefinementChild(conceptID) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({ "Action": "AddRefinementChild", "RequestConceptID": conceptID });
+    crlSendRequest(xhr, data);
+}
+
+function crlSendCloseWorkspace() {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "CloseWorkspace"
+    });
     crlSendRequest(xhr, data);
 }
 

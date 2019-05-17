@@ -30,17 +30,21 @@ var _ = Describe("Reference Tests", func() {
 			ref, _ := uOfD.NewReference(hl)
 			target, _ := uOfD.NewElement(hl)
 			target.(*element).Version.counter = 66
+			initialVersion := ref.GetVersion(hl)
 			ref.SetReferencedConceptID(target.getConceptIDNoLock(), hl)
 			Expect(ref.GetReferencedConceptID(hl)).To(Equal(target.getConceptIDNoLock()))
 			Expect(ref.GetReferencedConcept(hl)).To(Equal(target))
 			Expect(ref.getReferencedConceptNoLock()).To(Equal(target))
 			Expect(ref.GetReferencedConceptVersion(hl)).To(Equal(target.GetVersion(hl)))
+			Expect(ref.GetVersion(hl)).To(Equal(initialVersion + 1))
 		})
 		Specify("Referenced concept should clear correctly", func() {
 			ref, _ := uOfD.NewReference(hl)
 			target, _ := uOfD.NewElement(hl)
 			target.(*element).Version.counter = 66
+			initialVersion := ref.GetVersion(hl)
 			ref.SetReferencedConceptID(target.getConceptIDNoLock(), hl)
+			Expect(ref.GetVersion(hl)).To(Equal(initialVersion + 1))
 			ref.SetReferencedConceptID("", hl)
 			Expect(ref.GetReferencedConceptID(hl)).To(Equal(""))
 			Expect(ref.GetReferencedConcept(hl)).To(BeNil())
@@ -50,8 +54,10 @@ var _ = Describe("Reference Tests", func() {
 		Specify("SetReferencedConcept should work correctly", func() {
 			ref, _ := uOfD.NewReference(hl)
 			target, _ := uOfD.NewElement(hl)
+			initialVersion := ref.GetVersion(hl)
 			ref.SetReferencedConcept(target, hl)
 			Expect(ref.GetReferencedConcept(hl)).To(Equal(target))
+			Expect(ref.GetVersion(hl)).To(Equal(initialVersion + 1))
 		})
 		Specify("Referenced element should be retrieved from uOfD if cache does not contain pointer", func() {
 			ref, _ := uOfD.NewReference(hl)
@@ -68,7 +74,9 @@ var _ = Describe("Reference Tests", func() {
 		})
 		Specify("ReferencedConcept AttributeName should set correctly", func() {
 			ref, _ := uOfD.NewReference(hl)
+			initialVersion := ref.GetVersion(hl)
 			ref.SetReferencedAttributeName(OwningConceptID, hl)
+			Expect(ref.GetVersion(hl)).To(Equal(initialVersion + 1))
 			Expect(ref.GetReferencedAttributeName(hl)).To(Equal(OwningConceptID))
 			ref.SetReferencedAttributeName(NoAttribute, hl)
 			Expect(ref.GetReferencedAttributeName(hl)).To(Equal(NoAttribute))
