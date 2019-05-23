@@ -1254,7 +1254,7 @@ function crlInitializeWebSocket() {
                 crlNotificationAddTreeNode(data);
                 break;
             case "ChangeTreeNode":
-                crlNotificationChangeTreeNode(data);
+                crlNotificationUpdateTreeNode(data);
                 break;
             case "ClearToolbarSelection":
                 crlNotificationClearToolbarSelection(data);
@@ -1571,39 +1571,6 @@ function crlNotificationAddTreeNode(data) {
     crlSendNormalResponse();
 }
 
-function crlNotificationChangeTreeNode(data) {
-    var concept = data.NotificationConcept;
-    var params = data.AdditionalParameters;
-    var owningConceptID = concept.OwningConceptID;
-    var treeNodeOwnerID = ""
-    if (owningConceptID == "") {
-        treeNodeOwnerID = "#";
-    } else {
-        treeNodeOwnerID = crlGetTreeNodeIDFromConceptID(owningConceptID);
-    };
-    var nodeID = crlGetTreeNodeIDFromConceptID(concept.ConceptID);
-    var tree = $('#uOfD').jstree();
-    if (tree.get_parent(nodeID) != treeNodeOwnerID) {
-        tree.move_node(nodeID, treeNodeOwnerID);
-    }
-    var nodeClass
-    if (concept.ReadOnly == "true" || concept.IsCore == "true") {
-        nodeClass = "node-read-only";
-    } else {
-        nodeClass = "node"
-    }
-    tree.rename_node(nodeID, concept.Label);
-    tree.set_icon(nodeID, params.icon);
-    var node = tree.get_node(nodeID);
-    if (node) {
-        node.li_attr.read_only = concept.ReadOnly;
-        node.li_attr.is_core = concept.IsCore;
-        node.li_attr.is_diagram = params.isDiagram;
-        node.li_attr.class = nodeClass;
-    }
-    crlSendNormalResponse()
-}
-
 function crlNotificationClearToolbarSelection(data) {
     crlSelectToolbarButton("cursorToolbarButton");
     crlSendNormalResponse();
@@ -1678,38 +1645,7 @@ function crlNotificationElementSelected(data) {
     if (data.NotificationConceptID != crlSelectedConceptID) {
         crlSelectedConceptID = data.NotificationConceptID
         // Update the properties
-        crlPropertiesDisplayType(data, 1);
-        crlPropertiesDisplayID(data, 2);
-        crlPropertiesDisplayVersion(data, 3);
-        crlPropertiesDisplayLabel(data, 4);
-        crlPropertiesDisplayDefinition(data, 5);
-        crlPropertiesDisplayURI(data, 6);
-        var type = ""
-        if (data.NotificationConcept) {
-            type = data.NotificationConcept.Type
-        }
-        switch (type) {
-            case "*core.element":
-                crlPropertiesClearRow(8);
-                crlPropertiesClearRow(7);
-                break;
-            case "*core.literal":
-                crlPropertiesDisplayLiteralValue(data, 7);
-                crlPropertiesClearRow(8);
-                break
-            case "*core.reference":
-                crlPropertiesDisplayReferencedConcept(data, 7);
-                crlPropertiesClearRow(8);
-                break;
-            case "*core.refinement":
-                crlPropertiesDisplayAbstractConcept(data, 7);
-                crlPropertiesDisplayRefinedConcept(data, 8);
-                break;
-            default:
-                crlPropertiesClearRow(8);
-                crlPropertiesClearRow(7);
-        };
-
+        crlUpdateProperties(data);
         // Update the tree
         var treeNodeID = crlGetTreeNodeIDFromConceptID(crlSelectedConceptID);
         $("#uOfD").jstree(true).deselect_all(true);
@@ -1719,6 +1655,40 @@ function crlNotificationElementSelected(data) {
         crlInCrlElementSelected = false;
     }
     crlSendNormalResponse()
+}
+
+function crlUpdateProperties(data) {
+    crlPropertiesDisplayType(data, 1);
+    crlPropertiesDisplayID(data, 2);
+    crlPropertiesDisplayVersion(data, 3);
+    crlPropertiesDisplayLabel(data, 4);
+    crlPropertiesDisplayDefinition(data, 5);
+    crlPropertiesDisplayURI(data, 6);
+    var type = "";
+    if (data.NotificationConcept) {
+        type = data.NotificationConcept.Type;
+    }
+    switch (type) {
+        case "*core.element":
+            crlPropertiesClearRow(8);
+            crlPropertiesClearRow(7);
+            break;
+        case "*core.literal":
+            crlPropertiesDisplayLiteralValue(data, 7);
+            crlPropertiesClearRow(8);
+            break;
+        case "*core.reference":
+            crlPropertiesDisplayReferencedConcept(data, 7);
+            crlPropertiesClearRow(8);
+            break;
+        case "*core.refinement":
+            crlPropertiesDisplayAbstractConcept(data, 7);
+            crlPropertiesDisplayRefinedConcept(data, 8);
+            break;
+        default:
+            crlPropertiesClearRow(8);
+            crlPropertiesClearRow(7);
+    };
 }
 
 function crlNotificationSaveEditorSettings(data) {
@@ -1791,8 +1761,45 @@ var crlNotificationUpdateDiagramNode = function (data) {
     crlSendNormalResponse();
 }
 
+function crlNotificationUpdateTreeNode(data) {
+    var concept = data.NotificationConcept;
+    var params = data.AdditionalParameters;
+    var owningConceptID = concept.OwningConceptID;
+    var treeNodeOwnerID = ""
+    if (owningConceptID == "") {
+        treeNodeOwnerID = "#";
+    } else {
+        treeNodeOwnerID = crlGetTreeNodeIDFromConceptID(owningConceptID);
+    };
+    var nodeID = crlGetTreeNodeIDFromConceptID(concept.ConceptID);
+    var tree = $('#uOfD').jstree();
+    if (tree.get_parent(nodeID) != treeNodeOwnerID) {
+        tree.move_node(nodeID, treeNodeOwnerID);
+    }
+    var nodeClass
+    if (concept.ReadOnly == "true" || concept.IsCore == "true") {
+        nodeClass = "node-read-only";
+    } else {
+        nodeClass = "node"
+    }
+    tree.rename_node(nodeID, concept.Label);
+    tree.set_icon(nodeID, params.icon);
+    var node = tree.get_node(nodeID);
+    if (node) {
+        node.li_attr.read_only = concept.ReadOnly;
+        node.li_attr.is_core = concept.IsCore;
+        node.li_attr.is_diagram = params.isDiagram;
+        node.li_attr.class = nodeClass;
+    }
+    if (concept.ConceptID == crlSelectedConceptID) {
+        crlUpdateProperties(data);
+    }
+    crlSendNormalResponse()
+}
+
 var crlNotificationUpdateWorkspacePath = function (data) {
     crlWorkspacePath = data.AdditionalParameters["WorkspacePath"];
+    document.getElementById("CurrentWorkspace").innerHTML = crlWorkspacePath;
     crlSendNormalResponse();
 }
 
