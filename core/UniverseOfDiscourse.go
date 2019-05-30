@@ -35,7 +35,7 @@ func NewUniverseOfDiscourse() UniverseOfDiscourse {
 	uOfD.uOfD = &uOfD
 	hl := uOfD.NewHeldLocks()
 	uOfD.IsCore = true
-	uOfD.addElement(&uOfD, hl)
+	uOfD.addElement(&uOfD, false, hl)
 	uOfD.AddFunction(coreHousekeepingURI, coreHousekeeping)
 	hl.ReleaseLocksAndWait()
 	buildCoreConceptSpace(&uOfD, hl)
@@ -43,7 +43,7 @@ func NewUniverseOfDiscourse() UniverseOfDiscourse {
 	return &uOfD
 }
 
-func (uOfDPtr *universeOfDiscourse) addElement(el Element, hl *HeldLocks) error {
+func (uOfDPtr *universeOfDiscourse) addElement(el Element, inRecovery bool, hl *HeldLocks) error {
 	if el == nil {
 		return errors.New("UniverseOfDiscource addElement() failed because element was nil")
 	}
@@ -51,7 +51,7 @@ func (uOfDPtr *universeOfDiscourse) addElement(el Element, hl *HeldLocks) error 
 	uOfDPtr.undoManager.markNewElement(el, hl)
 	uuid := el.GetConceptID(hl)
 	if uuid == "" {
-		return errors.New("UniverseOfDiscource addBaseElement() failed because UUID was nil")
+		return errors.New("UniverseOfDiscource addElement() failed because UUID was nil")
 	}
 	uOfDPtr.uuidElementMap.SetEntry(el.getConceptIDNoLock(), el)
 	uri := el.GetURI(hl)
@@ -60,7 +60,11 @@ func (uOfDPtr *universeOfDiscourse) addElement(el Element, hl *HeldLocks) error 
 	}
 	owner := uOfDPtr.GetElement(el.GetOwningConceptID(hl))
 	if owner != nil {
-		owner.addOwnedConcept(uuid, hl)
+		if inRecovery {
+			owner.addRecoveredOwnedConcept(uuid, hl)
+		} else {
+			owner.addOwnedConcept(uuid, hl)
+		}
 	}
 	// Add element to all listener's lists
 	switch el.(type) {
@@ -620,10 +624,14 @@ func (uOfDPtr *universeOfDiscourse) queueFunctionExecutions(el Element, notifica
 	}
 	functionIdentifiers := uOfDPtr.findFunctions(el, notification, hl)
 	for _, functionIdentifier := range functionIdentifiers {
-		if TraceChange == true {
-			log.Printf("queueFunctionExecutions adding function, URI: %s notification: %s target: %p", functionIdentifier, notification.GetNatureOfChange().String(), el)
-			log.Printf("Function target: %T %s %s %p", el, el.getConceptIDNoLock(), el.GetLabel(hl), el)
-			notification.Print("Notification: ", hl)
+		if TraceLocks == true || TraceChange == true {
+			omitTrace := (OmitHousekeepingCalls && functionIdentifier == "http://activeCrl.com/core/coreHousekeeping") ||
+				(OmitManageTreeNodesCalls && functionIdentifier == "http://activeCrl.com/crlEditor/Editor/TreeViews/ManageTreeNodes")
+			if omitTrace == false {
+				log.Printf("queueFunctionExecutions adding function, URI: %s notification: %s target: %p", functionIdentifier, notification.GetNatureOfChange().String(), el)
+				log.Printf("Function target: %T %s %s %p", el, el.getConceptIDNoLock(), el.GetLabel(hl), el)
+				notification.Print("Notification: ", hl)
+			}
 		}
 		hl.functionCallManager.addFunctionCall(functionIdentifier, el, notification)
 	}
@@ -682,7 +690,7 @@ func (uOfDPtr *universeOfDiscourse) RecoverElement(data []byte, hl *HeldLocks) (
 		log.Printf("Error recovering Element: %s \n", err)
 		return nil, err
 	}
-	uOfDPtr.addElement(recoveredElement, hl)
+	uOfDPtr.addElement(recoveredElement, true, hl)
 	return recoveredElement, nil
 }
 
@@ -776,7 +784,7 @@ func (uOfDPtr *universeOfDiscourse) SetUniverseOfDiscourse(el Element, hl *HeldL
 		uOfDPtr.preChange(el, hl)
 		uOfDPtr.queueFunctionExecutions(uOfDPtr, uOfDPtr.newConceptAddedNotification(el, hl), hl)
 		el.setUniverseOfDiscourse(uOfDPtr, hl)
-		uOfDPtr.addElement(el, hl)
+		uOfDPtr.addElement(el, false, hl)
 	}
 	return nil
 }
@@ -927,7 +935,7 @@ func (uOfDPtr *universeOfDiscourse) uriValidForConceptID(uri ...string) error {
 // UniverseOfDiscourse defines the set of concepts (Elements) currently in scope
 type UniverseOfDiscourse interface {
 	Element
-	addElement(Element, *HeldLocks) error
+	addElement(el Element, inRecovery bool, hl *HeldLocks) error
 	AddFunction(string, crlExecutionFunction)
 	addUnresolvedPointer(*cachedPointer)
 	changeURIForElement(Element, string, string) error

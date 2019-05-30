@@ -793,7 +793,7 @@ func (ePtr *element) recoverElementFields(unmarshaledData *map[string]json.RawMe
 		ePtr.uOfD.addUnresolvedPointer(ePtr.owningConcept)
 	} else {
 		ePtr.owningConcept.setIndicatedConcept(owningConcept)
-		owningConcept.addOwnedConcept(ePtr.getConceptIDNoLock(), hl)
+		owningConcept.addRecoveredOwnedConcept(ePtr.getConceptIDNoLock(), hl)
 	}
 	// ReadOnly
 	var recoveredReadOnly string
@@ -819,6 +819,14 @@ func (ePtr *element) recoverElementFields(unmarshaledData *map[string]json.RawMe
 		log.Printf("Conversion of Element.version to integer failed\n")
 		return err
 	}
+	// URI
+	var recoveredURI string
+	err = json.Unmarshal((*unmarshaledData)["URI"], &recoveredURI)
+	if err != nil {
+		log.Printf("Recovery of Element.URI as string failed\n")
+		return err
+	}
+	ePtr.URI = recoveredURI
 	return nil
 }
 
@@ -850,8 +858,8 @@ func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 	}
 	if ePtr.Definition != def {
 		ePtr.uOfD.preChange(ePtr, hl)
-		ePtr.incrementVersion(hl)
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		ePtr.incrementVersion(hl)
 		ePtr.Definition = def
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
@@ -869,8 +877,8 @@ func (ePtr *element) SetIsCore(hl *HeldLocks) {
 	hl.WriteLockElement(ePtr)
 	if ePtr.IsCore != true {
 		ePtr.uOfD.preChange(ePtr, hl)
-		ePtr.incrementVersion(hl)
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		ePtr.incrementVersion(hl)
 		ePtr.IsCore = true
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
@@ -885,8 +893,8 @@ func (ePtr *element) SetLabel(label string, hl *HeldLocks) error {
 	}
 	if ePtr.Label != label {
 		ePtr.uOfD.preChange(ePtr, hl)
-		ePtr.incrementVersion(hl)
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		ePtr.incrementVersion(hl)
 		ePtr.Label = label
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
@@ -918,12 +926,12 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 	// Do nothing if there is no change
 	if ePtr.OwningConceptID != ocID {
 		ePtr.uOfD.preChange(ePtr, hl)
-		ePtr.incrementVersion(hl)
 		oldOwner := ePtr.GetOwningConcept(hl)
 		if oldOwner != nil {
 			oldOwner.removeOwnedConcept(ePtr.ConceptID, hl)
 		}
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		ePtr.incrementVersion(hl)
 		var newOwner Element
 		ePtr.OwningConceptID = ocID
 		ePtr.owningConcept.setIndicatedConceptID(ocID)
@@ -958,8 +966,8 @@ func (ePtr *element) SetReadOnly(value bool, hl *HeldLocks) error {
 	}
 	if ePtr.ReadOnly != value {
 		ePtr.uOfD.preChange(ePtr, hl)
-		ePtr.incrementVersion(hl)
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		ePtr.incrementVersion(hl)
 		ePtr.ReadOnly = value
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
@@ -988,9 +996,9 @@ func (ePtr *element) SetURI(uri string, hl *HeldLocks) error {
 	}
 	if ePtr.URI != uri {
 		ePtr.uOfD.preChange(ePtr, hl)
-		ePtr.incrementVersion(hl)
-		ePtr.uOfD.changeURIForElement(ePtr, ePtr.URI, uri)
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		ePtr.uOfD.changeURIForElement(ePtr, ePtr.URI, uri)
+		ePtr.incrementVersion(hl)
 		ePtr.URI = uri
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}

@@ -88,6 +88,7 @@ func (lPtr *literal) SetLiteralValue(value string, hl *HeldLocks) error {
 	if lPtr.LiteralValue != value {
 		lPtr.uOfD.preChange(lPtr, hl)
 		notification := lPtr.uOfD.NewConceptChangeNotification(lPtr, hl)
+		lPtr.incrementVersion(hl)
 		lPtr.LiteralValue = value
 		lPtr.uOfD.queueFunctionExecutions(lPtr, notification, hl)
 	}

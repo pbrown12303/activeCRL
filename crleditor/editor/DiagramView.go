@@ -108,6 +108,26 @@ func updateDiagramElementView(diagramElement core.Element, changeNotification *c
 		case core.ChildChanged:
 			additionalParameters := getNodeAdditionalParameters(diagramElement, hl)
 			SendNotification("UpdateDiagramNode", diagramElement.GetConceptID(hl), diagramElement, additionalParameters)
+		case core.IndicatedConceptChanged:
+			underlyingNotification := changeNotification.GetUnderlyingChange()
+			if underlyingNotification != nil {
+				switch underlyingNotification.GetNatureOfChange() {
+				case core.IndicatedConceptChanged:
+					secondUnderlyingNotification := underlyingNotification.GetUnderlyingChange()
+					if secondUnderlyingNotification != nil {
+						switch secondUnderlyingNotification.GetNatureOfChange() {
+						case core.ConceptChanged:
+							currentConcept := secondUnderlyingNotification.GetReportingElement()
+							priorConcept := secondUnderlyingNotification.GetPriorState()
+							if currentConcept != nil && priorConcept != nil && currentConcept.GetLabel(hl) != priorConcept.GetLabel(hl) {
+								currentLabel := currentConcept.GetLabel(hl)
+								diagramElement.SetLabel(currentLabel, hl)
+								crldiagram.SetDisplayLabel(diagramElement, currentLabel, hl)
+							}
+						}
+					}
+				}
+			}
 		}
 		return
 	} else if crldiagram.IsDiagramLink(diagramElement, hl) {
@@ -174,8 +194,7 @@ func updateDiagramView(diagram core.Element, changeNotification *core.ChangeNoti
 	}
 }
 
-// diagramViewMonitor is the callback function that manages the diagram view in the gui. Its sole purpose is to
-// detect the deletion of the diagram and then remove the correspondidng diagram view (if any) from the client GUI
+// diagramViewMonitor is the callback function that manages the diagram view in the gui.
 func diagramViewMonitor(instance core.Element, changeNotification *core.ChangeNotification, uOfD core.UniverseOfDiscourse) {
 	// The instance here is the reference that is monitoring the diagram
 	hl := uOfD.NewHeldLocks()
@@ -193,6 +212,17 @@ func diagramViewMonitor(instance core.Element, changeNotification *core.ChangeNo
 					CrlEditorSingleton.getDiagramManager().closeDiagramView(oldReferencedID, hl)
 					uOfD.DeleteElement(instance, hl)
 				}
+			}
+		}
+	case core.IndicatedConceptChanged:
+		underlyingChange := changeNotification.GetUnderlyingChange()
+		switch underlyingChange.GetNatureOfChange() {
+		case core.ConceptChanged:
+			diagram := underlyingChange.GetReportingElement()
+			oldDiagram := underlyingChange.GetPriorState()
+			if diagram != nil && oldDiagram != nil && diagram.GetLabel(hl) != oldDiagram.GetLabel(hl) {
+				diagramID := underlyingChange.GetReportingElementID()
+				CrlEditorSingleton.getDiagramManager().diagramLabelChanged(diagramID, diagram, hl)
 			}
 		}
 	}

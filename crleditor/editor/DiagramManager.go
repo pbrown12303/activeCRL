@@ -194,6 +194,11 @@ func (dmPtr *diagramManager) deleteDiagramElementView(elementID string, hl *core
 	return dmPtr.crlEditor.uOfD.DeleteElements(dEls, hl)
 }
 
+// diagramChanged handles the update of the diagram tab when the diagram name changes
+func (dmPtr *diagramManager) diagramLabelChanged(diagramID string, diagram core.Element, hl *core.HeldLocks) {
+	SendNotification("DiagramLabelChanged", diagramID, diagram, map[string]string{})
+}
+
 // diagramClick handles the creation of a new Element and adding a node representation of it to the diagram
 func (dmPtr *diagramManager) diagramClick(request *Request, hl *core.HeldLocks) error {
 	uOfD := dmPtr.crlEditor.uOfD

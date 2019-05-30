@@ -287,7 +287,6 @@ $(function () {
     window.onmousedown = function (e) {
         e = e || window.event;
         crlMouseButtonPressed[e.button] = true;
-        console.log(e);
     }
     window.onmouseup = function (e) {
         e = e || window.event;
@@ -967,17 +966,20 @@ function crlPropertiesDisplayDefinition(data, row) {
         isCore = data.NotificationConcept.IsCore
         isReadOnly = data.NotificationConcept.ReadOnly
     }
-    definitionRow.cells[1].innerHTML = definition;
-    definitionRow.cells[1].id = "definition";
+    var input = definitionRow.cells[1].firstElementChild;
+    var cursorPosition = input.selectionStart;
+    input.value = definition;
+    input.id = "definition";
     if (isCore == "false" && isReadOnly == "false") {
-        definitionRow.cells[1].contentEditable = true;
+        input.read_only = false;
         if (!definitionRow.cells[1].callbackAssigned) {
-            definitionRow.cells[1].callbackAssigned = true;
+            input.callbackAssigned = true;
             $("#definition").on("keyup", crlSendDefinitionChanged);
         }
     } else {
-        definitionRow.cells[1].contentEditable = false;
+        input.read_only = true;
     };
+    input.setSelectionRange(cursorPosition, cursorPosition);
 }
 
 function crlPropertiesDisplayID(data, row) {
@@ -989,30 +991,33 @@ function crlPropertiesDisplayID(data, row) {
 function crlPropertiesDisplayLabel(data, row) {
     var labelRow = crlObtainPropertyRow(row);
     labelRow.cells[0].innerHTML = "Label";
-    var label = ""
-    var isCore = false
-    var isReadOnly = false
+    var label = "";
+    var isCore = false;
+    var isReadOnly = false;
     if (data.NotificationConcept) {
-        label = data.NotificationConcept.Label
-        isCore = data.NotificationConcept.IsCore
-        isReadOnly = data.NotificationConcept.ReadOnly
+        label = data.NotificationConcept.Label;
+        isCore = data.NotificationConcept.IsCore;
+        isReadOnly = data.NotificationConcept.ReadOnly;
     }
-    labelRow.cells[1].innerHTML = label;
-    labelRow.cells[1].id = "elementLabel";
+    var input = labelRow.cells[1].firstElementChild;
+    var cursorPosition = input.selectionStart;
+    input.value = label;
+    input.id = "elementLabel";
     if (isCore == "false" && isReadOnly == "false") {
-        labelRow.cells[1].contentEditable = true;
-        if (!labelRow.cells[1].callbackAssigned) {
-            labelRow.cells[1].callbackAssigned = true;
+        input.read_only = false;
+        if (!input.callbackAssigned) {
+            input.callbackAssigned = true;
             $("#elementLabel").on("keyup", crlSendLabelChanged);
         }
     } else {
-        labelRow.cells[1].contentEditable = false;
+        input.read_only = true;
     };
+    input.setSelectionRange(cursorPosition, cursorPosition);
 }
 
 function crlPropertiesDisplayLiteralValue(data, row) {
-    var labelRow = crlObtainPropertyRow(row);
-    labelRow.cells[0].innerHTML = "Literal Value";
+    var literalValueRow = crlObtainPropertyRow(row);
+    literalValueRow.cells[0].innerHTML = "Literal Value";
     var literalValue = ""
     var isCore = false
     var isReadOnly = false
@@ -1021,17 +1026,20 @@ function crlPropertiesDisplayLiteralValue(data, row) {
         isCore = data.NotificationConcept.IsCore
         isReadOnly = data.NotificationConcept.ReadOnly
     }
-    labelRow.cells[1].innerHTML = literalValue;
-    labelRow.cells[1].id = "literalValue";
+    var input = literalValueRow.cells[1].firstElementChild;
+    var cursorPosition = input.selectionStart;
+    input.value = literalValue;
+    input.id = "literalValue";
     if (isCore == "false" && isReadOnly == "false") {
-        labelRow.cells[1].contentEditable = true;
-        if (!labelRow.cells[1].callbackAssigned) {
-            labelRow.cells[1].callbackAssigned = true;
+        input.read_only = false;
+        if (!literalValueRow.cells[1].callbackAssigned) {
+            input.callbackAssigned = true;
             $("#literalValue").on("keyup", crlSendLiteralValueChanged);
         }
     } else {
-        labelRow.cells[1].contentEditable = false;
+        input.read_only = true;
     };
+    input.setSelectionRange(cursorPosition, cursorPosition);
 }
 
 function crlPropertiesDisplayReferencedConcept(data, row) {
@@ -1075,17 +1083,20 @@ function crlPropertiesDisplayURI(data, row) {
         isCore = data.NotificationConcept.IsCore
         isReadOnly = data.NotificationConcept.ReadOnly
     }
-    uriRow.cells[1].innerHTML = uri;
-    uriRow.cells[1].id = "uri";
+    var input = uriRow.cells[1].firstElementChild;
+    var cursorPosition = input.selectionStart;
+    input.value = uri;
+    input.id = "uri";
     if (isCore == "false" && isReadOnly == "false") {
-        uriRow.cells[1].contentEditable = true;
+        input.read_only = false;
         if (!uriRow.cells[1].callbackAssigned) {
-            uriRow.cells[1].callbackAssigned = true;
+            input.callbackAssigned = true;
             $("#uri").on("keyup", crlSendURIChanged);
         }
     } else {
-        uriRow.cells[1].contentEditable = false;
+        input.read_only = true;
     }
+    input.setSelectionRange(cursorPosition, cursorPosition);
 }
 
 
@@ -1271,6 +1282,9 @@ function crlInitializeWebSocket() {
             case "DeleteTreeNode":
                 crlNotificationDeleteTreeNode(data);
                 break;
+            case "DiagramLabelChanged":
+                crlNotificationDiagramLabelChanged(data);
+                break;
             case "DisplayDiagram":
                 crlNotificationDisplayDiagram(data);
                 break;
@@ -1288,7 +1302,7 @@ function crlInitializeWebSocket() {
                 console.log("Initialization Complete")
                 crlSendNormalResponse("Processed InitializationComplete")
                 break;
-                case "Refresh":
+            case "Refresh":
                 crlNotificationRefresh()
                 break;
             case "UpdateDiagramLink":
@@ -1607,6 +1621,13 @@ function crlNotificationDeleteTreeNode(data) {
     crlSendNormalResponse();
 }
 
+function crlNotificationDiagramLabelChanged(data) {
+    var tabID = crlGetDiagramTabIDFromDiagramID(data.NotificationConceptID);
+    var tab = document.getElementById(tabID);
+    tab.innerHTML = data.NotificationConcept.Label;
+    crlSendNormalResponse();
+}
+
 function crlNotificationDisplayDiagram(data) {
     var diagramID = data.NotificationConceptID;
     var diagramLabel = data.NotificationConcept.Label;
@@ -1805,11 +1826,14 @@ var crlNotificationUpdateWorkspacePath = function (data) {
 
 function crlObtainPropertyRow(row) {
     var properties = document.getElementById("properties");
-    var propertyRow = properties.rows[row]
+    var propertyRow = properties.rows[row];
     if (propertyRow == undefined) {
-        propertyRow = properties.insertRow(row)
-        propertyRow.insertCell(0)
-        propertyRow.insertCell(1)
+        propertyRow = properties.insertRow(row);
+        propertyRow.insertCell(0);
+        propertyRow.insertCell(1);
+        var input = document.createElement("input");
+        input.setAttribute("type", "text");
+        propertyRow.cells[1].appendChild(input);
     }
     return propertyRow
 }
@@ -1828,7 +1852,6 @@ var crlOnCloseDiagramView = function () {
 }
 
 var crlOnDiagramCellPointerDown = function (cellView, event, x, y) {
-    console.log("In crlOnDiagramCellPointerDown")
     crlMouseButtonPressed[event.button] = true;
     var jointElementID = cellView.model.get("crlJointID");
     if (jointElementID && jointElementID != "") {
@@ -1841,7 +1864,6 @@ var crlOnDiagramCellPointerDown = function (cellView, event, x, y) {
 }
 
 var crlOnDiagramCellPointerUp = function (cellView, event, x, y) {
-    console.log("In crlOnDiagramCellPointerUp")
     crlMouseButtonPressed[event.button] = false;
     crlFinalizeNodeMoves();
 }
@@ -1910,7 +1932,6 @@ function crlOnDiagramClick(event) {
 
 function crlOnDiagramDrop(event) {
     event.preventDefault();
-    console.log("OnDiagramManagerDrop called");
     var conceptID = crlGetConceptIDFromContainerID(event.target.parentElement.parentElement.id);
     var x = event.layerX.toString();
     var y = event.layerY.toString();
@@ -1973,9 +1994,7 @@ function crlSelectToolbarButton(id) {
 
 function crlOnTreeDragStart(e, data) {
     var parentID = e.target.parentElement.id;
-    console.log("On Tree Drag Start called, ParentId = " + parentID);
     var selectedElementID = crlGetConceptIDFromTreeNodeID(parentID);
-    console.log("selectedElementID = " + selectedElementID)
     crlSendSetTreeDragSelection(selectedElementID);
 };
 
@@ -1986,10 +2005,8 @@ function crlOpenDiagramContainer(diagramContainerId) {
     for (i = 0; i < x.length; i++) {
         if (x[i].id == diagramContainerId) {
             x[i].style.display = "block";
-            console.log("Showing: " + diagramContainerId.toString())
         } else {
             x[i].style.display = "none";
-            console.log("Hiding: " + diagramContainerId.toString())
         }
     }
 }
@@ -2084,7 +2101,7 @@ function crlSendDefinitionChanged(evt, obj) {
         "Action": "DefinitionChanged",
         "RequestConceptID": crlSelectedConceptID,
         "AdditionalParameters":
-            { "NewValue": evt.currentTarget.textContent }
+            { "NewValue": evt.currentTarget.value }
     });
     crlSendRequest(xhr, data);
 }
@@ -2194,7 +2211,7 @@ function crlSendLabelChanged(evt, obj) {
         "Action": "LabelChanged",
         "RequestConceptID": crlSelectedConceptID,
         "AdditionalParameters":
-            { "NewValue": evt.currentTarget.textContent }
+            { "NewValue": evt.currentTarget.value }
     });
     crlSendRequest(xhr, data)
 }
@@ -2205,7 +2222,7 @@ function crlSendLiteralValueChanged(evt, obj) {
         "Action": "LiteralValueChanged",
         "RequestConceptID": crlSelectedConceptID,
         "AdditionalParameters":
-            { "NewValue": evt.currentTarget.textContent }
+            { "NewValue": evt.currentTarget.value }
     });
     crlSendRequest(xhr, data)
 }
@@ -2308,7 +2325,7 @@ function crlSendURIChanged(evt, obj) {
         "Action": "URIChanged",
         "RequestConceptID": crlSelectedConceptID,
         "AdditionalParameters":
-            { "NewValue": evt.currentTarget.textContent }
+            { "NewValue": evt.currentTarget.value }
     });
     crlSendRequest(xhr, data)
 }
