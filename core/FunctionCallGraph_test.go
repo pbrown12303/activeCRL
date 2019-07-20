@@ -8,7 +8,7 @@ import (
 )
 
 var _ = Describe("Verify function call graph generation", func() {
-	var uOfD UniverseOfDiscourse
+	var uOfD *UniverseOfDiscourse
 	var hl *HeldLocks
 	var df1 Element
 	var df2 Element

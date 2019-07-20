@@ -16,12 +16,12 @@ type HeldLocks struct {
 	sync.Mutex
 	functionCallManager *functionCallManager
 	readLocks           map[string]Element
-	uOfD                UniverseOfDiscourse
+	uOfD                *UniverseOfDiscourse
 	writeLocks          map[string]Element
 }
 
 // GetUniverseOfDiscourse returns the UniverseOfDiscourse to which this HeldLocks belongs
-func (hlPtr *HeldLocks) GetUniverseOfDiscourse() UniverseOfDiscourse {
+func (hlPtr *HeldLocks) GetUniverseOfDiscourse() *UniverseOfDiscourse {
 	return hlPtr.uOfD
 }
 

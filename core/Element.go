@@ -17,14 +17,11 @@ type element struct {
 	ConceptID       string
 	Definition      string
 	Label           string
-	listeners       *StringElementMap
 	IsCore          bool
-	ownedConcepts   *StringElementMap
-	owningConcept   *cachedPointer
 	OwningConceptID string
 	ReadOnly        bool
 	Version         *versionCounter
-	uOfD            UniverseOfDiscourse
+	uOfD            *UniverseOfDiscourse
 	URI             string
 }
 
@@ -34,13 +31,10 @@ type element struct {
 // is performed by the child
 func (ePtr *element) addOwnedConcept(ownedConceptID string, hl *HeldLocks) {
 	hl.ReadLockElement(ePtr)
-	if ePtr.ownedConcepts.GetEntry(ownedConceptID) == nil {
+	if ePtr.uOfD.ownedIDsMap.ContainsMappedValue(ePtr.ConceptID, ownedConceptID) == false {
 		ePtr.uOfD.preChange(ePtr, hl)
 		ePtr.incrementVersion(hl)
-		ownedConcept := ePtr.GetUniverseOfDiscourse(hl).GetElement(ownedConceptID)
-		if ownedConcept != nil {
-			ePtr.ownedConcepts.SetEntry(ownedConceptID, ownedConcept)
-		}
+		ePtr.uOfD.ownedIDsMap.AddMappedValue(ePtr.GetConceptID(hl), ownedConceptID)
 	}
 }
 
@@ -51,12 +45,9 @@ func (ePtr *element) addOwnedConcept(ownedConceptID string, hl *HeldLocks) {
 // is performed by the child
 func (ePtr *element) addRecoveredOwnedConcept(ownedConceptID string, hl *HeldLocks) {
 	hl.ReadLockElement(ePtr)
-	if ePtr.ownedConcepts.GetEntry(ownedConceptID) == nil {
+	if ePtr.uOfD.ownedIDsMap.ContainsMappedValue(ePtr.ConceptID, ownedConceptID) == false {
 		ePtr.uOfD.preChange(ePtr, hl)
-		ownedConcept := ePtr.GetUniverseOfDiscourse(hl).GetElement(ownedConceptID)
-		if ownedConcept != nil {
-			ePtr.ownedConcepts.SetEntry(ownedConceptID, ownedConcept)
-		}
+		ePtr.uOfD.ownedIDsMap.AddMappedValue(ePtr.ConceptID, ownedConceptID)
 	}
 }
 
@@ -64,12 +55,9 @@ func (ePtr *element) addRecoveredOwnedConcept(ownedConceptID string, hl *HeldLoc
 // This is an internal housekeeping method.
 func (ePtr *element) addListener(listeningConceptID string, hl *HeldLocks) {
 	hl.ReadLockElement(ePtr)
-	if ePtr.listeners.GetEntry(listeningConceptID) == nil {
+	if ePtr.uOfD.listenersMap.ContainsMappedValue(ePtr.ConceptID, listeningConceptID) == false {
 		ePtr.uOfD.preChange(ePtr, hl)
-		listeningConcept := ePtr.GetUniverseOfDiscourse(hl).GetElement(listeningConceptID)
-		if listeningConcept != nil {
-			ePtr.listeners.SetEntry(listeningConceptID, listeningConcept)
-		}
+		ePtr.uOfD.listenersMap.AddMappedValue(ePtr.ConceptID, listeningConceptID)
 	}
 }
 
@@ -90,18 +78,7 @@ func (ePtr *element) cloneAttributes(source *element, hl *HeldLocks) {
 	ePtr.ConceptID = source.ConceptID
 	ePtr.Definition = source.Definition
 	ePtr.Label = source.Label
-	ePtr.listeners.Clear()
-	for k, v := range source.listeners.CopyMap() {
-		ePtr.listeners.SetEntry(k, v)
-	}
 	ePtr.IsCore = source.IsCore
-	ePtr.ownedConcepts.Clear()
-	for k, v := range source.ownedConcepts.CopyMap() {
-		ePtr.ownedConcepts.SetEntry(k, v)
-	}
-	ePtr.owningConcept.setIndicatedConceptID(source.owningConcept.getIndicatedConceptID())
-	ePtr.owningConcept.setIndicatedConcept(source.owningConcept.getIndicatedConcept())
-	ePtr.owningConcept.parentConceptID = source.owningConcept.parentConceptID
 	ePtr.OwningConceptID = source.OwningConceptID
 	ePtr.ReadOnly = source.ReadOnly
 	ePtr.Version.counter = source.Version.counter
@@ -148,7 +125,8 @@ func (ePtr *element) GetDefinition(hl *HeldLocks) string {
 // there is more than one child with the given abstraction the result is nondeterministic.
 func (ePtr *element) GetFirstOwnedConceptRefinedFrom(abstraction Element, hl *HeldLocks) Element {
 	hl.ReadLockElement(ePtr)
-	for _, element := range ePtr.ownedConcepts.CopyMap() {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		element := ePtr.uOfD.GetElement(id.(string))
 		if element.IsRefinementOf(abstraction, hl) {
 			return element
 		}
@@ -172,7 +150,8 @@ func (ePtr *element) GetFirstOwnedConceptRefinedFromURI(abstractionURI string, h
 // abstraction as one of its abstractions.
 func (ePtr *element) GetFirstOwnedLiteralRefinementOf(abstraction Element, hl *HeldLocks) Literal {
 	hl.ReadLockElement(ePtr)
-	for _, element := range ePtr.ownedConcepts.CopyMap() {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Literal:
 			if element.IsRefinementOf(abstraction, hl) {
@@ -199,7 +178,8 @@ func (ePtr *element) GetFirstOwnedLiteralRefinementOfURI(abstractionURI string, 
 // abstraction as one of its abstractions.
 func (ePtr *element) GetFirstOwnedReferenceRefinedFrom(abstraction Element, hl *HeldLocks) Reference {
 	hl.ReadLockElement(ePtr)
-	for _, element := range ePtr.ownedConcepts.CopyMap() {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Reference:
 			if element.IsRefinementOf(abstraction, hl) {
@@ -230,7 +210,8 @@ func (ePtr *element) GetFirstOwnedReferenceRefinedFromURI(abstractionURI string,
 // abstraction as one of its abstractions.
 func (ePtr *element) GetFirstOwnedRefinementRefinedFrom(abstraction Element, hl *HeldLocks) Refinement {
 	hl.ReadLockElement(ePtr)
-	for _, element := range ePtr.ownedConcepts.CopyMap() {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Refinement:
 			if element.IsRefinementOf(abstraction, hl) {
@@ -256,7 +237,8 @@ func (ePtr *element) GetFirstOwnedRefinementRefinedFromURI(abstractionURI string
 // GetFirstOwnedConceptWithURI
 func (ePtr *element) GetFirstOwnedConceptWithURI(uri string, hl *HeldLocks) Element {
 	hl.ReadLockElement(ePtr)
-	for _, element := range ePtr.ownedConcepts.CopyMap() {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		element := ePtr.uOfD.GetElement(id.(string))
 		if element.GetURI(hl) == uri {
 			return element
 		}
@@ -266,7 +248,8 @@ func (ePtr *element) GetFirstOwnedConceptWithURI(uri string, hl *HeldLocks) Elem
 
 func (ePtr *element) GetFirstOwnedLiteralRefinedFrom(abstraction Element, hl *HeldLocks) Literal {
 	hl.ReadLockElement(ePtr)
-	for _, element := range ePtr.ownedConcepts.CopyMap() {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Literal:
 			if element.IsRefinementOf(abstraction, hl) {
@@ -288,7 +271,8 @@ func (ePtr *element) GetFirstOwnedLiteralRefinedFromURI(uri string, hl *HeldLock
 
 func (ePtr *element) GetFirstOwnedLiteralWithURI(uri string, hl *HeldLocks) Literal {
 	hl.ReadLockElement(ePtr)
-	for _, element := range ePtr.ownedConcepts.CopyMap() {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case *literal:
 			if element.GetURI(hl) == uri {
@@ -301,7 +285,8 @@ func (ePtr *element) GetFirstOwnedLiteralWithURI(uri string, hl *HeldLocks) Lite
 
 func (ePtr *element) GetFirstOwnedReferenceWithURI(uri string, hl *HeldLocks) Reference {
 	hl.ReadLockElement(ePtr)
-	for _, element := range ePtr.ownedConcepts.CopyMap() {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case *reference:
 			if element.GetURI(hl) == uri {
@@ -314,7 +299,8 @@ func (ePtr *element) GetFirstOwnedReferenceWithURI(uri string, hl *HeldLocks) Re
 
 func (ePtr *element) GetFirstOwnedRefinementWithURI(uri string, hl *HeldLocks) Refinement {
 	hl.ReadLockElement(ePtr)
-	for _, element := range ePtr.ownedConcepts.CopyMap() {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case *refinement:
 			if element.GetURI(hl) == uri {
@@ -327,7 +313,8 @@ func (ePtr *element) GetFirstOwnedRefinementWithURI(uri string, hl *HeldLocks) R
 
 // FindAbstractions adds all found abstractions to supplied map
 func (ePtr *element) FindAbstractions(abstractions map[string]Element, hl *HeldLocks) {
-	for _, listener := range ePtr.listeners.CopyMap() {
+	for id := range ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		listener := ePtr.uOfD.GetElement(id.(string))
 		switch listener.(type) {
 		case *refinement:
 			abstraction := listener.(*refinement).GetAbstractConcept(hl)
@@ -341,7 +328,8 @@ func (ePtr *element) FindAbstractions(abstractions map[string]Element, hl *HeldL
 
 // FindImmediateAbstractions adds all immediate abstractions to supplied map
 func (ePtr *element) FindImmediateAbstractions(abstractions map[string]Element, hl *HeldLocks) {
-	for _, listener := range ePtr.listeners.CopyMap() {
+	for id := range ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		listener := ePtr.uOfD.GetElement(id.(string))
 		switch listener.(type) {
 		case *refinement:
 			abstraction := listener.(*refinement).GetAbstractConcept(hl)
@@ -362,25 +350,29 @@ func (ePtr *element) getLabelNoLock() string {
 	return ePtr.Label
 }
 
-func (ePtr *element) getListeners(hl *HeldLocks) map[string]Element {
-	hl.ReadLockElement(ePtr)
-	return ePtr.listeners.CopyMap()
-}
+// func (ePtr *element) getListeners(hl *HeldLocks) (mapset.Set, error) {
+// 	hl.ReadLockElement(ePtr)
+// 	if ePtr.uOfD == nil {
+// 		return nil, errors.New("element.getListener called with element.uOfD == nil")
+// 	}
+// 	return ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID), nil
+// }
 
-// GetOwnedConcepts returns the concepts owned by this concept
-func (ePtr *element) GetOwnedConcepts(hl *HeldLocks) map[string]Element {
-	hl.ReadLockElement(ePtr)
-	return ePtr.ownedConcepts.CopyMap()
-}
+// // GetOwnedConcepts returns the concepts owned by this concept
+// func (ePtr *element) GetOwnedConcepts(hl *HeldLocks) mapset.Set {
+// 	hl.ReadLockElement(ePtr)
+// 	return ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID)
+// }
 
-// GetOwnedConceptsRecursively
-func (ePtr *element) GetOwnedConceptsRecursively(descendants map[string]Element, hl *HeldLocks) {
-	hl.ReadLockElement(ePtr)
-	for k, v := range ePtr.ownedConcepts.CopyMap() {
-		descendants[k] = v
-		v.GetOwnedConceptsRecursively(descendants, hl)
-	}
-}
+// // GetOwnedConceptsRecursively
+// func (ePtr *element) GetOwnedConceptsRecursively(descendants mapset.Set, hl *HeldLocks) {
+// 	hl.ReadLockElement(ePtr)
+// 	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+// 		descendants.Add(id)
+// 		element := ePtr.uOfD.GetElement(id.(string))
+// 		element.GetOwnedConceptsRecursively(descendants, hl)
+// 	}
+// }
 
 // GetOwningConceptID returns the ID of the concept that owns this one (if any)
 func (ePtr *element) GetOwningConceptID(hl *HeldLocks) string {
@@ -388,16 +380,13 @@ func (ePtr *element) GetOwningConceptID(hl *HeldLocks) string {
 	return ePtr.OwningConceptID
 }
 
-func (ePtr *element) getOwningConceptPointer() *cachedPointer {
-	return ePtr.owningConcept
-}
-
 // GetOwnedConceptsRefinedFrom returns the owned concepts with the indicated abstraction as
 // one of their abstractions.
 func (ePtr *element) GetOwnedConceptsRefinedFrom(abstraction Element, hl *HeldLocks) map[string]Element {
 	hl.ReadLockElement(ePtr)
 	matches := map[string]Element{}
-	for _, element := range ePtr.ownedConcepts.CopyMap() {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		element := ePtr.uOfD.GetElement(id.(string))
 		if element.IsRefinementOf(abstraction, hl) {
 			matches[element.GetConceptID(hl)] = element
 		}
@@ -412,7 +401,8 @@ func (ePtr *element) GetOwnedConceptsRefinedFromURI(abstractionURI string, hl *H
 	matches := map[string]Element{}
 	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
 	if abstraction != nil {
-		for _, element := range ePtr.ownedConcepts.CopyMap() {
+		for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+			element := ePtr.uOfD.GetElement(id.(string))
 			if element.IsRefinementOf(abstraction, hl) {
 				matches[element.GetConceptID(hl)] = element
 			}
@@ -426,7 +416,8 @@ func (ePtr *element) GetOwnedConceptsRefinedFromURI(abstractionURI string, hl *H
 func (ePtr *element) GetOwnedLiteralsRefinedFrom(abstraction Element, hl *HeldLocks) map[string]Literal {
 	hl.ReadLockElement(ePtr)
 	matches := map[string]Literal{}
-	for _, element := range ePtr.ownedConcepts.CopyMap() {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Literal:
 			if element.IsRefinementOf(abstraction, hl) {
@@ -444,7 +435,8 @@ func (ePtr *element) GetOwnedLiteralsRefinedFromURI(abstractionURI string, hl *H
 	matches := map[string]Literal{}
 	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
 	if abstraction != nil {
-		for _, element := range ePtr.ownedConcepts.CopyMap() {
+		for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+			element := ePtr.uOfD.GetElement(id.(string))
 			switch element.(type) {
 			case Literal:
 				if element.IsRefinementOf(abstraction, hl) {
@@ -461,7 +453,8 @@ func (ePtr *element) GetOwnedLiteralsRefinedFromURI(abstractionURI string, hl *H
 func (ePtr *element) GetOwnedReferencesRefinedFrom(abstraction Element, hl *HeldLocks) map[string]Reference {
 	hl.ReadLockElement(ePtr)
 	matches := map[string]Reference{}
-	for _, element := range ePtr.ownedConcepts.CopyMap() {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Reference:
 			if element.IsRefinementOf(abstraction, hl) {
@@ -479,7 +472,8 @@ func (ePtr *element) GetOwnedReferencesRefinedFromURI(abstractionURI string, hl 
 	matches := map[string]Reference{}
 	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
 	if abstraction != nil {
-		for _, element := range ePtr.ownedConcepts.CopyMap() {
+		for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+			element := ePtr.uOfD.GetElement(id.(string))
 			switch element.(type) {
 			case Reference:
 				if element.IsRefinementOf(abstraction, hl) {
@@ -496,7 +490,8 @@ func (ePtr *element) GetOwnedReferencesRefinedFromURI(abstractionURI string, hl 
 func (ePtr *element) GetOwnedRefinementsRefinedFrom(abstraction Element, hl *HeldLocks) map[string]Refinement {
 	hl.ReadLockElement(ePtr)
 	matches := map[string]Refinement{}
-	for _, element := range ePtr.ownedConcepts.CopyMap() {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Refinement:
 			if element.IsRefinementOf(abstraction, hl) {
@@ -514,7 +509,8 @@ func (ePtr *element) GetOwnedRefinementsRefinedFromURI(abstractionURI string, hl
 	matches := map[string]Refinement{}
 	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
 	if abstraction != nil {
-		for _, element := range ePtr.ownedConcepts.CopyMap() {
+		for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+			element := ePtr.uOfD.GetElement(id.(string))
 			switch element.(type) {
 			case Refinement:
 				if element.IsRefinementOf(abstraction, hl) {
@@ -529,17 +525,22 @@ func (ePtr *element) GetOwnedRefinementsRefinedFromURI(abstractionURI string, hl
 // GetOwningConcept returns the Element representing the concept that owns this one (if any)
 func (ePtr *element) GetOwningConcept(hl *HeldLocks) Element {
 	hl.ReadLockElement(ePtr)
-	return ePtr.owningConcept.getIndicatedConcept()
+	return ePtr.uOfD.GetElement(ePtr.OwningConceptID)
+}
+
+// getOwningConceptNoLock returns the Element representing the concept that owns this one (if any)
+func (ePtr *element) getOwningConceptNoLock() Element {
+	return ePtr.uOfD.GetElement(ePtr.OwningConceptID)
 }
 
 // GetUniverseOfDiscourse returns the UniverseOfDiscourse in which the element instance resides
-func (ePtr *element) GetUniverseOfDiscourse(hl *HeldLocks) UniverseOfDiscourse {
+func (ePtr *element) GetUniverseOfDiscourse(hl *HeldLocks) *UniverseOfDiscourse {
 	hl.ReadLockElement(ePtr)
 	return ePtr.uOfD
 }
 
 // getUniverseOfDiscourseNoLock returns the UniverseOfDiscourse in which the element instance resides
-func (ePtr *element) getUniverseOfDiscourseNoLock() UniverseOfDiscourse {
+func (ePtr *element) getUniverseOfDiscourseNoLock() *UniverseOfDiscourse {
 	return ePtr.uOfD
 }
 
@@ -559,7 +560,8 @@ func (ePtr *element) GetVersion(hl *HeldLocks) int {
 // of this element. No locking is required since the StringIntMap does its own locking
 func (ePtr *element) IsRefinementOf(abstraction Element, hl *HeldLocks) bool {
 	hl.ReadLockElement(ePtr)
-	for _, listener := range ePtr.listeners.CopyMap() {
+	for id := range ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		listener := ePtr.uOfD.GetElement(id.(string))
 		switch listener.(type) {
 		case Refinement:
 			foundAbstraction := listener.(Refinement).GetAbstractConcept(hl)
@@ -617,9 +619,6 @@ func (ePtr *element) incrementVersion(hl *HeldLocks) {
 // nor are monitors of this element notified of changes.
 func (ePtr *element) initializeElement(identifier string, uri string) {
 	ePtr.ConceptID = identifier
-	ePtr.ownedConcepts = NewStringElementMap()
-	ePtr.owningConcept = newCachedPointer(ePtr.getConceptIDNoLock(), true)
-	ePtr.listeners = NewStringElementMap()
 	ePtr.Version = newVersionCounter()
 	ePtr.URI = uri
 }
@@ -654,16 +653,7 @@ func (ePtr *element) isEquivalent(hl1 *HeldLocks, el *element, hl2 *HeldLocks) b
 	if ePtr.Label != el.Label {
 		return false
 	}
-	if ePtr.listeners.IsEquivalent(el.listeners) != true {
-		return false
-	}
-	if ePtr.ownedConcepts.IsEquivalent(el.ownedConcepts) != true {
-		return false
-	}
 	if ePtr.OwningConceptID != el.OwningConceptID {
-		return false
-	}
-	if ePtr.owningConcept.isEquivalent(el.owningConcept) == false {
 		return false
 	}
 	if ePtr.ReadOnly != el.ReadOnly {
@@ -685,7 +675,8 @@ func (ePtr *element) isEquivalent(hl1 *HeldLocks, el *element, hl2 *HeldLocks) b
 // list has not yet been updated.
 func (ePtr *element) IsOwnedConcept(el Element, hl *HeldLocks) bool {
 	hl.ReadLockElement(ePtr)
-	for _, child := range ePtr.ownedConcepts.CopyMap() {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		child := ePtr.uOfD.GetElement(id.(string))
 		if el.GetConceptID(hl) == child.GetConceptID(hl) {
 			return true
 		}
@@ -720,7 +711,8 @@ func (ePtr *element) notifyListeners(underlyingNotification *ChangeNotification,
 	if ePtr.uOfD != nil {
 		indicatedConceptChanged := ePtr.uOfD.NewForwardingChangeNotification(ePtr, IndicatedConceptChanged, underlyingNotification)
 		abstractionChanged := ePtr.uOfD.NewForwardingChangeNotification(ePtr, AbstractionChanged, underlyingNotification)
-		for _, listener := range ePtr.listeners.CopyMap() {
+		for id := range ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+			listener := ePtr.uOfD.GetElement(id.(string))
 			switch listener.(type) {
 			case *refinement:
 				if listener.(*refinement).GetAbstractConcept(hl) == ePtr {
@@ -750,7 +742,6 @@ func (ePtr *element) recoverElementFields(unmarshaledData *map[string]json.RawMe
 		return err
 	}
 	ePtr.ConceptID = recoveredConceptID
-	ePtr.owningConcept.parentConceptID = recoveredConceptID
 	// Definition
 	var recoveredDefinition string
 	err = json.Unmarshal((*unmarshaledData)["Definition"], &recoveredDefinition)
@@ -787,14 +778,6 @@ func (ePtr *element) recoverElementFields(unmarshaledData *map[string]json.RawMe
 		return err
 	}
 	ePtr.OwningConceptID = recoveredOwningConceptID
-	ePtr.owningConcept.setIndicatedConceptID(recoveredOwningConceptID)
-	owningConcept := ePtr.uOfD.GetElement(recoveredOwningConceptID)
-	if owningConcept == nil {
-		ePtr.uOfD.addUnresolvedPointer(ePtr.owningConcept)
-	} else {
-		ePtr.owningConcept.setIndicatedConcept(owningConcept)
-		owningConcept.addRecoveredOwnedConcept(ePtr.getConceptIDNoLock(), hl)
-	}
 	// ReadOnly
 	var recoveredReadOnly string
 	err = json.Unmarshal((*unmarshaledData)["ReadOnly"], &recoveredReadOnly)
@@ -834,7 +817,7 @@ func (ePtr *element) recoverElementFields(unmarshaledData *map[string]json.RawMe
 func (ePtr *element) removeListener(listeningConceptID string, hl *HeldLocks) {
 	hl.ReadLockElement(ePtr)
 	ePtr.uOfD.preChange(ePtr, hl)
-	ePtr.listeners.DeleteEntry(listeningConceptID)
+	ePtr.uOfD.listenersMap.RemoveMappedValue(ePtr.ConceptID, listeningConceptID)
 }
 
 // removeOwnedConcept removes the indicated Element as a child (owned) concept.
@@ -845,7 +828,7 @@ func (ePtr *element) removeOwnedConcept(ownedConceptID string, hl *HeldLocks) er
 	}
 	ePtr.uOfD.preChange(ePtr, hl)
 	ePtr.incrementVersion(hl)
-	ePtr.ownedConcepts.DeleteEntry(ownedConceptID)
+	ePtr.uOfD.ownedIDsMap.RemoveMappedValue(ePtr.ConceptID, ownedConceptID)
 	return nil
 }
 
@@ -868,7 +851,8 @@ func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 
 func (ePtr *element) SetIsCoreRecursively(hl *HeldLocks) {
 	ePtr.SetIsCore(hl)
-	for _, el := range ePtr.GetOwnedConcepts(hl) {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		el := ePtr.uOfD.GetElement(id.(string))
 		el.SetIsCoreRecursively(hl)
 	}
 }
@@ -932,18 +916,11 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 		}
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
 		ePtr.incrementVersion(hl)
-		var newOwner Element
-		ePtr.OwningConceptID = ocID
-		ePtr.owningConcept.setIndicatedConceptID(ocID)
-		if ocID != "" {
-			newOwner = ePtr.uOfD.GetElement(ocID)
-			ePtr.owningConcept.setIndicatedConcept(newOwner)
-			if newOwner != nil {
-				newOwner.addOwnedConcept(ePtr.ConceptID, hl)
-			}
-		} else {
-			ePtr.owningConcept.setIndicatedConcept(nil)
+		newOwner := ePtr.uOfD.GetElement(ocID)
+		if newOwner != nil {
+			newOwner.addOwnedConcept(ePtr.ConceptID, hl)
 		}
+		ePtr.OwningConceptID = ocID
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
 	return nil
@@ -976,13 +953,14 @@ func (ePtr *element) SetReadOnly(value bool, hl *HeldLocks) error {
 
 func (ePtr *element) SetReadOnlyRecursively(value bool, hl *HeldLocks) {
 	ePtr.SetReadOnly(value, hl)
-	for _, el := range ePtr.GetOwnedConcepts(hl) {
+	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		el := ePtr.uOfD.GetElement(id.(string))
 		el.SetReadOnlyRecursively(value, hl)
 	}
 }
 
 // setUniverseOfDiscourse is intended to be called only by the UniverseOfDiscourse
-func (ePtr *element) setUniverseOfDiscourse(uOfD UniverseOfDiscourse, hl *HeldLocks) {
+func (ePtr *element) setUniverseOfDiscourse(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
 	hl.WriteLockElement(ePtr)
 	ePtr.uOfD = uOfD
 }
@@ -1061,9 +1039,9 @@ type Element interface {
 	GetIsCore(*HeldLocks) bool
 	GetLabel(*HeldLocks) string
 	getLabelNoLock() string
-	getListeners(*HeldLocks) map[string]Element
-	GetOwnedConcepts(*HeldLocks) map[string]Element
-	GetOwnedConceptsRecursively(map[string]Element, *HeldLocks)
+	// getListeners(*HeldLocks) (mapset.Set, error)
+	// GetOwnedConcepts(*HeldLocks) mapset.Set
+	// GetOwnedConceptsRecursively(mapset.Set, *HeldLocks)
 	GetOwnedConceptsRefinedFrom(Element, *HeldLocks) map[string]Element
 	GetOwnedConceptsRefinedFromURI(string, *HeldLocks) map[string]Element
 	GetOwnedLiteralsRefinedFrom(Element, *HeldLocks) map[string]Literal
@@ -1073,10 +1051,10 @@ type Element interface {
 	GetOwnedRefinementsRefinedFrom(Element, *HeldLocks) map[string]Refinement
 	GetOwnedRefinementsRefinedFromURI(string, *HeldLocks) map[string]Refinement
 	GetOwningConceptID(*HeldLocks) string
-	getOwningConceptPointer() *cachedPointer
 	GetOwningConcept(*HeldLocks) Element
-	GetUniverseOfDiscourse(*HeldLocks) UniverseOfDiscourse
-	getUniverseOfDiscourseNoLock() UniverseOfDiscourse
+	getOwningConceptNoLock() Element
+	GetUniverseOfDiscourse(*HeldLocks) *UniverseOfDiscourse
+	getUniverseOfDiscourseNoLock() *UniverseOfDiscourse
 	GetURI(*HeldLocks) string
 	GetVersion(*HeldLocks) int
 	IsRefinementOf(Element, *HeldLocks) bool
@@ -1096,7 +1074,7 @@ type Element interface {
 	SetOwningConceptID(string, *HeldLocks) error
 	SetReadOnly(bool, *HeldLocks) error
 	SetReadOnlyRecursively(bool, *HeldLocks)
-	setUniverseOfDiscourse(UniverseOfDiscourse, *HeldLocks)
+	setUniverseOfDiscourse(*UniverseOfDiscourse, *HeldLocks)
 	SetURI(string, *HeldLocks) error
 	TraceableReadLock(*HeldLocks)
 	TraceableWriteLock(*HeldLocks)

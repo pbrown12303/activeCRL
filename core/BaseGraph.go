@@ -94,7 +94,7 @@ func (bgPtr *baseGraph) getRootNodeID(parentGraph string) string {
 }
 
 func (bgPtr *baseGraph) graphParentsRecursively(child Element, parentGraph string) {
-	parent := child.getOwningConceptPointer().getIndicatedConcept()
+	parent := child.getOwningConceptNoLock()
 	if parent != nil {
 		childObjectID := makeGraphID(child, bgPtr.parentGraphNodePrefix[parentGraph])
 		parentGraphID := makeGraphID(parent, bgPtr.parentGraphNodePrefix[parentGraph])

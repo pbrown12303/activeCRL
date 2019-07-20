@@ -20,7 +20,7 @@ import (
 var startCrlEditorServerCmd *exec.Cmd
 var page *agouti.Page
 var agoutiDriver *agouti.WebDriver
-var uOfD core.UniverseOfDiscourse
+var uOfD *core.UniverseOfDiscourse
 
 var _ = BeforeSuite(func() {
 	// Start the editor server

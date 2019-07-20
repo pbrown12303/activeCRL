@@ -1,6 +1,7 @@
 package core
 
 import (
+	mapset "github.com/deckarep/golang-set"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -9,12 +10,12 @@ var df1URI = "http://dummy.function.uri,df1"
 var df2URI = "http://dummy.function.uri.df2"
 var df3URI = "http://dummy.function.uri.df3"
 
-func dummyChangeFunction(Element, *ChangeNotification, UniverseOfDiscourse) {
+func dummyChangeFunction(Element, *ChangeNotification, *UniverseOfDiscourse) {
 	// noop
 }
 
 var _ = Describe("Verify housekeeping function execution", func() {
-	var uOfD UniverseOfDiscourse
+	var uOfD *UniverseOfDiscourse
 	var hl *HeldLocks
 	var df1 Element
 	var df2 Element
@@ -43,7 +44,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 		Specify("SetDefinition should generate a ConceptChanged", func() {
 			el, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			definition := "Definition"
 			el.SetDefinition(definition, hl)
 			hl.ReleaseLocksAndWait()
@@ -68,12 +69,12 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 		Specify("SetLabel should generate a ConceptChanged", func() {
 			el, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			label := "Label"
 			el.SetLabel(label, hl)
 			hl.ReleaseLocksAndWait()
@@ -98,13 +99,13 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 		Specify("SetOwningConcept should generate a ConceptChanged", func() {
 			el, _ := uOfD.NewElement(hl)
 			newOwner, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -128,7 +129,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 		Specify("SetOwningConcept should generate a ConceptChanged for the old owner as well", func() {
 			el, _ := uOfD.NewElement(hl)
@@ -136,7 +137,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			newOwner, _ := uOfD.NewElement(hl)
 			el.SetOwningConceptID(oldOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -160,12 +161,12 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 		Specify("SetReadOnly should generate a ConceptChanged", func() {
 			el, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el.SetReadOnly(true, hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -189,12 +190,12 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 		Specify("SetURI should generate a ConceptChanged", func() {
 			el, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			uri := "URI"
 			el.SetURI(uri, hl)
 			hl.ReleaseLocksAndWait()
@@ -219,7 +220,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 	})
 
@@ -227,7 +228,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 		Specify("SetLiteralValue should generate ConceptChanged", func() {
 			lit, _ := uOfD.NewLiteral(hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			literalValue := "LiteralValue"
 			lit.SetLiteralValue(literalValue, hl)
 			hl.ReleaseLocksAndWait()
@@ -257,7 +258,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 	})
 
@@ -266,7 +267,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			ref, _ := uOfD.NewReference(hl)
 			target, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			ref.SetReferencedConceptID(target.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -295,7 +296,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 	})
 
@@ -304,7 +305,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			ref, _ := uOfD.NewRefinement(hl)
 			target, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			ref.SetAbstractConceptID(target.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -333,13 +334,13 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 		Specify("SetRefinedConcept should generate ConceptChanged", func() {
 			ref, _ := uOfD.NewRefinement(hl)
 			target, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			ref.SetRefinedConceptID(target.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -368,7 +369,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 	})
 
@@ -380,7 +381,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			ref.SetAbstractConceptID(abstractConcept.getConceptIDNoLock(), hl)
 			ref.SetRefinedConceptID(refinedConcept.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			abstractConcept.SetLabel("Label", hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -402,7 +403,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 	})
 
@@ -416,7 +417,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			ref.SetAbstractConceptID(abstractConcept.getConceptIDNoLock(), hl)
 			ref.SetRefinedConceptID(refinedConcept.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			abstractConcept.SetLabel("Label", hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -438,7 +439,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 
 	})
@@ -448,7 +449,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			el, _ := uOfD.NewElement(hl)
 			newOwner, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -470,7 +471,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 		Specify("After SetOwningConcept, ChildChanged should be sent to both owner and old owner", func() {
 			el, _ := uOfD.NewElement(hl)
@@ -478,7 +479,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			newOwner, _ := uOfD.NewElement(hl)
 			el.SetOwningConceptID(oldOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -507,7 +508,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			}
 			Expect(oldFound).To(BeTrue())
 			Expect(newFound).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 		Specify("After SetOwningConcept, function associated with element should be invoked", func() {
 			el, _ := uOfD.NewElement(hl)
@@ -516,7 +517,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			df1Ref.SetRefinedConceptID(el.getConceptIDNoLock(), hl)
 			newOwner, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -538,7 +539,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 		Specify("After SetOwningConcept, IndicatedConceptChanged should be sent to listeners", func() {
 			el, _ := uOfD.NewElement(hl)
@@ -546,7 +547,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			ref, _ := uOfD.NewReference(hl)
 			ref.SetReferencedConceptID(el.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -568,7 +569,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 	})
 
@@ -579,7 +580,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			grandparent, _ := uOfD.NewElement(hl)
 			newOwner.SetOwningConceptID(grandparent.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -602,7 +603,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 		Specify("After ChildChanged, IndicatedConceptChanged should be sent to listeners", func() {
 			el, _ := uOfD.NewElement(hl)
@@ -612,7 +613,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			ref, _ := uOfD.NewReference(hl)
 			ref.SetReferencedConceptID(grandparent.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -635,7 +636,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 	})
 
@@ -648,7 +649,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			refOwner, _ := uOfD.NewElement(hl)
 			ref.SetOwningConceptID(refOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -671,7 +672,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 		Specify("After IndicatedConceptChanged, IndicatedConceptChanged should be sent to listener's grandparent", func() {
 			el, _ := uOfD.NewElement(hl)
@@ -683,7 +684,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			refGrandparent, _ := uOfD.NewElement(hl)
 			refOwner.SetOwningConceptID(refGrandparent.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -706,7 +707,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 	})
 
@@ -722,7 +723,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			ref2.SetAbstractConceptID(refinedConcept.getConceptIDNoLock(), hl)
 			ref2.SetRefinedConceptID(refinedConcept2.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			abstractConcept.SetLabel("Label", hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -744,7 +745,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 		Specify("AbstractionChanged propagates as an IndicatedElementChanged to other listeners", func() {
 			ref, _ := uOfD.NewRefinement(hl)
@@ -755,7 +756,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			listener, _ := uOfD.NewReference(hl)
 			listener.SetReferencedConceptID(refinedConcept.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			abstractConcept.SetLabel("Label", hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -777,7 +778,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 	})
 
@@ -793,7 +794,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			refinedConceptGrandparent, _ := uOfD.NewElement(hl)
 			refinedConceptOwner.SetOwningConceptID(refinedConceptGrandparent.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			abstractConcept.SetLabel("Label", hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -815,7 +816,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 		Specify("ChildAbstractionChanged should propagate as AbstractionChanged to refinements of the recipient", func() {
 			ref, _ := uOfD.NewRefinement(hl)
@@ -830,7 +831,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			ref2.SetAbstractConceptID(refinedConceptOwner.getConceptIDNoLock(), hl)
 			ref2.SetRefinedConceptID(refinedConcept2.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			abstractConcept.SetLabel("Label", hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -852,7 +853,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 	})
 
@@ -863,7 +864,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			listener, _ := uOfD.NewReference(hl)
 			listener.SetReferencedConceptID(uOfD.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -885,7 +886,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 	})
 	Describe("UofDConceptAdded propagation", func() {
@@ -893,7 +894,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			listener, _ := uOfD.NewReference(hl)
 			listener.SetReferencedConceptID(uOfD.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -916,7 +917,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 	})
 	Describe("UofDConceptRemoved propagation", func() {
@@ -925,8 +926,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			listener.SetReferencedConceptID(uOfD.getConceptIDNoLock(), hl)
 			el, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
-			uOfD.(*universeOfDiscourse).executedCalls = make(chan *pendingFunctionCall, 100)
-			deletedElements := map[string]Element{el.GetConceptID(hl): el}
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
+			deletedElements := mapset.NewSet(el.GetConceptID(hl))
 			uOfD.DeleteElements(deletedElements, hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
@@ -949,7 +950,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				}
 			}
 			Expect(found).To(BeTrue())
-			uOfD.(*universeOfDiscourse).executedCalls = nil
+			uOfD.executedCalls = nil
 		})
 	})
 })

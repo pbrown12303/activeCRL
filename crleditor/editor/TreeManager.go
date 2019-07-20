@@ -27,12 +27,11 @@ func newTreeManager(editor *CrlEditor, treeID string) *treeManager {
 
 // addChildren adds the OwnedConcepts of the supplied Element to the client's tree
 func (tmPtr *treeManager) addChildren(el core.Element, hl *core.HeldLocks) {
-	switch el.(type) {
-	case core.Element:
-		for _, child := range el.GetOwnedConcepts(hl) {
-			tmPtr.addNode(child, hl)
-			tmPtr.addChildren(child, hl)
-		}
+	uOfD := tmPtr.editor.uOfD
+	for id := range uOfD.GetOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
+		child := uOfD.GetElement(id.(string))
+		tmPtr.addNode(child, hl)
+		tmPtr.addChildren(child, hl)
 	}
 }
 
@@ -55,7 +54,9 @@ func (tmPtr *treeManager) addNode(el core.Element, hl *core.HeldLocks) {
 // addNodeRecursively adds the node and all of its descendants to the tree
 func (tmPtr *treeManager) addNodeRecursively(el core.Element, hl *core.HeldLocks) {
 	tmPtr.addNode(el, hl)
-	for _, child := range el.GetOwnedConcepts(hl) {
+	uOfD := tmPtr.editor.uOfD
+	for id := range uOfD.GetOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
+		child := uOfD.GetElement(id.(string))
 		tmPtr.addNodeRecursively(child, hl)
 	}
 }

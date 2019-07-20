@@ -69,7 +69,6 @@ type reference struct {
 	element
 	ReferencedConceptID string
 	// referencedConcept is a cache for convenience
-	referencedConcept        *cachedPointer
 	ReferencedAttributeName  AttributeName
 	ReferencedConceptVersion int
 }
@@ -85,9 +84,6 @@ func (rPtr *reference) clone(hl *HeldLocks) Reference {
 func (rPtr *reference) cloneAttributes(source *reference, hl *HeldLocks) {
 	rPtr.element.cloneAttributes(&source.element, hl)
 	rPtr.ReferencedConceptID = source.ReferencedConceptID
-	rPtr.referencedConcept.setIndicatedConceptID(source.referencedConcept.getIndicatedConceptID())
-	rPtr.referencedConcept.setIndicatedConcept(source.referencedConcept.getIndicatedConcept())
-	rPtr.referencedConcept.parentConceptID = source.referencedConcept.parentConceptID
 	rPtr.ReferencedConceptVersion = source.ReferencedConceptVersion
 }
 
@@ -99,14 +95,7 @@ func (rPtr *reference) GetReferencedConcept(hl *HeldLocks) Element {
 }
 
 func (rPtr *reference) getReferencedConceptNoLock() Element {
-	cachedConcept := rPtr.referencedConcept.getIndicatedConcept()
-	if cachedConcept == nil && rPtr.ReferencedConceptID != "" {
-		cachedConcept = rPtr.uOfD.GetElement(rPtr.ReferencedConceptID)
-		if cachedConcept != nil {
-			rPtr.referencedConcept.setIndicatedConcept(cachedConcept)
-		}
-	}
-	return cachedConcept
+	return rPtr.uOfD.GetElement(rPtr.ReferencedConceptID)
 }
 
 // GetReferencedConceptID returns the identifier of the concept being referenced
@@ -129,7 +118,6 @@ func (rPtr *reference) GetReferencedConceptVersion(hl *HeldLocks) int {
 
 func (rPtr *reference) initializeReference(conceptID string, uri string) {
 	rPtr.initializeElement(conceptID, uri)
-	rPtr.referencedConcept = newCachedPointer(rPtr.getConceptIDNoLock(), false)
 }
 
 func (rPtr *reference) isEquivalent(hl1 *HeldLocks, el *reference, hl2 *HeldLocks) bool {
@@ -139,9 +127,6 @@ func (rPtr *reference) isEquivalent(hl1 *HeldLocks, el *reference, hl2 *HeldLock
 		return false
 	}
 	if rPtr.ReferencedAttributeName != el.ReferencedAttributeName {
-		return false
-	}
-	if rPtr.referencedConcept.isEquivalent(el.referencedConcept) != true {
 		return false
 	}
 	if rPtr.ReferencedConceptVersion != el.ReferencedConceptVersion {
@@ -184,14 +169,6 @@ func (rPtr *reference) recoverReferenceFields(unmarshaledData *map[string]json.R
 		return err
 	}
 	rPtr.ReferencedConceptID = recoveredReferencedConceptID
-	rPtr.referencedConcept.setIndicatedConceptID(recoveredReferencedConceptID)
-	rPtr.referencedConcept.parentConceptID = rPtr.getConceptIDNoLock()
-	foundReferencedConcept := rPtr.uOfD.GetElement(recoveredReferencedConceptID)
-	if foundReferencedConcept == nil {
-		rPtr.uOfD.addUnresolvedPointer(rPtr.referencedConcept)
-	} else {
-		rPtr.referencedConcept.setIndicatedConcept(foundReferencedConcept)
-	}
 	// ReferencedAttributeName
 	var recoveredReferencedConceptAttributeName string
 	err = json.Unmarshal((*unmarshaledData)["ReferencedAttributeName"], &recoveredReferencedConceptAttributeName)
@@ -257,8 +234,6 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 		}
 		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, hl)
 		rPtr.ReferencedConceptID = rcID
-		rPtr.referencedConcept.setIndicatedConcept(newReferencedConcept)
-		rPtr.referencedConcept.setIndicatedConceptID(rcID)
 		if newReferencedConcept == nil {
 			rPtr.ReferencedConceptVersion = 0
 		} else {

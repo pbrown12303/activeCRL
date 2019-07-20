@@ -30,6 +30,7 @@ import (
 	"github.com/golang/freetype/truetype"
 	"github.com/pbrown12303/activeCRL/core"
 
+	mapset "github.com/deckarep/golang-set"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/gobold"
 	"golang.org/x/image/font/gofont/goitalic"
@@ -632,42 +633,42 @@ func IsModelReference(el core.Element, hl *core.HeldLocks) bool {
 }
 
 // NewDiagram creates a new diagram
-func NewDiagram(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
+func NewDiagram(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
 	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramURI, hl)
 }
 
 // NewDiagramReferenceLink creates a new diagram link to represent a reference
-func NewDiagramReferenceLink(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
+func NewDiagramReferenceLink(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
 	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramReferenceLinkURI, hl)
 }
 
 // NewDiagramRefinementLink creates a new diagram link
-func NewDiagramRefinementLink(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
+func NewDiagramRefinementLink(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
 	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramRefinementLinkURI, hl)
 }
 
 // NewDiagramNode creates a new diagram node
-func NewDiagramNode(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
+func NewDiagramNode(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
 	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, hl)
 }
 
 // NewDiagramOwnerPointer creates a new DiagramOwnerPointer
-func NewDiagramOwnerPointer(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
+func NewDiagramOwnerPointer(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
 	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramOwnerPointerURI, hl)
 }
 
 // NewDiagramElementPointer creates a new DiagramElementPointer
-func NewDiagramElementPointer(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
+func NewDiagramElementPointer(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
 	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramElementPointerURI, hl)
 }
 
 // NewDiagramAbstractPointer creates a new DiagramAbstractPointer
-func NewDiagramAbstractPointer(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
+func NewDiagramAbstractPointer(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
 	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramAbstractPointerURI, hl)
 }
 
 // NewDiagramRefinedPointer creates a new DiagramRefinedPointer
-func NewDiagramRefinedPointer(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
+func NewDiagramRefinedPointer(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
 	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramRefinedPointerURI, hl)
 }
 
@@ -793,7 +794,7 @@ func SetReferencedModelElement(diagramElement core.Element, el core.Element, hl 
 }
 
 // BuildCrlDiagramConceptSpace builds the CrlDiagram concept space and adds it to the uOfD
-func BuildCrlDiagramConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
+func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	// CrlDiagramConceptSpace
 	crlDiagramConceptSpace, _ := uOfD.NewElement(hl, CrlDiagramConceptSpaceURI)
 	crlDiagramConceptSpace.SetLabel("CrlDiagramConceptSpace", hl)
@@ -1330,7 +1331,7 @@ func BuildCrlDiagramConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLoc
 }
 
 // updateDiagramElement updates the diagram node based on changes to the modelElement it represents
-func updateDiagramElement(diagramElement core.Element, notification *core.ChangeNotification, uOfD core.UniverseOfDiscourse) {
+func updateDiagramElement(diagramElement core.Element, notification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) {
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	hl.WriteLockElement(diagramElement)
@@ -1482,7 +1483,7 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 }
 
 // updateDiagramOwnerPointer updates the ownerPointer's target if the ownership of the represented modelElement changes
-func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.ChangeNotification, uOfD core.UniverseOfDiscourse) {
+func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) {
 	// There is one change of interest here: the model element's owner has changed
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
@@ -1512,7 +1513,7 @@ func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.C
 							newDiagramTarget := GetFirstElementRepresentingConcept(diagram, modelOwner, hl)
 							if newDiagramTarget == nil {
 								// There is no view, delete the modelElement
-								dEls := map[string]core.Element{diagramPointer.GetConceptID(hl): diagramPointer}
+								dEls := mapset.NewSet(diagramPointer.GetConceptID(hl))
 								uOfD.DeleteElements(dEls, hl)
 							} else {
 								SetLinkTarget(diagramPointer, newDiagramTarget, hl)

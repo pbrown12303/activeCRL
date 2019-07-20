@@ -24,7 +24,7 @@ var ViewNodeElementReferenceURI = ViewNodeURI + "/ElementReference"
 
 // treeViewManageNodes() is the callback function that manaages the tree view when base elements in the Universe of Discourse change.
 // The changes being sought are the addition, removal, and re-parenting of base elements and the changes in their names.
-func treeViewManageNodes(instance core.Element, changeNotification *core.ChangeNotification, uOfD core.UniverseOfDiscourse) {
+func treeViewManageNodes(instance core.Element, changeNotification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) {
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocks()
 
@@ -108,6 +108,6 @@ func BuildTreeViews(conceptSpace core.Element, hl *core.HeldLocks) {
 	reference.SetIsCore(hl)
 }
 
-func registerTreeViewFunctions(uOfD core.UniverseOfDiscourse) {
+func registerTreeViewFunctions(uOfD *core.UniverseOfDiscourse) {
 	uOfD.AddFunction(ManageTreeNodesURI, treeViewManageNodes)
 }

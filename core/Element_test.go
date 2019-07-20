@@ -1,12 +1,13 @@
 package core
 
 import (
+	mapset "github.com/deckarep/golang-set"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Element internals test", func() {
-	var uOfD UniverseOfDiscourse
+	var uOfD *UniverseOfDiscourse
 	var hl *HeldLocks
 
 	BeforeEach(func() {
@@ -47,13 +48,6 @@ var _ = Describe("Element internals test", func() {
 			clone := clone(el, hl)
 			Expect(Equivalent(el, hl, clone, hl)).To(BeTrue())
 		})
-		It("should be equivalent for with an owned concept added", func() {
-			el, _ := uOfD.NewElement(hl)
-			x, _ := uOfD.NewElement(hl)
-			el.(*element).ownedConcepts.SetEntry(x.GetConceptID(hl), x)
-			clone := clone(el, hl)
-			Expect(Equivalent(el, hl, clone, hl)).To(BeTrue())
-		})
 		It("should be equivalent with an owning concept ID set", func() {
 			el, _ := uOfD.NewElement(hl)
 			x, _ := uOfD.NewElement(hl)
@@ -64,13 +58,6 @@ var _ = Describe("Element internals test", func() {
 		It("should be equivalent with readOnly set", func() {
 			el, _ := uOfD.NewElement(hl)
 			el.(*element).ReadOnly = true
-			clone := clone(el, hl)
-			Expect(Equivalent(el, hl, clone, hl)).To(BeTrue())
-		})
-		It("should be equivalent for with an listening concept added", func() {
-			el, _ := uOfD.NewElement(hl)
-			x, _ := uOfD.NewElement(hl)
-			el.(*element).listeners.SetEntry(x.GetConceptID(hl), x)
 			clone := clone(el, hl)
 			Expect(Equivalent(el, hl, clone, hl)).To(BeTrue())
 		})
@@ -107,7 +94,7 @@ var _ = Describe("Element internals test", func() {
 		Context("After creating an element", func() {
 			Specify("ownedConcepts should be empty", func() {
 				el, _ := uOfD.NewElement(hl)
-				Expect(len(el.GetOwnedConcepts(hl)) == 0).To(BeTrue())
+				Expect(uOfD.GetOwnedConceptIDs(el.GetConceptID(hl)).Cardinality() == 0).To(BeTrue())
 			})
 			Context("after adding an ownedConcept", func() {
 				var el Element
@@ -122,7 +109,8 @@ var _ = Describe("Element internals test", func() {
 				})
 				It("should be present in GetOwnedConcepts", func() {
 					found := false
-					for _, oc := range el.GetOwnedConcepts(hl) {
+					for id := range uOfD.GetOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
+						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(hl) == ownedConcept.GetConceptID(hl) {
 							found = true
 						}
@@ -144,7 +132,8 @@ var _ = Describe("Element internals test", func() {
 				})
 				It("should not be present in the OwnedConcepts", func() {
 					found := false
-					for _, oc := range el.GetOwnedConcepts(hl) {
+					for id := range uOfD.GetOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
+						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(hl) == ownedConcept.GetConceptID(hl) {
 							found = true
 						}
@@ -168,7 +157,7 @@ var _ = Describe("Element internals test", func() {
 		Context("After creating an element", func() {
 			Specify("listeningConcepts should be empty", func() {
 				el, _ := uOfD.NewElement(hl)
-				Expect(len(el.(*element).listeners.CopyMap())).To(Equal(0))
+				Expect(uOfD.getListenerIDs(el.GetConceptID(hl)).Cardinality()).To(Equal(0))
 			})
 			Context("after adding an referencingConcept", func() {
 				var el Element
@@ -180,7 +169,8 @@ var _ = Describe("Element internals test", func() {
 				})
 				It("should be present in listeners", func() {
 					found := false
-					for _, oc := range el.(*element).listeners.CopyMap() {
+					for id := range uOfD.getListenerIDs(el.GetConceptID(hl)).Iterator().C {
+						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(hl) == referencingConcept.GetConceptID(hl) {
 							found = true
 						}
@@ -199,7 +189,8 @@ var _ = Describe("Element internals test", func() {
 				})
 				It("should not be present in the listeningConcepts", func() {
 					found := false
-					for _, oc := range el.(*element).listeners.CopyMap() {
+					for id := range uOfD.getListenerIDs(el.GetConceptID(hl)).Iterator().C {
+						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(hl) == referencingConcept.GetConceptID(hl) {
 							found = true
 						}
@@ -333,7 +324,7 @@ var _ = Describe("Element internals test", func() {
 			Expect(el.(*element).uOfD == uOfD).To(BeTrue())
 			// Can't set new uOfD without removing it from the old uOfD first
 			Expect(uOfD2.SetUniverseOfDiscourse(el, hl)).ToNot(Succeed())
-			deleteElements := map[string]Element{el.GetConceptID(hl): el}
+			deleteElements := mapset.NewSet(el.GetConceptID(hl))
 			Expect(uOfD.DeleteElements(deleteElements, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 			Expect(uOfD2.SetUniverseOfDiscourse(el, hl2)).To(Succeed())
@@ -474,11 +465,6 @@ var _ = Describe("Element internals test", func() {
 		})
 		Specify("Differences in Label should be detected", func() {
 			original.SetLabel("Label", hl)
-			Expect(Equivalent(original, hl, copy, hl)).To(BeFalse())
-		})
-		Specify("Differences in listeners should be detected", func() {
-			reference, _ := uOfD.NewReference(hl)
-			reference.SetReferencedConceptID(original.getConceptIDNoLock(), hl)
 			Expect(Equivalent(original, hl, copy, hl)).To(BeFalse())
 		})
 		Specify("Differences in owned concepts should be detected", func() {

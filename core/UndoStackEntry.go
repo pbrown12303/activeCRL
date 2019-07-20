@@ -4,6 +4,8 @@
 
 package core
 
+import mapset "github.com/deckarep/golang-set"
+
 // UndoChangeType identifies the type of undo change
 type UndoChangeType int
 
@@ -19,15 +21,19 @@ const (
 )
 
 type undoRedoStackEntry struct {
-	changeType     UndoChangeType
-	priorState     Element
-	changedElement Element
+	changeType         UndoChangeType
+	priorState         Element
+	priorOwnedElements mapset.Set
+	priorListeners     mapset.Set
+	changedElement     Element
 }
 
-func newUndoRedoStackEntry(changeType UndoChangeType, priorState Element, changedElement Element) *undoRedoStackEntry {
+func newUndoRedoStackEntry(changeType UndoChangeType, priorState Element, priorOwnedElements mapset.Set, priorListeners mapset.Set, changedElement Element) *undoRedoStackEntry {
 	var entry undoRedoStackEntry
 	entry.changeType = changeType
 	entry.priorState = priorState
+	entry.priorOwnedElements = priorOwnedElements
+	entry.priorListeners = priorListeners
 	entry.changedElement = changedElement
 	return &entry
 }

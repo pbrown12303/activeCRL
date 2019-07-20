@@ -52,7 +52,7 @@ type CrlEditor struct {
 	initialized               bool
 	treeDragSelection         core.Element
 	treeManager               *treeManager
-	uOfD                      core.UniverseOfDiscourse
+	uOfD                      *core.UniverseOfDiscourse
 	workspaceFiles            map[string]*workspaceFile
 	workingConceptSpace       core.Element
 }
@@ -120,7 +120,7 @@ func InitializeClient() {
 }
 
 // AddEditorConceptSpaceToUofD adds the concepts representing the various editor views to the universe of discurse
-func AddEditorConceptSpaceToUofD(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
+func AddEditorConceptSpaceToUofD(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	conceptSpace := uOfD.GetElementWithURI(editorURI)
 	if conceptSpace == nil {
 		conceptSpace = BuildEditorConceptSpace(uOfD, hl)
@@ -315,7 +315,7 @@ func (edPtr *CrlEditor) getTreeManager() *treeManager {
 }
 
 // GetUofD returns the UniverseOfDiscourse being edited by this editor
-func (edPtr *CrlEditor) GetUofD() core.UniverseOfDiscourse {
+func (edPtr *CrlEditor) GetUofD() *core.UniverseOfDiscourse {
 	return edPtr.uOfD
 }
 
@@ -623,7 +623,7 @@ func (edPtr *CrlEditor) UpdateEditorSettings(request *Request) {
 }
 
 // BuildEditorConceptSpace programmatically constructs the EditorConceptSpace
-func BuildEditorConceptSpace(uOfD core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
+func BuildEditorConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
 	// EditorConceptSpace
 	conceptSpace, _ := uOfD.NewElement(hl, editorURI)
 	conceptSpace.SetLabel("EditorConceptSpace", hl)

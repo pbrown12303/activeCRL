@@ -6,7 +6,7 @@ import (
 )
 
 var _ = Describe("Literal Tests", func() {
-	var uOfD UniverseOfDiscourse
+	var uOfD *UniverseOfDiscourse
 	var hl *HeldLocks
 
 	BeforeEach(func() {

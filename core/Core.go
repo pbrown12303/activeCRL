@@ -38,7 +38,7 @@ func init() {
 	notificationsCount = 0
 }
 
-func buildCoreConceptSpace(uOfD UniverseOfDiscourse, hl *HeldLocks) Element {
+func buildCoreConceptSpace(uOfD *UniverseOfDiscourse, hl *HeldLocks) Element {
 	coreElement, _ := uOfD.NewElement(hl, CoreConceptSpaceURI)
 	coreElementID := coreElement.getConceptIDNoLock()
 	coreElement.SetLabel("CoreConceptSpace", hl)

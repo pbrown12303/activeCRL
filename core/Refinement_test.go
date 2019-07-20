@@ -6,7 +6,7 @@ import (
 )
 
 var _ = Describe("Refinement tests", func() {
-	var uOfD UniverseOfDiscourse
+	var uOfD *UniverseOfDiscourse
 	var hl *HeldLocks
 	var ref Refinement
 	var abstractConcept Element
@@ -106,22 +106,6 @@ var _ = Describe("Refinement tests", func() {
 			ref.SetRefinedConceptID(target.getConceptIDNoLock(), hl)
 			clonedRefinement := clone(ref, hl)
 			ref.(*refinement).RefinedConceptID = ""
-			Expect(Equivalent(ref, hl, clonedRefinement, hl)).To(BeFalse())
-		})
-		Specify("Equivalent should fail if there is a difference in the AbstractConcept", func() {
-			ref, _ := uOfD.NewRefinement(hl)
-			target, _ := uOfD.NewElement(hl)
-			ref.SetAbstractConceptID(target.getConceptIDNoLock(), hl)
-			clonedRefinement := clone(ref, hl)
-			ref.(*refinement).abstractConcept.indicatedConcept = nil
-			Expect(Equivalent(ref, hl, clonedRefinement, hl)).To(BeFalse())
-		})
-		Specify("Equivalent should fail if there is a difference in the RefinementdConcept", func() {
-			ref, _ := uOfD.NewRefinement(hl)
-			target, _ := uOfD.NewElement(hl)
-			ref.SetRefinedConceptID(target.getConceptIDNoLock(), hl)
-			clonedRefinement := clone(ref, hl)
-			ref.(*refinement).refinedConcept.indicatedConcept = nil
 			Expect(Equivalent(ref, hl, clonedRefinement, hl)).To(BeFalse())
 		})
 		Specify("Equivalent should fail if there is a difference in the AbstractConcept version", func() {

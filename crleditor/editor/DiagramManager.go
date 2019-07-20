@@ -8,6 +8,7 @@ import (
 	//	"fmt"
 	"log"
 
+	mapset "github.com/deckarep/golang-set"
 	"github.com/pbrown12303/activeCRL/core"
 )
 
@@ -190,7 +191,7 @@ func (dmPtr *diagramManager) deleteDiagramElementView(elementID string, hl *core
 	if diagramElement == nil {
 		return errors.New("diagramManager.deleteDiagramElementView diagramElement not found for elementID " + elementID)
 	}
-	dEls := map[string]core.Element{diagramElement.GetConceptID(hl): diagramElement}
+	dEls := mapset.NewSet(diagramElement.GetConceptID(hl))
 	return dmPtr.crlEditor.uOfD.DeleteElements(dEls, hl)
 }
 

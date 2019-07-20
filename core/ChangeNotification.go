@@ -60,7 +60,7 @@ type ChangeNotification struct {
 	natureOfChange   NatureOfChange
 	reportingElement Element
 	underlyingChange *ChangeNotification
-	uOfD             UniverseOfDiscourse
+	uOfD             *UniverseOfDiscourse
 }
 
 // GetDepth returns the depth of the nested notifications within the current notification

@@ -101,13 +101,8 @@ func printBe(el Element, prefix string, hl *HeldLocks) {
 }
 
 // PrintURIIndex prints the URI index of the uOfD with full Element information
-func PrintURIIndex(uOfD UniverseOfDiscourse, hl *HeldLocks) {
-	uOfD.(*universeOfDiscourse).uriElementMap.Print(hl)
-}
-
-// PrintURIIndexJustIdentifiers prints the URI indix with just identifiers
-func PrintURIIndexJustIdentifiers(uOfD UniverseOfDiscourse, hl *HeldLocks) {
-	uOfD.(*universeOfDiscourse).uriElementMap.PrintJustIdentifiers(hl)
+func PrintURIIndex(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
+	uOfD.uriUUIDMap.Print(hl)
 }
 
 func restoreValueOwningElementFieldsRecursively(el Element, hl *HeldLocks) {

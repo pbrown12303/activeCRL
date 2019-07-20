@@ -17,13 +17,15 @@ type undoManager struct {
 	recordingUndo bool
 	redoStack     undoStack
 	undoStack     undoStack
+	uOfD          *UniverseOfDiscourse
 }
 
 // NewUndoManager creates and initializes the manager for the undo/redo functionality
-func newUndoManager() *undoManager {
+func newUndoManager(uOfD *UniverseOfDiscourse) *undoManager {
 	var undoMgr undoManager
 	undoMgr.debugUndo = false
 	undoMgr.recordingUndo = false
+	undoMgr.uOfD = uOfD
 	return &undoMgr
 }
 
@@ -35,27 +37,31 @@ func (undoMgr *undoManager) markChangedElement(changedElement Element, hl *HeldL
 	if undoMgr.debugUndo == true {
 		debug.PrintStack()
 	}
-	clone := clone(changedElement, hl)
+	priorState := clone(changedElement, hl)
+	priorOwnedElements := undoMgr.uOfD.ownedIDsMap.GetMappedValues(changedElement.GetConceptID(hl)).Clone()
+	priorListeners := undoMgr.uOfD.listenersMap.GetMappedValues(changedElement.GetConceptID(hl)).Clone()
 	if undoMgr.recordingUndo {
-		undoMgr.undoStack.Push(newUndoRedoStackEntry(Change, clone, changedElement))
+		undoMgr.undoStack.Push(newUndoRedoStackEntry(Change, priorState, priorOwnedElements, priorListeners, changedElement))
 	}
 	return nil
 }
 
 // markNewElement() If undo is enabled, updates the undo stack.
-func (undoMgr *undoManager) markNewElement(be Element, hl *HeldLocks) error {
+func (undoMgr *undoManager) markNewElement(el Element, hl *HeldLocks) error {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	if hl == nil {
 		return errors.New("UndoManager.markNewElement called with nil HeldLocks")
 	}
-	hl.ReadLockElement(be)
+	hl.ReadLockElement(el)
 	if undoMgr.debugUndo == true {
 		debug.PrintStack()
 	}
 	if undoMgr.recordingUndo {
-		clone := clone(be, hl)
-		stackEntry := newUndoRedoStackEntry(Creation, clone, be)
+		clone := clone(el, hl)
+		priorOwnedElements := undoMgr.uOfD.ownedIDsMap.GetMappedValues(el.GetConceptID(hl)).Clone()
+		priorListeners := undoMgr.uOfD.listenersMap.GetMappedValues(el.GetConceptID(hl)).Clone()
+		stackEntry := newUndoRedoStackEntry(Creation, clone, priorOwnedElements, priorListeners, el)
 		if undoMgr.debugUndo == true {
 			PrintStackEntry(stackEntry, hl)
 		}
@@ -65,19 +71,21 @@ func (undoMgr *undoManager) markNewElement(be Element, hl *HeldLocks) error {
 }
 
 // markRemoveElement() If undo is enabled, updates the undo stack.
-func (undoMgr *undoManager) markRemovedElement(be Element, hl *HeldLocks) error {
+func (undoMgr *undoManager) markRemovedElement(el Element, hl *HeldLocks) error {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	if hl == nil {
 		return errors.New("UndoManager.markRemovedElement called with nil HeldLocks")
 	}
-	hl.ReadLockElement(be)
+	hl.ReadLockElement(el)
 	if undoMgr.debugUndo == true {
 		debug.PrintStack()
 	}
 	if undoMgr.recordingUndo {
-		clone := clone(be, hl)
-		undoMgr.undoStack.Push(newUndoRedoStackEntry(Deletion, clone, be))
+		clone := clone(el, hl)
+		priorOwnedElements := undoMgr.uOfD.ownedIDsMap.GetMappedValues(el.GetConceptID(hl)).Clone()
+		priorListeners := undoMgr.uOfD.listenersMap.GetMappedValues(el.GetConceptID(hl)).Clone()
+		undoMgr.undoStack.Push(newUndoRedoStackEntry(Deletion, clone, priorOwnedElements, priorListeners, el))
 	}
 	return nil
 }
@@ -87,12 +95,12 @@ func (undoMgr *undoManager) MarkUndoPoint() {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	if undoMgr.recordingUndo {
-		undoMgr.undoStack.Push(newUndoRedoStackEntry(Marker, nil, nil))
+		undoMgr.undoStack.Push(newUndoRedoStackEntry(Marker, nil, nil, nil, nil))
 	}
 }
 
 // PrintUndoStack prints the undo stack. It is intended only for debugging.
-func PrintUndoStack(s undoStack, stackName string, uOfD UniverseOfDiscourse) {
+func PrintUndoStack(s undoStack, stackName string, uOfD *UniverseOfDiscourse) {
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	log.Printf("%s:", stackName)
@@ -152,9 +160,10 @@ func PrintStackEntry(entry *undoRedoStackEntry, hl *HeldLocks) {
 	Print(entry.changedElement, "      ", hl)
 }
 
-func (undoMgr *undoManager) redo(uOfD UniverseOfDiscourse, hl *HeldLocks) {
+func (undoMgr *undoManager) redo(hl *HeldLocks) {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
+	uOfD := undoMgr.uOfD
 	for len(undoMgr.redoStack) > 0 {
 		currentEntry := undoMgr.redoStack.Pop()
 		if currentEntry.changeType == Marker {
@@ -164,16 +173,24 @@ func (undoMgr *undoManager) redo(uOfD UniverseOfDiscourse, hl *HeldLocks) {
 			undoMgr.undoStack.Push(currentEntry)
 			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
 			// this was a new element
-			uOfD.(*universeOfDiscourse).addElementForUndo(currentEntry.changedElement, hl)
+			uOfD.addElementForUndo(currentEntry.changedElement, hl)
+			uOfD.ownedIDsMap.SetMappedValues(currentEntry.changedElement.GetConceptID(hl), currentEntry.priorOwnedElements)
+			uOfD.listenersMap.SetMappedValues(currentEntry.changedElement.GetConceptID(hl), currentEntry.priorListeners)
 		} else if currentEntry.changeType == Deletion {
 			undoMgr.undoStack.Push(currentEntry)
 			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
 			// this was an deleted element
-			uOfD.(*universeOfDiscourse).removeElementForUndo(currentEntry.changedElement, hl)
+			uOfD.removeElementForUndo(currentEntry.changedElement, hl)
+			uOfD.ownedIDsMap.SetMappedValues(currentEntry.changedElement.GetConceptID(hl), currentEntry.priorOwnedElements)
+			uOfD.listenersMap.SetMappedValues(currentEntry.changedElement.GetConceptID(hl), currentEntry.priorListeners)
 		} else {
 			clone := clone(currentEntry.changedElement, hl)
-			undoEntry := newUndoRedoStackEntry(Change, clone, currentEntry.changedElement)
+			priorOwnedElements := undoMgr.uOfD.ownedIDsMap.GetMappedValues(currentEntry.changedElement.GetConceptID(hl)).Clone()
+			priorListeners := undoMgr.uOfD.listenersMap.GetMappedValues(currentEntry.changedElement.GetConceptID(hl)).Clone()
+			undoEntry := newUndoRedoStackEntry(Change, clone, priorOwnedElements, priorListeners, currentEntry.changedElement)
 			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
+			uOfD.ownedIDsMap.SetMappedValues(currentEntry.changedElement.GetConceptID(hl), currentEntry.priorOwnedElements)
+			uOfD.listenersMap.SetMappedValues(currentEntry.changedElement.GetConceptID(hl), currentEntry.priorListeners)
 			undoMgr.undoStack.Push(undoEntry)
 		}
 	}
@@ -229,9 +246,10 @@ func (undoMgr *undoManager) TraceableUnlock() {
 	undoMgr.Unlock()
 }
 
-func (undoMgr *undoManager) undo(uOfD UniverseOfDiscourse, hl *HeldLocks) {
+func (undoMgr *undoManager) undo(hl *HeldLocks) {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
+	uOfD := undoMgr.uOfD
 	firstEntry := true
 	for len(undoMgr.undoStack) > 0 {
 		currentEntry := undoMgr.undoStack.Pop()
@@ -245,15 +263,23 @@ func (undoMgr *undoManager) undo(uOfD UniverseOfDiscourse, hl *HeldLocks) {
 			}
 		} else if currentEntry.changeType == Creation {
 			undoMgr.redoStack.Push(currentEntry)
-			uOfD.(*universeOfDiscourse).removeElementForUndo(currentEntry.changedElement, hl)
+			uOfD.removeElementForUndo(currentEntry.changedElement, hl)
+			uOfD.ownedIDsMap.SetMappedValues(currentEntry.changedElement.GetConceptID(hl), currentEntry.priorOwnedElements)
+			uOfD.listenersMap.SetMappedValues(currentEntry.changedElement.GetConceptID(hl), currentEntry.priorListeners)
 		} else if currentEntry.changeType == Deletion {
 			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
 			undoMgr.redoStack.Push(currentEntry)
-			uOfD.(*universeOfDiscourse).addElementForUndo(currentEntry.changedElement, hl)
+			uOfD.addElementForUndo(currentEntry.changedElement, hl)
+			uOfD.ownedIDsMap.SetMappedValues(currentEntry.changedElement.GetConceptID(hl), currentEntry.priorOwnedElements)
+			uOfD.listenersMap.SetMappedValues(currentEntry.changedElement.GetConceptID(hl), currentEntry.priorListeners)
 		} else if currentEntry.changeType == Change {
 			clone := clone(currentEntry.changedElement, hl)
-			redoEntry := newUndoRedoStackEntry(Change, clone, currentEntry.changedElement)
+			priorOwnedElements := uOfD.ownedIDsMap.GetMappedValues(currentEntry.changedElement.GetConceptID(hl)).Clone()
+			priorListeners := uOfD.listenersMap.GetMappedValues(currentEntry.changedElement.GetConceptID(hl)).Clone()
+			redoEntry := newUndoRedoStackEntry(Change, clone, priorOwnedElements, priorListeners, currentEntry.changedElement)
 			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
+			uOfD.ownedIDsMap.SetMappedValues(currentEntry.changedElement.GetConceptID(hl), currentEntry.priorOwnedElements)
+			uOfD.listenersMap.SetMappedValues(currentEntry.changedElement.GetConceptID(hl), currentEntry.priorListeners)
 			undoMgr.redoStack.Push(redoEntry)
 		}
 		firstEntry = false

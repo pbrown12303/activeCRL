@@ -14,7 +14,7 @@ import (
 // its children) experience a change. Its arguments are the element that changed, the array of ChangeNotifications, and
 // a pointer to a WaitGroup that is used to determine (on a larger scale) when the execution of the triggered functions
 // has completed.
-type crlExecutionFunction func(Element, *ChangeNotification, UniverseOfDiscourse)
+type crlExecutionFunction func(Element, *ChangeNotification, *UniverseOfDiscourse)
 
 type pendingFunctionCall struct {
 	function     crlExecutionFunction
@@ -110,11 +110,11 @@ type functions map[string][]crlExecutionFunction
 // functionCallManager manages the set of pending function calls
 type functionCallManager struct {
 	functionCallQueue *pendingFunctionCallQueue
-	uOfD              UniverseOfDiscourse
+	uOfD              *UniverseOfDiscourse
 }
 
 // newFunctionCallManager creates and initializes a FunctionCallManager
-func newFunctionCallManager(uOfD UniverseOfDiscourse) *functionCallManager {
+func newFunctionCallManager(uOfD *UniverseOfDiscourse) *functionCallManager {
 	var fcm functionCallManager
 	fcm.uOfD = uOfD
 	fcm.functionCallQueue = newPendingFunctionCallQueue()
@@ -125,7 +125,7 @@ func newFunctionCallManager(uOfD UniverseOfDiscourse) *functionCallManager {
 // The Element is the element that will eventually "execute" the function, and the ChangeNotification is the trigger
 // that caused the function to be queued for execution.
 func (fcm *functionCallManager) addFunctionCall(functionID string, targetElement Element, notification *ChangeNotification) {
-	for _, function := range fcm.uOfD.GetFunctions(functionID) {
+	for _, function := range fcm.uOfD.getFunctions(functionID) {
 		pendingCall := newPendingFunctionCall(functionID, function, targetElement, notification)
 		fcm.functionCallQueue.enqueue(pendingCall)
 	}
@@ -146,8 +146,8 @@ func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
 				functionCallGraphs = append(functionCallGraphs, NewFunctionCallGraph(pendingCall.functionID, pendingCall.target, pendingCall.notification, hl))
 			}
 		}
-		// if pendingCall.target.getUniverseOfDiscourseNoLock() != nil {
-		pendingCall.function(pendingCall.target, pendingCall.notification, fcm.uOfD)
-		// }
+		if pendingCall.target.getUniverseOfDiscourseNoLock() != nil {
+			pendingCall.function(pendingCall.target, pendingCall.notification, fcm.uOfD)
+		}
 	}
 }

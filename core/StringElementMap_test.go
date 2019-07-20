@@ -6,7 +6,7 @@ import (
 )
 
 var _ = Describe("StringElementMap Test", func() {
-	var uOfD UniverseOfDiscourse
+	var uOfD *UniverseOfDiscourse
 	var hl *HeldLocks
 	var seMap *StringElementMap
 	var el Element

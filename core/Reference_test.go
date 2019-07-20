@@ -6,7 +6,7 @@ import (
 )
 
 var _ = Describe("Reference Tests", func() {
-	var uOfD UniverseOfDiscourse
+	var uOfD *UniverseOfDiscourse
 	var hl *HeldLocks
 
 	BeforeEach(func() {
@@ -111,14 +111,6 @@ var _ = Describe("Reference Tests", func() {
 			ref.SetReferencedConceptID(target.getConceptIDNoLock(), hl)
 			clonedReference := clone(ref, hl)
 			ref.(*reference).ReferencedConceptID = ""
-			Expect(Equivalent(ref, hl, clonedReference, hl)).To(BeFalse())
-		})
-		Specify("Equivalent should fail if there is a difference in the ReferencedConcept", func() {
-			ref, _ := uOfD.NewReference(hl)
-			target, _ := uOfD.NewElement(hl)
-			ref.SetReferencedConceptID(target.getConceptIDNoLock(), hl)
-			clonedReference := clone(ref, hl)
-			ref.(*reference).referencedConcept.indicatedConcept = nil
 			Expect(Equivalent(ref, hl, clonedReference, hl)).To(BeFalse())
 		})
 		Specify("Equivalent should fail if there is a difference in the ReferencedConceptAttributeName", func() {

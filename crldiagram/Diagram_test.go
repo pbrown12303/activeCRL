@@ -8,7 +8,7 @@ import (
 )
 
 var _ = Describe("CrlDiagramtest", func() {
-	var uOfD core.UniverseOfDiscourse
+	var uOfD *core.UniverseOfDiscourse
 	var hl *core.HeldLocks
 
 	BeforeEach(func() {

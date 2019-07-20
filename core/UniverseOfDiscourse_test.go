@@ -8,7 +8,7 @@ import (
 
 var _ = Describe("UniverseOfDiscourse", func() {
 
-	var uOfD UniverseOfDiscourse
+	var uOfD *UniverseOfDiscourse
 	var hl *HeldLocks
 
 	BeforeEach(func() {
@@ -28,8 +28,8 @@ var _ = Describe("UniverseOfDiscourse", func() {
 
 	Describe("Getting the maps", func() {
 		It("shoulld return the correct and initialized maps", func() {
-			Expect(uOfD.getURIElementMap()).ToNot(BeNil())
-			Expect(uOfD.getURIElementMap() == uOfD.(*universeOfDiscourse).uriElementMap)
+			Expect(uOfD.getURIUUIDMap()).ToNot(BeNil())
+			Expect(uOfD.getURIUUIDMap() == uOfD.uriUUIDMap)
 		})
 	})
 
@@ -157,109 +157,6 @@ var _ = Describe("UniverseOfDiscourse", func() {
 		})
 	})
 
-	Describe("Setting and clearing the uOfD should update relevant cached pointers", func() {
-		Specify("The owner relationship should be maintained", func() {
-			el, _ := uOfD.NewElement(hl)
-			elID := el.getConceptIDNoLock()
-			owner, _ := uOfD.NewElement(hl)
-			ownerID := owner.getConceptIDNoLock()
-			el.SetOwningConceptID(ownerID, hl)
-			Expect(el.GetOwningConceptID(hl)).To(Equal(ownerID))
-			Expect(el.GetOwningConcept(hl)).To(Equal(owner))
-			Expect((owner.GetOwnedConcepts(hl))[elID]).To(Equal(el))
-			dEls := map[string]Element{elID: el}
-			uOfD.DeleteElements(dEls, hl)
-			Expect((owner.GetOwnedConcepts(hl))[elID]).To(BeNil())
-			uOfD.SetUniverseOfDiscourse(el, hl)
-			Expect(el.GetOwningConceptID(hl)).To(Equal(""))
-			Expect(el.GetOwningConcept(hl)).To(BeNil())
-			Expect((owner.GetOwnedConcepts(hl))[elID]).To(BeNil())
-			dEls2 := map[string]Element{ownerID: owner}
-			uOfD.DeleteElements(dEls2, hl)
-			Expect(el.GetOwningConceptID(hl)).To(Equal(""))
-			Expect(el.GetOwningConcept(hl)).To(BeNil())
-			uOfD.SetUniverseOfDiscourse(owner, hl)
-			Expect(el.GetOwningConceptID(hl)).To(Equal(""))
-			Expect(el.GetOwningConcept(hl)).To(BeNil())
-			Expect((owner.GetOwnedConcepts(hl))[elID]).To(BeNil())
-		})
-		Specify("The ReferencedConcept relationship should be maintained", func() {
-			ref, _ := uOfD.NewReference(hl)
-			refID := ref.getConceptIDNoLock()
-			target, _ := uOfD.NewElement(hl)
-			targetID := target.getConceptIDNoLock()
-			ref.SetReferencedConceptID(targetID, hl)
-			Expect(ref.GetReferencedConceptID(hl)).To(Equal(targetID))
-			Expect(ref.GetReferencedConcept(hl)).To(Equal(target))
-			Expect((target.(*element).listeners.CopyMap())[refID]).To(Equal(ref))
-			dEls := map[string]Element{targetID: target}
-			uOfD.DeleteElements(dEls, hl)
-			Expect(ref.GetReferencedConceptID(hl)).To(Equal(""))
-			Expect(ref.GetReferencedConcept(hl)).To(BeNil())
-			uOfD.SetUniverseOfDiscourse(target, hl)
-			Expect(ref.GetReferencedConceptID(hl)).To(Equal(""))
-			Expect(ref.GetReferencedConcept(hl)).To(BeNil())
-			Expect((target.(*element).listeners.CopyMap())[refID]).To(BeNil())
-			dEls2 := map[string]Element{targetID: target}
-			uOfD.DeleteElements(dEls2, hl)
-			Expect((target.(*element).listeners.CopyMap())[refID]).To(BeNil())
-			uOfD.SetUniverseOfDiscourse(ref, hl)
-			Expect(ref.GetReferencedConceptID(hl)).To(Equal(""))
-			Expect(ref.GetReferencedConcept(hl)).To(BeNil())
-			Expect((target.(*element).listeners.CopyMap())[refID]).To(BeNil())
-		})
-		Specify("The AbstractConcept relationship should be maintained", func() {
-			ref, _ := uOfD.NewRefinement(hl)
-			refID := ref.getConceptIDNoLock()
-			target, _ := uOfD.NewElement(hl)
-			targetID := target.getConceptIDNoLock()
-			ref.SetAbstractConceptID(targetID, hl)
-			Expect(ref.GetAbstractConceptID(hl)).To(Equal(targetID))
-			Expect(ref.GetAbstractConcept(hl)).To(Equal(target))
-			Expect((target.(*element).listeners.CopyMap())[refID]).To(Equal(ref))
-			dEls := map[string]Element{targetID: target}
-			uOfD.DeleteElements(dEls, hl)
-			Expect(ref.GetAbstractConceptID(hl)).To(Equal(""))
-			Expect(ref.GetAbstractConcept(hl)).To(BeNil())
-			uOfD.SetUniverseOfDiscourse(target, hl)
-			Expect(ref.GetAbstractConceptID(hl)).To(Equal(""))
-			Expect(ref.GetAbstractConcept(hl)).To(BeNil())
-			Expect((target.(*element).listeners.CopyMap())[refID]).To(BeNil())
-			dEls2 := map[string]Element{refID: ref}
-			uOfD.DeleteElements(dEls2, hl)
-			Expect((target.(*element).listeners.CopyMap())[refID]).To(BeNil())
-			uOfD.SetUniverseOfDiscourse(ref, hl)
-			Expect(ref.GetAbstractConceptID(hl)).To(Equal(""))
-			Expect(ref.GetAbstractConcept(hl)).To(BeNil())
-			Expect((target.(*element).listeners.CopyMap())[refID]).To(BeNil())
-		})
-		Specify("The RefinedConcept relationship should be maintained", func() {
-			ref, _ := uOfD.NewRefinement(hl)
-			refID := ref.getConceptIDNoLock()
-			target, _ := uOfD.NewElement(hl)
-			targetID := target.getConceptIDNoLock()
-			ref.SetRefinedConceptID(targetID, hl)
-			Expect(ref.GetRefinedConceptID(hl)).To(Equal(targetID))
-			Expect(ref.GetRefinedConcept(hl)).To(Equal(target))
-			Expect((target.(*element).listeners.CopyMap())[refID]).To(Equal(ref))
-			dEls := map[string]Element{targetID: target}
-			uOfD.DeleteElements(dEls, hl)
-			Expect(ref.GetRefinedConceptID(hl)).To(Equal(""))
-			Expect(ref.GetRefinedConcept(hl)).To(BeNil())
-			uOfD.SetUniverseOfDiscourse(target, hl)
-			Expect(ref.GetRefinedConceptID(hl)).To(Equal(""))
-			Expect(ref.GetRefinedConcept(hl)).To(BeNil())
-			Expect((target.(*element).listeners.CopyMap())[refID]).To(BeNil())
-			dEls2 := map[string]Element{refID: ref}
-			uOfD.DeleteElements(dEls2, hl)
-			Expect((target.(*element).listeners.CopyMap())[refID]).To(BeNil())
-			uOfD.SetUniverseOfDiscourse(ref, hl)
-			Expect(ref.GetRefinedConceptID(hl)).To(Equal(""))
-			Expect(ref.GetRefinedConcept(hl)).To(BeNil())
-			Expect((target.(*element).listeners.CopyMap())[refID]).To(BeNil())
-		})
-	})
-
 	Describe("Test Replicate as Refinement", func() {
 		var original Element
 		var oChild1 Element
@@ -292,7 +189,8 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			var foundChild1Replicate = false
 			var foundChild2Replicate = false
 			var foundChild3Replicate = false
-			for _, replicateChild := range replicate.GetOwnedConcepts(hl) {
+			for id := range uOfD.GetOwnedConceptIDs(replicate.GetConceptID(hl)).Iterator().C {
+				replicateChild := uOfD.GetElement(id.(string))
 				if replicateChild.IsRefinementOf(oChild1, hl) {
 					foundChild1Replicate = true
 				}
@@ -310,9 +208,9 @@ var _ = Describe("UniverseOfDiscourse", func() {
 
 		Specify("replicateAsRefinement should be idempotent", func() {
 			replicate := uOfD.CreateReplicateAsRefinement(original, hl)
-			childCount := len(replicate.GetOwnedConcepts(hl))
-			uOfD.(*universeOfDiscourse).replicateAsRefinement(original, replicate, hl)
-			Expect(len(replicate.GetOwnedConcepts(hl))).To(Equal(childCount))
+			childCount := uOfD.GetOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()
+			uOfD.replicateAsRefinement(original, replicate, hl)
+			Expect(uOfD.GetOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()).To(Equal(childCount))
 		})
 	})
 })
