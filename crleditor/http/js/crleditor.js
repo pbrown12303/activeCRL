@@ -1027,6 +1027,13 @@ function crlPropertiesDisplayLiteralValue(data, row) {
         isReadOnly = data.NotificationConcept.ReadOnly
     }
     var input = literalValueRow.cells[1].firstElementChild;
+    if (input == null) {
+        // The existing row does not have an input: add one
+        literalValueRow.cells[1].innerHTML = "";
+        input = document.createElement("input");
+        input.setAttribute("type", "text");
+        literalValueRow.cells[1].appendChild(input);
+    }
     var cursorPosition = input.selectionStart;
     input.value = literalValue;
     input.id = "literalValue";

@@ -525,12 +525,18 @@ func (ePtr *element) GetOwnedRefinementsRefinedFromURI(abstractionURI string, hl
 // GetOwningConcept returns the Element representing the concept that owns this one (if any)
 func (ePtr *element) GetOwningConcept(hl *HeldLocks) Element {
 	hl.ReadLockElement(ePtr)
-	return ePtr.uOfD.GetElement(ePtr.OwningConceptID)
+	if ePtr.uOfD != nil {
+		return ePtr.uOfD.GetElement(ePtr.OwningConceptID)
+	}
+	return nil
 }
 
 // getOwningConceptNoLock returns the Element representing the concept that owns this one (if any)
 func (ePtr *element) getOwningConceptNoLock() Element {
-	return ePtr.uOfD.GetElement(ePtr.OwningConceptID)
+	if ePtr.uOfD != nil {
+		return ePtr.uOfD.GetElement(ePtr.OwningConceptID)
+	}
+	return nil
 }
 
 // GetUniverseOfDiscourse returns the UniverseOfDiscourse in which the element instance resides

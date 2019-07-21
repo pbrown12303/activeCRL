@@ -193,7 +193,21 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, deletedElements ma
 	// Remove element from owner's child list
 	ownerID := el.GetOwningConceptID(hl)
 	if ownerID != "" {
-		uOfDPtr.ownedIDsMap.RemoveMappedValue(ownerID, uuid)
+		el.SetOwningConceptID("", hl)
+	}
+	for id := range uOfDPtr.listenersMap.GetMappedValues(uuid).Iterator().C {
+		listener := uOfDPtr.GetElement(id.(string))
+		switch listener.(type) {
+		case Reference:
+			listener.(Reference).SetReferencedConcept(nil, hl)
+		case Refinement:
+			refinement := listener.(Refinement)
+			if refinement.GetAbstractConcept(hl) == el {
+				refinement.SetAbstractConcept(nil, hl)
+			} else if refinement.GetRefinedConcept(hl) == el {
+				refinement.SetRefinedConcept(nil, hl)
+			}
+		}
 	}
 	// Remove element from all listener's lists
 	switch el.(type) {
@@ -212,20 +226,6 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, deletedElements ma
 		refinedConceptID := ref.GetRefinedConceptID(hl)
 		if refinedConceptID != "" {
 			uOfDPtr.listenersMap.RemoveMappedValue(refinedConceptID, uuid)
-		}
-	}
-	for id := range uOfDPtr.listenersMap.GetMappedValues(uuid).Iterator().C {
-		listener := uOfDPtr.GetElement(id.(string))
-		switch listener.(type) {
-		case Reference:
-			listener.(Reference).SetReferencedConcept(nil, hl)
-		case Refinement:
-			refinement := listener.(Refinement)
-			if refinement.GetAbstractConcept(hl) == el {
-				refinement.SetAbstractConcept(nil, hl)
-			} else if refinement.GetRefinedConcept(hl) == el {
-				refinement.SetRefinedConcept(nil, hl)
-			}
 		}
 	}
 	uOfDPtr.listenersMap.DeleteKey(uuid)

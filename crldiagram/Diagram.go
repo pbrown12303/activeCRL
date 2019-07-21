@@ -685,7 +685,8 @@ func SetAbstractionDisplayLabel(diagramElement core.Element, value string, hl *c
 	updateNodeSize(diagramElement, hl)
 }
 
-// SetDisplayLabel is a function on a CrlDiagramNode that sets the display label of the diagram node
+// SetDisplayLabel is a function on a CrlDiagramNode that sets the display label of the diagram element.
+// If the diagram element is a pointer, the value is ignored and the label is set to the empty string
 func SetDisplayLabel(diagramElement core.Element, value string, hl *core.HeldLocks) {
 	if diagramElement == nil {
 		return
@@ -693,6 +694,11 @@ func SetDisplayLabel(diagramElement core.Element, value string, hl *core.HeldLoc
 	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementDisplayLabelURI, hl)
 	if literal == nil {
 		return
+	}
+	if IsDiagramPointer(diagramElement, hl) {
+		literal.SetLiteralValue("", hl)
+	} else {
+		literal.SetLiteralValue(value, hl)
 	}
 	literal.SetLiteralValue(value, hl)
 	updateNodeSize(diagramElement, hl)
@@ -1542,13 +1548,15 @@ func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.C
 	}
 }
 
-func updateDiagramElementForModelElementChange(node core.Element, modelElement core.Element, hl *core.HeldLocks) {
+func updateDiagramElementForModelElementChange(diagramElement core.Element, modelElement core.Element, hl *core.HeldLocks) {
 	modelElementLabel := ""
 	if modelElement != nil {
 		modelElementLabel = modelElement.GetLabel(hl)
-		if modelElementLabel != node.GetLabel(hl) {
-			node.SetLabel(modelElementLabel, hl)
-			SetDisplayLabel(node, modelElementLabel, hl)
+		if modelElementLabel != diagramElement.GetLabel(hl) {
+			diagramElement.SetLabel(modelElementLabel, hl)
+			if !IsDiagramPointer(diagramElement, hl) {
+				SetDisplayLabel(diagramElement, modelElementLabel, hl)
+			}
 		}
 		abstractions := make(map[string]core.Element)
 		modelElement.FindImmediateAbstractions(abstractions, hl)
@@ -1559,8 +1567,8 @@ func updateDiagramElementForModelElementChange(node core.Element, modelElement c
 			}
 			abstractionsLabel += abs.GetLabel(hl)
 		}
-		if GetAbstractionDisplayLabel(node, hl) != abstractionsLabel {
-			SetAbstractionDisplayLabel(node, abstractionsLabel, hl)
+		if GetAbstractionDisplayLabel(diagramElement, hl) != abstractionsLabel {
+			SetAbstractionDisplayLabel(diagramElement, abstractionsLabel, hl)
 		}
 	}
 }
