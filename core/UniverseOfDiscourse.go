@@ -157,6 +157,27 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinementFromURI(originalU
 	return uOfDPtr.CreateReplicateAsRefinement(original, hl, newURI...), nil
 }
 
+// CreateReplicateReferenceAsRefinement replicates the supplied reference and makes all elements of the replicate
+// refinements of the original elements
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinement(original Reference, hl *HeldLocks, newURI ...string) Reference {
+	uri := ""
+	if len(newURI) > 0 {
+		uri = newURI[0]
+	}
+	replicate, _ := uOfDPtr.NewReference(hl, uri)
+	uOfDPtr.replicateAsRefinement(original, replicate, hl)
+	return replicate
+}
+
+// CreateReplicateReferenceAsRefinementFromURI replicates the Reference indicated by the URI
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinementFromURI(originalURI string, hl *HeldLocks, newURI ...string) (Reference, error) {
+	original := uOfDPtr.GetReferenceWithURI(originalURI)
+	if original == nil {
+		return nil, fmt.Errorf("In CreateReplicateAsRefinementFromURI Element with uri %s not found", originalURI)
+	}
+	return uOfDPtr.CreateReplicateReferenceAsRefinement(original, hl, newURI...), nil
+}
+
 func (uOfDPtr *UniverseOfDiscourse) findFunctions(element Element, notification *ChangeNotification, hl *HeldLocks) []string {
 	var functionIdentifiers []string
 	if element == nil {
@@ -240,7 +261,7 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, deletedElements ma
 func (uOfDPtr *UniverseOfDiscourse) DeleteElement(element Element, hl *HeldLocks) error {
 	id := element.GetConceptID(hl)
 	elements := mapset.NewSet(id)
-	uOfDPtr.GetOwnedConceptIDsRecursively(id, elements, hl)
+	uOfDPtr.GetConceptsOwnedConceptIDsRecursively(id, elements, hl)
 	return uOfDPtr.DeleteElements(elements, hl)
 }
 
@@ -352,16 +373,16 @@ func (uOfDPtr *UniverseOfDiscourse) GetLiteralWithURI(uri string) Literal {
 	return nil
 }
 
-// GetOwnedConceptIDs returns the set of owned concepts for the indicated ID
-func (uOfDPtr *UniverseOfDiscourse) GetOwnedConceptIDs(id string) mapset.Set {
+// GetConceptsOwnedConceptIDs returns the set of owned concepts for the indicated ID
+func (uOfDPtr *UniverseOfDiscourse) GetConceptsOwnedConceptIDs(id string) mapset.Set {
 	return uOfDPtr.ownedIDsMap.GetMappedValues(id)
 }
 
-// GetOwnedConceptIDsRecursively returns the IDs of owned concepts
-func (uOfDPtr *UniverseOfDiscourse) GetOwnedConceptIDsRecursively(rootID string, descendants mapset.Set, hl *HeldLocks) {
+// GetConceptsOwnedConceptIDsRecursively returns the IDs of owned concepts
+func (uOfDPtr *UniverseOfDiscourse) GetConceptsOwnedConceptIDsRecursively(rootID string, descendants mapset.Set, hl *HeldLocks) {
 	for id := range uOfDPtr.ownedIDsMap.GetMappedValues(rootID).Iterator().C {
 		descendants.Add(id.(string))
-		uOfDPtr.GetOwnedConceptIDsRecursively(id.(string), descendants, hl)
+		uOfDPtr.GetConceptsOwnedConceptIDsRecursively(id.(string), descendants, hl)
 	}
 }
 
@@ -457,7 +478,7 @@ func (uOfDPtr *UniverseOfDiscourse) marshalConceptRecursively(el Element, hl *He
 	result = append(result, marshaledElement...)
 	result = append(result, []byte(",")...)
 	elID := el.GetConceptID(hl)
-	for id := range uOfDPtr.GetOwnedConceptIDs(elID).Iterator().C {
+	for id := range uOfDPtr.GetConceptsOwnedConceptIDs(elID).Iterator().C {
 		child := uOfDPtr.GetElement(id.(string))
 		marshaledChild, err := uOfDPtr.marshalConceptRecursively(child, hl)
 		if err != nil {
@@ -716,7 +737,7 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 	}
 	originalID := original.GetConceptID(hl)
 	replicateID := replicate.GetConceptID(hl)
-	for id := range uOfDPtr.GetOwnedConceptIDs(originalID).Iterator().C {
+	for id := range uOfDPtr.GetConceptsOwnedConceptIDs(originalID).Iterator().C {
 		originalChild := uOfDPtr.GetElement(id.(string))
 		switch originalChild.(type) {
 		case Refinement:
@@ -725,7 +746,7 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 		var replicateChild Element
 		// For each original child, determine whether there is already a replicate child that
 		// has the original child as one of its abstractions. This is replicateChild
-		for id := range uOfDPtr.GetOwnedConceptIDs(replicateID).Iterator().C {
+		for id := range uOfDPtr.GetConceptsOwnedConceptIDs(replicateID).Iterator().C {
 			currentChild := uOfDPtr.GetElement(id.(string))
 			currentChildAbstractions := make(map[string]Element)
 			currentChild.FindAbstractions(currentChildAbstractions, hl)

@@ -70,98 +70,7 @@ $(function () {
     $(".uofd-browser").resizable({
         resizeHeight: false
     });
-    $("#uOfD").jstree({
-        'core': {
-            'check_callback': true,
-            'multiple': false
-        },
-        'plugins': ['sort', 'contextmenu', 'wholerow'],
-        'sort': function (a, b) {
-            aNode = this.get_node(a);
-            bNode = this.get_node(b);
-            var aNodeText = aNode.text
-            var bNodeText = bNode.text
-            if (aNodeText == bNodeText) {
-                return aNode.id > bNode.id ? 1 : -1;
-            }
-            return aNodeText > bNodeText ? 1 : -1;
-        },
-        'contextmenu': {
-            "items": function ($node) {
-                var tree = $("uOfD").jstree(true);
-                var items = {
-                    addChild: {
-                        "label": "Add Child",
-                        "action": false,
-                        "submenu": {
-                            Element: {
-                                "label": "Element",
-                                "action": function (obj) {
-                                    if ($node != undefined) {
-                                        var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
-                                        crlSendAddElementChild(conceptID);
-                                    }
-                                }
-                            },
-                            Diagram: {
-                                "label": "Diagram",
-                                "action": function (obj) {
-                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
-                                    crlSendAddDiagramChild(conceptID);
-                                }
-                            },
-                            Literal: {
-                                "label": "Literal",
-                                "action": function (obj) {
-                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
-                                    crlSendAddLiteralChild(conceptID);
-                                }
-                            },
-                            Reference: {
-                                "label": "Reference",
-                                "action": function (obj) {
-                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
-                                    crlSendAddReferenceChild(conceptID);
-                                }
-                            },
-                            Refinement: {
-                                "label": "Refinement",
-                                "action": function (obj) {
-                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
-                                    crlSendAddRefinementChild(conceptID);
-                                }
-                            }
-                        }
-                    },
-                    display: {
-                        "label": "Display Diagram",
-                        "action": function (obj) {
-                            if ($node != undefined) {
-                                var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
-                                crlSendDisplayDiagramSelected(conceptID);
-                            }
-                        }
-                    },
-                    remove: {
-                        "label": "Delete",
-                        "action": function (obj) {
-                            if ($node != undefined) {
-                                var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
-                                crlSendTreeNodeDelete(conceptID);
-                            };
-                        }
-                    }
-                }
-                if ($node.li_attr.is_diagram == "false") {
-                    delete items.display
-                }
-                if ($node.li_attr.is_core == "true" || $node.li_attr.read_only == "true") {
-                    delete items.remove
-                }
-                return items
-            }
-        }
-    });
+    crlInitializeTree();
     $("#uOfD").on("select_node.jstree", crlSendTreeNodeSelected);
     $("#uOfD").on("dragstart", crlOnTreeDragStart);
     $("#body").on("ondrop", crlOnEditorDrop);
@@ -1253,6 +1162,101 @@ function crlInitializeClient() {
     crlSendRequest(xhr, data);
 }
 
+function crlInitializeTree() {
+    $("#uOfD").jstree({
+        'core': {
+            'check_callback': true,
+            'multiple': false
+        },
+        'plugins': ['sort', 'contextmenu', 'wholerow'],
+        'sort': function (a, b) {
+            aNode = this.get_node(a);
+            bNode = this.get_node(b);
+            var aNodeText = aNode.text
+            var bNodeText = bNode.text
+            if (aNodeText == bNodeText) {
+                return aNode.id > bNode.id ? 1 : -1;
+            }
+            return aNodeText > bNodeText ? 1 : -1;
+        },
+        'contextmenu': {
+            "items": function ($node) {
+                var tree = $("uOfD").jstree(true);
+                var items = {
+                    addChild: {
+                        "label": "Add Child",
+                        "action": false,
+                        "submenu": {
+                            Element: {
+                                "label": "Element",
+                                "action": function (obj) {
+                                    if ($node != undefined) {
+                                        var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
+                                        crlSendAddElementChild(conceptID);
+                                    }
+                                }
+                            },
+                            Diagram: {
+                                "label": "Diagram",
+                                "action": function (obj) {
+                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
+                                    crlSendAddDiagramChild(conceptID);
+                                }
+                            },
+                            Literal: {
+                                "label": "Literal",
+                                "action": function (obj) {
+                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
+                                    crlSendAddLiteralChild(conceptID);
+                                }
+                            },
+                            Reference: {
+                                "label": "Reference",
+                                "action": function (obj) {
+                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
+                                    crlSendAddReferenceChild(conceptID);
+                                }
+                            },
+                            Refinement: {
+                                "label": "Refinement",
+                                "action": function (obj) {
+                                    var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
+                                    crlSendAddRefinementChild(conceptID);
+                                }
+                            }
+                        }
+                    },
+                    display: {
+                        "label": "Display Diagram",
+                        "action": function (obj) {
+                            if ($node != undefined) {
+                                var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
+                                crlSendDisplayDiagramSelected(conceptID);
+                            }
+                        }
+                    },
+                    remove: {
+                        "label": "Delete",
+                        "action": function (obj) {
+                            if ($node != undefined) {
+                                var conceptID = crlGetConceptIDFromTreeNodeID($node.id);
+                                crlSendTreeNodeDelete(conceptID);
+                            };
+                        }
+                    }
+                }
+                if ($node.li_attr.is_diagram == "false") {
+                    delete items.display
+                }
+                if ($node.li_attr.is_core == "true" || $node.li_attr.read_only == "true") {
+                    delete items.remove
+                }
+                return items
+            }
+        }
+    });
+}
+
 function crlInitializeWebSocket() {
     console.log("Initializing Web Socket")
     // ws initialization
@@ -1276,6 +1280,9 @@ function crlInitializeWebSocket() {
                 break;
             case "ClearToolbarSelection":
                 crlNotificationClearToolbarSelection(data);
+                break;
+            case "ClearTree":
+                crlNotificationClearTree();
                 break;
             case "CloseDiagramView":
                 crlNotificationCloseDiagramView(data);
@@ -1594,6 +1601,12 @@ function crlNotificationAddTreeNode(data) {
 
 function crlNotificationClearToolbarSelection(data) {
     crlSelectToolbarButton("cursorToolbarButton");
+    crlSendNormalResponse();
+}
+
+function crlNotificationClearTree() {
+    $('#uOfD').jstree().destroy();
+    crlInitializeTree();
     crlSendNormalResponse();
 }
 
@@ -2264,6 +2277,12 @@ function crlSendOwnerPointerChanged(jointLink, linkID, sourceID, targetID) {
     crlSendRequest(xhr, data);
 }
 
+function crlSendRedo() {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "Redo" });
+    crlSendRequest(xhr, data);
+}
+
 function crlSendReferenceLinkChanged(jointLink, linkID, sourceID, targetID, targetAttributeName) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
@@ -2366,6 +2385,12 @@ function crlSendTreeNodeSelected(evt, obj) {
             crlSendRequest(xhr, data);
         }
     };
+}
+
+function crlSendUndo() {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "Undo" });
+    crlSendRequest(xhr, data);
 }
 
 function crlSetDefaultLink() {

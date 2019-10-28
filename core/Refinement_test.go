@@ -48,6 +48,7 @@ var _ = Describe("Refinement tests", func() {
 			Expect(ref.GetRefinedConceptID(hl)).To(Equal(refinedConcept.getConceptIDNoLock()))
 			Expect(ref.GetAbstractConceptVersion(hl)).To(Equal(abstractConcept.GetVersion(hl)))
 			Expect(ref.GetRefinedConceptVersion(hl)).To(Equal(refinedConcept.GetVersion(hl)))
+			Expect(refinedConcept.IsRefinementOf(abstractConcept, hl)).To(BeTrue())
 			// Now set to nil
 			ref.SetAbstractConceptID("", hl)
 			ref.SetRefinedConceptID("", hl)

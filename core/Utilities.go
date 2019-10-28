@@ -71,33 +71,21 @@ func equivalent(be1 Element, hl1 *HeldLocks, be2 Element, hl2 *HeldLocks) bool {
 
 // Print prints the indicated element and its ownedConcepts, recursively
 func Print(el Element, prefix string, hl *HeldLocks) {
-	printBe(el, prefix, hl)
+	printElement(el, prefix, hl)
 }
 
-func printBe(el Element, prefix string, hl *HeldLocks) {
-	// if el == nil {
-	// 	return
-	// }
-	// if hl == nil {
-	// 	hl = NewHeldLocks(nil)
-	// 	defer hl.ReleaseLocks()
-	// }
-	// hl.LockElement(el)
-	// log.Printf("%s%s: %p\n", prefix, reflect.TypeOf(el).String(), el)
-	// switch el.(type) {
-	// case *element:
-	// 	el.(*element).printElement(prefix, hl)
-	// case *reference:
-	// 	el.(*reference).printReference(prefix, hl)
-	// case *literal:
-	// 	el.(*literal).printLiteral(prefix, hl)
-	// case *refinement:
-	// 	el.(*refinement).printRefinement(prefix, hl)
-	// case *universeOfDiscourse:
-	// 	el.(*universeOfDiscourse).printElement(prefix, hl)
-	// default:
-	// 	log.Printf("No case for %T in Print \n", el)
-	// }
+func printElement(el Element, prefix string, hl *HeldLocks) {
+	if el == nil {
+		return
+	}
+	hl.ReadLockElement(el)
+	serializedElement, _ := el.MarshalJSON()
+	log.Printf("%s%s", prefix, string(serializedElement))
+	ownedIDs := el.GetUniverseOfDiscourse(hl).ownedIDsMap.GetMappedValues(el.GetConceptID(hl))
+	for id := range ownedIDs.Iterator().C {
+		ownedElement := el.GetUniverseOfDiscourse(hl).GetElement(id.(string))
+		printElement(ownedElement, prefix+"  ", hl)
+	}
 }
 
 // PrintURIIndex prints the URI index of the uOfD with full Element information

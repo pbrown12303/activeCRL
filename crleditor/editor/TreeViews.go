@@ -10,11 +10,11 @@ import (
 // TreeViewsURI identifies the TreeViews concept
 var TreeViewsURI = editorURI + "/TreeViews"
 
-// ManageTreeNodesURI identifies the ManageNodes concept
-var ManageTreeNodesURI = TreeViewsURI + "/ManageTreeNodes"
+// TreeNodeManagerURI identifies the ManageNodes concept
+var TreeNodeManagerURI = TreeViewsURI + "/TreeNodeManager"
 
-// ManageNodesUofDReferenceURI identifies the ManageNodesUofDReference
-var ManageNodesUofDReferenceURI = ManageTreeNodesURI + "/UofDReference"
+// TreeNodeManagerUofDReferenceURI identifies the ManageNodesUofDReference
+var TreeNodeManagerUofDReferenceURI = TreeNodeManagerURI + "/UofDReference"
 
 // ViewNodeURI identifies the ViewNode concept
 var ViewNodeURI = TreeViewsURI + "/ViewNode"
@@ -82,15 +82,15 @@ func BuildTreeViews(conceptSpace core.Element, hl *core.HeldLocks) {
 	treeViews.SetIsCore(hl)
 
 	// ManageNodes
-	manageNodes, _ := uOfD.NewElement(hl, ManageTreeNodesURI)
-	manageNodes.SetLabel("ManageTreeNodes", hl)
-	manageNodes.SetURI(ManageTreeNodesURI, hl)
+	manageNodes, _ := uOfD.NewElement(hl, TreeNodeManagerURI)
+	manageNodes.SetLabel("TreeNodeManager", hl)
+	manageNodes.SetURI(TreeNodeManagerURI, hl)
 	manageNodes.SetOwningConcept(treeViews, hl)
 	manageNodes.SetIsCore(hl)
 	// ManageNodes UofD Reference
-	uOfDReference, _ := uOfD.NewReference(hl, ManageNodesUofDReferenceURI)
+	uOfDReference, _ := uOfD.NewReference(hl, TreeNodeManagerUofDReferenceURI)
 	uOfDReference.SetLabel("UofDReference", hl)
-	uOfDReference.SetURI(ManageNodesUofDReferenceURI, hl)
+	uOfDReference.SetURI(TreeNodeManagerUofDReferenceURI, hl)
 	uOfDReference.SetOwningConcept(manageNodes, hl)
 	uOfDReference.SetIsCore(hl)
 
@@ -109,5 +109,5 @@ func BuildTreeViews(conceptSpace core.Element, hl *core.HeldLocks) {
 }
 
 func registerTreeViewFunctions(uOfD *core.UniverseOfDiscourse) {
-	uOfD.AddFunction(ManageTreeNodesURI, treeViewManageNodes)
+	uOfD.AddFunction(TreeNodeManagerURI, treeViewManageNodes)
 }

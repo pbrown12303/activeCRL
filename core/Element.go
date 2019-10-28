@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
+
+	mapset "github.com/deckarep/golang-set"
 )
 
 // element is the root representation of a concept
@@ -178,7 +180,8 @@ func (ePtr *element) GetFirstOwnedLiteralRefinementOfURI(abstractionURI string, 
 // abstraction as one of its abstractions.
 func (ePtr *element) GetFirstOwnedReferenceRefinedFrom(abstraction Element, hl *HeldLocks) Reference {
 	hl.ReadLockElement(ePtr)
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	ownedIDs := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID)
+	for id := range ownedIDs.Iterator().C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Reference:
@@ -380,6 +383,15 @@ func (ePtr *element) GetOwningConceptID(hl *HeldLocks) string {
 	return ePtr.OwningConceptID
 }
 
+// GetOwnedConceptIDs returns the set of IDs owned by this concept. Note that if this Element is not
+// presently in a uOfD it returns the empty set
+func (ePtr *element) GetOwnedConceptIDs(hl *HeldLocks) mapset.Set {
+	if ePtr.uOfD == nil {
+		return mapset.NewSet()
+	}
+	return ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID)
+}
+
 // GetOwnedConceptsRefinedFrom returns the owned concepts with the indicated abstraction as
 // one of their abstractions.
 func (ePtr *element) GetOwnedConceptsRefinedFrom(abstraction Element, hl *HeldLocks) map[string]Element {
@@ -566,6 +578,29 @@ func (ePtr *element) GetVersion(hl *HeldLocks) int {
 // of this element. No locking is required since the StringIntMap does its own locking
 func (ePtr *element) IsRefinementOf(abstraction Element, hl *HeldLocks) bool {
 	hl.ReadLockElement(ePtr)
+	// Get the actual element so that we can get the correct type
+	fullElement := ePtr.uOfD.GetElement(ePtr.ConceptID)
+	// Check to see whether the abstraction is one of the core classes
+	abstractionURI := abstraction.GetURI(hl)
+	switch abstractionURI {
+	case ElementURI:
+		return true
+	case LiteralURI:
+		switch fullElement.(type) {
+		case Literal:
+			return true
+		}
+	case ReferenceURI:
+		switch fullElement.(type) {
+		case Reference:
+			return true
+		}
+	case RefinementURI:
+		switch fullElement.(type) {
+		case Refinement:
+			return true
+		}
+	}
 	for id := range ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
 		listener := ePtr.uOfD.GetElement(id.(string))
 		switch listener.(type) {
@@ -1048,6 +1083,7 @@ type Element interface {
 	// getListeners(*HeldLocks) (mapset.Set, error)
 	// GetOwnedConcepts(*HeldLocks) mapset.Set
 	// GetOwnedConceptsRecursively(mapset.Set, *HeldLocks)
+	GetOwnedConceptIDs(hl *HeldLocks) mapset.Set
 	GetOwnedConceptsRefinedFrom(Element, *HeldLocks) map[string]Element
 	GetOwnedConceptsRefinedFromURI(string, *HeldLocks) map[string]Element
 	GetOwnedLiteralsRefinedFrom(Element, *HeldLocks) map[string]Literal

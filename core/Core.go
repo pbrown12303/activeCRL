@@ -62,7 +62,7 @@ func buildCoreConceptSpace(uOfD *UniverseOfDiscourse, hl *HeldLocks) Element {
 	// Reference
 	reference, _ := uOfD.NewReference(hl, ReferenceURI)
 	reference.SetOwningConceptID(coreElementID, hl)
-	reference.SetLabel("ElementReference", hl)
+	reference.SetLabel("Reference", hl)
 	reference.SetURI(ReferenceURI, hl)
 	reference.SetIsCore(hl)
 

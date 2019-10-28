@@ -28,7 +28,7 @@ func newTreeManager(editor *CrlEditor, treeID string) *treeManager {
 // addChildren adds the OwnedConcepts of the supplied Element to the client's tree
 func (tmPtr *treeManager) addChildren(el core.Element, hl *core.HeldLocks) {
 	uOfD := tmPtr.editor.uOfD
-	for id := range uOfD.GetOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
+	for id := range uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
 		child := uOfD.GetElement(id.(string))
 		tmPtr.addNode(child, hl)
 		tmPtr.addChildren(child, hl)
@@ -55,7 +55,7 @@ func (tmPtr *treeManager) addNode(el core.Element, hl *core.HeldLocks) {
 func (tmPtr *treeManager) addNodeRecursively(el core.Element, hl *core.HeldLocks) {
 	tmPtr.addNode(el, hl)
 	uOfD := tmPtr.editor.uOfD
-	for id := range uOfD.GetOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
+	for id := range uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
 		child := uOfD.GetElement(id.(string))
 		tmPtr.addNodeRecursively(child, hl)
 	}
@@ -80,11 +80,11 @@ func (tmPtr *treeManager) changeNode(el core.Element, hl *core.HeldLocks) {
 func (tmPtr *treeManager) configureUofD(hl *core.HeldLocks) (core.Element, error) {
 	// Set up the tree view
 	var err error
-	tmPtr.treeNodeManager, err = tmPtr.editor.uOfD.CreateReplicateAsRefinementFromURI(ManageTreeNodesURI, hl)
+	tmPtr.treeNodeManager, err = tmPtr.editor.uOfD.CreateReplicateAsRefinementFromURI(TreeNodeManagerURI, hl)
 	if err != nil {
 		return nil, err
 	}
-	uOfDReference := tmPtr.treeNodeManager.GetFirstOwnedReferenceRefinedFromURI(ManageNodesUofDReferenceURI, hl)
+	uOfDReference := tmPtr.treeNodeManager.GetFirstOwnedReferenceRefinedFromURI(TreeNodeManagerUofDReferenceURI, hl)
 	uOfDReference.SetReferencedConcept(tmPtr.editor.uOfD, hl)
 	return tmPtr.treeNodeManager, nil
 }
@@ -112,6 +112,14 @@ func (tmPtr *treeManager) getChangeNotificationBelowUofD(changeNotification *cor
 
 // initializeTree initializes the display of the tree in the client
 func (tmPtr *treeManager) initializeTree(hl *core.HeldLocks) {
+	notificationResponse, err := CrlEditorSingleton.GetClientNotificationManager().SendNotification("ClearTree", "", nil, map[string]string{})
+	if err != nil {
+		log.Printf(err.Error())
+		return
+	}
+	if notificationResponse.Result != 0 {
+		log.Print(notificationResponse.ErrorMessage)
+	}
 	for _, el := range tmPtr.editor.uOfD.GetElements() {
 		if el.GetOwningConcept(hl) == nil {
 			tmPtr.addNode(el, hl)

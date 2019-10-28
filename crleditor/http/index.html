@@ -44,9 +44,13 @@
 			</div>
 		</div>
 		<div class="dropdown">
-			<button class="dropbtn">
+			<button id="EditMenuButton" class="dropbtn" onclick="crlDropdownMenu('EditDropdown')">
 				Edit <i class="fa fa-caret-down"></i>
 			</button>
+			<div class="dropdown-content" id="EditDropdown">
+				<a id="UndoButton" class="show" onClick="crlSendUndo()">Undo</a>
+				<a id="RedoButton" class="show" onClick="crlSendRedo()">Redo</a>
+			</div>
 		</div>
 		<div class="dropdown">
 			<button id="HelpMenuButton" class="dropbtn" onclick="crlDropdownMenu('HelpDropdown')">

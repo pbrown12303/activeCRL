@@ -80,6 +80,7 @@ func InitializeCrlEditorSingleton() {
 
 	editor.initializeUofD(hl)
 
+	editor.uOfD.SetRecordingUndo(true)
 	editor.initialized = true
 	log.Printf("Editor initialized")
 }
@@ -421,6 +422,19 @@ func (edPtr *CrlEditor) openWorkspace(path string, hl *core.HeldLocks) error {
 	return nil
 }
 
+// Redo performs an undo on the uOfD and refreshes the interface
+func (edPtr *CrlEditor) Redo(hl *core.HeldLocks) error {
+	edPtr.uOfD.Redo(hl)
+	edPtr.refresh(hl)
+	return nil
+}
+
+// refresh refreshes the interface
+func (edPtr *CrlEditor) refresh(hl *core.HeldLocks) {
+	edPtr.SetSelectionURI("", hl)
+	edPtr.treeManager.initializeTree(hl)
+}
+
 // saveFile saves the file and updates the fileInfo
 func (edPtr *CrlEditor) saveFile(wf *workspaceFile, hl *core.HeldLocks) error {
 	hl.ReadLockElement(wf.ConceptSpace)
@@ -592,6 +606,13 @@ func (edPtr *CrlEditor) SetTraceChangeLimit(limit int) {
 // SetTreeDragSelection identifies the Element as the one being dragged from the tree
 func (edPtr *CrlEditor) SetTreeDragSelection(elID string) {
 	edPtr.treeDragSelection = edPtr.GetUofD().GetElement(elID)
+}
+
+// Undo performs an undo on the uOfD and refreshes the interface
+func (edPtr *CrlEditor) Undo(hl *core.HeldLocks) error {
+	edPtr.uOfD.Undo(hl)
+	edPtr.refresh(hl)
+	return nil
 }
 
 // UpdateDebugSettings updates the debug-related settings and sends a notification to the client

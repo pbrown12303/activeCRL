@@ -189,7 +189,7 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			var foundChild1Replicate = false
 			var foundChild2Replicate = false
 			var foundChild3Replicate = false
-			for id := range uOfD.GetOwnedConceptIDs(replicate.GetConceptID(hl)).Iterator().C {
+			for id := range uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Iterator().C {
 				replicateChild := uOfD.GetElement(id.(string))
 				if replicateChild.IsRefinementOf(oChild1, hl) {
 					foundChild1Replicate = true
@@ -208,9 +208,9 @@ var _ = Describe("UniverseOfDiscourse", func() {
 
 		Specify("replicateAsRefinement should be idempotent", func() {
 			replicate := uOfD.CreateReplicateAsRefinement(original, hl)
-			childCount := uOfD.GetOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()
+			childCount := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()
 			uOfD.replicateAsRefinement(original, replicate, hl)
-			Expect(uOfD.GetOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()).To(Equal(childCount))
+			Expect(uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()).To(Equal(childCount))
 		})
 	})
 })

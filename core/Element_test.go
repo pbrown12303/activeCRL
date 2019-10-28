@@ -94,7 +94,7 @@ var _ = Describe("Element internals test", func() {
 		Context("After creating an element", func() {
 			Specify("ownedConcepts should be empty", func() {
 				el, _ := uOfD.NewElement(hl)
-				Expect(uOfD.GetOwnedConceptIDs(el.GetConceptID(hl)).Cardinality() == 0).To(BeTrue())
+				Expect(uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Cardinality() == 0).To(BeTrue())
 			})
 			Context("after adding an ownedConcept", func() {
 				var el Element
@@ -109,7 +109,7 @@ var _ = Describe("Element internals test", func() {
 				})
 				It("should be present in GetOwnedConcepts", func() {
 					found := false
-					for id := range uOfD.GetOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
+					for id := range uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
 						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(hl) == ownedConcept.GetConceptID(hl) {
 							found = true
@@ -132,7 +132,7 @@ var _ = Describe("Element internals test", func() {
 				})
 				It("should not be present in the OwnedConcepts", func() {
 					found := false
-					for id := range uOfD.GetOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
+					for id := range uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
 						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(hl) == ownedConcept.GetConceptID(hl) {
 							found = true
@@ -439,6 +439,25 @@ var _ = Describe("Element internals test", func() {
 			child.FindAbstractions(foundAbstractions, hl)
 			Expect(foundAbstractions[firstAbstraction.getConceptIDNoLock()]).To(Equal(firstAbstraction))
 			Expect(foundAbstractions[secondAbstraction.getConceptIDNoLock()]).To(Equal(secondAbstraction))
+		})
+		Specify("An Element should be a refinement of the core Element", func() {
+			el, _ := uOfD.NewElement(hl)
+			Expect(el.IsRefinementOfURI(ElementURI, hl)).Should(BeTrue())
+		})
+		Specify("A Literal should be a refinement of the core Element and core Literal", func() {
+			el, _ := uOfD.NewLiteral(hl)
+			Expect(el.IsRefinementOfURI(ElementURI, hl)).Should(BeTrue())
+			Expect(el.IsRefinementOfURI(LiteralURI, hl)).Should(BeTrue())
+		})
+		Specify("A Reference should be a refinement of the core Element and core Reference", func() {
+			el, _ := uOfD.NewReference(hl)
+			Expect(el.IsRefinementOfURI(ElementURI, hl)).Should(BeTrue())
+			Expect(el.IsRefinementOfURI(ReferenceURI, hl)).Should(BeTrue())
+		})
+		Specify("A Refinement should be a refinement of the core Element and core Refinement", func() {
+			el, _ := uOfD.NewRefinement(hl)
+			Expect(el.IsRefinementOfURI(ElementURI, hl)).Should(BeTrue())
+			Expect(el.IsRefinementOfURI(RefinementURI, hl)).Should(BeTrue())
 		})
 	})
 

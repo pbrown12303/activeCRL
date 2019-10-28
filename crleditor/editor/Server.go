@@ -311,6 +311,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			sendReply(w, 0, "Processed OwnerPointerChanged", linkID, nil)
 		}
+	case "Redo":
+		err := CrlEditorSingleton.Redo(hl)
+		reply(w, "Redo", err)
 	case "RefinedPointerChanged":
 		linkID, err := CrlEditorSingleton.getDiagramManager().refinedPointerChanged(
 			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
@@ -395,6 +398,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		CrlEditorSingleton.SelectElementUsingIDString(elementID, hl)
 		sendReply(w, 0, "Processed TreeNodeSelected", elementID, CrlEditorSingleton.GetUofD().GetElement(elementID))
+	case "Undo":
+		err := CrlEditorSingleton.Undo(hl)
+		reply(w, "Undo", err)
 	case "UpdateDebugSettings":
 		CrlEditorSingleton.UpdateDebugSettings(request)
 		sendReply(w, 0, "Processed UpdateDebugSettings", "", nil)
