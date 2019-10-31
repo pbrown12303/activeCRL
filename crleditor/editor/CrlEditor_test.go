@@ -439,7 +439,7 @@ var _ = Describe("Test CrlEditor", func() {
 				&treeNodeID)
 			Expect(page.FindByID(treeNodeID)).To(BeFound())
 		})
-		Specify("Tree selection should work", func() {
+		FSpecify("Tree selection should work", func() {
 			coreConceptSpace := uOfD.GetElementWithURI(core.CoreConceptSpaceURI)
 			var treeNodeID string
 			page.RunScript("return crlGetTreeNodeIDFromConceptID(conceptID);",

@@ -71,8 +71,6 @@ $(function () {
         resizeHeight: false
     });
     crlInitializeTree();
-    $("#uOfD").on("select_node.jstree", crlSendTreeNodeSelected);
-    $("#uOfD").on("dragstart", crlOnTreeDragStart);
     $("#body").on("ondrop", crlOnEditorDrop);
     crlPopulateToolbar();
     crlDiagramCellDropdownMenu = document.getElementById("diagramCellDropdown");
@@ -1255,6 +1253,8 @@ function crlInitializeTree() {
             }
         }
     });
+    $("#uOfD").on("select_node.jstree", crlSendTreeNodeSelected);
+    $("#uOfD").on("dragstart", crlOnTreeDragStart);
 }
 
 function crlInitializeWebSocket() {
@@ -2376,7 +2376,7 @@ function crlSendTreeNodeDelete(id) {
     crlSendRequest(xhr, data);
 }
 
-function crlSendTreeNodeSelected(evt, obj) {
+var crlSendTreeNodeSelected = function(evt, obj) {
     if (obj != undefined) {
         var conceptID = crlGetConceptIDFromTreeNodeID(obj.node.id)
         if (conceptID != crlSelectedConceptID && crlInCrlElementSelected == false) {
