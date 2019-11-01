@@ -344,13 +344,13 @@ func RemoveListMember(list core.Element, el core.Element, hl *core.HeldLocks) er
 			priorMemberReference, _ := GetPriorMemberReference(memberReference, hl)
 			nextMemberReference, _ := GetNextMemberReference(memberReference, hl)
 			if priorMemberReference != nil {
-			setNextMemberReference(priorMemberReference, nextMemberReference, hl)
+				setNextMemberReference(priorMemberReference, nextMemberReference, hl)
 			} else {
 				referenceToFirstMemberReference, _ := getListReferenceToFirstMemberReference(list, hl)
 				referenceToFirstMemberReference.SetReferencedConcept(nextMemberReference, hl)
 			}
 			if nextMemberReference != nil {
-			setPriorMemberReference(nextMemberReference, priorMemberReference, hl)
+				setPriorMemberReference(nextMemberReference, priorMemberReference, hl)
 			} else {
 				referenceToLastMemberReference, _ := getListReferenceToLastMemberReference(list, hl)
 				referenceToLastMemberReference.SetReferencedConcept(priorMemberReference, hl)
@@ -377,8 +377,8 @@ func setPriorMemberReference(memberReference core.Reference, priorReference core
 	priorReferenceReference.SetReferencedConcept(priorReference, hl)
 }
 
-// BuildCrlListsConceptSpace builds the CrlLists concept space and adds it as a child of the provided parent concept space
-func BuildCrlListsConceptSpace(uOfD *core.UniverseOfDiscourse, parentSpace core.Element, hl *core.HeldLocks) {
+// BuildCrlListsConcepts builds the CrlList concept and adds it as a child of the provided parent concept space
+func BuildCrlListsConcepts(uOfD *core.UniverseOfDiscourse, parentSpace core.Element, hl *core.HeldLocks) {
 	crlList, _ := uOfD.NewElement(hl, CrlListURI)
 	crlList.SetLabel("CrlList", hl)
 	crlList.SetOwningConcept(parentSpace, hl)

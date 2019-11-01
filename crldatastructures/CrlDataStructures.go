@@ -11,6 +11,6 @@ var CrlDataStructuresConceptSpaceURI = "http://activeCRL.com/crldatastructures/C
 func BuildCrlDataStructuresConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
 	crlDataStructures, _ := uOfD.NewElement(hl, CrlDataStructuresConceptSpaceURI)
 	crlDataStructures.SetLabel("CrlDataStructures", hl)
-	BuildCrlSetsConceptSpace(uOfD, crlDataStructures, hl)
-	BuildCrlListsConceptSpace(uOfD, crlDataStructures, hl)
+	BuildCrlSetsConcepts(uOfD, crlDataStructures, hl)
+	BuildCrlListsConcepts(uOfD, crlDataStructures, hl)
 }

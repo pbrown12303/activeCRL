@@ -87,8 +87,8 @@ func RemoveSetMember(set core.Element, el core.Element, hl *core.HeldLocks) erro
 	return errors.New("element not member of set")
 }
 
-// BuildCrlSetsConceptSpace builds the CrlSets concept space and adds it as a child of the provided parent concept space
-func BuildCrlSetsConceptSpace(uOfD *core.UniverseOfDiscourse, parentSpace core.Element, hl *core.HeldLocks) {
+// BuildCrlSetsConcepts builds the CrlSets concept space and adds it as a child of the provided parent concept space
+func BuildCrlSetsConcepts(uOfD *core.UniverseOfDiscourse, parentSpace core.Element, hl *core.HeldLocks) {
 	crlSet, _ := uOfD.NewElement(hl, CrlSetURI)
 	crlSet.SetLabel("CrlSet", hl)
 	crlSet.SetOwningConcept(parentSpace, hl)

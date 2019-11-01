@@ -157,6 +157,27 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinementFromURI(originalU
 	return uOfDPtr.CreateReplicateAsRefinement(original, hl, newURI...), nil
 }
 
+// CreateReplicateLiteralAsRefinement replicates the supplied Literal and makes all elements of the replicate
+// refinements of the original elements
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinement(original Literal, hl *HeldLocks, newURI ...string) Literal {
+	uri := ""
+	if len(newURI) > 0 {
+		uri = newURI[0]
+	}
+	replicate, _ := uOfDPtr.NewLiteral(hl, uri)
+	uOfDPtr.replicateAsRefinement(original, replicate, hl)
+	return replicate
+}
+
+// CreateReplicateLiteralAsRefinementFromURI replicates the Literal indicated by the URI
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinementFromURI(originalURI string, hl *HeldLocks, newURI ...string) (Literal, error) {
+	original := uOfDPtr.GetLiteralWithURI(originalURI)
+	if original == nil {
+		return nil, fmt.Errorf("In CreateReplicateLiteralAsRefinementFromURI Element with uri %s not found", originalURI)
+	}
+	return uOfDPtr.CreateReplicateLiteralAsRefinement(original, hl, newURI...), nil
+}
+
 // CreateReplicateReferenceAsRefinement replicates the supplied reference and makes all elements of the replicate
 // refinements of the original elements
 func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinement(original Reference, hl *HeldLocks, newURI ...string) Reference {
