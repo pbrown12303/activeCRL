@@ -73,7 +73,7 @@ var upgrader = websocket.Upgrader{
 // Exit is used as a programmatic shutdown of the server. It is primarily intended to support testing scenarios.
 func Exit() error {
 	// Save the settings
-	err := CrlEditorSingleton.saveSettings()
+	err := CrlEditorSingleton.saveUserPreferences()
 	if err != nil {
 		log.Printf(err.Error())
 	}
@@ -159,9 +159,13 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		diagram.SetOwningConceptID(request.RequestConceptID, hl)
 		CrlEditorSingleton.SelectElement(diagram, hl)
 		hl.ReleaseLocksAndWait()
-		diagramManager.displayDiagram(diagram, hl)
+		err := diagramManager.displayDiagram(diagram, hl)
 		hl.ReleaseLocksAndWait()
-		sendReply(w, 0, "Processed AddDiagramChild", diagram.GetConceptID(hl), diagram)
+		if err != nil {
+			sendReply(w, 1, "Error processing AddDiagramChild: "+err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed AddDiagramChild", diagram.GetConceptID(hl), diagram)
+		}
 	case "AddLiteralChild":
 		el, _ := CrlEditorSingleton.GetUofD().NewLiteral(hl)
 		el.SetLabel(getDefaultLiteralLabel(), hl)
@@ -264,16 +268,12 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	case "InitializeClient":
 		log.Printf("InitializeClient requested")
 		sendReply(w, 0, "Client will be initialized", "", nil)
-		InitializeClient()
-		SendNotification("InitializationComplete", "", nil, nil)
-		if CrlEditorSingleton.settings.WorkspacePath != "" {
-			err = CrlEditorSingleton.openWorkspace(CrlEditorSingleton.settings.WorkspacePath, hl)
-			if err != nil {
-				log.Print(err)
-			}
-			hl.ReleaseLocksAndWait()
+		err := CrlEditorSingleton.InitializeClient()
+		if err != nil {
+			SendNotification("Error initializing client: "+err.Error(), "", nil, nil)
+		} else {
+			SendNotification("InitializationComplete", "", nil, nil)
 		}
-
 	case "LabelChanged":
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil {
@@ -297,7 +297,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		CrlEditorSingleton.SelectElement(cs, hl)
 		sendReply(w, 0, "Processed NewConceptSpaceRequest", cs.GetConceptID(hl), cs)
 	case "OpenWorkspace":
-		err := CrlEditorSingleton.openWorkspace(request.AdditionalParameters["WorkspacePath"], hl)
+		err := CrlEditorSingleton.openWorkspace(hl)
 		if err != nil {
 			sendReply(w, 1, "Error processing OpenWorkspace: "+err.Error(), "", nil)
 		} else {
@@ -404,9 +404,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	case "UpdateDebugSettings":
 		CrlEditorSingleton.UpdateDebugSettings(request)
 		sendReply(w, 0, "Processed UpdateDebugSettings", "", nil)
-	case "UpdateEditorSettings":
-		CrlEditorSingleton.UpdateEditorSettings(request)
-		sendReply(w, 0, "Processed UpdateEditorSettings", "", nil)
+	case "UpdateUserPreferences":
+		CrlEditorSingleton.UpdateUserPreferences(request, hl)
+		sendReply(w, 0, "Processed UpdateUserPreferences", "", nil)
 	case "URIChanged":
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil {
@@ -448,10 +448,27 @@ func StartServer(startBrowser bool) {
 		log.Fatalf("User home directory not found")
 	}
 	InitializeCrlEditorSingleton()
-	err = CrlEditorSingleton.loadSettings()
+	err = CrlEditorSingleton.LoadUserPreferences()
 	if err != nil {
 		log.Fatal(err)
 	}
+	workspacePath := CrlEditorSingleton.GetUserPreferences().WorkspacePath
+	if workspacePath == "" {
+		workspacePath, err2 := CrlEditorSingleton.SelectWorkspace()
+		if err2 != nil {
+			log.Fatal(err2)
+		}
+		err = CrlEditorSingleton.SetWorkspacePath(workspacePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	hl := CrlEditorSingleton.GetUofD().NewHeldLocks()
+	err = CrlEditorSingleton.LoadWorkspace(hl)
+	if err != nil {
+		log.Fatal(err)
+	}
+	hl.ReleaseLocksAndWait()
 	// WebSocketts server
 	go startWsServer()
 	// RequestServer

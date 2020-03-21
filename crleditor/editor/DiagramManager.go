@@ -4,12 +4,15 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/pbrown12303/activeCRL/crldiagram"
 	//	"fmt"
 	"log"
 
 	mapset "github.com/deckarep/golang-set"
+
 	"github.com/pbrown12303/activeCRL/core"
+	"github.com/pbrown12303/activeCRL/crldatastructures"
+	"github.com/pbrown12303/activeCRL/crldiagram"
+	"github.com/pbrown12303/activeCRL/crleditor/crleditordomain"
 )
 
 const diagramContainerSuffix = "DiagramContainer"
@@ -119,9 +122,9 @@ func (dmPtr *diagramManager) addConceptView(request *Request, hl *core.HeldLocks
 	createAsLink := false
 	switch el.(type) {
 	case core.Reference:
-		createAsLink = CrlEditorSingleton.GetEditorSettings().DropReferenceAsLink
+		createAsLink = CrlEditorSingleton.GetDropDiagramReferenceAsLink(hl)
 	case core.Refinement:
-		createAsLink = CrlEditorSingleton.GetEditorSettings().DropRefinementAsLink
+		createAsLink = CrlEditorSingleton.GetDropDiagramRefinementAsLink(hl)
 	}
 
 	var newElement core.Element
@@ -181,7 +184,23 @@ func (dmPtr *diagramManager) addConceptView(request *Request, hl *core.HeldLocks
 	return newElement, nil
 }
 
+// addDiagramToDisplayedList adds the diagram to the list of displayed diagrams
+func (dmPtr *diagramManager) addDiagramToDisplayedList(diagram core.Element, hl *core.HeldLocks) {
+	if !dmPtr.isDiagramDisplayed(diagram, hl) {
+		openDiagrams := dmPtr.crlEditor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
+		crldatastructures.AddListMemberBefore(openDiagrams, nil, diagram, hl)
+	}
+}
+
 func (dmPtr *diagramManager) closeDiagramView(diagramID string, hl *core.HeldLocks) error {
+	diagram := dmPtr.crlEditor.uOfD.GetElement(diagramID)
+	if !diagram.IsRefinementOfURI(crldiagram.CrlDiagramURI, hl) {
+		return errors.New("In diagramManager.closeDiagramView, the supplied diagram is not a refinement of CrlDiagramURI")
+	}
+	// If the diagram is in the list of displayed diagrams, remove it
+	if dmPtr.isDiagramDisplayed(diagram, hl) {
+		dmPtr.removeDiagramFromDisplayedList(diagram, hl)
+	}
 	_, err := SendNotification("CloseDiagramView", diagramID, nil, map[string]string{})
 	return err
 }
@@ -277,8 +296,19 @@ func (dmPtr *diagramManager) diagramDrop(request *Request, hl *core.HeldLocks) e
 
 // displayDiagram tells the client to display the indicated diagram.
 func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.HeldLocks) error {
-	// First make sure there is a monitor on the diagram so we know when it has been deleted
-	dmPtr.verifyMonitorPresent(diagram, hl)
+	if !diagram.IsRefinementOfURI(crldiagram.CrlDiagramURI, hl) {
+		return errors.New("In diagramManager.displayDiagram, the supplied diagram is not a refinement of CrlDiagramURI")
+	}
+	// Make sure the diagram is in the list of displayed diagrams
+	if !dmPtr.isDiagramDisplayed(diagram, hl) {
+		dmPtr.addDiagramToDisplayedList(diagram, hl)
+	}
+	// make sure there is a monitor on the diagram so we know when it has been deleted
+	err2 := dmPtr.verifyMonitorPresent(diagram, hl)
+	if err2 != nil {
+		return err2
+	}
+	// Tell the client to display the diagram
 	notificationResponse, err := CrlEditorSingleton.GetClientNotificationManager().SendNotification("DisplayDiagram", diagram.GetConceptID(hl), diagram, nil)
 	if err != nil {
 		return err
@@ -397,6 +427,12 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 	}
 
 	return diagramPointer.GetConceptID(hl), nil
+}
+
+// isDiagramDisplayed returns true if the diagram is in the list of displayed diagrams
+func (dmPtr *diagramManager) isDiagramDisplayed(diagram core.Element, hl *core.HeldLocks) bool {
+	openDiagrams := dmPtr.crlEditor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
+	return crldatastructures.IsListMember(openDiagrams, diagram, hl)
 }
 
 // newDiagram creates a new crldiagram
@@ -702,6 +738,14 @@ func (dmPtr *diagramManager) refreshDiagram(diagram core.Element, hl *core.HeldL
 	return nil
 }
 
+// removeDiagramFromDisplayedList adds the diagram to the list of displayed diagrams
+func (dmPtr *diagramManager) removeDiagramFromDisplayedList(diagram core.Element, hl *core.HeldLocks) {
+	if dmPtr.isDiagramDisplayed(diagram, hl) {
+		openDiagrams := dmPtr.crlEditor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
+		crldatastructures.RemoveListMember(openDiagrams, diagram, hl)
+	}
+}
+
 // setDiagramNodePosition sets the position of the diagram node
 func (dmPtr *diagramManager) setDiagramNodePosition(nodeID string, x float64, y float64, hl *core.HeldLocks) {
 	node := CrlEditorSingleton.GetUofD().GetElement(nodeID)
@@ -890,14 +934,18 @@ func (dmPtr *diagramManager) showRefinedConcept(elementID string, hl *core.HeldL
 	return nil
 }
 
-func (dmPtr *diagramManager) verifyMonitorPresent(diagram core.Element, hl *core.HeldLocks) {
+func (dmPtr *diagramManager) verifyMonitorPresent(diagram core.Element, hl *core.HeldLocks) error {
 	workingConceptSpace := dmPtr.crlEditor.workingConceptSpace
 	for _, monitor := range workingConceptSpace.GetOwnedReferencesRefinedFromURI(DiagramViewMonitorURI, hl) {
 		if monitor.GetReferencedConcept(hl) == diagram {
-			return
+			return nil
 		}
 	}
-	newMonitor, _ := dmPtr.crlEditor.uOfD.CreateReplicateAsRefinementFromURI(DiagramViewMonitorURI, hl)
+	newMonitor, err := dmPtr.crlEditor.uOfD.CreateReplicateAsRefinementFromURI(DiagramViewMonitorURI, hl)
+	if err != nil {
+		return err
+	}
 	newMonitor.SetOwningConcept(workingConceptSpace, hl)
 	newMonitor.(core.Reference).SetReferencedConcept(diagram, hl)
+	return nil
 }

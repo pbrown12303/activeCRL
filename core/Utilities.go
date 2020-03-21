@@ -49,6 +49,52 @@ func Equivalent(be1 Element, hl1 *HeldLocks, be2 Element, hl2 *HeldLocks) bool {
 	return equivalent(be1, hl1, be2, hl2)
 }
 
+// RecursivelyEquivalent returns true if two elements and all of their children are equivalent
+func RecursivelyEquivalent(e1 Element, hl1 *HeldLocks, e2 Element, hl2 *HeldLocks, printExceptions ...bool) bool {
+	var print bool
+	if len(printExceptions) == 1 {
+		print = printExceptions[0]
+	}
+	if !Equivalent(e1, hl1, e2, hl2) {
+		if print {
+			log.Print("Equivalence failed")
+			Print(e1, "e1: ", hl1)
+			Print(e2, "e2: ", hl2)
+		}
+		return false
+	}
+	children1 := e1.GetOwnedConceptIDs(hl1)
+	children2 := e2.GetOwnedConceptIDs(hl2)
+	if children1.Cardinality() != children2.Cardinality() {
+		if print {
+			log.Print("Children Cardinality failed")
+			Print(e1, "Element1:", hl1)
+			log.Printf("Children1: %s", children1.String())
+			log.Printf("Children2: %s", children2.String())
+		}
+		return false
+	}
+	if !children1.Equal(children2) {
+		if print {
+			log.Print("Children Equal failed")
+			Print(e1, "Element1:", hl1)
+			log.Printf("Children1: %s", children1.String())
+			log.Printf("Children2: %s", children2.String())
+		}
+		return false
+	}
+	it := children1.Iterator()
+	for childEntry := range it.C {
+		childID := childEntry.(string)
+		child1 := e1.GetUniverseOfDiscourse(hl1).GetElement(childID)
+		child2 := e2.GetUniverseOfDiscourse(hl2).GetElement(childID)
+		if child1 == nil || child2 == nil || !RecursivelyEquivalent(child1, hl1, child2, hl2, printExceptions...) {
+			return false
+		}
+	}
+	return true
+}
+
 func equivalent(be1 Element, hl1 *HeldLocks, be2 Element, hl2 *HeldLocks) bool {
 	if reflect.TypeOf(be1) != reflect.TypeOf(be2) {
 		return false

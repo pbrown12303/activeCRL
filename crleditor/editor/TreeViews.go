@@ -2,13 +2,14 @@ package editor
 
 import (
 	"github.com/pbrown12303/activeCRL/core"
+	"github.com/pbrown12303/activeCRL/crleditor/crleditordomain"
 
 	//	"github.com/satori/go.uuid"
 	"log"
 )
 
 // TreeViewsURI identifies the TreeViews concept
-var TreeViewsURI = editorURI + "/TreeViews"
+var TreeViewsURI = crleditordomain.EditorDomainURI + "/TreeViews"
 
 // TreeNodeManagerURI identifies the ManageNodes concept
 var TreeNodeManagerURI = TreeViewsURI + "/TreeNodeManager"
@@ -70,8 +71,8 @@ func treeViewManageNodes(instance core.Element, changeNotification *core.ChangeN
 
 }
 
-// BuildTreeViews builds the concepts related to TreeViews and adds them to the uOfD
-func BuildTreeViews(conceptSpace core.Element, hl *core.HeldLocks) {
+// BuildTreeViewManager builds the concepts related to TreeViews and adds them to the uOfD
+func BuildTreeViewManager(conceptSpace core.Element, hl *core.HeldLocks) {
 	uOfD := conceptSpace.GetUniverseOfDiscourse(hl)
 
 	// TreeViews

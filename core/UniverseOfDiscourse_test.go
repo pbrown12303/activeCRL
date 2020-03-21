@@ -183,7 +183,8 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			oChild3.SetLabel(oChild3Label, hl)
 		})
 		Specify("Replicate should work properly", func() {
-			replicate := uOfD.CreateReplicateAsRefinement(original, hl)
+			replicate, err := uOfD.CreateReplicateAsRefinement(original, hl)
+			Expect(err).To(BeNil())
 			hl.ReleaseLocksAndWait()
 			Expect(replicate.IsRefinementOf(original, hl)).To(BeTrue())
 			var foundChild1Replicate = false
@@ -207,9 +208,10 @@ var _ = Describe("UniverseOfDiscourse", func() {
 		})
 
 		Specify("replicateAsRefinement should be idempotent", func() {
-			replicate := uOfD.CreateReplicateAsRefinement(original, hl)
+			replicate, err := uOfD.CreateReplicateAsRefinement(original, hl)
+			Expect(err).To(BeNil())
 			childCount := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()
-			uOfD.replicateAsRefinement(original, replicate, hl)
+			Expect(uOfD.replicateAsRefinement(original, replicate, hl)).To(Succeed())
 			Expect(uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()).To(Equal(childCount))
 		})
 	})

@@ -38,8 +38,8 @@
 					Space</a>
 				<a id="SaveWorkspaceButton" class="show" onClick="crlSendSaveWorkspace()">Save Workspace</a>
 				<a id="CloseWorkspaceButton" class="show" onClick="crlSendCloseWorkspace()">Close Workspace</a>
-				<a id="OpenWorkspaceButton" class="show" onClick="crlOpenWorkspaceDialog.open()">Open Workspace ...</a>
-				<a id="EditorSettingsButton" class="show" onClick="crlEditorSettingsDialog.open()">Editor Settings ...</a>
+				<a id="OpenWorkspaceButton" class="show" onClick="crlSendOpenWorkspace()">Open Workspace ...</a>
+				<a id="UserPreferencesButton" class="show" onClick="crlUserPreferencesDialog.open()">User Preferences ...</a>
 				<a id="Exit" class="show" onClick="crlCallExit()">Exit</a>
 			</div>
 		</div>
@@ -61,7 +61,8 @@
 				<a id="DisplayTracesButton" class="show" onClick="crlInitiateGraphsDialogDisplay()">Display Call Graphs ...</a>
 			</div>
 		</div>
-		<a id="CurrentWorkspace"></a>
+		<a>Current Workspace: </a>
+		<a id="CurrentWorkspace">XXX</a>
 	</div>
 	<div class="wrapper" id="wrapper">
 		<div class="uofd-browser" id="uofd-browser">

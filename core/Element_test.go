@@ -541,7 +541,7 @@ var _ = Describe("Element internals test", func() {
 			rOwner, err4 := uOfD2.RecoverElement(mOwner, hl2)
 			Expect(err4).To(BeNil())
 			Expect(Equivalent(el, hl, rEl, hl2)).To(BeTrue())
-			Expect(Equivalent(owner, hl, rOwner, hl2)).To(BeTrue())
+			Expect(RecursivelyEquivalent(owner, hl, rOwner, hl2)).To(BeTrue())
 		})
 	})
 

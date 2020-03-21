@@ -12,4 +12,6 @@ func BuildCrlDataTypesConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.Held
 	crlDataTypes, _ := uOfD.NewElement(hl, CrlDataTypesConceptSpaceURI)
 	crlDataTypes.SetLabel("CrlDataTypes", hl)
 	BuildCrlBooleanConcept(uOfD, crlDataTypes, hl)
+	crlDataTypes.SetReadOnlyRecursively(true, hl)
+	crlDataTypes.SetIsCoreRecursively(hl)
 }

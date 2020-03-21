@@ -28,11 +28,11 @@ var CrlListReferenceToPriorMemberReferenceURI = CrlListURI + "/ReferenceToPriorM
 var CrlListTypeReferenceURI = CrlListURI + "/ListTypeReference"
 
 // NewList creates an instance of a list
-func NewList(uOfD *core.UniverseOfDiscourse, setType core.Element, hl *core.HeldLocks) (core.Element, error) {
+func NewList(uOfD *core.UniverseOfDiscourse, setType core.Element, hl *core.HeldLocks, newURI ...string) (core.Element, error) {
 	if setType == nil {
 		return nil, errors.New("No type specified for list")
 	}
-	newList, err := uOfD.CreateReplicateAsRefinementFromURI(CrlListURI, hl)
+	newList, err := uOfD.CreateReplicateAsRefinementFromURI(CrlListURI, hl, newURI...)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func GetFirstMemberReference(list core.Element, hl *core.HeldLocks) (core.Refere
 		return nil, err
 	}
 	if refRef == nil {
-		return nil, errors.New("No reference to first member reference found")
+		return nil, errors.New("In List GetFirstMemberReference, No reference to first member reference found")
 	}
 	firstMemberReference := refRef.GetReferencedConcept(hl)
 	if firstMemberReference == nil {
@@ -227,7 +227,11 @@ func getListReferenceToFirstMemberReference(list core.Element, hl *core.HeldLock
 	if IsList(list, hl) == false {
 		return nil, errors.New("Argument is not a CrlDataStructures.List")
 	}
-	return list.GetFirstOwnedReferenceRefinedFromURI(CrlListReferenceToFirstMemberReferenceURI, hl), nil
+	refToRef := list.GetFirstOwnedReferenceRefinedFromURI(CrlListReferenceToFirstMemberReferenceURI, hl)
+	if refToRef == nil {
+		return nil, errors.New("In getListReferenceToFirstMemberReference, the reference was not found")
+	}
+	return refToRef, nil
 }
 
 // getListReferenceToLastMemberReference returns the reference to the last member reference. It returns an error if list is not a List
@@ -361,6 +365,23 @@ func RemoveListMember(list core.Element, el core.Element, hl *core.HeldLocks) er
 		}
 	}
 	return errors.New("element not member of list")
+}
+
+// SetListType sets the element that should be an abstraction of every member. It is only valid on a list that
+// does not already have a list type assigned, i.e. you can't change the type of a list once it has been set.
+// It returns an error if the argument is not a list or if the list already has a type assigned
+func SetListType(list core.Element, listType core.Element, hl *core.HeldLocks) error {
+	if list.IsRefinementOfURI(CrlListURI, hl) == false {
+		return errors.New("Argument is not a list")
+	}
+	typeReference := list.GetFirstOwnedReferenceRefinedFromURI(CrlListTypeReferenceURI, hl)
+	if typeReference == nil {
+		return errors.New("ListTypeReference not found")
+	}
+	if typeReference.GetReferencedConcept(hl) != nil {
+		return errors.New("List already has an assigned type")
+	}
+	return typeReference.SetReferencedConcept(listType, hl)
 }
 
 // setNextMemberReference takes a memberReference and sets its next reference

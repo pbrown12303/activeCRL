@@ -128,24 +128,31 @@ func (uOfDPtr *UniverseOfDiscourse) changeURIForElement(el Element, oldURI strin
 // except that descendant Refinements are not replicated.
 // For each replicated Element, a Refinement is created with the abstractElement being the original and the refinedElement
 // being the replica. The root replicated element is returned.
-func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinement(original Element, hl *HeldLocks, newURI ...string) Element {
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinement(original Element, hl *HeldLocks, newURI ...string) (Element, error) {
 	uri := ""
 	if len(newURI) > 0 {
 		uri = newURI[0]
 	}
 	var replicate Element
+	var err error
 	switch original.(type) {
 	case Literal:
-		replicate, _ = uOfDPtr.NewLiteral(hl, uri)
+		replicate, err = uOfDPtr.NewLiteral(hl, uri)
 	case Reference:
-		replicate, _ = uOfDPtr.NewReference(hl, uri)
+		replicate, err = uOfDPtr.NewReference(hl, uri)
 	case Refinement:
-		replicate, _ = uOfDPtr.NewRefinement(hl, uri)
+		replicate, err = uOfDPtr.NewRefinement(hl, uri)
 	case Element:
-		replicate, _ = uOfDPtr.NewElement(hl, uri)
+		replicate, err = uOfDPtr.NewElement(hl, uri)
 	}
-	uOfDPtr.replicateAsRefinement(original, replicate, hl)
-	return replicate
+	if err != nil {
+		return nil, err
+	}
+	err = uOfDPtr.replicateAsRefinement(original, replicate, hl, newURI...)
+	if err != nil {
+		return nil, err
+	}
+	return replicate, nil
 }
 
 // CreateReplicateAsRefinementFromURI replicates the Element indicated by the URI
@@ -154,19 +161,25 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinementFromURI(originalU
 	if original == nil {
 		return nil, fmt.Errorf("In CreateReplicateAsRefinementFromURI Element with uri %s not found", originalURI)
 	}
-	return uOfDPtr.CreateReplicateAsRefinement(original, hl, newURI...), nil
+	return uOfDPtr.CreateReplicateAsRefinement(original, hl, newURI...)
 }
 
 // CreateReplicateLiteralAsRefinement replicates the supplied Literal and makes all elements of the replicate
 // refinements of the original elements
-func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinement(original Literal, hl *HeldLocks, newURI ...string) Literal {
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinement(original Literal, hl *HeldLocks, newURI ...string) (Literal, error) {
 	uri := ""
 	if len(newURI) > 0 {
 		uri = newURI[0]
 	}
-	replicate, _ := uOfDPtr.NewLiteral(hl, uri)
-	uOfDPtr.replicateAsRefinement(original, replicate, hl)
-	return replicate
+	replicate, err := uOfDPtr.NewLiteral(hl, uri)
+	if err != nil {
+		return nil, err
+	}
+	err = uOfDPtr.replicateAsRefinement(original, replicate, hl, uri)
+	if err != nil {
+		return nil, err
+	}
+	return replicate, nil
 }
 
 // CreateReplicateLiteralAsRefinementFromURI replicates the Literal indicated by the URI
@@ -175,19 +188,25 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinementFromURI(or
 	if original == nil {
 		return nil, fmt.Errorf("In CreateReplicateLiteralAsRefinementFromURI Element with uri %s not found", originalURI)
 	}
-	return uOfDPtr.CreateReplicateLiteralAsRefinement(original, hl, newURI...), nil
+	return uOfDPtr.CreateReplicateLiteralAsRefinement(original, hl, newURI...)
 }
 
 // CreateReplicateReferenceAsRefinement replicates the supplied reference and makes all elements of the replicate
 // refinements of the original elements
-func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinement(original Reference, hl *HeldLocks, newURI ...string) Reference {
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinement(original Reference, hl *HeldLocks, newURI ...string) (Reference, error) {
 	uri := ""
 	if len(newURI) > 0 {
 		uri = newURI[0]
 	}
-	replicate, _ := uOfDPtr.NewReference(hl, uri)
-	uOfDPtr.replicateAsRefinement(original, replicate, hl)
-	return replicate
+	replicate, err := uOfDPtr.NewReference(hl, uri)
+	if err != nil {
+		return nil, err
+	}
+	err = uOfDPtr.replicateAsRefinement(original, replicate, hl, uri)
+	if err != nil {
+		return nil, err
+	}
+	return replicate, nil
 }
 
 // CreateReplicateReferenceAsRefinementFromURI replicates the Reference indicated by the URI
@@ -196,7 +215,7 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinementFromURI(
 	if original == nil {
 		return nil, fmt.Errorf("In CreateReplicateAsRefinementFromURI Element with uri %s not found", originalURI)
 	}
-	return uOfDPtr.CreateReplicateReferenceAsRefinement(original, hl, newURI...), nil
+	return uOfDPtr.CreateReplicateReferenceAsRefinement(original, hl, newURI...)
 }
 
 func (uOfDPtr *UniverseOfDiscourse) findFunctions(element Element, notification *ChangeNotification, hl *HeldLocks) []string {
@@ -744,13 +763,20 @@ func (uOfDPtr *UniverseOfDiscourse) RecoverElement(data []byte, hl *HeldLocks) (
 // corresponding replicate element. This function is idempotent: if applied to an existing structure,
 // Elements of that structure that have existing Refinement relationships with original Elements
 // will not be re-created.
-func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, replicate Element, hl *HeldLocks) {
+func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, replicate Element, hl *HeldLocks, uri ...string) error {
 	hl.ReadLockElement(original)
 	hl.WriteLockElement(replicate)
 
 	replicate.SetLabel(original.GetLabel(hl), hl)
 	if replicate.IsRefinementOf(original, hl) == false {
-		refinement, _ := uOfDPtr.NewRefinement(hl)
+		refinementURI := ""
+		if len(uri) == 1 && uri[0] != "" {
+			refinementURI = uri[0] + original.GetConceptID(hl) + "/Refinement"
+		}
+		refinement, err := uOfDPtr.NewRefinement(hl, refinementURI)
+		if err != nil {
+			return err
+		}
 		refinement.SetOwningConcept(replicate, hl)
 		refinement.SetAbstractConcept(original, hl)
 		refinement.SetRefinedConcept(replicate, hl)
@@ -780,16 +806,25 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 		// If the replicate child is nil at this point, there is no existing replicate child that corresponds
 		// to the original child - create one.
 		if replicateChild == nil {
+			childURI := ""
+			refinementURI := ""
+			if len(uri) == 1 {
+				childURI = uri[0] + "/" + originalChild.GetConceptID(hl)
+				refinementURI = childURI + "/Refinement"
+			}
 			switch originalChild.(type) {
 			case Reference:
-				replicateChild, _ = uOfDPtr.NewReference(hl)
+				replicateChild, _ = uOfDPtr.NewReference(hl, childURI)
 			case Literal:
-				replicateChild, _ = uOfDPtr.NewLiteral(hl)
+				replicateChild, _ = uOfDPtr.NewLiteral(hl, childURI)
 			case Element:
-				replicateChild, _ = uOfDPtr.NewElement(hl)
+				replicateChild, _ = uOfDPtr.NewElement(hl, childURI)
 			}
 			replicateChild.SetOwningConcept(replicate, hl)
-			refinement, _ := uOfDPtr.NewRefinement(hl)
+			refinement, err := uOfDPtr.NewRefinement(hl, refinementURI)
+			if err != nil {
+				return err
+			}
 			refinement.SetOwningConcept(replicateChild, hl)
 			refinement.SetAbstractConcept(originalChild, hl)
 			refinement.SetRefinedConcept(replicateChild, hl)
@@ -797,10 +832,14 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 			replicateChild.SetLabel(originalChild.GetLabel(hl), hl)
 		}
 		switch originalChild.(type) {
-		case Element:
-			uOfDPtr.replicateAsRefinement(originalChild.(Element), replicateChild.(Element), hl)
+		case Element, Literal, Reference:
+			err := uOfDPtr.replicateAsRefinement(originalChild, replicateChild, hl)
+			if err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 // SetRecordingUndo turns undo/redo recording on and off

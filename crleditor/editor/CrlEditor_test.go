@@ -3,7 +3,10 @@ package editor_test
 import (
 	//	"fmt"
 
+	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -439,7 +442,7 @@ var _ = Describe("Test CrlEditor", func() {
 				&treeNodeID)
 			Expect(page.FindByID(treeNodeID)).To(BeFound())
 		})
-		FSpecify("Tree selection should work", func() {
+		Specify("Tree selection should work", func() {
 			coreConceptSpace := uOfD.GetElementWithURI(core.CoreConceptSpaceURI)
 			var treeNodeID string
 			page.RunScript("return crlGetTreeNodeIDFromConceptID(conceptID);",
@@ -1009,6 +1012,39 @@ var _ = Describe("Test CrlEditor", func() {
 			hl.ReleaseLocksAndWait()
 			// Now check the results
 			Expect(r1.GetRefinedConcept(hl)).To(Equal(e1))
+		})
+	})
+
+	Describe("Test Workspace Functionality", func() {
+		var ws1 string
+		var ws1Cleanup func()
+
+		BeforeEach(func() {
+			tmpDir, err := ioutil.TempDir("", "crltests")
+			Expect(err).To(BeNil())
+
+			ws1 = filepath.Join(tmpDir, "ws1")
+			ws1Cleanup = func() {
+				Expect(os.RemoveAll(tmpDir)).To(Succeed())
+			}
+		})
+
+		AfterEach(func() {
+			ws1Cleanup()
+		})
+
+		Specify("Creating a workspace should succeed", func() {
+			Expect(ws1).ToNot(BeNil())
+			Expect(editor.CrlEditorSingleton.GetUserPreferences().WorkspacePath).To(Equal(""))
+			var changeWorkspaceButton = page.FindByID("OpenWorkspaceButton")
+			Expect(changeWorkspaceButton.Click()).To(Succeed())
+			hl.ReleaseLocksAndWait()
+			var workspaceFolderPath = page.FindByID("selectedWorkspaceFolder")
+			workspaceFolderPath.Fill(ws1)
+			var okButton = page.FindByClass("jBox-Confirm-button-submit")
+			okButton.Click()
+			hl.ReleaseLocksAndWait()
+			//			Expect(editor.CrlEditorSingleton.workspace)
 		})
 	})
 })

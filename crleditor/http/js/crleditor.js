@@ -28,8 +28,8 @@ var crlOmitHousekeepingCalls = false;
 var crlDebugSettingsDialog;
 
 // Dialogs
-// crlEditorSettingsDialog is the initialized dialog used for editing editor settings
-var crlEditorSettingsDialog;
+// crlUserPreferencesDialog is the initialized dialog used for editing user preferences
+var crlUserPreferencesDialog;
 // crlOpenWorkspaceDialog is the initialized dialog used for opening a workspace
 var crlOpenWorkspaceDialog;
 
@@ -142,8 +142,8 @@ $(function () {
             crlSendDisplayCallGraph(selectedNumber);
         }
     })
-    crlEditorSettingsDialog = new jBox("Confirm", {
-        title: "Editor Settings",
+    crlUserPreferencesDialog = new jBox("Confirm", {
+        title: "User Preferences",
         confirmButton: "OK",
         cancelButton: "Cancel",
         content: "" +
@@ -156,7 +156,7 @@ $(function () {
             "	</fieldset>" +
             "</form>",
         confirm: function () {
-            crlSendEditorSettings();
+            crlSendUserPreferences();
         },
         onOpen: function () {
             $("#dropReferenceAsLink").prop("checked", crlDropReferenceAsLink);
@@ -172,7 +172,7 @@ $(function () {
             "	<fieldset>" +
             "		<p>Use the file selector to locate the folder you want to use for your workspace. Copy the path in the" +
             "			top of the browser and then paste it into the indicated box.</p>" +
-            "		Identify Workspace Folder:<input type='file'><br>" +
+            "		Identify Workspace Folder:<input type='file' webkitdirectory directory multiple><br>" +
             "		Paste Directory Path Here:<input type='text' id='selectedWorkspaceFolder'>" +
             "	</fieldset>" +
             "</form>",
@@ -1305,8 +1305,8 @@ function crlInitializeWebSocket() {
             case "DisplayGraph":
                 crlNotificationDisplayGraph(data);
                 break;
-            case "EditorSettings":
-                crlNotificationSaveEditorSettings(data);
+            case "UserPreferences":
+                crlNotificationSaveUserPreferences(data);
                 break;
             case "ElementSelected":
                 crlNotificationElementSelected(data);
@@ -1732,7 +1732,7 @@ function crlUpdateProperties(data) {
     };
 }
 
-function crlNotificationSaveEditorSettings(data) {
+function crlNotificationSaveUserPreferences(data) {
     crlDropReferenceAsLink = JSON.parse(data.AdditionalParameters["DropReferenceAsLink"]);
     crlDropRefinementAsLink = JSON.parse(data.AdditionalParameters["DropRefinementAsLink"]);
     crlSendNormalResponse();
@@ -2191,7 +2191,7 @@ function crlSendDisplayDiagramSelected(diagramID) {
     crlSendRequest(xhr, data);
 }
 
-function crlSendEditorSettings() {
+function crlSendUserPreferences() {
     var xhr = crlCreateEmptyRequest()
     var dropReferenceAsLink = "false";
     var dropRefinementAsLink = "false";
@@ -2202,7 +2202,7 @@ function crlSendEditorSettings() {
         dropRefinementAsLink = "true";
     }
     var data = JSON.stringify({
-        "Action": "UpdateEditorSettings",
+        "Action": "UpdateUserPreferences",
         "AdditionalParameters": {
             "DropReferenceAsLink": dropReferenceAsLink,
             "DropRefinementAsLink": dropRefinementAsLink
@@ -2253,13 +2253,10 @@ function crlSendNewConceptSpaceRequest(evt) {
     crlSendRequest(xhr, data)
 }
 
-function crlSendOpenWorkspace(workspacePath) {
+function crlSendOpenWorkspace() {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
         "Action": "OpenWorkspace",
-        "AdditionalParameters": {
-            "WorkspacePath": workspacePath
-        }
     });
     crlSendRequest(xhr, data);
 }

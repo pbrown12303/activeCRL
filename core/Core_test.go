@@ -25,4 +25,13 @@ var _ = Describe("Core should build properly", func() {
 		Expect(refinement).ToNot(BeNil())
 		Expect(refinement.GetIsCore(hl)).To(BeTrue())
 	})
+	Specify("The creation of the core domain should be idempotent", func() {
+		uOfD1 := NewUniverseOfDiscourse()
+		hl1 := uOfD1.NewHeldLocks()
+		cs1 := uOfD1.GetElementWithURI(CoreConceptSpaceURI)
+		uOfD2 := NewUniverseOfDiscourse()
+		hl2 := uOfD2.NewHeldLocks()
+		cs2 := uOfD2.GetElementWithURI(CoreConceptSpaceURI)
+		Expect(RecursivelyEquivalent(cs1, hl1, cs2, hl2)).To(BeTrue())
+	})
 })

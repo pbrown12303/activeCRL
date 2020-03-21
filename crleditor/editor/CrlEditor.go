@@ -10,13 +10,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pbrown12303/activeCRL/crldiagram"
-
 	"github.com/pbrown12303/activeCRL/core"
-)
+	"github.com/pbrown12303/activeCRL/crldatastructures"
+	"github.com/pbrown12303/activeCRL/crldatatypes"
+	"github.com/pbrown12303/activeCRL/crldiagram"
+	"github.com/pbrown12303/activeCRL/crleditor/crleditordomain"
 
-// editorURI is the URI for accessing the CrlEditor
-var editorURI = "http://activeCrl.com/crlEditor/Editor"
+	"github.com/sqweek/dialog"
+)
 
 // CrlEditorSingleton is the singleton instance of the CrlEditor
 var CrlEditorSingleton *CrlEditor
@@ -27,11 +28,11 @@ var CrlLogClientNotifications = false
 // CrlLogClientRequests enables the logging of client requests when set to true
 var CrlLogClientRequests = false
 
-// CrlEditorSettings are the configurable behaviors of the editor
-type CrlEditorSettings struct {
-	DropReferenceAsLink  bool
-	DropRefinementAsLink bool
-	WorkspacePath        string
+// CrlEditorUserPreferences are the user preferences for the editor
+type CrlEditorUserPreferences struct {
+	WorkspacePath               string
+	DropDiagramReferenceAsLink  bool
+	DropDiagramRefinementAsLink bool
 }
 
 type workspaceFile struct {
@@ -45,7 +46,8 @@ type workspaceFile struct {
 // and the singleton instances of the Universe of Discourse and HeldLocks shared by all editing operations.
 type CrlEditor struct {
 	clientNotificationManager *ClientNotificationManager
-	settings                  *CrlEditorSettings
+	userPreferences           *CrlEditorUserPreferences
+	settings                  core.Element
 	currentSelection          core.Element
 	cutBuffer                 map[string]core.Element
 	diagramManager            *diagramManager
@@ -62,23 +64,26 @@ type CrlEditor struct {
 func InitializeCrlEditorSingleton() {
 	var editor CrlEditor
 	editor.initialized = false
-	var settings CrlEditorSettings
-	editor.settings = &settings
-	editor.cutBuffer = make(map[string]core.Element)
-	editor.workspaceFiles = make(map[string]*workspaceFile)
 
 	editor.uOfD = core.NewUniverseOfDiscourse()
 	hl := editor.uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
+	editor.initializeUofD(hl)
+
+	var userPreferences CrlEditorUserPreferences
+	editor.userPreferences = &userPreferences
+	editor.cutBuffer = make(map[string]core.Element)
+	editor.workspaceFiles = make(map[string]*workspaceFile)
 
 	// Set the value of the singleton
 	CrlEditorSingleton = &editor
+	domain := editor.uOfD.GetElementWithURI(crleditordomain.EditorDomainURI)
+	BuildTreeViewManager(domain, hl)
+	BuildDiagramViewMonitor(domain, hl)
 
-	editor.treeManager = newTreeManager(&editor, "#uOfD")
+	editor.createTreeManager(&editor, "#uOfD", hl)
 	editor.diagramManager = newDiagramManager(&editor)
 	editor.clientNotificationManager = newClientNotificationManager()
-
-	editor.initializeUofD(hl)
 
 	editor.uOfD.SetRecordingUndo(true)
 	editor.initialized = true
@@ -86,50 +91,68 @@ func InitializeCrlEditorSingleton() {
 }
 
 func (edPtr *CrlEditor) initializeUofD(hl *core.HeldLocks) error {
+	crldatatypes.BuildCrlDataTypesConceptSpace(edPtr.uOfD, hl)
+	crldatastructures.BuildCrlDataStructuresConceptSpace(edPtr.uOfD, hl)
+	hl.ReleaseLocksAndWait()
 	crldiagram.BuildCrlDiagramConceptSpace(edPtr.uOfD, hl)
 	hl.ReleaseLocksAndWait()
-	AddEditorConceptSpaceToUofD(edPtr.uOfD, hl)
+	_, err := AddEditorConceptSpaceToUofD(edPtr.uOfD, hl)
+	if err != nil {
+		return err
+	}
 	hl.ReleaseLocksAndWait()
 	// Create editor working concept space
 	edPtr.workingConceptSpace, _ = edPtr.uOfD.NewElement(hl)
 	edPtr.workingConceptSpace.SetLabel("EditorWorkingCS", hl)
-	treeNodeManager, err := edPtr.treeManager.configureUofD(hl)
-	if err != nil {
-		return err
-	}
-	treeNodeManager.SetOwningConcept(edPtr.workingConceptSpace, hl)
-	treeNodeManager.SetIsCoreRecursively(hl)
-	hl.ReleaseLocksAndWait()
-	registerTreeViewFunctions(edPtr.uOfD)
 	registerDiagramViewMonitorFunctions(edPtr.uOfD)
 	return nil
 }
 
-// InitializeClient sets the client state after a browser refresh.
-func InitializeClient() {
-	<-webSocketReady
-	log.Printf("InitializeClient executing")
-	uOfD := CrlEditorSingleton.GetUofD()
-	hl := uOfD.NewHeldLocks()
-	defer hl.ReleaseLocksAndWait()
-	if CrlEditorSingleton.IsInitialized() == false {
-		time.Sleep(100 * time.Millisecond)
-	}
-	CrlEditorSingleton.getTreeManager().initializeTree(hl)
-	CrlEditorSingleton.SendEditorSettings()
-	CrlEditorSingleton.SendDebugSettings()
-}
-
-// AddEditorConceptSpaceToUofD adds the concepts representing the various editor views to the universe of discurse
-func AddEditorConceptSpaceToUofD(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
-	conceptSpace := uOfD.GetElementWithURI(editorURI)
+// AddEditorConceptSpaceToUofD adds the concepts representing the various editor views to the universe of discourse
+func AddEditorConceptSpaceToUofD(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
+	conceptSpace := uOfD.GetElementWithURI(crleditordomain.EditorURI)
 	if conceptSpace == nil {
-		conceptSpace = BuildEditorConceptSpace(uOfD, hl)
-		if conceptSpace == nil {
-			log.Printf("Build of Editor Concept Space failed")
+		var err error
+		conceptSpace, err = crleditordomain.BuildEditorDomain(uOfD, hl)
+		if err != nil {
+			return nil, err
 		}
 	}
-	return conceptSpace
+	return conceptSpace, nil
+}
+
+// createTreeManager creates an instance of the TreeManager
+func (edPtr *CrlEditor) createTreeManager(editor *CrlEditor, treeID string, hl *core.HeldLocks) error {
+	var tm treeManager
+	tm.editor = editor
+	tm.treeID = treeID
+	edPtr.treeManager = &tm
+	var err error
+	tm.treeNodeManager, err = edPtr.uOfD.CreateReplicateAsRefinementFromURI(TreeNodeManagerURI, hl)
+	if err != nil {
+		return err
+	}
+	treeNodeManagerUOfDReference := tm.treeNodeManager.GetFirstOwnedReferenceRefinedFromURI(TreeNodeManagerUofDReferenceURI, hl)
+	treeNodeManagerUOfDReference.SetReferencedConcept(edPtr.uOfD, hl)
+	tm.treeNodeManager.SetOwningConcept(edPtr.workingConceptSpace, hl)
+	tm.treeNodeManager.SetIsCoreRecursively(hl)
+	hl.ReleaseLocksAndWait()
+	registerTreeViewFunctions(edPtr.uOfD)
+	return nil
+}
+
+// createSettings creates the concept space for settings and adds it to the workspace
+func (edPtr *CrlEditor) createSettings(hl *core.HeldLocks) error {
+
+	newSettings, err := edPtr.uOfD.CreateReplicateAsRefinementFromURI(crleditordomain.EditorSettingsURI, hl)
+	if err != nil {
+		return err
+	}
+	edPtr.settings = newSettings
+	openDiagrams := edPtr.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
+	diagram := edPtr.uOfD.GetElementWithURI(crldiagram.CrlDiagramURI)
+	crldatastructures.SetListType(openDiagrams, diagram, hl)
+	return nil
 }
 
 // CloseWorkspace closes the current workspace, saving the root elements
@@ -138,7 +161,7 @@ func (edPtr *CrlEditor) CloseWorkspace(hl *core.HeldLocks) error {
 	if err != nil {
 		return err
 	}
-	edPtr.settings.WorkspacePath = ""
+	edPtr.userPreferences.WorkspacePath = ""
 	edPtr.workspaceFiles = make(map[string]*workspaceFile)
 	hl.ReleaseLocksAndWait()
 	edPtr.uOfD = core.NewUniverseOfDiscourse()
@@ -174,7 +197,7 @@ func (edPtr *CrlEditor) Delete(elID string) error {
 
 // deleteFile deletes the file from the os
 func (edPtr *CrlEditor) deleteFile(wf *workspaceFile, hl *core.HeldLocks) error {
-	qualifiedFilename := edPtr.settings.WorkspacePath + "/" + wf.Info.Name()
+	qualifiedFilename := edPtr.userPreferences.WorkspacePath + "/" + wf.Info.Name()
 	return os.Remove(qualifiedFilename)
 }
 
@@ -295,9 +318,14 @@ func (edPtr *CrlEditor) GetNotificationsLimit() int {
 	return core.GetNotificationsLimit()
 }
 
-// GetEditorSettings returns the settings that impact editor behavior
-func (edPtr *CrlEditor) GetEditorSettings() *CrlEditorSettings {
-	return edPtr.settings
+// GetDropDiagramReferenceAsLink returns true if dropped references are shown as links
+func (edPtr *CrlEditor) GetDropDiagramReferenceAsLink(hl *core.HeldLocks) bool {
+	return edPtr.userPreferences.DropDiagramReferenceAsLink
+}
+
+// GetDropDiagramRefinementAsLink returns true if dropped refinements are shown as links
+func (edPtr *CrlEditor) GetDropDiagramRefinementAsLink(hl *core.HeldLocks) bool {
+	return edPtr.userPreferences.DropDiagramRefinementAsLink
 }
 
 // GetTreeDragSelection returns the Element currently being dragged from the tree
@@ -320,14 +348,53 @@ func (edPtr *CrlEditor) GetUofD() *core.UniverseOfDiscourse {
 	return edPtr.uOfD
 }
 
+// GetUserPreferences returns the current user's preferences
+func (edPtr *CrlEditor) GetUserPreferences() *CrlEditorUserPreferences {
+	return edPtr.userPreferences
+}
+
+// getUserPreferencesPath returns the path to the user preferences
+func (edPtr *CrlEditor) getUserPreferencesPath() string {
+	return home + "/.crleditoruserpreferences"
+}
+
+// InitializeClient sets the client state after a browser refresh.
+func (edPtr *CrlEditor) InitializeClient() error {
+	<-webSocketReady
+	uOfD := edPtr.GetUofD()
+	hl := uOfD.NewHeldLocks()
+	defer hl.ReleaseLocksAndWait()
+	if edPtr.IsInitialized() == false {
+		time.Sleep(100 * time.Millisecond)
+	}
+	edPtr.getTreeManager().initializeTree(hl)
+	edPtr.SendUserPreferences(hl)
+	edPtr.SendDebugSettings()
+	edPtr.SendWorkspacePath()
+	openDiagrams := edPtr.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
+	openDiagramReference, err2 := crldatastructures.GetFirstMemberReference(openDiagrams, hl)
+	if err2 != nil {
+		return err2
+	}
+	for openDiagramReference != nil {
+		diagram := openDiagramReference.GetReferencedConcept(hl)
+		if diagram == nil {
+			return errors.New("Failed to load diagram with ID: " + openDiagramReference.GetReferencedConceptID(hl))
+		}
+		edPtr.diagramManager.displayDiagram(diagram, hl)
+		openDiagramReference, _ = crldatastructures.GetNextMemberReference(openDiagramReference, hl)
+	}
+	return nil
+}
+
 // IsInitialized returns true if the editor's initialization is complete
 func (edPtr *CrlEditor) IsInitialized() bool {
 	return edPtr.initialized
 }
 
-// loadSettings loads the settings saved in the user's home directory
-func (edPtr *CrlEditor) loadSettings() error {
-	path := home + "/.crleditorsettings"
+// LoadUserPreferences loads the user preferences saved in the user's home directory
+func (edPtr *CrlEditor) LoadUserPreferences() error {
+	path := edPtr.getUserPreferencesPath()
 	_, err := os.Stat(path)
 	if err != nil {
 		// it is OK to not find the file
@@ -337,7 +404,7 @@ func (edPtr *CrlEditor) loadSettings() error {
 	if err2 != nil {
 		return err
 	}
-	err = json.Unmarshal(fileSettings, edPtr.settings)
+	err = json.Unmarshal(fileSettings, edPtr.userPreferences)
 	if err != nil {
 		return err
 	}
@@ -346,10 +413,10 @@ func (edPtr *CrlEditor) loadSettings() error {
 
 // newFile creates a file with the name being the ConceptID of the supplied Element and returns the workspaceFile struct
 func (edPtr *CrlEditor) newFile(el core.Element, hl *core.HeldLocks) (*workspaceFile, error) {
-	if edPtr.settings.WorkspacePath == "" {
+	if edPtr.userPreferences.WorkspacePath == "" {
 		return nil, errors.New("CrlEditor.NewFile called with no settings.WorkspacePath defined")
 	}
-	filename := edPtr.settings.WorkspacePath + "/" + el.GetConceptID(hl) + ".acrl"
+	filename := edPtr.userPreferences.WorkspacePath + "/" + el.GetConceptID(hl) + ".acrl"
 	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
@@ -373,7 +440,7 @@ func (edPtr *CrlEditor) openFile(fileInfo os.FileInfo, hl *core.HeldLocks) (*wor
 	if writable {
 		mode = os.O_RDWR
 	}
-	file, err := os.OpenFile(edPtr.settings.WorkspacePath+"/"+fileInfo.Name(), mode, fileInfo.Mode())
+	file, err := os.OpenFile(edPtr.userPreferences.WorkspacePath+"/"+fileInfo.Name(), mode, fileInfo.Mode())
 	if err != nil {
 		return nil, err
 	}
@@ -398,14 +465,10 @@ func (edPtr *CrlEditor) openFile(fileInfo os.FileInfo, hl *core.HeldLocks) (*wor
 	return &wf, nil
 }
 
-// openWorkspace sets the path to the folder to be used as a workspace
-func (edPtr *CrlEditor) openWorkspace(path string, hl *core.HeldLocks) error {
-	if path != edPtr.settings.WorkspacePath && edPtr.settings.WorkspacePath != "" {
-		return errors.New("Cannot open another workspace in the same editor - a new editor must be started")
-	}
-	edPtr.settings.WorkspacePath = path
+// LoadWorkspace loads the workspace currently designated by the userPreferences.WorkspacePath. If the path is empty, it is a no-op.
+func (edPtr *CrlEditor) LoadWorkspace(hl *core.HeldLocks) error {
 	edPtr.SendWorkspacePath()
-	files, err := ioutil.ReadDir(path)
+	files, err := ioutil.ReadDir(edPtr.userPreferences.WorkspacePath)
 	if err != nil {
 		return err
 	}
@@ -417,9 +480,32 @@ func (edPtr *CrlEditor) openWorkspace(path string, hl *core.HeldLocks) error {
 				return err
 			}
 			edPtr.workspaceFiles[workspaceFile.ConceptSpace.GetConceptID(hl)] = workspaceFile
+			if workspaceFile.ConceptSpace.IsRefinementOfURI(crleditordomain.EditorSettingsURI, hl) {
+				edPtr.settings = workspaceFile.ConceptSpace
+			}
 		}
 	}
+	if edPtr.settings == nil {
+		err = edPtr.createSettings(hl)
+		if err != nil {
+			return err
+		}
+	}
+	edPtr.InitializeClient()
 	return nil
+}
+
+// openWorkspace sets the path to the folder to be used as a workspace
+func (edPtr *CrlEditor) openWorkspace(hl *core.HeldLocks) error {
+	if edPtr.userPreferences.WorkspacePath != "" {
+		return errors.New("Cannot open another workspace in the same editor - close existing workspace first")
+	}
+	path, err2 := edPtr.SelectWorkspace()
+	if err2 != nil {
+		return err2
+	}
+	edPtr.userPreferences.WorkspacePath = path
+	return edPtr.LoadWorkspace(hl)
 }
 
 // Redo performs an undo on the uOfD and refreshes the interface
@@ -457,21 +543,21 @@ func (edPtr *CrlEditor) saveFile(wf *workspaceFile, hl *core.HeldLocks) error {
 	return wf.File.Sync()
 }
 
-// saveSettings saves the current settings to the user's home directory
-func (edPtr *CrlEditor) saveSettings() error {
-	path := home + "/.crleditorsettings"
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0755)
+// saveUserPreferences saves the current user preferences to the user's home directory
+func (edPtr *CrlEditor) saveUserPreferences() error {
+	f, err := os.OpenFile(edPtr.getUserPreferencesPath(), os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
 		return err
 	}
-	serializedSettings, err2 := json.Marshal(edPtr.settings)
+	serializedUserPreferences, err2 := json.Marshal(edPtr.userPreferences)
 	if err2 != nil {
 		return err2
 	}
-	_, err = f.Write(serializedSettings)
+	_, err = f.Write(serializedUserPreferences)
 	if err != nil {
 		return err
 	}
+	err = f.Truncate(int64(len(serializedUserPreferences)))
 	if err := f.Close(); err != nil {
 		return err
 	}
@@ -485,14 +571,12 @@ func (edPtr *CrlEditor) SaveWorkspace(hl *core.HeldLocks) error {
 	for id, el := range rootElements {
 		if el.GetIsCore(hl) == false && edPtr.workingConceptSpace != el {
 			workspaceFile := edPtr.workspaceFiles[id]
-			if workspaceFile != nil && workspaceFile.LoadedVersion < el.GetVersion(hl) {
+			if workspaceFile != nil {
 				err = edPtr.saveFile(workspaceFile, hl)
 				if err != nil {
 					return err
 				}
-				break
-			}
-			if workspaceFile == nil {
+			} else {
 				workspaceFile, err = edPtr.newFile(el, hl)
 				if err != nil {
 					return err
@@ -535,6 +619,11 @@ func (edPtr *CrlEditor) SelectElementUsingIDString(id string, hl *core.HeldLocks
 	return edPtr.SelectElement(foundElement, hl)
 }
 
+// SelectWorkspace opens a dialog for the user to select a workspace
+func (edPtr *CrlEditor) SelectWorkspace() (string, error) {
+	return dialog.Directory().Title("Select a directory for your workspace").Browse()
+}
+
 // SendDebugSettings sends the trace settings to the client so that they can be edited
 func (edPtr *CrlEditor) SendDebugSettings() {
 	params := make(map[string]string)
@@ -544,12 +633,12 @@ func (edPtr *CrlEditor) SendDebugSettings() {
 	edPtr.SendNotification("DebugSettings", "", nil, params)
 }
 
-// SendEditorSettings sends the editor settings to the client so that they can be edited
-func (edPtr *CrlEditor) SendEditorSettings() {
+// SendUserPreferences sends the editor settings to the client so that they can be edited
+func (edPtr *CrlEditor) SendUserPreferences(hl *core.HeldLocks) {
 	params := make(map[string]string)
-	params["DropReferenceAsLink"] = strconv.FormatBool(edPtr.settings.DropReferenceAsLink)
-	params["DropRefinementAsLink"] = strconv.FormatBool(edPtr.settings.DropRefinementAsLink)
-	edPtr.SendNotification("EditorSettings", "", nil, params)
+	params["DropReferenceAsLink"] = strconv.FormatBool(edPtr.GetDropDiagramReferenceAsLink(hl))
+	params["DropRefinementAsLink"] = strconv.FormatBool(edPtr.GetDropDiagramRefinementAsLink(hl))
+	edPtr.SendNotification("UserPreferences", "", nil, params)
 }
 
 // SendNotification calls the ClientNotificationManager method of the same name and returns the result.
@@ -560,13 +649,23 @@ func (edPtr *CrlEditor) SendNotification(notificationDescription string, id stri
 // SendWorkspacePath sends the new workspace path to the client
 func (edPtr *CrlEditor) SendWorkspacePath() {
 	params := make(map[string]string)
-	params["WorkspacePath"] = edPtr.settings.WorkspacePath
+	params["WorkspacePath"] = edPtr.userPreferences.WorkspacePath
 	edPtr.SendNotification("WorkspacePath", "", nil, params)
 }
 
 // SetAdHocTrace sets the value of the core.AdHocTrace variable used in troubleshooting
 func (edPtr *CrlEditor) SetAdHocTrace(status bool) {
 	core.AdHocTrace = status
+}
+
+// SetDropDiagramReferenceAsLink returns true if dropped references are shown as links
+func (edPtr *CrlEditor) SetDropDiagramReferenceAsLink(value bool, hl *core.HeldLocks) {
+	edPtr.userPreferences.DropDiagramReferenceAsLink = value
+}
+
+// SetDropDiagramRefinementAsLink returns true if dropped refinements are shown as links
+func (edPtr *CrlEditor) SetDropDiagramRefinementAsLink(value bool, hl *core.HeldLocks) {
+	edPtr.userPreferences.DropDiagramRefinementAsLink = value
 }
 
 // SetSelectionDefinition is a convenience method for setting the Definition of the currently selected Element
@@ -608,6 +707,12 @@ func (edPtr *CrlEditor) SetTreeDragSelection(elID string) {
 	edPtr.treeDragSelection = edPtr.GetUofD().GetElement(elID)
 }
 
+// SetWorkspacePath sets the user's preference WorkspacePath value.
+func (edPtr *CrlEditor) SetWorkspacePath(path string) error {
+	edPtr.userPreferences.WorkspacePath = path
+	return edPtr.saveUserPreferences()
+}
+
 // Undo performs an undo on the uOfD and refreshes the interface
 func (edPtr *CrlEditor) Undo(hl *core.HeldLocks) error {
 	edPtr.uOfD.Undo(hl)
@@ -636,23 +741,12 @@ func (edPtr *CrlEditor) UpdateDebugSettings(request *Request) {
 	edPtr.SendDebugSettings()
 }
 
-// UpdateEditorSettings updates the values of the editor settings and sends a notification of the change to the client.
-func (edPtr *CrlEditor) UpdateEditorSettings(request *Request) {
-	edPtr.settings.DropReferenceAsLink, _ = strconv.ParseBool(request.AdditionalParameters["DropReferenceAsLink"])
-	edPtr.settings.DropRefinementAsLink, _ = strconv.ParseBool(request.AdditionalParameters["DropRefinementAsLink"])
-	edPtr.SendEditorSettings()
-}
-
-// BuildEditorConceptSpace programmatically constructs the EditorConceptSpace
-func BuildEditorConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) core.Element {
-	// EditorConceptSpace
-	conceptSpace, _ := uOfD.NewElement(hl, editorURI)
-	conceptSpace.SetLabel("EditorConceptSpace", hl)
-	conceptSpace.SetURI(editorURI, hl)
-	conceptSpace.SetIsCore(hl)
-
-	BuildTreeViews(conceptSpace, hl)
-	BuildDiagramViewMonitor(conceptSpace, hl)
-
-	return conceptSpace
+// UpdateUserPreferences updates the values of the editor settings and sends a notification of the change to the client.
+func (edPtr *CrlEditor) UpdateUserPreferences(request *Request, hl *core.HeldLocks) {
+	value, _ := strconv.ParseBool(request.AdditionalParameters["DropReferenceAsLink"])
+	edPtr.SetDropDiagramReferenceAsLink(value, hl)
+	value, _ = strconv.ParseBool(request.AdditionalParameters["DropRefinementAsLink"])
+	edPtr.SetDropDiagramRefinementAsLink(value, hl)
+	edPtr.saveUserPreferences()
+	edPtr.SendUserPreferences(hl)
 }

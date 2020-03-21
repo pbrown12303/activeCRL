@@ -17,14 +17,6 @@ type treeManager struct {
 	editor          *CrlEditor
 }
 
-// newTreeManager creates an instance of the TreeManager
-func newTreeManager(editor *CrlEditor, treeID string) *treeManager {
-	var tm treeManager
-	tm.editor = editor
-	tm.treeID = treeID
-	return &tm
-}
-
 // addChildren adds the OwnedConcepts of the supplied Element to the client's tree
 func (tmPtr *treeManager) addChildren(el core.Element, hl *core.HeldLocks) {
 	uOfD := tmPtr.editor.uOfD
@@ -46,7 +38,7 @@ func (tmPtr *treeManager) addNode(el core.Element, hl *core.HeldLocks) {
 		log.Printf(err.Error())
 		return
 	}
-	if notificationResponse.Result != 0 {
+	if notificationResponse != nil && notificationResponse.Result != 0 {
 		log.Print(notificationResponse.ErrorMessage)
 	}
 }
@@ -72,21 +64,9 @@ func (tmPtr *treeManager) changeNode(el core.Element, hl *core.HeldLocks) {
 		log.Printf(err.Error())
 		return
 	}
-	if notificationResponse.Result != 0 {
+	if notificationResponse != nil && notificationResponse.Result != 0 {
 		log.Print(notificationResponse.ErrorMessage)
 	}
-}
-
-func (tmPtr *treeManager) configureUofD(hl *core.HeldLocks) (core.Element, error) {
-	// Set up the tree view
-	var err error
-	tmPtr.treeNodeManager, err = tmPtr.editor.uOfD.CreateReplicateAsRefinementFromURI(TreeNodeManagerURI, hl)
-	if err != nil {
-		return nil, err
-	}
-	uOfDReference := tmPtr.treeNodeManager.GetFirstOwnedReferenceRefinedFromURI(TreeNodeManagerUofDReferenceURI, hl)
-	uOfDReference.SetReferencedConcept(tmPtr.editor.uOfD, hl)
-	return tmPtr.treeNodeManager, nil
 }
 
 // removeNode removes the tree node

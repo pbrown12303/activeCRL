@@ -5,11 +5,12 @@ import (
 
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagram"
+	"github.com/pbrown12303/activeCRL/crleditor/crleditordomain"
 	//	"log"
 )
 
 // DiagramViewMonitorURI identifies the diagram view monitor
-var DiagramViewMonitorURI = editorURI + "/DiagramViewMonitor"
+var DiagramViewMonitorURI = crleditordomain.EditorDomainURI + "/DiagramViewMonitor"
 
 func addDiagramViewFunctionsToUofD(uOfD *core.UniverseOfDiscourse) {
 	uOfD.AddFunction(crldiagram.CrlDiagramURI, updateDiagramView)

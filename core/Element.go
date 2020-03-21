@@ -185,7 +185,7 @@ func (ePtr *element) GetFirstOwnedReferenceRefinedFrom(abstraction Element, hl *
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Reference:
-			if element.IsRefinementOf(abstraction, hl) {
+			if element.(Reference).IsRefinementOf(abstraction, hl) {
 				return element.(Reference)
 			}
 		}
@@ -1014,6 +1014,10 @@ func (ePtr *element) SetURI(uri string, hl *HeldLocks) error {
 		return editableError
 	}
 	if ePtr.URI != uri {
+		foundElement := ePtr.uOfD.GetElementWithURI(uri)
+		if foundElement != nil && foundElement.GetConceptID(hl) != ePtr.ConceptID {
+			return errors.New("Element already exists with URI " + uri)
+		}
 		ePtr.uOfD.preChange(ePtr, hl)
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
 		ePtr.uOfD.changeURIForElement(ePtr, ePtr.URI, uri)
