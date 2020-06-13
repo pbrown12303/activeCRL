@@ -108,6 +108,8 @@ func equivalent(be1 Element, hl1 *HeldLocks, be2 Element, hl2 *HeldLocks) bool {
 		return be1.(*literal).isEquivalent(hl1, be2.(*literal), hl2)
 	case *refinement:
 		return be1.(*refinement).isEquivalent(hl1, be2.(*refinement), hl2)
+	case *UniverseOfDiscourse:
+		return be1.(*UniverseOfDiscourse).element.isEquivalent(hl1, &be2.(*UniverseOfDiscourse).element, hl2)
 	default:
 		log.Printf("Equivalent default case entered for object: \n")
 		Print(be1, "   ", hl1)

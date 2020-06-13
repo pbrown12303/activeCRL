@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"reflect"
 
 	mapset "github.com/deckarep/golang-set"
 	uuid "github.com/satori/go.uuid"
@@ -122,6 +123,61 @@ func (uOfDPtr *UniverseOfDiscourse) changeURIForElement(el Element, oldURI strin
 		uOfDPtr.uriUUIDMap.SetEntry(newURI, el.getConceptIDNoLock())
 	}
 	return nil
+}
+
+// Clone makes an exact copy of the UniverseOfDiscourse and all its contents except for the undo/redo stack. All Elements are new objects,
+// but all the identifiers are retained from the original uOfD.
+func (uOfDPtr *UniverseOfDiscourse) Clone(hl *HeldLocks) *UniverseOfDiscourse {
+	newUofD := NewUniverseOfDiscourse()
+
+	// uOfD.computeFunctions = make(map[string][]crlExecutionFunction)
+	var uri string
+	var functionArray []crlExecutionFunction
+	for uri, functionArray = range uOfDPtr.computeFunctions {
+		var crlFunction crlExecutionFunction
+		for _, crlFunction = range functionArray {
+			newUofD.computeFunctions[uri] = append(newUofD.computeFunctions[uri], crlFunction)
+		}
+	}
+
+	// uOfD.undoManager = newUndoManager(&uOfD)
+	// Nothing to do here
+
+	// uOfD.uriUUIDMap = NewStringStringMap()
+	for uri, uuid := range uOfDPtr.uriUUIDMap.CopyMap() {
+		newUofD.uriUUIDMap.SetEntry(uri, uuid)
+	}
+
+	// uOfD.uuidElementMap = NewStringElementMap()
+	for id, element := range uOfDPtr.uuidElementMap.CopyMap() {
+		newElement := clone(element, hl)
+		newUofD.uuidElementMap.SetEntry(id, newElement)
+	}
+
+	// uOfD.ownedIDsMap = NewOneToNStringMap()
+	for key, strings := range uOfDPtr.ownedIDsMap.CopyMap() {
+		newUofD.ownedIDsMap.SetMappedValues(key, strings)
+	}
+
+	// uOfD.listenersMap = NewOneToNStringMap()
+	for key, strings := range uOfDPtr.listenersMap.CopyMap() {
+		newUofD.listenersMap.SetMappedValues(key, strings)
+	}
+
+	// uOfD.abstractionsMap = NewOneToNStringMap()
+	// uOfDID, _ := uOfD.generateConceptID(UniverseOfDiscourseURI)
+	// uOfD.initializeElement(uOfDID, UniverseOfDiscourseURI)
+	// uOfD.Label = "UniverseOfDiscourse"
+	// uOfD.uOfD = &uOfD
+	// hl := uOfD.NewHeldLocks()
+	// uOfD.IsCore = true
+	// uOfD.addElement(&uOfD, false, hl)
+	// uOfD.AddFunction(coreHousekeepingURI, coreHousekeeping)
+	// hl.ReleaseLocksAndWait()
+	// buildCoreConceptSpace(&uOfD, hl)
+	// hl.ReleaseLocksAndWait()
+
+	return newUofD
 }
 
 // CreateReplicateAsRefinement replicates the indicated Element and all of its descendent Elements
@@ -480,6 +536,62 @@ func (uOfDPtr *UniverseOfDiscourse) GetRootElements(hl *HeldLocks) map[string]El
 
 func (uOfDPtr *UniverseOfDiscourse) getURIUUIDMap() *StringStringMap {
 	return uOfDPtr.uriUUIDMap
+}
+
+// IsEquivalent returns true if all of the root elements in the uOfD are recursively equivalent
+func (uOfDPtr *UniverseOfDiscourse) IsEquivalent(hl1 *HeldLocks, uOfD2 *UniverseOfDiscourse, hl2 *HeldLocks) bool {
+	// Functions
+	// uOfD.computeFunctions = make(map[string][]crlExecutionFunction)
+	if len(uOfDPtr.computeFunctions) != len(uOfD2.computeFunctions) {
+		return false
+	}
+	var uri string
+	var functionArray []crlExecutionFunction
+	for uri, functionArray = range uOfDPtr.computeFunctions {
+		if len(functionArray) != len(uOfD2.computeFunctions[uri]) {
+			return false
+		}
+		var crlFunction crlExecutionFunction
+		var crlFunction2 crlExecutionFunction
+		var i int
+		for i, crlFunction = range functionArray {
+			crlFunction2 = uOfD2.computeFunctions[uri][i]
+			if reflect.ValueOf(crlFunction).Pointer() != reflect.ValueOf(crlFunction2).Pointer() {
+				return false
+			}
+		}
+	}
+
+	// uOfD.uriUUIDMap = NewStringStringMap()
+	if uOfDPtr.uriUUIDMap.IsEquivalent(uOfD2.uriUUIDMap) != true {
+		return false
+	}
+
+	// uOfD.uuidElementMap = NewStringElementMap()
+	if uOfDPtr.uuidElementMap.IsEquivalent(uOfD2.uuidElementMap) != true {
+		return false
+	}
+
+	// uOfD.ownedIDsMap
+	if uOfDPtr.ownedIDsMap.IsEquivalent(uOfD2.ownedIDsMap) != true {
+		return false
+	}
+
+	// uOfD.listenersMap
+	if uOfDPtr.listenersMap.IsEquivalent(uOfD2.listenersMap) != true {
+		return false
+	}
+
+	rootElements1 := uOfDPtr.GetRootElements(hl1)
+	rootElements2 := uOfD2.GetRootElements(hl2)
+	for id1, el1 := range rootElements1 {
+		el2 := rootElements2[id1]
+		if el2 == nil || RecursivelyEquivalent(el1, hl1, el2, hl2) == false {
+			return false
+		}
+	}
+
+	return true
 }
 
 // IsRecordingUndo reveals whether undo recording is on

@@ -25,6 +25,7 @@ var home string
 var server *http.Server
 var wsServer *http.Server
 var webSocketReady = make(chan bool)
+var requestInProgress bool
 
 // Request is the data structure submitted by the client browser as part of an http request
 type Request struct {
@@ -84,6 +85,11 @@ func Exit() error {
 	return nil
 }
 
+// GetRequestInProgress returns true if the server is actively processing a request
+func GetRequestInProgress() bool {
+	return requestInProgress
+}
+
 func graphHandler(w http.ResponseWriter, r *http.Request) {
 	p := &page{Title: "Function Call Notification Graph"}
 	renderTemplate(w, "graph", p)
@@ -121,6 +127,12 @@ func openBrowser(url string) bool {
 
 // handler for client requests
 func requestHandler(w http.ResponseWriter, r *http.Request) {
+	requestInProgress = true
+	// log.Printf("requestInProgress set to true")
+	defer func() {
+		requestInProgress = false
+		// log.Printf("requestInProgress set to false")
+	}()
 	request := newRequest()
 	if r.Body == nil {
 		log.Printf("Request received with no body")
@@ -149,7 +161,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case "AddElementChild":
 		el, _ := CrlEditorSingleton.GetUofD().NewElement(hl)
-		el.SetLabel(getDefaultElementLabel(), hl)
+		el.SetLabel(CrlEditorSingleton.getDefaultElementLabel(), hl)
 		el.SetOwningConceptID(request.RequestConceptID, hl)
 		CrlEditorSingleton.SelectElement(el, hl)
 		sendReply(w, 0, "Processed AddElementChild", el.GetConceptID(hl), el)
@@ -168,22 +180,25 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case "AddLiteralChild":
 		el, _ := CrlEditorSingleton.GetUofD().NewLiteral(hl)
-		el.SetLabel(getDefaultLiteralLabel(), hl)
+		el.SetLabel(CrlEditorSingleton.getDefaultLiteralLabel(), hl)
 		el.SetOwningConceptID(request.RequestConceptID, hl)
 		CrlEditorSingleton.SelectElement(el, hl)
 		sendReply(w, 0, "Processed AddLiteralChild", el.GetConceptID(hl), el)
 	case "AddReferenceChild":
 		el, _ := CrlEditorSingleton.GetUofD().NewReference(hl)
-		el.SetLabel(getDefaultReferenceLabel(), hl)
+		el.SetLabel(CrlEditorSingleton.getDefaultReferenceLabel(), hl)
 		el.SetOwningConceptID(request.RequestConceptID, hl)
 		CrlEditorSingleton.SelectElement(el, hl)
 		sendReply(w, 0, "Processed AddReferenceChild", el.GetConceptID(hl), el)
 	case "AddRefinementChild":
 		el, _ := CrlEditorSingleton.GetUofD().NewRefinement(hl)
-		el.SetLabel(getDefaultRefinementLabel(), hl)
+		el.SetLabel(CrlEditorSingleton.getDefaultRefinementLabel(), hl)
 		el.SetOwningConceptID(request.RequestConceptID, hl)
 		CrlEditorSingleton.SelectElement(el, hl)
 		sendReply(w, 0, "Processed AddRefinementChild", el.GetConceptID(hl), el)
+	case "ClearWorkspace":
+		err := CrlEditorSingleton.ClearWorkspace(hl)
+		reply(w, "ClearWorkspace", err)
 	case "CloseWorkspace":
 		err := CrlEditorSingleton.CloseWorkspace(hl)
 		reply(w, "CloseWorkspace", err)
@@ -235,6 +250,8 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			CrlEditorSingleton.SelectElement(modelElement, hl)
 		}
 		sendReply(w, 0, "Processed DiagramElementSelected", elementID, CrlEditorSingleton.GetUofD().GetElement(elementID))
+	case "DiagramViewHasBeenClosed":
+		CrlEditorSingleton.getDiagramManager().DiagramViewHasBeenClosed(request.RequestConceptID, hl)
 	case "DisplayCallGraph":
 		err := CrlEditorSingleton.DisplayCallGraph(request.AdditionalParameters["GraphIndex"], hl)
 		reply(w, "DisplayCallGraph", err)
@@ -274,6 +291,8 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			SendNotification("InitializationComplete", "", nil, nil)
 		}
+		requestInProgress = false
+		log.Printf("requestInProgress set to false in InitializeClient")
 	case "LabelChanged":
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil {
@@ -293,7 +312,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		sendReply(w, 0, "Processed LiteralValueChanged", request.RequestConceptID, el)
 	case "NewConceptSpaceRequest":
 		cs, _ := CrlEditorSingleton.GetUofD().NewElement(hl)
-		cs.SetLabel(getDefaultConceptSpaceLabel(), hl)
+		cs.SetLabel(CrlEditorSingleton.getDefaultConceptSpaceLabel(), hl)
 		CrlEditorSingleton.SelectElement(cs, hl)
 		sendReply(w, 0, "Processed NewConceptSpaceRequest", cs.GetConceptID(hl), cs)
 	case "OpenWorkspace":
@@ -441,18 +460,21 @@ func sendReply(w http.ResponseWriter, code int, message string, resultConceptID 
 }
 
 // StartServer starts the editor server. This will automatically launch a browser as an interface
-func StartServer(startBrowser bool) {
+func StartServer(startBrowser bool, workspaceArg string, userFolderArg string) {
 	var err error
 	home, err = os.UserHomeDir()
 	if err != nil {
 		log.Fatalf("User home directory not found")
 	}
-	InitializeCrlEditorSingleton()
-	err = CrlEditorSingleton.LoadUserPreferences()
+	InitializeCrlEditorSingleton(userFolderArg)
+	err = CrlEditorSingleton.LoadUserPreferences(workspaceArg)
 	if err != nil {
 		log.Fatal(err)
 	}
-	workspacePath := CrlEditorSingleton.GetUserPreferences().WorkspacePath
+	workspacePath := workspaceArg
+	if workspacePath == "" {
+		workspacePath = CrlEditorSingleton.GetUserPreferences().WorkspacePath
+	}
 	if workspacePath == "" {
 		workspacePath, err2 := CrlEditorSingleton.SelectWorkspace()
 		if err2 != nil {
@@ -469,6 +491,7 @@ func StartServer(startBrowser bool) {
 		log.Fatal(err)
 	}
 	hl.ReleaseLocksAndWait()
+	go CrlEditorSingleton.InitializeClient()
 	// WebSocketts server
 	go startWsServer()
 	// RequestServer

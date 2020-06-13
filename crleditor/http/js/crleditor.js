@@ -242,6 +242,12 @@ function crlBringToFront(evt) {
 }
 
 function crlCloseDiagramView(diagramID) {
+    crlCloseDiagramViewWithoutNotification(diagramID)
+    // Notify the server
+    crlSendDiagramViewHasBeenClosed(diagramID)
+}
+
+function crlCloseDiagramViewWithoutNotification(diagramID) {
     var diagramContainerID = crlGetDiagramContainerIDFromDiagramID(diagramID);
     var diagramContainer = document.getElementById(diagramContainerID);
     if (crlCurrentDiagramContainerID == diagramContainerID) {
@@ -268,6 +274,7 @@ function crlCloseDiagramView(diagramID) {
         tabs.removeChild(tab);
     }
 }
+
 
 function crlConstructDiagramContainer(diagramContainer, diagramContainerID, diagramLabel, diagramID) {
     var topContent = document.getElementById("top-content");
@@ -482,12 +489,14 @@ function crlCallExit() {
     crlSendRequest(xhr, data);
 }
 
-function crlPropertiesClearRow(row) {
-    var properties = document.getElementById("properties");
-    var propertyRow = properties.rows[row]
-    if (propertyRow != undefined) {
-        properties.deleteRow(row);
-    }
+function crlClearDiagrams() {
+    var x = document.getElementsByClassName("crlDiagramContainer");
+    for (i = 0; i < x.length; i++) {
+        var container = x.item(i);
+        var diagramID = crlGetDiagramIDFromDiagramContainerID(container.id);
+        crlCloseDiagramViewWithoutNotification(diagramID);
+    };
+    crlSendNormalResponse();
 }
 
 var crlCloseWebsocket = function () {
@@ -839,8 +848,6 @@ var crlCustomLinkView = joint.dia.LinkView.extend({
 
 });
 
-
-
 function crlDeleteDiagramElementView(evt) {
     var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
     var jointID = cellView.model.attributes.crlJointID;
@@ -849,6 +856,14 @@ function crlDeleteDiagramElementView(evt) {
         var xhr = crlCreateEmptyRequest();
         var data = JSON.stringify({ "Action": "DeleteDiagramElementView", "RequestConceptID": diagramElementID });
         crlSendRequest(xhr, data);
+    }
+}
+
+function crlPropertiesClearRow(row) {
+    var properties = document.getElementById("properties");
+    var propertyRow = properties.rows[row]
+    if (propertyRow != undefined) {
+        properties.deleteRow(row);
     }
 }
 
@@ -1277,6 +1292,9 @@ function crlInitializeWebSocket() {
                 break;
             case "ChangeTreeNode":
                 crlNotificationUpdateTreeNode(data);
+                break;
+            case "ClearDiagrams":
+                crlClearDiagrams();
                 break;
             case "ClearToolbarSelection":
                 crlNotificationClearToolbarSelection(data);
@@ -2093,6 +2111,23 @@ function crlSendAddRefinementChild(conceptID) {
     crlSendRequest(xhr, data);
 }
 
+function crlSendDiagramViewHasBeenClosed(diagramID) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "DiagramViewHasBeenClosed",
+        "RequestConceptID": diagramID
+    });
+    crlSendRequest(xhr, data);
+}
+
+function crlSendClearWorkspace() {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "ClearWorkspace"
+    });
+    crlSendRequest(xhr, data);
+}
+
 function crlSendCloseWorkspace() {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
@@ -2373,7 +2408,7 @@ function crlSendTreeNodeDelete(id) {
     crlSendRequest(xhr, data);
 }
 
-var crlSendTreeNodeSelected = function(evt, obj) {
+var crlSendTreeNodeSelected = function (evt, obj) {
     if (obj != undefined) {
         var conceptID = crlGetConceptIDFromTreeNodeID(obj.node.id)
         if (conceptID != crlSelectedConceptID && crlInCrlElementSelected == false) {

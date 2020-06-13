@@ -18,16 +18,10 @@ import (
 const diagramContainerSuffix = "DiagramContainer"
 const diagramSuffix = "Diagram"
 
-var defaultConceptSpaceLabelCount int
-var defaultDiagramLabelCount int
-var defaultElementLabelCount int
-var defaultLiteralLabelCount int
-var defaultReferenceLabelCount int
-var defaultRefinementLabelCount int
-
 // diagramManager manages the diagram portion of the UI and all interactions with it
 type diagramManager struct {
-	crlEditor *CrlEditor
+	crlEditor                *CrlEditor
+	defaultDiagramLabelCount int
 }
 
 func newDiagramManager(crlEditor *CrlEditor) *diagramManager {
@@ -194,6 +188,9 @@ func (dmPtr *diagramManager) addDiagramToDisplayedList(diagram core.Element, hl 
 
 func (dmPtr *diagramManager) closeDiagramView(diagramID string, hl *core.HeldLocks) error {
 	diagram := dmPtr.crlEditor.uOfD.GetElement(diagramID)
+	if diagram == nil {
+		return errors.New("In diagram manager.closeDiagramView, the suppied diagram was not found in the uOfD")
+	}
 	if !diagram.IsRefinementOfURI(crldiagram.CrlDiagramURI, hl) {
 		return errors.New("In diagramManager.closeDiagramView, the supplied diagram is not a refinement of CrlDiagramURI")
 	}
@@ -236,19 +233,19 @@ func (dmPtr *diagramManager) diagramClick(request *Request, hl *core.HeldLocks) 
 	switch nodeType {
 	case "Element":
 		el, err = uOfD.NewElement(hl)
-		el.SetLabel(getDefaultElementLabel(), hl)
+		el.SetLabel(dmPtr.crlEditor.getDefaultElementLabel(), hl)
 	case "Literal":
 		el, err = uOfD.NewLiteral(hl)
-		el.SetLabel(getDefaultLiteralLabel(), hl)
+		el.SetLabel(dmPtr.crlEditor.getDefaultLiteralLabel(), hl)
 	case "Reference":
 		el, err = uOfD.NewReference(hl)
-		el.SetLabel(getDefaultReferenceLabel(), hl)
+		el.SetLabel(dmPtr.crlEditor.getDefaultReferenceLabel(), hl)
 	case "Refinement":
 		el, err = uOfD.NewRefinement(hl)
-		el.SetLabel(getDefaultRefinementLabel(), hl)
+		el.SetLabel(dmPtr.crlEditor.getDefaultRefinementLabel(), hl)
 	case "Diagram":
 		el, err = crldiagram.NewDiagram(uOfD, hl)
-		el.SetLabel(getDefaultDiagramLabel(), hl)
+		el.SetLabel(dmPtr.getDefaultDiagramLabel(), hl)
 	}
 	if err != nil {
 		return err
@@ -294,6 +291,19 @@ func (dmPtr *diagramManager) diagramDrop(request *Request, hl *core.HeldLocks) e
 	return nil
 }
 
+// DiagramViewHasBeenClosed notifies the server that the client has closed the diagram view
+func (dmPtr *diagramManager) DiagramViewHasBeenClosed(diagramID string, hl *core.HeldLocks) error {
+	diagram := dmPtr.crlEditor.uOfD.GetElement(diagramID)
+	if !diagram.IsRefinementOfURI(crldiagram.CrlDiagramURI, hl) {
+		return errors.New("In diagramManager.closeDiagramView, the supplied diagram is not a refinement of CrlDiagramURI")
+	}
+	// If the diagram is in the list of displayed diagrams, remove it
+	if dmPtr.isDiagramDisplayed(diagram, hl) {
+		dmPtr.removeDiagramFromDisplayedList(diagram, hl)
+	}
+	return nil
+}
+
 // displayDiagram tells the client to display the indicated diagram.
 func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.HeldLocks) error {
 	if !diagram.IsRefinementOfURI(crldiagram.CrlDiagramURI, hl) {
@@ -313,45 +323,18 @@ func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.HeldL
 	if err != nil {
 		return err
 	}
+	if notificationResponse == nil {
+		return errors.New("In diagramManager.displayDiagram the notification response was nil")
+	}
 	if notificationResponse.Result != 0 {
 		return err
 	}
 	return dmPtr.refreshDiagram(diagram, hl)
 }
 
-func getDefaultConceptSpaceLabel() string {
-	defaultConceptSpaceLabelCount++
-	countString := strconv.Itoa(defaultConceptSpaceLabelCount)
-	return "ConceptSpace" + countString
-}
-
-func getDefaultElementLabel() string {
-	defaultElementLabelCount++
-	countString := strconv.Itoa(defaultElementLabelCount)
-	return "Element" + countString
-}
-
-func getDefaultLiteralLabel() string {
-	defaultLiteralLabelCount++
-	countString := strconv.Itoa(defaultLiteralLabelCount)
-	return "Literal" + countString
-}
-
-func getDefaultReferenceLabel() string {
-	defaultReferenceLabelCount++
-	countString := strconv.Itoa(defaultReferenceLabelCount)
-	return "Reference" + countString
-}
-
-func getDefaultRefinementLabel() string {
-	defaultRefinementLabelCount++
-	countString := strconv.Itoa(defaultRefinementLabelCount)
-	return "Refinement" + countString
-}
-
-func getDefaultDiagramLabel() string {
-	defaultDiagramLabelCount++
-	countString := strconv.Itoa(defaultDiagramLabelCount)
+func (dmPtr *diagramManager) getDefaultDiagramLabel() string {
+	dmPtr.defaultDiagramLabelCount++
+	countString := strconv.Itoa(dmPtr.defaultDiagramLabelCount)
 	return "Diagram" + countString
 }
 
@@ -438,7 +421,7 @@ func (dmPtr *diagramManager) isDiagramDisplayed(diagram core.Element, hl *core.H
 // newDiagram creates a new crldiagram
 func (dmPtr *diagramManager) newDiagram(hl *core.HeldLocks) core.Element {
 	// Insert name prompt here
-	name := getDefaultDiagramLabel()
+	name := dmPtr.getDefaultDiagramLabel()
 	uOfD := CrlEditorSingleton.GetUofD()
 	diagram, err := crldiagram.NewDiagram(uOfD, hl)
 	if err != nil {
@@ -744,6 +727,11 @@ func (dmPtr *diagramManager) removeDiagramFromDisplayedList(diagram core.Element
 		openDiagrams := dmPtr.crlEditor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
 		crldatastructures.RemoveListMember(openDiagrams, diagram, hl)
 	}
+}
+
+// ResetDefaultLabelCounts
+func (dmPtr *diagramManager) ResetDefaultLabelCounts() {
+	dmPtr.defaultDiagramLabelCount = 0
 }
 
 // setDiagramNodePosition sets the position of the diagram node

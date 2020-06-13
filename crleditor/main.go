@@ -5,9 +5,16 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"github.com/pbrown12303/activeCRL/crleditor/editor"
 )
 
 func main() {
-	editor.StartServer(true)
+	workspaceArg := flag.String("workspace", "", "Path to workspace folder (optional)")
+	userFolderArg := flag.String("userFolder", "", "Path to user folder (optional)")
+	flag.Parse()
+	fmt.Println("workspace: ", *workspaceArg)
+	fmt.Println("user folder: ", *userFolderArg)
+	editor.StartServer(true, *workspaceArg, *userFolderArg)
 }

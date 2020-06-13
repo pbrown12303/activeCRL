@@ -97,8 +97,13 @@ func (tmPtr *treeManager) initializeTree(hl *core.HeldLocks) {
 		log.Printf(err.Error())
 		return
 	}
+	if notificationResponse == nil {
+		log.Print("treeManager.initializeTree called, but no notificationResponse was received")
+		return
+	}
 	if notificationResponse.Result != 0 {
 		log.Print(notificationResponse.ErrorMessage)
+		return
 	}
 	for _, el := range tmPtr.editor.uOfD.GetElements() {
 		if el.GetOwningConcept(hl) == nil {

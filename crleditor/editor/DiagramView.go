@@ -207,7 +207,9 @@ func diagramViewMonitor(instance core.Element, changeNotification *core.ChangeNo
 		switch instance.(type) {
 		case core.Reference:
 			reference := instance.(core.Reference)
-			if reference.GetReferencedConcept(hl) == nil {
+			// This may be a band-aid here. If this gets called with the reference no longer having a uOfD, i.e. deleted,
+			// we still tell the diagram manager to close the diagram view.
+			if reference.GetUniverseOfDiscourse(hl) == nil || reference.GetReferencedConcept(hl) == nil {
 				oldReferencedID := changeNotification.GetPriorState().(core.Reference).GetReferencedConceptID(hl)
 				if oldReferencedID != "" {
 					CrlEditorSingleton.getDiagramManager().closeDiagramView(oldReferencedID, hl)

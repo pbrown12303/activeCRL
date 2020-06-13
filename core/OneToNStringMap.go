@@ -50,10 +50,15 @@ func (onMap *OneToNStringMap) DeleteKey(key string) {
 	delete(onMap.oneToNStringMap, key)
 }
 
-// GetMappedValues returns the Element corresponding to the UUID
+// GetMappedValues returns the set of strings corresponding to the key
 func (onMap *OneToNStringMap) GetMappedValues(key string) mapset.Set {
 	onMap.TraceableLock()
 	defer onMap.TraceableUnlock()
+	return onMap.getMappedValuesNoLock(key)
+}
+
+// getMappedValuesNoLock returns the Element corresponding to the UUID
+func (onMap *OneToNStringMap) getMappedValuesNoLock(key string) mapset.Set {
 	if onMap.oneToNStringMap[key] == nil {
 		onMap.oneToNStringMap[key] = mapset.NewSet()
 	}
@@ -69,7 +74,7 @@ func (onMap *OneToNStringMap) IsEquivalent(sem *OneToNStringMap) bool {
 	sem.TraceableLock()
 	defer sem.TraceableUnlock()
 	for k := range onMap.oneToNStringMap {
-		if !sem.GetMappedValues(k).Equal(onMap.oneToNStringMap[k]) {
+		if !sem.getMappedValuesNoLock(k).Equal(onMap.oneToNStringMap[k]) {
 			return false
 		}
 	}

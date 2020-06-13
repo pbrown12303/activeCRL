@@ -215,4 +215,55 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			Expect(uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()).To(Equal(childCount))
 		})
 	})
+
+	Describe("Test UofD Equivalence", func() {
+		var uOfD1 *UniverseOfDiscourse
+		var hl1 *HeldLocks
+		var uOfD2 *UniverseOfDiscourse
+		var hl2 *HeldLocks
+
+		BeforeEach(func() {
+			uOfD1 = NewUniverseOfDiscourse()
+			hl1 = uOfD1.NewHeldLocks()
+			uOfD2 = NewUniverseOfDiscourse()
+			hl2 = uOfD2.NewHeldLocks()
+		})
+
+		Specify("Empty uOfDs should be equivalent", func() {
+			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2)).To(BeTrue())
+		})
+		Specify("UofDs with different elements should not be equivalent", func() {
+			// Element in uOfD1 but not uOfD2
+			el1a, _ := uOfD1.NewElement(hl1)
+			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2)).To(BeFalse())
+			// HACK this is not the intended use of clone!
+			el2a := clone(el1a, hl1)
+			el2a.setUniverseOfDiscourse(nil, hl1)
+			Expect(uOfD2.SetUniverseOfDiscourse(el2a, hl2)).To(Succeed())
+			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2)).To(BeTrue())
+		})
+		Specify("UofDs with different uuidElementMap should not be equivalent", func() {
+			el1a, _ := uOfD1.NewElement(hl1)
+			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2)).To(BeFalse())
+			// HACK this is not the intended use of clone!
+			el2a := clone(el1a, hl1)
+			el2a.setUniverseOfDiscourse(nil, hl1)
+			Expect(uOfD2.SetUniverseOfDiscourse(el2a, hl2)).To(Succeed())
+			// now remove the entry in uOfD2.uuidElementMap
+			uOfD2.uuidElementMap.DeleteEntry(el2a.GetConceptID(hl2))
+			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2)).To(BeFalse())
+		})
+		Specify("UofDs with different uriUUIDMap should not be equivalent", func() {
+			uOfD1.uriUUIDMap.SetEntry("A", "X")
+			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2)).To(BeFalse())
+		})
+		Specify("UofDs with different ownedIDMap should not be equivalent", func() {
+			uOfD1.ownedIDsMap.AddMappedValue("A", "X")
+			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2)).To(BeFalse())
+		})
+		Specify("UofDs with different listenersMap should not be equivalent", func() {
+			uOfD1.listenersMap.AddMappedValue("A", "X")
+			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2)).To(BeFalse())
+		})
+	})
 })

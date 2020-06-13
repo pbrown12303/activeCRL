@@ -2,14 +2,17 @@ package editor_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
 	"os/exec"
 	"runtime"
 	"syscall"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crleditor/editor"
 
 	//	"github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"
@@ -20,11 +23,34 @@ import (
 var startCrlEditorServerCmd *exec.Cmd
 var page *agouti.Page
 var agoutiDriver *agouti.WebDriver
-var uOfD *core.UniverseOfDiscourse
+var testRootDir string
+var testUserDir string
+var testWorkspaceDir string
 
 var _ = BeforeSuite(func() {
+	var err error
+	// Get the tempDir
+	tempDirPath := os.TempDir()
+	log.Printf("TempDirPath: " + tempDirPath)
+	err = os.Mkdir(tempDirPath, os.ModeDir)
+	if !(err == nil || os.IsExist(err)) {
+		Expect(err).NotTo(HaveOccurred())
+	}
+	log.Printf("TempDir created")
+
+	testRootDir, err = ioutil.TempDir(tempDirPath, "crlEditorTestDir*")
+	Expect(err).NotTo(HaveOccurred())
+	testUserDir = testRootDir + "/testUserDir"
+	err = os.Mkdir(testUserDir, os.ModeDir)
+	Expect(err).NotTo(HaveOccurred())
+	testWorkspaceDir = testRootDir + "/testWorkspace"
+	err = os.Mkdir(testWorkspaceDir, os.ModeDir)
+	Expect(err).NotTo(HaveOccurred())
+
 	// Start the editor server
-	go editor.StartServer(false)
+	//	editor.CrlLogClientRequests = true
+	// editor.CrlLogClientNotifications = true
+	go editor.StartServer(false, testWorkspaceDir, testUserDir)
 	// Start the browser
 	// Choose a WebDriver:
 	// agoutiDriver = agouti.PhantomJS()
@@ -32,23 +58,30 @@ var _ = BeforeSuite(func() {
 	agoutiDriver = agouti.ChromeDriver()
 	Expect(agoutiDriver.Start()).To(Succeed())
 
-	var err error
 	page, err = agoutiDriver.NewPage(agouti.Browser("chrome"))
 	Expect(err).NotTo(HaveOccurred())
 
 	Expect(page.Navigate("http://localhost:8082/index")).To(Succeed())
 	Expect(page).To(HaveURL("http://localhost:8082/index/"))
 	Eventually(func() bool {
-		var initializationComplete interface{}
+		var initializationComplete bool
 		page.RunScript("return crlInitializationComplete;", nil, &initializationComplete)
-		return initializationComplete.(bool)
+		return initializationComplete
 	}, 20).Should(BeTrue())
-	uOfD = editor.CrlEditorSingleton.GetUofD()
+	var fileMenuButton = page.FindByID("FileMenuButton")
+	Expect(fileMenuButton.Click()).To(Succeed())
+	var clearWorkspaceButton = page.FindByID("ClearWorkspaceButton")
+	Expect(clearWorkspaceButton.Click()).To(Succeed())
+	Eventually(func() bool {
+		return editor.GetRequestInProgress() == false
+	}, time.Second*10).Should(BeTrue())
 })
 
 var _ = AfterSuite(func() {
-	editor.Exit()
+	var exitButton = page.FindByID("Exit")
+	Expect(exitButton.Click()).To(Succeed())
 	Expect(agoutiDriver.Stop()).To(Succeed())
+	Expect(os.RemoveAll(testRootDir)).To(Succeed())
 })
 
 func stop() error {

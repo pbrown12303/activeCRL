@@ -353,30 +353,6 @@ func (ePtr *element) getLabelNoLock() string {
 	return ePtr.Label
 }
 
-// func (ePtr *element) getListeners(hl *HeldLocks) (mapset.Set, error) {
-// 	hl.ReadLockElement(ePtr)
-// 	if ePtr.uOfD == nil {
-// 		return nil, errors.New("element.getListener called with element.uOfD == nil")
-// 	}
-// 	return ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID), nil
-// }
-
-// // GetOwnedConcepts returns the concepts owned by this concept
-// func (ePtr *element) GetOwnedConcepts(hl *HeldLocks) mapset.Set {
-// 	hl.ReadLockElement(ePtr)
-// 	return ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID)
-// }
-
-// // GetOwnedConceptsRecursively
-// func (ePtr *element) GetOwnedConceptsRecursively(descendants mapset.Set, hl *HeldLocks) {
-// 	hl.ReadLockElement(ePtr)
-// 	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
-// 		descendants.Add(id)
-// 		element := ePtr.uOfD.GetElement(id.(string))
-// 		element.GetOwnedConceptsRecursively(descendants, hl)
-// 	}
-// }
-
 // GetOwningConceptID returns the ID of the concept that owns this one (if any)
 func (ePtr *element) GetOwningConceptID(hl *HeldLocks) string {
 	hl.ReadLockElement(ePtr)

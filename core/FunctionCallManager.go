@@ -8,7 +8,13 @@ import (
 	"errors"
 	"log"
 	"sync"
+	"sync/atomic"
 )
+
+var pendingFunctionCount int32
+
+// CrlLogPendingFunctionCount is a debugging aid. When set to true, all changes to the pending function count will be printed to the log
+var CrlLogPendingFunctionCount bool
 
 // The crlExecutionFunction is the standard signature of a function that gets called when an element (including
 // its children) experience a change. Its arguments are the element that changed, the array of ChangeNotifications, and
@@ -127,6 +133,10 @@ func newFunctionCallManager(uOfD *UniverseOfDiscourse) *functionCallManager {
 func (fcm *functionCallManager) addFunctionCall(functionID string, targetElement Element, notification *ChangeNotification) {
 	for _, function := range fcm.uOfD.getFunctions(functionID) {
 		pendingCall := newPendingFunctionCall(functionID, function, targetElement, notification)
+		newCount := atomic.AddInt32(&pendingFunctionCount, 1)
+		if CrlLogPendingFunctionCount == true {
+			log.Printf("Pending function count: %d", newCount)
+		}
 		fcm.functionCallQueue.enqueue(pendingCall)
 	}
 }
@@ -149,5 +159,15 @@ func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
 		// if pendingCall.target.getUniverseOfDiscourseNoLock() != nil {
 		pendingCall.function(pendingCall.target, pendingCall.notification, fcm.uOfD)
 		// }
+		newCount := atomic.AddInt32(&pendingFunctionCount, -1)
+		if CrlLogPendingFunctionCount == true {
+			log.Printf("Pending function count: %d", newCount)
+			log.Printf("Dequeued call: %+v", pendingCall)
+		}
 	}
+}
+
+// GetPendingFunctionCallCount returns the count of all pending functions from all function managers (i.e. from all HeldLocks objects)
+func GetPendingFunctionCallCount() int32 {
+	return atomic.LoadInt32(&pendingFunctionCount)
 }
