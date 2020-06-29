@@ -36,13 +36,20 @@ func (lPtr *literal) initializeLiteral(conceptID string, uri string) {
 	lPtr.initializeElement(conceptID, uri)
 }
 
-func (lPtr *literal) isEquivalent(hl1 *HeldLocks, ref *literal, hl2 *HeldLocks) bool {
+func (lPtr *literal) isEquivalent(hl1 *HeldLocks, ref *literal, hl2 *HeldLocks, printExceptions ...bool) bool {
+	var print bool
+	if len(printExceptions) > 0 {
+		print = printExceptions[0]
+	}
 	hl1.ReadLockElement(lPtr)
 	hl2.ReadLockElement(ref)
 	if ref.LiteralValue != lPtr.LiteralValue {
+		if print {
+			log.Printf("In literal.isEquivalent, LiteralValues do not match")
+		}
 		return false
 	}
-	return lPtr.element.isEquivalent(hl1, &ref.element, hl2)
+	return lPtr.element.isEquivalent(hl1, &ref.element, hl2, print)
 }
 
 func (lPtr *literal) MarshalJSON() ([]byte, error) {

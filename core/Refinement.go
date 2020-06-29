@@ -85,22 +85,38 @@ func (rPtr *refinement) initializeRefinement(conceptID string, uri string) {
 	rPtr.initializeElement(conceptID, uri)
 }
 
-func (rPtr *refinement) isEquivalent(hl1 *HeldLocks, ref *refinement, hl2 *HeldLocks) bool {
+func (rPtr *refinement) isEquivalent(hl1 *HeldLocks, ref *refinement, hl2 *HeldLocks, printExceptions ...bool) bool {
+	var print bool
+	if len(printExceptions) > 0 {
+		print = printExceptions[0]
+	}
 	hl1.ReadLockElement(rPtr)
 	hl2.ReadLockElement(ref)
 	if rPtr.AbstractConceptID != ref.AbstractConceptID {
+		if print {
+			log.Printf("In refinement.isEquivalent, AbstractConecptIDs do not match")
+		}
 		return false
 	}
 	if rPtr.AbstractConceptVersion != ref.AbstractConceptVersion {
+		if print {
+			log.Printf("In refinement.isEquivalent, AbstractConecptVersionss do not match")
+		}
 		return false
 	}
 	if rPtr.RefinedConceptID != ref.RefinedConceptID {
+		if print {
+			log.Printf("In refinement.isEquivalent, RefinedConecptIDs do not match")
+		}
 		return false
 	}
 	if rPtr.RefinedConceptVersion != ref.RefinedConceptVersion {
+		if print {
+			log.Printf("In refinement.isEquivalent, RefinedConecptVersions do not match")
+		}
 		return false
 	}
-	return rPtr.element.isEquivalent(hl1, &ref.element, hl2)
+	return rPtr.element.isEquivalent(hl1, &ref.element, hl2, print)
 }
 
 // MarshalJSON produces a byte string JSON representation of the Element

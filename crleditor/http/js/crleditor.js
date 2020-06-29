@@ -22,6 +22,8 @@ var crlDropRefinementAsLink = false;
 var crlEnableTracing = false;
 // crlOmitHousekeepingCalls indicates whether housekeeping calls shouldl be included when tracing is enabled
 var crlOmitHousekeepingCalls = false;
+// crlAutomatedTestInProgress set to true during automated regression testing. Primary intent is to suppress alerts requiring user response
+var crlAutomatedTestInProgress = false;
 
 // Debug Settings
 // crlDebugSettingsDialog is the initialized dialog used for editing debug settings
@@ -513,7 +515,10 @@ function crlCreateEmptyRequest() {
         if (this.readyState == 4 && this.status == 200) {
             var response = JSON.parse(xhr.responseText)
             if (response.Result == 1) {
-                alert(response.ResultDescription);
+                // suppress alerts if automated regression testing is in progress
+                if (crlAutomatedTestInProgress == false) {
+                    alert(response.ResultDescription);
+                }
             }
             console.log(response)
         };

@@ -55,19 +55,44 @@ func (seMap *StringStringMap) GetEntry(key string) string {
 	return seMap.uriUUIDMap[key]
 }
 
-// IsEquivalent returns true if the map contains the same number of elements
-// and each has the same set of keys. No comparison is performed on the elements
-// themselves
-func (seMap *StringStringMap) IsEquivalent(sem *StringStringMap) bool {
+// IsEquivalent returns true if the map contains the same number of entries
+// and each key same value
+func (seMap *StringStringMap) IsEquivalent(sem *StringStringMap, printExceptions ...bool) bool {
+	var print bool
+	if len(printExceptions) > 0 {
+		print = printExceptions[0]
+	}
 	seMap.TraceableLock()
 	defer seMap.TraceableUnlock()
 	sem.TraceableLock()
 	defer sem.TraceableUnlock()
 	if len(seMap.uriUUIDMap) != len(sem.uriUUIDMap) {
+		if print {
+			log.Printf("Map1 entries that differ from Map2:")
+			for k := range seMap.uriUUIDMap {
+				if seMap.uriUUIDMap[k] != sem.uriUUIDMap[k] {
+					log.Printf("Map1 key: %s Map1 value %s Map2 value %s", k, seMap.uriUUIDMap[k], sem.uriUUIDMap[k])
+				}
+			}
+			log.Printf("Map2 entries that differ frmo Map1")
+			for k := range sem.uriUUIDMap {
+				if sem.uriUUIDMap[k] != seMap.uriUUIDMap[k] {
+					log.Printf("Map2 key: %s Map2 value %s Map1 value %s", k, sem.uriUUIDMap[k], seMap.uriUUIDMap[k])
+				}
+			}
+		}
 		return false
 	}
 	for k := range seMap.uriUUIDMap {
-		if sem.uriUUIDMap[k] == "" {
+		if seMap.uriUUIDMap[k] != sem.uriUUIDMap[k] {
+			if print {
+				log.Printf("Map1 entries that differ from Map2:")
+				for k := range seMap.uriUUIDMap {
+					if seMap.uriUUIDMap[k] != sem.uriUUIDMap[k] {
+						log.Printf("Map1 key: %s Map1 value %s Map2 value %s", k, seMap.uriUUIDMap[k], sem.uriUUIDMap[k])
+					}
+				}
+			}
 			return false
 		}
 	}

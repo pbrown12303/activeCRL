@@ -35,7 +35,11 @@ func clone(el Element, hl *HeldLocks) Element {
 }
 
 // Equivalent returns true if the two elements are equivalent
-func Equivalent(be1 Element, hl1 *HeldLocks, be2 Element, hl2 *HeldLocks) bool {
+func Equivalent(be1 Element, hl1 *HeldLocks, be2 Element, hl2 *HeldLocks, printExceptions ...bool) bool {
+	var print bool
+	if len(printExceptions) > 0 {
+		print = printExceptions[0]
+	}
 	if be1 == nil && be2 == nil {
 		return true
 	}
@@ -46,7 +50,7 @@ func Equivalent(be1 Element, hl1 *HeldLocks, be2 Element, hl2 *HeldLocks) bool {
 	if be2 != be1 {
 		hl2.ReadLockElement(be2)
 	}
-	return equivalent(be1, hl1, be2, hl2)
+	return equivalent(be1, hl1, be2, hl2, print)
 }
 
 // RecursivelyEquivalent returns true if two elements and all of their children are equivalent
@@ -55,7 +59,7 @@ func RecursivelyEquivalent(e1 Element, hl1 *HeldLocks, e2 Element, hl2 *HeldLock
 	if len(printExceptions) == 1 {
 		print = printExceptions[0]
 	}
-	if !Equivalent(e1, hl1, e2, hl2) {
+	if !Equivalent(e1, hl1, e2, hl2, print) {
 		if print {
 			log.Print("Equivalence failed")
 			Print(e1, "e1: ", hl1)
@@ -88,28 +92,35 @@ func RecursivelyEquivalent(e1 Element, hl1 *HeldLocks, e2 Element, hl2 *HeldLock
 		childID := childEntry.(string)
 		child1 := e1.GetUniverseOfDiscourse(hl1).GetElement(childID)
 		child2 := e2.GetUniverseOfDiscourse(hl2).GetElement(childID)
-		if child1 == nil || child2 == nil || !RecursivelyEquivalent(child1, hl1, child2, hl2, printExceptions...) {
+		if child1 == nil || child2 == nil || !RecursivelyEquivalent(child1, hl1, child2, hl2, print) {
 			return false
 		}
 	}
 	return true
 }
 
-func equivalent(be1 Element, hl1 *HeldLocks, be2 Element, hl2 *HeldLocks) bool {
+func equivalent(be1 Element, hl1 *HeldLocks, be2 Element, hl2 *HeldLocks, printExceptions ...bool) bool {
+	var print bool
+	if len(printExceptions) > 0 {
+		print = printExceptions[0]
+	}
 	if reflect.TypeOf(be1) != reflect.TypeOf(be2) {
+		if print {
+			log.Printf("In equivalent, element types do not match")
+		}
 		return false
 	}
 	switch be1.(type) {
 	case *element:
-		return be1.(*element).isEquivalent(hl1, be2.(*element), hl2)
+		return be1.(*element).isEquivalent(hl1, be2.(*element), hl2, print)
 	case *reference:
-		return be1.(*reference).isEquivalent(hl1, be2.(*reference), hl2)
+		return be1.(*reference).isEquivalent(hl1, be2.(*reference), hl2, print)
 	case *literal:
-		return be1.(*literal).isEquivalent(hl1, be2.(*literal), hl2)
+		return be1.(*literal).isEquivalent(hl1, be2.(*literal), hl2, print)
 	case *refinement:
-		return be1.(*refinement).isEquivalent(hl1, be2.(*refinement), hl2)
+		return be1.(*refinement).isEquivalent(hl1, be2.(*refinement), hl2, print)
 	case *UniverseOfDiscourse:
-		return be1.(*UniverseOfDiscourse).element.isEquivalent(hl1, &be2.(*UniverseOfDiscourse).element, hl2)
+		return be1.(*UniverseOfDiscourse).element.isEquivalent(hl1, &be2.(*UniverseOfDiscourse).element, hl2, print)
 	default:
 		log.Printf("Equivalent default case entered for object: \n")
 		Print(be1, "   ", hl1)

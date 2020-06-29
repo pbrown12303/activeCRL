@@ -1,7 +1,7 @@
 package crldatastructures
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 
 	"github.com/pbrown12303/activeCRL/core"
 )
@@ -47,51 +47,49 @@ func NewList(uOfD *core.UniverseOfDiscourse, setType core.Element, hl *core.Held
 func AddListMemberAfter(list core.Element, priorMemberReference core.Reference, newMember core.Element, hl *core.HeldLocks) (core.Reference, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	if !IsList(list, hl) {
-		return nil, errors.New("Supplied Element is not a CRL List")
+		return nil, errors.New("In AddListMemberAfter, supplied Element is not a CRL List")
 	}
 	if newMember == nil {
-		return nil, errors.New("Supplied Element is nil: nil members are not allowed in CRL Lists")
+		return nil, errors.New("In AddListMemberAfter, newMember is nil: nil members are not allowed in CRL Lists")
+	}
+	// validate prior member reference
+	if priorMemberReference == nil {
+		return nil, errors.New("In AddListMemberAfter, priorMemberReference is nil: this is a required value")
 	}
 	if priorMemberReference != nil {
 		if !priorMemberReference.IsRefinementOfURI(CrlListMemberReferenceURI, hl) {
-			return nil, errors.New("Supplied priorElementReference is not a CrlListMemberReference")
+			return nil, errors.New("In AddListMemberAfter, supplied priorElementReference is not a CrlListMemberReference")
 		}
 		if priorMemberReference.GetOwningConcept(hl) != list {
-			return nil, errors.New("Supplied priorMemberReference does not belong to this list")
+			return nil, errors.New("In AddListMemberAfter, supplied priorMemberReference does not belong to this list")
 		}
 	}
 	listType, _ := GetListType(list, hl)
 	if newMember.IsRefinementOf(listType, hl) == false {
-		return nil, errors.New("NewMember is of wrong type")
+		return nil, errors.New("In AddListMemberAfter, newMember is of wrong type")
 	}
 	var newPostMemberReference core.Reference
-	if priorMemberReference != nil {
-		referenceToPostMemberReference, err := getReferenceToNextMemberReference(priorMemberReference, hl)
-		if err != nil {
-			return nil, err
-		}
-		referencedPostMemberReference := referenceToPostMemberReference.GetReferencedConcept(hl)
-		if referencedPostMemberReference != nil {
-			newPostMemberReference = referencedPostMemberReference.(core.Reference)
-		}
+	referenceToPostMemberReference, err := getReferenceToNextMemberReference(priorMemberReference, hl)
+	if err != nil {
+		return nil, err
+	}
+	referencedPostMemberReference := referenceToPostMemberReference.GetReferencedConcept(hl)
+	if referencedPostMemberReference != nil {
+		newPostMemberReference = referencedPostMemberReference.(core.Reference)
 	}
 	newMemberReference, _ := uOfD.CreateReplicateReferenceAsRefinementFromURI(CrlListMemberReferenceURI, hl)
 	newMemberReference.SetOwningConcept(list, hl)
 	newMemberReference.SetReferencedConcept(newMember, hl)
 	// Wire up prior references
-	if priorMemberReference == nil {
-		// This is the new list beginning
-		referenceToFirstMemberReference, _ := getListReferenceToFirstMemberReference(list, hl)
-		if referenceToFirstMemberReference != nil {
-			referenceToFirstMemberReference.SetReferencedConcept(newMemberReference, hl)
-		}
-	} else {
-		setNextMemberReference(priorMemberReference, newMemberReference, hl)
-		setPriorMemberReference(newMemberReference, priorMemberReference, hl)
-	}
+	setNextMemberReference(priorMemberReference, newMemberReference, hl)
+
+	setPriorMemberReference(newMemberReference, priorMemberReference, hl)
 	// Wire up next references
 	if newPostMemberReference == nil {
-		referenceToLastMemberReference, _ := getListReferenceToLastMemberReference(list, hl)
+		referenceToLastMemberReference, err2 := getListReferenceToLastMemberReference(list, hl)
+		if err2 != nil {
+			return nil, errors.Wrap(err2, "AddListMemberAfter failed")
+		}
 		if referenceToLastMemberReference != nil {
 			referenceToLastMemberReference.SetReferencedConcept(newMemberReference, hl)
 		}
@@ -99,6 +97,7 @@ func AddListMemberAfter(list core.Element, priorMemberReference core.Reference, 
 		setPriorMemberReference(newPostMemberReference, newMemberReference, hl)
 		setNextMemberReference(newMemberReference, newPostMemberReference, hl)
 	}
+
 	return newMemberReference, nil
 }
 
@@ -107,50 +106,45 @@ func AddListMemberAfter(list core.Element, priorMemberReference core.Reference, 
 func AddListMemberBefore(list core.Element, postMemberReference core.Reference, newMember core.Element, hl *core.HeldLocks) (core.Reference, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	if !IsList(list, hl) {
-		return nil, errors.New("Supplied Element is not a CRL List")
+		return nil, errors.New("In AddListMemberBefore, Supplied Element is not a CRL List")
 	}
 	if newMember == nil {
-		return nil, errors.New("Supplied Element is nil: nil members are not allowed in CRL Lists")
+		return nil, errors.New("In AddListMemberBefore, Supplied Element is nil: nil members are not allowed in CRL Lists")
 	}
-	if postMemberReference != nil {
-		if !postMemberReference.IsRefinementOfURI(CrlListMemberReferenceURI, hl) {
-			return nil, errors.New("Supplied postMemberReference is not a CrlListMemberReference")
-		}
-		if postMemberReference.GetOwningConcept(hl) != list {
-			return nil, errors.New("Supplied postMemberReference does not belong to this list")
-		}
+	// Check to ensure that the postMemberReference is valid
+	if postMemberReference == nil {
+		return nil, errors.New("AddListMemberBefore called with nil postMemberReference")
+	}
+	if !postMemberReference.IsRefinementOfURI(CrlListMemberReferenceURI, hl) {
+		return nil, errors.New("In AddListMemberBefore, Supplied postMemberReference is not a CrlListMemberReference")
+	}
+	if postMemberReference.GetOwningConcept(hl) != list {
+		return nil, errors.New("In AddListMemberBefore, Supplied postMemberReference does not belong to this list")
 	}
 	listType, _ := GetListType(list, hl)
 	if newMember.IsRefinementOf(listType, hl) == false {
-		return nil, errors.New("NewMember is of wrong type")
+		return nil, errors.New("In AddListMemberBefore, NewMember is of wrong type")
 	}
 	var newPriorMemberReference core.Reference
-	if postMemberReference != nil {
-		referenceToPriorMemberReference, err := getReferenceToPriorMemberReference(postMemberReference, hl)
-		if err != nil {
-			return nil, err
-		}
-		referencedPriorMemberReference := referenceToPriorMemberReference.GetReferencedConcept(hl)
-		if referencedPriorMemberReference != nil {
-			newPriorMemberReference = referencedPriorMemberReference.(core.Reference)
-		}
+	// If the postMemberReference exists, then its priorMemberReference should point to the newMemberReference
+	referenceToPriorMemberReference, err := getReferenceToPriorMemberReference(postMemberReference, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "AddListMemberBefore failed")
 	}
+	referencedPriorMemberReference := referenceToPriorMemberReference.GetReferencedConcept(hl)
+	if referencedPriorMemberReference != nil {
+		newPriorMemberReference = referencedPriorMemberReference.(core.Reference)
+	}
+	// Create the newMemberReference
 	newMemberReference, _ := uOfD.CreateReplicateReferenceAsRefinementFromURI(CrlListMemberReferenceURI, hl)
 	newMemberReference.SetOwningConcept(list, hl)
 	newMemberReference.SetReferencedConcept(newMember, hl)
-	// Wire up post references
-	if postMemberReference == nil {
-		// This is the new list end
-		referenceToLastMemberReference, _ := getListReferenceToLastMemberReference(list, hl)
-		if referenceToLastMemberReference != nil {
-			referenceToLastMemberReference.SetReferencedConcept(newMemberReference, hl)
-		}
-	} else {
-		setPriorMemberReference(postMemberReference, newMemberReference, hl)
-		setNextMemberReference(newMemberReference, postMemberReference, hl)
-	}
+	// Wire up post references - be careful if inserting at the end
+	setPriorMemberReference(postMemberReference, newMemberReference, hl)
+	setNextMemberReference(newMemberReference, postMemberReference, hl)
 	// Wire up prior references
 	if newPriorMemberReference == nil {
+		// The new member is the only member of the list
 		referenceToFirstMemberReference, _ := getListReferenceToFirstMemberReference(list, hl)
 		if referenceToFirstMemberReference != nil {
 			referenceToFirstMemberReference.SetReferencedConcept(newMemberReference, hl)
@@ -158,6 +152,69 @@ func AddListMemberBefore(list core.Element, postMemberReference core.Reference, 
 	} else {
 		setNextMemberReference(newPriorMemberReference, newMemberReference, hl)
 		setPriorMemberReference(newMemberReference, newPriorMemberReference, hl)
+	}
+	return newMemberReference, nil
+}
+
+// AppendListMember adds a member to the end of the list
+func AppendListMember(list core.Element, newMember core.Element, hl *core.HeldLocks) (core.Reference, error) {
+	uOfD := list.GetUniverseOfDiscourse(hl)
+	if !IsList(list, hl) {
+		return nil, errors.New("In AddListMemberBefore, Supplied Element is not a CRL List")
+	}
+	if newMember == nil {
+		return nil, errors.New("In AddListMemberBefore, Supplied Element is nil: nil members are not allowed in CRL Lists")
+	}
+	listType, _ := GetListType(list, hl)
+	if newMember.IsRefinementOf(listType, hl) == false {
+		return nil, errors.New("In AddListMemberBefore, NewMember is of wrong type")
+	}
+	oldLastMemberReference, err := GetLastMemberReference(list, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "AppendListMember failed")
+	}
+	// Create the newMemberReference
+	newMemberReference, err2 := uOfD.CreateReplicateReferenceAsRefinementFromURI(CrlListMemberReferenceURI, hl)
+	if err2 != nil {
+		return nil, errors.Wrap(err2, "AppendListMember failed")
+	}
+	err = newMemberReference.SetOwningConcept(list, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "AppendListMember failed")
+	}
+	err = newMemberReference.SetReferencedConcept(newMember, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "AppendListMember failed")
+	}
+	// Wire up references - be careful if inserting at the end
+	referenceToLastMemberReference, err3 := getListReferenceToLastMemberReference(list, hl)
+	if err3 != nil {
+		return nil, errors.Wrap(err2, "AppendListMember failed")
+	}
+	if referenceToLastMemberReference != nil {
+		err = referenceToLastMemberReference.SetReferencedConcept(newMemberReference, hl)
+		if err != nil {
+			return nil, errors.Wrap(err, "AppendListMember failed")
+		}
+	}
+	if oldLastMemberReference == nil {
+		referenceToFirstMemberReference, err4 := getListReferenceToFirstMemberReference(list, hl)
+		if err4 != nil {
+			return nil, errors.Wrap(err2, "AppendListMember failed")
+		}
+		err = referenceToFirstMemberReference.SetReferencedConcept(newMemberReference, hl)
+		if err != nil {
+			return nil, errors.Wrap(err, "AppendListMember failed")
+		}
+	} else {
+		err = setNextMemberReference(oldLastMemberReference, newMemberReference, hl)
+		if err != nil {
+			return nil, errors.Wrap(err, "AppendListMember failed")
+		}
+	}
+	err = setPriorMemberReference(newMemberReference, oldLastMemberReference, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "AppendListMember failed")
 	}
 	return newMemberReference, nil
 }
@@ -304,14 +361,14 @@ func getReferenceToNextMemberReference(memberReference core.Reference, hl *core.
 // It returns nil if the reference is the first member of the list
 func getReferenceToPriorMemberReference(memberReference core.Reference, hl *core.HeldLocks) (core.Reference, error) {
 	if memberReference == nil {
-		return nil, errors.New("GetPriorMemberReference called with nil memberReference")
+		return nil, errors.New("getReferenceToPriorMemberReference called with nil memberReference")
 	}
 	if !IsListMemberReference(memberReference, hl) {
-		return nil, errors.New("Supplied memberReference is not a refinement of CrlListMemberReference")
+		return nil, errors.New("In getReferenceToPriorMemberReference, supplied memberReference is not a refinement of CrlListMemberReference")
 	}
 	priorMemberReference := memberReference.GetFirstOwnedReferenceRefinedFromURI(CrlListReferenceToPriorMemberReferenceURI, hl)
 	if priorMemberReference == nil {
-		return nil, errors.New("In GetPriorMemberReference, memberReference does not have a PriorMemberReferenceReference")
+		return nil, errors.New("In getReferenceToPriorMemberReference, memberReference does not have a PriorMemberReferenceReference")
 	}
 	return priorMemberReference, nil
 }
@@ -338,13 +395,76 @@ func IsListMemberReference(memberReference core.Reference, hl *core.HeldLocks) b
 	return memberReference.IsRefinementOfURI(CrlListMemberReferenceURI, hl)
 }
 
+// PrependListMember adds a member to the end of the list
+func PrependListMember(list core.Element, newMember core.Element, hl *core.HeldLocks) (core.Reference, error) {
+	uOfD := list.GetUniverseOfDiscourse(hl)
+	if !IsList(list, hl) {
+		return nil, errors.New("In PrependListMember, Supplied Element is not a CRL List")
+	}
+	if newMember == nil {
+		return nil, errors.New("In PrependListMember, Supplied Element is nil: nil members are not allowed in CRL Lists")
+	}
+	listType, _ := GetListType(list, hl)
+	if newMember.IsRefinementOf(listType, hl) == false {
+		return nil, errors.New("In PrependListMember, NewMember is of wrong type")
+	}
+	oldFirstMemberReference, err := GetFirstMemberReference(list, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "PrependListMember failed")
+	}
+	// Create the newMemberReference
+	newMemberReference, err2 := uOfD.CreateReplicateReferenceAsRefinementFromURI(CrlListMemberReferenceURI, hl)
+	if err2 != nil {
+		return nil, errors.Wrap(err2, "PrependListMember failed")
+	}
+	err = newMemberReference.SetOwningConcept(list, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "PrependListMember failed")
+	}
+	err = newMemberReference.SetReferencedConcept(newMember, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "PrependListMember failed")
+	}
+	// Wire up references - be careful if inserting at the end
+	referenceToFirstMemberReference, err3 := getListReferenceToFirstMemberReference(list, hl)
+	if err3 != nil {
+		return nil, errors.Wrap(err2, "PrependListMember failed")
+	}
+	if referenceToFirstMemberReference != nil {
+		err = referenceToFirstMemberReference.SetReferencedConcept(newMemberReference, hl)
+		if err != nil {
+			return nil, errors.Wrap(err, "PrependListMember failed")
+		}
+	}
+	if oldFirstMemberReference == nil {
+		referenceToLastMemberReference, err4 := getListReferenceToLastMemberReference(list, hl)
+		if err4 != nil {
+			return nil, errors.Wrap(err2, "PrependListMember failed")
+		}
+		err = referenceToLastMemberReference.SetReferencedConcept(newMemberReference, hl)
+		if err != nil {
+			return nil, errors.Wrap(err, "PrependListMember failed")
+		}
+	} else {
+		err = setPriorMemberReference(oldFirstMemberReference, newMemberReference, hl)
+		if err != nil {
+			return nil, errors.Wrap(err, "PrependListMember failed")
+		}
+	}
+	err = setNextMemberReference(newMemberReference, oldFirstMemberReference, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "PrependListMember failed")
+	}
+	return newMemberReference, nil
+}
+
 // RemoveListMember removes the first occurrance of an element from the given list
 func RemoveListMember(list core.Element, el core.Element, hl *core.HeldLocks) error {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	for id := range list.GetOwnedConceptIDs(hl).Iterator().C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil && memberReference.IsRefinementOfURI(CrlListMemberReferenceURI, hl) && memberReference.GetReferencedConcept(hl) == el {
-			// Fix previous and next pointers
+			// Modify previous and next pointers
 			priorMemberReference, _ := GetPriorMemberReference(memberReference, hl)
 			nextMemberReference, _ := GetNextMemberReference(memberReference, hl)
 			if priorMemberReference != nil {
@@ -385,17 +505,31 @@ func SetListType(list core.Element, listType core.Element, hl *core.HeldLocks) e
 }
 
 // setNextMemberReference takes a memberReference and sets its next reference
-func setNextMemberReference(memberReference core.Reference, nextReference core.Reference, hl *core.HeldLocks) {
+func setNextMemberReference(memberReference core.Reference, nextReference core.Reference, hl *core.HeldLocks) error {
 	// since this is an internal function we assume that the references are refinements of CrlListMemberReference
-	nextReferenceReference, _ := getReferenceToNextMemberReference(memberReference, hl)
-	nextReferenceReference.SetReferencedConcept(nextReference, hl)
+	nextReferenceReference, err := getReferenceToNextMemberReference(memberReference, hl)
+	if err != nil {
+		return errors.Wrap(err, "setNextMemberReference failed")
+	}
+	err = nextReferenceReference.SetReferencedConcept(nextReference, hl)
+	if err != nil {
+		return errors.Wrap(err, "setNextMemberReference failed")
+	}
+	return nil
 }
 
 // setPriorMemberReference takes a memberReference and sets its prior reference
-func setPriorMemberReference(memberReference core.Reference, priorReference core.Reference, hl *core.HeldLocks) {
+func setPriorMemberReference(memberReference core.Reference, priorReference core.Reference, hl *core.HeldLocks) error {
 	// since this is an internal function we assume that the references are refinements of CrlListMemberReference
-	priorReferenceReference, _ := getReferenceToPriorMemberReference(memberReference, hl)
-	priorReferenceReference.SetReferencedConcept(priorReference, hl)
+	priorReferenceReference, err := getReferenceToPriorMemberReference(memberReference, hl)
+	if err != nil {
+		return errors.Wrap(err, "setNextMemberReference failed")
+	}
+	err = priorReferenceReference.SetReferencedConcept(priorReference, hl)
+	if err != nil {
+		return errors.Wrap(err, "setNextMemberReference failed")
+	}
+	return nil
 }
 
 // BuildCrlListsConcepts builds the CrlList concept and adds it as a child of the provided parent concept space

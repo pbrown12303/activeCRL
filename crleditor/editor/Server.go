@@ -491,6 +491,8 @@ func StartServer(startBrowser bool, workspaceArg string, userFolderArg string) {
 		log.Fatal(err)
 	}
 	hl.ReleaseLocksAndWait()
+	CrlEditorSingleton.uOfD.SetRecordingUndo(true)
+
 	go CrlEditorSingleton.InitializeClient()
 	// WebSocketts server
 	go startWsServer()

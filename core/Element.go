@@ -655,31 +655,59 @@ func (ePtr *element) IsReadOnly(hl *HeldLocks) bool {
 }
 
 // isEquivalent only checks the element attributes. It ignores the uOfD.
-func (ePtr *element) isEquivalent(hl1 *HeldLocks, el *element, hl2 *HeldLocks) bool {
+func (ePtr *element) isEquivalent(hl1 *HeldLocks, el *element, hl2 *HeldLocks, printExceptions ...bool) bool {
+	var print bool
+	if len(printExceptions) > 0 {
+		print = printExceptions[0]
+	}
 	hl1.ReadLockElement(ePtr)
 	hl2.ReadLockElement(el)
 	if ePtr.ConceptID != el.ConceptID {
+		if print {
+			log.Printf("In element.isEquivalent, ConceptIDs do not match")
+		}
 		return false
 	}
 	if ePtr.Definition != el.Definition {
+		if print {
+			log.Printf("In element.isEquivalent, Definitions do not match")
+		}
 		return false
 	}
 	if ePtr.IsCore != el.IsCore {
+		if print {
+			log.Printf("In element.isEquivalent, IsCore do not match")
+		}
 		return false
 	}
 	if ePtr.Label != el.Label {
+		if print {
+			log.Printf("In element.isEquivalent, Labels do not match")
+		}
 		return false
 	}
 	if ePtr.OwningConceptID != el.OwningConceptID {
+		if print {
+			log.Printf("In element.isEquivalent, OwningConceptIDs do not match")
+		}
 		return false
 	}
 	if ePtr.ReadOnly != el.ReadOnly {
+		if print {
+			log.Printf("In element.isEquivalent, ReadOnly does not match")
+		}
 		return false
 	}
 	if ePtr.Version.getVersion() != el.Version.getVersion() {
+		if print {
+			log.Printf("In element.isEquivalent, Versions do not match")
+		}
 		return false
 	}
 	if ePtr.URI != el.URI {
+		if print {
+			log.Printf("In element.isEquivalent, URIs do not match")
+		}
 		return false
 	}
 	return true

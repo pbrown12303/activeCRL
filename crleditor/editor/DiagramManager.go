@@ -1,7 +1,7 @@
 package editor
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 	"strconv"
 
 	//	"fmt"
@@ -179,11 +179,15 @@ func (dmPtr *diagramManager) addConceptView(request *Request, hl *core.HeldLocks
 }
 
 // addDiagramToDisplayedList adds the diagram to the list of displayed diagrams
-func (dmPtr *diagramManager) addDiagramToDisplayedList(diagram core.Element, hl *core.HeldLocks) {
+func (dmPtr *diagramManager) addDiagramToDisplayedList(diagram core.Element, hl *core.HeldLocks) error {
 	if !dmPtr.isDiagramDisplayed(diagram, hl) {
 		openDiagrams := dmPtr.crlEditor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
-		crldatastructures.AddListMemberBefore(openDiagrams, nil, diagram, hl)
+		_, err := crldatastructures.AppendListMember(openDiagrams, diagram, hl)
+		if err != nil {
+			return errors.Wrap(err, "diagramManager.addDiagramToDisplayedList failed")
+		}
 	}
+	return nil
 }
 
 func (dmPtr *diagramManager) closeDiagramView(diagramID string, hl *core.HeldLocks) error {
@@ -311,7 +315,10 @@ func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.HeldL
 	}
 	// Make sure the diagram is in the list of displayed diagrams
 	if !dmPtr.isDiagramDisplayed(diagram, hl) {
-		dmPtr.addDiagramToDisplayedList(diagram, hl)
+		err3 := dmPtr.addDiagramToDisplayedList(diagram, hl)
+		if err3 != nil {
+			return errors.Wrap(err3, "diagramManager.displayDiagram failed")
+		}
 	}
 	// make sure there is a monitor on the diagram so we know when it has been deleted
 	err2 := dmPtr.verifyMonitorPresent(diagram, hl)

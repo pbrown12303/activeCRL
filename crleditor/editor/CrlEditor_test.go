@@ -30,6 +30,23 @@ var _ = Describe("Test CrlEditor", func() {
 		}, time.Second*10).Should(BeTrue())
 	}
 
+	SelectElementInTree := func(el core.Element) {
+		var treeNodeID string
+		page.RunScript("return crlGetTreeNodeIDFromConceptID(conceptID);",
+			map[string]interface{}{"conceptID": el.GetConceptID(hl)},
+			&treeNodeID)
+		// log.Printf("TreeNodeID: " + treeNodeID)
+		// editor.CrlLogClientRequests = true
+		// editor.CrlLogClientNotifications = true
+		treeNode := page.FindByID(treeNodeID)
+		treeNode.MouseToElement()
+		page.Click(agouti.SingleClick, agouti.LeftButton)
+		hl.ReleaseLocksAndWait()
+		Eventually(func() bool {
+			return editor.CrlEditorSingleton.GetCurrentSelection() != nil && editor.CrlEditorSingleton.GetCurrentSelection().GetConceptID(hl) == el.GetConceptID(hl)
+		}).Should(BeTrue())
+	}
+
 	CreateConceptSpace := func() (string, core.Element) {
 		var oldSelectionID string
 		Expect(page.RunScript("return crlSelectedConceptID;", nil, &oldSelectionID)).To(Succeed())
@@ -55,7 +72,8 @@ var _ = Describe("Test CrlEditor", func() {
 		return newID, newCS
 	}
 
-	CreateDiagram := func() (string, core.Element) {
+	CreateDiagram := func(parent core.Element) (string, core.Element) {
+		SelectElementInTree(parent)
 		var currentSelectionID string
 		Expect(page.RunScript("return crlSelectedConceptID;", nil, &currentSelectionID)).To(Succeed())
 		page.RunScript("crlSendAddDiagramChild(conceptSpaceID);", map[string]interface{}{"conceptSpaceID": currentSelectionID}, nil)
@@ -478,6 +496,22 @@ var _ = Describe("Test CrlEditor", func() {
 		return refinement, elementPointerView
 	}
 
+	Undo := func() {
+		Expect(page.FindByID("EditMenuButton").MouseToElement()).To(Succeed())
+		Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
+		Expect(page.FindByID("UndoButton").MouseToElement()).To(Succeed())
+		Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
+		AssertServerRequestProcessingComplete()
+	}
+
+	Redo := func() {
+		Expect(page.FindByID("EditMenuButton").MouseToElement()).To(Succeed())
+		Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
+		Expect(page.FindByID("RedoButton").MouseToElement()).To(Succeed())
+		Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
+		AssertServerRequestProcessingComplete()
+	}
+
 	Describe("Testing CrlEditor basic functionality", func() {
 		Specify("The editor should be initialized", func() {
 			Expect(editor.CrlEditorSingleton.IsInitialized()).To(BeTrue())
@@ -514,27 +548,65 @@ var _ = Describe("Test CrlEditor", func() {
 			// editor.CrlLogClientRequests = false
 			// editor.CrlLogClientNotifications = false
 		})
+		Specify("UndoRedo of a concept space should work", func() {
+			uOfD.MarkUndoPoint()
+			beforeUofD := uOfD.Clone(hl)
+			beforeHL := beforeUofD.NewHeldLocks()
+			_, cs1 := CreateConceptSpace()
+			Expect(cs1).ToNot(BeNil())
+			afterUofD := uOfD.Clone(hl)
+			afterHL := afterUofD.NewHeldLocks()
+			Undo()
+			Expect(uOfD.IsEquivalent(hl, beforeUofD, beforeHL, true)).To(BeTrue())
+			Redo()
+			Expect(uOfD.IsEquivalent(hl, afterUofD, afterHL, true)).To(BeTrue())
+		})
+
+		Specify("UndoRedo of a diagram creation should work", func() {
+			_, cs1 := CreateConceptSpace()
+			Expect(cs1).ToNot(BeNil())
+			uOfD.MarkUndoPoint()
+			beforeUofD := uOfD.Clone(hl)
+			beforeHL := beforeUofD.NewHeldLocks()
+			_, diag := CreateDiagram(cs1)
+			Expect(diag).ToNot(BeNil())
+			afterUofD := uOfD.Clone(hl)
+			afterHL := afterUofD.NewHeldLocks()
+			Undo()
+			Expect(uOfD.IsEquivalent(hl, beforeUofD, beforeHL, true)).To(BeTrue())
+			Redo()
+			Expect(uOfD.IsEquivalent(hl, afterUofD, afterHL, true)).To(BeTrue())
+		})
 
 		Describe("Single Diagram Tests", func() {
 			var cs1ID string
 			var cs1 core.Element
 			var diagramID string
 			var diagram core.Element
-			// var diagramContainerID string
-			// var diagramGraphID string
+			var beforeUofD *core.UniverseOfDiscourse
+			var beforeHL *core.HeldLocks
+			var afterUofD *core.UniverseOfDiscourse
+			var afterHL *core.HeldLocks
 
 			BeforeEach(func() {
 				cs1ID, cs1 = CreateConceptSpace()
 
 				// Now add a diagram
-				diagramID, diagram = CreateDiagram()
+				diagramID, diagram = CreateDiagram(cs1)
 				// Expect(page.RunScript("return crlGetContainerIDFromConceptID(conceptID)", map[string]interface{}{"conceptID": diagramID}, &diagramContainerID)).To(Succeed())
 				// Expect(page.RunScript("return crlGetJointGraphIDFromDiagramID(diagramID)", map[string]interface{}{"diagramID": diagramID}, &diagramGraphID)).To(Succeed())
-
+				uOfD.MarkUndoPoint()
+				beforeUofD = uOfD.Clone(hl)
+				beforeHL = beforeUofD.NewHeldLocks()
 			})
 
 			AfterEach(func() {
-
+				afterUofD = uOfD.Clone(hl)
+				afterHL = afterUofD.NewHeldLocks()
+				Undo()
+				Expect(uOfD.IsEquivalent(hl, beforeUofD, beforeHL, true)).To(BeTrue())
+				Redo()
+				Expect(uOfD.IsEquivalent(hl, afterUofD, afterHL, true)).To(BeTrue())
 			})
 			PSpecify("Drag TreeNode into Diagram should work", func() {
 				// There is a bug in Agouti with respect to both FlickFinger and MoveMouseBy

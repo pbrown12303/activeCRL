@@ -16501,8 +16501,8 @@ joint.dia.LinkView = joint.dia.CellView.extend({
         // GET DISTANCE:
 
         var labelDistance = path.lengthAtT(t, pathOpt);
-        if (isDistanceRelative) labelDistance = (labelDistance / this.getConnectionLength()) || 0; // fix to prevent NaN for 0 length
-        if (isDistanceAbsoluteReverse) labelDistance = (-1 * (this.getConnectionLength() - labelDistance)) || 1; // fix for end point (-0 => 1)
+        if (isDistanceRelative) labelDistance = (labelDistance / this.getConnectionLength()) || 0; // Adjustment to prevent NaN for 0 length
+        if (isDistanceAbsoluteReverse) labelDistance = (-1 * (this.getConnectionLength() - labelDistance)) || 1; // Adjustment for end point (-0 => 1)
 
         position.distance = labelDistance;
 
@@ -21842,7 +21842,7 @@ joint.routers.manhattan = (function(g, joint, util) {
         return (directionChange > 180) ? (360 - directionChange) : directionChange;
     }
 
-    // fix direction offsets according to current grid
+    // Adjust direction offsets according to current grid
     function getGridOffsets(directions, grid, opt) {
 
         var step = opt.step;

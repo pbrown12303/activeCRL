@@ -75,6 +75,8 @@ var _ = BeforeSuite(func() {
 	Eventually(func() bool {
 		return editor.GetRequestInProgress() == false
 	}, time.Second*10).Should(BeTrue())
+	// Suppress alerts since they require user response
+	Expect(page.RunScript("crlAutomatedTestInProgress = true;", nil, nil)).To(Succeed())
 })
 
 var _ = AfterSuite(func() {

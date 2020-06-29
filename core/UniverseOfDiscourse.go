@@ -134,9 +134,12 @@ func (uOfDPtr *UniverseOfDiscourse) Clone(hl *HeldLocks) *UniverseOfDiscourse {
 	var uri string
 	var functionArray []crlExecutionFunction
 	for uri, functionArray = range uOfDPtr.computeFunctions {
-		var crlFunction crlExecutionFunction
-		for _, crlFunction = range functionArray {
-			newUofD.computeFunctions[uri] = append(newUofD.computeFunctions[uri], crlFunction)
+		// Housekeeping functions are already present in a new uOfD
+		if uri != "http://activeCrl.com/core/coreHousekeeping" {
+			var crlFunction crlExecutionFunction
+			for _, crlFunction = range functionArray {
+				newUofD.computeFunctions[uri] = append(newUofD.computeFunctions[uri], crlFunction)
+			}
 		}
 	}
 
@@ -149,10 +152,16 @@ func (uOfDPtr *UniverseOfDiscourse) Clone(hl *HeldLocks) *UniverseOfDiscourse {
 	}
 
 	// uOfD.uuidElementMap = NewStringElementMap()
-	for id, element := range uOfDPtr.uuidElementMap.CopyMap() {
-		newElement := clone(element, hl)
-		newUofD.uuidElementMap.SetEntry(id, newElement)
+	for id, el := range uOfDPtr.uuidElementMap.CopyMap() {
+		switch el.(type) {
+		case *element, *literal, *reference, *refinement:
+			{
+				newElement := clone(el, hl)
+				newUofD.uuidElementMap.SetEntry(id, newElement)
+			}
+		}
 	}
+	newUofD.uuidElementMap.SetEntry(newUofD.ConceptID, newUofD)
 
 	// uOfD.ownedIDsMap = NewOneToNStringMap()
 	for key, strings := range uOfDPtr.ownedIDsMap.CopyMap() {
@@ -165,6 +174,10 @@ func (uOfDPtr *UniverseOfDiscourse) Clone(hl *HeldLocks) *UniverseOfDiscourse {
 	}
 
 	// uOfD.abstractionsMap = NewOneToNStringMap()
+	for key, strings := range uOfDPtr.abstractionsMap.CopyMap() {
+		newUofD.abstractionsMap.SetMappedValues(key, strings)
+	}
+
 	// uOfDID, _ := uOfD.generateConceptID(UniverseOfDiscourseURI)
 	// uOfD.initializeElement(uOfDID, UniverseOfDiscourseURI)
 	// uOfD.Label = "UniverseOfDiscourse"
@@ -539,16 +552,26 @@ func (uOfDPtr *UniverseOfDiscourse) getURIUUIDMap() *StringStringMap {
 }
 
 // IsEquivalent returns true if all of the root elements in the uOfD are recursively equivalent
-func (uOfDPtr *UniverseOfDiscourse) IsEquivalent(hl1 *HeldLocks, uOfD2 *UniverseOfDiscourse, hl2 *HeldLocks) bool {
+func (uOfDPtr *UniverseOfDiscourse) IsEquivalent(hl1 *HeldLocks, uOfD2 *UniverseOfDiscourse, hl2 *HeldLocks, printExceptions ...bool) bool {
+	var printEquivalenceExceptions bool
+	if len(printExceptions) > 0 {
+		printEquivalenceExceptions = printExceptions[0]
+	}
 	// Functions
 	// uOfD.computeFunctions = make(map[string][]crlExecutionFunction)
 	if len(uOfDPtr.computeFunctions) != len(uOfD2.computeFunctions) {
+		if printEquivalenceExceptions {
+			log.Printf("Length of compute functions map not equivalent")
+		}
 		return false
 	}
 	var uri string
 	var functionArray []crlExecutionFunction
 	for uri, functionArray = range uOfDPtr.computeFunctions {
 		if len(functionArray) != len(uOfD2.computeFunctions[uri]) {
+			if printEquivalenceExceptions {
+				log.Printf("Length of compute functions array not equivalent for uri: %s", uri)
+			}
 			return false
 		}
 		var crlFunction crlExecutionFunction
@@ -557,28 +580,43 @@ func (uOfDPtr *UniverseOfDiscourse) IsEquivalent(hl1 *HeldLocks, uOfD2 *Universe
 		for i, crlFunction = range functionArray {
 			crlFunction2 = uOfD2.computeFunctions[uri][i]
 			if reflect.ValueOf(crlFunction).Pointer() != reflect.ValueOf(crlFunction2).Pointer() {
+				if printEquivalenceExceptions {
+					log.Printf("The %dth compute function is not equivalent for uri: %s", i, uri)
+				}
 				return false
 			}
 		}
 	}
 
 	// uOfD.uriUUIDMap = NewStringStringMap()
-	if uOfDPtr.uriUUIDMap.IsEquivalent(uOfD2.uriUUIDMap) != true {
+	if uOfDPtr.uriUUIDMap.IsEquivalent(uOfD2.uriUUIDMap, printEquivalenceExceptions) != true {
+		if printEquivalenceExceptions {
+			log.Printf("uriUUDIMap not equivalent")
+		}
 		return false
 	}
 
 	// uOfD.uuidElementMap = NewStringElementMap()
 	if uOfDPtr.uuidElementMap.IsEquivalent(uOfD2.uuidElementMap) != true {
+		if printEquivalenceExceptions {
+			log.Printf("uriUUDIMap keys not equivalent")
+		}
 		return false
 	}
 
 	// uOfD.ownedIDsMap
 	if uOfDPtr.ownedIDsMap.IsEquivalent(uOfD2.ownedIDsMap) != true {
+		if printEquivalenceExceptions {
+			log.Printf("ownedIDsMap not equivalent")
+		}
 		return false
 	}
 
 	// uOfD.listenersMap
 	if uOfDPtr.listenersMap.IsEquivalent(uOfD2.listenersMap) != true {
+		if printEquivalenceExceptions {
+			log.Printf("listenersMap not equivalent")
+		}
 		return false
 	}
 
@@ -586,7 +624,7 @@ func (uOfDPtr *UniverseOfDiscourse) IsEquivalent(hl1 *HeldLocks, uOfD2 *Universe
 	rootElements2 := uOfD2.GetRootElements(hl2)
 	for id1, el1 := range rootElements1 {
 		el2 := rootElements2[id1]
-		if el2 == nil || RecursivelyEquivalent(el1, hl1, el2, hl2) == false {
+		if el2 == nil || RecursivelyEquivalent(el1, hl1, el2, hl2, printEquivalenceExceptions) == false {
 			return false
 		}
 	}
@@ -703,6 +741,9 @@ func (uOfDPtr *UniverseOfDiscourse) NewElement(hl *HeldLocks, uri ...string) (El
 	el.initializeElement(conceptID, actualURI)
 	hl.WriteLockElement(&el)
 	uOfDPtr.SetUniverseOfDiscourse(&el, hl)
+	if actualURI != "" {
+		el.SetURI(actualURI, hl)
+	}
 	return &el, nil
 }
 
@@ -730,6 +771,9 @@ func (uOfDPtr *UniverseOfDiscourse) NewLiteral(hl *HeldLocks, uri ...string) (Li
 	lit.initializeLiteral(conceptID, actualURI)
 	hl.WriteLockElement(&lit)
 	uOfDPtr.SetUniverseOfDiscourse(&lit, hl)
+	if actualURI != "" {
+		lit.SetURI(actualURI, hl)
+	}
 	return &lit, nil
 }
 
@@ -747,6 +791,9 @@ func (uOfDPtr *UniverseOfDiscourse) NewReference(hl *HeldLocks, uri ...string) (
 	ref.initializeReference(conceptID, actualURI)
 	hl.WriteLockElement(&ref)
 	uOfDPtr.SetUniverseOfDiscourse(&ref, hl)
+	if actualURI != "" {
+		ref.SetURI(actualURI, hl)
+	}
 	return &ref, nil
 }
 
@@ -764,6 +811,9 @@ func (uOfDPtr *UniverseOfDiscourse) NewRefinement(hl *HeldLocks, uri ...string) 
 	ref.initializeRefinement(conceptID, actualURI)
 	hl.WriteLockElement(&ref)
 	uOfDPtr.SetUniverseOfDiscourse(&ref, hl)
+	if actualURI != "" {
+		ref.SetURI(actualURI, hl)
+	}
 	return &ref, nil
 }
 
@@ -825,7 +875,6 @@ func (uOfDPtr *UniverseOfDiscourse) removeElementForUndo(el Element, hl *HeldLoc
 			Print(el, "Removed Element: ", hl)
 		}
 		uOfDPtr.uuidElementMap.DeleteEntry(elID)
-		// TODO fixup for cached ownedConceptIDs, listenerIDs
 	}
 }
 
@@ -920,7 +969,7 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 		if replicateChild == nil {
 			childURI := ""
 			refinementURI := ""
-			if len(uri) == 1 {
+			if len(uri) == 1 && uri[0] != "" {
 				childURI = uri[0] + "/" + originalChild.GetConceptID(hl)
 				refinementURI = childURI + "/Refinement"
 			}

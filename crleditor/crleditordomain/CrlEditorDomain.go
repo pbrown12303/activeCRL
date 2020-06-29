@@ -30,7 +30,6 @@ func BuildEditorDomain(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core
 	// Assumes that the DiagramConceptSpace has already been added to the uOfD
 	domain, _ := uOfD.NewElement(hl, EditorDomainURI)
 	domain.SetLabel("EditorDomain", hl)
-	domain.SetURI(EditorDomainURI, hl)
 
 	settings, _ := uOfD.NewElement(hl, EditorSettingsURI)
 	settings.SetLabel("Settings", hl)

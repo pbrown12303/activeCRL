@@ -120,19 +120,32 @@ func (rPtr *reference) initializeReference(conceptID string, uri string) {
 	rPtr.initializeElement(conceptID, uri)
 }
 
-func (rPtr *reference) isEquivalent(hl1 *HeldLocks, el *reference, hl2 *HeldLocks) bool {
+func (rPtr *reference) isEquivalent(hl1 *HeldLocks, el *reference, hl2 *HeldLocks, printExceptions ...bool) bool {
+	var print bool
+	if len(printExceptions) > 0 {
+		print = printExceptions[0]
+	}
 	hl1.ReadLockElement(rPtr)
 	hl2.ReadLockElement(el)
 	if rPtr.ReferencedConceptID != el.ReferencedConceptID {
+		if print {
+			log.Printf("In reference.IsEquivalent, ReferencedConceptIDs do not match")
+		}
 		return false
 	}
 	if rPtr.ReferencedAttributeName != el.ReferencedAttributeName {
+		if print {
+			log.Printf("In reference.IsEquivalent, ReferencedAttributeNames do not match")
+		}
 		return false
 	}
 	if rPtr.ReferencedConceptVersion != el.ReferencedConceptVersion {
+		if print {
+			log.Printf("In reference.IsEquivalent, ReferencedConceptVersions do not match")
+		}
 		return false
 	}
-	return rPtr.element.isEquivalent(hl1, &el.element, hl2)
+	return rPtr.element.isEquivalent(hl1, &el.element, hl2, print)
 }
 
 // MarshalJSON produces a byte string JSON representation of the Element

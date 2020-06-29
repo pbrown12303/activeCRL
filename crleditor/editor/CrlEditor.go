@@ -101,7 +101,6 @@ func (edPtr *CrlEditor) initializeEditor(userFolderArg string) {
 	edPtr.diagramManager = newDiagramManager(edPtr)
 	edPtr.clientNotificationManager = newClientNotificationManager()
 
-	edPtr.uOfD.SetRecordingUndo(true)
 }
 
 // reinitializeEditor is used to re-initialize the editor
@@ -459,12 +458,18 @@ func (edPtr *CrlEditor) InitializeClient() error {
 
 // initializeClientState sets the client state at any desired time
 func (edPtr *CrlEditor) initializeClientState(hl *core.HeldLocks) error {
-	edPtr.getTreeManager().initializeTree(hl)
+	err := edPtr.getTreeManager().initializeTree(hl)
+	if err != nil {
+		return err
+	}
 	edPtr.SendUserPreferences(hl)
 	edPtr.SendDebugSettings()
 	edPtr.SendWorkspacePath()
 	edPtr.SendClearDiagrams()
 	openDiagrams := edPtr.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
+	if openDiagrams == nil {
+		return errors.New("In CrlEditor.initializeClientState, openDiagrams is nil")
+	}
 	openDiagramReference, err2 := crldatastructures.GetFirstMemberReference(openDiagrams, hl)
 	if err2 != nil {
 		return err2
@@ -583,6 +588,10 @@ func (edPtr *CrlEditor) LoadWorkspace(hl *core.HeldLocks) error {
 			}
 			edPtr.workspaceFiles[workspaceFile.ConceptSpace.GetConceptID(hl)] = workspaceFile
 			if workspaceFile.ConceptSpace.IsRefinementOfURI(crleditordomain.EditorSettingsURI, hl) {
+				if edPtr.settings != nil {
+					edPtr.uOfD.DeleteElement(edPtr.settings, hl)
+					hl.ReleaseLocksAndWait()
+				}
 				edPtr.settings = workspaceFile.ConceptSpace
 			}
 		}
@@ -850,8 +859,7 @@ func (edPtr *CrlEditor) SetWorkspacePath(path string) error {
 // Undo performs an undo on the uOfD and refreshes the interface
 func (edPtr *CrlEditor) Undo(hl *core.HeldLocks) error {
 	edPtr.uOfD.Undo(hl)
-	edPtr.initializeClientState(hl)
-	return nil
+	return edPtr.initializeClientState(hl)
 }
 
 // UpdateDebugSettings updates the debug-related settings and sends a notification to the client
