@@ -22,6 +22,10 @@ var crlDropRefinementAsLink = false;
 var crlEnableTracing = false;
 // crlOmitHousekeepingCalls indicates whether housekeeping calls shouldl be included when tracing is enabled
 var crlOmitHousekeepingCalls = false;
+// crlOmitManageTreeNodesCalls indicates whether housekeeping calls shouldl be included when tracing is enabled
+var crlOmitManageTreeNodesCalls = false;
+// crlOmitDiagramRelatedCalls indicates whether housekeeping calls shouldl be included when tracing is enabled
+var crlOmitDiagramRelatedCalls = false;
 // crlAutomatedTestInProgress set to true during automated regression testing. Primary intent is to suppress alerts requiring user response
 var crlAutomatedTestInProgress = false;
 
@@ -105,7 +109,9 @@ $(function () {
             "       <label>Omit Houskeeping Calls</label>" +
             "       <input type='checkbox' id='omitHousekeepingCalls'> <br>" +
             "       <label>Omit ManageTreeNodes Calls</label>" +
-            "       <input type='checkbox' id='omitManageTreeNodesCalls'>" +
+            "       <input type='checkbox' id='omitManageTreeNodesCalls'> <br>" +
+            "       <label>Omit Diagram-related Calls</label>" +
+            "       <input type='checkbox' id='omitDiagramRelatedCalls'>" +
             "	</fieldset> " +
             "</form>",
         confirm: function () {
@@ -121,11 +127,16 @@ $(function () {
             if ($("#omitManageTreeNodesCalls").prop("checked") == true) {
                 omitManageTreeNodesCalls = "true";
             }
-            crlSendDebugSettings(enableNotificationTracing, omitHousekeepingCalls, omitManageTreeNodesCalls, "0");
+            if ($("#omitDiagramRelatedCalls").prop("checked") == true) {
+                omitDiagramRelatedCalls = "true";
+            }
+            crlSendDebugSettings(enableNotificationTracing, omitHousekeepingCalls, omitManageTreeNodesCalls, omitDiagramRelatedCalls, "0");
         },
         onOpen: function () {
             $("#enableTracing").prop("checked", crlEnableTracing);
             $("#omitHousekeepingCalls").prop("checked", crlOmitHousekeepingCalls);
+            $("#omitManageTreeNodesCalls").prop("checked", crlOmitManageTreeNodesCalls);
+            $("#omitDiagramRelatedCalls").prop("checked", crlOmitDiagramRelatedCalls);
         }
     });
     crlDisplayCallGraphsDialog = new jBox("Confirm", {
@@ -804,7 +815,7 @@ var crlCustomLinkView = joint.dia.LinkView.extend({
         this.notify('element:magnet:pointerclick', evt, magnet, x, y);
     },
     startListening: function () {
-
+        // Code from joint.js version 2.2.1
         var model = this.model;
 
         this.listenTo(model, 'change:markup', this.render);
@@ -814,7 +825,7 @@ var crlCustomLinkView = joint.dia.LinkView.extend({
         this.listenTo(model, 'change:vertices change:vertexMarkup', this.onVerticesChange);
         this.listenTo(model, 'change:source', this.onSourceChange);
         this.listenTo(model, 'change:target', this.onTargetChange);
-    },
+},
     // The custom update function adds a hack to ensure that changes to links that are endpoints of other links trigger updates of those other links
     // Default is to process the `attrs` object and set attributes on subelements based on the selectors.
     update: function (model, attributes, opt) {
@@ -974,6 +985,16 @@ function crlPropertiesDisplayLiteralValue(data, row) {
         input.read_only = true;
     };
     input.setSelectionRange(cursorPosition, cursorPosition);
+}
+
+function crlPropertiesDisplayOwningConcept(data, row) {
+    var typeRow = crlObtainPropertyRow(row);
+    typeRow.cells[0].innerHTML = "Owning Concept ID";
+    var owningConceptID = ""
+    if (data.NotificationConcept) {
+        owningConceptID = data.NotificationConcept.OwningConceptID
+    }
+    typeRow.cells[1].innerHTML = owningConceptID;
 }
 
 function crlPropertiesDisplayReferencedConcept(data, row) {
@@ -1484,6 +1505,7 @@ function crlNotificationSaveDebugSettings(data) {
     crlEnableTracing = JSON.parse(data.AdditionalParameters["EnableNotificationTracing"]);
     crlOmitHousekeepingCalls = JSON.parse(data.AdditionalParameters["OmitHousekeepingCalls"]);
     crlOmitManageTreeNodesCalls = JSON.parse(data.AdditionalParameters["OmitManageTreeNodesCalls"]);
+    crlOmitDiagramRelatedCalls = JSON.parse(data.AdditionalParameters["OmitDiagramRelatedCalls"]);
     crlSendNormalResponse();
 }
 
@@ -1724,34 +1746,35 @@ function crlNotificationElementSelected(data) {
 function crlUpdateProperties(data) {
     crlPropertiesDisplayType(data, 1);
     crlPropertiesDisplayID(data, 2);
-    crlPropertiesDisplayVersion(data, 3);
-    crlPropertiesDisplayLabel(data, 4);
-    crlPropertiesDisplayDefinition(data, 5);
-    crlPropertiesDisplayURI(data, 6);
+    crlPropertiesDisplayOwningConcept(data, 3);
+    crlPropertiesDisplayVersion(data, 4);
+    crlPropertiesDisplayLabel(data, 5);
+    crlPropertiesDisplayDefinition(data, 6);
+    crlPropertiesDisplayURI(data, 7);
     var type = "";
     if (data.NotificationConcept) {
         type = data.NotificationConcept.Type;
     }
     switch (type) {
         case "*core.element":
+            crlPropertiesClearRow(9);
             crlPropertiesClearRow(8);
-            crlPropertiesClearRow(7);
             break;
         case "*core.literal":
-            crlPropertiesDisplayLiteralValue(data, 7);
-            crlPropertiesClearRow(8);
+            crlPropertiesDisplayLiteralValue(data, 8);
+            crlPropertiesClearRow(9);
             break;
         case "*core.reference":
-            crlPropertiesDisplayReferencedConcept(data, 7);
-            crlPropertiesClearRow(8);
+            crlPropertiesDisplayReferencedConcept(data, 8);
+            crlPropertiesClearRow(9);
             break;
         case "*core.refinement":
-            crlPropertiesDisplayAbstractConcept(data, 7);
-            crlPropertiesDisplayRefinedConcept(data, 8);
+            crlPropertiesDisplayAbstractConcept(data, 8);
+            crlPropertiesDisplayRefinedConcept(data, 9);
             break;
         default:
+            crlPropertiesClearRow(9);
             crlPropertiesClearRow(8);
-            crlPropertiesClearRow(7);
     };
 }
 
@@ -2149,6 +2172,7 @@ function crlSendDebugSettings(enableNotificationTracing, omitHousekeepingCalls, 
             "EnableNotificationTracing": enableNotificationTracing,
             "OmitHousekeepingCalls": omitHousekeepingCalls,
             "OmitManageTreeNodesCalls": omitManageTreeNodesCalls,
+            "OmitDiagramRelatedCalls": omitDiagramRelatedCalls,
             "MaxTracingDepth": maxTracingDepth
         }
     });

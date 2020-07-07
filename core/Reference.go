@@ -3,8 +3,8 @@ package core
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"log"
 	"reflect"
 	"strconv"
@@ -225,9 +225,8 @@ func (rPtr *reference) SetReferencedConcept(el Element, hl *HeldLocks) error {
 // SetReferencedConceptID sets the referenced concept using the supplied ID.
 func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error {
 	hl.WriteLockElement(rPtr)
-	editableError := rPtr.editableError(hl)
-	if editableError != nil {
-		return editableError
+	if rPtr.isEditable(hl) == false {
+		return errors.New("reference.SetReferencedConceptID failed because the reference is not editable")
 	}
 	if rPtr.ReferencedConceptID != rcID {
 		rPtr.uOfD.preChange(rPtr, hl)
@@ -261,9 +260,8 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 // referenced
 func (rPtr *reference) SetReferencedAttributeName(attributeName AttributeName, hl *HeldLocks) error {
 	hl.WriteLockElement(rPtr)
-	editableError := rPtr.editableError(hl)
-	if editableError != nil {
-		return editableError
+	if rPtr.isEditable(hl) == false {
+		return errors.New("reference.SetReferencedAttributeName failed because reference is not editable")
 	}
 	if rPtr.ReferencedAttributeName != attributeName {
 		rPtr.uOfD.preChange(rPtr, hl)

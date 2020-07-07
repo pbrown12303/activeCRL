@@ -1057,7 +1057,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(source.GetReferencedAttributeName(hl)).To(Equal(core.NoAttribute))
 						Expect(crldiagram.GetLinkSource(epView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(epView, hl).GetConceptID(hl)).To(Equal(targetView.GetConceptID(hl)))
-						PerformUndoRedoTest(4)
+						PerformUndoRedoTest(5)
 					})
 					Specify("for a node source and RefinementLink target", func() {
 						source, sourceView := CreateReferenceNode(diagram, 100, 150)

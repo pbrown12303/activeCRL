@@ -2,7 +2,7 @@ package editor
 
 import (
 	"encoding/json"
-	"errors"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -15,6 +15,7 @@ import (
 	"github.com/pbrown12303/activeCRL/crldatatypes"
 	"github.com/pbrown12303/activeCRL/crldiagram"
 	"github.com/pbrown12303/activeCRL/crleditor/crleditordomain"
+	"github.com/pbrown12303/activeCRL/crlmaps"
 
 	"github.com/sqweek/dialog"
 )
@@ -77,11 +78,14 @@ func InitializeCrlEditorSingleton(userFolderArg string) {
 }
 
 // initializeEditor must be called before any other editor operation. It should not be used to reinitialize the editor
-func (edPtr *CrlEditor) initializeEditor(userFolderArg string) {
+func (edPtr *CrlEditor) initializeEditor(userFolderArg string) error {
 	edPtr.uOfD = core.NewUniverseOfDiscourse()
 	hl := edPtr.uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
-	edPtr.initializeUofD(hl)
+	err := edPtr.initializeUofD(hl)
+	if err != nil {
+		return errors.Wrap(err, "CrlEditor.initializeEditor failed")
+	}
 
 	if userFolderArg == "" {
 		edPtr.userFolder = home
@@ -93,29 +97,24 @@ func (edPtr *CrlEditor) initializeEditor(userFolderArg string) {
 	edPtr.cutBuffer = make(map[string]core.Element)
 	edPtr.workspaceFiles = make(map[string]*workspaceFile)
 
-	domain := edPtr.uOfD.GetElementWithURI(crleditordomain.EditorDomainURI)
-	BuildTreeViewManager(domain, hl)
-	BuildDiagramViewMonitor(domain, hl)
-
 	edPtr.createTreeManager(edPtr, "#uOfD", hl)
 	edPtr.diagramManager = newDiagramManager(edPtr)
 	edPtr.clientNotificationManager = newClientNotificationManager()
-
+	return nil
 }
 
 // reinitializeEditor is used to re-initialize the editor
-func (edPtr *CrlEditor) reinitializeEditor() {
+func (edPtr *CrlEditor) reinitializeEditor() error {
 	edPtr.uOfD = core.NewUniverseOfDiscourse()
 	hl := edPtr.uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
-	edPtr.initializeUofD(hl)
+	err := edPtr.initializeUofD(hl)
+	if err != nil {
+		return errors.Wrap(err, "CrlEditor.reinitializeEditor failed")
+	}
 
 	edPtr.cutBuffer = make(map[string]core.Element)
 	edPtr.workspaceFiles = make(map[string]*workspaceFile)
-
-	domain := edPtr.uOfD.GetElementWithURI(crleditordomain.EditorDomainURI)
-	BuildTreeViewManager(domain, hl)
-	BuildDiagramViewMonitor(domain, hl)
 
 	edPtr.createSettings(hl)
 	edPtr.createTreeManager(edPtr, "#uOfD", hl)
@@ -124,15 +123,21 @@ func (edPtr *CrlEditor) reinitializeEditor() {
 	// edPtr.clientNotificationManager = newClientNotificationManager()
 	edPtr.userPreferences.WorkspacePath = ""
 	edPtr.uOfD.SetRecordingUndo(true)
+	return nil
 }
 
 func (edPtr *CrlEditor) initializeUofD(hl *core.HeldLocks) error {
 	crldatatypes.BuildCrlDataTypesConceptSpace(edPtr.uOfD, hl)
 	crldatastructures.BuildCrlDataStructuresConceptSpace(edPtr.uOfD, hl)
 	hl.ReleaseLocksAndWait()
+	err := crlmaps.BuildCrlMapsDomain(edPtr.uOfD, hl)
+	if err != nil {
+		return errors.Wrap(err, "CrlEditor.initializeUofD failed")
+	}
+	hl.ReleaseLocksAndWait()
 	crldiagram.BuildCrlDiagramConceptSpace(edPtr.uOfD, hl)
 	hl.ReleaseLocksAndWait()
-	_, err := AddEditorConceptSpaceToUofD(edPtr.uOfD, hl)
+	_, err = AddEditorConceptSpaceToUofD(edPtr.uOfD, hl)
 	if err != nil {
 		return err
 	}
@@ -164,11 +169,14 @@ func (edPtr *CrlEditor) createTreeManager(editor *CrlEditor, treeID string, hl *
 	tm.treeID = treeID
 	edPtr.treeManager = &tm
 	var err error
-	tm.treeNodeManager, err = edPtr.uOfD.CreateReplicateAsRefinementFromURI(TreeNodeManagerURI, hl)
+	tm.treeNodeManager, err = edPtr.uOfD.CreateReplicateAsRefinementFromURI(crleditordomain.TreeNodeManagerURI, hl)
 	if err != nil {
 		return err
 	}
-	treeNodeManagerUOfDReference := tm.treeNodeManager.GetFirstOwnedReferenceRefinedFromURI(TreeNodeManagerUofDReferenceURI, hl)
+	treeNodeManagerUOfDReference := tm.treeNodeManager.GetFirstOwnedReferenceRefinedFromURI(crleditordomain.TreeNodeManagerUofDReferenceURI, hl)
+	if treeNodeManagerUOfDReference == nil {
+		return errors.New("in CrlEditor.createTreeManager, treeNodeManagerUOfDReference not found")
+	}
 	treeNodeManagerUOfDReference.SetReferencedConcept(edPtr.uOfD, hl)
 	tm.treeNodeManager.SetOwningConcept(edPtr.workingConceptSpace, hl)
 	tm.treeNodeManager.SetIsCoreRecursively(hl)
@@ -197,13 +205,19 @@ func (edPtr *CrlEditor) ClearWorkspace(hl *core.HeldLocks) error {
 	rootElements := edPtr.uOfD.GetRootElements(hl)
 	for id, wf := range edPtr.workspaceFiles {
 		if rootElements[id] == nil {
-			edPtr.deleteFile(wf, hl)
+			err = edPtr.deleteFile(wf, hl)
+			if err != nil {
+				return errors.Wrap(err, "CrlEditor.ClearWorkspace failed")
+			}
 			delete(edPtr.workspaceFiles, id)
 		}
 	}
-	edPtr.reinitializeEditor()
+	err = edPtr.reinitializeEditor()
+	if err != nil {
+		return errors.Wrap(err, "CrlEditor.ClearWorkspace failed")
+	}
 	edPtr.initializeClientState(hl)
-	return err
+	return nil
 }
 
 // CloseWorkspace closes the current workspace, saving the root elements
@@ -368,6 +382,11 @@ func (edPtr *CrlEditor) GetOmitHousekeepingCalls() bool {
 // GetOmitManageTreeNodesCalls returns the value of core.OmitManageTreeNodesCalls used in troubleshooting
 func (edPtr *CrlEditor) GetOmitManageTreeNodesCalls() bool {
 	return core.OmitManageTreeNodesCalls
+}
+
+// GetOmitDiagramRelatedCalls returns the value of core.OmitDiagramRelatedCalls used in troubleshooting
+func (edPtr *CrlEditor) GetOmitDiagramRelatedCalls() bool {
+	return core.OmitDiagramRelatedCalls
 }
 
 // GetTraceChange returns the value of the core.TraceChange variable used in troubleshooting
@@ -773,6 +792,7 @@ func (edPtr *CrlEditor) SendDebugSettings() {
 	params["EnableNotificationTracing"] = strconv.FormatBool(edPtr.GetTraceChange())
 	params["OmitHousekeepingCalls"] = strconv.FormatBool(edPtr.GetOmitHousekeepingCalls())
 	params["OmitManageTreeNodesCalls"] = strconv.FormatBool(edPtr.GetOmitManageTreeNodesCalls())
+	params["OmitDiagramRelatedCalls"] = strconv.FormatBool(edPtr.GetOmitDiagramRelatedCalls())
 	edPtr.SendNotification("DebugSettings", "", nil, params)
 }
 
@@ -833,10 +853,11 @@ func (edPtr *CrlEditor) SetSelectionURI(uri string, hl *core.HeldLocks) {
 }
 
 // SetTraceChange sets the value of the core.TraceChange variable used in troubleshooting
-func (edPtr *CrlEditor) SetTraceChange(newValue bool, omitHousekeepingCalls bool, omitManageTreeNodesCalls bool) {
+func (edPtr *CrlEditor) SetTraceChange(newValue bool, omitHousekeepingCalls bool, omitManageTreeNodesCalls bool, omitDiagramRelatedCalls bool) {
 	core.TraceChange = newValue
 	core.OmitHousekeepingCalls = omitHousekeepingCalls
 	core.OmitManageTreeNodesCalls = omitManageTreeNodesCalls
+	core.OmitDiagramRelatedCalls = omitDiagramRelatedCalls
 	core.ClearFunctionCallGraphs()
 }
 
@@ -879,7 +900,12 @@ func (edPtr *CrlEditor) UpdateDebugSettings(request *Request) {
 		log.Printf(err.Error())
 		return
 	}
-	edPtr.SetTraceChange(traceChange, omitHousekeeingCalls, omitManageTreeNodesCalls)
+	omitDiagramRelatedCalls, err := strconv.ParseBool(request.AdditionalParameters["OmitDiagramRelatedCalls"])
+	if err != nil {
+		log.Printf(err.Error())
+		return
+	}
+	edPtr.SetTraceChange(traceChange, omitHousekeeingCalls, omitManageTreeNodesCalls, omitDiagramRelatedCalls)
 	edPtr.SendDebugSettings()
 }
 

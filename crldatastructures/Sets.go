@@ -92,16 +92,13 @@ func BuildCrlSetsConcepts(uOfD *core.UniverseOfDiscourse, parentSpace core.Eleme
 	crlSet, _ := uOfD.NewElement(hl, CrlSetURI)
 	crlSet.SetLabel("CrlSet", hl)
 	crlSet.SetOwningConcept(parentSpace, hl)
-	crlSet.SetIsCore(hl)
 
 	crlSetMemberReference, _ := uOfD.NewReference(hl, CrlSetMemberReferenceURI)
 	crlSetMemberReference.SetLabel("MemberReference", hl)
 	crlSetMemberReference.SetOwningConcept(parentSpace, hl)
-	crlSetMemberReference.SetIsCore(hl)
 
 	CrlSetTypeReference, _ := uOfD.NewReference(hl, CrlSetTypeReferenceURI)
 	CrlSetTypeReference.SetLabel("TypeReference", hl)
 	CrlSetTypeReference.SetOwningConcept(crlSet, hl)
-	CrlSetTypeReference.SetIsCore(hl)
 
 }

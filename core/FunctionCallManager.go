@@ -141,6 +141,18 @@ func (fcm *functionCallManager) addFunctionCall(functionID string, targetElement
 	}
 }
 
+// isDiagramRelatedFunction returns true if the functionID matches one of the diagram related functions
+func isDiagramRelatedFunction(functionID string) bool {
+	if functionID == "http://activeCrl.com/corediagram/CoreDiagram/CrlDiagram" ||
+		functionID == "http://activeCrl.com/corediagram/CoreDiagram/CrlDiagramElement" ||
+		functionID == "http://activeCrl.com/corediagram/CoreDiagram/OwnerPointer" ||
+		functionID == "http://activeCrl.com/crlEditor/EditorDomain/DiagramViewMonitor" ||
+		functionID == "http://activeCrl.com/crlEditor/EditorDomain/TreeViews/TreeNodeManager" {
+		return true
+	}
+	return false
+}
+
 // callQueuedFunctions calls each function on the pending function queue
 func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
 	for fcm.functionCallQueue.queueHead != nil {
@@ -150,7 +162,8 @@ func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
 		}
 		if TraceLocks == true || TraceChange == true {
 			omitCall := (OmitHousekeepingCalls && pendingCall.functionID == "http://activeCrl.com/core/coreHousekeeping") ||
-				(OmitManageTreeNodesCalls && pendingCall.functionID == "http://activeCrl.com/crlEditor/Editor/TreeViews/ManageTreeNodes")
+				(OmitManageTreeNodesCalls && pendingCall.functionID == "http://activeCrl.com/crlEditor/Editor/TreeViews/ManageTreeNodes") ||
+				(OmitDiagramRelatedCalls && isDiagramRelatedFunction(pendingCall.functionID))
 			if omitCall == false {
 				log.Printf("About to execute %s with notification %s target %p", pendingCall.functionID, pendingCall.notification.GetNatureOfChange().String(), pendingCall.target)
 				functionCallGraphs = append(functionCallGraphs, NewFunctionCallGraph(pendingCall.functionID, pendingCall.target, pendingCall.notification, hl))

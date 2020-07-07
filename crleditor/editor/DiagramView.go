@@ -9,9 +9,6 @@ import (
 	//	"log"
 )
 
-// DiagramViewMonitorURI identifies the diagram view monitor
-var DiagramViewMonitorURI = crleditordomain.EditorDomainURI + "/DiagramViewMonitor"
-
 func addDiagramViewFunctionsToUofD(uOfD *core.UniverseOfDiscourse) {
 	uOfD.AddFunction(crldiagram.CrlDiagramURI, updateDiagramView)
 	uOfD.AddFunction(crldiagram.CrlDiagramElementURI, updateDiagramElementView)
@@ -231,19 +228,6 @@ func diagramViewMonitor(instance core.Element, changeNotification *core.ChangeNo
 	}
 }
 
-// BuildDiagramViewMonitor builds the concepts needed to manage the diagrams. The specific need is to
-// monitor existing diagrams so that when one is deleted from the uOfD the diagram view (display) is
-// removed from the client GUI
-func BuildDiagramViewMonitor(conceptSpace core.Element, hl *core.HeldLocks) {
-	uOfD := conceptSpace.GetUniverseOfDiscourse(hl)
-
-	// DiagramViewMonitor
-	diagramViewMonitor, _ := uOfD.NewReference(hl, DiagramViewMonitorURI)
-	diagramViewMonitor.SetLabel("DiagramViewMonitor", hl)
-	diagramViewMonitor.SetOwningConcept(conceptSpace, hl)
-	diagramViewMonitor.SetIsCore(hl)
-}
-
 func registerDiagramViewMonitorFunctions(uOfD *core.UniverseOfDiscourse) {
-	uOfD.AddFunction(DiagramViewMonitorURI, diagramViewMonitor)
+	uOfD.AddFunction(crleditordomain.DiagramViewMonitorURI, diagramViewMonitor)
 }

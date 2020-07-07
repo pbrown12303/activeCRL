@@ -931,12 +931,12 @@ func (dmPtr *diagramManager) showRefinedConcept(elementID string, hl *core.HeldL
 
 func (dmPtr *diagramManager) verifyMonitorPresent(diagram core.Element, hl *core.HeldLocks) error {
 	workingConceptSpace := dmPtr.crlEditor.workingConceptSpace
-	for _, monitor := range workingConceptSpace.GetOwnedReferencesRefinedFromURI(DiagramViewMonitorURI, hl) {
+	for _, monitor := range workingConceptSpace.GetOwnedReferencesRefinedFromURI(crleditordomain.DiagramViewMonitorURI, hl) {
 		if monitor.GetReferencedConcept(hl) == diagram {
 			return nil
 		}
 	}
-	newMonitor, err := dmPtr.crlEditor.uOfD.CreateReplicateAsRefinementFromURI(DiagramViewMonitorURI, hl)
+	newMonitor, err := dmPtr.crlEditor.uOfD.CreateReplicateAsRefinementFromURI(crleditordomain.DiagramViewMonitorURI, hl)
 	if err != nil {
 		return err
 	}

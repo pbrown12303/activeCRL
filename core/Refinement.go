@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"log"
 	"reflect"
 	"strconv"
@@ -201,9 +202,8 @@ func (rPtr *refinement) SetAbstractConcept(el Element, hl *HeldLocks) error {
 
 func (rPtr *refinement) SetAbstractConceptID(acID string, hl *HeldLocks) error {
 	hl.WriteLockElement(rPtr)
-	editableError := rPtr.editableError(hl)
-	if editableError != nil {
-		return editableError
+	if rPtr.isEditable(hl) == false {
+		return errors.New("refinement.SetAbstractConceptID failed because the refinement is not editable")
 	}
 	if rPtr.AbstractConceptID != acID {
 		rPtr.uOfD.preChange(rPtr, hl)
@@ -241,9 +241,8 @@ func (rPtr *refinement) SetRefinedConcept(el Element, hl *HeldLocks) error {
 
 func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *HeldLocks) error {
 	hl.WriteLockElement(rPtr)
-	editableError := rPtr.editableError(hl)
-	if editableError != nil {
-		return editableError
+	if rPtr.isEditable(hl) == false {
+		return errors.New("refinement.SetReferencedConceptID failed because the refinement is not editable")
 	}
 	if rPtr.RefinedConceptID != rcID {
 		rPtr.uOfD.preChange(rPtr, hl)

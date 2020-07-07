@@ -37,6 +37,9 @@ func NewList(uOfD *core.UniverseOfDiscourse, setType core.Element, hl *core.Held
 		return nil, err
 	}
 	typeReference := newList.GetFirstOwnedReferenceRefinedFromURI(CrlListTypeReferenceURI, hl)
+	if typeReference == nil {
+		return nil, errors.New("In Lists.go, NewList failed to find a type reference")
+	}
 	typeReference.SetReferencedConcept(setType, hl)
 	return newList, nil
 }
@@ -537,36 +540,28 @@ func BuildCrlListsConcepts(uOfD *core.UniverseOfDiscourse, parentSpace core.Elem
 	crlList, _ := uOfD.NewElement(hl, CrlListURI)
 	crlList.SetLabel("CrlList", hl)
 	crlList.SetOwningConcept(parentSpace, hl)
-	crlList.SetIsCore(hl)
 
 	crlFirstMemberReference, _ := uOfD.NewReference(hl, CrlListReferenceToFirstMemberReferenceURI)
 	crlFirstMemberReference.SetLabel("FirstMemberReference", hl)
 	crlFirstMemberReference.SetOwningConcept(crlList, hl)
-	crlFirstMemberReference.SetIsCore(hl)
 
 	crlLastMemberReference, _ := uOfD.NewReference(hl, CrlListReferenceToLastMemberReferenceURI)
 	crlLastMemberReference.SetLabel("LastMemberReference", hl)
 	crlLastMemberReference.SetOwningConcept(crlList, hl)
-	crlLastMemberReference.SetIsCore(hl)
 
 	CrlListTypeReference, _ := uOfD.NewReference(hl, CrlListTypeReferenceURI)
 	CrlListTypeReference.SetLabel("TypeReference", hl)
 	CrlListTypeReference.SetOwningConcept(crlList, hl)
-	CrlListTypeReference.SetIsCore(hl)
 
 	crlListMemberReference, _ := uOfD.NewReference(hl, CrlListMemberReferenceURI)
 	crlListMemberReference.SetLabel("MemberReference", hl)
 	crlListMemberReference.SetOwningConcept(parentSpace, hl)
-	crlListMemberReference.SetIsCore(hl)
 
 	crlNextMemberReference, _ := uOfD.NewReference(hl, CrlListReferenceToNextMemberReferenceURI)
 	crlNextMemberReference.SetLabel("NextMemberReference", hl)
 	crlNextMemberReference.SetOwningConcept(crlListMemberReference, hl)
-	crlNextMemberReference.SetIsCore(hl)
 
 	crlPriorMemberReference, _ := uOfD.NewReference(hl, CrlListReferenceToPriorMemberReferenceURI)
 	crlPriorMemberReference.SetLabel("PriorMemberReference", hl)
 	crlPriorMemberReference.SetOwningConcept(crlListMemberReference, hl)
-	crlPriorMemberReference.SetIsCore(hl)
-
 }

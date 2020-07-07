@@ -804,7 +804,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	// CrlDiagramConceptSpace
 	crlDiagramConceptSpace, _ := uOfD.NewElement(hl, CrlDiagramConceptSpaceURI)
 	crlDiagramConceptSpace.SetLabel("CrlDiagramConceptSpace", hl)
-	crlDiagramConceptSpace.SetIsCore(hl)
 
 	//
 	// CrlDiagram
@@ -812,17 +811,14 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagram, _ := uOfD.NewElement(hl, CrlDiagramURI)
 	crlDiagram.SetLabel("CrlDiagram", hl)
 	crlDiagram.SetOwningConcept(crlDiagramConceptSpace, hl)
-	crlDiagram.SetIsCore(hl)
 
 	crlDiagramWidth, _ := uOfD.NewLiteral(hl, CrlDiagramWidthURI)
 	crlDiagramWidth.SetLabel("Width", hl)
 	crlDiagramWidth.SetOwningConcept(crlDiagram, hl)
-	crlDiagramWidth.SetIsCore(hl)
 
 	crlDiagramHeight, _ := uOfD.NewLiteral(hl, CrlDiagramHeightURI)
 	crlDiagramHeight.SetLabel("Height", hl)
 	crlDiagramHeight.SetOwningConcept(crlDiagram, hl)
-	crlDiagramHeight.SetIsCore(hl)
 
 	//
 	// CrlDiagramElement
@@ -830,23 +826,18 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramElement, _ := uOfD.NewElement(hl, CrlDiagramElementURI)
 	crlDiagramElement.SetLabel("CrlDiagramElement", hl)
 	crlDiagramElement.SetOwningConcept(crlDiagramConceptSpace, hl)
-	crlDiagramElement.SetIsCore(hl)
-	hl.ReleaseLocksAndWait()
 
 	crlDiagramElementModelReference, _ := uOfD.NewReference(hl, CrlDiagramElementModelReferenceURI)
 	crlDiagramElementModelReference.SetLabel("ModelReference", hl)
 	crlDiagramElementModelReference.SetOwningConcept(crlDiagramElement, hl)
-	crlDiagramElementModelReference.SetIsCore(hl)
 
 	crlDiagramElementDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramElementDisplayLabelURI)
 	crlDiagramElementDisplayLabel.SetLabel("DisplayLabel", hl)
 	crlDiagramElementDisplayLabel.SetOwningConcept(crlDiagramElement, hl)
-	crlDiagramElementDisplayLabel.SetIsCore(hl)
 
 	crlDiagramElementAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramElementAbstractionDisplayLabelURI)
 	crlDiagramElementAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
 	crlDiagramElementAbstractionDisplayLabel.SetOwningConcept(crlDiagramElement, hl)
-	crlDiagramElementAbstractionDisplayLabel.SetIsCore(hl)
 
 	//
 	// CrlDiagramNode
@@ -854,7 +845,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramNode, _ := uOfD.NewElement(hl, CrlDiagramNodeURI)
 	crlDiagramNode.SetLabel("CrlDiagramNode", hl)
 	crlDiagramNode.SetOwningConcept(crlDiagramConceptSpace, hl)
-	crlDiagramNode.SetIsCoreRecursively(hl)
 
 	crlDiagramNodeRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramNodeRefinement.SetOwningConcept(crlDiagramNode, hl)
@@ -864,7 +854,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramNodeModelReference, _ := uOfD.NewReference(hl, CrlDiagramNodeModelReferenceURI)
 	crlDiagramNodeModelReference.SetLabel("ModelReference", hl)
 	crlDiagramNodeModelReference.SetOwningConcept(crlDiagramNode, hl)
-	crlDiagramNodeModelReference.SetIsCore(hl)
 
 	crlDiagramNodeModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramNodeModelReferenceRefinement.SetOwningConcept(crlDiagramNodeModelReference, hl)
@@ -874,7 +863,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramNodeDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramNodeDisplayLabelURI)
 	crlDiagramNodeDisplayLabel.SetLabel("DisplayLabel", hl)
 	crlDiagramNodeDisplayLabel.SetOwningConcept(crlDiagramNode, hl)
-	crlDiagramNodeDisplayLabel.SetIsCore(hl)
 
 	crlDiagramNodeDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramNodeDisplayLabelRefinement.SetOwningConcept(crlDiagramNodeDisplayLabel, hl)
@@ -884,7 +872,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramNodeAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramNodeAbstractionDisplayLabelURI)
 	crlDiagramNodeAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
 	crlDiagramNodeAbstractionDisplayLabel.SetOwningConcept(crlDiagramNode, hl)
-	crlDiagramNodeAbstractionDisplayLabel.SetIsCore(hl)
 
 	crlDiagramNodeAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramNodeAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramNodeAbstractionDisplayLabel, hl)
@@ -894,27 +881,22 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramNodeX, _ := uOfD.NewLiteral(hl, CrlDiagramNodeXURI)
 	crlDiagramNodeX.SetLabel("X", hl)
 	crlDiagramNodeX.SetOwningConcept(crlDiagramNode, hl)
-	crlDiagramNodeX.SetIsCore(hl)
 
 	crlDiagramNodeY, _ := uOfD.NewLiteral(hl, CrlDiagramNodeYURI)
 	crlDiagramNodeY.SetLabel("Y", hl)
 	crlDiagramNodeY.SetOwningConcept(crlDiagramNode, hl)
-	crlDiagramNodeY.SetIsCore(hl)
 
 	crlDiagramNodeHeight, _ := uOfD.NewLiteral(hl, CrlDiagramNodeHeightURI)
 	crlDiagramNodeHeight.SetLabel("Height", hl)
 	crlDiagramNodeHeight.SetOwningConcept(crlDiagramNode, hl)
-	crlDiagramNodeHeight.SetIsCore(hl)
 
 	crlDiagramNodeWidth, _ := uOfD.NewLiteral(hl, CrlDiagramNodeWidthURI)
 	crlDiagramNodeWidth.SetLabel("Width", hl)
 	crlDiagramNodeWidth.SetOwningConcept(crlDiagramNode, hl)
-	crlDiagramNodeWidth.SetIsCore(hl)
 
 	crlDiagramNodeDisplayLabelYOffset, _ := uOfD.NewLiteral(hl, CrlDiagramNodeDisplayLabelYOffsetURI)
 	crlDiagramNodeDisplayLabelYOffset.SetLabel("DisplayLabelYOffset", hl)
 	crlDiagramNodeDisplayLabelYOffset.SetOwningConcept(crlDiagramNode, hl)
-	crlDiagramNodeDisplayLabelYOffset.SetIsCore(hl)
 
 	//
 	// CrlDiagramLink
@@ -922,7 +904,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramLink, _ := uOfD.NewElement(hl, CrlDiagramLinkURI)
 	crlDiagramLink.SetLabel("CrlDiagramLink", hl)
 	crlDiagramLink.SetOwningConcept(crlDiagramConceptSpace, hl)
-	crlDiagramLink.SetIsCoreRecursively(hl)
 
 	crlDiagramLinkRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramLinkRefinement.SetOwningConcept(crlDiagramLink, hl)
@@ -932,12 +913,10 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramLinkSource, _ := uOfD.NewReference(hl, CrlDiagramLinkSourceURI)
 	crlDiagramLinkSource.SetLabel("Source", hl)
 	crlDiagramLinkSource.SetOwningConcept(crlDiagramLink, hl)
-	crlDiagramLinkSource.SetIsCore(hl)
 
 	crlDiagramLinkTarget, _ := uOfD.NewReference(hl, CrlDiagramLinkTargetURI)
 	crlDiagramLinkTarget.SetLabel("Target", hl)
 	crlDiagramLinkTarget.SetOwningConcept(crlDiagramLink, hl)
-	crlDiagramLinkTarget.SetIsCore(hl)
 
 	//
 	// Pointer
@@ -945,7 +924,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramPointer, _ := uOfD.NewElement(hl, CrlDiagramPointerURI)
 	crlDiagramPointer.SetLabel("Pointer", hl)
 	crlDiagramPointer.SetOwningConcept(crlDiagramConceptSpace, hl)
-	crlDiagramPointer.SetIsCoreRecursively(hl)
 
 	crlDiagramPointerRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramPointerRefinement.SetOwningConcept(crlDiagramPointer, hl)
@@ -958,7 +936,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramAbstractPointer, _ := uOfD.NewElement(hl, CrlDiagramAbstractPointerURI)
 	crlDiagramAbstractPointer.SetLabel("AbstractPointer", hl)
 	crlDiagramAbstractPointer.SetOwningConcept(crlDiagramConceptSpace, hl)
-	crlDiagramAbstractPointer.SetIsCore(hl)
 
 	crlDiagramAbstractPointerRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramAbstractPointerRefinement.SetOwningConcept(crlDiagramAbstractPointer, hl)
@@ -968,7 +945,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramAbstractPointerModelReference, _ := uOfD.NewReference(hl, CrlDiagramAbstractPointerModelReferenceURI)
 	crlDiagramAbstractPointerModelReference.SetLabel("ModelReference", hl)
 	crlDiagramAbstractPointerModelReference.SetOwningConcept(crlDiagramAbstractPointer, hl)
-	crlDiagramAbstractPointerModelReference.SetIsCore(hl)
 
 	crlDiagramAbstractPointerModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramAbstractPointerModelReferenceRefinement.SetOwningConcept(crlDiagramAbstractPointerModelReference, hl)
@@ -978,7 +954,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramAbstractPointerDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramAbstractPointerDisplayLabelURI)
 	crlDiagramAbstractPointerDisplayLabel.SetLabel("DisplayLabel", hl)
 	crlDiagramAbstractPointerDisplayLabel.SetOwningConcept(crlDiagramAbstractPointer, hl)
-	crlDiagramAbstractPointerDisplayLabel.SetIsCore(hl)
 
 	crlDiagramAbstractPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramAbstractPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramAbstractPointerDisplayLabel, hl)
@@ -988,7 +963,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramAbstractPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramAbstractPointerAbstractionDisplayLabelURI)
 	crlDiagramAbstractPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
 	crlDiagramAbstractPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramAbstractPointer, hl)
-	crlDiagramAbstractPointerAbstractionDisplayLabel.SetIsCore(hl)
 
 	crlDiagramAbstractPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramAbstractPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramAbstractPointerAbstractionDisplayLabel, hl)
@@ -998,7 +972,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramAbstractPointerSource, _ := uOfD.NewReference(hl, CrlDiagramAbstractPointerSourceURI)
 	crlDiagramAbstractPointerSource.SetLabel("Source", hl)
 	crlDiagramAbstractPointerSource.SetOwningConcept(crlDiagramAbstractPointer, hl)
-	crlDiagramAbstractPointerSource.SetIsCore(hl)
 
 	crlDiagramAbstractPointerSourceRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramAbstractPointerSourceRefinement.SetOwningConcept(crlDiagramAbstractPointerSource, hl)
@@ -1008,7 +981,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramAbstractPointerTarget, _ := uOfD.NewReference(hl, CrlDiagramAbstractPointerTargetURI)
 	crlDiagramAbstractPointerTarget.SetLabel("Target", hl)
 	crlDiagramAbstractPointerTarget.SetOwningConcept(crlDiagramAbstractPointer, hl)
-	crlDiagramAbstractPointerTarget.SetIsCore(hl)
 
 	crlDiagramAbstractPointerTargetRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramAbstractPointerTargetRefinement.SetOwningConcept(crlDiagramAbstractPointerTarget, hl)
@@ -1021,7 +993,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramElementPointer, _ := uOfD.NewElement(hl, CrlDiagramElementPointerURI)
 	crlDiagramElementPointer.SetLabel("ElementPointer", hl)
 	crlDiagramElementPointer.SetOwningConcept(crlDiagramConceptSpace, hl)
-	crlDiagramElementPointer.SetIsCore(hl)
 
 	crlDiagramElementPointerRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramElementPointerRefinement.SetOwningConcept(crlDiagramElementPointer, hl)
@@ -1031,7 +1002,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramElementPointerModelReference, _ := uOfD.NewReference(hl, CrlDiagramElementPointerModelReferenceURI)
 	crlDiagramElementPointerModelReference.SetLabel("ModelReference", hl)
 	crlDiagramElementPointerModelReference.SetOwningConcept(crlDiagramElementPointer, hl)
-	crlDiagramElementPointerModelReference.SetIsCore(hl)
 
 	crlDiagramElementPointerModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramElementPointerModelReferenceRefinement.SetOwningConcept(crlDiagramElementPointerModelReference, hl)
@@ -1041,7 +1011,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramElementPointerDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramElementPointerDisplayLabelURI)
 	crlDiagramElementPointerDisplayLabel.SetLabel("DisplayLabel", hl)
 	crlDiagramElementPointerDisplayLabel.SetOwningConcept(crlDiagramElementPointer, hl)
-	crlDiagramElementPointerDisplayLabel.SetIsCore(hl)
 
 	crlDiagramElementPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramElementPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramElementPointerDisplayLabel, hl)
@@ -1051,7 +1020,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramElementPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramElementPointerAbstractionDisplayLabelURI)
 	crlDiagramElementPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
 	crlDiagramElementPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramElementPointer, hl)
-	crlDiagramElementPointerAbstractionDisplayLabel.SetIsCore(hl)
 
 	crlDiagramElementPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramElementPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramElementPointerAbstractionDisplayLabel, hl)
@@ -1061,7 +1029,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramElementPointerSource, _ := uOfD.NewReference(hl, CrlDiagramElementPointerSourceURI)
 	crlDiagramElementPointerSource.SetLabel("Source", hl)
 	crlDiagramElementPointerSource.SetOwningConcept(crlDiagramElementPointer, hl)
-	crlDiagramElementPointerSource.SetIsCore(hl)
 
 	crlDiagramElementPointerSourceRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramElementPointerSourceRefinement.SetOwningConcept(crlDiagramElementPointerSource, hl)
@@ -1071,7 +1038,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramElementPointerTarget, _ := uOfD.NewReference(hl, CrlDiagramElementPointerTargetURI)
 	crlDiagramElementPointerTarget.SetLabel("Target", hl)
 	crlDiagramElementPointerTarget.SetOwningConcept(crlDiagramElementPointer, hl)
-	crlDiagramElementPointerTarget.SetIsCore(hl)
 
 	crlDiagramElementPointerTargetRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramElementPointerTargetRefinement.SetOwningConcept(crlDiagramElementPointerTarget, hl)
@@ -1084,7 +1050,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramOwnerPointer, _ := uOfD.NewElement(hl, CrlDiagramOwnerPointerURI)
 	crlDiagramOwnerPointer.SetLabel("OwnerPointer", hl)
 	crlDiagramOwnerPointer.SetOwningConcept(crlDiagramConceptSpace, hl)
-	crlDiagramOwnerPointer.SetIsCore(hl)
 
 	crlDiagramOwnerPointerRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramOwnerPointerRefinement.SetOwningConcept(crlDiagramOwnerPointer, hl)
@@ -1094,7 +1059,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramOwnerPointerModelReference, _ := uOfD.NewReference(hl, CrlDiagramOwnerPointerModelReferenceURI)
 	crlDiagramOwnerPointerModelReference.SetLabel("ModelReference", hl)
 	crlDiagramOwnerPointerModelReference.SetOwningConcept(crlDiagramOwnerPointer, hl)
-	crlDiagramOwnerPointerModelReference.SetIsCore(hl)
 
 	crlDiagramOwnerPointerModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramOwnerPointerModelReferenceRefinement.SetOwningConcept(crlDiagramOwnerPointerModelReference, hl)
@@ -1104,7 +1068,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramOwnerPointerDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramOwnerPointerDisplayLabelURI)
 	crlDiagramOwnerPointerDisplayLabel.SetLabel("DisplayLabel", hl)
 	crlDiagramOwnerPointerDisplayLabel.SetOwningConcept(crlDiagramOwnerPointer, hl)
-	crlDiagramOwnerPointerDisplayLabel.SetIsCore(hl)
 
 	crlDiagramOwnerPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramOwnerPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramOwnerPointerDisplayLabel, hl)
@@ -1114,7 +1077,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramOwnerPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramOwnerPointerAbstractionDisplayLabelURI)
 	crlDiagramOwnerPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
 	crlDiagramOwnerPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramOwnerPointer, hl)
-	crlDiagramOwnerPointerAbstractionDisplayLabel.SetIsCore(hl)
 
 	crlDiagramOwnerPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramOwnerPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramOwnerPointerAbstractionDisplayLabel, hl)
@@ -1124,7 +1086,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramOwnerPointerSource, _ := uOfD.NewReference(hl, CrlDiagramOwnerPointerSourceURI)
 	crlDiagramOwnerPointerSource.SetLabel("Source", hl)
 	crlDiagramOwnerPointerSource.SetOwningConcept(crlDiagramOwnerPointer, hl)
-	crlDiagramOwnerPointerSource.SetIsCore(hl)
 
 	crlDiagramOwnerPointerSourceRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramOwnerPointerSourceRefinement.SetOwningConcept(crlDiagramOwnerPointerSource, hl)
@@ -1134,7 +1095,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramOwnerPointerTarget, _ := uOfD.NewReference(hl, CrlDiagramOwnerPointerTargetURI)
 	crlDiagramOwnerPointerTarget.SetLabel("Target", hl)
 	crlDiagramOwnerPointerTarget.SetOwningConcept(crlDiagramOwnerPointer, hl)
-	crlDiagramOwnerPointerTarget.SetIsCore(hl)
 
 	crlDiagramOwnerPointerTargetRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramOwnerPointerTargetRefinement.SetOwningConcept(crlDiagramOwnerPointerTarget, hl)
@@ -1147,7 +1107,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramRefinedPointer, _ := uOfD.NewElement(hl, CrlDiagramRefinedPointerURI)
 	crlDiagramRefinedPointer.SetLabel("RefinedPointer", hl)
 	crlDiagramRefinedPointer.SetOwningConcept(crlDiagramConceptSpace, hl)
-	crlDiagramRefinedPointer.SetIsCore(hl)
 
 	crlDiagramRefinedPointerRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramRefinedPointerRefinement.SetOwningConcept(crlDiagramRefinedPointer, hl)
@@ -1157,7 +1116,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramRefinedPointerModelReference, _ := uOfD.NewReference(hl, CrlDiagramRefinedPointerModelReferenceURI)
 	crlDiagramRefinedPointerModelReference.SetLabel("ModelReference", hl)
 	crlDiagramRefinedPointerModelReference.SetOwningConcept(crlDiagramRefinedPointer, hl)
-	crlDiagramRefinedPointerModelReference.SetIsCore(hl)
 
 	crlDiagramRefinedPointerModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramRefinedPointerModelReferenceRefinement.SetOwningConcept(crlDiagramRefinedPointerModelReference, hl)
@@ -1167,7 +1125,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramRefinedPointerDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramRefinedPointerDisplayLabelURI)
 	crlDiagramRefinedPointerDisplayLabel.SetLabel("DisplayLabel", hl)
 	crlDiagramRefinedPointerDisplayLabel.SetOwningConcept(crlDiagramRefinedPointer, hl)
-	crlDiagramRefinedPointerDisplayLabel.SetIsCore(hl)
 
 	crlDiagramRefinedPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramRefinedPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinedPointerDisplayLabel, hl)
@@ -1177,7 +1134,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramRefinedPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramRefinedPointerAbstractionDisplayLabelURI)
 	crlDiagramRefinedPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
 	crlDiagramRefinedPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramRefinedPointer, hl)
-	crlDiagramRefinedPointerAbstractionDisplayLabel.SetIsCore(hl)
 
 	crlDiagramRefinedPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramRefinedPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinedPointerAbstractionDisplayLabel, hl)
@@ -1187,7 +1143,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramRefinedPointerSource, _ := uOfD.NewReference(hl, CrlDiagramRefinedPointerSourceURI)
 	crlDiagramRefinedPointerSource.SetLabel("Source", hl)
 	crlDiagramRefinedPointerSource.SetOwningConcept(crlDiagramRefinedPointer, hl)
-	crlDiagramRefinedPointerSource.SetIsCore(hl)
 
 	crlDiagramRefinedPointerSourceRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramRefinedPointerSourceRefinement.SetOwningConcept(crlDiagramRefinedPointerSource, hl)
@@ -1197,7 +1152,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramRefinedPointerTarget, _ := uOfD.NewReference(hl, CrlDiagramRefinedPointerTargetURI)
 	crlDiagramRefinedPointerTarget.SetLabel("Target", hl)
 	crlDiagramRefinedPointerTarget.SetOwningConcept(crlDiagramRefinedPointer, hl)
-	crlDiagramRefinedPointerTarget.SetIsCore(hl)
 
 	crlDiagramRefinedPointerTargetRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramRefinedPointerTargetRefinement.SetOwningConcept(crlDiagramRefinedPointerTarget, hl)
@@ -1210,7 +1164,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramReferenceLink, _ := uOfD.NewElement(hl, CrlDiagramReferenceLinkURI)
 	crlDiagramReferenceLink.SetLabel("ReferenceLink", hl)
 	crlDiagramReferenceLink.SetOwningConcept(crlDiagramConceptSpace, hl)
-	crlDiagramReferenceLink.SetIsCore(hl)
 
 	crlDiagramReferenceLinkRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramReferenceLinkRefinement.SetOwningConcept(crlDiagramReferenceLink, hl)
@@ -1220,7 +1173,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramReferenceLinkModelReference, _ := uOfD.NewReference(hl, CrlDiagramReferenceLinkModelReferenceURI)
 	crlDiagramReferenceLinkModelReference.SetLabel("ModelReference", hl)
 	crlDiagramReferenceLinkModelReference.SetOwningConcept(crlDiagramReferenceLink, hl)
-	crlDiagramReferenceLinkModelReference.SetIsCore(hl)
 
 	crlDiagramReferenceLinkModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramReferenceLinkModelReferenceRefinement.SetOwningConcept(crlDiagramReferenceLinkModelReference, hl)
@@ -1230,7 +1182,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramReferenceLinkDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramReferenceLinkDisplayLabelURI)
 	crlDiagramReferenceLinkDisplayLabel.SetLabel("DisplayLabel", hl)
 	crlDiagramReferenceLinkDisplayLabel.SetOwningConcept(crlDiagramReferenceLink, hl)
-	crlDiagramReferenceLinkDisplayLabel.SetIsCore(hl)
 
 	crlDiagramReferenceLinkDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramReferenceLinkDisplayLabelRefinement.SetOwningConcept(crlDiagramReferenceLinkDisplayLabel, hl)
@@ -1240,7 +1191,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramReferenceLinkAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramReferenceLinkAbstractionDisplayLabelURI)
 	crlDiagramReferenceLinkAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
 	crlDiagramReferenceLinkAbstractionDisplayLabel.SetOwningConcept(crlDiagramReferenceLink, hl)
-	crlDiagramReferenceLinkAbstractionDisplayLabel.SetIsCore(hl)
 
 	crlDiagramReferenceLinkAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramReferenceLinkAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramReferenceLinkAbstractionDisplayLabel, hl)
@@ -1250,7 +1200,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramReferenceLinkSource, _ := uOfD.NewReference(hl, CrlDiagramReferenceLinkSourceURI)
 	crlDiagramReferenceLinkSource.SetLabel("Source", hl)
 	crlDiagramReferenceLinkSource.SetOwningConcept(crlDiagramReferenceLink, hl)
-	crlDiagramReferenceLinkSource.SetIsCore(hl)
 
 	crlDiagramReferenceLinkSourceRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramReferenceLinkSourceRefinement.SetOwningConcept(crlDiagramReferenceLinkSource, hl)
@@ -1260,7 +1209,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramReferenceLinkTarget, _ := uOfD.NewReference(hl, CrlDiagramReferenceLinkTargetURI)
 	crlDiagramReferenceLinkTarget.SetLabel("Target", hl)
 	crlDiagramReferenceLinkTarget.SetOwningConcept(crlDiagramReferenceLink, hl)
-	crlDiagramReferenceLinkTarget.SetIsCore(hl)
 
 	crlDiagramReferenceLinkTargetRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramReferenceLinkTargetRefinement.SetOwningConcept(crlDiagramReferenceLinkTarget, hl)
@@ -1273,7 +1221,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramRefinementLink, _ := uOfD.NewElement(hl, CrlDiagramRefinementLinkURI)
 	crlDiagramRefinementLink.SetLabel("RefinementLink", hl)
 	crlDiagramRefinementLink.SetOwningConcept(crlDiagramConceptSpace, hl)
-	crlDiagramRefinementLink.SetIsCore(hl)
 
 	crlDiagramRefinementLinkRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramRefinementLinkRefinement.SetOwningConcept(crlDiagramRefinementLink, hl)
@@ -1283,7 +1230,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramRefinementLinkModelReference, _ := uOfD.NewReference(hl, CrlDiagramRefinementLinkModelReferenceURI)
 	crlDiagramRefinementLinkModelReference.SetLabel("ModelReference", hl)
 	crlDiagramRefinementLinkModelReference.SetOwningConcept(crlDiagramRefinementLink, hl)
-	crlDiagramRefinementLinkModelReference.SetIsCore(hl)
 
 	crlDiagramRefinementLinkModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramRefinementLinkModelReferenceRefinement.SetOwningConcept(crlDiagramRefinementLinkModelReference, hl)
@@ -1293,7 +1239,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramRefinementLinkDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramRefinementLinkDisplayLabelURI)
 	crlDiagramRefinementLinkDisplayLabel.SetLabel("DisplayLabel", hl)
 	crlDiagramRefinementLinkDisplayLabel.SetOwningConcept(crlDiagramRefinementLink, hl)
-	crlDiagramRefinementLinkDisplayLabel.SetIsCore(hl)
 
 	crlDiagramRefinementLinkDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramRefinementLinkDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinementLinkDisplayLabel, hl)
@@ -1303,7 +1248,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramRefinementLinkAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramRefinementLinkAbstractionDisplayLabelURI)
 	crlDiagramRefinementLinkAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
 	crlDiagramRefinementLinkAbstractionDisplayLabel.SetOwningConcept(crlDiagramRefinementLink, hl)
-	crlDiagramRefinementLinkAbstractionDisplayLabel.SetIsCore(hl)
 
 	crlDiagramRefinementLinkAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramRefinementLinkAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinementLinkAbstractionDisplayLabel, hl)
@@ -1313,7 +1257,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramRefinementLinkSource, _ := uOfD.NewReference(hl, CrlDiagramRefinementLinkSourceURI)
 	crlDiagramRefinementLinkSource.SetLabel("Source", hl)
 	crlDiagramRefinementLinkSource.SetOwningConcept(crlDiagramRefinementLink, hl)
-	crlDiagramRefinementLinkSource.SetIsCore(hl)
 
 	crlDiagramRefinementLinkSourceRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramRefinementLinkSourceRefinement.SetOwningConcept(crlDiagramRefinementLinkSource, hl)
@@ -1323,7 +1266,6 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramRefinementLinkTarget, _ := uOfD.NewReference(hl, CrlDiagramRefinementLinkTargetURI)
 	crlDiagramRefinementLinkTarget.SetLabel("Target", hl)
 	crlDiagramRefinementLinkTarget.SetOwningConcept(crlDiagramRefinementLink, hl)
-	crlDiagramRefinementLinkTarget.SetIsCore(hl)
 
 	crlDiagramRefinementLinkTargetRefinement, _ := uOfD.NewRefinement(hl)
 	crlDiagramRefinementLinkTargetRefinement.SetOwningConcept(crlDiagramRefinementLinkTarget, hl)
@@ -1333,6 +1275,7 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	uOfD.AddFunction(CrlDiagramElementURI, updateDiagramElement)
 	uOfD.AddFunction(CrlDiagramOwnerPointerURI, updateDiagramOwnerPointer)
 
+	crlDiagramConceptSpace.SetIsCoreRecursively(hl)
 	return crlDiagramConceptSpace
 }
 

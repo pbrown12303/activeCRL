@@ -8,21 +8,6 @@ import (
 	"log"
 )
 
-// TreeViewsURI identifies the TreeViews concept
-var TreeViewsURI = crleditordomain.EditorDomainURI + "/TreeViews"
-
-// TreeNodeManagerURI identifies the ManageNodes concept
-var TreeNodeManagerURI = TreeViewsURI + "/TreeNodeManager"
-
-// TreeNodeManagerUofDReferenceURI identifies the ManageNodesUofDReference
-var TreeNodeManagerUofDReferenceURI = TreeNodeManagerURI + "/UofDReference"
-
-// ViewNodeURI identifies the ViewNode concept
-var ViewNodeURI = TreeViewsURI + "/ViewNode"
-
-// ViewNodeElementReferenceURI identifies the ViewNodeElementReference concept
-var ViewNodeElementReferenceURI = ViewNodeURI + "/ElementReference"
-
 // treeViewManageNodes() is the callback function that manaages the tree view when base elements in the Universe of Discourse change.
 // The changes being sought are the addition, removal, and re-parenting of base elements and the changes in their names.
 func treeViewManageNodes(instance core.Element, changeNotification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) {
@@ -71,44 +56,6 @@ func treeViewManageNodes(instance core.Element, changeNotification *core.ChangeN
 
 }
 
-// BuildTreeViewManager builds the concepts related to TreeViews and adds them to the uOfD
-func BuildTreeViewManager(conceptSpace core.Element, hl *core.HeldLocks) {
-	uOfD := conceptSpace.GetUniverseOfDiscourse(hl)
-
-	// TreeViews
-	treeViews, _ := uOfD.NewElement(hl, TreeViewsURI)
-	treeViews.SetLabel("TreeViews", hl)
-	treeViews.SetURI(TreeViewsURI, hl)
-	treeViews.SetOwningConcept(conceptSpace, hl)
-	treeViews.SetIsCore(hl)
-
-	// ManageNodes
-	manageNodes, _ := uOfD.NewElement(hl, TreeNodeManagerURI)
-	manageNodes.SetLabel("TreeNodeManager", hl)
-	manageNodes.SetURI(TreeNodeManagerURI, hl)
-	manageNodes.SetOwningConcept(treeViews, hl)
-	manageNodes.SetIsCore(hl)
-	// ManageNodes UofD Reference
-	uOfDReference, _ := uOfD.NewReference(hl, TreeNodeManagerUofDReferenceURI)
-	uOfDReference.SetLabel("UofDReference", hl)
-	uOfDReference.SetURI(TreeNodeManagerUofDReferenceURI, hl)
-	uOfDReference.SetOwningConcept(manageNodes, hl)
-	uOfDReference.SetIsCore(hl)
-
-	// ViewNode
-	viewNode, _ := uOfD.NewElement(hl, ViewNodeURI)
-	viewNode.SetLabel("ViewNode", hl)
-	viewNode.SetURI(ViewNodeURI, hl)
-	viewNode.SetOwningConcept(treeViews, hl)
-	viewNode.SetIsCore(hl)
-	// ViewNode BaseElementReference
-	reference, _ := uOfD.NewReference(hl, ViewNodeElementReferenceURI)
-	reference.SetLabel("ElementReference", hl)
-	reference.SetURI(ViewNodeElementReferenceURI, hl)
-	reference.SetOwningConcept(viewNode, hl)
-	reference.SetIsCore(hl)
-}
-
 func registerTreeViewFunctions(uOfD *core.UniverseOfDiscourse) {
-	uOfD.AddFunction(TreeNodeManagerURI, treeViewManageNodes)
+	uOfD.AddFunction(crleditordomain.TreeNodeManagerURI, treeViewManageNodes)
 }

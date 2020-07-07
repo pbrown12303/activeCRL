@@ -274,11 +274,9 @@ var _ = Describe("Element internals test", func() {
 			It("should fail", func() {
 				child, _ = uOfD.NewElement(hl)
 				parent, _ = uOfD.NewElement(hl)
-				initialVersion := parent.GetVersion(hl)
+				Expect(child.SetOwningConceptID(parent.getConceptIDNoLock(), hl)).To(Succeed())
 				parent.SetReadOnly(true, hl)
-				Expect(parent.GetVersion(hl)).To(Equal(initialVersion + 1))
-				child.SetOwningConceptID(parent.getConceptIDNoLock(), hl)
-				Expect(child.SetReadOnly(true, hl)).ToNot(Succeed())
+				Expect(child.SetReadOnly(false, hl)).ToNot(Succeed())
 			})
 		})
 		Context("Element is a core element", func() {

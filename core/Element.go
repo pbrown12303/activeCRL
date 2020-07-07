@@ -3,8 +3,8 @@ package core
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"log"
 	"reflect"
 	"strconv"
@@ -88,17 +88,17 @@ func (ePtr *element) cloneAttributes(source *element, hl *HeldLocks) {
 	ePtr.URI = source.URI
 }
 
-// editableError checks to see if the element cannot be edited because it
-// is either a core element or has been marked readOnly.
-func (ePtr *element) editableError(hl *HeldLocks) error {
-	if ePtr.GetIsCore(hl) {
-		return errors.New("Element.SetOwningConceptID called on core Element")
-	}
-	if ePtr.ReadOnly {
-		return errors.New("Element.SetOwningConcept called on read-only Element")
-	}
-	return nil
-}
+// // editableError checks to see if the element cannot be edited because it
+// // is either a core element or has been marked readOnly.
+// func (ePtr *element) editableError(hl *HeldLocks) error {
+// 	if ePtr.GetIsCore(hl) {
+// 		return errors.New("Element.SetOwningConceptID called on core Element")
+// 	}
+// 	if ePtr.ReadOnly {
+// 		return errors.New("Element.SetOwningConcept called on read-only Element")
+// 	}
+// 	return nil
+// }
 
 // GetConceptID returns the conceptID
 func (ePtr *element) GetConceptID(hl *HeldLocks) string {
@@ -654,6 +654,15 @@ func (ePtr *element) IsReadOnly(hl *HeldLocks) bool {
 	return ePtr.ReadOnly
 }
 
+// isEditable checks to see if the element cannot be edited because it
+// is either a core element or has been marked readOnly.
+func (ePtr *element) isEditable(hl *HeldLocks) bool {
+	if ePtr.GetIsCore(hl) || ePtr.IsReadOnly(hl) {
+		return false
+	}
+	return true
+}
+
 // isEquivalent only checks the element attributes. It ignores the uOfD.
 func (ePtr *element) isEquivalent(hl1 *HeldLocks, el *element, hl2 *HeldLocks, printExceptions ...bool) bool {
 	var print bool
@@ -880,9 +889,8 @@ func (ePtr *element) removeOwnedConcept(ownedConceptID string, hl *HeldLocks) er
 // SetDefinition sets the definition of the Element
 func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	editableError := ePtr.editableError(hl)
-	if editableError != nil {
-		return editableError
+	if ePtr.isEditable(hl) == false {
+		return errors.New("element.SetDefinition failed because the element is not editable")
 	}
 	if ePtr.Definition != def {
 		ePtr.uOfD.preChange(ePtr, hl)
@@ -894,15 +902,22 @@ func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 	return nil
 }
 
-func (ePtr *element) SetIsCoreRecursively(hl *HeldLocks) {
-	ePtr.SetIsCore(hl)
+func (ePtr *element) SetIsCoreRecursively(hl *HeldLocks) error {
+	err := ePtr.SetIsCore(hl)
+	if err != nil {
+		return errors.Wrap(err, "Element.SetIsCoreRecursively failed")
+	}
 	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
 		el := ePtr.uOfD.GetElement(id.(string))
-		el.SetIsCoreRecursively(hl)
+		err = el.SetIsCoreRecursively(hl)
+		if err != nil {
+			return errors.Wrap(err, "Element.SetIsCoreRecursively failed")
+		}
 	}
+	return nil
 }
 
-func (ePtr *element) SetIsCore(hl *HeldLocks) {
+func (ePtr *element) SetIsCore(hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
 	if ePtr.IsCore != true {
 		ePtr.uOfD.preChange(ePtr, hl)
@@ -911,14 +926,14 @@ func (ePtr *element) SetIsCore(hl *HeldLocks) {
 		ePtr.IsCore = true
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
+	return nil
 }
 
 // SetLabel sets the label of the Element
 func (ePtr *element) SetLabel(label string, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	editableError := ePtr.editableError(hl)
-	if editableError != nil {
-		return editableError
+	if ePtr.isEditable(hl) == false {
+		return errors.New("element.SetLabel failed because the element is not editable")
 	}
 	if ePtr.Label != label {
 		ePtr.uOfD.preChange(ePtr, hl)
@@ -930,38 +945,48 @@ func (ePtr *element) SetLabel(label string, hl *HeldLocks) error {
 	return nil
 }
 
-// SetOwningConcept takes the ID of the supplied concept and call SetOwningConceptID
+// SetOwningConcept takes the ID of the supplied concept and call SetOwningConceptID. It first checks to
+// determine whether the new owner is editable and will throw an error if it is not
 func (ePtr *element) SetOwningConcept(el Element, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
+	if el.isEditable(hl) == false {
+		return errors.New("element.SetOwningConcept called with an owner that is not editable")
+	}
 	id := ""
 	if el != nil {
 		id = el.getConceptIDNoLock()
 	}
-	return ePtr.SetOwningConceptID(id, hl)
+	err := ePtr.SetOwningConceptID(id, hl)
+	if err != nil {
+		errors.Wrap(err, "element.SetOwningConcept failed")
+	}
+	return nil
 }
 
 // SetOwningConceptID sets the ID of the owning concept for the element
 // Design Note: the argument is the identifier rather than the Element to ensure
-// the correct type of the owning concept is recorded. For example, if a method
-// of *element calls this method with itself as the argument, the actual type
-// recorded would be *element even if the actual caller is a *literal, *reference, or
-// *refinement
+// the correct type of the owning concept is recorded.
 func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	editableError := ePtr.editableError(hl)
-	if editableError != nil {
-		return editableError
+	if ePtr.isEditable(hl) == false {
+		return errors.New("element.SetOwningConceptID failed because the element is not editable")
+	}
+	newOwner := ePtr.uOfD.GetElement(ocID)
+	if newOwner != nil && newOwner.isEditable(hl) == false {
+		return errors.New("element.SetOwningConceptID called with new owner not editable")
+	}
+	oldOwner := ePtr.GetOwningConcept(hl)
+	if oldOwner != nil && oldOwner.isEditable(hl) == false {
+		return errors.New("element.SetOwningConceptID called with old owner not editable")
 	}
 	// Do nothing if there is no change
 	if ePtr.OwningConceptID != ocID {
 		ePtr.uOfD.preChange(ePtr, hl)
-		oldOwner := ePtr.GetOwningConcept(hl)
 		if oldOwner != nil {
 			oldOwner.removeOwnedConcept(ePtr.ConceptID, hl)
 		}
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
 		ePtr.incrementVersion(hl)
-		newOwner := ePtr.uOfD.GetElement(ocID)
 		if newOwner != nil {
 			newOwner.addOwnedConcept(ePtr.ConceptID, hl)
 		}
@@ -972,18 +997,16 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 }
 
 // SetReadOnly provides a mechanism for preventing modifications to concepts. It will throw an error
-// if the concept is one of the CRL core concepts, as these can never be made writable. It will also throw
-// an error if there is an owner and it is read only
+// if the concept is one of the CRL core concepts, as these can never be made writable. It will also
+// throw an error if its owner is read only and this call tries to set read only false.
 func (ePtr *element) SetReadOnly(value bool, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	editableError := ePtr.editableError(hl)
-	if editableError != nil {
-		return editableError
+	if ePtr.GetIsCore(hl) == true {
+		return errors.New("element.SetReadOnly failed because element is a core element")
 	}
 	if ePtr.GetOwningConcept(hl) != nil {
-		ownerEditableError := ePtr.GetOwningConcept(hl).editableError(hl)
-		if ownerEditableError != nil {
-			return ownerEditableError
+		if ePtr.GetOwningConcept(hl).IsReadOnly(hl) == true && value == false {
+			return errors.New("element.SetReadOnly failed because the owner is read only")
 		}
 	}
 	if ePtr.ReadOnly != value {
@@ -996,12 +1019,19 @@ func (ePtr *element) SetReadOnly(value bool, hl *HeldLocks) error {
 	return nil
 }
 
-func (ePtr *element) SetReadOnlyRecursively(value bool, hl *HeldLocks) {
-	ePtr.SetReadOnly(value, hl)
+func (ePtr *element) SetReadOnlyRecursively(value bool, hl *HeldLocks) error {
+	err := ePtr.SetReadOnly(value, hl)
+	if err != nil {
+		return errors.Wrap(err, "Element.SetReadOnlyRecursively failed")
+	}
 	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
 		el := ePtr.uOfD.GetElement(id.(string))
-		el.SetReadOnlyRecursively(value, hl)
+		err = el.SetReadOnlyRecursively(value, hl)
+		if err != nil {
+			return errors.Wrap(err, "Element.SetReadOnlyRecursively failed")
+		}
 	}
+	return nil
 }
 
 // setUniverseOfDiscourse is intended to be called only by the UniverseOfDiscourse
@@ -1013,9 +1043,8 @@ func (ePtr *element) setUniverseOfDiscourse(uOfD *UniverseOfDiscourse, hl *HeldL
 // SetURI sets the URI of the Element
 func (ePtr *element) SetURI(uri string, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	editableError := ePtr.editableError(hl)
-	if editableError != nil {
-		return editableError
+	if ePtr.isEditable(hl) == false {
+		return errors.New("element.SetURI failed because the elementis not editable")
 	}
 	if ePtr.URI != uri {
 		foundElement := ePtr.uOfD.GetElementWithURI(uri)
@@ -1065,7 +1094,7 @@ type Element interface {
 	addListener(string, *HeldLocks)
 	addOwnedConcept(string, *HeldLocks)
 	addRecoveredOwnedConcept(string, *HeldLocks)
-	editableError(*HeldLocks) error
+	// editableError(*HeldLocks) error
 	FindAbstractions(map[string]Element, *HeldLocks)
 	FindImmediateAbstractions(map[string]Element, *HeldLocks)
 	GetConceptID(*HeldLocks) string
@@ -1107,6 +1136,7 @@ type Element interface {
 	getUniverseOfDiscourseNoLock() *UniverseOfDiscourse
 	GetURI(*HeldLocks) string
 	GetVersion(*HeldLocks) int
+	isEditable(*HeldLocks) bool
 	IsRefinementOf(Element, *HeldLocks) bool
 	IsRefinementOfURI(string, *HeldLocks) bool
 	incrementVersion(*HeldLocks)
@@ -1117,13 +1147,13 @@ type Element interface {
 	removeListener(string, *HeldLocks)
 	removeOwnedConcept(string, *HeldLocks) error
 	SetDefinition(string, *HeldLocks) error
-	SetIsCore(*HeldLocks)
-	SetIsCoreRecursively(*HeldLocks)
+	SetIsCore(*HeldLocks) error
+	SetIsCoreRecursively(*HeldLocks) error
 	SetLabel(string, *HeldLocks) error
 	SetOwningConcept(Element, *HeldLocks) error
 	SetOwningConceptID(string, *HeldLocks) error
 	SetReadOnly(bool, *HeldLocks) error
-	SetReadOnlyRecursively(bool, *HeldLocks)
+	SetReadOnlyRecursively(bool, *HeldLocks) error
 	setUniverseOfDiscourse(*UniverseOfDiscourse, *HeldLocks)
 	SetURI(string, *HeldLocks) error
 	TraceableReadLock(*HeldLocks)

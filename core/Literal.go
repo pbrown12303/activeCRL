@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"log"
 	"reflect"
 )
@@ -88,9 +89,8 @@ func (lPtr *literal) recoverLiteralFields(unmarshaledData *map[string]json.RawMe
 
 func (lPtr *literal) SetLiteralValue(value string, hl *HeldLocks) error {
 	hl.WriteLockElement(lPtr)
-	editableError := lPtr.editableError(hl)
-	if editableError != nil {
-		return editableError
+	if lPtr.isEditable(hl) == false {
+		return errors.New("literal.SetLiteralValue failed because the literal is not editable")
 	}
 	if lPtr.LiteralValue != value {
 		lPtr.uOfD.preChange(lPtr, hl)

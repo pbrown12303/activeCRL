@@ -42,31 +42,27 @@ func buildCoreConceptSpace(uOfD *UniverseOfDiscourse, hl *HeldLocks) Element {
 	coreElement, _ := uOfD.NewElement(hl, CoreConceptSpaceURI)
 	coreElementID := coreElement.getConceptIDNoLock()
 	coreElement.SetLabel("CoreConceptSpace", hl)
-	coreElement.SetIsCore(hl)
 
 	// Element
 	element, _ := uOfD.NewElement(hl, ElementURI)
 	element.SetOwningConceptID(coreElementID, hl)
 	element.SetLabel("Element", hl)
-	element.SetIsCore(hl)
 
 	// Literal
 	literal, _ := uOfD.NewLiteral(hl, LiteralURI)
 	literal.SetOwningConceptID(coreElementID, hl)
 	literal.SetLabel("Literal", hl)
-	literal.SetIsCore(hl)
 
 	// Reference
 	reference, _ := uOfD.NewReference(hl, ReferenceURI)
 	reference.SetOwningConceptID(coreElementID, hl)
 	reference.SetLabel("Reference", hl)
-	reference.SetIsCore(hl)
 
 	// Refinement
 	refinement, _ := uOfD.NewRefinement(hl, RefinementURI)
 	refinement.SetOwningConceptID(coreElementID, hl)
 	refinement.SetLabel("Refinement", hl)
-	refinement.SetIsCore(hl)
 
+	coreElement.SetIsCoreRecursively(hl)
 	return coreElement
 }
