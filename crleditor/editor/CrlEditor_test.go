@@ -3,7 +3,7 @@ package editor_test
 import (
 	//	"fmt"
 
-	"log"
+	// "log"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -600,46 +600,22 @@ var _ = Describe("Test CrlEditor", func() {
 				beforeHL = beforeUofD.NewHeldLocks()
 			})
 
-			AfterEach(func() {
+			PerformUndoRedoTest := func(count int) {
 				afterUofD = uOfD.Clone(hl)
 				afterHL = afterUofD.NewHeldLocks()
-				Undo()
+				for i := 0; i < count; i++ {
+					Undo()
+				}
 				Expect(uOfD.IsEquivalent(hl, beforeUofD, beforeHL, true)).To(BeTrue())
-				Redo()
+				for i := 0; i < count; i++ {
+					Redo()
+				}
 				Expect(uOfD.IsEquivalent(hl, afterUofD, afterHL, true)).To(BeTrue())
-			})
-			PSpecify("Drag TreeNode into Diagram should work", func() {
-				// There is a bug in Agouti with respect to both FlickFinger and MoveMouseBy
-				// This test will not work until that bug is fixed
-				coreConceptSpace := uOfD.GetElementWithURI(core.CoreConceptSpaceURI)
-				var treeNodeID string
-				page.RunScript("return crlGetTreeNodeIDFromConceptID(conceptID);",
-					map[string]interface{}{"conceptID": coreConceptSpace.GetConceptID(hl)},
-					&treeNodeID)
-				treeNode := page.FindByID(treeNodeID)
-				treeNode.MouseToElement()
-				pageError := page.Click(agouti.HoldClick, agouti.LeftButton)
-				if pageError != nil {
-					log.Printf(pageError.Error())
-				}
-				//				container := page.FindByID(newDiagramContainerID)
-				ffError := treeNode.FlickFinger(-100, -300, 50)
-				time.Sleep(10 * time.Second)
-				if ffError != nil {
-					log.Printf(ffError.Error())
-				}
-				// page.MoveMouseBy(-100, -200)
-				hl.ReleaseLocksAndWait()
-				Eventually(func() bool {
-					return editor.CrlEditorSingleton.GetTreeDragSelection() == coreConceptSpace
-				}).Should(BeTrue())
-				//				container.MouseToElement()
-				page.Click(agouti.ReleaseClick, agouti.LeftButton)
-				hl.ReleaseLocksAndWait()
-			})
+			}
 			Specify("DiagramDrop should produce view of treeDragSelection", func() {
 				coreConceptSpace := uOfD.GetElementWithURI(core.CoreConceptSpaceURI)
 				Expect(page.RunScript("crlSendSetTreeDragSelection(ID)", map[string]interface{}{"ID": coreConceptSpace.GetConceptID(hl)}, nil)).To(Succeed())
+				AssertServerRequestProcessingComplete()
 				Expect(page.RunScript("crlSendDiagramDrop(ID, x, y)", map[string]interface{}{"ID": diagramID, "x": "100", "y": "100"}, nil)).To(Succeed())
 				// Some form of sleep is required here as this thread blocks socket communications. Eventually accomplishes this as it will not
 				// be true until after all of the expected client communication has completed.
@@ -669,6 +645,7 @@ var _ = Describe("Test CrlEditor", func() {
 				Expect(treeNodeParentID).To(Equal(diagramTreeNodeID))
 				// Now drop a second instance
 				Expect(page.RunScript("crlSendSetTreeDragSelection(ID)", map[string]interface{}{"ID": coreConceptSpace.GetConceptID(hl)}, nil)).To(Succeed())
+				AssertServerRequestProcessingComplete()
 				Expect(page.RunScript("crlSendDiagramDrop(ID, x, y)", map[string]interface{}{"ID": diagramID, "x": "200", "y": "200"}, nil)).To(Succeed())
 				// Some form of sleep is required here as this thread blocks socket communications. Eventually accomplishes this as it will not
 				// be true until after all of the expected client communication has completed.
@@ -698,6 +675,7 @@ var _ = Describe("Test CrlEditor", func() {
 					map[string]interface{}{"treeNodeID": treeNode2ID},
 					&treeNode2ParentID)).To(Succeed())
 				Expect(treeNode2ParentID).To(Equal(diagramTreeNodeID))
+				PerformUndoRedoTest(4)
 			})
 			Describe("Test AddChild functionality", func() {
 				Specify("AddChild Diagram should work", func() {
@@ -717,6 +695,7 @@ var _ = Describe("Test CrlEditor", func() {
 					Expect(newDiagram).ToNot(BeNil())
 					Expect(newDiagram.IsRefinementOfURI(crldiagram.CrlDiagramURI, hl)).To(BeTrue())
 					Expect(newDiagram.GetOwningConcept(hl)).To(Equal(cs1))
+					PerformUndoRedoTest(1)
 				})
 				Specify("AddChild Element should work", func() {
 					var initialSelectionID string
@@ -734,6 +713,7 @@ var _ = Describe("Test CrlEditor", func() {
 					el := uOfD.GetElement(newID)
 					Expect(el).ToNot(BeNil())
 					Expect(el.GetOwningConcept(hl)).To(Equal(cs1))
+					PerformUndoRedoTest(1)
 				})
 				Specify("AddChild Literal should work", func() {
 					var initialSelectionID string
@@ -757,6 +737,7 @@ var _ = Describe("Test CrlEditor", func() {
 						isLiteral = true
 					}
 					Expect(isLiteral).To(BeTrue())
+					PerformUndoRedoTest(1)
 				})
 				Specify("AddChild Reference should work", func() {
 					var initialSelectionID string
@@ -780,6 +761,7 @@ var _ = Describe("Test CrlEditor", func() {
 						isReference = true
 					}
 					Expect(isReference).To(BeTrue())
+					PerformUndoRedoTest(1)
 				})
 				Specify("AddChild Refinement should work", func() {
 					var initialSelectionID string
@@ -803,6 +785,7 @@ var _ = Describe("Test CrlEditor", func() {
 						isRefinement = true
 					}
 					Expect(isRefinement).To(BeTrue())
+					PerformUndoRedoTest(1)
 				})
 			})
 
@@ -811,22 +794,26 @@ var _ = Describe("Test CrlEditor", func() {
 					e1, e1View := CreateElement(diagram, 100, 100)
 					Expect(e1).ToNot(BeNil())
 					Expect(e1View).ToNot(BeNil())
+					PerformUndoRedoTest(1)
 				})
 				Specify("Literal node creation should work", func() {
 					l1, l1View := CreateLiteral(diagram, 100, 100)
 					Expect(l1).ToNot(BeNil())
 					Expect(l1View).ToNot(BeNil())
+					PerformUndoRedoTest(1)
 				})
 				Specify("Reference node creation should work", func() {
 					r1, r1View := CreateReferenceNode(diagram, 100, 100)
 					Expect(r1).ToNot(BeNil())
 					Expect(r1View).ToNot(BeNil())
+					PerformUndoRedoTest(1)
 				})
 				Specify("Refinement node creation should work", func() {
 					// editor.CrlLogClientDialog = true
 					r1, r1View := CreateRefinementNode(diagram, 100, 100)
 					Expect(r1).ToNot(BeNil())
 					Expect(r1View).ToNot(BeNil())
+					PerformUndoRedoTest(1)
 				})
 				Describe("Reference link creation should work", func() {
 					Specify("for a node source and target", func() {
@@ -835,6 +822,7 @@ var _ = Describe("Test CrlEditor", func() {
 						newRefinement, _ := CreateReferenceLink(diagram, e2View, e1View)
 						Expect(newRefinement.GetOwningConcept(hl)).To(Equal(e2))
 						Expect(newRefinement.GetReferencedConcept(hl)).To(Equal(e1))
+						PerformUndoRedoTest(3)
 					})
 					Specify("for a link source and node target", func() {
 						_, e1View := CreateElement(diagram, 100, 100)
@@ -848,6 +836,7 @@ var _ = Describe("Test CrlEditor", func() {
 						// Now check the results
 						Expect(refLink2.GetOwningConceptID(hl)).To(Equal(refLink1.GetConceptID(hl)))
 						Expect(refLink2.GetReferencedConceptID(hl)).To(Equal(e3.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 					Specify("for a node source and link target", func() {
 						_, e1View := CreateElement(diagram, 100, 100)
@@ -861,6 +850,7 @@ var _ = Describe("Test CrlEditor", func() {
 						// Now check the results
 						Expect(refLink2.GetOwningConceptID(hl)).To(Equal(e3.GetConceptID(hl)))
 						Expect(refLink2.GetReferencedConceptID(hl)).To(Equal(refLink1.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 					Specify("for a link source and link target", func() {
 						_, e1View := CreateElement(diagram, 100, 100)
@@ -876,6 +866,7 @@ var _ = Describe("Test CrlEditor", func() {
 						// Now check the results
 						Expect(refLink3.GetOwningConceptID(hl)).To(Equal(refLink1.GetConceptID(hl)))
 						Expect(refLink3.GetReferencedConceptID(hl)).To(Equal(refLink2.GetConceptID(hl)))
+						PerformUndoRedoTest(7)
 					})
 					Specify("for a node source and an OwnerPointer target", func() {
 						_, e1View := CreateElement(diagram, 100, 100)
@@ -892,6 +883,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(ref.GetOwningConceptID(hl)).To(Equal(e3.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkSource(refView, hl).GetConceptID(hl)).To(Equal(e3View.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(refView, hl).GetConceptID(hl)).To(Equal(opView.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 					Specify("for a node source and an ElementPointer target", func() {
 						_, e1View := CreateElement(diagram, 100, 100)
@@ -908,6 +900,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(ref.GetOwningConceptID(hl)).To(Equal(e3.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkSource(refView, hl).GetConceptID(hl)).To(Equal(e3View.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(refView, hl).GetConceptID(hl)).To(Equal(epView.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 					Specify("for a node source and an AbstractPointer target", func() {
 						_, e1View := CreateElement(diagram, 100, 100)
@@ -924,6 +917,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(ref.GetOwningConceptID(hl)).To(Equal(e3.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkSource(refView, hl).GetConceptID(hl)).To(Equal(e3View.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(refView, hl).GetConceptID(hl)).To(Equal(apView.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 					Specify("for a node source and an RefinedPointer target", func() {
 						_, e1View := CreateElement(diagram, 100, 100)
@@ -940,6 +934,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(ref.GetOwningConceptID(hl)).To(Equal(e3.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkSource(refView, hl).GetConceptID(hl)).To(Equal(e3View.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(refView, hl).GetConceptID(hl)).To(Equal(apView.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 				})
 				Describe("Refinement link creation should work", func() {
@@ -949,6 +944,7 @@ var _ = Describe("Test CrlEditor", func() {
 						newRefinement, _ := CreateRefinementLink(diagram, e2View, e1View)
 						Expect(newRefinement.GetAbstractConcept(hl)).To(Equal(e1))
 						Expect(newRefinement.GetRefinedConcept(hl)).To(Equal(e2))
+						PerformUndoRedoTest(3)
 					})
 					Specify("for a link source and node target", func() {
 						_, e1View := CreateElement(diagram, 100, 100)
@@ -960,6 +956,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(newRefinement.GetRefinedConceptID(hl)).To(Equal(source.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkSource(newRefinementView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(newRefinementView, hl).GetConceptID(hl)).To(Equal(targetView.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 					Specify("for a node source and link target", func() {
 						_, e1View := CreateElement(diagram, 100, 100)
@@ -971,6 +968,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(newRefinement.GetRefinedConceptID(hl)).To(Equal(source.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkSource(newRefinementView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(newRefinementView, hl).GetConceptID(hl)).To(Equal(targetView.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 				})
 				Describe("OwnerPointer creation should work", func() {
@@ -983,6 +981,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(e2.GetOwningConceptID(hl)).To(Equal(e1.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkSource(ownerPointerView, hl).GetConceptID(hl)).To(Equal(e2View.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(ownerPointerView, hl).GetConceptID(hl)).To(Equal(e1View.GetConceptID(hl)))
+						PerformUndoRedoTest(3)
 					})
 					Specify("For a Refinement Link source and node target", func() {
 						_, e1View := CreateElement(diagram, 100, 100)
@@ -998,6 +997,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(source.GetConceptID(hl)).To(Equal(ownerPointerConcept.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkSource(ownerPointerView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(ownerPointerView, hl).GetConceptID(hl)).To(Equal(e3View.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 					Specify("For a node source and ReferenceLink target", func() {
 						_, e1View := CreateElement(diagram, 100, 100)
@@ -1013,6 +1013,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(source.GetConceptID(hl)).To(Equal(ownerPointerConcept.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkSource(ownerPointerView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(ownerPointerView, hl).GetConceptID(hl)).To(Equal(targetView.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 					Specify("For a node source and RefinementLink target", func() {
 						_, e1View := CreateElement(diagram, 100, 100)
@@ -1028,6 +1029,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(source.GetConceptID(hl)).To(Equal(ownerPointerConcept.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkSource(ownerPointerView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(ownerPointerView, hl).GetConceptID(hl)).To(Equal(targetView.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 				})
 				Describe("ElementPointer creation should work", func() {
@@ -1042,6 +1044,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(source.GetReferencedAttributeName(hl)).To(Equal(core.NoAttribute))
 						Expect(crldiagram.GetLinkSource(epView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(epView, hl).GetConceptID(hl)).To(Equal(targetView.GetConceptID(hl)))
+						PerformUndoRedoTest(3)
 					})
 					Specify("for a node source and reference link target", func() {
 						source, sourceView := CreateReferenceNode(diagram, 100, 150)
@@ -1054,6 +1057,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(source.GetReferencedAttributeName(hl)).To(Equal(core.NoAttribute))
 						Expect(crldiagram.GetLinkSource(epView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(epView, hl).GetConceptID(hl)).To(Equal(targetView.GetConceptID(hl)))
+						PerformUndoRedoTest(4)
 					})
 					Specify("for a node source and RefinementLink target", func() {
 						source, sourceView := CreateReferenceNode(diagram, 100, 150)
@@ -1066,6 +1070,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(source.GetReferencedAttributeName(hl)).To(Equal(core.NoAttribute))
 						Expect(crldiagram.GetLinkSource(epView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(epView, hl).GetConceptID(hl)).To(Equal(targetView.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 					Specify("for a node source and an OwnerPointer target", func() {
 						source, sourceView := CreateReferenceNode(diagram, 100, 150)
@@ -1078,6 +1083,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(source.GetReferencedAttributeName(hl)).To(Equal(core.OwningConceptID))
 						Expect(crldiagram.GetLinkSource(epView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(epView, hl).GetConceptID(hl)).To(Equal(targetView.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 					Specify("for a node source and an ElementPointer target", func() {
 						source, sourceView := CreateReferenceNode(diagram, 100, 150)
@@ -1090,6 +1096,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(source.GetReferencedAttributeName(hl)).To(Equal(core.ReferencedConceptID))
 						Expect(crldiagram.GetLinkSource(epView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(epView, hl).GetConceptID(hl)).To(Equal(targetView.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 					Specify("for a node source and an AbstractPointer target", func() {
 						source, sourceView := CreateReferenceNode(diagram, 100, 150)
@@ -1102,6 +1109,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(source.GetReferencedAttributeName(hl)).To(Equal(core.AbstractConceptID))
 						Expect(crldiagram.GetLinkSource(epView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(epView, hl).GetConceptID(hl)).To(Equal(targetView.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 					Specify("for a node source and an RefinedPointer target", func() {
 						source, sourceView := CreateReferenceNode(diagram, 100, 150)
@@ -1114,6 +1122,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(source.GetReferencedAttributeName(hl)).To(Equal(core.RefinedConceptID))
 						Expect(crldiagram.GetLinkSource(epView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))
 						Expect(crldiagram.GetLinkTarget(epView, hl).GetConceptID(hl)).To(Equal(targetView.GetConceptID(hl)))
+						PerformUndoRedoTest(5)
 					})
 				})
 				Specify("AbstractPointer creation should work", func() {
@@ -1143,6 +1152,7 @@ var _ = Describe("Test CrlEditor", func() {
 					hl.ReleaseLocksAndWait()
 					// Now check the results
 					Expect(r1.GetAbstractConcept(hl)).To(Equal(e1))
+					PerformUndoRedoTest(3)
 				})
 				Specify("RefinedPointer creation should work", func() {
 					e1, e1View := CreateElement(diagram, 100, 100)
@@ -1171,6 +1181,7 @@ var _ = Describe("Test CrlEditor", func() {
 					hl.ReleaseLocksAndWait()
 					// Now check the results
 					Expect(r1.GetRefinedConcept(hl)).To(Equal(e1))
+					PerformUndoRedoTest(3)
 				})
 			})
 

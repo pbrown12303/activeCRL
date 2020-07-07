@@ -152,6 +152,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	switch request.Action {
 	case "AbstractPointerChanged":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		linkID, err := CrlEditorSingleton.getDiagramManager().abstractPointerChanged(
 			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
 		if err != nil {
@@ -160,12 +161,14 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			sendReply(w, 0, "Processed AbstractPointerChanged", linkID, nil)
 		}
 	case "AddElementChild":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		el, _ := CrlEditorSingleton.GetUofD().NewElement(hl)
 		el.SetLabel(CrlEditorSingleton.getDefaultElementLabel(), hl)
 		el.SetOwningConceptID(request.RequestConceptID, hl)
 		CrlEditorSingleton.SelectElement(el, hl)
 		sendReply(w, 0, "Processed AddElementChild", el.GetConceptID(hl), el)
 	case "AddDiagramChild":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		diagramManager := CrlEditorSingleton.getDiagramManager()
 		diagram := diagramManager.newDiagram(hl)
 		diagram.SetOwningConceptID(request.RequestConceptID, hl)
@@ -179,18 +182,21 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			sendReply(w, 0, "Processed AddDiagramChild", diagram.GetConceptID(hl), diagram)
 		}
 	case "AddLiteralChild":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		el, _ := CrlEditorSingleton.GetUofD().NewLiteral(hl)
 		el.SetLabel(CrlEditorSingleton.getDefaultLiteralLabel(), hl)
 		el.SetOwningConceptID(request.RequestConceptID, hl)
 		CrlEditorSingleton.SelectElement(el, hl)
 		sendReply(w, 0, "Processed AddLiteralChild", el.GetConceptID(hl), el)
 	case "AddReferenceChild":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		el, _ := CrlEditorSingleton.GetUofD().NewReference(hl)
 		el.SetLabel(CrlEditorSingleton.getDefaultReferenceLabel(), hl)
 		el.SetOwningConceptID(request.RequestConceptID, hl)
 		CrlEditorSingleton.SelectElement(el, hl)
 		sendReply(w, 0, "Processed AddReferenceChild", el.GetConceptID(hl), el)
 	case "AddRefinementChild":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		el, _ := CrlEditorSingleton.GetUofD().NewRefinement(hl)
 		el.SetLabel(CrlEditorSingleton.getDefaultRefinementLabel(), hl)
 		el.SetOwningConceptID(request.RequestConceptID, hl)
@@ -203,6 +209,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		err := CrlEditorSingleton.CloseWorkspace(hl)
 		reply(w, "CloseWorkspace", err)
 	case "DefinitionChanged":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil {
 			el.SetDefinition(request.AdditionalParameters["NewValue"], hl)
@@ -210,6 +217,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed DefinitionChanged", request.RequestConceptID, el)
 	case "DeleteDiagramElementView":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		err := CrlEditorSingleton.getDiagramManager().deleteDiagramElementView(request.RequestConceptID, hl)
 		if err != nil {
 			sendReply(w, 1, err.Error(), "", nil)
@@ -217,6 +225,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			sendReply(w, 0, "Processed DeleteDiagramElementView", request.RequestConceptID, nil)
 		}
 	case "DiagramClick":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		err := CrlEditorSingleton.getDiagramManager().diagramClick(request, hl)
 		if err != nil {
 			sendReply(w, 1, err.Error(), "", nil)
@@ -224,6 +233,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			sendReply(w, 0, "Processed DiagramClick", request.RequestConceptID, nil)
 		}
 	case "DiagramDrop":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		err := CrlEditorSingleton.getDiagramManager().diagramDrop(request, hl)
 		if err != nil {
 			sendReply(w, 1, err.Error(), "", nil)
@@ -231,6 +241,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			sendReply(w, 0, "Processed DiagramDrop", request.RequestConceptID, nil)
 		}
 	case "DiagramNodeNewPosition":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		x, err := strconv.ParseFloat(request.AdditionalParameters["NodeX"], 64)
 		if err != nil {
 			sendReply(w, 1, err.Error(), "", nil)
@@ -243,6 +254,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			sendReply(w, 0, "Processed DiagramNodeNewPosition", "", nil)
 		}
 	case "DiagramElementSelected":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		elementID := request.RequestConceptID
 		element := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if element != nil {
@@ -251,11 +263,14 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		sendReply(w, 0, "Processed DiagramElementSelected", elementID, CrlEditorSingleton.GetUofD().GetElement(elementID))
 	case "DiagramViewHasBeenClosed":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		CrlEditorSingleton.getDiagramManager().DiagramViewHasBeenClosed(request.RequestConceptID, hl)
 	case "DisplayCallGraph":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		err := CrlEditorSingleton.DisplayCallGraph(request.AdditionalParameters["GraphIndex"], hl)
 		reply(w, "DisplayCallGraph", err)
 	case "DisplayDiagramSelected":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil && el.IsRefinementOfURI(crldiagram.CrlDiagramURI, hl) {
 			diagramManager := CrlEditorSingleton.getDiagramManager()
@@ -264,6 +279,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed DisplayDiagramSelected", request.RequestConceptID, el)
 	case "ElementPointerChanged":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		linkID, err := CrlEditorSingleton.getDiagramManager().elementPointerChanged(
 			request.RequestConceptID,
 			request.AdditionalParameters["SourceID"],
@@ -294,6 +310,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		requestInProgress = false
 		log.Printf("requestInProgress set to false in InitializeClient")
 	case "LabelChanged":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil {
 			el.SetLabel(request.AdditionalParameters["NewValue"], hl)
@@ -301,6 +318,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed LabelChanged", request.RequestConceptID, el)
 	case "LiteralValueChanged":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil {
 			switch el.(type) {
@@ -311,6 +329,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed LiteralValueChanged", request.RequestConceptID, el)
 	case "NewConceptSpaceRequest":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		cs, _ := CrlEditorSingleton.GetUofD().NewElement(hl)
 		cs.SetLabel(CrlEditorSingleton.getDefaultConceptSpaceLabel(), hl)
 		CrlEditorSingleton.SelectElement(cs, hl)
@@ -323,6 +342,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			sendReply(w, 0, "Processed OpenWorkspace", "", nil)
 		}
 	case "OwnerPointerChanged":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		linkID, err := CrlEditorSingleton.getDiagramManager().ownerPointerChanged(
 			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
 		if err != nil {
@@ -334,6 +354,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		err := CrlEditorSingleton.Redo(hl)
 		reply(w, "Redo", err)
 	case "RefinedPointerChanged":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		linkID, err := CrlEditorSingleton.getDiagramManager().refinedPointerChanged(
 			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
 		if err != nil {
@@ -342,6 +363,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			sendReply(w, 0, "Processed RefinedPointerChanged", linkID, nil)
 		}
 	case "ReferenceLinkChanged":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		linkID, err := CrlEditorSingleton.getDiagramManager().ReferenceLinkChanged(
 			request.RequestConceptID,
 			request.AdditionalParameters["SourceID"],
@@ -353,6 +375,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			sendReply(w, 0, "Processed ReferenceLinkChanged", linkID, nil)
 		}
 	case "RefinementLinkChanged":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		linkID, err := CrlEditorSingleton.getDiagramManager().RefinementLinkChanged(
 			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
 		if err != nil {
@@ -383,12 +406,15 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			sendReply(w, 0, "Processed SaveWorkspace", "", nil)
 		}
 	case "SetTreeDragSelection":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		CrlEditorSingleton.SetTreeDragSelection(request.RequestConceptID)
 		sendReply(w, 0, "Processed SetTreeDragSelection", request.RequestConceptID, CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID))
 	case "ShowAbstractConcept":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		err := CrlEditorSingleton.getDiagramManager().showAbstractConcept(request.RequestConceptID, hl)
 		reply(w, "ShowAbstractConcept", err)
 	case "ShowOwner":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		err := CrlEditorSingleton.getDiagramManager().showOwner(request.RequestConceptID, hl)
 		if err != nil {
 			sendReply(w, 1, "ShowOwner failed: "+err.Error(), "", nil)
@@ -396,12 +422,15 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			sendReply(w, 0, "Processed ShowOwner", "", nil)
 		}
 	case "ShowReferencedConcept":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		err := CrlEditorSingleton.getDiagramManager().showReferencedConcept(request.RequestConceptID, hl)
 		reply(w, "ShowReferencedConcept", err)
 	case "ShowRefinedConcept":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		err := CrlEditorSingleton.getDiagramManager().showRefinedConcept(request.RequestConceptID, hl)
 		reply(w, "ShowRefinedConcept", err)
 	case "TreeNodeDelete":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		elementID := request.RequestConceptID
 		// log.Printf("TreeNodeDelete called for node id: %s for elementID: %s", request.RequestConceptID, elementID)
 		err := CrlEditorSingleton.Delete(elementID)
@@ -411,6 +440,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			sendReply(w, 1, "Delete failed", elementID, nil)
 		}
 	case "TreeNodeSelected":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		elementID := request.RequestConceptID
 		if CrlLogClientNotifications {
 			log.Printf("Selected node id: %s", request.RequestConceptID)
@@ -421,12 +451,15 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		err := CrlEditorSingleton.Undo(hl)
 		reply(w, "Undo", err)
 	case "UpdateDebugSettings":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		CrlEditorSingleton.UpdateDebugSettings(request)
 		sendReply(w, 0, "Processed UpdateDebugSettings", "", nil)
 	case "UpdateUserPreferences":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		CrlEditorSingleton.UpdateUserPreferences(request, hl)
 		sendReply(w, 0, "Processed UpdateUserPreferences", "", nil)
 	case "URIChanged":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		el := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil {
 			el.SetURI(request.AdditionalParameters["NewValue"], hl)

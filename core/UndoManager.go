@@ -166,7 +166,10 @@ func (undoMgr *undoManager) redo(hl *HeldLocks) {
 	uOfD := undoMgr.uOfD
 	for len(undoMgr.redoStack) > 0 {
 		currentEntry := undoMgr.redoStack.Pop()
-		currentID := currentEntry.changedElement.GetConceptID(hl)
+		var currentID string
+		if currentEntry.changedElement != nil {
+			currentID = currentEntry.changedElement.GetConceptID(hl)
+		}
 		if currentEntry.changeType == Marker {
 			undoMgr.undoStack.Push(currentEntry)
 			return
