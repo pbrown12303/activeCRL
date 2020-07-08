@@ -10,8 +10,8 @@ var df1URI = "http://dummy.function.uri,df1"
 var df2URI = "http://dummy.function.uri.df2"
 var df3URI = "http://dummy.function.uri.df3"
 
-func dummyChangeFunction(Element, *ChangeNotification, *UniverseOfDiscourse) {
-	// noop
+func dummyChangeFunction(Element, *ChangeNotification, *UniverseOfDiscourse) error {
+	return nil
 }
 
 var _ = Describe("Verify housekeeping function execution", func() {

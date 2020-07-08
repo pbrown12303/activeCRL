@@ -112,6 +112,11 @@ func (dmPtr *diagramManager) addConceptView(request *Request, hl *core.HeldLocks
 	if err != nil {
 		return nil, err
 	}
+	return dmPtr.addConceptViewImpl(uOfD, diagram, el, x, y, hl)
+}
+
+// addConceptViewImpl creates the concept view and adds it to the diagram
+func (dmPtr *diagramManager) addConceptViewImpl(uOfD *core.UniverseOfDiscourse, diagram core.Element, el core.Element, x float64, y float64, hl *core.HeldLocks) (core.Element, error) {
 
 	createAsLink := false
 	switch el.(type) {
@@ -122,6 +127,7 @@ func (dmPtr *diagramManager) addConceptView(request *Request, hl *core.HeldLocks
 	}
 
 	var newElement core.Element
+	var err error
 	if createAsLink {
 		var modelSourceConcept core.Element
 		var modelTargetConcept core.Element
@@ -172,10 +178,42 @@ func (dmPtr *diagramManager) addConceptView(request *Request, hl *core.HeldLocks
 	crldiagram.SetReferencedModelElement(newElement, el, hl)
 	crldiagram.SetDisplayLabel(newElement, el.GetLabel(hl), hl)
 
-	newElement.SetOwningConceptID(diagramID, hl)
+	newElement.SetOwningConceptID(diagram.GetConceptID(hl), hl)
 	hl.ReleaseLocksAndWait()
 
 	return newElement, nil
+}
+
+// addCopyWithRefinement creates a copy with refinement of the selected item and places it in the diagram.
+func (dmPtr *diagramManager) addCopyWithRefinement(request *Request, hl *core.HeldLocks) (core.Element, error) {
+	uOfD := dmPtr.crlEditor.GetUofD()
+	diagramID := request.AdditionalParameters["DiagramID"]
+	diagram := uOfD.GetElement(diagramID)
+	el := uOfD.GetElement(dmPtr.crlEditor.GetTreeDragSelectionID(hl))
+	if el == nil {
+		return nil, errors.New("Indicated model element not found in addNodeView, ID: " + request.RequestConceptID)
+	}
+	var x, y float64
+	var err error
+	x, err = strconv.ParseFloat(request.AdditionalParameters["NodeX"], 64)
+	if err != nil {
+		return nil, err
+	}
+	y, err = strconv.ParseFloat(request.AdditionalParameters["NodeY"], 64)
+	if err != nil {
+		return nil, err
+	}
+	copy, err := uOfD.CreateReplicateAsRefinement(el, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "diagramManagere.addCopyWithRefinement failed")
+	}
+	copy.SetOwningConcept(diagram.GetOwningConcept(hl), hl)
+	hl.ReleaseLocksAndWait()
+	_, err2 := dmPtr.addConceptViewImpl(uOfD, diagram, copy, x, y, hl)
+	if err2 != nil {
+		return nil, errors.Wrap(err2, "diagramManager.addCopyWithRefinement failed")
+	}
+	return copy, nil
 }
 
 // addDiagramToDisplayedList adds the diagram to the list of displayed diagrams
@@ -287,11 +325,19 @@ func (dmPtr *diagramManager) diagramClick(request *Request, hl *core.HeldLocks) 
 
 // diagramDrop evaluates the request resulting from a drop in the diagram
 func (dmPtr *diagramManager) diagramDrop(request *Request, hl *core.HeldLocks) error {
-	_, err := dmPtr.addConceptView(request, hl)
-	if err != nil {
-		return err
+	if request.AdditionalParameters["Shift"] == "false" {
+		_, err := dmPtr.addConceptView(request, hl)
+		if err != nil {
+			return errors.Wrap(err, "diagramManager.diagramDrop failed")
+		}
+		dmPtr.crlEditor.SetTreeDragSelection("")
+	} else {
+		_, err := dmPtr.addCopyWithRefinement(request, hl)
+		if err != nil {
+			return errors.Wrap(err, "diagramManager.diagramDrop failed")
+		}
+		dmPtr.crlEditor.SetTreeDragSelection("")
 	}
-	dmPtr.crlEditor.SetTreeDragSelection("")
 	return nil
 }
 
@@ -795,6 +841,50 @@ func (dmPtr *diagramManager) showAbstractConcept(elementID string, hl *core.Held
 		crldiagram.SetReferencedModelElement(elementPointer, modelConcept, hl)
 		crldiagram.SetLinkSource(elementPointer, diagramElement, hl)
 		crldiagram.SetLinkTarget(elementPointer, diagramAbstractConcept, hl)
+	}
+	return nil
+}
+
+func (dmPtr *diagramManager) showOwnedConcepts(elementID string, hl *core.HeldLocks) error {
+	diagramElement := dmPtr.crlEditor.uOfD.GetElement(elementID)
+	if diagramElement == nil {
+		return errors.New("diagramManager.showOwnedConcepts diagramElement not found for elementID " + elementID)
+	}
+	diagram := diagramElement.GetOwningConcept(hl)
+	if diagram == nil {
+		return errors.New("diagramManager.showOwnedConcepts diagram not found for elementID " + elementID)
+	}
+	modelConcept := crldiagram.GetReferencedModelElement(diagramElement, hl)
+	if modelConcept == nil {
+		return errors.New("diagramManager.showOwnedConcepts modelConcept not found for elementID " + elementID)
+	}
+	it := modelConcept.GetOwnedConceptIDs(hl).Iterator()
+	defer it.Stop()
+	var offset float64
+	for id := range it.C {
+		child := dmPtr.crlEditor.uOfD.GetElement(id.(string))
+		if child == nil {
+			return errors.New("Child Concept is nil for id " + id.(string))
+		}
+		diagramChildConcept := crldiagram.GetFirstElementRepresentingConcept(diagram, child, hl)
+		if diagramChildConcept == nil {
+			diagramChildConcept, _ = crldiagram.NewDiagramNode(dmPtr.crlEditor.uOfD, hl)
+			crldiagram.SetReferencedModelElement(diagramChildConcept, child, hl)
+			diagramChildConcept.SetOwningConcept(diagram, hl)
+			diagramElementX := crldiagram.GetNodeX(diagramElement, hl)
+			diagramElementY := crldiagram.GetNodeY(diagramElement, hl)
+			crldiagram.SetNodeX(diagramChildConcept, diagramElementX+offset, hl)
+			crldiagram.SetNodeY(diagramChildConcept, diagramElementY+50, hl)
+		}
+		ownerPointer := crldiagram.GetOwnerPointer(diagram, diagramElement, hl)
+		if ownerPointer == nil {
+			ownerPointer, _ = crldiagram.NewDiagramOwnerPointer(dmPtr.crlEditor.uOfD, hl)
+			ownerPointer.SetOwningConcept(diagram, hl)
+			crldiagram.SetReferencedModelElement(ownerPointer, modelConcept, hl)
+			crldiagram.SetLinkSource(ownerPointer, diagramChildConcept, hl)
+			crldiagram.SetLinkTarget(ownerPointer, diagramElement, hl)
+		}
+		offset = offset + 50
 	}
 	return nil
 }

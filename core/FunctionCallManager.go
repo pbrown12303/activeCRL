@@ -20,7 +20,7 @@ var CrlLogPendingFunctionCount bool
 // its children) experience a change. Its arguments are the element that changed, the array of ChangeNotifications, and
 // a pointer to a WaitGroup that is used to determine (on a larger scale) when the execution of the triggered functions
 // has completed.
-type crlExecutionFunction func(Element, *ChangeNotification, *UniverseOfDiscourse)
+type crlExecutionFunction func(Element, *ChangeNotification, *UniverseOfDiscourse) error
 
 type pendingFunctionCall struct {
 	function     crlExecutionFunction
@@ -169,9 +169,10 @@ func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
 				functionCallGraphs = append(functionCallGraphs, NewFunctionCallGraph(pendingCall.functionID, pendingCall.target, pendingCall.notification, hl))
 			}
 		}
-		// if pendingCall.target.getUniverseOfDiscourseNoLock() != nil {
-		pendingCall.function(pendingCall.target, pendingCall.notification, fcm.uOfD)
-		// }
+		err := pendingCall.function(pendingCall.target, pendingCall.notification, fcm.uOfD)
+		if err != nil {
+			log.Printf(err.Error())
+		}
 		newCount := atomic.AddInt32(&pendingFunctionCount, -1)
 		if CrlLogPendingFunctionCount == true {
 			log.Printf("Pending function count: %d", newCount)

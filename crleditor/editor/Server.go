@@ -264,7 +264,8 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		sendReply(w, 0, "Processed DiagramElementSelected", elementID, CrlEditorSingleton.GetUofD().GetElement(elementID))
 	case "DiagramViewHasBeenClosed":
 		CrlEditorSingleton.uOfD.MarkUndoPoint()
-		CrlEditorSingleton.getDiagramManager().DiagramViewHasBeenClosed(request.RequestConceptID, hl)
+		err := CrlEditorSingleton.getDiagramManager().DiagramViewHasBeenClosed(request.RequestConceptID, hl)
+		reply(w, "DiagramViewHasBeenClosed", err)
 	case "DisplayCallGraph":
 		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		err := CrlEditorSingleton.DisplayCallGraph(request.AdditionalParameters["GraphIndex"], hl)
@@ -413,6 +414,14 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		err := CrlEditorSingleton.getDiagramManager().showAbstractConcept(request.RequestConceptID, hl)
 		reply(w, "ShowAbstractConcept", err)
+	case "ShowOwnedConcepts":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
+		err := CrlEditorSingleton.getDiagramManager().showOwnedConcepts(request.RequestConceptID, hl)
+		if err != nil {
+			sendReply(w, 1, "ShowOwner failed: "+err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed ShowOwner", "", nil)
+		}
 	case "ShowOwner":
 		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		err := CrlEditorSingleton.getDiagramManager().showOwner(request.RequestConceptID, hl)

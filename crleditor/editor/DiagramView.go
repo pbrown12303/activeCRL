@@ -88,7 +88,7 @@ func getNodeAdditionalParameters(node core.Element, hl *core.HeldLocks) map[stri
 }
 
 // updateDiagramElementView attaches to the diagram element and updates the client display of the diagram based on changes to the diagramElement
-func updateDiagramElementView(diagramElement core.Element, changeNotification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) {
+func updateDiagramElementView(diagramElement core.Element, changeNotification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) error {
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	hl.ReadLockElement(diagramElement)
@@ -99,7 +99,7 @@ func updateDiagramElementView(diagramElement core.Element, changeNotification *c
 			additionalParameters := map[string]string{"OwnerID": priorState.GetOwningConceptID(hl)}
 			SendNotification("DeleteDiagramElement", diagramElement.GetConceptID(hl), priorState, additionalParameters)
 		}
-		return
+		return nil
 	}
 	if crldiagram.IsDiagramNode(diagramElement, hl) {
 		switch changeNotification.GetNatureOfChange() {
@@ -127,21 +127,22 @@ func updateDiagramElementView(diagramElement core.Element, changeNotification *c
 				}
 			}
 		}
-		return
+		return nil
 	} else if crldiagram.IsDiagramLink(diagramElement, hl) {
 		switch changeNotification.GetNatureOfChange() {
 		case core.ChildChanged:
 			additionalParameters := getLinkAdditionalParameters(diagramElement, hl)
 			SendNotification("UpdateDiagramLink", diagramElement.GetConceptID(hl), diagramElement, additionalParameters)
 		}
-		return
+		return nil
 	}
+	return nil
 }
 
 // updateDiagramView attaches to the diagram view and handles additions and removals of diagram elements from the diagram view
 // Note that it cannot delete the diagram view in the GUI because this function will never get called: once the diagram has been
 // deleted, queuing of functions related to it is suppressed. That's what the DiagramViewMonitor is for.
-func updateDiagramView(diagram core.Element, changeNotification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) {
+func updateDiagramView(diagram core.Element, changeNotification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) error {
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	hl.ReadLockElement(diagram)
@@ -190,10 +191,11 @@ func updateDiagramView(diagram core.Element, changeNotification *core.ChangeNoti
 			}
 		}
 	}
+	return nil
 }
 
 // diagramViewMonitor is the callback function that manages the diagram view in the gui.
-func diagramViewMonitor(instance core.Element, changeNotification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) {
+func diagramViewMonitor(instance core.Element, changeNotification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) error {
 	// The instance here is the reference that is monitoring the diagram
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocks()
@@ -226,6 +228,7 @@ func diagramViewMonitor(instance core.Element, changeNotification *core.ChangeNo
 			}
 		}
 	}
+	return nil
 }
 
 func registerDiagramViewMonitorFunctions(uOfD *core.UniverseOfDiscourse) {

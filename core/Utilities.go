@@ -141,7 +141,9 @@ func printElement(el Element, prefix string, hl *HeldLocks) {
 	serializedElement, _ := el.MarshalJSON()
 	log.Printf("%s%s", prefix, string(serializedElement))
 	ownedIDs := el.GetUniverseOfDiscourse(hl).ownedIDsMap.GetMappedValues(el.GetConceptID(hl))
-	for id := range ownedIDs.Iterator().C {
+	it := ownedIDs.Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		ownedElement := el.GetUniverseOfDiscourse(hl).GetElement(id.(string))
 		printElement(ownedElement, prefix+"  ", hl)
 	}

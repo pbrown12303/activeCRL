@@ -2001,7 +2001,7 @@ function crlOnDiagramDrop(event) {
     var conceptID = crlGetConceptIDFromContainerID(event.target.parentElement.parentElement.id);
     var x = event.layerX.toString();
     var y = event.layerY.toString();
-    crlSendDiagramDrop(conceptID, x, y);
+    crlSendDiagramDrop(conceptID, x, y, event.shiftKey);
 };
 
 function crlOnDragover(event, data) {
@@ -2205,7 +2205,7 @@ function crlSendDiagramClick(nodeType, diagramID, x, y) {
     crlSendRequest(xhr, data);
 }
 
-function crlSendDiagramDrop(diagramID, x, y) {
+function crlSendDiagramDrop(diagramID, x, y, shiftKey) {
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({
         "Action": "DiagramDrop",
@@ -2213,7 +2213,8 @@ function crlSendDiagramDrop(diagramID, x, y) {
         {
             "DiagramID": diagramID,
             "NodeX": x,
-            "NodeY": y
+            "NodeY": y,
+            "Shift": shiftKey.toString()
         }
     });
     crlSendRequest(xhr, data);
@@ -2470,6 +2471,15 @@ var crlShowAbstractConcept = function (evt) {
     var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({ "Action": "ShowAbstractConcept", "RequestConceptID": diagramElementID });
+    crlSendRequest(xhr, data);
+}
+
+var crlShowOwnedConcepts = function (evt) {
+    var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
+    var jointID = cellView.model.attributes.crlJointID;
+    var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "ShowOwnedConcepts", "RequestConceptID": diagramElementID });
     crlSendRequest(xhr, data);
 }
 

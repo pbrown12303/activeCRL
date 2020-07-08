@@ -21,7 +21,9 @@ type treeManager struct {
 // addChildren adds the OwnedConcepts of the supplied Element to the client's tree
 func (tmPtr *treeManager) addChildren(el core.Element, hl *core.HeldLocks) error {
 	uOfD := tmPtr.editor.uOfD
-	for id := range uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
+	it := uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		child := uOfD.GetElement(id.(string))
 		if child == nil {
 			return errors.New("In TreeManager.addChildren, no child found for id: " + id.(string))
@@ -61,7 +63,9 @@ func (tmPtr *treeManager) addNodeRecursively(el core.Element, hl *core.HeldLocks
 		return errors.Wrap(err, "TreeManager.addNodeRecursively failed")
 	}
 	uOfD := tmPtr.editor.uOfD
-	for id := range uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
+	it := uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		child := uOfD.GetElement(id.(string))
 		if child == nil {
 			return errors.New("In TreeManager.addNodeRecursively, child not found for id: " + id.(string))

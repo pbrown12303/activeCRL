@@ -2,8 +2,8 @@ package core
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"log"
 	"net/url"
 	"reflect"
@@ -325,7 +325,9 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, deletedElements ma
 	if ownerID != "" {
 		el.SetOwningConceptID("", hl)
 	}
-	for id := range uOfDPtr.listenersMap.GetMappedValues(uuid).Iterator().C {
+	it := uOfDPtr.listenersMap.GetMappedValues(uuid).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		listener := uOfDPtr.GetElement(id.(string))
 		switch listener.(type) {
 		case Reference:
@@ -376,7 +378,9 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElement(element Element, hl *HeldLocks
 
 // DeleteElements removes the elements from the uOfD. Pointers to the elements from elements not being deleted are set to nil.
 func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, hl *HeldLocks) error {
-	for id := range elements.Iterator().C {
+	it := elements.Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		el := uOfDPtr.GetElement(id.(string))
 		if el.GetIsCore(hl) {
 			return errors.New("ClearUniverseOfDiscourse called on a CRL core concept")
@@ -388,7 +392,9 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, hl *Held
 			return errors.New("SetUniverseOfDiscourse called on read-only Element")
 		}
 	}
-	for id := range elements.Iterator().C {
+	it2 := elements.Iterator()
+	defer it2.Stop()
+	for id := range it2.C {
 		el := uOfDPtr.GetElement(id.(string))
 		hl.WriteLockElement(el)
 		uOfDPtr.preChange(el, hl)
@@ -489,7 +495,9 @@ func (uOfDPtr *UniverseOfDiscourse) GetConceptsOwnedConceptIDs(id string) mapset
 
 // GetConceptsOwnedConceptIDsRecursively returns the IDs of owned concepts
 func (uOfDPtr *UniverseOfDiscourse) GetConceptsOwnedConceptIDsRecursively(rootID string, descendants mapset.Set, hl *HeldLocks) {
-	for id := range uOfDPtr.ownedIDsMap.GetMappedValues(rootID).Iterator().C {
+	it := uOfDPtr.ownedIDsMap.GetMappedValues(rootID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		descendants.Add(id.(string))
 		uOfDPtr.GetConceptsOwnedConceptIDsRecursively(id.(string), descendants, hl)
 	}
@@ -668,7 +676,9 @@ func (uOfDPtr *UniverseOfDiscourse) marshalConceptRecursively(el Element, hl *He
 	result = append(result, marshaledElement...)
 	result = append(result, []byte(",")...)
 	elID := el.GetConceptID(hl)
-	for id := range uOfDPtr.GetConceptsOwnedConceptIDs(elID).Iterator().C {
+	it := uOfDPtr.GetConceptsOwnedConceptIDs(elID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		child := uOfDPtr.GetElement(id.(string))
 		marshaledChild, err := uOfDPtr.marshalConceptRecursively(child, hl)
 		if err != nil {
@@ -775,6 +785,83 @@ func (uOfDPtr *UniverseOfDiscourse) NewLiteral(hl *HeldLocks, uri ...string) (Li
 		lit.SetURI(actualURI, hl)
 	}
 	return &lit, nil
+}
+
+// NewOwnedElement creates an element (with optional URI) and sets its owner and label
+func (uOfDPtr *UniverseOfDiscourse) NewOwnedElement(owner Element, label string, hl *HeldLocks, uri ...string) (Element, error) {
+	el, err := uOfDPtr.NewElement(hl, uri...)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedElement failed")
+	}
+	err = el.SetLabel(label, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedElement failed")
+	}
+	err = el.SetOwningConcept(owner, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedElement failed")
+	}
+	return el, nil
+}
+
+// NewOwnedLiteral creates a literal (with optional URI) and sets its owner and label
+func (uOfDPtr *UniverseOfDiscourse) NewOwnedLiteral(owner Element, label string, hl *HeldLocks, uri ...string) (Literal, error) {
+	lit, err := uOfDPtr.NewLiteral(hl, uri...)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedLiteral failed")
+	}
+	err = lit.SetLabel(label, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedLiteral failed")
+	}
+	err = lit.SetOwningConcept(owner, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedLiteral failed")
+	}
+	return lit, nil
+}
+
+// NewOwnedReference creates a reference (with optional URI) and sets its owner and label
+func (uOfDPtr *UniverseOfDiscourse) NewOwnedReference(owner Element, label string, hl *HeldLocks, uri ...string) (Reference, error) {
+	ref, err := uOfDPtr.NewReference(hl, uri...)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedReference failed")
+	}
+	err = ref.SetLabel(label, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedReference failed")
+	}
+	err = ref.SetOwningConcept(owner, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedReference failed")
+	}
+	return ref, nil
+}
+
+// NewOwnedRefinement creates a refinement (with optional URI) and sets its abstract and refined references, sets the label, and
+// makes the refined element the owner
+func (uOfDPtr *UniverseOfDiscourse) NewOwnedRefinement(abstractElement Element, refinedElement Element, label string, hl *HeldLocks, uri ...string) (Refinement, error) {
+	ref, err := uOfDPtr.NewRefinement(hl, uri...)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
+	}
+	err = ref.SetLabel(label, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
+	}
+	err = ref.SetAbstractConcept(abstractElement, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
+	}
+	err = ref.SetRefinedConcept(refinedElement, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
+	}
+	err = ref.SetOwningConcept(refinedElement, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
+	}
+	return ref, nil
 }
 
 // NewReference creates and initializes a new Reference
@@ -946,7 +1033,9 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 	}
 	originalID := original.GetConceptID(hl)
 	replicateID := replicate.GetConceptID(hl)
-	for id := range uOfDPtr.GetConceptsOwnedConceptIDs(originalID).Iterator().C {
+	it := uOfDPtr.GetConceptsOwnedConceptIDs(originalID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		originalChild := uOfDPtr.GetElement(id.(string))
 		switch originalChild.(type) {
 		case Refinement:
@@ -955,7 +1044,9 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 		var replicateChild Element
 		// For each original child, determine whether there is already a replicate child that
 		// has the original child as one of its abstractions. This is replicateChild
-		for id := range uOfDPtr.GetConceptsOwnedConceptIDs(replicateID).Iterator().C {
+		it2 := uOfDPtr.GetConceptsOwnedConceptIDs(replicateID).Iterator()
+		defer it2.Stop()
+		for id := range it2.C {
 			currentChild := uOfDPtr.GetElement(id.(string))
 			currentChildAbstractions := make(map[string]Element)
 			currentChild.FindAbstractions(currentChildAbstractions, hl)

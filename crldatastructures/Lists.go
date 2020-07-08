@@ -225,7 +225,9 @@ func AppendListMember(list core.Element, newMember core.Element, hl *core.HeldLo
 // ClearList removes all members from the list
 func ClearList(list core.Element, hl *core.HeldLocks) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
-	for id := range list.GetOwnedConceptIDs(hl).Iterator().C {
+	it := list.GetOwnedConceptIDs(hl).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil && memberReference.IsRefinementOfURI(CrlListMemberReferenceURI, hl) {
 			uOfD.DeleteElement(memberReference, hl)
@@ -254,7 +256,9 @@ func GetFirstMemberReference(list core.Element, hl *core.HeldLocks) (core.Refere
 // It returns nil if the element it is not found in the list.
 func GetFirstReferenceForMember(list core.Element, member core.Element, hl *core.HeldLocks) (core.Reference, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
-	for id := range list.GetOwnedConceptIDs(hl).Iterator().C {
+	it := list.GetOwnedConceptIDs(hl).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil &&
 			memberReference.IsRefinementOfURI(CrlListMemberReferenceURI, hl) &&
@@ -384,7 +388,9 @@ func IsList(list core.Element, hl *core.HeldLocks) bool {
 // IsListMember returns true if the element is a memeber of the given list
 func IsListMember(list core.Element, el core.Element, hl *core.HeldLocks) bool {
 	uOfD := list.GetUniverseOfDiscourse(hl)
-	for id := range list.GetOwnedConceptIDs(hl).Iterator().C {
+	it := list.GetOwnedConceptIDs(hl).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil && memberReference.IsRefinementOfURI(CrlListMemberReferenceURI, hl) && memberReference.GetReferencedConcept(hl) == el {
 			return true
@@ -464,7 +470,9 @@ func PrependListMember(list core.Element, newMember core.Element, hl *core.HeldL
 // RemoveListMember removes the first occurrance of an element from the given list
 func RemoveListMember(list core.Element, el core.Element, hl *core.HeldLocks) error {
 	uOfD := list.GetUniverseOfDiscourse(hl)
-	for id := range list.GetOwnedConceptIDs(hl).Iterator().C {
+	it := list.GetOwnedConceptIDs(hl).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil && memberReference.IsRefinementOfURI(CrlListMemberReferenceURI, hl) && memberReference.GetReferencedConcept(hl) == el {
 			// Modify previous and next pointers

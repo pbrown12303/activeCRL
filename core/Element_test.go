@@ -109,7 +109,9 @@ var _ = Describe("Element internals test", func() {
 				})
 				It("should be present in GetOwnedConcepts", func() {
 					found := false
-					for id := range uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
+					it := uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator()
+					defer it.Stop()
+					for id := range it.C {
 						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(hl) == ownedConcept.GetConceptID(hl) {
 							found = true
@@ -132,7 +134,9 @@ var _ = Describe("Element internals test", func() {
 				})
 				It("should not be present in the OwnedConcepts", func() {
 					found := false
-					for id := range uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator().C {
+					it := uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator()
+					defer it.Stop()
+					for id := range it.C {
 						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(hl) == ownedConcept.GetConceptID(hl) {
 							found = true
@@ -169,7 +173,9 @@ var _ = Describe("Element internals test", func() {
 				})
 				It("should be present in listeners", func() {
 					found := false
-					for id := range uOfD.getListenerIDs(el.GetConceptID(hl)).Iterator().C {
+					it := uOfD.getListenerIDs(el.GetConceptID(hl)).Iterator()
+					defer it.Stop()
+					for id := range it.C {
 						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(hl) == referencingConcept.GetConceptID(hl) {
 							found = true
@@ -189,7 +195,9 @@ var _ = Describe("Element internals test", func() {
 				})
 				It("should not be present in the listeningConcepts", func() {
 					found := false
-					for id := range uOfD.getListenerIDs(el.GetConceptID(hl)).Iterator().C {
+					it := uOfD.getListenerIDs(el.GetConceptID(hl)).Iterator()
+					defer it.Stop()
+					for id := range it.C {
 						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(hl) == referencingConcept.GetConceptID(hl) {
 							found = true

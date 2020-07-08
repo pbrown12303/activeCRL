@@ -45,7 +45,9 @@ func AddSetMember(set core.Element, newMember core.Element, hl *core.HeldLocks) 
 // ClearSet removes all members from the set
 func ClearSet(set core.Element, hl *core.HeldLocks) {
 	uOfD := set.GetUniverseOfDiscourse(hl)
-	for id := range set.GetOwnedConceptIDs(hl).Iterator().C {
+	it := set.GetOwnedConceptIDs(hl).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil && memberReference.IsRefinementOfURI(CrlSetMemberReferenceURI, hl) {
 			uOfD.DeleteElement(memberReference, hl)
@@ -65,7 +67,9 @@ func GetSetType(set core.Element, hl *core.HeldLocks) (core.Element, error) {
 // IsSetMember returns true if the element is a memeber of the given set
 func IsSetMember(set core.Element, el core.Element, hl *core.HeldLocks) bool {
 	uOfD := set.GetUniverseOfDiscourse(hl)
-	for id := range set.GetOwnedConceptIDs(hl).Iterator().C {
+	it := set.GetOwnedConceptIDs(hl).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil && memberReference.IsRefinementOfURI(CrlSetMemberReferenceURI, hl) && memberReference.GetReferencedConcept(hl) == el {
 			return true
@@ -77,7 +81,9 @@ func IsSetMember(set core.Element, el core.Element, hl *core.HeldLocks) bool {
 // RemoveSetMember removes the element from the given set
 func RemoveSetMember(set core.Element, el core.Element, hl *core.HeldLocks) error {
 	uOfD := set.GetUniverseOfDiscourse(hl)
-	for id := range set.GetOwnedConceptIDs(hl).Iterator().C {
+	it := set.GetOwnedConceptIDs(hl).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil && memberReference.IsRefinementOfURI(CrlSetMemberReferenceURI, hl) && memberReference.GetReferencedConcept(hl) == el {
 			uOfD.DeleteElement(memberReference, hl)

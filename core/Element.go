@@ -127,7 +127,9 @@ func (ePtr *element) GetDefinition(hl *HeldLocks) string {
 // there is more than one child with the given abstraction the result is nondeterministic.
 func (ePtr *element) GetFirstOwnedConceptRefinedFrom(abstraction Element, hl *HeldLocks) Element {
 	hl.ReadLockElement(ePtr)
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		if element.IsRefinementOf(abstraction, hl) {
 			return element
@@ -152,7 +154,9 @@ func (ePtr *element) GetFirstOwnedConceptRefinedFromURI(abstractionURI string, h
 // abstraction as one of its abstractions.
 func (ePtr *element) GetFirstOwnedLiteralRefinementOf(abstraction Element, hl *HeldLocks) Literal {
 	hl.ReadLockElement(ePtr)
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Literal:
@@ -181,7 +185,9 @@ func (ePtr *element) GetFirstOwnedLiteralRefinementOfURI(abstractionURI string, 
 func (ePtr *element) GetFirstOwnedReferenceRefinedFrom(abstraction Element, hl *HeldLocks) Reference {
 	hl.ReadLockElement(ePtr)
 	ownedIDs := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID)
-	for id := range ownedIDs.Iterator().C {
+	it := ownedIDs.Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Reference:
@@ -213,7 +219,9 @@ func (ePtr *element) GetFirstOwnedReferenceRefinedFromURI(abstractionURI string,
 // abstraction as one of its abstractions.
 func (ePtr *element) GetFirstOwnedRefinementRefinedFrom(abstraction Element, hl *HeldLocks) Refinement {
 	hl.ReadLockElement(ePtr)
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Refinement:
@@ -240,7 +248,9 @@ func (ePtr *element) GetFirstOwnedRefinementRefinedFromURI(abstractionURI string
 // GetFirstOwnedConceptWithURI
 func (ePtr *element) GetFirstOwnedConceptWithURI(uri string, hl *HeldLocks) Element {
 	hl.ReadLockElement(ePtr)
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		if element.GetURI(hl) == uri {
 			return element
@@ -251,7 +261,9 @@ func (ePtr *element) GetFirstOwnedConceptWithURI(uri string, hl *HeldLocks) Elem
 
 func (ePtr *element) GetFirstOwnedLiteralRefinedFrom(abstraction Element, hl *HeldLocks) Literal {
 	hl.ReadLockElement(ePtr)
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Literal:
@@ -274,7 +286,9 @@ func (ePtr *element) GetFirstOwnedLiteralRefinedFromURI(uri string, hl *HeldLock
 
 func (ePtr *element) GetFirstOwnedLiteralWithURI(uri string, hl *HeldLocks) Literal {
 	hl.ReadLockElement(ePtr)
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case *literal:
@@ -288,7 +302,9 @@ func (ePtr *element) GetFirstOwnedLiteralWithURI(uri string, hl *HeldLocks) Lite
 
 func (ePtr *element) GetFirstOwnedReferenceWithURI(uri string, hl *HeldLocks) Reference {
 	hl.ReadLockElement(ePtr)
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case *reference:
@@ -302,7 +318,9 @@ func (ePtr *element) GetFirstOwnedReferenceWithURI(uri string, hl *HeldLocks) Re
 
 func (ePtr *element) GetFirstOwnedRefinementWithURI(uri string, hl *HeldLocks) Refinement {
 	hl.ReadLockElement(ePtr)
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case *refinement:
@@ -316,7 +334,9 @@ func (ePtr *element) GetFirstOwnedRefinementWithURI(uri string, hl *HeldLocks) R
 
 // FindAbstractions adds all found abstractions to supplied map
 func (ePtr *element) FindAbstractions(abstractions map[string]Element, hl *HeldLocks) {
-	for id := range ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		listener := ePtr.uOfD.GetElement(id.(string))
 		switch listener.(type) {
 		case *refinement:
@@ -331,7 +351,9 @@ func (ePtr *element) FindAbstractions(abstractions map[string]Element, hl *HeldL
 
 // FindImmediateAbstractions adds all immediate abstractions to supplied map
 func (ePtr *element) FindImmediateAbstractions(abstractions map[string]Element, hl *HeldLocks) {
-	for id := range ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		listener := ePtr.uOfD.GetElement(id.(string))
 		switch listener.(type) {
 		case *refinement:
@@ -373,7 +395,9 @@ func (ePtr *element) GetOwnedConceptIDs(hl *HeldLocks) mapset.Set {
 func (ePtr *element) GetOwnedConceptsRefinedFrom(abstraction Element, hl *HeldLocks) map[string]Element {
 	hl.ReadLockElement(ePtr)
 	matches := map[string]Element{}
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		if element.IsRefinementOf(abstraction, hl) {
 			matches[element.GetConceptID(hl)] = element
@@ -389,7 +413,9 @@ func (ePtr *element) GetOwnedConceptsRefinedFromURI(abstractionURI string, hl *H
 	matches := map[string]Element{}
 	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
 	if abstraction != nil {
-		for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+		defer it.Stop()
+		for id := range it.C {
 			element := ePtr.uOfD.GetElement(id.(string))
 			if element.IsRefinementOf(abstraction, hl) {
 				matches[element.GetConceptID(hl)] = element
@@ -404,7 +430,9 @@ func (ePtr *element) GetOwnedConceptsRefinedFromURI(abstractionURI string, hl *H
 func (ePtr *element) GetOwnedLiteralsRefinedFrom(abstraction Element, hl *HeldLocks) map[string]Literal {
 	hl.ReadLockElement(ePtr)
 	matches := map[string]Literal{}
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Literal:
@@ -423,7 +451,9 @@ func (ePtr *element) GetOwnedLiteralsRefinedFromURI(abstractionURI string, hl *H
 	matches := map[string]Literal{}
 	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
 	if abstraction != nil {
-		for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+		defer it.Stop()
+		for id := range it.C {
 			element := ePtr.uOfD.GetElement(id.(string))
 			switch element.(type) {
 			case Literal:
@@ -441,7 +471,9 @@ func (ePtr *element) GetOwnedLiteralsRefinedFromURI(abstractionURI string, hl *H
 func (ePtr *element) GetOwnedReferencesRefinedFrom(abstraction Element, hl *HeldLocks) map[string]Reference {
 	hl.ReadLockElement(ePtr)
 	matches := map[string]Reference{}
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Reference:
@@ -460,7 +492,9 @@ func (ePtr *element) GetOwnedReferencesRefinedFromURI(abstractionURI string, hl 
 	matches := map[string]Reference{}
 	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
 	if abstraction != nil {
-		for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+		defer it.Stop()
+		for id := range it.C {
 			element := ePtr.uOfD.GetElement(id.(string))
 			switch element.(type) {
 			case Reference:
@@ -478,7 +512,9 @@ func (ePtr *element) GetOwnedReferencesRefinedFromURI(abstractionURI string, hl 
 func (ePtr *element) GetOwnedRefinementsRefinedFrom(abstraction Element, hl *HeldLocks) map[string]Refinement {
 	hl.ReadLockElement(ePtr)
 	matches := map[string]Refinement{}
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch element.(type) {
 		case Refinement:
@@ -497,7 +533,9 @@ func (ePtr *element) GetOwnedRefinementsRefinedFromURI(abstractionURI string, hl
 	matches := map[string]Refinement{}
 	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
 	if abstraction != nil {
-		for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+		defer it.Stop()
+		for id := range it.C {
 			element := ePtr.uOfD.GetElement(id.(string))
 			switch element.(type) {
 			case Refinement:
@@ -577,7 +615,9 @@ func (ePtr *element) IsRefinementOf(abstraction Element, hl *HeldLocks) bool {
 			return true
 		}
 	}
-	for id := range ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		listener := ePtr.uOfD.GetElement(id.(string))
 		switch listener.(type) {
 		case Refinement:
@@ -729,7 +769,9 @@ func (ePtr *element) isEquivalent(hl1 *HeldLocks, el *element, hl2 *HeldLocks, p
 // list has not yet been updated.
 func (ePtr *element) IsOwnedConcept(el Element, hl *HeldLocks) bool {
 	hl.ReadLockElement(ePtr)
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		child := ePtr.uOfD.GetElement(id.(string))
 		if el.GetConceptID(hl) == child.GetConceptID(hl) {
 			return true
@@ -765,7 +807,9 @@ func (ePtr *element) notifyListeners(underlyingNotification *ChangeNotification,
 	if ePtr.uOfD != nil {
 		indicatedConceptChanged := ePtr.uOfD.NewForwardingChangeNotification(ePtr, IndicatedConceptChanged, underlyingNotification)
 		abstractionChanged := ePtr.uOfD.NewForwardingChangeNotification(ePtr, AbstractionChanged, underlyingNotification)
-		for id := range ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+		it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
+		defer it.Stop()
+		for id := range it.C {
 			listener := ePtr.uOfD.GetElement(id.(string))
 			switch listener.(type) {
 			case *refinement:
@@ -907,7 +951,9 @@ func (ePtr *element) SetIsCoreRecursively(hl *HeldLocks) error {
 	if err != nil {
 		return errors.Wrap(err, "Element.SetIsCoreRecursively failed")
 	}
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		el := ePtr.uOfD.GetElement(id.(string))
 		err = el.SetIsCoreRecursively(hl)
 		if err != nil {
@@ -949,11 +995,11 @@ func (ePtr *element) SetLabel(label string, hl *HeldLocks) error {
 // determine whether the new owner is editable and will throw an error if it is not
 func (ePtr *element) SetOwningConcept(el Element, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	if el.isEditable(hl) == false {
-		return errors.New("element.SetOwningConcept called with an owner that is not editable")
-	}
 	id := ""
 	if el != nil {
+		if el.isEditable(hl) == false {
+			return errors.New("element.SetOwningConcept called with an owner that is not editable")
+		}
 		id = el.getConceptIDNoLock()
 	}
 	err := ePtr.SetOwningConceptID(id, hl)
@@ -970,6 +1016,9 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
 	if ePtr.isEditable(hl) == false {
 		return errors.New("element.SetOwningConceptID failed because the element is not editable")
+	}
+	if ocID == ePtr.ConceptID {
+		return errors.New("element.SetOwningConceptID called with itself as owner")
 	}
 	newOwner := ePtr.uOfD.GetElement(ocID)
 	if newOwner != nil && newOwner.isEditable(hl) == false {
@@ -1024,7 +1073,9 @@ func (ePtr *element) SetReadOnlyRecursively(value bool, hl *HeldLocks) error {
 	if err != nil {
 		return errors.Wrap(err, "Element.SetReadOnlyRecursively failed")
 	}
-	for id := range ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator().C {
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
 		el := ePtr.uOfD.GetElement(id.(string))
 		err = el.SetReadOnlyRecursively(value, hl)
 		if err != nil {

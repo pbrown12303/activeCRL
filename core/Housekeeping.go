@@ -3,7 +3,7 @@ package core
 var coreHousekeepingURI = CorePrefix + "coreHousekeeping"
 
 // coreHousekeeping does the housekeeping for the core concepts
-func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *UniverseOfDiscourse) {
+func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *UniverseOfDiscourse) error {
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	hl.ReadLockElement(el)
@@ -69,4 +69,5 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 		// Send IndicatedConceptChanged to listeners
 		el.notifyListeners(notification, hl)
 	}
+	return nil
 }

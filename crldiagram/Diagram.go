@@ -1280,7 +1280,7 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 }
 
 // updateDiagramElement updates the diagram node based on changes to the modelElement it represents
-func updateDiagramElement(diagramElement core.Element, notification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) {
+func updateDiagramElement(diagramElement core.Element, notification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) error {
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	hl.WriteLockElement(diagramElement)
@@ -1330,7 +1330,7 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 								newModelSource := reference.GetOwningConcept(hl)
 								if newModelSource == nil || newModelTarget == nil {
 									uOfD.DeleteElement(diagramElement, hl)
-									return
+									return nil
 								}
 								currentDiagramSource := GetLinkSource(diagramElement, hl)
 								currentModelSource := GetReferencedModelElement(currentDiagramSource, hl)
@@ -1340,7 +1340,7 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 									newDiagramSource := GetFirstElementRepresentingConcept(diagram, newModelSource, hl)
 									if newDiagramSource == nil {
 										uOfD.DeleteElement(diagramElement, hl)
-										return
+										return nil
 									}
 									SetLinkSource(diagramElement, newDiagramSource, hl)
 								}
@@ -1348,7 +1348,7 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 									newDiagramTarget := GetFirstElementRepresentingConcept(diagram, newModelTarget, hl)
 									if newDiagramTarget == nil {
 										uOfD.DeleteElement(diagramElement, hl)
-										return
+										return nil
 									}
 									SetLinkTarget(diagramElement, newDiagramTarget, hl)
 								}
@@ -1379,7 +1379,7 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 								newModelSource := refinement.GetRefinedConcept(hl)
 								if newModelTarget == nil || newModelSource == nil {
 									uOfD.DeleteElement(diagramElement, hl)
-									return
+									return nil
 								}
 								currentDiagramTarget := GetLinkTarget(diagramElement, hl)
 								currentModelTarget := GetReferencedModelElement(currentDiagramTarget, hl)
@@ -1389,7 +1389,7 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 									newDiagramTarget := GetFirstElementRepresentingConcept(diagram, newModelTarget, hl)
 									if newDiagramTarget == nil {
 										uOfD.DeleteElement(diagramElement, hl)
-										return
+										return nil
 									}
 									SetLinkTarget(diagramElement, newDiagramTarget, hl)
 								}
@@ -1397,7 +1397,7 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 									newDiagramSource := GetFirstElementRepresentingConcept(diagram, newModelSource, hl)
 									if newDiagramSource == nil {
 										uOfD.DeleteElement(diagramElement, hl)
-										return
+										return nil
 									}
 									SetLinkSource(diagramElement, newDiagramSource, hl)
 								}
@@ -1429,10 +1429,11 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 			}
 		}
 	}
+	return nil
 }
 
 // updateDiagramOwnerPointer updates the ownerPointer's target if the ownership of the represented modelElement changes
-func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) {
+func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) error {
 	// There is one change of interest here: the model element's owner has changed
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
@@ -1489,6 +1490,7 @@ func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.C
 			}
 		}
 	}
+	return nil
 }
 
 func updateDiagramElementForModelElementChange(diagramElement core.Element, modelElement core.Element, hl *core.HeldLocks) {

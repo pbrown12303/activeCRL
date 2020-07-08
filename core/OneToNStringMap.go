@@ -124,6 +124,7 @@ func (onMap *OneToNStringMap) SetMappedValues(key string, newValues mapset.Set) 
 	selectedMap := onMap.oneToNStringMap[key]
 	selectedMap.Clear()
 	newValuesIterator := newValues.Iterator()
+	defer newValuesIterator.Stop()
 	for value := range newValuesIterator.C {
 		selectedMap.Add(value)
 	}
