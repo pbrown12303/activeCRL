@@ -576,6 +576,23 @@ var _ = Describe("Element internals test", func() {
 			Expect(owner.GetFirstOwnedConceptRefinedFromURI(abstractionURI, hl)).To(Equal(el))
 			Expect(len(owner.GetOwnedConceptsRefinedFromURI(abstractionURI, hl))).To(Equal(1))
 		})
+		Specify("Getting any descendant with abstractionURI", func() {
+			el, _ := uOfD.NewElement(hl)
+			el2, _ := uOfD.NewElement(hl)
+			owner, _ := uOfD.NewElement(hl)
+			el.SetOwningConceptID(owner.getConceptIDNoLock(), hl)
+			el2.SetOwningConceptID(el.getConceptIDNoLock(), hl)
+			abs, _ := uOfD.NewElement(hl)
+			abstractionURI := "http://test.uri"
+			abs.SetURI(abstractionURI, hl)
+			ref, _ := uOfD.NewRefinement(hl)
+			ref.SetAbstractConceptID(abs.getConceptIDNoLock(), hl)
+			ref.SetRefinedConceptID(el.getConceptIDNoLock(), hl)
+			ref2, _ := uOfD.NewRefinement(hl)
+			ref2.SetAbstractConceptID(abs.getConceptIDNoLock(), hl)
+			ref2.SetRefinedConceptID(el2.getConceptIDNoLock(), hl)
+			Expect(len(owner.GetOwnedDescendantsRefinedFromURI(abstractionURI, hl))).To(Equal(2))
+		})
 		Specify("Getting Literal child with abstraction", func() {
 			lit, _ := uOfD.NewLiteral(hl)
 			owner, _ := uOfD.NewElement(hl)

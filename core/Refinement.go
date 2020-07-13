@@ -209,7 +209,13 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *HeldLocks) error {
 		rPtr.uOfD.preChange(rPtr, hl)
 		rPtr.incrementVersion(hl)
 		if rPtr.AbstractConceptID != "" {
-			rPtr.uOfD.GetElement(rPtr.AbstractConceptID).removeListener(rPtr.ConceptID, hl)
+			abstractConcept := rPtr.uOfD.GetElement(rPtr.AbstractConceptID)
+			if abstractConcept != nil {
+				abstractConcept.removeListener(rPtr.ConceptID, hl)
+			} else {
+				// This case can arise if the abstract concept is not currently loaded
+				rPtr.uOfD.listenersMap.RemoveMappedValue(rPtr.AbstractConceptID, rPtr.ConceptID)
+			}
 		}
 		var newAbstractConcept Element
 		if acID != "" {

@@ -425,6 +425,49 @@ func (ePtr *element) GetOwnedConceptsRefinedFromURI(abstractionURI string, hl *H
 	return matches
 }
 
+// GetOwnedDescendantsRefinedFrom returns the owned concepts with the indicated abstraction as
+// one of their abstractions.
+func (ePtr *element) GetOwnedDescendantsRefinedFrom(abstraction Element, hl *HeldLocks) map[string]Element {
+	hl.ReadLockElement(ePtr)
+	matches := map[string]Element{}
+	if abstraction != nil {
+		// it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+		descendantIDs := mapset.NewSet()
+		ePtr.uOfD.GetConceptsOwnedConceptIDsRecursively(ePtr.ConceptID, descendantIDs, hl)
+		it := descendantIDs.Iterator()
+		defer it.Stop()
+		for id := range it.C {
+			element := ePtr.uOfD.GetElement(id.(string))
+			if element.IsRefinementOf(abstraction, hl) {
+				matches[element.GetConceptID(hl)] = element
+			}
+		}
+	}
+	return matches
+}
+
+// GetOwnedDescendantsRefinedFromURI returns the descendant concepts that have the indicated abstraction
+// by the URI as one of their abstractions.
+func (ePtr *element) GetOwnedDescendantsRefinedFromURI(abstractionURI string, hl *HeldLocks) map[string]Element {
+	hl.ReadLockElement(ePtr)
+	matches := map[string]Element{}
+	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
+	if abstraction != nil {
+		// it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+		descendantIDs := mapset.NewSet()
+		ePtr.uOfD.GetConceptsOwnedConceptIDsRecursively(ePtr.ConceptID, descendantIDs, hl)
+		it := descendantIDs.Iterator()
+		defer it.Stop()
+		for id := range it.C {
+			element := ePtr.uOfD.GetElement(id.(string))
+			if element.IsRefinementOf(abstraction, hl) {
+				matches[element.GetConceptID(hl)] = element
+			}
+		}
+	}
+	return matches
+}
+
 // GetOwnedLiteralsRefinedFrom returns the owned literals that have the indicated
 // abstraction as one of their abstractions.
 func (ePtr *element) GetOwnedLiteralsRefinedFrom(abstraction Element, hl *HeldLocks) map[string]Literal {
@@ -1174,6 +1217,8 @@ type Element interface {
 	GetOwnedConceptIDs(hl *HeldLocks) mapset.Set
 	GetOwnedConceptsRefinedFrom(Element, *HeldLocks) map[string]Element
 	GetOwnedConceptsRefinedFromURI(string, *HeldLocks) map[string]Element
+	GetOwnedDescendantsRefinedFrom(Element, *HeldLocks) map[string]Element
+	GetOwnedDescendantsRefinedFromURI(string, *HeldLocks) map[string]Element
 	GetOwnedLiteralsRefinedFrom(Element, *HeldLocks) map[string]Literal
 	GetOwnedLiteralsRefinedFromURI(string, *HeldLocks) map[string]Literal
 	GetOwnedReferencesRefinedFrom(Element, *HeldLocks) map[string]Reference

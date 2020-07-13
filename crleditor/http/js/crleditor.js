@@ -119,14 +119,15 @@ $(function () {
             if ($("#enableTracing").prop("checked") == true) {
                 enableNotificationTracing = "true";
             };
-            var omitHousekeepingCalls = "false"
+            var omitHousekeepingCalls = "false";
             if ($("#omitHousekeepingCalls").prop("checked") == true) {
                 omitHousekeepingCalls = "true";
             }
-            var omitManageTreeNodesCalls = "false"
+            var omitManageTreeNodesCalls = "false";
             if ($("#omitManageTreeNodesCalls").prop("checked") == true) {
                 omitManageTreeNodesCalls = "true";
             }
+            var omitDiagramRelatedCalls = "false";
             if ($("#omitDiagramRelatedCalls").prop("checked") == true) {
                 omitDiagramRelatedCalls = "true";
             }
@@ -405,8 +406,8 @@ function crlConstructPaper(diagramContainer, jointGraph, jointPaperID) {
     diagramContainer.appendChild(diagramPaperDiv);
     jointPaper = new joint.dia.Paper({
         "el": diagramPaperDiv,
-        "width": 1000,
-        "height": 1000,
+        "width": 2000,
+        "height": 2000,
         defaultLink: undefined,
         linkView: crlCustomLinkView,
         validateMagnet: crlValidateLinkStart,
@@ -1361,7 +1362,10 @@ function crlInitializeWebSocket() {
                 crlSendNormalResponse("Processed InitializationComplete")
                 break;
             case "Refresh":
-                crlNotificationRefresh()
+                crlNotificationRefresh();
+                break;
+            case "ShowTreeNode":
+                crlNotificationShowTreeNode(data);
                 break;
             case "UpdateDiagramLink":
                 crlNotificationUpdateDiagramLink(data);
@@ -1784,6 +1788,14 @@ function crlNotificationSaveUserPreferences(data) {
     crlSendNormalResponse();
 }
 
+function crlNotificationShowTreeNode(data) {
+    var concept = data.NotificationConcept;
+    var nodeID = crlGetTreeNodeIDFromConceptID(concept.ConceptID);
+    var tree = $('#uOfD').jstree();
+    tree.select_node(nodeID);
+    crlSendNormalResponse();
+}
+
 var crlNotificationUpdateDiagramLink = function (data) {
     var concept = data.NotificationConcept;
     var params = data.AdditionalParameters;
@@ -2164,7 +2176,7 @@ function crlSendCloseWorkspace() {
     crlSendRequest(xhr, data);
 }
 
-function crlSendDebugSettings(enableNotificationTracing, omitHousekeepingCalls, omitManageTreeNodesCalls, maxTracingDepth) {
+function crlSendDebugSettings(enableNotificationTracing, omitHousekeepingCalls, omitManageTreeNodesCalls, omitDiagramRelatedCalls, maxTracingDepth) {
     var xhr = crlCreateEmptyRequest()
     var data = JSON.stringify({
         "Action": "UpdateDebugSettings",
@@ -2471,6 +2483,15 @@ var crlShowAbstractConcept = function (evt) {
     var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({ "Action": "ShowAbstractConcept", "RequestConceptID": diagramElementID });
+    crlSendRequest(xhr, data);
+}
+
+var crlShowConceptInNavigator = function (evt) {
+    var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
+    var jointID = cellView.model.attributes.crlJointID;
+    var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "ShowConceptInNavigator", "RequestConceptID": diagramElementID });
     crlSendRequest(xhr, data);
 }
 

@@ -883,6 +883,18 @@ func (edPtr *CrlEditor) Undo(hl *core.HeldLocks) error {
 	return edPtr.initializeClientState(hl)
 }
 
+// ShowConceptInTree shows the concept in the tree
+func (edPtr *CrlEditor) ShowConceptInTree(concept core.Element, hl *core.HeldLocks) error {
+	if concept == nil {
+		return errors.New("CrlEditor.ShowConceptInTree called with nil concept")
+	}
+	_, err := edPtr.SendNotification("ShowTreeNode", concept.GetConceptID(hl), concept, nil)
+	if err != nil {
+		return errors.Wrap(err, "CrlEditor.ShowConceptInTree failed")
+	}
+	return nil
+}
+
 // UpdateDebugSettings updates the debug-related settings and sends a notification to the client
 func (edPtr *CrlEditor) UpdateDebugSettings(request *Request) {
 	traceChange, err := strconv.ParseBool(request.AdditionalParameters["EnableNotificationTracing"])

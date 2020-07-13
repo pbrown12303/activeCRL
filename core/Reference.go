@@ -104,10 +104,41 @@ func (rPtr *reference) GetReferencedConceptID(hl *HeldLocks) string {
 	return rPtr.ReferencedConceptID
 }
 
-// GetReferencedConceptAttribute returns an indicator of which attribute is being referenced (if any)
+// GetReferencedAttributeName returns an indicator of which attribute is being referenced (if any)
 func (rPtr *reference) GetReferencedAttributeName(hl *HeldLocks) AttributeName {
 	hl.ReadLockElement(rPtr)
 	return rPtr.ReferencedAttributeName
+}
+
+// GetReferencedAttributeValue returns the string value of the referenced attribute (if any)
+func (rPtr *reference) GetReferencedAttributeValue(hl *HeldLocks) string {
+	hl.ReadLockElement(rPtr)
+	if rPtr.ReferencedConceptID != "" {
+		referencedConcept := rPtr.GetReferencedConcept(hl)
+		if referencedConcept != nil {
+			if rPtr.ReferencedAttributeName == OwningConceptID {
+				return referencedConcept.GetOwningConceptID(hl)
+			}
+			switch referencedConcept.(type) {
+			case Reference:
+				if rPtr.ReferencedAttributeName == ReferencedConceptID {
+					return referencedConcept.(Reference).GetReferencedConceptID(hl)
+				}
+			case Refinement:
+				if rPtr.ReferencedAttributeName == AbstractConceptID {
+					return referencedConcept.(Refinement).GetAbstractConceptID(hl)
+				}
+				if rPtr.ReferencedAttributeName == RefinedConceptID {
+					return referencedConcept.(Refinement).GetRefinedConceptID(hl)
+				}
+			case Literal:
+				if rPtr.ReferencedAttributeName == LiteralValue {
+					return referencedConcept.(Literal).GetLiteralValue(hl)
+				}
+			}
+		}
+	}
+	return ""
 }
 
 // GetReferencedConceptVersion returns the last known version of the referenced concept
@@ -279,6 +310,7 @@ type Reference interface {
 	GetReferencedConcept(*HeldLocks) Element
 	GetReferencedConceptID(*HeldLocks) string
 	GetReferencedAttributeName(*HeldLocks) AttributeName
+	GetReferencedAttributeValue(*HeldLocks) string
 	GetReferencedConceptVersion(*HeldLocks) int
 	getReferencedConceptNoLock() Element
 	SetReferencedConcept(Element, *HeldLocks) error

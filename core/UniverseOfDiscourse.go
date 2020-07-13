@@ -941,7 +941,7 @@ func (uOfDPtr *UniverseOfDiscourse) queueFunctionExecutions(el Element, notifica
 				(OmitDiagramRelatedCalls && isDiagramRelatedFunction(functionIdentifier))
 			if omitTrace == false {
 				log.Printf("queueFunctionExecutions adding function, URI: %s notification: %s target: %p", functionIdentifier, notification.GetNatureOfChange().String(), el)
-				log.Printf("Function target: %T %s %s %p", el, el.getConceptIDNoLock(), el.GetLabel(hl), el)
+				log.Printf("   Function target: %T %s %s %p", el, el.getConceptIDNoLock(), el.GetLabel(hl), el)
 				notification.Print("Notification: ", hl)
 			}
 		}

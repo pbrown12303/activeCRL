@@ -406,6 +406,23 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			sendReply(w, 0, "Processed SaveWorkspace", "", nil)
 		}
+	case "ShowConceptInNavigator":
+		diagramElement := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
+		if diagramElement == nil {
+			sendReply(w, 1, "Selected diagram element not found", "", nil)
+			break
+		}
+		modelElement := crldiagram.GetReferencedModelElement(diagramElement, hl)
+		if modelElement == nil {
+			sendReply(w, 1, "Model element corresponding to selected diagram element not found", "", nil)
+			break
+		}
+		err := CrlEditorSingleton.ShowConceptInTree(modelElement, hl)
+		if err != nil {
+			sendReply(w, 1, "ShowConceptInNavigator failed: "+err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed ShowConceptInNavigator", "", nil)
+		}
 	case "SetTreeDragSelection":
 		CrlEditorSingleton.uOfD.MarkUndoPoint()
 		CrlEditorSingleton.SetTreeDragSelection(request.RequestConceptID)

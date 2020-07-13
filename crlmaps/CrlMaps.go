@@ -1,9 +1,8 @@
 package crlmaps
 
 import (
-	"github.com/pkg/errors"
-
 	"github.com/pbrown12303/activeCRL/core"
+	"github.com/pkg/errors"
 )
 
 // CrlMapsDomainURI is the URI for the concpet space that defines the CRL Data Types
@@ -20,25 +19,25 @@ var CrlMapSourceURI = CrlMapURI + "/Source"
 // CrlMapTargetURI is the URI of the CrlMap target
 var CrlMapTargetURI = CrlMapURI + "/Target"
 
-// Element to Element Map
+// One to One Map
 
-// CrlElementToElementMapURI is the URI for the Element-to-Element Map
-var CrlElementToElementMapURI = CrlMapsDomainURI + "/ElementToElementMap"
+// CrlOneToOneMapURI is the URI for the Element-to-Element Map
+var CrlOneToOneMapURI = CrlMapsDomainURI + "/OneToOneMap"
 
-// CrlElementToElementMapRefinementURI is the URI of the refinement showing it to be a refinement of CrlMap
-var CrlElementToElementMapRefinementURI = CrlElementToElementMapURI + "/Refinement"
+// CrlOneToOneMapRefinementURI is the URI of the refinement showing it to be a refinement of CrlMap
+var CrlOneToOneMapRefinementURI = CrlOneToOneMapURI + "/Refinement"
 
-// CrlElementToElementMapSourceReferenceURI is the URI for the source reference
-var CrlElementToElementMapSourceReferenceURI = CrlElementToElementMapURI + "/SourceReference"
+// CrlOneToOneMapSourceReferenceURI is the URI for the source reference
+var CrlOneToOneMapSourceReferenceURI = CrlOneToOneMapURI + "/SourceReference"
 
-// CrlElementToElementMapSourceReferenceRefinementURI is the URI of the refinement showing it to be a refinement of CrlMapSource
-var CrlElementToElementMapSourceReferenceRefinementURI = CrlElementToElementMapSourceReferenceURI + "/Refinement"
+// CrlOneToOneMapSourceReferenceRefinementURI is the URI of the refinement showing it to be a refinement of CrlMapSource
+var CrlOneToOneMapSourceReferenceRefinementURI = CrlOneToOneMapSourceReferenceURI + "/Refinement"
 
-// CrlElementToElementMapTargetReferenceURI is the URI for the target reference
-var CrlElementToElementMapTargetReferenceURI = CrlElementToElementMapURI + "/TargetReference"
+// CrlOneToOneMapTargetReferenceURI is the URI for the target reference
+var CrlOneToOneMapTargetReferenceURI = CrlOneToOneMapURI + "/TargetReference"
 
-// CrlElementToElementMapTargetReferenceRefinementURI is the URI of the refinement showing it to be a refinement of CrlMapTarget
-var CrlElementToElementMapTargetReferenceRefinementURI = CrlElementToElementMapTargetReferenceURI + "/Refinement"
+// CrlOneToOneMapTargetReferenceRefinementURI is the URI of the refinement showing it to be a refinement of CrlMapTarget
+var CrlOneToOneMapTargetReferenceRefinementURI = CrlOneToOneMapTargetReferenceURI + "/Refinement"
 
 // Reference to Element Map
 
@@ -102,27 +101,27 @@ func BuildCrlMapsDomain(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) erro
 	}
 
 	// Element To Element Map
-	crlElementToElementMap, err5 := uOfD.NewOwnedElement(crlMapsDomain, "CrlElementToElementMap", hl, CrlElementToElementMapURI)
+	crlOneToOneMap, err5 := uOfD.NewOwnedElement(crlMapsDomain, "CrlOneToOneMap", hl, CrlOneToOneMapURI)
 	if err5 != nil {
 		return errors.Wrap(err5, "crlmaps.BuildCrlMapsDomain failed")
 	}
-	_, err6 := uOfD.NewOwnedRefinement(crlMap, crlElementToElementMap, "Refines CrlMap", hl, CrlElementToElementMapRefinementURI)
+	_, err6 := uOfD.NewOwnedRefinement(crlMap, crlOneToOneMap, "Refines CrlMap", hl, CrlOneToOneMapRefinementURI)
 	if err6 != nil {
 		return errors.Wrap(err6, "crlmaps.BuildCrlMapsDomain failed")
 	}
-	crlElementToElementMapSourceReference, err7 := uOfD.NewOwnedReference(crlElementToElementMap, "SourceReference", hl, CrlElementToElementMapSourceReferenceURI)
+	crlOneToOneMapSourceReference, err7 := uOfD.NewOwnedReference(crlOneToOneMap, "SourceReference", hl, CrlOneToOneMapSourceReferenceURI)
 	if err7 != nil {
 		return errors.Wrap(err7, "crlmaps.BuildCrlMapsDomain failed")
 	}
-	_, err8 := uOfD.NewOwnedRefinement(crlMapSource, crlElementToElementMapSourceReference, "Refines CrlMapSource", hl, CrlElementToElementMapSourceReferenceRefinementURI)
+	_, err8 := uOfD.NewOwnedRefinement(crlMapSource, crlOneToOneMapSourceReference, "Refines CrlMapSource", hl, CrlOneToOneMapSourceReferenceRefinementURI)
 	if err8 != nil {
 		return errors.Wrap(err8, "crlmaps.BuildCrlMapsDomain failed")
 	}
-	crlElementToElementMapTargetReference, err9 := uOfD.NewOwnedReference(crlElementToElementMap, "TargetReference", hl, CrlElementToElementMapTargetReferenceURI)
+	crlOneToOneMapTargetReference, err9 := uOfD.NewOwnedReference(crlOneToOneMap, "TargetReference", hl, CrlOneToOneMapTargetReferenceURI)
 	if err9 != nil {
 		return errors.Wrap(err9, "crlmaps.BuildCrlMapsDomain failed")
 	}
-	_, err10 := uOfD.NewOwnedRefinement(crlMapTarget, crlElementToElementMapTargetReference, "Refines CrlMapTarget", hl, CrlElementToElementMapTargetReferenceRefinementURI)
+	_, err10 := uOfD.NewOwnedRefinement(crlMapTarget, crlOneToOneMapTargetReference, "Refines CrlMapTarget", hl, CrlOneToOneMapTargetReferenceRefinementURI)
 	if err10 != nil {
 		return errors.Wrap(err10, "crlmaps.BuildCrlMapsDomain failed")
 	}
@@ -188,8 +187,7 @@ func BuildCrlMapsDomain(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) erro
 		return errors.Wrap(err, "CrlMaps BuildCrlMapsDomain failed")
 	}
 
-	uOfD.AddFunction(CrlElementToElementMapURI, executeOneToOneMap)
-	uOfD.AddFunction(CrlReferenceToElementMapURI, executeOneToOneMap)
+	uOfD.AddFunction(CrlOneToOneMapURI, executeOneToOneMap)
 	return nil
 }
 
@@ -199,12 +197,12 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	defer hl.ReleaseLocksAndWait()
 	hl.WriteLockElement(mapInstance)
 	// As an initial assumption, it probably doesn't matter what kind of notification has been received.
-	// Validate that this instance is a refinement of an element that is, in turn, a refinement of CrlElementToElementMap
+	// Validate that this instance is a refinement of an element that is, in turn, a refinement of CrlOneToOneMap
 	var immediateAbstractions = map[string]core.Element{}
 	mapInstance.FindImmediateAbstractions(immediateAbstractions, hl)
 	var abstractionMap core.Element
 	for _, abs := range immediateAbstractions {
-		if abs.IsRefinementOfURI(CrlElementToElementMapURI, hl) {
+		if abs.IsRefinementOfURI(CrlOneToOneMapURI, hl) {
 			abstractionMap = abs
 			break
 		}
@@ -213,7 +211,7 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 		return nil
 	}
 	// Validate that the abstraction has a sourceRef and that the sourceRef is referencing an element
-	absSourceRef := abstractionMap.GetFirstOwnedReferenceRefinedFromURI(CrlElementToElementMapSourceReferenceURI, hl)
+	absSourceRef := abstractionMap.GetFirstOwnedReferenceRefinedFromURI(CrlOneToOneMapSourceReferenceURI, hl)
 	if absSourceRef == nil {
 		return nil
 	}
@@ -222,7 +220,7 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 		return nil
 	}
 	// Validate that the abstraction has a targetRef and that the targetRef is referencing an element
-	absTargetRef := abstractionMap.GetFirstOwnedReferenceRefinedFromURI(CrlElementToElementMapTargetReferenceURI, hl)
+	absTargetRef := abstractionMap.GetFirstOwnedReferenceRefinedFromURI(CrlOneToOneMapTargetReferenceURI, hl)
 	if absTargetRef == nil {
 		return nil
 	}
@@ -286,6 +284,65 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 		}
 	}
 
+	// Make value assignments as required
+	// If the sourceRef is an attribute value reference, get the source value
+	sourceAttributeName := sourceRef.GetReferencedAttributeName(hl)
+	if sourceAttributeName != core.NoAttribute {
+		sourceValue := sourceRef.GetReferencedAttributeValue(hl)
+
+		switch targetRef.GetReferencedAttributeName(hl) {
+		case core.NoAttribute:
+			// This case is valid only if the target is a reference, in which case we are setting the reference's referencedConceptID
+			switch target.(type) {
+			case core.Reference:
+				err := target.(core.Reference).SetReferencedConceptID(sourceValue, hl)
+				if err != nil {
+					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+				}
+			}
+		case core.ReferencedConceptID:
+			// This case is valid only if the target is a reference
+			switch target.(type) {
+			case core.Reference:
+				err := target.(core.Reference).SetReferencedConceptID(sourceValue, hl)
+				if err != nil {
+					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+				}
+			}
+		case core.AbstractConceptID:
+			switch target.(type) {
+			case core.Refinement:
+				err := target.(core.Refinement).SetAbstractConceptID(sourceValue, hl)
+				if err != nil {
+					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+				}
+			}
+		case core.RefinedConceptID:
+			// If the targetRef is an attribute value reference, set its value
+			// If the target is a reference, set the referenced elementID
+			switch target.(type) {
+			case core.Refinement:
+				err := target.(core.Refinement).SetRefinedConceptID(sourceValue, hl)
+				if err != nil {
+					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+				}
+			}
+		case core.LiteralValue:
+			switch target.(type) {
+			case core.Literal:
+				err := target.(core.Literal).SetLiteralValue(sourceValue, hl)
+				if err != nil {
+					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+				}
+			}
+		case core.OwningConceptID:
+			err := target.SetOwningConceptID(sourceValue, hl)
+			if err != nil {
+				return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+			}
+		}
+	}
+
 	// Now take care of map children.
 	err := instantiateChildren(abstractionMap, mapInstance, source, target, uOfD, hl)
 	if err != nil {
@@ -300,9 +357,9 @@ func instantiateChildren(abstractionMap core.Element, parentMap core.Element, so
 	for _, childMap := range abstractionMap.GetOwnedConceptsRefinedFromURI(CrlMapURI, hl) {
 		childMapSource := getSource(childMap, hl)
 		if childMapSource != nil {
-			// if the source contains an instance of the child's source (need to generalize this for multiple sources in the future)
+			// if the source contains (recursively) an instance of the child's source
 			// then instantiate the map (replicate as refinement) and wire up the source
-			for _, sourceEl := range source.GetOwnedConceptsRefinedFrom(childMapSource, hl) {
+			for _, sourceEl := range source.GetOwnedDescendantsRefinedFrom(childMapSource, hl) {
 				// Check to see whether there is already a map instance for this source
 				var newMapInstance core.Element
 				for _, mapInstance := range parentMap.GetOwnedConceptsRefinedFrom(childMap, hl) {

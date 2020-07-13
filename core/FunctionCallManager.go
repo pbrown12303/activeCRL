@@ -166,6 +166,7 @@ func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
 				(OmitDiagramRelatedCalls && isDiagramRelatedFunction(pendingCall.functionID))
 			if omitCall == false {
 				log.Printf("About to execute %s with notification %s target %p", pendingCall.functionID, pendingCall.notification.GetNatureOfChange().String(), pendingCall.target)
+				log.Printf("   Function target: %T %s %s %p", pendingCall.target, pendingCall.target.getConceptIDNoLock(), pendingCall.target.getLabelNoLock(), pendingCall.target)
 				functionCallGraphs = append(functionCallGraphs, NewFunctionCallGraph(pendingCall.functionID, pendingCall.target, pendingCall.notification, hl))
 			}
 		}
