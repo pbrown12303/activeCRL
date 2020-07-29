@@ -845,11 +845,11 @@ func (ePtr *element) marshalElementFields(buffer *bytes.Buffer) error {
 	return nil
 }
 
-func (ePtr *element) notifyListeners(underlyingNotification *ChangeNotification, hl *HeldLocks) {
+func (ePtr *element) notifyListeners(underlyingNotification *ChangeNotification, hl *HeldLocks) error {
 	hl.ReadLockElement(ePtr)
 	if ePtr.uOfD != nil {
-		indicatedConceptChanged := ePtr.uOfD.NewForwardingChangeNotification(ePtr, IndicatedConceptChanged, underlyingNotification)
-		abstractionChanged := ePtr.uOfD.NewForwardingChangeNotification(ePtr, AbstractionChanged, underlyingNotification)
+		indicatedConceptChanged := ePtr.uOfD.NewForwardingChangeNotification(ePtr, underlyingNotification.GetBeforeState(), underlyingNotification.GetAfterState(), IndicatedConceptChanged, underlyingNotification, hl)
+		abstractionChanged := ePtr.uOfD.NewForwardingChangeNotification(ePtr, underlyingNotification.GetBeforeState(), underlyingNotification.GetAfterState(), AbstractionChanged, underlyingNotification, hl)
 		it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
 		defer it.Stop()
 		for id := range it.C {
@@ -869,6 +869,7 @@ func (ePtr *element) notifyListeners(underlyingNotification *ChangeNotification,
 			}
 		}
 	}
+	return nil
 }
 
 // recoverElementFields() is used when de-serializing an element. The activities in restoring the
@@ -981,9 +982,17 @@ func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 	}
 	if ePtr.Definition != def {
 		ePtr.uOfD.preChange(ePtr, hl)
-		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		beforeState, err := NewConceptState(ePtr)
+		if err != nil {
+			errors.Wrap(err, "element.SetDefinition failed")
+		}
 		ePtr.incrementVersion(hl)
 		ePtr.Definition = def
+		afterState, err2 := NewConceptState(ePtr)
+		if err2 != nil {
+			errors.Wrap(err2, "element.SetDefinition failed")
+		}
+		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
 	return nil
@@ -1010,9 +1019,17 @@ func (ePtr *element) SetIsCore(hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
 	if ePtr.IsCore != true {
 		ePtr.uOfD.preChange(ePtr, hl)
-		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		beforeState, err := NewConceptState(ePtr)
+		if err != nil {
+			errors.Wrap(err, "element.SetIsCore failed")
+		}
 		ePtr.incrementVersion(hl)
 		ePtr.IsCore = true
+		afterState, err2 := NewConceptState(ePtr)
+		if err2 != nil {
+			errors.Wrap(err2, "element.SetIsCore failed")
+		}
+		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
 	return nil
@@ -1026,9 +1043,17 @@ func (ePtr *element) SetLabel(label string, hl *HeldLocks) error {
 	}
 	if ePtr.Label != label {
 		ePtr.uOfD.preChange(ePtr, hl)
-		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		beforeState, err := NewConceptState(ePtr)
+		if err != nil {
+			errors.Wrap(err, "element.SetLabel failed")
+		}
 		ePtr.incrementVersion(hl)
 		ePtr.Label = label
+		afterState, err2 := NewConceptState(ePtr)
+		if err2 != nil {
+			errors.Wrap(err2, "element.SetLabel failed")
+		}
+		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
 	return nil
@@ -1074,15 +1099,23 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 	// Do nothing if there is no change
 	if ePtr.OwningConceptID != ocID {
 		ePtr.uOfD.preChange(ePtr, hl)
+		beforeState, err := NewConceptState(ePtr)
+		if err != nil {
+			errors.Wrap(err, "element.SetOwningConceptID failed")
+		}
 		if oldOwner != nil {
 			oldOwner.removeOwnedConcept(ePtr.ConceptID, hl)
 		}
-		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
 		ePtr.incrementVersion(hl)
 		if newOwner != nil {
 			newOwner.addOwnedConcept(ePtr.ConceptID, hl)
 		}
 		ePtr.OwningConceptID = ocID
+		afterState, err2 := NewConceptState(ePtr)
+		if err2 != nil {
+			errors.Wrap(err2, "element.SetOwningConceptID failed")
+		}
+		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
 	return nil
@@ -1103,9 +1136,17 @@ func (ePtr *element) SetReadOnly(value bool, hl *HeldLocks) error {
 	}
 	if ePtr.ReadOnly != value {
 		ePtr.uOfD.preChange(ePtr, hl)
-		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		beforeState, err := NewConceptState(ePtr)
+		if err != nil {
+			errors.Wrap(err, "element.SetReadOnly failed")
+		}
 		ePtr.incrementVersion(hl)
 		ePtr.ReadOnly = value
+		afterState, err2 := NewConceptState(ePtr)
+		if err2 != nil {
+			errors.Wrap(err2, "element.SetDeSetReadOnlyfinition failed")
+		}
+		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
 	return nil
@@ -1146,10 +1187,18 @@ func (ePtr *element) SetURI(uri string, hl *HeldLocks) error {
 			return errors.New("Element already exists with URI " + uri)
 		}
 		ePtr.uOfD.preChange(ePtr, hl)
-		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, hl)
+		beforeState, err := NewConceptState(ePtr)
+		if err != nil {
+			errors.Wrap(err, "element.SetURI failed")
+		}
 		ePtr.uOfD.changeURIForElement(ePtr, ePtr.URI, uri)
 		ePtr.incrementVersion(hl)
 		ePtr.URI = uri
+		afterState, err2 := NewConceptState(ePtr)
+		if err2 != nil {
+			errors.Wrap(err2, "element.SetURI failed")
+		}
+		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
 		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
 	}
 	return nil
@@ -1239,7 +1288,7 @@ type Element interface {
 	IsOwnedConcept(Element, *HeldLocks) bool
 	IsReadOnly(*HeldLocks) bool
 	MarshalJSON() ([]byte, error)
-	notifyListeners(*ChangeNotification, *HeldLocks)
+	notifyListeners(*ChangeNotification, *HeldLocks) error
 	removeListener(string, *HeldLocks)
 	removeOwnedConcept(string, *HeldLocks) error
 	SetDefinition(string, *HeldLocks) error

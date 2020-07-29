@@ -2,6 +2,7 @@ package core
 
 import (
 	"log"
+	"reflect"
 )
 
 // FunctionCallGraph is a graphical representation of the function calls made when HeldLocks.ReleaseLocks is called
@@ -19,8 +20,12 @@ func NewFunctionCallGraph(functionID string, executingElement Element, notificat
 	fcGraph.parentGraphNodePrefix[graphName] = ""
 	fcGraph.functionName = functionID
 	fcGraph.executingElement = executingElement
-	executingElementNodeID := fcGraph.makeNode(executingElement, graphName, true)
-	fcGraph.nodeElements[executingElementNodeID] = executingElement
+	executingElementID := executingElement.getConceptIDNoLock()
+	executingElementType := reflect.TypeOf(executingElement).String()
+	executingElementLabel := executingElement.getLabelNoLock()
+	executingElementNodeID := fcGraph.makeNode(executingElementID, GetConceptTypeString(executingElement), executingElement.getLabelNoLock(), graphName, true, functionID)
+	fcGraph.nodeElementLabels[executingElementNodeID] = executingElementLabel
+	fcGraph.nodeElementLabels[executingElementNodeID] = executingElementType
 	fcGraph.graphParentsRecursively(executingElement, "")
 	fcGraph.addNotification(notification, graphName)
 	err := fcGraph.graph.AddEdge(executingElementNodeID, fcGraph.rootNodeIDs[graphName], true, map[string]string{})
@@ -29,7 +34,11 @@ func NewFunctionCallGraph(functionID string, executingElement Element, notificat
 		log.Printf(err.Error())
 	}
 	for _, node := range fcGraph.graph.Nodes.Nodes {
-		node.Attrs["label"] = fcGraph.makeLabel(node.Name, fcGraph.nodeToGraphName[node.Name])
+		if node.Name == executingElementNodeID {
+			node.Attrs["label"] = fcGraph.makeLabel(node.Name, fcGraph.nodeToGraphName[node.Name], functionID)
+		} else {
+			node.Attrs["label"] = fcGraph.makeLabel(node.Name, fcGraph.nodeToGraphName[node.Name], "")
+		}
 	}
 	return &fcGraph
 }

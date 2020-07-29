@@ -14,7 +14,7 @@ func NewNotificationGraph(notification *ChangeNotification, hl *HeldLocks) *Noti
 	nGraph.initializeBaseGraph(graphName)
 	nGraph.addNotification(notification, graphName)
 	for _, node := range nGraph.graph.Nodes.Nodes {
-		node.Attrs["label"] = nGraph.makeLabel(node.Name, nGraph.nodeToGraphName[node.Name])
+		node.Attrs["label"] = nGraph.makeLabel(node.Name, nGraph.nodeToGraphName[node.Name], "")
 	}
 	return &nGraph
 }

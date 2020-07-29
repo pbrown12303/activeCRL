@@ -36,18 +36,18 @@ func treeViewManageNodes(instance core.Element, changeNotification *core.ChangeN
 			}
 			switch secondUnderlyingChange.GetNatureOfChange() {
 			case core.UofDConceptAdded:
-				changedElement := secondUnderlyingChange.GetPriorState()
+				changedElement := uOfD.GetElement(secondUnderlyingChange.GetChangedConceptID())
 				treeManager.addNode(changedElement, hl)
 			case core.UofDConceptChanged:
 				thirdUnderlyingChange := secondUnderlyingChange.GetUnderlyingChange()
 				if thirdUnderlyingChange == nil {
 					return errors.New("treeViewManageNodes called with UofDConceptChanged but no thirdUnderlyingChange chanage")
 				}
-				changedElement := thirdUnderlyingChange.GetReportingElement()
+				changedElement := uOfD.GetElement(thirdUnderlyingChange.GetChangedConceptID())
 				treeManager.changeNode(changedElement, hl)
 			case core.UofDConceptRemoved:
-				changedElement := secondUnderlyingChange.GetPriorState()
-				treeManager.removeNode(changedElement, hl)
+				changedElementID := secondUnderlyingChange.GetBeforeState().ConceptID
+				treeManager.removeNode(changedElementID, hl)
 			}
 		}
 	}

@@ -21,6 +21,7 @@
 package crldiagram
 
 import (
+	// "github.com/pkg/errors"
 	"log"
 	"math"
 	"strconv"
@@ -1284,16 +1285,24 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	hl.WriteLockElement(diagramElement)
+	// core Elements should always be ignored
+	if diagramElement.GetIsCore(hl) == true {
+		return nil
+	}
 	// There are several notifications of interest here:
 	//   - the deletion of the referenced model element
 	//   - the label of the referenced model element
 	//   - the list of immediate abstractions of the referenced model element.
 	// First, determine whether it is the referenced model element that has changed
 	diagramElementModelReference := diagramElement.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, hl)
+	if diagramElementModelReference == nil {
+		// Without a model reference, there is nothing to do. This scenario can occur during diagramElement deletion.
+		return nil
+	}
 	modelElement := GetReferencedModelElement(diagramElement, hl)
 	switch notification.GetNatureOfChange() {
 	case core.IndicatedConceptChanged:
-		if notification.GetReportingElement() == diagramElementModelReference {
+		if notification.GetAfterState().ConceptID == diagramElementModelReference.GetConceptID(hl) {
 			modelReferenceNotification := notification.GetUnderlyingChange()
 			switch modelReferenceNotification.GetNatureOfChange() {
 			case core.IndicatedConceptChanged:
@@ -1301,8 +1310,8 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 				switch modelElementNotification.GetNatureOfChange() {
 				case core.ConceptChanged:
 					if IsDiagramNode(diagramElement, hl) {
-						currentModelElement := modelElementNotification.GetReportingElement()
-						previousModelElement := modelElementNotification.GetPriorState()
+						currentModelElement := modelElementNotification.GetAfterState()
+						previousModelElement := modelElementNotification.GetBeforeState()
 						if currentModelElement != nil && previousModelElement != nil {
 							updateDiagramElementForModelElementChange(diagramElement, modelElement, hl)
 						}
@@ -1413,13 +1422,18 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 
 	case core.ChildChanged:
 		// We are looking for the model diagramElementModelReference reporting a ConceptChanged which would be the result of setting the referencedConcept
-		if notification.GetReportingElement() != diagramElementModelReference {
+		if diagramElementModelReference == nil {
+			break
+		}
+		afterConceptID := notification.GetAfterState().ConceptID
+		modelReferenceID := diagramElementModelReference.GetConceptID(hl)
+		if afterConceptID != modelReferenceID {
 			break
 		}
 		modelReferenceNotification := notification.GetUnderlyingChange()
 		switch modelReferenceNotification.GetNatureOfChange() {
 		case core.ConceptChanged:
-			if modelReferenceNotification.GetReportingElement() != diagramElementModelReference {
+			if modelReferenceNotification.GetAfterState().ConceptID != diagramElementModelReference.GetConceptID(hl) {
 				break
 			}
 			if diagramElementModelReference.(core.Reference).GetReferencedConceptID(hl) == "" {
@@ -1438,20 +1452,20 @@ func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.C
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	hl.WriteLockElement(diagramPointer)
-	reportingElement := notification.GetReportingElement()
+	changedElement := uOfD.GetElement(notification.GetAfterState().ConceptID)
 	modelElementReference := diagramPointer.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, hl)
 	diagram := diagramPointer.GetOwningConcept(hl)
 	modelElement := GetReferencedModelElement(diagramPointer, hl)
 	switch notification.GetNatureOfChange() {
 	case core.IndicatedConceptChanged:
-		if reportingElement == modelElementReference {
+		if changedElement == modelElementReference {
 			underlyingNotification := notification.GetUnderlyingChange()
 			switch underlyingNotification.GetNatureOfChange() {
 			case core.IndicatedConceptChanged:
 				secondUnderlyingNotification := underlyingNotification.GetUnderlyingChange()
 				switch secondUnderlyingNotification.GetNatureOfChange() {
 				case core.ConceptChanged:
-					if secondUnderlyingNotification.GetReportingElement() == modelElement {
+					if secondUnderlyingNotification.GetAfterState().ConceptID == modelElement.GetConceptID(hl) {
 						modelOwner := modelElement.GetOwningConcept(hl)
 						var oldModelOwner core.Element
 						diagramTarget := GetLinkTarget(diagramPointer, hl)
@@ -1477,13 +1491,13 @@ func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.C
 		// If either source or target are nil, delete the pointer
 		sourceReference := diagramPointer.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, hl)
 		targetReference := diagramPointer.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, hl)
-		if reportingElement == sourceReference || reportingElement == targetReference {
+		if changedElement == sourceReference || changedElement == targetReference {
 			underlyingNotification := notification.GetUnderlyingChange()
 			switch underlyingNotification.GetNatureOfChange() {
 			case core.ConceptChanged:
-				switch reportingElement.(type) {
+				switch changedElement.(type) {
 				case core.Reference:
-					if reportingElement.(core.Reference).GetReferencedConcept(hl) == nil {
+					if changedElement.(core.Reference).GetReferencedConcept(hl) == nil {
 						uOfD.DeleteElement(diagramPointer, hl)
 					}
 				}

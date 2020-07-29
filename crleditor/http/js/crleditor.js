@@ -505,7 +505,8 @@ function crlCallExit() {
 
 function crlClearDiagrams() {
     var x = document.getElementsByClassName("crlDiagramContainer");
-    for (i = 0; i < x.length; i++) {
+    // Note that the number of elements in x decreases as the diagrams are removed
+    for (i = 0; x.length > 0; ) {
         var container = x.item(i);
         var diagramID = crlGetDiagramIDFromDiagramContainerID(container.id);
         crlCloseDiagramViewWithoutNotification(diagramID);
@@ -888,8 +889,8 @@ function crlPropertiesDisplayAbstractConcept(data, row) {
     var typeRow = crlObtainPropertyRow(row);
     typeRow.cells[0].innerHTML = "Abstract Concept ID";
     var abstractConceptID = ""
-    if (data.NotificationConcept) {
-        abstractConceptID = data.NotificationConcept.AbstractConceptID
+    if (data.NotificationConceptState) {
+        abstractConceptID = data.NotificationConceptState.AbstractConceptID
     }
     typeRow.cells[1].innerHTML = abstractConceptID;
 }
@@ -900,10 +901,10 @@ function crlPropertiesDisplayDefinition(data, row) {
     var definition = ""
     var isCore = false
     var isReadOnly = false
-    if (data.NotificationConcept) {
-        definition = data.NotificationConcept.Definition
-        isCore = data.NotificationConcept.IsCore
-        isReadOnly = data.NotificationConcept.ReadOnly
+    if (data.NotificationConceptState) {
+        definition = data.NotificationConceptState.Definition
+        isCore = data.NotificationConceptState.IsCore
+        isReadOnly = data.NotificationConceptState.ReadOnly
     }
     var input = definitionRow.cells[1].firstElementChild;
     var cursorPosition = input.selectionStart;
@@ -933,10 +934,10 @@ function crlPropertiesDisplayLabel(data, row) {
     var label = "";
     var isCore = false;
     var isReadOnly = false;
-    if (data.NotificationConcept) {
-        label = data.NotificationConcept.Label;
-        isCore = data.NotificationConcept.IsCore;
-        isReadOnly = data.NotificationConcept.ReadOnly;
+    if (data.NotificationConceptState) {
+        label = data.NotificationConceptState.Label;
+        isCore = data.NotificationConceptState.IsCore;
+        isReadOnly = data.NotificationConceptState.ReadOnly;
     }
     var input = labelRow.cells[1].firstElementChild;
     var cursorPosition = input.selectionStart;
@@ -960,10 +961,10 @@ function crlPropertiesDisplayLiteralValue(data, row) {
     var literalValue = ""
     var isCore = false
     var isReadOnly = false
-    if (data.NotificationConcept) {
-        literalValue = data.NotificationConcept.LiteralValue
-        isCore = data.NotificationConcept.IsCore
-        isReadOnly = data.NotificationConcept.ReadOnly
+    if (data.NotificationConceptState) {
+        literalValue = data.NotificationConceptState.LiteralValue
+        isCore = data.NotificationConceptState.IsCore
+        isReadOnly = data.NotificationConceptState.ReadOnly
     }
     var input = literalValueRow.cells[1].firstElementChild;
     if (input == null) {
@@ -992,18 +993,28 @@ function crlPropertiesDisplayOwningConcept(data, row) {
     var typeRow = crlObtainPropertyRow(row);
     typeRow.cells[0].innerHTML = "Owning Concept ID";
     var owningConceptID = ""
-    if (data.NotificationConcept) {
-        owningConceptID = data.NotificationConcept.OwningConceptID
+    if (data.NotificationConceptState) {
+        owningConceptID = data.NotificationConceptState.OwningConceptID
     }
     typeRow.cells[1].innerHTML = owningConceptID;
+}
+
+function crlPropertiesDisplayReferencedAttributeName(data, row) {
+    var typeRow = crlObtainPropertyRow(row);
+    typeRow.cells[0].innerHTML = "Referenced AttributeName";
+    var referencedAttributeName = ""
+    if (data.NotificationConceptState) {
+        referencedAttributeName = data.NotificationConceptState.ReferencedAttributeName
+    }
+    typeRow.cells[1].innerHTML = referencedAttributeName;
 }
 
 function crlPropertiesDisplayReferencedConcept(data, row) {
     var typeRow = crlObtainPropertyRow(row);
     typeRow.cells[0].innerHTML = "Referenced Concept ID";
     var referencedConceptID = ""
-    if (data.NotificationConcept) {
-        referencedConceptID = data.NotificationConcept.ReferencedConceptID
+    if (data.NotificationConceptState) {
+        referencedConceptID = data.NotificationConceptState.ReferencedConceptID
     }
     typeRow.cells[1].innerHTML = referencedConceptID;
 }
@@ -1012,8 +1023,8 @@ function crlPropertiesDisplayRefinedConcept(data, row) {
     var typeRow = crlObtainPropertyRow(row);
     typeRow.cells[0].innerHTML = "Refined Concept ID";
     var refinedConceptID = ""
-    if (data.NotificationConcept) {
-        refinedConceptID = data.NotificationConcept.RefinedConceptID
+    if (data.NotificationConceptState) {
+        refinedConceptID = data.NotificationConceptState.RefinedConceptID
     }
     typeRow.cells[1].innerHTML = refinedConceptID;
 }
@@ -1022,8 +1033,8 @@ function crlPropertiesDisplayType(data, row) {
     var typeRow = crlObtainPropertyRow(row);
     typeRow.cells[0].innerHTML = "Type";
     var type = ""
-    if (data.NotificationConcept) {
-        type = data.NotificationConcept.Type
+    if (data.NotificationConceptState) {
+        type = data.NotificationConceptState.Type
     }
     typeRow.cells[1].innerHTML = type;
 }
@@ -1034,10 +1045,10 @@ function crlPropertiesDisplayURI(data, row) {
     var uri = ""
     var isCore = false
     var isReadOnly = false
-    if (data.NotificationConcept) {
-        uri = data.NotificationConcept.URI
-        isCore = data.NotificationConcept.IsCore
-        isReadOnly = data.NotificationConcept.ReadOnly
+    if (data.NotificationConceptState) {
+        uri = data.NotificationConceptState.URI
+        isCore = data.NotificationConceptState.IsCore
+        isReadOnly = data.NotificationConceptState.ReadOnly
     }
     var input = uriRow.cells[1].firstElementChild;
     var cursorPosition = input.selectionStart;
@@ -1060,8 +1071,8 @@ function crlPropertiesDisplayVersion(data, row) {
     var versionRow = crlObtainPropertyRow(row)
     versionRow.cells[0].innerHTML = "Version";
     var version = ""
-    if (data.NotificationConcept) {
-        version = data.NotificationConcept.Version
+    if (data.NotificationConceptState) {
+        version = data.NotificationConceptState.Version
     }
     versionRow.cells[1].innerHTML = version;
 }
@@ -1208,7 +1219,7 @@ function crlInitializeTree() {
             'check_callback': true,
             'multiple': false
         },
-        'plugins': ['sort', 'contextmenu', 'wholerow'],
+        'plugins': ['sort', 'contextmenu'],
         'sort': function (a, b) {
             aNode = this.get_node(a);
             bNode = this.get_node(b);
@@ -1535,7 +1546,7 @@ function crlProcessPendingLinks() {
 }
 
 function crlAddPendingDiagramLink(data) {
-    var concept = data.NotificationConcept;
+    var concept = data.NotificationConceptState;
     var params = data.AdditionalParameters;
     var owningConceptID = concept.OwningConceptID;
     var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
@@ -1562,7 +1573,7 @@ function crlAddPendingDiagramLink(data) {
 
 
 function crlNotificationAddDiagramLink(data) {
-    var concept = data.NotificationConcept;
+    var concept = data.NotificationConceptState;
     var params = data.AdditionalParameters;
     var owningConceptID = concept.OwningConceptID;
     var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
@@ -1588,10 +1599,11 @@ function crlNotificationAddDiagramLink(data) {
         crlNotificationUpdateDiagramLink(data);
     }
     crlProcessPendingLinks();
+    crlSendNormalResponse();
 }
 
 function crlNotificationAddDiagramNode(data) {
-    var concept = data.NotificationConcept;
+    var concept = data.NotificationConceptState;
     var params = data.AdditionalParameters;
     var owningConceptID = concept.OwningConceptID;
     var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
@@ -1611,7 +1623,7 @@ function crlNotificationAddDiagramNode(data) {
 
 // <!-- Set up the websockets connection and callbacks -->
 function crlNotificationAddTreeNode(data) {
-    var concept = data.NotificationConcept;
+    var concept = data.NotificationConceptState;
     var params = data.AdditionalParameters;
     var owningConceptID = concept.OwningConceptID;
     if (owningConceptID == "") {
@@ -1666,7 +1678,7 @@ function crlNotificationCloseDiagramView(data) {
 }
 
 function crlNotificationDeleteDiagramCell(data) {
-    var concept = data.NotificationConcept;
+    var concept = data.NotificationConceptState;
     var elementID = crlGetJointCellIDFromConceptID(concept.ConceptID);
     var owningConceptID = data.AdditionalParameters["OwnerID"];
     var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
@@ -1683,9 +1695,8 @@ function crlNotificationDeleteDiagramCell(data) {
 }
 
 function crlNotificationDeleteTreeNode(data) {
-    var concept = data.NotificationConcept;
-    var params = data.AdditionalParameters;
-    var nodeID = crlGetTreeNodeIDFromConceptID(concept.ConceptID);
+    var conceptID = data.NotificationConceptID;
+    var nodeID = crlGetTreeNodeIDFromConceptID(conceptID);
     $('#uOfD').jstree().delete_node(nodeID);
     crlSendNormalResponse();
 }
@@ -1693,13 +1704,13 @@ function crlNotificationDeleteTreeNode(data) {
 function crlNotificationDiagramLabelChanged(data) {
     var tabID = crlGetDiagramTabIDFromDiagramID(data.NotificationConceptID);
     var tab = document.getElementById(tabID);
-    tab.innerHTML = data.NotificationConcept.Label;
+    tab.innerHTML = data.NotificationConceptState.Label;
     crlSendNormalResponse();
 }
 
 function crlNotificationDisplayDiagram(data) {
     var diagramID = data.NotificationConceptID;
-    var diagramLabel = data.NotificationConcept.Label;
+    var diagramLabel = data.NotificationConceptState.Label;
     var diagramContainerID = crlGetDiagramContainerIDFromDiagramID(diagramID);
     var diagramContainer = document.getElementById(diagramContainerID);
     // Construct the container if it is not already present
@@ -1756,8 +1767,8 @@ function crlUpdateProperties(data) {
     crlPropertiesDisplayDefinition(data, 6);
     crlPropertiesDisplayURI(data, 7);
     var type = "";
-    if (data.NotificationConcept) {
-        type = data.NotificationConcept.Type;
+    if (data.NotificationConceptState) {
+        type = data.NotificationConceptState.ConceptType;
     }
     switch (type) {
         case "*core.element":
@@ -1770,7 +1781,7 @@ function crlUpdateProperties(data) {
             break;
         case "*core.reference":
             crlPropertiesDisplayReferencedConcept(data, 8);
-            crlPropertiesClearRow(9);
+            crlPropertiesDisplayReferencedAttributeName(data, 9)
             break;
         case "*core.refinement":
             crlPropertiesDisplayAbstractConcept(data, 8);
@@ -1789,7 +1800,7 @@ function crlNotificationSaveUserPreferences(data) {
 }
 
 function crlNotificationShowTreeNode(data) {
-    var concept = data.NotificationConcept;
+    var concept = data.NotificationConceptState;
     var nodeID = crlGetTreeNodeIDFromConceptID(concept.ConceptID);
     var tree = $('#uOfD').jstree();
     tree.select_node(nodeID);
@@ -1797,7 +1808,7 @@ function crlNotificationShowTreeNode(data) {
 }
 
 var crlNotificationUpdateDiagramLink = function (data) {
-    var concept = data.NotificationConcept;
+    var concept = data.NotificationConceptState;
     var params = data.AdditionalParameters;
     var owningConceptID = concept.OwningConceptID;
     var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
@@ -1837,7 +1848,7 @@ var crlNotificationUpdateDiagramLink = function (data) {
 }
 
 var crlNotificationUpdateDiagramNode = function (data) {
-    var concept = data.NotificationConcept;
+    var concept = data.NotificationConceptState;
     var params = data.AdditionalParameters;
     var owningConceptID = concept.OwningConceptID;
     var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
@@ -1861,7 +1872,7 @@ var crlNotificationUpdateDiagramNode = function (data) {
 }
 
 function crlNotificationUpdateTreeNode(data) {
-    var concept = data.NotificationConcept;
+    var concept = data.NotificationConceptState;
     var params = data.AdditionalParameters;
     var owningConceptID = concept.OwningConceptID;
     var treeNodeOwnerID = ""
@@ -2492,6 +2503,15 @@ var crlShowConceptInNavigator = function (evt) {
     var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({ "Action": "ShowConceptInNavigator", "RequestConceptID": diagramElementID });
+    crlSendRequest(xhr, data);
+}
+
+var crlShowDiagramElementInNavigator = function (evt) {
+    var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
+    var jointID = cellView.model.attributes.crlJointID;
+    var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "ShowDiagramElementInNavigator", "RequestConceptID": diagramElementID });
     crlSendRequest(xhr, data);
 }
 

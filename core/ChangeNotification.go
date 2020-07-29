@@ -5,7 +5,10 @@
 package core
 
 import (
+	"encoding/json"
+	"github.com/pkg/errors"
 	"log"
+	"reflect"
 	"strconv"
 )
 
@@ -52,15 +55,102 @@ func (noc NatureOfChange) String() string {
 	return "Undefined"
 }
 
+// ConceptState is a flattened representation of all concept types. It is used to capture the current state of a concept
+type ConceptState struct {
+	// Element fields
+	ConceptID       string
+	ConceptType     string
+	OwningConceptID string
+	Label           string
+	Definition      string
+	URI             string
+	Version         string
+	IsCore          string
+	ReadOnly        string
+	// Literal fields
+	LiteralValue string
+	// Reference fields
+	ReferencedConceptID      string
+	ReferencedAttributeName  string
+	ReferencedConceptVersion string
+	// Refinement Fields
+	AbstractConceptID      string
+	AbstractConceptVersion string
+	RefinedConceptID       string
+	RefinedConceptVersion  string
+}
+
+// NewConceptState copies the state of an Element into a ConceptState struct
+func NewConceptState(el Element) (*ConceptState, error) {
+	if el == nil {
+		return nil, errors.New("NewConceptState called with nil element")
+	}
+	mJSON, err := el.MarshalJSON()
+	if err != nil {
+		return nil, errors.Wrap(err, "NewConceptState failed")
+	}
+	var newConceptState ConceptState
+	err = json.Unmarshal([]byte(mJSON), &newConceptState)
+	if err != nil {
+		return nil, errors.Wrap(err, "NewConceptState failed")
+	}
+	newConceptState.ConceptType = reflect.TypeOf(el).String()
+	return &newConceptState, nil
+}
+
 // ChangeNotification records the metadata regarding a change to a Element. It provides
 // the nature of the change, the old and new values, and the reporting Element.
 // It also provides the underlying change that triggered this one (if any)
 type ChangeNotification struct {
-	priorState       Element
-	natureOfChange   NatureOfChange
-	reportingElement Element
-	underlyingChange *ChangeNotification
-	uOfD             *UniverseOfDiscourse
+	reportingElementID    string
+	reportingElementLabel string
+	reportingElementType  string
+	natureOfChange        NatureOfChange
+	beforeState           *ConceptState
+	afterState            *ConceptState
+	underlyingChange      *ChangeNotification
+	uOfD                  *UniverseOfDiscourse
+}
+
+// GetAfterState returns the state of the Element after the change
+func (cnPtr *ChangeNotification) GetAfterState() *ConceptState {
+	return cnPtr.afterState
+}
+
+// GetBeforeState returns the state of the Element before the change
+// Note that while this is an Element, it is NOT a member of the UniverseOfDiscourse
+func (cnPtr *ChangeNotification) GetBeforeState() *ConceptState {
+	return cnPtr.beforeState
+}
+
+// GetChangedConceptID returns the ID of the Element impacted by the change
+func (cnPtr *ChangeNotification) GetChangedConceptID() string {
+	if cnPtr.afterState != nil {
+		return cnPtr.afterState.ConceptID
+	} else if cnPtr.beforeState != nil {
+		return cnPtr.beforeState.ConceptID
+	}
+	return ""
+}
+
+// GetChangedConceptLabel returns the label of the Element impacted by the change
+func (cnPtr *ChangeNotification) GetChangedConceptLabel() string {
+	if cnPtr.afterState != nil {
+		return cnPtr.afterState.Label
+	} else if cnPtr.beforeState != nil {
+		return cnPtr.beforeState.Label
+	}
+	return ""
+}
+
+// GetChangedConceptType returns the typeString of the Element impacted by the change
+func (cnPtr *ChangeNotification) GetChangedConceptType() string {
+	if cnPtr.afterState != nil {
+		return cnPtr.afterState.ConceptType
+	} else if cnPtr.beforeState != nil {
+		return cnPtr.beforeState.ConceptType
+	}
+	return ""
 }
 
 // GetDepth returns the depth of the nested notifications within the current notification
@@ -76,40 +166,39 @@ func (cnPtr *ChangeNotification) getDepth(currentDepth int) int {
 	return newDepth
 }
 
-func (cnPtr *ChangeNotification) isReferenced(el Element) bool {
-	if cnPtr.reportingElement == el {
-		return true
-	} else if cnPtr.underlyingChange != nil {
-		return cnPtr.underlyingChange.isReferenced(el)
-	}
-	return false
-}
-
 // GetNatureOfChange returns the NatureOFChange
 func (cnPtr *ChangeNotification) GetNatureOfChange() NatureOfChange {
 	return cnPtr.natureOfChange
 }
 
-// GetPriorState returns the state, which is a clone of the Element prior to the change
-// Note that while this is an Element, it is NOT a member of the UniverseOfDiscourse
-func (cnPtr *ChangeNotification) GetPriorState() Element {
-	return cnPtr.priorState
-}
-
-// GetReportingElement returns the Element reporting the change
-func (cnPtr *ChangeNotification) GetReportingElement() Element {
-	return cnPtr.reportingElement
-}
-
-// GetReportingElementID returns the ID of the Element reporting the change
+// GetReportingElementID returns the ID of the element sending the notification
 func (cnPtr *ChangeNotification) GetReportingElementID() string {
-	return cnPtr.reportingElement.getConceptIDNoLock()
+	return cnPtr.reportingElementID
+}
+
+// GetReportingElementLabel returns the Label of the element sending the notification
+func (cnPtr *ChangeNotification) GetReportingElementLabel() string {
+	return cnPtr.reportingElementLabel
+}
+
+// GetReportingElementType returns the Type of the element sending the notification
+func (cnPtr *ChangeNotification) GetReportingElementType() string {
+	return cnPtr.reportingElementType
 }
 
 // GetUnderlyingChange returns the change notification that triggered the change being
 // reported in this ChangeNotification
 func (cnPtr *ChangeNotification) GetUnderlyingChange() *ChangeNotification {
 	return cnPtr.underlyingChange
+}
+
+func (cnPtr *ChangeNotification) isReferenced(el Element) bool {
+	if cnPtr.GetChangedConceptID() == el.getConceptIDNoLock() {
+		return true
+	} else if cnPtr.underlyingChange != nil {
+		return cnPtr.underlyingChange.isReferenced(el)
+	}
+	return false
 }
 
 // Print prints the change notification for diagnostic purposes to the log
@@ -121,24 +210,15 @@ func (cnPtr *ChangeNotification) Print(prefix string, hl *HeldLocks) {
 }
 
 // printRecursively prints the change notification for diagnostic purposes to the log. The startCount
-// indicates the depth of nesting of the print so that the printout can el indented appropriately.
+// indicates the depth of nesting of the print so that the printout can be indented appropriately.
 func (cnPtr *ChangeNotification) printRecursively(prefix string, hl *HeldLocks, startCount int) {
 	notificationType := "+++ " + cnPtr.natureOfChange.String()
 	log.Printf("%s%s: \n", prefix, "### Notification Level: "+strconv.Itoa(startCount)+" Type: "+notificationType)
-	if cnPtr.reportingElement == nil {
-		log.Printf(prefix + "Reporting Element is nil")
-	} else {
-		log.Printf(prefix+"  Reporting Element: %T", cnPtr.GetReportingElement())
-		log.Printf(prefix+"  Reporting Element ID: %s", cnPtr.reportingElement.getConceptIDNoLock())
-		log.Printf(prefix+"  Reporting Element Version: %d", cnPtr.GetReportingElement().GetVersion(hl))
-		log.Printf(prefix+"  Reporting Element Label: %s", cnPtr.GetReportingElement().GetLabel(hl))
-		priorState := cnPtr.GetPriorState()
-		if priorState != nil {
-			jsonString, _ := priorState.MarshalJSON()
-			log.Printf(prefix+"  PriorState: %s", jsonString)
-		} else {
-			log.Printf(prefix + "  PriorState is nil")
-		}
+	if cnPtr.afterState != nil {
+		log.Printf(prefix+"  AfterState: %+v", cnPtr.afterState)
+	}
+	if cnPtr.beforeState != nil {
+		log.Printf(prefix+"  BeforeState: %s", cnPtr.beforeState)
 	}
 	if cnPtr.underlyingChange != nil {
 		cnPtr.underlyingChange.printRecursively(prefix+"      ", hl, startCount-1)

@@ -178,18 +178,6 @@ func (uOfDPtr *UniverseOfDiscourse) Clone(hl *HeldLocks) *UniverseOfDiscourse {
 		newUofD.abstractionsMap.SetMappedValues(key, strings)
 	}
 
-	// uOfDID, _ := uOfD.generateConceptID(UniverseOfDiscourseURI)
-	// uOfD.initializeElement(uOfDID, UniverseOfDiscourseURI)
-	// uOfD.Label = "UniverseOfDiscourse"
-	// uOfD.uOfD = &uOfD
-	// hl := uOfD.NewHeldLocks()
-	// uOfD.IsCore = true
-	// uOfD.addElement(&uOfD, false, hl)
-	// uOfD.AddFunction(coreHousekeepingURI, coreHousekeeping)
-	// hl.ReleaseLocksAndWait()
-	// buildCoreConceptSpace(&uOfD, hl)
-	// hl.ReleaseLocksAndWait()
-
 	return newUofD
 }
 
@@ -383,13 +371,13 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, hl *Held
 	for id := range it.C {
 		el := uOfDPtr.GetElement(id.(string))
 		if el.GetIsCore(hl) {
-			return errors.New("ClearUniverseOfDiscourse called on a CRL core concept")
+			return errors.New("UniverseOfDiscourse.DeleteElements called on a CRL core concept")
 		}
 		if el.GetUniverseOfDiscourse(hl).getConceptIDNoLock() != uOfDPtr.getConceptIDNoLock() {
-			return errors.New("ClearUniverseOfDiscourse called on an Element in a different UofD")
+			return errors.New("UniverseOfDiscourse.DeleteElements called on an Element in a different UofD")
 		}
 		if el.IsReadOnly(hl) {
-			return errors.New("SetUniverseOfDiscourse called on read-only Element")
+			return errors.New("UniverseOfDiscourse.DeleteElements called on read-only Element")
 		}
 	}
 	it2 := elements.Iterator()
@@ -398,9 +386,13 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, hl *Held
 		el := uOfDPtr.GetElement(id.(string))
 		hl.WriteLockElement(el)
 		uOfDPtr.preChange(el, hl)
-		uOfDPtr.queueFunctionExecutions(uOfDPtr, uOfDPtr.newConceptRemovedNotification(el, hl), hl)
+		beforeState, err := NewConceptState(el)
+		if err != nil {
+			return errors.Wrap(err, "UniverseOfDiscourse.DeleteElements failed")
+		}
 		uOfDPtr.deleteElement(el, elements, hl)
 		el.setUniverseOfDiscourse(nil, hl)
+		uOfDPtr.queueFunctionExecutions(uOfDPtr, uOfDPtr.newUofDConceptRemovedNotification(beforeState, hl), hl)
 	}
 	return nil
 }
@@ -413,7 +405,7 @@ func (uOfDPtr *UniverseOfDiscourse) generateConceptID(uri ...string) (string, er
 		if len(uri) == 1 {
 			_, err := url.ParseRequestURI(uri[0])
 			if err != nil {
-				return "", errors.New("Invalid URI provided for initializing lement")
+				return "", errors.New("Invalid URI provided for initializing Element")
 			}
 			conceptID = uuid.NewV5(uuid.NamespaceURL, uri[0]).String()
 		} else {
@@ -482,8 +474,8 @@ func (uOfDPtr *UniverseOfDiscourse) GetLiteral(conceptID string) Literal {
 func (uOfDPtr *UniverseOfDiscourse) GetLiteralWithURI(uri string) Literal {
 	el := uOfDPtr.GetElementWithURI(uri)
 	switch el.(type) {
-	case *literal:
-		return el.(*literal)
+	case Literal:
+		return el.(Literal)
 	}
 	return nil
 }
@@ -689,38 +681,40 @@ func (uOfDPtr *UniverseOfDiscourse) marshalConceptRecursively(el Element, hl *He
 	return result, nil
 }
 
-// newConceptAddedNotification creates a UniverseOfDiscourseAdded notification
-func (uOfDPtr *UniverseOfDiscourse) newConceptAddedNotification(concept Element, hl *HeldLocks) *ChangeNotification {
+// newUofDConceptAddedNotification creates a UofDConceptAdded notification
+func (uOfDPtr *UniverseOfDiscourse) newUofDConceptAddedNotification(afterState *ConceptState, hl *HeldLocks) *ChangeNotification {
 	var notification ChangeNotification
-	notification.reportingElement = uOfDPtr
+	notification.reportingElementID = uOfDPtr.ConceptID
+	notification.reportingElementLabel = uOfDPtr.Label
+	notification.reportingElementType = reflect.TypeOf(uOfDPtr).String()
+	notification.afterState = afterState
 	notification.natureOfChange = UofDConceptAdded
-	notification.priorState = clone(concept, hl)
 	notification.uOfD = uOfDPtr
 	return &notification
 }
 
-// NewConceptChangeNotification creates a ChangeNotification that records state of the concept prior to the
-// change. Note that this MUST be called prior to making any changes to the concept.
-func (uOfDPtr *UniverseOfDiscourse) NewConceptChangeNotification(changingConcept Element, hl *HeldLocks) *ChangeNotification {
-	// Since this function is invoked by the *element methods for Literals, References, and Refinements, we play a
-	// game to get the full datatype
-	correctedChangingConcept := uOfDPtr.GetElement(changingConcept.getConceptIDNoLock())
+// NewConceptChangeNotification creates a ConceptChangeNotification
+func (uOfDPtr *UniverseOfDiscourse) NewConceptChangeNotification(reportingElement Element, beforeState *ConceptState, afterState *ConceptState, hl *HeldLocks) *ChangeNotification {
 	var notification ChangeNotification
-	notification.reportingElement = correctedChangingConcept
+	notification.reportingElementID = reportingElement.GetConceptID(hl)
+	notification.reportingElementLabel = reportingElement.GetLabel(hl)
+	// Make sure we get the correct type
+	notification.reportingElementType = reflect.TypeOf(uOfDPtr.GetElement(notification.reportingElementID)).String()
+	notification.beforeState = beforeState
+	notification.afterState = afterState
 	notification.natureOfChange = ConceptChanged
-	// Since this function is invoked by the *element methods for Literals, References, and Refinements, we play a
-	// game to get the full datatype cloned
-	notification.priorState = clone(correctedChangingConcept, hl)
 	notification.uOfD = uOfDPtr
 	return &notification
 }
 
-// newConceptRemovedNotification creates a UniverseOfDiscourseRemoved notification
-func (uOfDPtr *UniverseOfDiscourse) newConceptRemovedNotification(concept Element, hl *HeldLocks) *ChangeNotification {
+// newUofDConceptRemovedNotification creates a UniverseOfDiscourseRemoved notification
+func (uOfDPtr *UniverseOfDiscourse) newUofDConceptRemovedNotification(beforeState *ConceptState, hl *HeldLocks) *ChangeNotification {
 	var notification ChangeNotification
-	notification.reportingElement = uOfDPtr
 	notification.natureOfChange = UofDConceptRemoved
-	notification.priorState = clone(concept, hl)
+	notification.reportingElementID = uOfDPtr.ConceptID
+	notification.reportingElementLabel = uOfDPtr.Label
+	notification.reportingElementType = reflect.TypeOf(uOfDPtr).String()
+	notification.beforeState = beforeState
 	notification.uOfD = uOfDPtr
 	return &notification
 }
@@ -728,9 +722,21 @@ func (uOfDPtr *UniverseOfDiscourse) newConceptRemovedNotification(concept Elemen
 // NewForwardingChangeNotification creates a ChangeNotification that records the reason for the change to the element,
 // including the nature of the change, an indication of which component originated the change, and whether there
 // was a preceeding notification that triggered this change.
-func (uOfDPtr *UniverseOfDiscourse) NewForwardingChangeNotification(reportingElement Element, natureOfChange NatureOfChange, underlyingChange *ChangeNotification) *ChangeNotification {
+func (uOfDPtr *UniverseOfDiscourse) NewForwardingChangeNotification(reportingElement Element, beforeState *ConceptState, afterState *ConceptState, natureOfChange NatureOfChange, underlyingChange *ChangeNotification, hl *HeldLocks) *ChangeNotification {
 	var notification ChangeNotification
-	notification.reportingElement = reportingElement
+	notification.reportingElementID = reportingElement.GetConceptID(hl)
+	notification.reportingElementLabel = reportingElement.GetLabel(hl)
+	// Make sure we get the correct type
+	reportingElementFromUofD := uOfDPtr.GetElement(notification.reportingElementID)
+	if reportingElementFromUofD == nil {
+		// This can occur if the reporting element itself has been deleted. In this case, the beforeState
+		// should be the same element - we'll use its type
+		notification.reportingElementType = beforeState.ConceptType
+	} else {
+		notification.reportingElementType = reflect.TypeOf(reportingElementFromUofD).String()
+	}
+	notification.afterState = afterState
+	notification.beforeState = beforeState
 	notification.natureOfChange = natureOfChange
 	notification.underlyingChange = underlyingChange
 	notification.uOfD = uOfDPtr
@@ -907,7 +913,6 @@ func (uOfDPtr *UniverseOfDiscourse) NewRefinement(hl *HeldLocks, uri ...string) 
 // newUniverseOfDiscourseChangeNotification creates a new ChangeNotification for a UofD change
 func (uOfDPtr *UniverseOfDiscourse) newUniverseOfDiscourseChangeNotification(underlyingChange *ChangeNotification) *ChangeNotification {
 	var notification ChangeNotification
-	notification.reportingElement = uOfDPtr
 	notification.natureOfChange = UofDConceptChanged
 	notification.underlyingChange = underlyingChange
 	notification.uOfD = uOfDPtr
@@ -1016,7 +1021,14 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 	hl.ReadLockElement(original)
 	hl.WriteLockElement(replicate)
 
+	// Set the attributes - but no IDs
 	replicate.SetLabel(original.GetLabel(hl), hl)
+	switch original.(type) {
+	case Reference:
+		replicate.(Reference).SetReferencedAttributeName(original.(Reference).GetReferencedAttributeName(hl), hl)
+	}
+
+	// Determine whether there is already a refinement in place; if not, create it
 	if replicate.IsRefinementOf(original, hl) == false {
 		refinementURI := ""
 		if len(uri) == 1 && uri[0] != "" {
@@ -1031,6 +1043,8 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 		refinement.SetRefinedConcept(replicate, hl)
 		refinement.SetLabel("Refines "+original.GetLabel(hl), hl)
 	}
+
+	// Now determine which children need to be replicated
 	originalID := original.GetConceptID(hl)
 	replicateID := replicate.GetConceptID(hl)
 	it := uOfDPtr.GetConceptsOwnedConceptIDs(originalID).Iterator()
@@ -1118,7 +1132,11 @@ func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourse(el Element, hl *HeldL
 			return errors.New("SetUniverseOfDiscourse called on read-only Element")
 		}
 		uOfDPtr.preChange(el, hl)
-		uOfDPtr.queueFunctionExecutions(uOfDPtr, uOfDPtr.newConceptAddedNotification(el, hl), hl)
+		elementState, err := NewConceptState(el)
+		if err != nil {
+			return errors.Wrap(err, "UniverseOfDiscourse.SetUniverseOfDiscourse failed")
+		}
+		uOfDPtr.queueFunctionExecutions(uOfDPtr, uOfDPtr.newUofDConceptAddedNotification(elementState, hl), hl)
 		el.setUniverseOfDiscourse(uOfDPtr, hl)
 		uOfDPtr.addElement(el, false, hl)
 	}

@@ -200,18 +200,18 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	// Validate that this instance is a refinement of an element that is, in turn, a refinement of CrlOneToOneMap
 	var immediateAbstractions = map[string]core.Element{}
 	mapInstance.FindImmediateAbstractions(immediateAbstractions, hl)
-	var abstractionMap core.Element
+	var abstractMap core.Element
 	for _, abs := range immediateAbstractions {
 		if abs.IsRefinementOfURI(CrlOneToOneMapURI, hl) {
-			abstractionMap = abs
+			abstractMap = abs
 			break
 		}
 	}
-	if abstractionMap == nil {
+	if abstractMap == nil {
 		return nil
 	}
 	// Validate that the abstraction has a sourceRef and that the sourceRef is referencing an element
-	absSourceRef := abstractionMap.GetFirstOwnedReferenceRefinedFromURI(CrlOneToOneMapSourceReferenceURI, hl)
+	absSourceRef := abstractMap.GetFirstOwnedReferenceRefinedFromURI(CrlOneToOneMapSourceReferenceURI, hl)
 	if absSourceRef == nil {
 		return nil
 	}
@@ -220,7 +220,7 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 		return nil
 	}
 	// Validate that the abstraction has a targetRef and that the targetRef is referencing an element
-	absTargetRef := abstractionMap.GetFirstOwnedReferenceRefinedFromURI(CrlOneToOneMapTargetReferenceURI, hl)
+	absTargetRef := abstractMap.GetFirstOwnedReferenceRefinedFromURI(CrlOneToOneMapTargetReferenceURI, hl)
 	if absTargetRef == nil {
 		return nil
 	}
@@ -344,7 +344,7 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	}
 
 	// Now take care of map children.
-	err := instantiateChildren(abstractionMap, mapInstance, source, target, uOfD, hl)
+	err := instantiateChildren(abstractMap, mapInstance, source, target, uOfD, hl)
 	if err != nil {
 		return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 	}
@@ -352,25 +352,35 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	return nil
 }
 
-func instantiateChildren(abstractionMap core.Element, parentMap core.Element, source core.Element, target core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) error {
-	// for each of the abstractionMap's children that is a map
-	for _, childMap := range abstractionMap.GetOwnedConceptsRefinedFromURI(CrlMapURI, hl) {
-		childMapSource := getSource(childMap, hl)
-		if childMapSource != nil {
-			// if the source contains (recursively) an instance of the child's source
-			// then instantiate the map (replicate as refinement) and wire up the source
-			for _, sourceEl := range source.GetOwnedDescendantsRefinedFrom(childMapSource, hl) {
+func instantiateChildren(abstractMap core.Element, parentMap core.Element, source core.Element, target core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) error {
+	// for each of the abstractMap's children that is a map
+	for _, abstractChildMap := range abstractMap.GetOwnedConceptsRefinedFromURI(CrlMapURI, hl) {
+		abstractChildMapSource := getSource(abstractChildMap, hl)
+		if abstractChildMapSource != nil {
+			// There are two cases here, depending upon whether the source reference is to a pointer or an element.
+			abstractChildMapSourceReference := abstractChildMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
+			if abstractChildMapSourceReference == nil {
+				return errors.New("In CrlMaps.go instantiateChildren, the abstractChildMapSource does not have a ChildMapSourceReference")
+			}
+			if abstractChildMapSourceReference.GetReferencedAttributeName(hl) != core.NoAttribute {
+				// If the abstractChildMap's source reference is to a pointer, then the actual source for the child is going to be
+				// the parent's source. Error checking is required to ensure that the parent's source is of the appropriate type for the AttributeName
+				// on the reference. In this case there will only be one instance of the abstractChildMap created.
 				// Check to see whether there is already a map instance for this source
+				parentMapSource := getSource(parentMap, hl)
+				if parentMapSource == nil {
+					return errors.New("In CrlMaps.go instantiateChildren, the parentMap does not have a parentMapSource")
+				}
 				var newMapInstance core.Element
-				for _, mapInstance := range parentMap.GetOwnedConceptsRefinedFrom(childMap, hl) {
+				for _, mapInstance := range parentMap.GetOwnedConceptsRefinedFrom(abstractChildMap, hl) {
 					mapInstanceSource := getSource(mapInstance, hl)
-					if mapInstanceSource.GetConceptID(hl) == sourceEl.GetConceptID(hl) {
+					if mapInstanceSource.GetConceptID(hl) == parentMapSource.GetConceptID(hl) {
 						newMapInstance = mapInstance
 						break
 					}
 				}
 				if newMapInstance == nil {
-					newMapInstance, err := uOfD.CreateReplicateAsRefinement(childMap, hl)
+					newMapInstance, err := uOfD.CreateReplicateAsRefinement(abstractChildMap, hl)
 					if err != nil {
 						return errors.Wrap(err, "crlmaps.instantiateChildren failed")
 					}
@@ -382,9 +392,43 @@ func instantiateChildren(abstractionMap core.Element, parentMap core.Element, so
 					if newSourceRef == nil {
 						return errors.New("In crlmaps.instantiateChildren, newSourceRef is nil")
 					}
-					err = newSourceRef.SetReferencedConcept(sourceEl, hl)
+					err = newSourceRef.SetReferencedConcept(parentMapSource, hl)
 					if err != nil {
 						return errors.Wrap(err, "crlmaps.instantiateChildren failed")
+					}
+				}
+			} else {
+				// The abstractChildMapSourceReference is to an element. There is an assumption in this case that the parent's source
+				// contains elements that are refinements of the abstractChildMapSource. For each element that is a refinement of the
+				// abstractChildMapSource found in the parent's source, instantiate the abstractChildMap (replicate as refinement)
+				// and wire up the element as the source
+				for _, sourceEl := range source.GetOwnedDescendantsRefinedFrom(abstractChildMapSource, hl) {
+					// Check to see whether there is already a map instance for this source
+					var newMapInstance core.Element
+					for _, mapInstance := range parentMap.GetOwnedConceptsRefinedFrom(abstractChildMap, hl) {
+						mapInstanceSource := getSource(mapInstance, hl)
+						if mapInstanceSource.GetConceptID(hl) == sourceEl.GetConceptID(hl) {
+							newMapInstance = mapInstance
+							break
+						}
+					}
+					if newMapInstance == nil {
+						newMapInstance, err := uOfD.CreateReplicateAsRefinement(abstractChildMap, hl)
+						if err != nil {
+							return errors.Wrap(err, "crlmaps.instantiateChildren failed")
+						}
+						err = newMapInstance.SetOwningConcept(parentMap, hl)
+						if err != nil {
+							return errors.Wrap(err, "crlmaps.instantiateChildren failed")
+						}
+						newSourceRef := newMapInstance.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
+						if newSourceRef == nil {
+							return errors.New("In crlmaps.instantiateChildren, newSourceRef is nil")
+						}
+						err = newSourceRef.SetReferencedConcept(sourceEl, hl)
+						if err != nil {
+							return errors.Wrap(err, "crlmaps.instantiateChildren failed")
+						}
 					}
 				}
 			}

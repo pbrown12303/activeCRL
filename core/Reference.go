@@ -260,6 +260,31 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 		return errors.New("reference.SetReferencedConceptID failed because the reference is not editable")
 	}
 	if rPtr.ReferencedConceptID != rcID {
+		var newReferencedConcept Element
+		if rcID != "" {
+			newReferencedConcept = rPtr.uOfD.GetElement(rcID)
+			switch rPtr.GetReferencedAttributeName(hl) {
+			case ReferencedConceptID:
+				switch newReferencedConcept.(type) {
+				case Reference:
+				default:
+					return errors.New("In reference.SetReferencedConceptID, the ReferencedAttributeName was ReferencedConceptID, but the referenced concept is not a Reference")
+				}
+			case AbstractConceptID, RefinedConceptID:
+				switch newReferencedConcept.(type) {
+				case Refinement:
+				default:
+					return errors.New("In reference.SetReferencedConceptID, the ReferencedAttributeName was AbstractConceptID or RefinedConceptID, but the referenced concept is not a Refinement")
+				}
+			}
+			if newReferencedConcept != nil {
+				newReferencedConcept.addListener(rPtr.ConceptID, hl)
+			}
+		}
+		beforeState, err := NewConceptState(rPtr)
+		if err != nil {
+			errors.Wrap(err, "reference.SetReferencedConceptID failed")
+		}
 		rPtr.uOfD.preChange(rPtr, hl)
 		rPtr.incrementVersion(hl)
 		if rPtr.ReferencedConceptID != "" {
@@ -268,20 +293,22 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 				oldReferencedConcept.removeListener(rPtr.ConceptID, hl)
 			}
 		}
-		var newReferencedConcept Element
 		if rcID != "" {
-			newReferencedConcept = rPtr.uOfD.GetElement(rcID)
 			if newReferencedConcept != nil {
 				newReferencedConcept.addListener(rPtr.ConceptID, hl)
 			}
 		}
-		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, hl)
 		rPtr.ReferencedConceptID = rcID
 		if newReferencedConcept == nil {
 			rPtr.ReferencedConceptVersion = 0
 		} else {
 			rPtr.ReferencedConceptVersion = newReferencedConcept.GetVersion(hl)
 		}
+		afterState, err2 := NewConceptState(rPtr)
+		if err2 != nil {
+			errors.Wrap(err2, "reference.SetReferencedConceptID failed")
+		}
+		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, beforeState, afterState, hl)
 		rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
 	}
 	return nil
@@ -295,10 +322,38 @@ func (rPtr *reference) SetReferencedAttributeName(attributeName AttributeName, h
 		return errors.New("reference.SetReferencedAttributeName failed because reference is not editable")
 	}
 	if rPtr.ReferencedAttributeName != attributeName {
+		var referencedConcept Element
+		if rPtr.ReferencedConceptID != "" {
+			referencedConcept = rPtr.uOfD.GetElement(rPtr.ReferencedConceptID)
+			if referencedConcept != nil {
+			}
+			switch rPtr.GetReferencedAttributeName(hl) {
+			case ReferencedConceptID:
+				switch referencedConcept.(type) {
+				case Reference:
+				default:
+					return errors.New("In reference.SetReferencedConceptID, the ReferencedAttributeName was ReferencedConceptID, but the referenced concept is not a Reference")
+				}
+			case AbstractConceptID, RefinedConceptID:
+				switch referencedConcept.(type) {
+				case Refinement:
+				default:
+					return errors.New("In reference.SetReferencedConceptID, the ReferencedAttributeName was AbstractConceptID or RefinedConceptID, but the referenced concept is not a Refinement")
+				}
+			}
+		}
 		rPtr.uOfD.preChange(rPtr, hl)
+		beforeState, err := NewConceptState(rPtr)
+		if err != nil {
+			errors.Wrap(err, "reference.SetReferencedAttributeName failed")
+		}
 		rPtr.incrementVersion(hl)
-		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, hl)
 		rPtr.ReferencedAttributeName = attributeName
+		afterState, err2 := NewConceptState(rPtr)
+		if err2 != nil {
+			errors.Wrap(err2, "reference.SetReferencedAttributeName failed")
+		}
+		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, beforeState, afterState, hl)
 		rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
 	}
 	return nil

@@ -404,21 +404,31 @@ var _ = Describe("Element internals test", func() {
 		var child Element
 		var firstAbstraction Element
 		var secondAbstraction Element
+		var thirdAbstraction Element
 		var firstAbstractionURI = "http://firstAbstraction"
 		var secondAbstractionURI = "http://secondAbstraction"
+		var thirdAbstractionURI = "http://thirdAbstraction"
 		BeforeEach(func() {
 			owner, _ = uOfD.NewElement(hl)
 			child, _ = uOfD.NewElement(hl)
 			child.SetOwningConceptID(owner.getConceptIDNoLock(), hl)
-			firstAbstraction, _ = uOfD.NewElement(hl)
-			firstAbstraction.SetURI(firstAbstractionURI, hl)
-			secondAbstraction, _ = uOfD.NewElement(hl)
-			secondAbstraction.SetURI(secondAbstractionURI, hl)
+			firstAbstraction, _ = uOfD.NewElement(hl, firstAbstractionURI)
+			secondAbstraction, _ = uOfD.NewElement(hl, secondAbstractionURI)
+			thirdAbstraction, _ = uOfD.NewElement(hl, thirdAbstractionURI)
 		})
 		Specify("Initially HasAbstraction should return false", func() {
 			Expect(child.IsRefinementOf(firstAbstraction, hl)).To(BeFalse())
 			Expect(child.IsRefinementOfURI(firstAbstractionURI, hl)).To(BeFalse())
 			Expect(owner.GetFirstOwnedConceptRefinedFrom(firstAbstraction, hl)).To(BeNil())
+			Expect(owner.GetFirstOwnedConceptRefinedFromURI(firstAbstractionURI, hl)).To(BeNil())
+			Expect(child.IsRefinementOf(secondAbstraction, hl)).To(BeFalse())
+			Expect(child.IsRefinementOfURI(secondAbstractionURI, hl)).To(BeFalse())
+			Expect(owner.GetFirstOwnedConceptRefinedFrom(secondAbstraction, hl)).To(BeNil())
+			Expect(owner.GetFirstOwnedConceptRefinedFromURI(secondAbstractionURI, hl)).To(BeNil())
+			Expect(child.IsRefinementOf(thirdAbstraction, hl)).To(BeFalse())
+			Expect(child.IsRefinementOfURI(thirdAbstractionURI, hl)).To(BeFalse())
+			Expect(owner.GetFirstOwnedConceptRefinedFrom(thirdAbstraction, hl)).To(BeNil())
+			Expect(owner.GetFirstOwnedConceptRefinedFromURI(thirdAbstractionURI, hl)).To(BeNil())
 		})
 		Specify("After adding abstraction, child and owner abstraction-related methods should work", func() {
 			ref, _ := uOfD.NewRefinement(hl)
@@ -430,6 +440,16 @@ var _ = Describe("Element internals test", func() {
 			foundAbstractions := make(map[string]Element)
 			child.FindAbstractions(foundAbstractions, hl)
 			Expect(foundAbstractions[firstAbstraction.getConceptIDNoLock()]).To(Equal(firstAbstraction))
+			Expect(foundAbstractions[secondAbstraction.getConceptIDNoLock()]).To(BeNil())
+			Expect(foundAbstractions[thirdAbstraction.getConceptIDNoLock()]).To(BeNil())
+			Expect(child.IsRefinementOf(secondAbstraction, hl)).To(BeFalse())
+			Expect(child.IsRefinementOfURI(secondAbstractionURI, hl)).To(BeFalse())
+			Expect(owner.GetFirstOwnedConceptRefinedFrom(secondAbstraction, hl)).To(BeNil())
+			Expect(owner.GetFirstOwnedConceptRefinedFromURI(secondAbstractionURI, hl)).To(BeNil())
+			Expect(child.IsRefinementOf(thirdAbstraction, hl)).To(BeFalse())
+			Expect(child.IsRefinementOfURI(thirdAbstractionURI, hl)).To(BeFalse())
+			Expect(owner.GetFirstOwnedConceptRefinedFrom(thirdAbstraction, hl)).To(BeNil())
+			Expect(owner.GetFirstOwnedConceptRefinedFromURI(thirdAbstractionURI, hl)).To(BeNil())
 		})
 		Specify("After adding second-level abstraction, child and owner abstraction-related methods should work", func() {
 			ref, _ := uOfD.NewRefinement(hl)
@@ -441,10 +461,16 @@ var _ = Describe("Element internals test", func() {
 			Expect(child.IsRefinementOf(secondAbstraction, hl)).To(BeTrue())
 			Expect(child.IsRefinementOfURI(secondAbstractionURI, hl)).To(BeTrue())
 			Expect(owner.GetFirstOwnedConceptRefinedFrom(secondAbstraction, hl)).To(Equal(child))
+			Expect(owner.GetFirstOwnedConceptRefinedFromURI(secondAbstractionURI, hl)).To(Equal(child))
+			Expect(child.IsRefinementOf(thirdAbstraction, hl)).To(BeFalse())
+			Expect(child.IsRefinementOfURI(thirdAbstractionURI, hl)).To(BeFalse())
+			Expect(owner.GetFirstOwnedConceptRefinedFrom(thirdAbstraction, hl)).To(BeNil())
+			Expect(owner.GetFirstOwnedConceptRefinedFromURI(thirdAbstractionURI, hl)).To(BeNil())
 			foundAbstractions := make(map[string]Element)
 			child.FindAbstractions(foundAbstractions, hl)
 			Expect(foundAbstractions[firstAbstraction.getConceptIDNoLock()]).To(Equal(firstAbstraction))
 			Expect(foundAbstractions[secondAbstraction.getConceptIDNoLock()]).To(Equal(secondAbstraction))
+			Expect(foundAbstractions[thirdAbstraction.getConceptIDNoLock()]).To(BeNil())
 		})
 		Specify("An Element should be a refinement of the core Element", func() {
 			el, _ := uOfD.NewElement(hl)

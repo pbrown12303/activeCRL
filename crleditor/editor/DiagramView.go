@@ -1,6 +1,7 @@
 package editor
 
 import (
+	"github.com/pkg/errors"
 	"strconv"
 
 	"github.com/pbrown12303/activeCRL/core"
@@ -94,9 +95,9 @@ func updateDiagramElementView(diagramElement core.Element, changeNotification *c
 	hl.ReadLockElement(diagramElement)
 	if diagramElement.GetUniverseOfDiscourse(hl) != uOfD {
 		// The diagram element has been removed from the universe of discourse
-		priorState := changeNotification.GetPriorState()
+		priorState := changeNotification.GetBeforeState()
 		if priorState != nil {
-			additionalParameters := map[string]string{"OwnerID": priorState.GetOwningConceptID(hl)}
+			additionalParameters := map[string]string{"OwnerID": priorState.OwningConceptID}
 			SendNotification("DeleteDiagramElement", diagramElement.GetConceptID(hl), priorState, additionalParameters)
 		}
 		return nil
@@ -105,7 +106,11 @@ func updateDiagramElementView(diagramElement core.Element, changeNotification *c
 		switch changeNotification.GetNatureOfChange() {
 		case core.ChildChanged:
 			additionalParameters := getNodeAdditionalParameters(diagramElement, hl)
-			SendNotification("UpdateDiagramNode", diagramElement.GetConceptID(hl), diagramElement, additionalParameters)
+			conceptState, err := core.NewConceptState(diagramElement)
+			if err != nil {
+				return errors.Wrap(err, "DiagramView.go updateDiagrmElementView failed")
+			}
+			SendNotification("UpdateDiagramNode", diagramElement.GetConceptID(hl), conceptState, additionalParameters)
 		case core.IndicatedConceptChanged:
 			underlyingNotification := changeNotification.GetUnderlyingChange()
 			if underlyingNotification != nil {
@@ -115,10 +120,10 @@ func updateDiagramElementView(diagramElement core.Element, changeNotification *c
 					if secondUnderlyingNotification != nil {
 						switch secondUnderlyingNotification.GetNatureOfChange() {
 						case core.ConceptChanged:
-							currentConcept := secondUnderlyingNotification.GetReportingElement()
-							priorConcept := secondUnderlyingNotification.GetPriorState()
-							if currentConcept != nil && priorConcept != nil && currentConcept.GetLabel(hl) != priorConcept.GetLabel(hl) {
-								currentLabel := currentConcept.GetLabel(hl)
+							currentConcept := secondUnderlyingNotification.GetAfterState()
+							priorConcept := secondUnderlyingNotification.GetBeforeState()
+							if currentConcept != nil && priorConcept != nil && currentConcept.Label != priorConcept.Label {
+								currentLabel := currentConcept.Label
 								diagramElement.SetLabel(currentLabel, hl)
 								crldiagram.SetDisplayLabel(diagramElement, currentLabel, hl)
 							}
@@ -132,7 +137,11 @@ func updateDiagramElementView(diagramElement core.Element, changeNotification *c
 		switch changeNotification.GetNatureOfChange() {
 		case core.ChildChanged:
 			additionalParameters := getLinkAdditionalParameters(diagramElement, hl)
-			SendNotification("UpdateDiagramLink", diagramElement.GetConceptID(hl), diagramElement, additionalParameters)
+			conceptState, err := core.NewConceptState(diagramElement)
+			if err != nil {
+				return errors.Wrap(err, "DiagramView.go updateDiagrmElementView failed")
+			}
+			SendNotification("UpdateDiagramLink", diagramElement.GetConceptID(hl), conceptState, additionalParameters)
 		}
 		return nil
 	}
@@ -148,43 +157,48 @@ func updateDiagramView(diagram core.Element, changeNotification *core.ChangeNoti
 	hl.ReadLockElement(diagram)
 	switch changeNotification.GetNatureOfChange() {
 	case core.ChildChanged:
-		reportingElement := changeNotification.GetReportingElement()
-		if reportingElement.IsRefinementOfURI(crldiagram.CrlDiagramElementURI, hl) {
-			// The reporting element is one of the diagram elements
-			underlyingChange := changeNotification.GetUnderlyingChange()
-			if underlyingChange != nil {
-				switch underlyingChange.GetNatureOfChange() {
-				case core.ConceptChanged:
-					// The diagram element itself has changed. Need to check to see if it is an ownership change that requires
-					// removal from the diagram
-					oldChildOwner := underlyingChange.GetPriorState().GetOwningConcept(hl)
-					currentChildOwner := underlyingChange.GetReportingElement().GetOwningConcept(hl)
-					if oldChildOwner == diagram && currentChildOwner != diagram {
-						priorState := underlyingChange.GetPriorState()
-						additionalParameters := map[string]string{"OwnerID": diagram.GetConceptID(hl)}
-						SendNotification("DeleteDiagramElement", priorState.GetConceptID(hl), priorState, additionalParameters)
-					} else if oldChildOwner != diagram && currentChildOwner == diagram {
-						newElement := underlyingChange.GetReportingElement()
-						if crldiagram.IsDiagramNode(newElement, hl) {
-							additionalParameters := getNodeAdditionalParameters(newElement, hl)
-							SendNotification("AddDiagramNode", newElement.GetConceptID(hl), newElement, additionalParameters)
-						} else if crldiagram.IsDiagramLink(newElement, hl) {
-							additionalParameters := getLinkAdditionalParameters(newElement, hl)
-							SendNotification("AddDiagramLink", newElement.GetConceptID(hl), newElement, additionalParameters)
-						}
+		// In the case of deletion, the reportingElement may be nil at this point, i.e. already removed from UofD
+		reportingElementState := changeNotification.GetAfterState()
+		underlyingChange := changeNotification.GetUnderlyingChange()
+		if underlyingChange != nil {
+			switch underlyingChange.GetNatureOfChange() {
+			case core.ConceptChanged:
+				// The diagram element itself has changed. Need to check to see if it is an ownership change that requires
+				// removal from the diagram
+				oldChildOwner := uOfD.GetElement(underlyingChange.GetBeforeState().OwningConceptID)
+				currentChildOwner := uOfD.GetElement(underlyingChange.GetAfterState().OwningConceptID)
+				if oldChildOwner == diagram && currentChildOwner != diagram {
+					beforeState := underlyingChange.GetBeforeState()
+					additionalParameters := map[string]string{"OwnerID": diagram.GetConceptID(hl)}
+					SendNotification("DeleteDiagramElement", beforeState.ConceptID, beforeState, additionalParameters)
+				} else if oldChildOwner != diagram && currentChildOwner == diagram {
+					newElement := uOfD.GetElement(underlyingChange.GetAfterState().ConceptID)
+					if newElement == nil {
+						return errors.New("In DiagramView.go updateDiagramView, newElement was nil")
 					}
-				case core.ChildChanged:
-					// a Child of the diagram element changed. Check to see whether it is a model reference and, if so, whether the model elemment still exists
-					if crldiagram.IsModelReference(underlyingChange.GetReportingElement(), hl) {
-						secondUnderlyingChange := underlyingChange.GetUnderlyingChange()
-						switch secondUnderlyingChange.GetNatureOfChange() {
-						case core.ConceptChanged:
-							// check to see whether the modelElement is nil
-							modelReference := secondUnderlyingChange.GetReportingElement().(core.Reference)
-							if modelReference.GetReferencedConcept(hl) == nil {
-								additionalParameters := map[string]string{"OwnerID": diagram.GetConceptID(hl)}
-								SendNotification("DeleteDiagramElement", reportingElement.GetConceptID(hl), reportingElement, additionalParameters)
-							}
+					conceptState, err := core.NewConceptState(newElement)
+					if err != nil {
+						return errors.Wrap(err, "DiagramView.go updateDiagramView failed")
+					}
+					if crldiagram.IsDiagramNode(newElement, hl) {
+						additionalParameters := getNodeAdditionalParameters(newElement, hl)
+						SendNotification("AddDiagramNode", newElement.GetConceptID(hl), conceptState, additionalParameters)
+					} else if crldiagram.IsDiagramLink(newElement, hl) {
+						additionalParameters := getLinkAdditionalParameters(newElement, hl)
+						SendNotification("AddDiagramLink", newElement.GetConceptID(hl), conceptState, additionalParameters)
+					}
+				}
+			case core.ChildChanged:
+				// a Child of the diagram element changed. Check to see whether it is a model reference and, if so, whether the model elemment still exists
+				if crldiagram.IsModelReference(uOfD.GetElement(underlyingChange.GetChangedConceptID()), hl) {
+					secondUnderlyingChange := underlyingChange.GetUnderlyingChange()
+					switch secondUnderlyingChange.GetNatureOfChange() {
+					case core.ConceptChanged:
+						// check to see whether the modelElement is nil
+						modelReference := uOfD.GetElement(secondUnderlyingChange.GetChangedConceptID()).(core.Reference)
+						if modelReference.GetReferencedConcept(hl) == nil {
+							additionalParameters := map[string]string{"OwnerID": diagram.GetConceptID(hl)}
+							SendNotification("DeleteDiagramElement", reportingElementState.ConceptID, reportingElementState, additionalParameters)
 						}
 					}
 				}
@@ -205,25 +219,22 @@ func diagramViewMonitor(instance core.Element, changeNotification *core.ChangeNo
 		// When the diagram is deleted, the reference to it in this object becomes nil resulting in a ConceptChanged
 		switch instance.(type) {
 		case core.Reference:
-			reference := instance.(core.Reference)
-			// This may be a band-aid here. If this gets called with the reference no longer having a uOfD, i.e. deleted,
-			// we still tell the diagram manager to close the diagram view.
-			if reference.GetUniverseOfDiscourse(hl) == nil || reference.GetReferencedConcept(hl) == nil {
-				oldReferencedID := changeNotification.GetPriorState().(core.Reference).GetReferencedConceptID(hl)
-				if oldReferencedID != "" {
-					CrlEditorSingleton.getDiagramManager().closeDiagramView(oldReferencedID, hl)
-					uOfD.DeleteElement(instance, hl)
+			if changeNotification.GetAfterState().ReferencedConceptID == "" && changeNotification.GetBeforeState().ReferencedConceptID != "" {
+				err := CrlEditorSingleton.getDiagramManager().closeDiagramView(changeNotification.GetBeforeState().ReferencedConceptID, hl)
+				if err != nil {
+					errors.Wrap(err, "DiagramView.go diagramViewMonitor failed")
 				}
+				uOfD.DeleteElement(instance, hl)
 			}
 		}
 	case core.IndicatedConceptChanged:
 		underlyingChange := changeNotification.GetUnderlyingChange()
 		switch underlyingChange.GetNatureOfChange() {
 		case core.ConceptChanged:
-			diagram := underlyingChange.GetReportingElement()
-			oldDiagram := underlyingChange.GetPriorState()
+			diagram := uOfD.GetElement(underlyingChange.GetAfterState().ConceptID)
+			oldDiagram := uOfD.GetElement(underlyingChange.GetBeforeState().ConceptID)
 			if diagram != nil && oldDiagram != nil && diagram.GetLabel(hl) != oldDiagram.GetLabel(hl) {
-				diagramID := underlyingChange.GetReportingElementID()
+				diagramID := underlyingChange.GetAfterState().ConceptID
 				CrlEditorSingleton.getDiagramManager().diagramLabelChanged(diagramID, diagram, hl)
 			}
 		}

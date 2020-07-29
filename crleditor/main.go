@@ -16,5 +16,6 @@ func main() {
 	flag.Parse()
 	fmt.Println("workspace: ", *workspaceArg)
 	fmt.Println("user folder: ", *userFolderArg)
+	editor.CrlLogClientRequests = true
 	editor.StartServer(true, *workspaceArg, *userFolderArg)
 }

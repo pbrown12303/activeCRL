@@ -4,6 +4,7 @@ import (
 	mapset "github.com/deckarep/golang-set"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"strconv"
 )
 
 var df1URI = "http://dummy.function.uri,df1"
@@ -63,8 +64,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetReportingElement().GetDefinition(hl)).To(Equal(definition))
-					Expect(pc.notification.GetPriorState().GetDefinition(hl)).To(Equal(""))
+					Expect(pc.notification.GetAfterState().Definition).To(Equal(definition))
+					Expect(pc.notification.GetBeforeState().Definition).To(Equal(""))
 					found = true
 				}
 			}
@@ -93,8 +94,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetReportingElement().GetLabel(hl)).To(Equal(label))
-					Expect(pc.notification.GetPriorState().GetLabel(hl)).To(Equal(""))
+					Expect(pc.notification.GetAfterState().Label).To(Equal(label))
+					Expect(pc.notification.GetBeforeState().Label).To(Equal(""))
 					found = true
 				}
 			}
@@ -123,8 +124,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetReportingElement().GetOwningConceptID(hl)).To(Equal(newOwner.getConceptIDNoLock()))
-					Expect(pc.notification.GetPriorState().GetOwningConceptID(hl)).To(Equal(""))
+					Expect(pc.notification.GetAfterState().OwningConceptID).To(Equal(newOwner.getConceptIDNoLock()))
+					Expect(pc.notification.GetBeforeState().OwningConceptID).To(Equal(""))
 					found = true
 				}
 			}
@@ -155,8 +156,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetReportingElement().GetOwningConceptID(hl)).To(Equal(newOwner.getConceptIDNoLock()))
-					Expect(pc.notification.GetPriorState().GetOwningConceptID(hl)).To(Equal(oldOwner.getConceptIDNoLock()))
+					Expect(pc.notification.GetAfterState().OwningConceptID).To(Equal(newOwner.getConceptIDNoLock()))
+					Expect(pc.notification.GetBeforeState().OwningConceptID).To(Equal(oldOwner.getConceptIDNoLock()))
 					found = true
 				}
 			}
@@ -184,8 +185,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetReportingElement().IsReadOnly(hl)).To(BeTrue())
-					Expect(pc.notification.GetPriorState().IsReadOnly(hl)).To(BeFalse())
+					Expect(strconv.ParseBool(pc.notification.GetAfterState().ReadOnly)).To(BeTrue())
+					Expect(strconv.ParseBool(pc.notification.GetBeforeState().ReadOnly)).To(BeFalse())
 					found = true
 				}
 			}
@@ -214,8 +215,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetReportingElement().GetURI(hl)).To(Equal(uri))
-					Expect(pc.notification.GetPriorState().GetURI(hl)).To(Equal(""))
+					Expect(pc.notification.GetAfterState().URI).To(Equal(uri))
+					Expect(pc.notification.GetBeforeState().URI).To(Equal(""))
 					found = true
 				}
 			}
@@ -247,13 +248,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == lit {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					switch pc.notification.GetPriorState().(type) {
-					case Literal:
-						Expect(pc.notification.GetReportingElement().(Literal).GetLiteralValue(hl)).To(Equal(literalValue))
-						Expect(pc.notification.GetPriorState().(Literal).GetLiteralValue(hl)).To(Equal(""))
-					default:
-						Fail("Notification concept state is not a Literal")
-					}
+					Expect(pc.notification.GetAfterState().LiteralValue).To(Equal(literalValue))
+					Expect(pc.notification.GetBeforeState().LiteralValue).To(Equal(""))
 					found = true
 				}
 			}
@@ -285,13 +281,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == ref {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					switch pc.notification.GetPriorState().(type) {
-					case Reference:
-						Expect(pc.notification.GetReportingElement().(Reference).GetReferencedConceptID(hl)).To(Equal(target.getConceptIDNoLock()))
-						Expect(pc.notification.GetPriorState().(Reference).GetReferencedConceptID(hl)).To(Equal(""))
-					default:
-						Fail("Notification concept state is not a Reference")
-					}
+					Expect(pc.notification.GetAfterState().ReferencedConceptID).To(Equal(target.getConceptIDNoLock()))
+					Expect(pc.notification.GetBeforeState().ReferencedConceptID).To(Equal(""))
 					found = true
 				}
 			}
@@ -323,13 +314,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == ref {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					switch pc.notification.GetPriorState().(type) {
-					case Refinement:
-						Expect(pc.notification.GetReportingElement().(Refinement).GetAbstractConceptID(hl)).To(Equal(target.getConceptIDNoLock()))
-						Expect(pc.notification.GetPriorState().(Refinement).GetAbstractConceptID(hl)).To(Equal(""))
-					default:
-						Fail("Notification concept state is not a Refinement")
-					}
+					Expect(pc.notification.GetAfterState().AbstractConceptID).To(Equal(target.getConceptIDNoLock()))
+					Expect(pc.notification.GetBeforeState().AbstractConceptID).To(Equal(""))
 					found = true
 				}
 			}
@@ -358,13 +344,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == ref {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					switch pc.notification.GetPriorState().(type) {
-					case Refinement:
-						Expect(pc.notification.GetReportingElement().(Refinement).GetRefinedConceptID(hl)).To(Equal(target.getConceptIDNoLock()))
-						Expect(pc.notification.GetPriorState().(Refinement).GetRefinedConceptID(hl)).To(Equal(""))
-					default:
-						Fail("Notification concept state is not a Refinement")
-					}
+					Expect(pc.notification.GetAfterState().RefinedConceptID).To(Equal(target.getConceptIDNoLock()))
+					Expect(pc.notification.GetBeforeState().RefinedConceptID).To(Equal(""))
 					found = true
 				}
 			}
@@ -912,7 +893,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == listener {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(UofDConceptAdded))
-					Expect(pc.notification.GetUnderlyingChange().GetPriorState().getConceptIDNoLock()).To(Equal(el.getConceptIDNoLock()))
+					Expect(pc.notification.GetUnderlyingChange().GetAfterState().ConceptID).To(Equal(el.getConceptIDNoLock()))
 					found = true
 				}
 			}
@@ -945,7 +926,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == listener {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(UofDConceptRemoved))
-					Expect(pc.notification.GetUnderlyingChange().GetPriorState().getConceptIDNoLock()).To(Equal(el.getConceptIDNoLock()))
+					Expect(pc.notification.GetUnderlyingChange().GetBeforeState().ConceptID).To(Equal(el.getConceptIDNoLock()))
 					found = true
 				}
 			}

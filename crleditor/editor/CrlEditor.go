@@ -465,7 +465,6 @@ func (edPtr *CrlEditor) GetWorkspacePath() string {
 
 // InitializeClient sets the client state after a browser refresh.
 func (edPtr *CrlEditor) InitializeClient() error {
-	<-webSocketReady
 	uOfD := edPtr.GetUofD()
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
@@ -479,30 +478,34 @@ func (edPtr *CrlEditor) InitializeClient() error {
 func (edPtr *CrlEditor) initializeClientState(hl *core.HeldLocks) error {
 	err := edPtr.getTreeManager().initializeTree(hl)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "CrlEditor.initializeClientState failed")
 	}
 	edPtr.SendUserPreferences(hl)
 	edPtr.SendDebugSettings()
 	edPtr.SendWorkspacePath()
 	edPtr.SendClearDiagrams()
+	_, err = SendNotification("ElementSelected", "", nil, nil)
+	if err != nil {
+		return errors.Wrap(err, "CrlEditor.initializeClientState failed")
+	}
 	openDiagrams := edPtr.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
 	if openDiagrams == nil {
 		return errors.New("In CrlEditor.initializeClientState, openDiagrams is nil")
 	}
-	openDiagramReference, err2 := crldatastructures.GetFirstMemberReference(openDiagrams, hl)
+	openDiagramLiteral, err2 := crldatastructures.GetFirstMemberLiteral(openDiagrams, hl)
 	if err2 != nil {
 		return err2
 	}
-	for openDiagramReference != nil {
-		diagram := openDiagramReference.GetReferencedConcept(hl)
+	for openDiagramLiteral != nil {
+		diagram := edPtr.uOfD.GetElement(openDiagramLiteral.GetLiteralValue(hl))
 		if diagram == nil {
-			return errors.New("Failed to load diagram with ID: " + openDiagramReference.GetReferencedConceptID(hl))
+			return errors.New("Failed to load diagram with ID: " + openDiagramLiteral.GetLiteralValue(hl))
 		}
 		err2 = edPtr.diagramManager.displayDiagram(diagram, hl)
 		if err2 != nil {
 			return err2
 		}
-		openDiagramReference, _ = crldatastructures.GetNextMemberReference(openDiagramReference, hl)
+		openDiagramLiteral, _ = crldatastructures.GetNextMemberLiteral(openDiagramLiteral, hl)
 	}
 	hl.ReleaseLocksAndWait()
 	edPtr.SendClientInitializationComplete()
@@ -752,22 +755,29 @@ func (edPtr *CrlEditor) SaveWorkspace(hl *core.HeldLocks) error {
 
 // SelectElement selects the indicated Element in the tree, displays the Element in the Properties window, and selects it in the
 // current diagram (if present).
-func (edPtr *CrlEditor) SelectElement(el core.Element, hl *core.HeldLocks) core.Element {
+func (edPtr *CrlEditor) SelectElement(el core.Element, hl *core.HeldLocks) (core.Element, error) {
 	edPtr.currentSelection = el
 	selectedID := ""
 	if el != nil {
 		selectedID = el.GetConceptID(hl)
 	}
-	_, err := SendNotification("ElementSelected", selectedID, el, nil)
+	conceptState, err := core.NewConceptState(el)
 	if err != nil {
-		log.Printf(err.Error())
+		return nil, errors.Wrap(err, "In CrlEditor.SelectElement, NewConceptState failed")
 	}
-	return edPtr.currentSelection
+	_, err2 := SendNotification("ElementSelected", selectedID, conceptState, nil)
+	if err2 != nil {
+		return nil, errors.Wrap(err2, "In CrlEditor.SelectElement, SendNotification failed")
+	}
+	return edPtr.currentSelection, nil
 }
 
 // SelectElementUsingIDString selects the Element whose ConceptID matches the supplied string
-func (edPtr *CrlEditor) SelectElementUsingIDString(id string, hl *core.HeldLocks) core.Element {
+func (edPtr *CrlEditor) SelectElementUsingIDString(id string, hl *core.HeldLocks) (core.Element, error) {
 	foundElement := edPtr.uOfD.GetElement(id)
+	if foundElement == nil && id != "" {
+		return nil, errors.New("In CrlEditor.SelectElementUsingIDString, element was not found")
+	}
 	return edPtr.SelectElement(foundElement, hl)
 }
 
@@ -805,8 +815,8 @@ func (edPtr *CrlEditor) SendUserPreferences(hl *core.HeldLocks) {
 }
 
 // SendNotification calls the ClientNotificationManager method of the same name and returns the result.
-func (edPtr *CrlEditor) SendNotification(notificationDescription string, id string, el core.Element, additionalParameters map[string]string) (*NotificationResponse, error) {
-	return edPtr.GetClientNotificationManager().SendNotification(notificationDescription, id, el, additionalParameters)
+func (edPtr *CrlEditor) SendNotification(notificationDescription string, id string, elState *core.ConceptState, additionalParameters map[string]string) (*NotificationResponse, error) {
+	return edPtr.GetClientNotificationManager().SendNotification(notificationDescription, id, elState, additionalParameters)
 }
 
 // SendWorkspacePath sends the new workspace path to the client
@@ -888,8 +898,12 @@ func (edPtr *CrlEditor) ShowConceptInTree(concept core.Element, hl *core.HeldLoc
 	if concept == nil {
 		return errors.New("CrlEditor.ShowConceptInTree called with nil concept")
 	}
-	_, err := edPtr.SendNotification("ShowTreeNode", concept.GetConceptID(hl), concept, nil)
+	conceptState, err := core.NewConceptState(concept)
 	if err != nil {
+		return errors.Wrap(err, "CrlEditor.ShowConceptInTree failed")
+	}
+	_, err2 := edPtr.SendNotification("ShowTreeNode", concept.GetConceptID(hl), conceptState, nil)
+	if err2 != nil {
 		return errors.Wrap(err, "CrlEditor.ShowConceptInTree failed")
 	}
 	return nil

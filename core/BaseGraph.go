@@ -9,9 +9,10 @@ import (
 )
 
 type baseGraph struct {
-	graph          *gographviz.Graph
-	callAnnotation map[string]string
-	nodeElements   map[string]Element
+	graph             *gographviz.Graph
+	callAnnotation    map[string]string
+	nodeElementLabels map[string]string
+	nodeElementTypes  map[string]string
 	// rootNodeIDs maps a parent graph to the ID of its root node. Each graph or subgraph has a root node.
 	rootNodeIDs map[string]string
 	// parentGraphNodePrefix maps each parentGraph to the prefix used for its nodes
@@ -28,65 +29,70 @@ func (bgPtr *baseGraph) initializeBaseGraph(graphName string) {
 	bgPtr.graph.SetStrict(true)
 	bgPtr.graph.SetName(graphName)
 	bgPtr.callAnnotation = make(map[string]string)
-	bgPtr.nodeElements = make(map[string]Element)
+	bgPtr.nodeElementLabels = make(map[string]string)
+	bgPtr.nodeElementTypes = make(map[string]string)
 	bgPtr.rootNodeIDs = make(map[string]string)
 	bgPtr.parentGraphNodePrefix = make(map[string]string)
 	bgPtr.parentGraphCallSequence = make(map[string]int)
 	bgPtr.nodeToGraphName = make(map[string]string)
 }
 
-// addNotification adds a notification to a graph (its parent graph). The changed object is added to the graph if not already present.
-// If this is the root notification, the ID of the changed object becomes the rootNodeID for the parentGraph.
-// If the changed object does not exist as a node, a node is created and an annotation is added to indicate the type of notification
-// and the position in the notification hierarcy. If the changed object already exists then a new annotation is just added
+// addNotification adds a notification to a graph (its parent graph). The reporting element is added to the graph if not already present.
+// If this is the root notification, the ID of the reporting element becomes the rootNodeID for the parentGraph.
+// If the reporting element does not exist as a node, a node is created and an annotation is added to indicate the type of notification
+// and the position in the notification hierarcy. If the reporting element already exists then a new annotation is just added
 func (bgPtr *baseGraph) addNotification(notification *ChangeNotification, parentGraph string) string {
-	changedObject := notification.GetReportingElement()
-	changedObjectID := bgPtr.makeNode(changedObject, parentGraph, false)
+	reportingElement := notification.uOfD.GetElement(notification.GetReportingElementID()) // this will return nil after an element deletion
+	reportingElementNodeID := bgPtr.makeNode(notification.GetReportingElementID(), notification.GetChangedConceptType(), notification.GetChangedConceptLabel(), parentGraph, false, "")
 	// By definition, the root notification's changed object is the root node
 	if bgPtr.rootNodeIDs[parentGraph] == "" {
-		bgPtr.rootNodeIDs[parentGraph] = changedObjectID
+		bgPtr.rootNodeIDs[parentGraph] = reportingElementNodeID
 	}
-	bgPtr.nodeElements[changedObjectID] = changedObject
+	bgPtr.nodeElementLabels[reportingElementNodeID] = notification.GetReportingElementLabel()
+	bgPtr.nodeElementTypes[reportingElementNodeID] = notification.GetReportingElementType()
 
-	bgPtr.callAnnotation[changedObjectID] = bgPtr.callAnnotation[changedObjectID] + "<TR><TD>" + strconv.Itoa(bgPtr.parentGraphCallSequence[parentGraph]) + ":" + notification.reportingElement.getConceptIDNoLock() + notification.natureOfChange.String() + "</TD></TR>"
+	bgPtr.callAnnotation[reportingElementNodeID] = bgPtr.callAnnotation[reportingElementNodeID] + "<TR><TD>" + strconv.Itoa(bgPtr.parentGraphCallSequence[parentGraph]) + ":" + notification.GetChangedConceptID() + notification.natureOfChange.String() + "</TD></TR>"
 	bgPtr.parentGraphCallSequence[parentGraph]--
 
-	bgPtr.graphParentsRecursively(changedObject, parentGraph)
+	bgPtr.graphParentsRecursively(reportingElement, parentGraph)
 
-	switch changedObject.(type) {
+	switch reportingElement.(type) {
 	case Reference:
-		indicatedElement := changedObject.(Reference).getReferencedConceptNoLock()
+		indicatedElement := reportingElement.(Reference).getReferencedConceptNoLock()
 		if indicatedElement != nil {
-			indicatedElementID := makeGraphID(indicatedElement, bgPtr.parentGraphNodePrefix[parentGraph])
-			bgPtr.nodeElements[indicatedElementID] = indicatedElement
-			bgPtr.makeNode(indicatedElement, parentGraph, false)
-			bgPtr.makeIndicatedElementEdge(changedObjectID, indicatedElementID)
+			indicatedElementID := makeGraphID(indicatedElement.getConceptIDNoLock(), bgPtr.parentGraphNodePrefix[parentGraph])
+			bgPtr.nodeElementLabels[indicatedElementID] = indicatedElement.getLabelNoLock()
+			bgPtr.nodeElementTypes[indicatedElementID] = reflect.TypeOf(indicatedElement).String()
+			bgPtr.makeNode(indicatedElement.getConceptIDNoLock(), GetConceptTypeString(indicatedElement), notification.GetChangedConceptLabel(), parentGraph, false, "")
+			bgPtr.makeIndicatedElementEdge(reportingElementNodeID, indicatedElementID)
 			bgPtr.graphParentsRecursively(indicatedElement, parentGraph)
 		}
 	case Refinement:
-		abstractConcept := changedObject.(Refinement).getAbstractConceptNoLock()
+		abstractConcept := reportingElement.(Refinement).getAbstractConceptNoLock()
 		if abstractConcept != nil {
-			abstractConceptID := makeGraphID(abstractConcept, bgPtr.parentGraphNodePrefix[parentGraph])
-			bgPtr.nodeElements[abstractConceptID] = abstractConcept
-			bgPtr.makeNode(abstractConcept, parentGraph, false)
-			bgPtr.makeAbstractConceptEdge(changedObjectID, abstractConceptID)
+			abstractConceptID := makeGraphID(abstractConcept.getConceptIDNoLock(), bgPtr.parentGraphNodePrefix[parentGraph])
+			bgPtr.nodeElementLabels[abstractConceptID] = abstractConcept.getLabelNoLock()
+			bgPtr.nodeElementTypes[abstractConceptID] = reflect.TypeOf(abstractConcept).String()
+			bgPtr.makeNode(abstractConcept.getConceptIDNoLock(), GetConceptTypeString(abstractConcept), notification.GetChangedConceptLabel(), parentGraph, false, "")
+			bgPtr.makeAbstractConceptEdge(reportingElementNodeID, abstractConceptID)
 			bgPtr.graphParentsRecursively(abstractConcept, parentGraph)
 		}
-		refinedConcept := changedObject.(Refinement).getAbstractConceptNoLock()
+		refinedConcept := reportingElement.(Refinement).getAbstractConceptNoLock()
 		if refinedConcept != nil {
-			refinedConceptID := makeGraphID(refinedConcept, bgPtr.parentGraphNodePrefix[parentGraph])
-			bgPtr.nodeElements[refinedConceptID] = refinedConcept
-			bgPtr.makeNode(refinedConcept, parentGraph, false)
-			bgPtr.makeRefinedConceptEdge(changedObjectID, refinedConceptID)
+			refinedConceptID := makeGraphID(refinedConcept.getConceptIDNoLock(), bgPtr.parentGraphNodePrefix[parentGraph])
+			bgPtr.nodeElementLabels[refinedConceptID] = refinedConcept.getLabelNoLock()
+			bgPtr.nodeElementTypes[refinedConceptID] = reflect.TypeOf(refinedConcept).String()
+			bgPtr.makeNode(refinedConcept.getConceptIDNoLock(), GetConceptTypeString(refinedConcept), notification.GetChangedConceptLabel(), parentGraph, false, "")
+			bgPtr.makeRefinedConceptEdge(reportingElementNodeID, refinedConceptID)
 			bgPtr.graphParentsRecursively(refinedConcept, parentGraph)
 		}
 	}
 
 	if notification.underlyingChange != nil {
 		underlyingNotificationID := bgPtr.addNotification(notification.underlyingChange, parentGraph)
-		bgPtr.makeNotificationEdge(underlyingNotificationID, changedObjectID)
+		bgPtr.makeNotificationEdge(underlyingNotificationID, reportingElementNodeID)
 	}
-	return changedObjectID
+	return reportingElementNodeID
 }
 
 func (bgPtr *baseGraph) getRootNodeID(parentGraph string) string {
@@ -94,12 +100,16 @@ func (bgPtr *baseGraph) getRootNodeID(parentGraph string) string {
 }
 
 func (bgPtr *baseGraph) graphParentsRecursively(child Element, parentGraph string) {
+	if child == nil {
+		return
+	}
 	parent := child.getOwningConceptNoLock()
 	if parent != nil {
-		childObjectID := makeGraphID(child, bgPtr.parentGraphNodePrefix[parentGraph])
-		parentGraphID := makeGraphID(parent, bgPtr.parentGraphNodePrefix[parentGraph])
-		bgPtr.nodeElements[parentGraphID] = parent
-		bgPtr.makeNode(parent, parentGraph, false)
+		childObjectID := makeGraphID(child.getConceptIDNoLock(), bgPtr.parentGraphNodePrefix[parentGraph])
+		parentGraphID := makeGraphID(parent.getConceptIDNoLock(), bgPtr.parentGraphNodePrefix[parentGraph])
+		bgPtr.nodeElementLabels[parentGraphID] = parent.getLabelNoLock()
+		bgPtr.nodeElementTypes[parentGraphID] = reflect.TypeOf(parent).String()
+		bgPtr.makeNode(parent.getConceptIDNoLock(), GetConceptTypeString(parent), parent.getLabelNoLock(), parentGraph, false, "")
 		bgPtr.makeOwnerEdge(parentGraphID, childObjectID)
 		bgPtr.graphParentsRecursively(parent, parentGraph)
 	}
@@ -110,8 +120,8 @@ func (bgPtr *baseGraph) GetGraph() *gographviz.Graph {
 	return bgPtr.graph
 }
 
-func makeGraphID(be Element, prefix string) string {
-	var graphID = prefix + "\"" + be.getConceptIDNoLock() + "\""
+func makeGraphID(conceptID string, prefix string) string {
+	var graphID = prefix + "\"" + conceptID + "\""
 	return graphID
 }
 
@@ -161,17 +171,23 @@ func (bgPtr *baseGraph) makeNotificationEdge(sourceID string, targetID string) {
 	}
 }
 
-func (bgPtr *baseGraph) makeNode(el Element, parentGraph string, root bool) string {
-	id := makeGraphID(el, bgPtr.parentGraphNodePrefix[parentGraph])
+func (bgPtr *baseGraph) makeNode(conceptID string, typeString string, label string, parentGraph string, root bool, functionName string) string {
+	id := makeGraphID(conceptID, bgPtr.parentGraphNodePrefix[parentGraph])
 	if bgPtr.graph.IsNode(id) != true {
 		nodeAttrs := make(map[string]string)
 		if root {
-			nodeAttrs["shape"] = "octagon"
+			nodeAttrs["shape"] = "none"
+			nodeAttrs["fillcolor"] = "yellow"
 		} else {
 			nodeAttrs["shape"] = "none"
 		}
-		typeString := reflect.TypeOf(el).String()
-		nodeAttrs["label"] = "<<TABLE><TR><TD>" + typeString + "</TD></TR><TR><TD>" + el.getLabelNoLock() + "</TD></TR><TR><TD>" + id + "</TD></TR></TABLE>>"
+		// typeString := reflect.TypeOf(el).String()
+		if root {
+			// nodeAttrs["label"] = "<<TABLE HEIGHT='0' WIDTH='0'><TR><TD>" + functionName + "</TD></TR><TR><TD>" + typeString + "</TD></TR><TR><TD>" + label + "</TD></TR><TR><TD>" + id + "</TD></TR></TABLE>>"
+			nodeAttrs["label"] = "<<TABLE><TR><TD> functionName </TD></TR><TR><TD>" + typeString + "</TD></TR><TR><TD>" + id + "</TD></TR></TABLE>>"
+		} else {
+			nodeAttrs["label"] = "<<TABLE><TR><TD>" + typeString + "</TD></TR><TR><TD>" + label + "</TD></TR><TR><TD>" + id + "</TD></TR></TABLE>>"
+		}
 		err := bgPtr.graph.AddNode(parentGraph, id, nodeAttrs)
 		if err != nil {
 			log.Printf("Error in BaseGraph.makeNode")
@@ -182,14 +198,15 @@ func (bgPtr *baseGraph) makeNode(el Element, parentGraph string, root bool) stri
 	return id
 }
 
-func (bgPtr *baseGraph) makeLabel(graphID string, parentGraph string) string {
-	el := bgPtr.nodeElements[graphID]
-	if el == nil {
-		log.Printf("In BaseGraph.makeLabel with nil Element for graphID %s\n", graphID)
-		return ""
+func (bgPtr *baseGraph) makeLabel(graphID string, parentGraph string, functionID string) string {
+	elLabel := bgPtr.nodeElementLabels[graphID]
+	elType := bgPtr.nodeElementTypes[graphID]
+	var label string
+	if functionID == "" {
+		label = "<<TABLE><TR><TD>" + elType + "</TD></TR><TR><TD>" + elLabel + "</TD></TR><TR><TD>" + graphID + "</TD></TR>" + bgPtr.callAnnotation[graphID] + "</TABLE>>"
+	} else {
+		label = "<<TABLE><TR><TD BGCOLOR='yellow'>" + functionID + "</TD></TR><TR><TD>" + elType + "</TD></TR><TR><TD>" + elLabel + "</TD></TR><TR><TD>" + graphID + "</TD></TR>" + bgPtr.callAnnotation[graphID] + "</TABLE>>"
 	}
-	typeString := reflect.TypeOf(el).String()
-	label := "<<TABLE><TR><TD>" + typeString + "</TD></TR><TR><TD>" + el.getLabelNoLock() + "</TD></TR><TR><TD>" + graphID + "</TD></TR>" + bgPtr.callAnnotation[graphID] + "</TABLE>>"
 	return label
 }
 

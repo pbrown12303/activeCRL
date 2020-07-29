@@ -162,7 +162,7 @@ func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
 		}
 		if TraceLocks == true || TraceChange == true {
 			omitCall := (OmitHousekeepingCalls && pendingCall.functionID == "http://activeCrl.com/core/coreHousekeeping") ||
-				(OmitManageTreeNodesCalls && pendingCall.functionID == "http://activeCrl.com/crlEditor/Editor/TreeViews/ManageTreeNodes") ||
+				(OmitManageTreeNodesCalls && pendingCall.functionID == "http://activeCrl.com/crlEditor/EditorDomain/TreeViews/TreeNodeManager") ||
 				(OmitDiagramRelatedCalls && isDiagramRelatedFunction(pendingCall.functionID))
 			if omitCall == false {
 				log.Printf("About to execute %s with notification %s target %p", pendingCall.functionID, pendingCall.notification.GetNatureOfChange().String(), pendingCall.target)

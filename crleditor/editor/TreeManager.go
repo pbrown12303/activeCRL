@@ -42,13 +42,20 @@ func (tmPtr *treeManager) addChildren(el core.Element, hl *core.HeldLocks) error
 
 // addNode adds a node to the tree
 func (tmPtr *treeManager) addNode(el core.Element, hl *core.HeldLocks) error {
+	if el == nil {
+		return errors.New("treeManger.addNode called with nil element")
+	}
 	icon := GetIconPath(el, hl)
 	additionalParameters := map[string]string{
 		"icon":      icon,
 		"isDiagram": strconv.FormatBool(crldiagram.IsDiagram(el, hl))}
-	notificationResponse, err := CrlEditorSingleton.GetClientNotificationManager().SendNotification("AddTreeNode", el.GetConceptID(hl), el, additionalParameters)
-	if err != nil {
-		return errors.Wrap(err, "TreeManager.addNode failed")
+	conceptState, err2 := core.NewConceptState(el)
+	if err2 != nil {
+		return errors.Wrap(err2, "treeManager.addNode failed")
+	}
+	notificationResponse, err3 := CrlEditorSingleton.GetClientNotificationManager().SendNotification("AddTreeNode", el.GetConceptID(hl), conceptState, additionalParameters)
+	if err3 != nil {
+		return errors.Wrap(err3, "TreeManager.addNode failed")
 	}
 	if notificationResponse != nil && notificationResponse.Result != 0 {
 		return errors.New("In TreeManager.addNode, got " + notificationResponse.ErrorMessage)
@@ -80,11 +87,18 @@ func (tmPtr *treeManager) addNodeRecursively(el core.Element, hl *core.HeldLocks
 
 // changeNode updates the tree node
 func (tmPtr *treeManager) changeNode(el core.Element, hl *core.HeldLocks) error {
+	if el == nil {
+		return errors.New("treeManager.changeNode called with nil Element")
+	}
 	icon := GetIconPath(el, hl)
 	additionalParameters := map[string]string{
 		"icon":      icon,
 		"isDiagram": strconv.FormatBool(crldiagram.IsDiagram(el, hl))}
-	notificationResponse, err := CrlEditorSingleton.GetClientNotificationManager().SendNotification("ChangeTreeNode", el.GetConceptID(hl), el, additionalParameters)
+	conceptState, err2 := core.NewConceptState(el)
+	if err2 != nil {
+		return errors.Wrap(err2, "treeManager.addNode failed")
+	}
+	notificationResponse, err := CrlEditorSingleton.GetClientNotificationManager().SendNotification("ChangeTreeNode", conceptState.ConceptID, conceptState, additionalParameters)
 	if err != nil {
 		return errors.Wrap(err, "TreeManager.changeNode failed")
 	}
@@ -95,8 +109,11 @@ func (tmPtr *treeManager) changeNode(el core.Element, hl *core.HeldLocks) error 
 }
 
 // removeNode removes the tree node
-func (tmPtr *treeManager) removeNode(el core.Element, hl *core.HeldLocks) error {
-	notificationResponse, err := CrlEditorSingleton.GetClientNotificationManager().SendNotification("DeleteTreeNode", el.GetConceptID(hl), el, nil)
+func (tmPtr *treeManager) removeNode(elID string, hl *core.HeldLocks) error {
+	if elID == "" {
+		return errors.New("treeManager.removeNode called with no ConceptID")
+	}
+	notificationResponse, err := CrlEditorSingleton.GetClientNotificationManager().SendNotification("DeleteTreeNode", elID, nil, nil)
 	if err != nil {
 		return errors.Wrap(err, "TreeManager.removeNode failed")
 	}
@@ -107,7 +124,7 @@ func (tmPtr *treeManager) removeNode(el core.Element, hl *core.HeldLocks) error 
 }
 
 func (tmPtr *treeManager) getChangeNotificationBelowUofD(changeNotification *core.ChangeNotification) *core.ChangeNotification {
-	if changeNotification.GetReportingElement() == tmPtr.editor.uOfD {
+	if changeNotification.GetChangedConceptID() == "" { // only happens when uOfD is the reporting element
 		return changeNotification.GetUnderlyingChange()
 	} else if changeNotification.GetUnderlyingChange() != nil {
 		return tmPtr.getChangeNotificationBelowUofD(changeNotification.GetUnderlyingChange())

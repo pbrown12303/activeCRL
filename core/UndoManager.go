@@ -260,10 +260,10 @@ func (undoMgr *undoManager) redo(hl *HeldLocks) {
 				priorReferencedElementID := currentEntry.priorState.(*reference).ReferencedConceptID
 				if currentReferencedElementID != priorReferencedElementID {
 					if currentReferencedElementID != "" {
-						uOfD.listenersMap.AddMappedValue(currentReferencedElementID, currentID)
+						uOfD.listenersMap.RemoveMappedValue(currentReferencedElementID, currentID)
 					}
 					if priorReferencedElementID != "" {
-						uOfD.listenersMap.RemoveMappedValue(priorReferencedElementID, currentID)
+						uOfD.listenersMap.AddMappedValue(priorReferencedElementID, currentID)
 					}
 				}
 			case *refinement:
@@ -271,20 +271,20 @@ func (undoMgr *undoManager) redo(hl *HeldLocks) {
 				priorAbstractID := currentEntry.priorState.(*refinement).AbstractConceptID
 				if currentAbstractID != priorAbstractID {
 					if currentAbstractID != "" {
-						uOfD.listenersMap.AddMappedValue(currentAbstractID, currentID)
+						uOfD.listenersMap.RemoveMappedValue(currentAbstractID, currentID)
 					}
 					if priorAbstractID != "" {
-						uOfD.listenersMap.RemoveMappedValue(priorAbstractID, currentID)
+						uOfD.listenersMap.AddMappedValue(priorAbstractID, currentID)
 					}
 				}
 				currentRefinedID := currentEntry.changedElement.(*refinement).RefinedConceptID
 				priorRefinedID := currentEntry.priorState.(*refinement).RefinedConceptID
 				if currentRefinedID != priorRefinedID {
 					if currentRefinedID != "" {
-						uOfD.listenersMap.AddMappedValue(currentRefinedID, currentID)
+						uOfD.listenersMap.RemoveMappedValue(currentRefinedID, currentID)
 					}
 					if priorRefinedID != "" {
-						uOfD.listenersMap.RemoveMappedValue(priorRefinedID, currentID)
+						uOfD.listenersMap.AddMappedValue(priorRefinedID, currentID)
 					}
 				}
 			}

@@ -12,10 +12,10 @@ import (
 
 // Notification is the data structure sent from the editor server to the browser client via websockets
 type Notification struct {
-	Notification          string
-	NotificationConceptID string
-	NotificationConcept   core.Element
-	AdditionalParameters  map[string]string
+	Notification             string
+	NotificationConceptID    string
+	NotificationConceptState core.ConceptState
+	AdditionalParameters     map[string]string
 }
 
 // NewNotification returns an initialized Notification
@@ -54,7 +54,7 @@ func (cnMgr *ClientNotificationManager) setConnection(conn *websocket.Conn) {
 // If there is no client connection or there is a problem in sending the Notification or receiving the NotificationResponse,
 // an error is returned.
 func (cnMgr *ClientNotificationManager) SendNotification(
-	notificationDescription string, conceptID string, concept core.Element, params map[string]string) (*NotificationResponse, error) {
+	notificationDescription string, conceptID string, conceptState *core.ConceptState, params map[string]string) (*NotificationResponse, error) {
 	cnMgr.Lock()
 	defer cnMgr.Unlock()
 	if cnMgr.conn == nil {
@@ -63,7 +63,9 @@ func (cnMgr *ClientNotificationManager) SendNotification(
 	notification := NewNotification()
 	notification.Notification = notificationDescription
 	notification.NotificationConceptID = conceptID
-	notification.NotificationConcept = concept
+	if conceptState != nil {
+		notification.NotificationConceptState = *conceptState
+	}
 	notification.AdditionalParameters = params
 
 	err := cnMgr.conn.WriteJSON(&notification)
@@ -102,6 +104,6 @@ func (cnMgr *ClientNotificationManager) SendNotification(
 }
 
 // SendNotification is a shortcut to the CrlEditorSingleton.GetClientNotificationManager().SendNotification() function
-func SendNotification(notificationString string, conceptID string, concept core.Element, additionalParameters map[string]string) (*NotificationResponse, error) {
-	return CrlEditorSingleton.GetClientNotificationManager().SendNotification(notificationString, conceptID, concept, additionalParameters)
+func SendNotification(notificationString string, conceptID string, conceptState *core.ConceptState, additionalParameters map[string]string) (*NotificationResponse, error) {
+	return CrlEditorSingleton.GetClientNotificationManager().SendNotification(notificationString, conceptID, conceptState, additionalParameters)
 }

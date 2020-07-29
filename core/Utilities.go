@@ -8,15 +8,23 @@ import (
 	"log"
 	"reflect"
 	"runtime/debug"
-	"sync"
+	// "sync"
 )
 
-type printMutexStruct struct {
-	sync.Mutex
+// type printMutexStruct struct {
+// 	sync.Mutex
+// }
+
+// GetConceptTypeString returns the string representing the reflected type
+func GetConceptTypeString(el Element) string {
+	if el == nil {
+		return ""
+	}
+	return reflect.TypeOf(el).String()
 }
 
-// PrintMutex provides a mututal exclusion for print routhines shared across threads
-var PrintMutex printMutexStruct
+// // PrintMutex provides a mututal exclusion for print routhines shared across threads
+// var PrintMutex printMutexStruct
 
 func clone(el Element, hl *HeldLocks) Element {
 	switch el.(type) {

@@ -1,5 +1,9 @@
 package core
 
+import (
+	"github.com/pkg/errors"
+)
+
 var coreHousekeepingURI = CorePrefix + "coreHousekeeping"
 
 // coreHousekeeping does the housekeeping for the core concepts
@@ -7,6 +11,10 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	hl.ReadLockElement(el)
+	elCurrentState, err := NewConceptState(el)
+	if err != nil {
+		return errors.Wrap(err, "coreHousekeeping failed")
+	}
 	switch notification.GetNatureOfChange() {
 	case ConceptChanged:
 		// Notify Universe of Discourse
@@ -15,13 +23,13 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 		// Send ChildChanged to owner
 		owner := el.GetOwningConcept(hl)
 		if owner != nil {
-			childChangedNotification := uOfD.NewForwardingChangeNotification(el, ChildChanged, notification)
+			childChangedNotification := uOfD.NewForwardingChangeNotification(el, notification.GetBeforeState(), notification.GetAfterState(), ChildChanged, notification, hl)
 			uOfD.queueFunctionExecutions(owner, childChangedNotification, hl)
 		}
 		// If owner has changed, send ChildChanged to old owner as well
-		oldOwner := notification.GetPriorState().GetOwningConcept(hl)
+		oldOwner := uOfD.GetElement(notification.GetBeforeState().OwningConceptID)
 		if oldOwner != nil && oldOwner != owner {
-			childChangedNotification := uOfD.NewForwardingChangeNotification(el, ChildChanged, notification)
+			childChangedNotification := uOfD.NewForwardingChangeNotification(el, notification.GetBeforeState(), notification.GetAfterState(), ChildChanged, notification, hl)
 			uOfD.queueFunctionExecutions(oldOwner, childChangedNotification, hl)
 		}
 		// Send IndicatedConceptChanged to listeners
@@ -32,7 +40,7 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 		// Send ChildAbstractionChanged to owner
 		owner := el.GetOwningConcept(hl)
 		if owner != nil {
-			childAbstractionChangedNotification := uOfD.NewForwardingChangeNotification(el, ChildAbstractionChanged, notification)
+			childAbstractionChangedNotification := uOfD.NewForwardingChangeNotification(el, elCurrentState, elCurrentState, ChildAbstractionChanged, notification, hl)
 			uOfD.queueFunctionExecutions(owner, childAbstractionChangedNotification, hl)
 		}
 		// Send IndicatedConceptChanged or AbstractionChanged to listeners
@@ -43,7 +51,7 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 		// Send ChildAbstractionChanged to owner
 		owner := el.GetOwningConcept(hl)
 		if owner != nil {
-			childAbstractionChangedNotification := uOfD.NewForwardingChangeNotification(el, ChildAbstractionChanged, notification)
+			childAbstractionChangedNotification := uOfD.NewForwardingChangeNotification(el, elCurrentState, elCurrentState, ChildAbstractionChanged, notification, hl)
 			uOfD.queueFunctionExecutions(owner, childAbstractionChangedNotification, hl)
 		}
 		// Send IndicatedConceptChanged or AbstractionChanged to listeners
@@ -54,7 +62,7 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 		// Send ChildChanged to owner
 		owner := el.GetOwningConcept(hl)
 		if owner != nil {
-			childChangedNotification := uOfD.NewForwardingChangeNotification(el, ChildChanged, notification)
+			childChangedNotification := uOfD.NewForwardingChangeNotification(el, elCurrentState, elCurrentState, ChildChanged, notification, hl)
 			uOfD.queueFunctionExecutions(owner, childChangedNotification, hl)
 		}
 		// Send IndicatedConceptChanged to listeners
@@ -62,7 +70,7 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 	case IndicatedConceptChanged:
 		owner := el.GetOwningConcept(hl)
 		if owner != nil && !notification.isReferenced(owner) {
-			indicatedConceptChangedNotification := uOfD.NewForwardingChangeNotification(el, IndicatedConceptChanged, notification)
+			indicatedConceptChangedNotification := uOfD.NewForwardingChangeNotification(el, notification.GetBeforeState(), notification.GetAfterState(), IndicatedConceptChanged, notification, hl)
 			uOfD.queueFunctionExecutions(owner, indicatedConceptChangedNotification, hl)
 		}
 	case UofDConceptChanged, UofDConceptAdded, UofDConceptRemoved:

@@ -3,7 +3,6 @@ package crleditordomain
 import (
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldatastructures"
-	"github.com/pbrown12303/activeCRL/crldiagram"
 )
 
 // EditorDomainURI is the URI for the domain of the editor
@@ -53,8 +52,7 @@ func BuildEditorDomain(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core
 	settings.SetLabel("Settings", hl)
 	settings.SetOwningConcept(domain, hl)
 
-	diagram := uOfD.GetElementWithURI(crldiagram.CrlDiagramURI)
-	editorOpenDiagramsList, err := crldatastructures.NewList(uOfD, diagram, hl, EditorOpenDiagramsURI)
+	editorOpenDiagramsList, err := crldatastructures.NewStringList(uOfD, hl, EditorOpenDiagramsURI)
 	if err != nil {
 		return nil, err
 	}

@@ -174,11 +174,17 @@ func (dmPtr *diagramManager) addConceptViewImpl(uOfD *core.UniverseOfDiscourse, 
 		crldiagram.SetNodeY(newElement, y, hl)
 	}
 
-	newElement.SetLabel(el.GetLabel(hl), hl)
+	err = newElement.SetLabel(el.GetLabel(hl), hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "diagramManager.addConceptView failed")
+	}
 	crldiagram.SetReferencedModelElement(newElement, el, hl)
 	crldiagram.SetDisplayLabel(newElement, el.GetLabel(hl), hl)
 
-	newElement.SetOwningConceptID(diagram.GetConceptID(hl), hl)
+	err = newElement.SetOwningConceptID(diagram.GetConceptID(hl), hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "diagramManager.addConceptView failed")
+	}
 	hl.ReleaseLocksAndWait()
 
 	return newElement, nil
@@ -216,11 +222,11 @@ func (dmPtr *diagramManager) addCopyWithRefinement(request *Request, hl *core.He
 	return copy, nil
 }
 
-// addDiagramToDisplayedList adds the diagram to the list of displayed diagrams
-func (dmPtr *diagramManager) addDiagramToDisplayedList(diagram core.Element, hl *core.HeldLocks) error {
-	if !dmPtr.isDiagramDisplayed(diagram, hl) {
+// addDiagramToDisplayedList adds the diagramID to the list of displayed diagrams
+func (dmPtr *diagramManager) addDiagramToDisplayedList(diagramID string, hl *core.HeldLocks) error {
+	if !dmPtr.isDiagramDisplayed(diagramID, hl) {
 		openDiagrams := dmPtr.crlEditor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
-		_, err := crldatastructures.AppendListMember(openDiagrams, diagram, hl)
+		_, err := crldatastructures.AppendStringListMember(openDiagrams, diagramID, hl)
 		if err != nil {
 			return errors.Wrap(err, "diagramManager.addDiagramToDisplayedList failed")
 		}
@@ -229,16 +235,9 @@ func (dmPtr *diagramManager) addDiagramToDisplayedList(diagram core.Element, hl 
 }
 
 func (dmPtr *diagramManager) closeDiagramView(diagramID string, hl *core.HeldLocks) error {
-	diagram := dmPtr.crlEditor.uOfD.GetElement(diagramID)
-	if diagram == nil {
-		return errors.New("In diagram manager.closeDiagramView, the suppied diagram was not found in the uOfD")
-	}
-	if !diagram.IsRefinementOfURI(crldiagram.CrlDiagramURI, hl) {
-		return errors.New("In diagramManager.closeDiagramView, the supplied diagram is not a refinement of CrlDiagramURI")
-	}
 	// If the diagram is in the list of displayed diagrams, remove it
-	if dmPtr.isDiagramDisplayed(diagram, hl) {
-		dmPtr.removeDiagramFromDisplayedList(diagram, hl)
+	if dmPtr.isDiagramDisplayed(diagramID, hl) {
+		dmPtr.removeDiagramFromDisplayedList(diagramID, hl)
 	}
 	_, err := SendNotification("CloseDiagramView", diagramID, nil, map[string]string{})
 	return err
@@ -254,8 +253,12 @@ func (dmPtr *diagramManager) deleteDiagramElementView(elementID string, hl *core
 }
 
 // diagramChanged handles the update of the diagram tab when the diagram name changes
-func (dmPtr *diagramManager) diagramLabelChanged(diagramID string, diagram core.Element, hl *core.HeldLocks) {
-	SendNotification("DiagramLabelChanged", diagramID, diagram, map[string]string{})
+func (dmPtr *diagramManager) diagramLabelChanged(diagramID string, diagram core.Element, hl *core.HeldLocks) (*NotificationResponse, error) {
+	conceptState, err := core.NewConceptState(diagram)
+	if err != nil {
+		return nil, errors.Wrap(err, "diagramManager.diagramLabelChanged failed")
+	}
+	return SendNotification("DiagramLabelChanged", diagramID, conceptState, map[string]string{})
 }
 
 // diagramClick handles the creation of a new Element and adding a node representation of it to the diagram
@@ -336,32 +339,28 @@ func (dmPtr *diagramManager) diagramDrop(request *Request, hl *core.HeldLocks) e
 		if err != nil {
 			return errors.Wrap(err, "diagramManager.diagramDrop failed")
 		}
-		dmPtr.crlEditor.SetTreeDragSelection("")
 	}
+	dmPtr.crlEditor.SetTreeDragSelection("")
 	return nil
 }
 
 // DiagramViewHasBeenClosed notifies the server that the client has closed the diagram view
 func (dmPtr *diagramManager) DiagramViewHasBeenClosed(diagramID string, hl *core.HeldLocks) error {
-	diagram := dmPtr.crlEditor.uOfD.GetElement(diagramID)
-	if !diagram.IsRefinementOfURI(crldiagram.CrlDiagramURI, hl) {
-		return errors.New("In diagramManager.closeDiagramView, the supplied diagram is not a refinement of CrlDiagramURI")
-	}
-	// If the diagram is in the list of displayed diagrams, remove it
-	if dmPtr.isDiagramDisplayed(diagram, hl) {
-		dmPtr.removeDiagramFromDisplayedList(diagram, hl)
+	if dmPtr.isDiagramDisplayed(diagramID, hl) {
+		dmPtr.removeDiagramFromDisplayedList(diagramID, hl)
 	}
 	return nil
 }
 
 // displayDiagram tells the client to display the indicated diagram.
 func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.HeldLocks) error {
+	diagramID := diagram.GetConceptID(hl)
 	if !diagram.IsRefinementOfURI(crldiagram.CrlDiagramURI, hl) {
 		return errors.New("In diagramManager.displayDiagram, the supplied diagram is not a refinement of CrlDiagramURI")
 	}
 	// Make sure the diagram is in the list of displayed diagrams
-	if !dmPtr.isDiagramDisplayed(diagram, hl) {
-		err3 := dmPtr.addDiagramToDisplayedList(diagram, hl)
+	if !dmPtr.isDiagramDisplayed(diagramID, hl) {
+		err3 := dmPtr.addDiagramToDisplayedList(diagramID, hl)
 		if err3 != nil {
 			return errors.Wrap(err3, "diagramManager.displayDiagram failed")
 		}
@@ -372,15 +371,19 @@ func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.HeldL
 		return err2
 	}
 	// Tell the client to display the diagram
-	notificationResponse, err := CrlEditorSingleton.GetClientNotificationManager().SendNotification("DisplayDiagram", diagram.GetConceptID(hl), diagram, nil)
+	conceptState, err2 := core.NewConceptState(diagram)
+	if err2 != nil {
+		return errors.Wrap(err2, "diagramManager.displayDiagram failed")
+	}
+	notificationResponse, err := CrlEditorSingleton.GetClientNotificationManager().SendNotification("DisplayDiagram", diagram.GetConceptID(hl), conceptState, nil)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "diagramManager.displayDiagram failed")
 	}
 	if notificationResponse == nil {
 		return errors.New("In diagramManager.displayDiagram the notification response was nil")
 	}
 	if notificationResponse.Result != 0 {
-		return err
+		return errors.New("In diagramManager.displayDiagram, notificationResponse was not 0")
 	}
 	return dmPtr.refreshDiagram(diagram, hl)
 }
@@ -466,9 +469,9 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 }
 
 // isDiagramDisplayed returns true if the diagram is in the list of displayed diagrams
-func (dmPtr *diagramManager) isDiagramDisplayed(diagram core.Element, hl *core.HeldLocks) bool {
+func (dmPtr *diagramManager) isDiagramDisplayed(diagramID string, hl *core.HeldLocks) bool {
 	openDiagrams := dmPtr.crlEditor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
-	return crldatastructures.IsListMember(openDiagrams, diagram, hl)
+	return crldatastructures.IsStringListMember(openDiagrams, diagramID, hl)
 }
 
 // newDiagram creates a new crldiagram
@@ -752,9 +755,13 @@ func (dmPtr *diagramManager) refreshDiagram(diagram core.Element, hl *core.HeldL
 	nodes := diagram.GetOwnedConceptsRefinedFromURI(crldiagram.CrlDiagramNodeURI, hl)
 	for _, node := range nodes {
 		additionalParameters := getNodeAdditionalParameters(node, hl)
-		notificationResponse, err := CrlEditorSingleton.SendNotification("AddDiagramNode", node.GetConceptID(hl), node, additionalParameters)
+		conceptState, err2 := core.NewConceptState(node)
+		if err2 != nil {
+			return errors.Wrap(err2, "diagramManager.refreshDiagram failed")
+		}
+		notificationResponse, err := CrlEditorSingleton.SendNotification("AddDiagramNode", node.GetConceptID(hl), conceptState, additionalParameters)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "diagramManager.refreshDiagram failed")
 		}
 		if notificationResponse.Result != 0 {
 			return errors.New(notificationResponse.ErrorMessage)
@@ -763,9 +770,13 @@ func (dmPtr *diagramManager) refreshDiagram(diagram core.Element, hl *core.HeldL
 	links := diagram.GetOwnedConceptsRefinedFromURI(crldiagram.CrlDiagramLinkURI, hl)
 	for _, link := range links {
 		additionalParameters := getLinkAdditionalParameters(link, hl)
-		notificationResponse, err := CrlEditorSingleton.SendNotification("AddDiagramLink", link.GetConceptID(hl), link, additionalParameters)
+		conceptState, err2 := core.NewConceptState(link)
+		if err2 != nil {
+			return errors.Wrap(err2, "diagramManager.refreshDiagram failed")
+		}
+		notificationResponse, err := CrlEditorSingleton.SendNotification("AddDiagramLink", link.GetConceptID(hl), conceptState, additionalParameters)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "diagramManager.refreshDiagram failed")
 		}
 		if notificationResponse.Result != 0 {
 			return errors.New(notificationResponse.ErrorMessage)
@@ -774,11 +785,11 @@ func (dmPtr *diagramManager) refreshDiagram(diagram core.Element, hl *core.HeldL
 	return nil
 }
 
-// removeDiagramFromDisplayedList adds the diagram to the list of displayed diagrams
-func (dmPtr *diagramManager) removeDiagramFromDisplayedList(diagram core.Element, hl *core.HeldLocks) {
-	if dmPtr.isDiagramDisplayed(diagram, hl) {
+// removeDiagramFromDisplayedList removes the diagramID from the list of displayed diagrams
+func (dmPtr *diagramManager) removeDiagramFromDisplayedList(diagramID string, hl *core.HeldLocks) {
+	if dmPtr.isDiagramDisplayed(diagramID, hl) {
 		openDiagrams := dmPtr.crlEditor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
-		crldatastructures.RemoveListMember(openDiagrams, diagram, hl)
+		crldatastructures.RemoveStringListMember(openDiagrams, diagramID, hl)
 	}
 }
 
@@ -952,15 +963,48 @@ func (dmPtr *diagramManager) showReferencedConcept(elementID string, hl *core.He
 	if modelReferencedConcept == nil {
 		return errors.New("Referenced Concept is nil")
 	}
-	diagramReferencedConcept := crldiagram.GetFirstElementRepresentingConcept(diagram, modelReferencedConcept, hl)
-	if diagramReferencedConcept == nil {
-		diagramReferencedConcept, _ = crldiagram.NewDiagramNode(dmPtr.crlEditor.uOfD, hl)
-		crldiagram.SetReferencedModelElement(diagramReferencedConcept, modelReferencedConcept, hl)
-		diagramReferencedConcept.SetOwningConcept(diagram, hl)
-		diagramElementX := crldiagram.GetNodeX(diagramElement, hl)
-		diagramElementY := crldiagram.GetNodeY(diagramElement, hl)
-		crldiagram.SetNodeX(diagramReferencedConcept, diagramElementX, hl)
-		crldiagram.SetNodeY(diagramReferencedConcept, diagramElementY-100, hl)
+	var diagramReferencedConcept core.Element
+	switch modelReference.GetReferencedAttributeName(hl) {
+	case core.NoAttribute, core.LiteralValue:
+		diagramReferencedConcept = crldiagram.GetFirstElementRepresentingConcept(diagram, modelReferencedConcept, hl)
+		if diagramReferencedConcept == nil {
+			diagramReferencedConcept, _ = crldiagram.NewDiagramNode(dmPtr.crlEditor.uOfD, hl)
+			crldiagram.SetReferencedModelElement(diagramReferencedConcept, modelReferencedConcept, hl)
+			diagramReferencedConcept.SetOwningConcept(diagram, hl)
+			diagramElementX := crldiagram.GetNodeX(diagramElement, hl)
+			diagramElementY := crldiagram.GetNodeY(diagramElement, hl)
+			crldiagram.SetNodeX(diagramReferencedConcept, diagramElementX, hl)
+			crldiagram.SetNodeY(diagramReferencedConcept, diagramElementY-100, hl)
+		}
+	case core.OwningConceptID:
+		diagramReferencedConcept = crldiagram.GetFirstElementRepresentingConceptOwnerPointer(diagram, modelReferencedConcept, hl)
+		if diagramReferencedConcept == nil {
+			return errors.New("No representation of the owner pointer currently exists in this diagram")
+		}
+	case core.ReferencedConceptID:
+		switch modelReferencedConcept.(type) {
+		case core.Reference:
+			diagramReferencedConcept = crldiagram.GetFirstElementRepresentingConceptElementPointer(diagram, modelReferencedConcept.(core.Reference), hl)
+			if diagramReferencedConcept == nil {
+				return errors.New("No representation of the referenced concept pointer currently exists in this diagram")
+			}
+		}
+	case core.AbstractConceptID:
+		switch modelReferencedConcept.(type) {
+		case core.Refinement:
+			diagramReferencedConcept = crldiagram.GetFirstElementRepresentingConceptAbstractPointer(diagram, modelReferencedConcept.(core.Refinement), hl)
+		}
+		if diagramReferencedConcept == nil {
+			return errors.New("No representation of the abstract concept pointer currently exists in this diagram")
+		}
+	case core.RefinedConceptID:
+		switch modelReferencedConcept.(type) {
+		case core.Refinement:
+			diagramReferencedConcept = crldiagram.GetFirstElementRepresentingConceptRefinedPointer(diagram, modelReferencedConcept.(core.Refinement), hl)
+			if diagramReferencedConcept == nil {
+				return errors.New("No representation of the refined concept pointer currently exists in this diagram")
+			}
+		}
 	}
 	elementPointer := crldiagram.GetElementPointer(diagram, diagramElement, hl)
 	if elementPointer == nil {

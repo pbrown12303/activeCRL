@@ -13,5 +13,6 @@ func BuildCrlDataStructuresConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core
 	crlDataStructures.SetLabel("CrlDataStructures", hl)
 	BuildCrlSetsConcepts(uOfD, crlDataStructures, hl)
 	BuildCrlListsConcepts(uOfD, crlDataStructures, hl)
+	BuildCrlStringListsConcepts(uOfD, crlDataStructures, hl)
 	crlDataStructures.SetIsCoreRecursively(hl)
 }

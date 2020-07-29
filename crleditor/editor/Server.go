@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strconv"
+	"sync"
 
 	//	"log"
 	"net/http"
@@ -125,8 +126,17 @@ func openBrowser(url string) bool {
 	return cmd.Start() == nil
 }
 
+type requestHandler struct {
+	sync.Mutex
+	ready bool
+}
+
+var rh requestHandler
+
 // handler for client requests
-func requestHandler(w http.ResponseWriter, r *http.Request) {
+func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) {
+	rh.Lock()
+	defer rh.Unlock()
 	requestInProgress = true
 	// log.Printf("requestInProgress set to true")
 	defer func() {
@@ -302,6 +312,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	case "InitializeClient":
 		log.Printf("InitializeClient requested")
 		sendReply(w, 0, "Client will be initialized", "", nil)
+		for rh.ready == false {
+			time.Sleep(100 * time.Millisecond)
+		}
 		err := CrlEditorSingleton.InitializeClient()
 		if err != nil {
 			SendNotification("Error initializing client: "+err.Error(), "", nil, nil)
@@ -422,6 +435,18 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 			sendReply(w, 1, "ShowConceptInNavigator failed: "+err.Error(), "", nil)
 		} else {
 			sendReply(w, 0, "Processed ShowConceptInNavigator", "", nil)
+		}
+	case "ShowDiagramElementInNavigator":
+		diagramElement := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
+		if diagramElement == nil {
+			sendReply(w, 1, "Selected diagram element not found", "", nil)
+			break
+		}
+		err := CrlEditorSingleton.ShowConceptInTree(diagramElement, hl)
+		if err != nil {
+			sendReply(w, 1, "ShowDiagramElementInNavigator failed: "+err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed ShowDiagramElementInNavigator", "", nil)
 		}
 	case "SetTreeDragSelection":
 		CrlEditorSingleton.uOfD.MarkUndoPoint()
@@ -562,7 +587,7 @@ func StartServer(startBrowser bool, workspaceArg string, userFolderArg string) {
 	mux.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir(root+"crleditor/http/js"))))
 	mux.Handle("/icons/", http.StripPrefix("/icons/", http.FileServer(http.Dir(root+"crleditor/http/images/icons"))))
 	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir(root+"crleditor/http/css"))))
-	mux.HandleFunc("/index/request", requestHandler)
+	mux.HandleFunc("/index/request", rh.handleRequest)
 
 	if startBrowser == true {
 		openBrowser("http://localhost:8082/index")
@@ -570,7 +595,13 @@ func StartServer(startBrowser bool, workspaceArg string, userFolderArg string) {
 
 	server = &http.Server{Addr: "127.0.0.1:8082", Handler: mux}
 
+	go checkReady()
+
 	server.ListenAndServe()
+}
+
+func checkReady() {
+	rh.ready = <-webSocketReady
 }
 
 func startWsServer() {

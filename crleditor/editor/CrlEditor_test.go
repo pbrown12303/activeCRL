@@ -539,9 +539,7 @@ var _ = Describe("Test CrlEditor", func() {
 			treeNode.MouseToElement()
 			page.Click(agouti.SingleClick, agouti.LeftButton)
 			hl.ReleaseLocksAndWait()
-			Eventually(func() bool {
-				return core.GetPendingFunctionCallCount() == 0
-			})
+			AssertServerRequestProcessingComplete()
 			Eventually(func() bool {
 				return editor.CrlEditorSingleton.GetCurrentSelection() != nil && editor.CrlEditorSingleton.GetCurrentSelection().GetConceptID(hl) == coreConceptSpace.GetConceptID(hl)
 			}).Should(BeTrue())
@@ -616,7 +614,7 @@ var _ = Describe("Test CrlEditor", func() {
 				coreConceptSpace := uOfD.GetElementWithURI(core.CoreConceptSpaceURI)
 				Expect(page.RunScript("crlSendSetTreeDragSelection(ID)", map[string]interface{}{"ID": coreConceptSpace.GetConceptID(hl)}, nil)).To(Succeed())
 				AssertServerRequestProcessingComplete()
-				Expect(page.RunScript("crlSendDiagramDrop(ID, x, y)", map[string]interface{}{"ID": diagramID, "x": "100", "y": "100"}, nil)).To(Succeed())
+				Expect(page.RunScript("crlSendDiagramDrop(ID, x, y, shiftKey)", map[string]interface{}{"ID": diagramID, "x": "100", "y": "100", "shiftKey": "false"}, nil)).To(Succeed())
 				// Some form of sleep is required here as this thread blocks socket communications. Eventually accomplishes this as it will not
 				// be true until after all of the expected client communication has completed.
 				hl.ReleaseLocksAndWait()
@@ -646,7 +644,7 @@ var _ = Describe("Test CrlEditor", func() {
 				// Now drop a second instance
 				Expect(page.RunScript("crlSendSetTreeDragSelection(ID)", map[string]interface{}{"ID": coreConceptSpace.GetConceptID(hl)}, nil)).To(Succeed())
 				AssertServerRequestProcessingComplete()
-				Expect(page.RunScript("crlSendDiagramDrop(ID, x, y)", map[string]interface{}{"ID": diagramID, "x": "200", "y": "200"}, nil)).To(Succeed())
+				Expect(page.RunScript("crlSendDiagramDrop(ID, x, y, shiftKey)", map[string]interface{}{"ID": diagramID, "x": "200", "y": "200", "shiftKey": "false"}, nil)).To(Succeed())
 				// Some form of sleep is required here as this thread blocks socket communications. Eventually accomplishes this as it will not
 				// be true until after all of the expected client communication has completed.
 				hl.ReleaseLocksAndWait()
