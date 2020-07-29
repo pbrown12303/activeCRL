@@ -232,8 +232,7 @@ func diagramViewMonitor(instance core.Element, changeNotification *core.ChangeNo
 		switch underlyingChange.GetNatureOfChange() {
 		case core.ConceptChanged:
 			diagram := uOfD.GetElement(underlyingChange.GetAfterState().ConceptID)
-			oldDiagram := uOfD.GetElement(underlyingChange.GetBeforeState().ConceptID)
-			if diagram != nil && oldDiagram != nil && diagram.GetLabel(hl) != oldDiagram.GetLabel(hl) {
+			if diagram != nil && underlyingChange.GetBeforeState().Label != underlyingChange.GetAfterState().Label {
 				diagramID := underlyingChange.GetAfterState().ConceptID
 				CrlEditorSingleton.getDiagramManager().diagramLabelChanged(diagramID, diagram, hl)
 			}
