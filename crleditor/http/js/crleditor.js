@@ -1034,7 +1034,7 @@ function crlPropertiesDisplayType(data, row) {
     typeRow.cells[0].innerHTML = "Type";
     var type = ""
     if (data.NotificationConceptState) {
-        type = data.NotificationConceptState.Type
+        type = data.NotificationConceptState.ConceptType
     }
     typeRow.cells[1].innerHTML = type;
 }
