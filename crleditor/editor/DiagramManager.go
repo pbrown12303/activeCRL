@@ -172,6 +172,7 @@ func (dmPtr *diagramManager) addConceptViewImpl(uOfD *core.UniverseOfDiscourse, 
 		}
 		crldiagram.SetNodeX(newElement, x, hl)
 		crldiagram.SetNodeY(newElement, y, hl)
+		crldiagram.SetLineColor(newElement, "#000000", hl)
 	}
 
 	err = newElement.SetLabel(el.GetLabel(hl), hl)
@@ -211,7 +212,7 @@ func (dmPtr *diagramManager) addCopyWithRefinement(request *Request, hl *core.He
 	}
 	copy, err := uOfD.CreateReplicateAsRefinement(el, hl)
 	if err != nil {
-		return nil, errors.Wrap(err, "diagramManagere.addCopyWithRefinement failed")
+		return nil, errors.Wrap(err, "diagramManager.addCopyWithRefinement failed")
 	}
 	copy.SetOwningConcept(diagram.GetOwningConcept(hl), hl)
 	hl.ReleaseLocksAndWait()
@@ -386,6 +387,12 @@ func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.HeldL
 		return errors.New("In diagramManager.displayDiagram, notificationResponse was not 0")
 	}
 	return dmPtr.refreshDiagram(diagram, hl)
+}
+
+func (dmPtr *diagramManager) formatChanged(diagramElement core.Element, lineColor string, bgColor string, hl *core.HeldLocks) error {
+	crldiagram.SetLineColor(diagramElement, lineColor, hl)
+	crldiagram.SetBGColor(diagramElement, bgColor, hl)
+	return nil
 }
 
 func (dmPtr *diagramManager) getDefaultDiagramLabel() string {

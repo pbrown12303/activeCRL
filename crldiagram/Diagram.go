@@ -21,7 +21,7 @@
 package crldiagram
 
 import (
-	// "github.com/pkg/errors"
+	"github.com/pkg/errors"
 	"log"
 	"math"
 	"strconv"
@@ -72,14 +72,20 @@ var CrlDiagramHeightURI = CrlDiagramURI + "/" + "Height"
 // CrlDiagramElementURI identifies the CrlDiagramElement concept
 var CrlDiagramElementURI = CrlDiagramConceptSpaceURI + "/" + "CrlDiagramElement"
 
-// CrlDiagramElementModelReferenceURI identifies the reference to the model element represented by the node
+// CrlDiagramElementModelReferenceURI identifies the reference to the model element represented by the element
 var CrlDiagramElementModelReferenceURI = CrlDiagramElementURI + "/" + "ModelReference"
 
-// CrlDiagramElementDisplayLabelURI identifies the display label concept to be used when displaying the node
+// CrlDiagramElementDisplayLabelURI identifies the display label concept to be used when displaying the element
 var CrlDiagramElementDisplayLabelURI = CrlDiagramElementURI + "/" + "DisplayLabel"
 
-// CrlDiagramElementAbstractionDisplayLabelURI identifies the abstraction display label concept to be used when displaying the node
+// CrlDiagramElementAbstractionDisplayLabelURI identifies the abstraction display label concept to be used when displaying the element
 var CrlDiagramElementAbstractionDisplayLabelURI = CrlDiagramElementURI + "/" + "AbstractionDisplayLabel"
+
+// CrlDiagramElementLineColorURI identifies the line color to be used when displaying the element
+var CrlDiagramElementLineColorURI = CrlDiagramElementURI + "/" + "LineColor"
+
+// CrlDiagramElementBGColorURI identifies the background color to be used when displaying the element
+var CrlDiagramElementBGColorURI = CrlDiagramElementURI + "/" + "BGColor"
 
 // CrlDiagramLinkURI identifies the CrlDiagramLink concept
 var CrlDiagramLinkURI = CrlDiagramConceptSpaceURI + "/" + "CrlDiagramLink"
@@ -101,6 +107,12 @@ var CrlDiagramNodeDisplayLabelURI = CrlDiagramNodeURI + "/" + "DisplayLabel"
 
 // CrlDiagramNodeAbstractionDisplayLabelURI identifies the abstraction display label concept to be used when displaying the node
 var CrlDiagramNodeAbstractionDisplayLabelURI = CrlDiagramNodeURI + "/" + "AbstractionDisplayLabel"
+
+// CrlDiagramNodeLineColorURI identifies the line color to be used when displaying the element
+var CrlDiagramNodeLineColorURI = CrlDiagramNodeURI + "/" + "LineColor"
+
+// CrlDiagramNodeBGColorURI identifies the background color to be used when displaying the element
+var CrlDiagramNodeBGColorURI = CrlDiagramNodeURI + "/" + "BGColor"
 
 // CrlDiagramNodeXURI identifies the X coordinate of the node
 var CrlDiagramNodeXURI = CrlDiagramNodeURI + "/" + "X"
@@ -248,6 +260,30 @@ func GetAbstractionDisplayLabel(diagramElement core.Element, hl *core.HeldLocks)
 	abstractionDisplayLabelLiteral := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementAbstractionDisplayLabelURI, hl)
 	if abstractionDisplayLabelLiteral != nil {
 		return abstractionDisplayLabelLiteral.GetLiteralValue(hl)
+	}
+	return ""
+}
+
+// GetLineColor is a convenience function for getting the LineColor value of a DiagramElement
+func GetLineColor(diagramElement core.Element, hl *core.HeldLocks) string {
+	if diagramElement == nil {
+		return ""
+	}
+	lineColorLiteral := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementLineColorURI, hl)
+	if lineColorLiteral != nil {
+		return lineColorLiteral.GetLiteralValue(hl)
+	}
+	return ""
+}
+
+// GetBGColor is a convenience function for getting the backgound color value of a DiagramElement
+func GetBGColor(diagramElement core.Element, hl *core.HeldLocks) string {
+	if diagramElement == nil {
+		return ""
+	}
+	BGColorLiteral := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementBGColorURI, hl)
+	if BGColorLiteral != nil {
+		return BGColorLiteral.GetLiteralValue(hl)
 	}
 	return ""
 }
@@ -650,7 +686,12 @@ func NewDiagramRefinementLink(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks
 
 // NewDiagramNode creates a new diagram node
 func NewDiagramNode(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
-	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, hl)
+	newNode, err := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "Diagram.go NewDiagramNode failed")
+	}
+	SetLineColor(newNode, "#000000", hl)
+	return newNode, nil
 }
 
 // NewDiagramOwnerPointer creates a new DiagramOwnerPointer
@@ -703,6 +744,35 @@ func SetDisplayLabel(diagramElement core.Element, value string, hl *core.HeldLoc
 	}
 	literal.SetLiteralValue(value, hl)
 	updateNodeSize(diagramElement, hl)
+}
+
+// SetLineColor is a function on a CrlDiagramElement that sets the line color for the diagram element.
+func SetLineColor(diagramElement core.Element, value string, hl *core.HeldLocks) {
+	if diagramElement == nil {
+		return
+	}
+	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementLineColorURI, hl)
+	if literal == nil {
+		return
+	}
+	literal.SetLiteralValue(value, hl)
+}
+
+// SetBGColor is a function on a CrlDiagramNode that sets the background color for the diagram element.
+// If the diagram element is a pointer, the value is ignored and the label is set to the empty string
+func SetBGColor(diagramElement core.Element, value string, hl *core.HeldLocks) {
+	if diagramElement == nil {
+		return
+	}
+	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementBGColorURI, hl)
+	if literal == nil {
+		return
+	}
+	if IsDiagramPointer(diagramElement, hl) {
+		literal.SetLiteralValue("", hl)
+	} else {
+		literal.SetLiteralValue(value, hl)
+	}
 }
 
 // SetLinkSource is a convenience function for setting the source concept of a link
@@ -840,6 +910,9 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramElementAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
 	crlDiagramElementAbstractionDisplayLabel.SetOwningConcept(crlDiagramElement, hl)
 
+	crlDiagramElementLineColor, _ := uOfD.NewOwnedLiteral(crlDiagramElement, "LineColor", hl, CrlDiagramElementLineColorURI)
+	crlDiagramElementBGColor, _ := uOfD.NewOwnedLiteral(crlDiagramElement, "BGColor", hl, CrlDiagramElementBGColorURI)
+
 	//
 	// CrlDiagramNode
 	//
@@ -878,6 +951,13 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 	crlDiagramNodeAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramNodeAbstractionDisplayLabel, hl)
 	crlDiagramNodeAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
 	crlDiagramNodeAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramNodeAbstractionDisplayLabel, hl)
+
+	crlDiagramNodeLineColor, _ := uOfD.NewOwnedLiteral(crlDiagramNode, "LineColor", hl, CrlDiagramNodeLineColorURI)
+	crlDiagramNodeLineColor.SetLiteralValue("#000000", hl)
+	uOfD.NewOwnedRefinement(crlDiagramElementLineColor, crlDiagramNodeLineColor, "LineColorRefinement", hl)
+
+	crlDiagramNodeBGColor, _ := uOfD.NewOwnedLiteral(crlDiagramNode, "BGColor", hl, CrlDiagramNodeBGColorURI)
+	uOfD.NewOwnedRefinement(crlDiagramElementBGColor, crlDiagramNodeBGColor, "BGColorRefinement", hl)
 
 	crlDiagramNodeX, _ := uOfD.NewLiteral(hl, CrlDiagramNodeXURI)
 	crlDiagramNodeX.SetLabel("X", hl)

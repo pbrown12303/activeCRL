@@ -5,7 +5,7 @@
 package core
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 	"log"
 	"sync"
 	"sync/atomic"
@@ -154,7 +154,7 @@ func isDiagramRelatedFunction(functionID string) bool {
 }
 
 // callQueuedFunctions calls each function on the pending function queue
-func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
+func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) error {
 	for fcm.functionCallQueue.queueHead != nil {
 		pendingCall := fcm.functionCallQueue.dequeue()
 		if fcm.uOfD.getExecutedCalls() != nil {
@@ -172,7 +172,7 @@ func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
 		}
 		err := pendingCall.function(pendingCall.target, pendingCall.notification, fcm.uOfD)
 		if err != nil {
-			log.Printf(err.Error())
+			return errors.Wrap(err, "functionCallManager.callQueuedFunctions failed")
 		}
 		newCount := atomic.AddInt32(&pendingFunctionCount, -1)
 		if CrlLogPendingFunctionCount == true {
@@ -180,6 +180,7 @@ func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) {
 			log.Printf("Dequeued call: %+v", pendingCall)
 		}
 	}
+	return nil
 }
 
 // GetPendingFunctionCallCount returns the count of all pending functions from all function managers (i.e. from all HeldLocks objects)

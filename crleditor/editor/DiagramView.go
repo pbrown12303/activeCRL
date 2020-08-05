@@ -84,7 +84,9 @@ func getNodeAdditionalParameters(node core.Element, hl *core.HeldLocks) map[stri
 		"Icon":                GetIconPath(referencedModelElement, hl),
 		"OwnerID":             node.GetOwningConceptID(hl),
 		"Abstractions":        crldiagram.GetAbstractionDisplayLabel(node, hl),
-		"Represents":          represents}
+		"Represents":          represents,
+		"LineColor":           crldiagram.GetLineColor(node, hl),
+		"BGColor":             crldiagram.GetBGColor(node, hl)}
 	return additionalParameters
 }
 

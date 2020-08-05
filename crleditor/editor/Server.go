@@ -309,6 +309,19 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			// Error from closing listeners, or context timeout:
 			log.Printf("HTTP server Shutdown error: %s", err.Error())
 		}
+	case "FormatChanged":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
+		diagramElement := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
+		var err error
+		if diagramElement != nil {
+			err = CrlEditorSingleton.diagramManager.formatChanged(diagramElement, request.AdditionalParameters["LineColor"], request.AdditionalParameters["BGColor"], hl)
+		}
+		hl.ReleaseLocksAndWait()
+		if err == nil {
+			sendReply(w, 0, "Processed FormatChanged", request.RequestConceptID, diagramElement)
+		} else {
+			sendReply(w, 1, "Error processing FormatChanged: "+err.Error(), "", nil)
+		}
 	case "InitializeClient":
 		log.Printf("InitializeClient requested")
 		sendReply(w, 0, "Client will be initialized", "", nil)

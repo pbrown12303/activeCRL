@@ -12,6 +12,12 @@ var crlMovedNodes = {};
 var crlSelectedConceptID;
 // crlTreeDragSelectionIDGlobal contains the model identifier of the concept currently being dragged from the tree
 var crlTreeDragSelectionID;
+// crlLineColor is the last copied color
+var crlLineColor = ""
+// crlBGColor is the last copied background color
+var crlBGColor = ""
+// crlSelectedDiagramElementIDForFormat is the diagram element whose format is being edited
+var crlSelectedDiagramElementIDForFormat;
 
 // Editor Settings
 // crlDropReferenceAsLink when true causes references dragged from the tree into the diagram to be added as links
@@ -38,6 +44,8 @@ var crlDebugSettingsDialog;
 var crlUserPreferencesDialog;
 // crlOpenWorkspaceDialog is the initialized dialog used for opening a workspace
 var crlOpenWorkspaceDialog;
+// crlDiagramElementFormatDialog is the initialized dialog used to set a diagram element format
+var crlDiagramElementFormatDialog;
 
 // Lookup structures
 // crlGraphsGlobal is an array of existing graphs that is used to look up a graph given its identifier
@@ -140,13 +148,30 @@ $(function () {
             $("#omitDiagramRelatedCalls").prop("checked", crlOmitDiagramRelatedCalls);
         }
     });
+    crlDiagramElementFormatDialog = new jBox("Confirm", {
+        title: "Diagram Element Format",
+        confirmButton: "OK",
+        cancelButton: "Cancel",
+        content: "" +
+            "<form>" +
+            "   <fieldset>" +
+            "       <label>Line Color:</label><input id='lineColor' type='color'><br>" +
+            "       <label>Background Color:</label><input id='bgColor' type='color'>" +
+            "   </fieldset>" +
+            "</form>",
+        confirm: function() {
+            crlLineColor = $("#lineColor").val()
+            crlBGColor = $("#bgColor").val()
+            crlSendDiagramElementFormatChanged(crlSelectedDiagramElementIDForFormat, $("#lineColor").val(), $("#bgColor").val())
+        }
+    })
     crlDisplayCallGraphsDialog = new jBox("Confirm", {
         title: "Display Call Graphs",
         confirmButton: "OK",
         cancelButton: "Cancel",
         content: "" +
             "<form>" +
-            "    <fieldseet>" +
+            "    <fieldset>" +
             "        <label>Number of available call graphs: </label> <label id='numberOfAvailableGraphs'></label><br>" +
             "        <label>Selected Graph:</label><input id='selectedGraph' type='number'>" +
             "	</fieldset> " +
@@ -253,6 +278,26 @@ function crlAppendToolbarButton(toolbar, id, icon) {
 function crlBringToFront(evt) {
     var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
     cellView.model.toFront();
+}
+
+function crlEditFormat(evt) {
+    var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
+    crlSelectedDiagramElementIDForFormat = crlGetConceptIDFromJointElementID(cellView.model.attributes.crlJointID)
+    $("#lineColor").val(cellView.model.attributes["lineColor"]) 
+    $("#bgColor").val(cellView.model.attributes["bgColor"])
+    crlDiagramElementFormatDialog.open()
+}
+
+function crlCopyFormat(evt) {
+    var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
+    crlLineColor = cellView.model.attributes["lineColor"]
+    crlBGColor = cellView.model.attributes["bgColor"]
+}
+
+function crlPasteFormat(evt) {
+    var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
+    crlSelectedDiagramElementIDForFormat = crlGetConceptIDFromJointElementID(cellView.model.attributes.crlJointID)
+    crlSendDiagramElementFormatChanged(crlSelectedDiagramElementIDForFormat, crlLineColor, crlBGColor)
 }
 
 function crlCloseDiagramView(diagramID) {
@@ -1867,6 +1912,8 @@ var crlNotificationUpdateDiagramNode = function (data) {
         node.set('icon', params["Icon"]);
         node.set('name', params["DisplayLabel"]);
         node.set("abstractions", params["Abstractions"]);
+        node.set("lineColor", params["LineColor"]);
+        node.set("bgColor", params["BGColor"]);
     }
     crlSendNormalResponse();
 }
@@ -2311,6 +2358,19 @@ function crlSendElementPointerChanged(jointLink, linkID, sourceID, targetID, tar
         }
     })
     crlSendRequest(xhr, data);
+}
+
+function crlSendDiagramElementFormatChanged(diagramElementID, lineColor, bgColor) {
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({
+        "Action": "FormatChanged",
+        "RequestConceptID": diagramElementID,
+        "AdditionalParameters": {
+            "LineColor": lineColor,
+             "BGColor": bgColor
+        }
+    });
+    crlSendRequest(xhr, data)
 }
 
 function crlSendLabelChanged(evt, obj) {

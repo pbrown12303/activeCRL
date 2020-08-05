@@ -86,7 +86,10 @@ func (hlPtr *HeldLocks) ReleaseLocks() {
 		el.TraceableWriteUnlock(hlPtr)
 		delete(hlPtr.writeLocks, el.getConceptIDNoLock())
 	}
-	hlPtr.functionCallManager.callQueuedFunctions(hlPtr)
+	err := hlPtr.functionCallManager.callQueuedFunctions(hlPtr)
+	if err != nil {
+		log.Print(err)
+	}
 }
 
 // ReleaseLocksAndWait releases all pending functions for execution (asynchronously) and releases all currently held locks.

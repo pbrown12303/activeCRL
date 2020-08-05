@@ -288,14 +288,49 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	// If the sourceRef is an attribute value reference, get the source value
 	sourceAttributeName := sourceRef.GetReferencedAttributeName(hl)
 	if sourceAttributeName != core.NoAttribute {
-		sourceValue := sourceRef.GetReferencedAttributeValue(hl)
+		var foundSourceValue string
+		var foundSource core.Element
+		switch sourceAttributeName {
+		case core.ReferencedConceptID:
+			switch source.(type) {
+			case core.Reference:
+				foundSourceValue = source.(core.Reference).GetReferencedConceptID(hl)
+				foundSource = uOfD.GetElement(foundSourceValue)
+			}
+		case core.AbstractConceptID:
+			switch source.(type) {
+			case core.Refinement:
+				foundSourceValue = source.(core.Refinement).GetAbstractConceptID(hl)
+				foundSource = uOfD.GetElement(foundSourceValue)
+			}
+		case core.RefinedConceptID:
+			switch source.(type) {
+			case core.Refinement:
+				foundSourceValue = source.(core.Refinement).GetRefinedConceptID(hl)
+				foundSource = uOfD.GetElement(foundSourceValue)
+			}
+		case core.OwningConceptID:
+			foundSourceValue = source.GetOwningConceptID(hl)
+			foundSource = uOfD.GetElement(foundSourceValue)
+		case core.LiteralValue:
+			foundSourceValue = source.(core.Literal).GetLiteralValue(hl)
+		}
+		var foundTarget core.Element
+		var foundTargetValue string
+		switch source.(type) {
+		case core.Literal:
+			foundTargetValue = foundSourceValue
+		default:
+			foundTarget = findTargetForSource(mapInstance, foundSource, hl)
+			foundTargetValue = foundTarget.GetConceptID(hl)
+		}
 
 		switch targetRef.GetReferencedAttributeName(hl) {
 		case core.NoAttribute:
 			// This case is valid only if the target is a reference, in which case we are setting the reference's referencedConceptID
 			switch target.(type) {
 			case core.Reference:
-				err := target.(core.Reference).SetReferencedConceptID(sourceValue, hl)
+				err := target.(core.Reference).SetReferencedConceptID(foundTargetValue, hl)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
@@ -304,7 +339,7 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 			// This case is valid only if the target is a reference
 			switch target.(type) {
 			case core.Reference:
-				err := target.(core.Reference).SetReferencedConceptID(sourceValue, hl)
+				err := target.(core.Reference).SetReferencedConceptID(foundTargetValue, hl)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
@@ -312,7 +347,7 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 		case core.AbstractConceptID:
 			switch target.(type) {
 			case core.Refinement:
-				err := target.(core.Refinement).SetAbstractConceptID(sourceValue, hl)
+				err := target.(core.Refinement).SetAbstractConceptID(foundTargetValue, hl)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
@@ -322,7 +357,7 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 			// If the target is a reference, set the referenced elementID
 			switch target.(type) {
 			case core.Refinement:
-				err := target.(core.Refinement).SetRefinedConceptID(sourceValue, hl)
+				err := target.(core.Refinement).SetRefinedConceptID(foundTargetValue, hl)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
@@ -330,13 +365,13 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 		case core.LiteralValue:
 			switch target.(type) {
 			case core.Literal:
-				err := target.(core.Literal).SetLiteralValue(sourceValue, hl)
+				err := target.(core.Literal).SetLiteralValue(foundTargetValue, hl)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
 			}
 		case core.OwningConceptID:
-			err := target.SetOwningConceptID(sourceValue, hl)
+			err := target.SetOwningConceptID(foundTargetValue, hl)
 			if err != nil {
 				return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 			}
@@ -349,6 +384,63 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 		return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 	}
 	hl.ReleaseLocksAndWait()
+	return nil
+}
+
+func getSource(theMap core.Element, hl *core.HeldLocks) core.Element {
+	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
+	if ref == nil {
+		return nil
+	}
+	return ref.GetReferencedConcept(hl)
+}
+
+func getTarget(theMap core.Element, hl *core.HeldLocks) core.Element {
+	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
+	if ref == nil {
+		return nil
+	}
+	return ref.GetReferencedConcept(hl)
+}
+
+func getRootMap(theMap core.Element, hl *core.HeldLocks) core.Element {
+	owner := theMap.GetOwningConcept(hl)
+	if owner != nil && isMap(owner, hl) {
+		return getRootMap(owner, hl)
+	}
+	return theMap
+}
+
+func getRootMapTarget(theMap core.Element, hl *core.HeldLocks) core.Element {
+	rootMap := getRootMap(theMap, hl)
+	ref := rootMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
+	if ref == nil {
+		return nil
+	}
+	return ref.GetReferencedConcept(hl)
+}
+
+func findMapForSource(currentMap core.Element, source core.Element, hl *core.HeldLocks) core.Element {
+	if getSource(currentMap, hl) == source {
+		return currentMap
+	}
+	for _, childMap := range currentMap.GetOwnedConceptsRefinedFromURI(CrlMapURI, hl) {
+		foundMap := findMapForSource(childMap, source, hl)
+		if foundMap != nil {
+			return foundMap
+		}
+	}
+	return nil
+}
+
+func findTargetForSource(currentMap core.Element, source core.Element, hl *core.HeldLocks) core.Element {
+	// get root map
+	rootMap := getRootMap(currentMap, hl)
+	// search the root map for a mapping whose source is the given source. If found, return target of the map
+	foundMap := findMapForSource(rootMap, source, hl)
+	if foundMap != nil {
+		return getTarget(foundMap, hl)
+	}
 	return nil
 }
 
@@ -371,10 +463,15 @@ func instantiateChildren(abstractMap core.Element, parentMap core.Element, sourc
 				if parentMapSource == nil {
 					return errors.New("In CrlMaps.go instantiateChildren, the parentMap does not have a parentMapSource")
 				}
+				// The parentMapSource must be a refinement of the abstractChildMapSource. This condition may fail during editing scenarios
+				// in which the owner of the childMap has not yet been assigned to the correct owner. This is not an error - it is an expected condition
+				if !parentMapSource.IsRefinementOf(abstractChildMapSource, hl) {
+					return nil
+				}
 				var newMapInstance core.Element
 				for _, mapInstance := range parentMap.GetOwnedConceptsRefinedFrom(abstractChildMap, hl) {
 					mapInstanceSource := getSource(mapInstance, hl)
-					if mapInstanceSource.GetConceptID(hl) == parentMapSource.GetConceptID(hl) {
+					if mapInstanceSource != nil && mapInstanceSource.GetConceptID(hl) == parentMapSource.GetConceptID(hl) {
 						newMapInstance = mapInstance
 						break
 					}
@@ -435,39 +532,6 @@ func instantiateChildren(abstractMap core.Element, parentMap core.Element, sourc
 		}
 	}
 	return nil
-}
-
-func getSource(theMap core.Element, hl *core.HeldLocks) core.Element {
-	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
-	if ref == nil {
-		return nil
-	}
-	return ref.GetReferencedConcept(hl)
-}
-
-func getTarget(theMap core.Element, hl *core.HeldLocks) core.Element {
-	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
-	if ref == nil {
-		return nil
-	}
-	return ref.GetReferencedConcept(hl)
-}
-
-func getRootMap(theMap core.Element, hl *core.HeldLocks) core.Element {
-	owner := theMap.GetOwningConcept(hl)
-	if owner != nil && isMap(owner, hl) {
-		return getRootMap(owner, hl)
-	}
-	return theMap
-}
-
-func getRootMapTarget(theMap core.Element, hl *core.HeldLocks) core.Element {
-	rootMap := getRootMap(theMap, hl)
-	ref := rootMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
-	if ref == nil {
-		return nil
-	}
-	return ref.GetReferencedConcept(hl)
 }
 
 func isMap(candidate core.Element, hl *core.HeldLocks) bool {

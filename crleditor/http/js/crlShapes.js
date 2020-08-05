@@ -59,7 +59,9 @@ joint.shapes.basic.Generic.define('crl.Element',
         name: "labelDefault",
         abstractions: "defaultAbstractions",
         icon: "",
-        displayLabelYOffset: 0.0
+        displayLabelYOffset: 0.0,
+        lineColor: "#000000",
+        bgColor: "#ffffff"
     },
     {
         markup: "<g class=\"rotatable\">" +
@@ -77,6 +79,10 @@ joint.shapes.basic.Generic.define('crl.Element',
                 this.trigger('crl-update');
             }, this);
             this.on("change:position", crlOnChangePosition);
+            this.on('change:lineColor change:bgColor', function() {
+                this.attr('.bounding-rect/stroke', this.get("lineColor"));
+                this.attr('.bounding-rect/fill', this.get("bgColor"));
+                })
             this.updateRectangles();
             joint.shapes.basic.Generic.prototype.initialize.apply(this, arguments);
         },
