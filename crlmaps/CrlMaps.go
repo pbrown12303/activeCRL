@@ -463,15 +463,28 @@ func instantiateChildren(abstractMap core.Element, parentMap core.Element, sourc
 				if parentMapSource == nil {
 					return errors.New("In CrlMaps.go instantiateChildren, the parentMap does not have a parentMapSource")
 				}
-				// The parentMapSource must be a refinement of the abstractChildMapSource. This condition may fail during editing scenarios
+				// We must find the Element whose attribute is being referenced. Two known cases are possible here (there may be others yet to be encountered).
+				// Either the parent's map source is that Element, or the sought-after Element is a Reference that is owned by the parent's map source.
+				// This latter case only occurs when the attribute name is ReferencedConceptID.
+				// We first check to see whether the parent's map source is a refinement of the abstractChildMapSource. This condition may fail during editing scenarios
 				// in which the owner of the childMap has not yet been assigned to the correct owner. This is not an error - it is an expected condition
+				// If it is not, we then perform a secondary check to see whether the parent's map source has a child reference that is a refinement
+				// of the abstractChildMapSource.
+				foundChildSource := parentMapSource // assume it's going to be the parent map source
 				if !parentMapSource.IsRefinementOf(abstractChildMapSource, hl) {
-					return nil
+					if abstractChildMapSourceReference.GetReferencedAttributeName(hl) == core.ReferencedConceptID {
+						foundChildSource = parentMapSource.GetFirstOwnedReferenceRefinedFrom(abstractChildMapSource, hl)
+						if foundChildSource == nil {
+							return nil
+						}
+					} else {
+						return nil
+					}
 				}
 				var newMapInstance core.Element
 				for _, mapInstance := range parentMap.GetOwnedConceptsRefinedFrom(abstractChildMap, hl) {
 					mapInstanceSource := getSource(mapInstance, hl)
-					if mapInstanceSource != nil && mapInstanceSource.GetConceptID(hl) == parentMapSource.GetConceptID(hl) {
+					if mapInstanceSource != nil && mapInstanceSource.GetConceptID(hl) == foundChildSource.GetConceptID(hl) {
 						newMapInstance = mapInstance
 						break
 					}
@@ -489,7 +502,7 @@ func instantiateChildren(abstractMap core.Element, parentMap core.Element, sourc
 					if newSourceRef == nil {
 						return errors.New("In crlmaps.instantiateChildren, newSourceRef is nil")
 					}
-					err = newSourceRef.SetReferencedConcept(parentMapSource, hl)
+					err = newSourceRef.SetReferencedConcept(foundChildSource, hl)
 					if err != nil {
 						return errors.Wrap(err, "crlmaps.instantiateChildren failed")
 					}

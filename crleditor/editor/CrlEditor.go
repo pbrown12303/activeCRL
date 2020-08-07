@@ -37,6 +37,7 @@ type CrlEditorUserPreferences struct {
 }
 
 type workspaceFile struct {
+	filename      string
 	File          *os.File
 	LoadedVersion int
 	Info          os.FileInfo
@@ -263,6 +264,10 @@ func (edPtr *CrlEditor) Delete(elID string) error {
 // deleteFile deletes the file from the os
 func (edPtr *CrlEditor) deleteFile(wf *workspaceFile, hl *core.HeldLocks) error {
 	qualifiedFilename := edPtr.userPreferences.WorkspacePath + "/" + wf.Info.Name()
+	err := wf.File.Close()
+	if err != nil {
+		return errors.Wrap(err, "CrlEditor.delete file failed")
+	}
 	return os.Remove(qualifiedFilename)
 }
 
@@ -538,15 +543,11 @@ func (edPtr *CrlEditor) LoadUserPreferences(workspaceArg string) error {
 }
 
 // newFile creates a file with the name being the ConceptID of the supplied Element and returns the workspaceFile struct
-// HACK: For troubleshooting, prepend the ConceptLabel to the filename so that the individual files may be better identified without
-// opening them. This, however, will result in duplicate files should the label of the Concept be changed.
-// TODO: remove this hack
 func (edPtr *CrlEditor) newFile(el core.Element, hl *core.HeldLocks) (*workspaceFile, error) {
 	if edPtr.userPreferences.WorkspacePath == "" {
 		return nil, errors.New("CrlEditor.NewFile called with no settings.WorkspacePath defined")
 	}
-	// HACK: here's the hack
-	filename := edPtr.userPreferences.WorkspacePath + "/" + el.GetLabel(hl) + "--" + el.GetConceptID(hl) + ".acrl"
+	filename := edPtr.generateFilename(el, hl)
 	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
@@ -556,11 +557,16 @@ func (edPtr *CrlEditor) newFile(el core.Element, hl *core.HeldLocks) (*workspace
 		return nil, err2
 	}
 	var wf workspaceFile
+	wf.filename = filename
 	wf.ConceptSpace = el
 	wf.File = file
 	wf.LoadedVersion = el.GetVersion(hl)
 	wf.Info = fileInfo
 	return &wf, nil
+}
+
+func (edPtr *CrlEditor) generateFilename(el core.Element, hl *core.HeldLocks) string {
+	return edPtr.userPreferences.WorkspacePath + "/" + el.GetLabel(hl) + "--" + el.GetConceptID(hl) + ".acrl"
 }
 
 // openFile opens the file and returns a workspaceFile struct
@@ -570,7 +576,8 @@ func (edPtr *CrlEditor) openFile(fileInfo os.FileInfo, hl *core.HeldLocks) (*wor
 	if writable {
 		mode = os.O_RDWR
 	}
-	file, err := os.OpenFile(edPtr.userPreferences.WorkspacePath+"/"+fileInfo.Name(), mode, fileInfo.Mode())
+	filename := edPtr.userPreferences.WorkspacePath + "/" + fileInfo.Name()
+	file, err := os.OpenFile(filename, mode, fileInfo.Mode())
 	if err != nil {
 		return nil, err
 	}
@@ -588,6 +595,7 @@ func (edPtr *CrlEditor) openFile(fileInfo os.FileInfo, hl *core.HeldLocks) (*wor
 	}
 	edPtr.treeManager.addNodeRecursively(element, hl)
 	var wf workspaceFile
+	wf.filename = filename
 	wf.ConceptSpace = element
 	wf.Info = fileInfo
 	wf.LoadedVersion = element.GetVersion(hl)
@@ -684,18 +692,43 @@ func (edPtr *CrlEditor) saveFile(wf *workspaceFile, hl *core.HeldLocks) error {
 	}
 	byteArray, err := edPtr.uOfD.MarshalConceptSpace(wf.ConceptSpace, hl)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "CrlEditor.saveFile failed")
 	}
 	var length int
 	length, err = wf.File.WriteAt(byteArray, 0)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "CrlEditor.saveFile failed")
 	}
 	err = wf.File.Truncate(int64(length))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "CrlEditor.saveFile failed")
 	}
-	return wf.File.Sync()
+	err = wf.File.Sync()
+	if err != nil {
+		return errors.Wrap(err, "CrlEditor.saveFile failed")
+	}
+	oldFilename := wf.filename
+	newFilename := edPtr.generateFilename(wf.ConceptSpace, hl)
+	if oldFilename != newFilename {
+		err = wf.File.Close()
+		if err != nil {
+			return errors.Wrap(err, "CrlEditor.saveFile failed")
+		}
+		err = os.Rename(oldFilename, newFilename)
+		if err != nil {
+			return errors.Wrap(err, "CrlEditor.saveFile failed")
+		}
+		wf.filename = newFilename
+		wf.File, err = os.OpenFile(newFilename, os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			return errors.Wrap(err, "CrlEditor.saveFile failed")
+		}
+		wf.Info, err = os.Stat(newFilename)
+		if err != nil {
+			return errors.Wrap(err, "CrlEditor.saveFile failed")
+		}
+	}
+	return nil
 }
 
 // saveUserPreferences saves the current user preferences to the user's home directory
@@ -746,7 +779,10 @@ func (edPtr *CrlEditor) SaveWorkspace(hl *core.HeldLocks) error {
 	}
 	for id, wf := range edPtr.workspaceFiles {
 		if rootElements[id] == nil {
-			edPtr.deleteFile(wf, hl)
+			err = edPtr.deleteFile(wf, hl)
+			if err != nil {
+				return errors.Wrap(err, "CrlEditor.SaveWorkspace failed")
+			}
 			delete(edPtr.workspaceFiles, id)
 		}
 	}

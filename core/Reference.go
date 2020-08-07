@@ -26,6 +26,8 @@ const (
 	AbstractConceptID   = AttributeName(3)
 	RefinedConceptID    = AttributeName(4)
 	LiteralValue        = AttributeName(5)
+	Label               = AttributeName(6)
+	Definition          = AttributeName(7)
 )
 
 func (an AttributeName) String() string {
@@ -42,6 +44,10 @@ func (an AttributeName) String() string {
 		return "RefinedConceptID"
 	case LiteralValue:
 		return "LiteralValue"
+	case Label:
+		return "Label"
+	case Definition:
+		return "Definition"
 	}
 	return "Undefined"
 }

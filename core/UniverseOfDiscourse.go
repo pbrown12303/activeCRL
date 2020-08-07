@@ -989,7 +989,7 @@ func (uOfDPtr *UniverseOfDiscourse) RecoverConceptSpace(data []byte, hl *HeldLoc
 			if conceptSpace == nil {
 				conceptSpace = el
 			} else {
-				return nil, errors.New("In UniverseOfDiscourse.RecoverConceptSpace more than one element does not have an owner")
+				log.Printf("In UniverseOfDiscourse.RecoverConceptSpace more than one element does not have an owner: %s %s", el.GetLabel(hl), el.GetConceptID(hl))
 			}
 		}
 	}
