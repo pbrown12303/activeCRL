@@ -96,16 +96,19 @@ func (lPtr *literal) SetLiteralValue(value string, hl *HeldLocks) error {
 		lPtr.uOfD.preChange(lPtr, hl)
 		beforeState, err := NewConceptState(lPtr)
 		if err != nil {
-			errors.Wrap(err, "literal.SetLiteralValue failed")
+			return errors.Wrap(err, "literal.SetLiteralValue failed")
 		}
 		lPtr.incrementVersion(hl)
 		lPtr.LiteralValue = value
 		afterState, err2 := NewConceptState(lPtr)
 		if err2 != nil {
-			errors.Wrap(err2, "literal.SetLiteralValue failed")
+			return errors.Wrap(err2, "literal.SetLiteralValue failed")
 		}
 		notification := lPtr.uOfD.NewConceptChangeNotification(lPtr, beforeState, afterState, hl)
-		lPtr.uOfD.queueFunctionExecutions(lPtr, notification, hl)
+		err = lPtr.uOfD.queueFunctionExecutions(lPtr, notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "literal.SetLiteralValue failed")
+		}
 	}
 	return nil
 }

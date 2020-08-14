@@ -954,10 +954,10 @@ func BuildCrlDiagramConceptSpace(uOfD *core.UniverseOfDiscourse, hl *core.HeldLo
 
 	crlDiagramNodeLineColor, _ := uOfD.NewOwnedLiteral(crlDiagramNode, "LineColor", hl, CrlDiagramNodeLineColorURI)
 	crlDiagramNodeLineColor.SetLiteralValue("#000000", hl)
-	uOfD.NewOwnedRefinement(crlDiagramElementLineColor, crlDiagramNodeLineColor, "LineColorRefinement", hl)
+	uOfD.NewCompleteRefinement(crlDiagramElementLineColor, crlDiagramNodeLineColor, "LineColorRefinement", hl)
 
 	crlDiagramNodeBGColor, _ := uOfD.NewOwnedLiteral(crlDiagramNode, "BGColor", hl, CrlDiagramNodeBGColorURI)
-	uOfD.NewOwnedRefinement(crlDiagramElementBGColor, crlDiagramNodeBGColor, "BGColorRefinement", hl)
+	uOfD.NewCompleteRefinement(crlDiagramElementBGColor, crlDiagramNodeBGColor, "BGColorRefinement", hl)
 
 	crlDiagramNodeX, _ := uOfD.NewLiteral(hl, CrlDiagramNodeXURI)
 	crlDiagramNodeX.SetLabel("X", hl)

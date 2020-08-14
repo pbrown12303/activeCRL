@@ -209,7 +209,7 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *HeldLocks) error {
 		rPtr.uOfD.preChange(rPtr, hl)
 		beforeState, err := NewConceptState(rPtr)
 		if err != nil {
-			errors.Wrap(err, "refinement.SetAbstractConceptID failed")
+			return errors.Wrap(err, "refinement.SetAbstractConceptID failed")
 		}
 		rPtr.incrementVersion(hl)
 		if rPtr.AbstractConceptID != "" {
@@ -236,10 +236,13 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *HeldLocks) error {
 		}
 		afterState, err2 := NewConceptState(rPtr)
 		if err2 != nil {
-			errors.Wrap(err2, "refinement.SetAbstractConceptID failed")
+			return errors.Wrap(err2, "refinement.SetAbstractConceptID failed")
 		}
 		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, beforeState, afterState, hl)
-		rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
+		err = rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "refinement.SetAbstractConceptID failed")
+		}
 	}
 	return nil
 }
@@ -262,7 +265,7 @@ func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *HeldLocks) error {
 		rPtr.uOfD.preChange(rPtr, hl)
 		beforeState, err := NewConceptState(rPtr)
 		if err != nil {
-			errors.Wrap(err, "refinement.SetRefinedConceptID failed")
+			return errors.Wrap(err, "refinement.SetRefinedConceptID failed")
 		}
 		rPtr.incrementVersion(hl)
 		if rPtr.RefinedConceptID != "" {
@@ -283,10 +286,10 @@ func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *HeldLocks) error {
 		}
 		afterState, err2 := NewConceptState(rPtr)
 		if err2 != nil {
-			errors.Wrap(err2, "refinement.SetRefinedConceptID failed")
+			return errors.Wrap(err2, "refinement.SetRefinedConceptID failed")
 		}
 		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, beforeState, afterState, hl)
-		rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
+		err = rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
 	}
 	return nil
 }

@@ -29,13 +29,16 @@ type pendingFunctionCall struct {
 	notification *ChangeNotification
 }
 
-func newPendingFunctionCall(functionID string, function crlExecutionFunction, target Element, notification *ChangeNotification) *pendingFunctionCall {
+func newPendingFunctionCall(functionID string, function crlExecutionFunction, target Element, notification *ChangeNotification) (*pendingFunctionCall, error) {
+	if target == nil {
+		return nil, errors.New("FunctionCallManager.go newPendingFunctionCall invoked with nil target")
+	}
 	var pendingCall pendingFunctionCall
 	pendingCall.function = function
 	pendingCall.functionID = functionID
 	pendingCall.target = target
 	pendingCall.notification = notification
-	return &pendingCall
+	return &pendingCall, nil
 }
 
 type pendingFunctionCallEntry struct {
@@ -130,15 +133,19 @@ func newFunctionCallManager(uOfD *UniverseOfDiscourse) *functionCallManager {
 // addFunctionCall adds a pending function call to the manager for each function associated with the functionIK.
 // The Element is the element that will eventually "execute" the function, and the ChangeNotification is the trigger
 // that caused the function to be queued for execution.
-func (fcm *functionCallManager) addFunctionCall(functionID string, targetElement Element, notification *ChangeNotification) {
+func (fcm *functionCallManager) addFunctionCall(functionID string, targetElement Element, notification *ChangeNotification) error {
 	for _, function := range fcm.uOfD.getFunctions(functionID) {
-		pendingCall := newPendingFunctionCall(functionID, function, targetElement, notification)
+		pendingCall, err := newPendingFunctionCall(functionID, function, targetElement, notification)
+		if err != nil {
+			return errors.Wrap(err, "functionCallManager.addFunctionCall failed")
+		}
 		newCount := atomic.AddInt32(&pendingFunctionCount, 1)
 		if CrlLogPendingFunctionCount == true {
 			log.Printf("Pending function count: %d", newCount)
 		}
 		fcm.functionCallQueue.enqueue(pendingCall)
 	}
+	return nil
 }
 
 // isDiagramRelatedFunction returns true if the functionID matches one of the diagram related functions

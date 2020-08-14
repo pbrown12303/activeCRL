@@ -1,15 +1,10 @@
 package main
 
 import (
-	"fyne.io/fyne/app"
-	"fyne.io/fyne/widget"
+	"github.com/pbrown12303/activeCRL/crlfyneeditor/fyneeditor"
 )
 
 func main() {
-	app := app.New()
-
-	w := app.NewWindow("Hello")
-	w.SetContent(widget.NewLabel("Hello Fyne!"))
-
-	w.ShowAndRun()
+	fyneEditor := fyneeditor.NewCrlFyneEditor()
+	fyneEditor.GetWindow().ShowAndRun()
 }

@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/pbrown12303/activeCRL/crleditor/editor"
+	"github.com/pbrown12303/activeCRL/crlfyneeditor/fyneeditor"
 )
 
 func main() {
@@ -17,5 +18,9 @@ func main() {
 	fmt.Println("workspace: ", *workspaceArg)
 	fmt.Println("user folder: ", *userFolderArg)
 	editor.CrlLogClientRequests = true
-	editor.StartServer(true, *workspaceArg, *userFolderArg)
+	go editor.StartServer(true, *workspaceArg, *userFolderArg)
+
+	// Fyne
+	fyneEditor := fyneeditor.NewCrlFyneEditor()
+	fyneEditor.GetWindow().ShowAndRun()
 }

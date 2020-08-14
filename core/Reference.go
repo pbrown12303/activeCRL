@@ -289,7 +289,7 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 		}
 		beforeState, err := NewConceptState(rPtr)
 		if err != nil {
-			errors.Wrap(err, "reference.SetReferencedConceptID failed")
+			return errors.Wrap(err, "reference.SetReferencedConceptID failed")
 		}
 		rPtr.uOfD.preChange(rPtr, hl)
 		rPtr.incrementVersion(hl)
@@ -312,10 +312,13 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 		}
 		afterState, err2 := NewConceptState(rPtr)
 		if err2 != nil {
-			errors.Wrap(err2, "reference.SetReferencedConceptID failed")
+			return errors.Wrap(err2, "reference.SetReferencedConceptID failed")
 		}
 		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, beforeState, afterState, hl)
-		rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
+		err = rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "reference.SetReferencedConceptID failed")
+		}
 	}
 	return nil
 }
@@ -351,16 +354,19 @@ func (rPtr *reference) SetReferencedAttributeName(attributeName AttributeName, h
 		rPtr.uOfD.preChange(rPtr, hl)
 		beforeState, err := NewConceptState(rPtr)
 		if err != nil {
-			errors.Wrap(err, "reference.SetReferencedAttributeName failed")
+			return errors.Wrap(err, "reference.SetReferencedAttributeName failed")
 		}
 		rPtr.incrementVersion(hl)
 		rPtr.ReferencedAttributeName = attributeName
 		afterState, err2 := NewConceptState(rPtr)
 		if err2 != nil {
-			errors.Wrap(err2, "reference.SetReferencedAttributeName failed")
+			return errors.Wrap(err2, "reference.SetReferencedAttributeName failed")
 		}
 		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, beforeState, afterState, hl)
-		rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
+		err = rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "reference.SetReferencedAttributeName failed")
+		}
 	}
 	return nil
 }

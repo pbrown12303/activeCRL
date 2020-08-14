@@ -361,6 +361,20 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		cs.SetLabel(CrlEditorSingleton.getDefaultConceptSpaceLabel(), hl)
 		CrlEditorSingleton.SelectElement(cs, hl)
 		sendReply(w, 0, "Processed NewConceptSpaceRequest", cs.GetConceptID(hl), cs)
+	case "NullifyReferencedConcept":
+		CrlEditorSingleton.uOfD.MarkUndoPoint()
+		diagramElement := CrlEditorSingleton.GetUofD().GetElement(request.RequestConceptID)
+		if diagramElement == nil {
+			sendReply(w, 1, "Selected diagram element not found", "", nil)
+			break
+		}
+		modelElement := crldiagram.GetReferencedModelElement(diagramElement, hl)
+		if modelElement == nil {
+			sendReply(w, 1, "Model element corresponding to selected diagram element not found", "", nil)
+			break
+		}
+		err := CrlEditorSingleton.nullifyReferencedConcept(modelElement.GetConceptID(hl), hl)
+		reply(w, "NullifyReferencedConcept", err)
 	case "OpenWorkspace":
 		err := CrlEditorSingleton.openWorkspace(hl)
 		if err != nil {

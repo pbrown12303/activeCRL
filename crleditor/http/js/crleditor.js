@@ -46,6 +46,8 @@ var crlUserPreferencesDialog;
 var crlOpenWorkspaceDialog;
 // crlDiagramElementFormatDialog is the initialized dialog used to set a diagram element format
 var crlDiagramElementFormatDialog;
+// crlSelectConceptByIDDialog is a dialog for entering the ConceptID to be selected
+var crlSelectConceptByIDDialog;
 
 // Lookup structures
 // crlGraphsGlobal is an array of existing graphs that is used to look up a graph given its identifier
@@ -181,6 +183,24 @@ $(function () {
             crlSendDisplayCallGraph(selectedNumber);
         }
     })
+    crlSelectConceptByIDDialog = new jBox("Confirm", {
+        title: "Enter ID of concept to be selected",
+        confirmButton: "OK",
+        cancelButton: "Cancel",
+        content: "" +
+        "<form>" +
+        "	<fieldset>" +
+        "		<label for='enteredConceptID'>ConceptID: </label>" +
+        "		<input type='text' id='enteredConceptID'><br>" +
+        "	</fieldset>" +
+        "</form>",
+        confirm: function () {
+            var enteredConceptIDElement = document.getElementById("enteredConceptID");
+            var xhr = crlCreateEmptyRequest();
+            var data = JSON.stringify({ "Action": "ShowConceptInNavigator", "RequestConceptID": enteredConceptIDElement.value });
+            crlSendRequest(xhr, data);
+                }
+    });
     crlUserPreferencesDialog = new jBox("Confirm", {
         title: "User Preferences",
         confirmButton: "OK",
@@ -486,8 +506,10 @@ function crlConstructPaper(diagramContainer, jointGraph, jointPaperID) {
         var represents = cellView.model.attributes.represents;
         if (represents == "Reference") {
             document.getElementById("showReferencedConcept").style.display = "block";
+            document.getElementById("nullifyReferencedConcept").style.display = "block";
         } else {
             document.getElementById("showReferencedConcept").style.display = "none";
+            document.getElementById("nullifyReferencedConcept").style.display = "none";
         }
         if (represents == "OwnerPointer" || represents == "ElementPointer" || represents == "AbstractPointer" || represents == "RefinedPointer") {
             document.getElementById("showOwner").style.display = "none";
@@ -2590,6 +2612,15 @@ var crlShowOwner = function (evt) {
     var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
     var xhr = crlCreateEmptyRequest();
     var data = JSON.stringify({ "Action": "ShowOwner", "RequestConceptID": diagramElementID });
+    crlSendRequest(xhr, data);
+}
+
+var crlNullifyReferencedConcept = function (evt) {
+    var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
+    var jointID = cellView.model.attributes.crlJointID;
+    var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
+    var xhr = crlCreateEmptyRequest();
+    var data = JSON.stringify({ "Action": "NullifyReferencedConcept", "RequestConceptID": diagramElementID });
     crlSendRequest(xhr, data);
 }
 

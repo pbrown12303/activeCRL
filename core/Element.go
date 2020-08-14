@@ -351,6 +351,10 @@ func (ePtr *element) FindAbstractions(abstractions map[string]Element, hl *HeldL
 
 // FindImmediateAbstractions adds all immediate abstractions to supplied map
 func (ePtr *element) FindImmediateAbstractions(abstractions map[string]Element, hl *HeldLocks) {
+	// There are no abstractions without the uOfD context
+	if ePtr.uOfD == nil {
+		return
+	}
 	it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
 	defer it.Stop()
 	for id := range it.C {
@@ -859,13 +863,22 @@ func (ePtr *element) notifyListeners(underlyingNotification *ChangeNotification,
 				if listener.(*refinement).GetAbstractConcept(hl) == ePtr {
 					refinedConcept := listener.(*refinement).GetRefinedConcept(hl)
 					if refinedConcept != nil {
-						ePtr.uOfD.queueFunctionExecutions(refinedConcept, abstractionChanged, hl)
+						err := ePtr.uOfD.queueFunctionExecutions(refinedConcept, abstractionChanged, hl)
+						if err != nil {
+							return errors.Wrap(err, "element.notifyListeners failed")
+						}
 					}
 				} else {
-					ePtr.uOfD.queueFunctionExecutions(listener, indicatedConceptChanged, hl)
+					err := ePtr.uOfD.queueFunctionExecutions(listener, indicatedConceptChanged, hl)
+					if err != nil {
+						return errors.Wrap(err, "element.notifyListeners failed")
+					}
 				}
 			default:
-				ePtr.uOfD.queueFunctionExecutions(listener, indicatedConceptChanged, hl)
+				err := ePtr.uOfD.queueFunctionExecutions(listener, indicatedConceptChanged, hl)
+				if err != nil {
+					return errors.Wrap(err, "element.notifyListeners failed")
+				}
 			}
 		}
 	}
@@ -984,16 +997,19 @@ func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 		ePtr.uOfD.preChange(ePtr, hl)
 		beforeState, err := NewConceptState(ePtr)
 		if err != nil {
-			errors.Wrap(err, "element.SetDefinition failed")
+			return errors.Wrap(err, "element.SetDefinition failed")
 		}
 		ePtr.incrementVersion(hl)
 		ePtr.Definition = def
 		afterState, err2 := NewConceptState(ePtr)
 		if err2 != nil {
-			errors.Wrap(err2, "element.SetDefinition failed")
+			return errors.Wrap(err2, "element.SetDefinition failed")
 		}
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
-		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		err = ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "element.SetDefinition failed")
+		}
 	}
 	return nil
 }
@@ -1021,16 +1037,19 @@ func (ePtr *element) SetIsCore(hl *HeldLocks) error {
 		ePtr.uOfD.preChange(ePtr, hl)
 		beforeState, err := NewConceptState(ePtr)
 		if err != nil {
-			errors.Wrap(err, "element.SetIsCore failed")
+			return errors.Wrap(err, "element.SetIsCore failed")
 		}
 		ePtr.incrementVersion(hl)
 		ePtr.IsCore = true
 		afterState, err2 := NewConceptState(ePtr)
 		if err2 != nil {
-			errors.Wrap(err2, "element.SetIsCore failed")
+			return errors.Wrap(err2, "element.SetIsCore failed")
 		}
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
-		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		err = ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "element.SetIsCore failed")
+		}
 	}
 	return nil
 }
@@ -1045,16 +1064,19 @@ func (ePtr *element) SetLabel(label string, hl *HeldLocks) error {
 		ePtr.uOfD.preChange(ePtr, hl)
 		beforeState, err := NewConceptState(ePtr)
 		if err != nil {
-			errors.Wrap(err, "element.SetLabel failed")
+			return errors.Wrap(err, "element.SetLabel failed")
 		}
 		ePtr.incrementVersion(hl)
 		ePtr.Label = label
 		afterState, err2 := NewConceptState(ePtr)
 		if err2 != nil {
-			errors.Wrap(err2, "element.SetLabel failed")
+			return errors.Wrap(err2, "element.SetLabel failed")
 		}
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
-		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		err = ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "element.SetLabel failed")
+		}
 	}
 	return nil
 }
@@ -1101,7 +1123,7 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 		ePtr.uOfD.preChange(ePtr, hl)
 		beforeState, err := NewConceptState(ePtr)
 		if err != nil {
-			errors.Wrap(err, "element.SetOwningConceptID failed")
+			return errors.Wrap(err, "element.SetOwningConceptID failed")
 		}
 		if oldOwner != nil {
 			oldOwner.removeOwnedConcept(ePtr.ConceptID, hl)
@@ -1113,10 +1135,13 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 		ePtr.OwningConceptID = ocID
 		afterState, err2 := NewConceptState(ePtr)
 		if err2 != nil {
-			errors.Wrap(err2, "element.SetOwningConceptID failed")
+			return errors.Wrap(err2, "element.SetOwningConceptID failed")
 		}
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
-		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		err = ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "element.SetOwningConceptID failed")
+		}
 	}
 	return nil
 }
@@ -1138,16 +1163,19 @@ func (ePtr *element) SetReadOnly(value bool, hl *HeldLocks) error {
 		ePtr.uOfD.preChange(ePtr, hl)
 		beforeState, err := NewConceptState(ePtr)
 		if err != nil {
-			errors.Wrap(err, "element.SetReadOnly failed")
+			return errors.Wrap(err, "element.SetReadOnly failed")
 		}
 		ePtr.incrementVersion(hl)
 		ePtr.ReadOnly = value
 		afterState, err2 := NewConceptState(ePtr)
 		if err2 != nil {
-			errors.Wrap(err2, "element.SetDeSetReadOnlyfinition failed")
+			return errors.Wrap(err2, "element.SetDeSetReadOnlyfinition failed")
 		}
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
-		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		err = ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "element.SetReadOnly failed")
+		}
 	}
 	return nil
 }
@@ -1189,17 +1217,20 @@ func (ePtr *element) SetURI(uri string, hl *HeldLocks) error {
 		ePtr.uOfD.preChange(ePtr, hl)
 		beforeState, err := NewConceptState(ePtr)
 		if err != nil {
-			errors.Wrap(err, "element.SetURI failed")
+			return errors.Wrap(err, "element.SetURI failed")
 		}
 		ePtr.uOfD.changeURIForElement(ePtr, ePtr.URI, uri)
 		ePtr.incrementVersion(hl)
 		ePtr.URI = uri
 		afterState, err2 := NewConceptState(ePtr)
 		if err2 != nil {
-			errors.Wrap(err2, "element.SetURI failed")
+			return errors.Wrap(err2, "element.SetURI failed")
 		}
 		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
-		ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		err = ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "element.SetURI failed")
+		}
 	}
 	return nil
 }

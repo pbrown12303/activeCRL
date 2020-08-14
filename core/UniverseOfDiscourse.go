@@ -392,7 +392,10 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, hl *Held
 		}
 		uOfDPtr.deleteElement(el, elements, hl)
 		el.setUniverseOfDiscourse(nil, hl)
-		uOfDPtr.queueFunctionExecutions(uOfDPtr, uOfDPtr.newUofDConceptRemovedNotification(beforeState, hl), hl)
+		err = uOfDPtr.queueFunctionExecutions(uOfDPtr, uOfDPtr.newUofDConceptRemovedNotification(beforeState, hl), hl)
+		if err != nil {
+			return errors.Wrap(err, "UniverseOfDiscourse.DeleteElements failed")
+		}
 	}
 	return nil
 }
@@ -844,9 +847,26 @@ func (uOfDPtr *UniverseOfDiscourse) NewOwnedReference(owner Element, label strin
 	return ref, nil
 }
 
-// NewOwnedRefinement creates a refinement (with optional URI) and sets its abstract and refined references, sets the label, and
+// NewOwnedRefinement creates a refinement (with optional URI) and sets its owner and label
+func (uOfDPtr *UniverseOfDiscourse) NewOwnedRefinement(owner Element, label string, hl *HeldLocks, uri ...string) (Refinement, error) {
+	ref, err := uOfDPtr.NewRefinement(hl, uri...)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
+	}
+	err = ref.SetLabel(label, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
+	}
+	err = ref.SetOwningConcept(owner, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
+	}
+	return ref, nil
+}
+
+// NewCompleteRefinement creates a refinement (with optional URI) and sets its abstract and refined references, sets the label, and
 // makes the refined element the owner
-func (uOfDPtr *UniverseOfDiscourse) NewOwnedRefinement(abstractElement Element, refinedElement Element, label string, hl *HeldLocks, uri ...string) (Refinement, error) {
+func (uOfDPtr *UniverseOfDiscourse) NewCompleteRefinement(abstractElement Element, refinedElement Element, label string, hl *HeldLocks, uri ...string) (Refinement, error) {
 	ref, err := uOfDPtr.NewRefinement(hl, uri...)
 	if err != nil {
 		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
@@ -913,6 +933,9 @@ func (uOfDPtr *UniverseOfDiscourse) NewRefinement(hl *HeldLocks, uri ...string) 
 // newUniverseOfDiscourseChangeNotification creates a new ChangeNotification for a UofD change
 func (uOfDPtr *UniverseOfDiscourse) newUniverseOfDiscourseChangeNotification(underlyingChange *ChangeNotification) *ChangeNotification {
 	var notification ChangeNotification
+	notification.reportingElementID = uOfDPtr.ConceptID
+	notification.reportingElementLabel = uOfDPtr.Label
+	notification.reportingElementType = reflect.TypeOf(uOfDPtr).String()
 	notification.natureOfChange = UofDConceptChanged
 	notification.underlyingChange = underlyingChange
 	notification.uOfD = uOfDPtr
@@ -925,18 +948,16 @@ func (uOfDPtr *UniverseOfDiscourse) preChange(el Element, hl *HeldLocks) {
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) queueFunctionExecutions(el Element, notification *ChangeNotification, hl *HeldLocks) {
+func (uOfDPtr *UniverseOfDiscourse) queueFunctionExecutions(el Element, notification *ChangeNotification, hl *HeldLocks) error {
 	if el == nil {
-		log.Printf("UniverseOfDiscourse.queueFunctionExecution called with a nil Element")
-		return
+		return errors.New("UniverseOfDiscourse.queueFunctionExecution called with a nil Element")
 	}
 	if el.GetUniverseOfDiscourse(hl) == nil {
 		// Functions do not get executed on elements that are no longer in a Universe of Discourse
-		return
+		return nil
 	}
 	if notification.GetNatureOfChange() == 0 {
-		log.Printf("UniverseOfDiscourse.queueFunctionExecution called without of NatureOfChange")
-		return
+		return errors.New("UniverseOfDiscourse.queueFunctionExecution called without of NatureOfChange")
 	}
 	functionIdentifiers := uOfDPtr.findFunctions(el, notification, hl)
 	for _, functionIdentifier := range functionIdentifiers {
@@ -950,8 +971,12 @@ func (uOfDPtr *UniverseOfDiscourse) queueFunctionExecutions(el Element, notifica
 				notification.Print("Notification: ", hl)
 			}
 		}
-		hl.functionCallManager.addFunctionCall(functionIdentifier, el, notification)
+		err := hl.functionCallManager.addFunctionCall(functionIdentifier, el, notification)
+		if err != nil {
+			return errors.Wrap(err, "UniverseOfDiscourse.queueFunctionExecutions failed")
+		}
 	}
+	return nil
 }
 
 // Redo redoes the last undo, if any
@@ -1136,7 +1161,10 @@ func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourse(el Element, hl *HeldL
 		if err != nil {
 			return errors.Wrap(err, "UniverseOfDiscourse.SetUniverseOfDiscourse failed")
 		}
-		uOfDPtr.queueFunctionExecutions(uOfDPtr, uOfDPtr.newUofDConceptAddedNotification(elementState, hl), hl)
+		err = uOfDPtr.queueFunctionExecutions(uOfDPtr, uOfDPtr.newUofDConceptAddedNotification(elementState, hl), hl)
+		if err != nil {
+			return errors.Wrap(err, "UniverseOfDiscourse.SetUniverseOfDiscourse failed")
+		}
 		el.setUniverseOfDiscourse(uOfDPtr, hl)
 		uOfDPtr.addElement(el, false, hl)
 	}

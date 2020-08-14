@@ -637,6 +637,18 @@ func (edPtr *CrlEditor) LoadWorkspace(hl *core.HeldLocks) error {
 
 // loadWorkspaceOnly loads the workspace currently designated by the userPreferences.WorkspacePath. If the path is empty, it is a no-op.
 
+func (edPtr *CrlEditor) nullifyReferencedConcept(refID string, hl *core.HeldLocks) error {
+	ref := edPtr.uOfD.GetReference(refID)
+	if ref == nil {
+		return errors.New("CrlEditor.nullifyReferencedConcept called with refID not found in uOfD")
+	}
+	err := ref.SetReferencedConceptID("", hl)
+	if err != nil {
+		return errors.Wrap(err, "CrlEditor.nullifyReferencedConcept failed")
+	}
+	return nil
+}
+
 // openWorkspace sets the path to the folder to be used as a workspace. It is the implementation of a request from the client.
 func (edPtr *CrlEditor) openWorkspace(hl *core.HeldLocks) error {
 	if edPtr.userPreferences.WorkspacePath != "" {

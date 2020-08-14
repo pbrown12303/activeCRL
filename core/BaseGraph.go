@@ -43,7 +43,7 @@ func (bgPtr *baseGraph) initializeBaseGraph(graphName string) {
 // and the position in the notification hierarcy. If the reporting element already exists then a new annotation is just added
 func (bgPtr *baseGraph) addNotification(notification *ChangeNotification, parentGraph string) string {
 	reportingElement := notification.uOfD.GetElement(notification.GetReportingElementID()) // this will return nil after an element deletion
-	reportingElementNodeID := bgPtr.makeNode(notification.GetReportingElementID(), notification.GetChangedConceptType(), notification.GetChangedConceptLabel(), parentGraph, false, "")
+	reportingElementNodeID := bgPtr.makeNode(notification.GetReportingElementID(), notification.GetReportingElementType(), notification.GetReportingElementLabel(), parentGraph, false, "")
 	// By definition, the root notification's changed object is the root node
 	if bgPtr.rootNodeIDs[parentGraph] == "" {
 		bgPtr.rootNodeIDs[parentGraph] = reportingElementNodeID
@@ -172,6 +172,9 @@ func (bgPtr *baseGraph) makeNotificationEdge(sourceID string, targetID string) {
 }
 
 func (bgPtr *baseGraph) makeNode(conceptID string, typeString string, label string, parentGraph string, root bool, functionName string) string {
+	if conceptID == "" || typeString == "" {
+		log.Printf("baseGraph.makeNode called will empty strings")
+	}
 	id := makeGraphID(conceptID, bgPtr.parentGraphNodePrefix[parentGraph])
 	if bgPtr.graph.IsNode(id) != true {
 		nodeAttrs := make(map[string]string)
