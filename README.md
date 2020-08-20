@@ -1,6 +1,6 @@
 # ActiveCRL
 
-The [Concept Representation Language](http://https://ieeexplore.ieee.org/document/8334433) (CRL) is a language for uniformly representing any and all formal languages and the mappings between them. While the language is very expressive, it carries with it two limitations: 
+The [Concept Representation Language](https://ieeexplore.ieee.org/document/8334433) (CRL) is a language for uniformly representing any and all formal languages and the mappings between them. While the language is very expressive, it carries with it two limitations: 
 * The CRL structure is inherently a network (think of it as a forest of trees with links between nodes of different trees). The problem is that networks are difficult for people to percieve when expressed in textual form.
 * To be useful, the CRL structure must be interpreted. This requires a mechanism to walk the network (or at least portions of it) and do something useful with the information beting represented.
 
