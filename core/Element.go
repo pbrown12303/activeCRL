@@ -852,8 +852,14 @@ func (ePtr *element) marshalElementFields(buffer *bytes.Buffer) error {
 func (ePtr *element) notifyListeners(underlyingNotification *ChangeNotification, hl *HeldLocks) error {
 	hl.ReadLockElement(ePtr)
 	if ePtr.uOfD != nil {
-		indicatedConceptChanged := ePtr.uOfD.NewForwardingChangeNotification(ePtr, underlyingNotification.GetBeforeState(), underlyingNotification.GetAfterState(), IndicatedConceptChanged, underlyingNotification, hl)
-		abstractionChanged := ePtr.uOfD.NewForwardingChangeNotification(ePtr, underlyingNotification.GetBeforeState(), underlyingNotification.GetAfterState(), AbstractionChanged, underlyingNotification, hl)
+		indicatedConceptChanged, err := ePtr.uOfD.NewForwardingChangeNotification(ePtr, underlyingNotification.GetBeforeState(), underlyingNotification.GetAfterState(), IndicatedConceptChanged, underlyingNotification, hl)
+		if err != nil {
+			return errors.Wrap(err, "element.notifyListeners failed")
+		}
+		abstractionChanged, err2 := ePtr.uOfD.NewForwardingChangeNotification(ePtr, underlyingNotification.GetBeforeState(), underlyingNotification.GetAfterState(), AbstractionChanged, underlyingNotification, hl)
+		if err2 != nil {
+			return errors.Wrap(err2, "element.notifyListeners failed")
+		}
 		it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
 		defer it.Stop()
 		for id := range it.C {

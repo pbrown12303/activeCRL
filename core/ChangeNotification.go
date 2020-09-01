@@ -98,7 +98,7 @@ func NewConceptState(el Element) (*ConceptState, error) {
 	return &newConceptState, nil
 }
 
-// ChangeNotification records the metadata regarding a change to a Element. It provides
+// ChangeNotification records the data and metadata regarding a change to a Element. It provides
 // the nature of the change, the old and new values, and the reporting Element.
 // It also provides the underlying change that triggered this one (if any)
 type ChangeNotification struct {

@@ -26,7 +26,10 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 		// Send ChildChanged to owner
 		owner := el.GetOwningConcept(hl)
 		if owner != nil {
-			childChangedNotification := uOfD.NewForwardingChangeNotification(el, notification.GetBeforeState(), notification.GetAfterState(), ChildChanged, notification, hl)
+			childChangedNotification, err2 := uOfD.NewForwardingChangeNotification(el, notification.GetBeforeState(), notification.GetAfterState(), ChildChanged, notification, hl)
+			if err2 != nil {
+				return errors.Wrap(err2, "Housekeeping.go coreHousekeeping failed")
+			}
 			err = uOfD.queueFunctionExecutions(owner, childChangedNotification, hl)
 			if err != nil {
 				return errors.Wrap(err, "Housekeeping.go coreHousekeeping failed")
@@ -35,7 +38,10 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 		// If owner has changed, send ChildChanged to old owner as well
 		oldOwner := uOfD.GetElement(notification.GetBeforeState().OwningConceptID)
 		if oldOwner != nil && oldOwner != owner {
-			childChangedNotification := uOfD.NewForwardingChangeNotification(el, notification.GetBeforeState(), notification.GetAfterState(), ChildChanged, notification, hl)
+			childChangedNotification, err2 := uOfD.NewForwardingChangeNotification(el, notification.GetBeforeState(), notification.GetAfterState(), ChildChanged, notification, hl)
+			if err2 != nil {
+				return errors.Wrap(err2, "Housekeeping.go coreHousekeeping failed")
+			}
 			err = uOfD.queueFunctionExecutions(oldOwner, childChangedNotification, hl)
 			if err != nil {
 				return errors.Wrap(err, "Housekeeping.go coreHousekeeping failed")
@@ -49,7 +55,10 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 		// Send ChildAbstractionChanged to owner
 		owner := el.GetOwningConcept(hl)
 		if owner != nil {
-			childAbstractionChangedNotification := uOfD.NewForwardingChangeNotification(el, elCurrentState, elCurrentState, ChildAbstractionChanged, notification, hl)
+			childAbstractionChangedNotification, err2 := uOfD.NewForwardingChangeNotification(el, elCurrentState, elCurrentState, ChildAbstractionChanged, notification, hl)
+			if err2 != nil {
+				return errors.Wrap(err2, "Housekeeping.go coreHousekeeping failed")
+			}
 			err := uOfD.queueFunctionExecutions(owner, childAbstractionChangedNotification, hl)
 			if err != nil {
 				return errors.Wrap(err, "Housekeeping.go coreHousekeeping failed")
@@ -63,7 +72,10 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 		// Send ChildAbstractionChanged to owner
 		owner := el.GetOwningConcept(hl)
 		if owner != nil {
-			childAbstractionChangedNotification := uOfD.NewForwardingChangeNotification(el, elCurrentState, elCurrentState, ChildAbstractionChanged, notification, hl)
+			childAbstractionChangedNotification, err2 := uOfD.NewForwardingChangeNotification(el, elCurrentState, elCurrentState, ChildAbstractionChanged, notification, hl)
+			if err2 != nil {
+				return errors.Wrap(err2, "Housekeeping.go coreHousekeeping failed")
+			}
 			err := uOfD.queueFunctionExecutions(owner, childAbstractionChangedNotification, hl)
 			if err != nil {
 				return errors.Wrap(err, "Housekeeping.go coreHousekeeping failed")
@@ -77,7 +89,10 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 		// Send ChildChanged to owner
 		owner := el.GetOwningConcept(hl)
 		if owner != nil {
-			childChangedNotification := uOfD.NewForwardingChangeNotification(el, elCurrentState, elCurrentState, ChildChanged, notification, hl)
+			childChangedNotification, err2 := uOfD.NewForwardingChangeNotification(el, elCurrentState, elCurrentState, ChildChanged, notification, hl)
+			if err2 != nil {
+				return errors.Wrap(err2, "Housekeeping.go coreHousekeeping failed")
+			}
 			err := uOfD.queueFunctionExecutions(owner, childChangedNotification, hl)
 			if err != nil {
 				return errors.Wrap(err, "Housekeeping.go coreHousekeeping failed")
@@ -88,7 +103,10 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 	case IndicatedConceptChanged:
 		owner := el.GetOwningConcept(hl)
 		if owner != nil && !notification.isReferenced(owner) {
-			indicatedConceptChangedNotification := uOfD.NewForwardingChangeNotification(el, notification.GetBeforeState(), notification.GetAfterState(), IndicatedConceptChanged, notification, hl)
+			indicatedConceptChangedNotification, err2 := uOfD.NewForwardingChangeNotification(el, notification.GetBeforeState(), notification.GetAfterState(), IndicatedConceptChanged, notification, hl)
+			if err2 != nil {
+				return errors.Wrap(err2, "Housekeeping.go coreHousekeeping failed")
+			}
 			err := uOfD.queueFunctionExecutions(owner, indicatedConceptChangedNotification, hl)
 			if err != nil {
 				return errors.Wrap(err, "Housekeeping.go coreHousekeeping failed")

@@ -11,8 +11,8 @@ import ()
 // CorePrefix is a string that prefixes all URIs for the core concepts
 var CorePrefix = "http://activeCrl.com/core/"
 
-// CoreConceptSpaceURI is the URI for the core concept space
-var CoreConceptSpaceURI = CorePrefix + "CoreConceptSpace"
+// CoreDomainURI is the URI for the core concept space
+var CoreDomainURI = CorePrefix + "CoreDomain"
 
 // ElementURI is the URI for the Element core concept
 var ElementURI = CorePrefix + "Element"
@@ -40,10 +40,10 @@ func init() {
 	notificationsCount = 0
 }
 
-func buildCoreConceptSpace(uOfD *UniverseOfDiscourse, hl *HeldLocks) Element {
-	coreElement, _ := uOfD.NewElement(hl, CoreConceptSpaceURI)
+func buildCoreDomain(uOfD *UniverseOfDiscourse, hl *HeldLocks) Element {
+	coreElement, _ := uOfD.NewElement(hl, CoreDomainURI)
 	coreElementID := coreElement.getConceptIDNoLock()
-	coreElement.SetLabel("CoreConceptSpace", hl)
+	coreElement.SetLabel("CoreDomain", hl)
 
 	// Element
 	element, _ := uOfD.NewElement(hl, ElementURI)

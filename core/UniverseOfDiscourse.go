@@ -44,7 +44,7 @@ func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	uOfD.addElement(&uOfD, false, hl)
 	uOfD.AddFunction(coreHousekeepingURI, coreHousekeeping)
 	hl.ReleaseLocksAndWait()
-	buildCoreConceptSpace(&uOfD, hl)
+	buildCoreDomain(&uOfD, hl)
 	hl.ReleaseLocksAndWait()
 	return &uOfD
 }
@@ -645,8 +645,8 @@ func (uOfDPtr *UniverseOfDiscourse) MarkUndoPoint() {
 	uOfDPtr.undoManager.MarkUndoPoint()
 }
 
-// MarshalConceptSpace creates a JSON representation of an element and all of its descendants
-func (uOfDPtr *UniverseOfDiscourse) MarshalConceptSpace(el Element, hl *HeldLocks) ([]byte, error) {
+// MarshalDomain creates a JSON representation of an element and all of its descendants
+func (uOfDPtr *UniverseOfDiscourse) MarshalDomain(el Element, hl *HeldLocks) ([]byte, error) {
 	var result []byte
 	result = append(result, []byte("[")...)
 	marshaledConcept, err := uOfDPtr.marshalConceptRecursively(el, hl)
@@ -725,25 +725,37 @@ func (uOfDPtr *UniverseOfDiscourse) newUofDConceptRemovedNotification(beforeStat
 // NewForwardingChangeNotification creates a ChangeNotification that records the reason for the change to the element,
 // including the nature of the change, an indication of which component originated the change, and whether there
 // was a preceeding notification that triggered this change.
-func (uOfDPtr *UniverseOfDiscourse) NewForwardingChangeNotification(reportingElement Element, beforeState *ConceptState, afterState *ConceptState, natureOfChange NatureOfChange, underlyingChange *ChangeNotification, hl *HeldLocks) *ChangeNotification {
-	var notification ChangeNotification
+func (uOfDPtr *UniverseOfDiscourse) NewForwardingChangeNotification(reportingElement Element, beforeState *ConceptState, afterState *ConceptState, natureOfChange NatureOfChange, underlyingChange *ChangeNotification, hl *HeldLocks) (*ChangeNotification, error) {
+	notification := &ChangeNotification{}
 	notification.reportingElementID = reportingElement.GetConceptID(hl)
 	notification.reportingElementLabel = reportingElement.GetLabel(hl)
-	// Make sure we get the correct type
-	reportingElementFromUofD := uOfDPtr.GetElement(notification.reportingElementID)
-	if reportingElementFromUofD == nil {
-		// This can occur if the reporting element itself has been deleted. In this case, the beforeState
-		// should be the same element - we'll use its type
-		notification.reportingElementType = beforeState.ConceptType
-	} else {
-		notification.reportingElementType = reflect.TypeOf(reportingElementFromUofD).String()
-	}
+
+	// HACK temporary work-around for problem described below.
+	notification.reportingElementType = reflect.TypeOf(reportingElement).String()
+
+	// This logic does not work. First of all, part of the logic is simply incorrect: before and after states
+	// get passed on, so there is no reason to believe that the beforeState type has anything to do with
+	// the reportingElement. But the wierd part is that when the reportingElement is the UofDReference, the
+	// reference itself should be found in the uOfD and sometimes it is not.
+	// // Make sure we get the correct type
+	// reportingElementFromUofD := uOfDPtr.GetElement(notification.reportingElementID)
+	// if reportingElementFromUofD == nil {
+	// 	// This can occur if the reporting element itself has been deleted. In this case, the beforeState
+	// 	// should be the same element - we'll use its type
+	// 	if beforeState == nil {
+	// 		return nil, errors.New("UniverseOfDiscourse.NewForwardingChangeNotification called with reporting element not found in UofD and nil beforeState")
+	// 	}
+	// 	notification.reportingElementType = beforeState.ConceptType
+	// } else {
+	// 	notification.reportingElementType = reflect.TypeOf(reportingElementFromUofD).String()
+	// }
+
 	notification.afterState = afterState
 	notification.beforeState = beforeState
 	notification.natureOfChange = natureOfChange
 	notification.underlyingChange = underlyingChange
 	notification.uOfD = uOfDPtr
-	return &notification
+	return notification, nil
 }
 
 // NewElement creates and initializes a new Element
@@ -996,8 +1008,8 @@ func (uOfDPtr *UniverseOfDiscourse) removeElementForUndo(el Element, hl *HeldLoc
 	}
 }
 
-// RecoverConceptSpace reconstructs a concept space from its JSON representation
-func (uOfDPtr *UniverseOfDiscourse) RecoverConceptSpace(data []byte, hl *HeldLocks) (Element, error) {
+// RecoverDomain reconstructs a concept space from its JSON representation
+func (uOfDPtr *UniverseOfDiscourse) RecoverDomain(data []byte, hl *HeldLocks) (Element, error) {
 	var unmarshaledData []json.RawMessage
 	var conceptSpace Element
 	err := json.Unmarshal(data, &unmarshaledData)
@@ -1014,7 +1026,7 @@ func (uOfDPtr *UniverseOfDiscourse) RecoverConceptSpace(data []byte, hl *HeldLoc
 			if conceptSpace == nil {
 				conceptSpace = el
 			} else {
-				log.Printf("In UniverseOfDiscourse.RecoverConceptSpace more than one element does not have an owner: %s %s", el.GetLabel(hl), el.GetConceptID(hl))
+				log.Printf("In UniverseOfDiscourse.RecoverDomain more than one element does not have an owner: %s %s", el.GetLabel(hl), el.GetConceptID(hl))
 			}
 		}
 	}
