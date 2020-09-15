@@ -394,6 +394,23 @@ func (ePtr *element) GetOwnedConceptIDs(hl *HeldLocks) mapset.Set {
 	return ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID)
 }
 
+// GetOwnedConcepts returns the element's owned concepts if
+func (ePtr *element) GetOwnedConcepts(hl *HeldLocks) map[string]Element {
+	ownedConcepts := make(map[string]Element)
+	if ePtr.uOfD == nil {
+		return ownedConcepts
+	}
+	it := ePtr.GetOwnedConceptIDs(hl).Iterator()
+	defer it.Stop()
+	for id := range it.C {
+		element := ePtr.uOfD.GetElement(id.(string))
+		if element != nil {
+			ownedConcepts[id.(string)] = element
+		}
+	}
+	return ownedConcepts
+}
+
 // GetOwnedConceptsRefinedFrom returns the owned concepts with the indicated abstraction as
 // one of their abstractions.
 func (ePtr *element) GetOwnedConceptsRefinedFrom(abstraction Element, hl *HeldLocks) map[string]Element {
@@ -1300,6 +1317,7 @@ type Element interface {
 	// getListeners(*HeldLocks) (mapset.Set, error)
 	// GetOwnedConcepts(*HeldLocks) mapset.Set
 	// GetOwnedConceptsRecursively(mapset.Set, *HeldLocks)
+	GetOwnedConcepts(hl *HeldLocks) map[string]Element
 	GetOwnedConceptIDs(hl *HeldLocks) mapset.Set
 	GetOwnedConceptsRefinedFrom(Element, *HeldLocks) map[string]Element
 	GetOwnedConceptsRefinedFromURI(string, *HeldLocks) map[string]Element

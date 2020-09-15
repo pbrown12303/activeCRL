@@ -1,6 +1,8 @@
 package crlmapsdomain
 
 import (
+	"log"
+
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pkg/errors"
 )
@@ -196,6 +198,9 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	hl := uOfD.NewHeldLocks()
 	defer hl.ReleaseLocksAndWait()
 	hl.WriteLockElement(mapInstance)
+
+	log.Printf("Executing executeOneToOneMap for map labeled %s", mapInstance.GetLabel(hl))
+
 	// As an initial assumption, it probably doesn't matter what kind of notification has been received.
 	// Validate that this instance is a refinement of an element that is, in turn, a refinement of CrlOneToOneMap
 	var immediateAbstractions = map[string]core.Element{}
@@ -420,6 +425,11 @@ func GetSource(theMap core.Element, hl *core.HeldLocks) core.Element {
 	return ref.GetReferencedConcept(hl)
 }
 
+// GetSourceReference returns the source reference for the given map
+func GetSourceReference(theMap core.Element, hl *core.HeldLocks) core.Reference {
+	return theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
+}
+
 // GetTarget returns the target referenced by the given map
 func GetTarget(theMap core.Element, hl *core.HeldLocks) core.Element {
 	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
@@ -427,6 +437,11 @@ func GetTarget(theMap core.Element, hl *core.HeldLocks) core.Element {
 		return nil
 	}
 	return ref.GetReferencedConcept(hl)
+}
+
+// GetTargetReference returns the target reference for the given map
+func GetTargetReference(theMap core.Element, hl *core.HeldLocks) core.Reference {
+	return theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
 }
 
 func getRootMap(theMap core.Element, hl *core.HeldLocks) core.Element {
@@ -457,11 +472,25 @@ func getRootMapTarget(theMap core.Element, hl *core.HeldLocks) core.Element {
 
 // FindMapForSource locates the map corresponding to the given source, if any.
 func FindMapForSource(currentMap core.Element, source core.Element, hl *core.HeldLocks) core.Element {
-	if GetSource(currentMap, hl) == source {
+	if GetSource(currentMap, hl) == source && GetSourceReference(currentMap, hl).GetReferencedAttributeName(hl) == core.NoAttribute {
 		return currentMap
 	}
 	for _, childMap := range currentMap.GetOwnedConceptsRefinedFromURI(CrlMapURI, hl) {
 		foundMap := FindMapForSource(childMap, source, hl)
+		if foundMap != nil {
+			return foundMap
+		}
+	}
+	return nil
+}
+
+// FindMapForSourceAttribute locates the map corresponding to the given source attribute, if any.
+func FindMapForSourceAttribute(currentMap core.Element, source core.Element, attributeName core.AttributeName, hl *core.HeldLocks) core.Element {
+	if GetSource(currentMap, hl) == source && GetSourceReference(currentMap, hl).GetReferencedAttributeName(hl) == attributeName {
+		return currentMap
+	}
+	for _, childMap := range currentMap.GetOwnedConceptsRefinedFromURI(CrlMapURI, hl) {
+		foundMap := FindMapForSourceAttribute(childMap, source, attributeName, hl)
 		if foundMap != nil {
 			return foundMap
 		}
@@ -606,6 +635,15 @@ func SetSource(theMap core.Element, newSource core.Element, hl *core.HeldLocks) 
 	return ref.SetReferencedConcept(newSource, hl)
 }
 
+// SetSourceAttributeName sets the source attribute name referenced by the given map
+func SetSourceAttributeName(theMap core.Element, attributeName core.AttributeName, hl *core.HeldLocks) error {
+	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
+	if ref == nil {
+		return errors.New("CrlMaps.SetSourceAttributeName called with map that does not have a source reference")
+	}
+	return ref.SetReferencedAttributeName(attributeName, hl)
+}
+
 // SetTarget sets the target referenced by the given map
 func SetTarget(theMap core.Element, newTarget core.Element, hl *core.HeldLocks) error {
 	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
@@ -613,4 +651,13 @@ func SetTarget(theMap core.Element, newTarget core.Element, hl *core.HeldLocks) 
 		return errors.New("CrlMaps.SetTarget called with map that does not have a target reference")
 	}
 	return ref.SetReferencedConcept(newTarget, hl)
+}
+
+// SetTargetAttributeName sets the target attribute name referenced by the given map
+func SetTargetAttributeName(theMap core.Element, attributeName core.AttributeName, hl *core.HeldLocks) error {
+	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
+	if ref == nil {
+		return errors.New("CrlMaps.SetTargetAttributeName called with map that does not have a target reference")
+	}
+	return ref.SetReferencedAttributeName(attributeName, hl)
 }
