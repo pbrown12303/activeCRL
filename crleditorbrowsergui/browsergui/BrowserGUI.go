@@ -11,7 +11,7 @@ import (
 	"github.com/pbrown12303/activeCRL/crldatastructuresdomain"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 	"github.com/pbrown12303/activeCRL/crleditor"
-	"github.com/pbrown12303/activeCRL/crleditorbrowserguidomain"
+	// "github.com/pbrown12303/activeCRL/crleditorbrowserguidomain"
 	"github.com/pbrown12303/activeCRL/crleditordomain"
 )
 
@@ -48,17 +48,17 @@ func InitializeBrowserGUISingleton(editor *crleditor.Editor, startBrowser bool) 
 }
 
 // AddBrowserGUIDomain adds the concepts representing the various editor views to the universe of discourse
-func AddBrowserGUIDomain(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
-	conceptSpace := uOfD.GetElementWithURI(crleditorbrowserguidomain.BrowserGUIDomainURI)
-	if conceptSpace == nil {
-		var err error
-		conceptSpace, err = crleditorbrowserguidomain.BuildBrowserGUIDomain(uOfD, hl)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return conceptSpace, nil
-}
+// func AddBrowserGUIDomain(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
+// 	conceptSpace := uOfD.GetElementWithURI(crleditorbrowserguidomain.BrowserGUIDomainURI)
+// 	if conceptSpace == nil {
+// 		var err error
+// 		conceptSpace, err = crleditorbrowserguidomain.BuildBrowserGUIDomain(uOfD, hl)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 	}
+// 	return conceptSpace, nil
+// }
 
 // CloseDiagramView closes the gui display of the diagram
 func (bgPtr *BrowserGUI) CloseDiagramView(diagramID string, hl *core.HeldLocks) error {
@@ -334,41 +334,41 @@ func (bgPtr *BrowserGUI) nullifyReferencedConcept(refID string, hl *core.HeldLoc
 
 // RegisterUofDInitializationFunctions adds the functions required to initialize the UofD for
 // BrowserEditor purposes
-func (bgPtr *BrowserGUI) RegisterUofDInitializationFunctions(uOfDMgr *core.UofDManager) error {
-	uOfDMgr.AddInitializationFunction(initializeUofDForBrowserGUI)
-	return nil
-}
+// func (bgPtr *BrowserGUI) RegisterUofDInitializationFunctions(uOfDMgr *core.UofDManager) error {
+// 	uOfDMgr.AddInitializationFunction(initializeUofDForBrowserGUI)
+// 	return nil
+// }
 
 // RegisterUofDPostInitializationFunctions adds the editor-specific functions to be executed
 // after a bgPtr.editor.GetUofD() initialization
-func (bgPtr *BrowserGUI) RegisterUofDPostInitializationFunctions(uOfDMgr *core.UofDManager) error {
-	uOfDMgr.AddPostInitializationFunction(func(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) error {
-		// Create editor working concept space
-		BrowserGUISingleton.workingDomain, _ = uOfD.NewElement(hl)
-		BrowserGUISingleton.workingDomain.SetLabel("BrowserGUIWorkingCS", hl)
-		// err := BrowserGUISingleton.Initialize(hl)
-		// if err != nil {
-		// 	return errors.Wrap(err, "BrowserGUI post-initialization function failed")
-		// }
-		// err = BrowserGUISingleton.initializeClientState(hl)
-		// if err != nil {
-		// 	return errors.Wrap(err, "BrowserGUI post-initialization function failed")
-		// }
-		registerDiagramViewMonitorFunctions(uOfD)
-		// BrowserGUISingleton.initialized = true
-		return nil
-	})
-	return nil
-}
+// func (bgPtr *BrowserGUI) RegisterUofDPostInitializationFunctions(uOfDMgr *core.UofDManager) error {
+// 	uOfDMgr.AddPostInitializationFunction(func(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) error {
+// 		// Create editor working concept space
+// 		BrowserGUISingleton.workingDomain, _ = uOfD.NewElement(hl)
+// 		BrowserGUISingleton.workingDomain.SetLabel("BrowserGUIWorkingCS", hl)
+// 		// err := BrowserGUISingleton.Initialize(hl)
+// 		// if err != nil {
+// 		// 	return errors.Wrap(err, "BrowserGUI post-initialization function failed")
+// 		// }
+// 		// err = BrowserGUISingleton.initializeClientState(hl)
+// 		// if err != nil {
+// 		// 	return errors.Wrap(err, "BrowserGUI post-initialization function failed")
+// 		// }
+// 		registerDiagramViewMonitorFunctions(uOfD)
+// 		// BrowserGUISingleton.initialized = true
+// 		return nil
+// 	})
+// 	return nil
+// }
 
-func initializeUofDForBrowserGUI(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) error {
-	_, err := AddBrowserGUIDomain(uOfD, hl)
-	if err != nil {
-		return errors.Wrap(err, "BrowserGUI PostInitializaton failed")
-	}
-	hl.ReleaseLocksAndWait()
-	return nil
-}
+// func initializeUofDForBrowserGUI(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) error {
+// 	_, err := AddBrowserGUIDomain(uOfD, hl)
+// 	if err != nil {
+// 		return errors.Wrap(err, "BrowserGUI PostInitializaton failed")
+// 	}
+// 	hl.ReleaseLocksAndWait()
+// 	return nil
+// }
 
 // SendClearDiagrams tells the client to close all displayed diagrams
 func (bgPtr *BrowserGUI) SendClearDiagrams() {

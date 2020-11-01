@@ -15,42 +15,40 @@ import (
 // NatureOfChange indicates the type of base element change:
 type NatureOfChange int
 
-// AbstractionChanged indicates that an abstraction of the Element has been modified
-// ChildAbstractionChanged indicates that an abstracton of the indicated child has been modified
-// ChildChanged indicates that a child of the Element has been changed
-// ConceptChanged indicates that a field of the concept has been modified
-// ConceptDeleted indicates that the concept has been deleted
-// IndicatedConceptChanged indicates that an Element indicated by a pointer has changed
-// UofDConceptChanged indicates that a concept in the UofD has changed
+// ConceptChanged indicates that an attribute of the concept that is NOT an element reference has changed
+// OwningConceptChanged indicates that the ownership of the concept has changed
+// ReferencedConceptChanged indicates that a different Element is being referenced
+// AbstractConceptChanged indicates that a different Element is now the abstract concept
+// RefinedConceptChanged indicates that a different Element is now the refined concept
 const (
-	AbstractionChanged      = NatureOfChange(1)
-	ChildAbstractionChanged = NatureOfChange(2)
-	ChildChanged            = NatureOfChange(3)
-	ConceptChanged          = NatureOfChange(4)
-	IndicatedConceptChanged = NatureOfChange(5)
-	UofDConceptAdded        = NatureOfChange(6)
-	UofDConceptChanged      = NatureOfChange(7)
-	UofDConceptRemoved      = NatureOfChange(8)
+	ConceptAdded             = NatureOfChange(1)
+	ConceptChanged           = NatureOfChange(2)
+	ConceptRemoved           = NatureOfChange(3)
+	OwningConceptChanged     = NatureOfChange(4)
+	ReferencedConceptChanged = NatureOfChange(5)
+	AbstractConceptChanged   = NatureOfChange(6)
+	RefinedConceptChanged    = NatureOfChange(7)
+	ForwardedChange          = NatureOfChange(8)
 )
 
 func (noc NatureOfChange) String() string {
 	switch noc {
-	case AbstractionChanged:
-		return "AbstractionChanged"
-	case ChildAbstractionChanged:
-		return "ChildAbstractionChanged"
-	case ChildChanged:
-		return "ChildChanged"
+	case ConceptAdded:
+		return "ConceptAdded"
 	case ConceptChanged:
 		return "ConceptChanged"
-	case IndicatedConceptChanged:
-		return "IndicatedConceptChanged"
-	case UofDConceptAdded:
-		return "UofDConceptAdded"
-	case UofDConceptChanged:
-		return "UofDConceptChanged"
-	case UofDConceptRemoved:
-		return "UofDConceptRemoved"
+	case ConceptRemoved:
+		return "ConceptRemoved"
+	case OwningConceptChanged:
+		return "OwningConceptChanged"
+	case ReferencedConceptChanged:
+		return "ReferencedConceptChanged"
+	case AbstractConceptChanged:
+		return "AbstractConceptChanged"
+	case RefinedConceptChanged:
+		return "RefinedConceptChanged"
+	case ForwardedChange:
+		return "ForwardedChange"
 	}
 	return "Undefined"
 }
@@ -102,53 +100,62 @@ func NewConceptState(el Element) (*ConceptState, error) {
 // the nature of the change, the old and new values, and the reporting Element.
 // It also provides the underlying change that triggered this one (if any)
 type ChangeNotification struct {
-	reportingElementID    string
-	reportingElementLabel string
-	reportingElementType  string
+	reportingElementState *ConceptState
 	natureOfChange        NatureOfChange
-	beforeState           *ConceptState
-	afterState            *ConceptState
+	beforeConceptState    *ConceptState
+	afterConceptState     *ConceptState
+	beforeReferencedState *ConceptState
+	afterReferencedState  *ConceptState
 	underlyingChange      *ChangeNotification
 	uOfD                  *UniverseOfDiscourse
 }
 
-// GetAfterState returns the state of the Element after the change
-func (cnPtr *ChangeNotification) GetAfterState() *ConceptState {
-	return cnPtr.afterState
+// GetAfterConceptState returns the state of the Element after the change
+func (cnPtr *ChangeNotification) GetAfterConceptState() *ConceptState {
+	return cnPtr.afterConceptState
 }
 
-// GetBeforeState returns the state of the Element before the change
-// Note that while this is an Element, it is NOT a member of the UniverseOfDiscourse
-func (cnPtr *ChangeNotification) GetBeforeState() *ConceptState {
-	return cnPtr.beforeState
+// GetAfterReferencedState returns the state of the referenced Element after the change
+func (cnPtr *ChangeNotification) GetAfterReferencedState() *ConceptState {
+	return cnPtr.afterReferencedState
+}
+
+// GetBeforeConceptState returns the state of the Element before the change
+func (cnPtr *ChangeNotification) GetBeforeConceptState() *ConceptState {
+	return cnPtr.beforeConceptState
+}
+
+// GetBeforeReferencedState returns the state of the referenced Element before the change
+func (cnPtr *ChangeNotification) GetBeforeReferencedState() *ConceptState {
+	return cnPtr.beforeReferencedState
 }
 
 // GetChangedConceptID returns the ID of the Element impacted by the change
 func (cnPtr *ChangeNotification) GetChangedConceptID() string {
-	if cnPtr.afterState != nil {
-		return cnPtr.afterState.ConceptID
-	} else if cnPtr.beforeState != nil {
-		return cnPtr.beforeState.ConceptID
+	if cnPtr.afterConceptState != nil {
+		return cnPtr.afterConceptState.ConceptID
+	} else if cnPtr.beforeConceptState != nil {
+		return cnPtr.beforeConceptState.ConceptID
 	}
 	return ""
 }
 
 // GetChangedConceptLabel returns the label of the Element impacted by the change
 func (cnPtr *ChangeNotification) GetChangedConceptLabel() string {
-	if cnPtr.afterState != nil {
-		return cnPtr.afterState.Label
-	} else if cnPtr.beforeState != nil {
-		return cnPtr.beforeState.Label
+	if cnPtr.afterConceptState != nil {
+		return cnPtr.afterConceptState.Label
+	} else if cnPtr.beforeConceptState != nil {
+		return cnPtr.beforeConceptState.Label
 	}
 	return ""
 }
 
 // GetChangedConceptType returns the typeString of the Element impacted by the change
 func (cnPtr *ChangeNotification) GetChangedConceptType() string {
-	if cnPtr.afterState != nil {
-		return cnPtr.afterState.ConceptType
-	} else if cnPtr.beforeState != nil {
-		return cnPtr.beforeState.ConceptType
+	if cnPtr.afterConceptState != nil {
+		return cnPtr.afterConceptState.ConceptType
+	} else if cnPtr.beforeConceptState != nil {
+		return cnPtr.beforeConceptState.ConceptType
 	}
 	return ""
 }
@@ -173,17 +180,17 @@ func (cnPtr *ChangeNotification) GetNatureOfChange() NatureOfChange {
 
 // GetReportingElementID returns the ID of the element sending the notification
 func (cnPtr *ChangeNotification) GetReportingElementID() string {
-	return cnPtr.reportingElementID
+	return cnPtr.reportingElementState.ConceptID
 }
 
 // GetReportingElementLabel returns the Label of the element sending the notification
 func (cnPtr *ChangeNotification) GetReportingElementLabel() string {
-	return cnPtr.reportingElementLabel
+	return cnPtr.reportingElementState.Label
 }
 
 // GetReportingElementType returns the Type of the element sending the notification
 func (cnPtr *ChangeNotification) GetReportingElementType() string {
-	return cnPtr.reportingElementType
+	return cnPtr.reportingElementState.ConceptType
 }
 
 // GetUnderlyingChange returns the change notification that triggered the change being
@@ -214,11 +221,11 @@ func (cnPtr *ChangeNotification) Print(prefix string, hl *HeldLocks) {
 func (cnPtr *ChangeNotification) printRecursively(prefix string, hl *HeldLocks, startCount int) {
 	notificationType := "+++ " + cnPtr.natureOfChange.String()
 	log.Printf("%s%s: \n", prefix, "### Notification Level: "+strconv.Itoa(startCount)+" Type: "+notificationType)
-	if cnPtr.afterState != nil {
-		log.Printf(prefix+"  AfterState: %+v", cnPtr.afterState)
+	if cnPtr.afterConceptState != nil {
+		log.Printf(prefix+"  AfterState: %+v", cnPtr.afterConceptState)
 	}
-	if cnPtr.beforeState != nil {
-		log.Printf(prefix+"  BeforeState: %s", cnPtr.beforeState)
+	if cnPtr.beforeConceptState != nil {
+		log.Printf(prefix+"  BeforeState: %s", cnPtr.beforeConceptState)
 	}
 	if cnPtr.underlyingChange != nil {
 		cnPtr.underlyingChange.printRecursively(prefix+"      ", hl, startCount-1)

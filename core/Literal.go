@@ -104,8 +104,7 @@ func (lPtr *literal) SetLiteralValue(value string, hl *HeldLocks) error {
 		if err2 != nil {
 			return errors.Wrap(err2, "literal.SetLiteralValue failed")
 		}
-		notification := lPtr.uOfD.NewConceptChangeNotification(lPtr, beforeState, afterState, hl)
-		err = lPtr.uOfD.queueFunctionExecutions(lPtr, notification, hl)
+		err = lPtr.uOfD.SendConceptChangeNotification(lPtr, beforeState, afterState, hl)
 		if err != nil {
 			return errors.Wrap(err, "literal.SetLiteralValue failed")
 		}

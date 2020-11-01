@@ -514,6 +514,10 @@ var _ = Describe("Element internals test", func() {
 			original.(*element).IsCore = true
 			Expect(Equivalent(original, hl, copy, hl)).To(BeFalse())
 		})
+		Specify("Differences in ForwardNotificationsToOwner should be detected", func() {
+			original.(*element).ForwardNotificationsToOwner = true
+			Expect(Equivalent(original, hl, copy, hl)).To(BeFalse())
+		})
 		Specify("Differences in Label should be detected", func() {
 			original.SetLabel("Label", hl)
 			Expect(Equivalent(original, hl, copy, hl)).To(BeFalse())
@@ -550,6 +554,7 @@ var _ = Describe("Element internals test", func() {
 			el.SetURI("URIValue", hl)
 			el.SetReadOnly(true, hl)
 			el.SetIsCore(hl)
+			el.SetForwardNotificationsToOwner(true, hl)
 			marshalledElement, err := el.MarshalJSON()
 			Expect(err).To(BeNil())
 			uOfD2 := NewUniverseOfDiscourse()

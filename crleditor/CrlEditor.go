@@ -78,14 +78,14 @@ func (editor *Editor) AddDiagramToDisplayedList(diagramID string, hl *core.HeldL
 // AddEditorGUI adds an editor to the list of editorGUIs being managed by the
 func (editor *Editor) AddEditorGUI(editorGUI EditorGUI) error {
 	editor.editorGUIs = append(editor.editorGUIs, editorGUI)
-	err := editorGUI.RegisterUofDInitializationFunctions(editor.uOfDManager)
-	if err != nil {
-		return errors.Wrap(err, "Editor.AddEditorGUI failed")
-	}
-	err = editorGUI.RegisterUofDPostInitializationFunctions(editor.uOfDManager)
-	if err != nil {
-		return errors.Wrap(err, "Editor.AddEditorGUI failed")
-	}
+	// err := editorGUI.RegisterUofDInitializationFunctions(editor.uOfDManager)
+	// if err != nil {
+	// 	return errors.Wrap(err, "Editor.AddEditorGUI failed")
+	// }
+	// err := editorGUI.RegisterUofDPostInitializationFunctions(editor.uOfDManager)
+	// if err != nil {
+	// 	return errors.Wrap(err, "Editor.AddEditorGUI failed")
+	// }
 	return nil
 }
 
@@ -582,6 +582,4 @@ type EditorGUI interface {
 	GetNoSaveDomains(noSaveDomains map[string]core.Element, hl *core.HeldLocks)
 	Initialize(hl *core.HeldLocks) error
 	InitializeGUI(hl *core.HeldLocks) error
-	RegisterUofDInitializationFunctions(uOfDManager *core.UofDManager) error
-	RegisterUofDPostInitializationFunctions(uOfDManager *core.UofDManager) error
 }

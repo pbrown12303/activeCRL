@@ -11,7 +11,7 @@ import (
 
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
-	"github.com/pbrown12303/activeCRL/crleditorbrowserguidomain"
+	// "github.com/pbrown12303/activeCRL/crleditorbrowserguidomain"
 )
 
 const diagramContainerSuffix = "DiagramContainer"
@@ -20,11 +20,13 @@ const diagramSuffix = "Diagram"
 // diagramManager manages the diagram portion of the UI and all interactions with it
 type diagramManager struct {
 	browserGUI *BrowserGUI
+	diagrams   map[string]core.Element
 }
 
 func newDiagramManager(browserGUI *BrowserGUI) *diagramManager {
 	dm := &diagramManager{}
 	dm.browserGUI = browserGUI
+	dm.diagrams = map[string]core.Element{}
 	return dm
 }
 
@@ -62,11 +64,11 @@ func (dmPtr *diagramManager) abstractPointerChanged(linkID string, sourceID stri
 		if err != nil {
 			return "", err
 		}
-		diagramPointer.SetOwningConceptID(diagramSource.GetOwningConceptID(hl), hl)
 		crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
 		crldiagramdomain.SetLinkSource(diagramPointer, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		modelRefinement.SetAbstractConcept(modelTarget, hl)
+		diagramPointer.SetOwningConceptID(diagramSource.GetOwningConceptID(hl), hl)
 		dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramPointer = uOfD.GetElement(linkID)
@@ -219,6 +221,28 @@ func (dmPtr *diagramManager) addCopyWithRefinement(request *Request, hl *core.He
 	return copy, nil
 }
 
+func (dmPtr *diagramManager) addDiagram(ownerID string, hl *core.HeldLocks) (core.Element, error) {
+	diagram, err := dmPtr.newDiagram(hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "diagramManager.addDiagram failed")
+	}
+	err = diagram.SetOwningConceptID(ownerID, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "diagramManager.addDiagram failed")
+	}
+	err = dmPtr.browserGUI.editor.SelectElement(diagram, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "diagramManager.addDiagram failed")
+	}
+	hl.ReleaseLocksAndWait()
+	err = dmPtr.displayDiagram(diagram, hl)
+	if err != nil {
+		return nil, errors.Wrap(err, "diagramManager.addDiagram failed")
+	}
+	hl.ReleaseLocksAndWait()
+	return diagram, nil
+}
+
 func (dmPtr *diagramManager) deleteDiagramElementView(elementID string, hl *core.HeldLocks) error {
 	diagramElement := dmPtr.browserGUI.GetUofD().GetElement(elementID)
 	if diagramElement == nil {
@@ -342,9 +366,9 @@ func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.HeldL
 		}
 	}
 	// make sure there is a monitor on the diagram so we know when it has been deleted
-	err2 := dmPtr.verifyMonitorPresent(diagram, hl)
-	if err2 != nil {
-		return err2
+	err := diagram.Register(dmPtr)
+	if err != nil {
+		return errors.Wrap(err, "diagramManager.displayDiagram failed")
 	}
 	// Tell the client to display the diagram
 	conceptState, err2 := core.NewConceptState(diagram)
@@ -416,11 +440,11 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 		if err != nil {
 			return "", err
 		}
-		diagramPointer.SetOwningConceptID(diagramSource.GetOwningConceptID(hl), hl)
 		crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
 		crldiagramdomain.SetLinkSource(diagramPointer, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		modelReference.SetReferencedConcept(modelTarget, hl)
+		diagramPointer.SetOwningConceptID(diagramSource.GetOwningConceptID(hl), hl)
 		dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramPointer = uOfD.GetElement(linkID)
@@ -445,23 +469,26 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 }
 
 func (dmPtr *diagramManager) initialize() error {
-	uOfD := dmPtr.browserGUI.GetUofD()
-	addDiagramViewFunctionsToUofD(uOfD)
+	dmPtr.diagrams = map[string]core.Element{}
 	return nil
 }
 
-// newDiagram creates a new crldiagramdomain
-func (dmPtr *diagramManager) newDiagram(hl *core.HeldLocks) core.Element {
+// newDiagram creates a new crldiagram
+func (dmPtr *diagramManager) newDiagram(hl *core.HeldLocks) (core.Element, error) {
 	// Insert name prompt here
 	name := dmPtr.browserGUI.editor.GetDefaultDiagramLabel()
 	uOfD := BrowserGUISingleton.GetUofD()
 	diagram, err := crldiagramdomain.NewDiagram(uOfD, hl)
 	if err != nil {
-		log.Print(err)
+		return nil, errors.Wrap(err, "diagramManager.newDiagram failed")
 	}
 	diagram.SetLabel(name, hl)
 	hl.ReleaseLocksAndWait()
-	return diagram
+	dmPtr.diagrams[diagram.GetConceptID(hl)] = diagram
+	if err != nil {
+		return nil, errors.Wrap(err, "diagramManager.newDiagram failed")
+	}
+	return diagram, nil
 }
 
 func (dmPtr *diagramManager) ownerPointerChanged(linkID string, sourceID string, targetID string, hl *core.HeldLocks) (string, error) {
@@ -490,11 +517,11 @@ func (dmPtr *diagramManager) ownerPointerChanged(linkID string, sourceID string,
 		if err != nil {
 			return "", err
 		}
-		diagramPointer.SetOwningConceptID(diagramSource.GetOwningConceptID(hl), hl)
 		crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
 		crldiagramdomain.SetLinkSource(diagramPointer, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		modelSource.SetOwningConcept(modelTarget, hl)
+		diagramPointer.SetOwningConceptID(diagramSource.GetOwningConceptID(hl), hl)
 		dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramPointer = uOfD.GetElement(linkID)
@@ -552,11 +579,11 @@ func (dmPtr *diagramManager) refinedPointerChanged(linkID string, sourceID strin
 		if err != nil {
 			return "", err
 		}
-		diagramPointer.SetOwningConceptID(diagramSource.GetOwningConceptID(hl), hl)
 		crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
 		crldiagramdomain.SetLinkSource(diagramPointer, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		modelRefinement.SetRefinedConcept(modelTarget, hl)
+		diagramPointer.SetOwningConceptID(diagramSource.GetOwningConceptID(hl), hl)
 		dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramPointer = uOfD.GetElement(linkID)
@@ -623,11 +650,11 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 		if err != nil {
 			return "", err
 		}
-		diagramLink.SetOwningConcept(diagram, hl)
 		crldiagramdomain.SetReferencedModelElement(diagramLink, newReference, hl)
 		crldiagramdomain.SetLinkSource(diagramLink, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramLink, diagramTarget, hl)
 		modelElement = newReference
+		diagramLink.SetOwningConcept(diagram, hl)
 		dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramLink = uOfD.GetElement(linkID)
@@ -687,10 +714,10 @@ func (dmPtr *diagramManager) RefinementLinkChanged(linkID string, sourceID strin
 		if err != nil {
 			return "", err
 		}
-		diagramLink.SetOwningConcept(diagram, hl)
 		crldiagramdomain.SetReferencedModelElement(diagramLink, newRefinement, hl)
 		crldiagramdomain.SetLinkSource(diagramLink, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramLink, diagramTarget, hl)
+		diagramLink.SetOwningConcept(diagram, hl)
 		modelElement = newRefinement
 		dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
@@ -972,10 +999,10 @@ func (dmPtr *diagramManager) showReferencedConcept(elementID string, hl *core.He
 	elementPointer := crldiagramdomain.GetElementPointer(diagram, diagramElement, hl)
 	if elementPointer == nil {
 		elementPointer, _ = crldiagramdomain.NewDiagramElementPointer(dmPtr.browserGUI.GetUofD(), hl)
-		elementPointer.SetOwningConcept(diagram, hl)
 		crldiagramdomain.SetReferencedModelElement(elementPointer, modelConcept, hl)
 		crldiagramdomain.SetLinkSource(elementPointer, diagramElement, hl)
 		crldiagramdomain.SetLinkTarget(elementPointer, diagramReferencedConcept, hl)
+		elementPointer.SetOwningConcept(diagram, hl)
 	}
 	return nil
 }
@@ -1026,18 +1053,41 @@ func (dmPtr *diagramManager) showRefinedConcept(elementID string, hl *core.HeldL
 	return nil
 }
 
-func (dmPtr *diagramManager) verifyMonitorPresent(diagram core.Element, hl *core.HeldLocks) error {
-	workingDomain := dmPtr.browserGUI.workingDomain
-	for _, monitor := range workingDomain.GetOwnedReferencesRefinedFromURI(crleditorbrowserguidomain.DiagramViewMonitorURI, hl) {
-		if monitor.GetReferencedConcept(hl) == diagram {
-			return nil
+// Update handles additions and removals of diagram elements from the diagram view
+// Note that it cannot delete the diagram view in the GUI because this function will never get called: once the diagram has been
+// deleted, queuing of functions related to it is suppressed. That's what the DiagramViewMonitor is for.
+func (dmPtr *diagramManager) Update(notification *core.ChangeNotification, hl *core.HeldLocks) error {
+	uOfD := hl.GetUniverseOfDiscourse()
+	switch notification.GetNatureOfChange() {
+	case core.ConceptRemoved:
+		if notification.GetBeforeConceptState() != nil {
+			err := dmPtr.browserGUI.editor.CloseDiagramView(notification.GetBeforeConceptState().ConceptID, hl)
+			if err != nil {
+				return errors.Wrap(err, "diagramManager.Update failed")
+			}
+		} else {
+			return errors.New("diagramManager.Update called with ConceptRemoved but beforeConceptState being nil")
+		}
+	case core.OwningConceptChanged:
+		if notification.GetAfterReferencedState() == nil ||
+			(notification.GetBeforeReferencedState() != nil && notification.GetBeforeReferencedState().ConceptID != notification.GetAfterReferencedState().ConceptID) {
+			// If the diagram was the owner but is no longer the owner, then remove the diagram element view
+			beforeState := notification.GetBeforeConceptState()
+			additionalParameters := map[string]string{"OwnerID": notification.GetBeforeReferencedState().ConceptID}
+			SendNotification("DeleteDiagramElement", beforeState.ConceptID, beforeState, additionalParameters)
+		} else if notification.GetBeforeReferencedState() == nil ||
+			(notification.GetAfterReferencedState() != nil && notification.GetBeforeReferencedState().ConceptID != notification.GetAfterReferencedState().ConceptID) {
+			// we have to add the diagram element view
+			afterState := notification.GetAfterConceptState()
+			newElement := uOfD.GetElement(afterState.ConceptID)
+			if crldiagramdomain.IsDiagramNode(newElement, hl) {
+				additionalParameters := getNodeAdditionalParameters(newElement, hl)
+				SendNotification("AddDiagramNode", newElement.GetConceptID(hl), afterState, additionalParameters)
+			} else if crldiagramdomain.IsDiagramLink(newElement, hl) {
+				additionalParameters := getLinkAdditionalParameters(newElement, hl)
+				SendNotification("AddDiagramLink", newElement.GetConceptID(hl), afterState, additionalParameters)
+			}
 		}
 	}
-	newMonitor, err := dmPtr.browserGUI.GetUofD().CreateReplicateAsRefinementFromURI(crleditorbrowserguidomain.DiagramViewMonitorURI, hl)
-	if err != nil {
-		return err
-	}
-	newMonitor.SetOwningConcept(workingDomain, hl)
-	newMonitor.(core.Reference).SetReferencedConcept(diagram, hl)
 	return nil
 }

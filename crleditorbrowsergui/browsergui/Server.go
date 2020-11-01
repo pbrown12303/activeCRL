@@ -178,13 +178,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		sendReply(w, 0, "Processed AddElementChild", el.GetConceptID(hl), el)
 	case "AddDiagramChild":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		diagramManager := BrowserGUISingleton.getDiagramManager()
-		diagram := diagramManager.newDiagram(hl)
-		diagram.SetOwningConceptID(request.RequestConceptID, hl)
-		BrowserGUISingleton.editor.SelectElement(diagram, hl)
-		hl.ReleaseLocksAndWait()
-		err := diagramManager.displayDiagram(diagram, hl)
-		hl.ReleaseLocksAndWait()
+		diagram, err := BrowserGUISingleton.getDiagramManager().addDiagram(request.RequestConceptID, hl)
 		if err != nil {
 			sendReply(w, 1, "Error processing AddDiagramChild: "+err.Error(), "", nil)
 		} else {

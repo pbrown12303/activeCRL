@@ -372,6 +372,7 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(correctType).To(BeTrue())
 		newRefinement := newElement.(core.Refinement)
 		newRefinementView := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, newRefinement, hl)
+		Expect(newRefinementView).ToNot(BeNil())
 		Expect(newRefinement.GetOwningConceptID(hl)).To(Equal(diagram.GetOwningConceptID(hl)))
 		hl.ReleaseLocksAndWait()
 		return newRefinement, newRefinementView

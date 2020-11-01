@@ -16,15 +16,17 @@ import (
 // element is the root representation of a concept
 type element struct {
 	sync.RWMutex
-	ConceptID       string
-	Definition      string
-	Label           string
-	IsCore          bool
-	OwningConceptID string
-	ReadOnly        bool
-	Version         *versionCounter
-	uOfD            *UniverseOfDiscourse
-	URI             string
+	ConceptID                   string
+	Definition                  string
+	ForwardNotificationsToOwner bool
+	Label                       string
+	IsCore                      bool
+	OwningConceptID             string
+	ReadOnly                    bool
+	Version                     *versionCounter
+	uOfD                        *UniverseOfDiscourse
+	URI                         string
+	observers                   mapset.Set
 }
 
 // addOwnedConcept adds the indicated Element as a child (owned) concept.
@@ -332,6 +334,12 @@ func (ePtr *element) GetFirstOwnedRefinementWithURI(uri string, hl *HeldLocks) R
 	return nil
 }
 
+// Deregister removes the registration of an Observer
+func (ePtr *element) Deregister(observer Observer) error {
+	ePtr.observers.Remove(observer)
+	return nil
+}
+
 // FindAbstractions adds all found abstractions to supplied map
 func (ePtr *element) FindAbstractions(abstractions map[string]Element, hl *HeldLocks) {
 	it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
@@ -367,6 +375,20 @@ func (ePtr *element) FindImmediateAbstractions(abstractions map[string]Element, 
 			}
 		}
 	}
+}
+
+// GetForwardNotificationsToOwner returns the boolean indicating whether notifications should be forwareded to the owner
+func (ePtr *element) GetForwardNotificationsToOwner(hl *HeldLocks) bool {
+	hl.ReadLockElement(ePtr)
+	return ePtr.ForwardNotificationsToOwner
+}
+
+// GetIsCore returns true if the element is one of the core elements of CRL. The purpose of this
+// function is to prevent SetReadOnly(true) on concepts that are built-in to CRL. Locking is
+// not necessary as this value is set when the object is created and never expected to change
+func (ePtr *element) GetIsCore(hl *HeldLocks) bool {
+	hl.ReadLockElement(ePtr)
+	return ePtr.IsCore
 }
 
 // GetGetLabel returns the label if one exists
@@ -742,14 +764,7 @@ func (ePtr *element) initializeElement(identifier string, uri string) {
 	ePtr.ConceptID = identifier
 	ePtr.Version = newVersionCounter()
 	ePtr.URI = uri
-}
-
-// GetIsCore returns true if the element is one of the core elements of CRL. The purpose of this
-// function is to prevent SetReadOnly(true) on concepts that are built-in to CRL. Locking is
-// not necessary as this value is set when the object is created and never expected to change
-func (ePtr *element) GetIsCore(hl *HeldLocks) bool {
-	hl.ReadLockElement(ePtr)
-	return ePtr.IsCore
+	ePtr.observers = mapset.NewSet()
 }
 
 // IsReadOnly returns a boolean indicating whether the concept can be modified.
@@ -790,6 +805,12 @@ func (ePtr *element) isEquivalent(hl1 *HeldLocks, el *element, hl2 *HeldLocks, p
 	if ePtr.IsCore != el.IsCore {
 		if print {
 			log.Printf("In element.isEquivalent, IsCore do not match")
+		}
+		return false
+	}
+	if ePtr.ForwardNotificationsToOwner != el.ForwardNotificationsToOwner {
+		if print {
+			log.Printf("In element.isEquivalent, ForwardNotificationsToOwner do not match")
 		}
 		return false
 	}
@@ -862,45 +883,56 @@ func (ePtr *element) marshalElementFields(buffer *bytes.Buffer) error {
 	buffer.WriteString(fmt.Sprintf("\"URI\":\"%s\",", ePtr.URI))
 	buffer.WriteString(fmt.Sprintf("\"Version\":\"%d\",", ePtr.Version.getVersion()))
 	buffer.WriteString(fmt.Sprintf("\"IsCore\":\"%t\",", ePtr.IsCore))
+	buffer.WriteString(fmt.Sprintf("\"ForwardNotificationsToOwner\":\"%t\",", ePtr.ForwardNotificationsToOwner))
 	buffer.WriteString(fmt.Sprintf("\"ReadOnly\":\"%t\"", ePtr.ReadOnly))
+	return nil
+}
+
+// NotifyAll passes the notification to all registered Observers
+func (ePtr *element) NotifyAll(notification *ChangeNotification, hl *HeldLocks) error {
+	it := ePtr.observers.Iterator()
+	defer it.Stop()
+	for observer := range it.C {
+		err := observer.(Observer).Update(notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "element.NotifyAll failed")
+		}
+	}
 	return nil
 }
 
 func (ePtr *element) notifyListeners(underlyingNotification *ChangeNotification, hl *HeldLocks) error {
 	hl.ReadLockElement(ePtr)
 	if ePtr.uOfD != nil {
-		indicatedConceptChanged, err := ePtr.uOfD.NewForwardingChangeNotification(ePtr, underlyingNotification.GetBeforeState(), underlyingNotification.GetAfterState(), IndicatedConceptChanged, underlyingNotification, hl)
+		forwardingChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(ePtr, ForwardedChange, underlyingNotification, hl)
 		if err != nil {
 			return errors.Wrap(err, "element.notifyListeners failed")
-		}
-		abstractionChanged, err2 := ePtr.uOfD.NewForwardingChangeNotification(ePtr, underlyingNotification.GetBeforeState(), underlyingNotification.GetAfterState(), AbstractionChanged, underlyingNotification, hl)
-		if err2 != nil {
-			return errors.Wrap(err2, "element.notifyListeners failed")
 		}
 		it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
 		defer it.Stop()
 		for id := range it.C {
 			listener := ePtr.uOfD.GetElement(id.(string))
+			if listener.GetConceptID(hl) == ePtr.OwningConceptID && ePtr.ForwardNotificationsToOwner == true {
+				err = ePtr.uOfD.queueFunctionExecutions(listener, forwardingChangeNotification, hl)
+				if err != nil {
+					return errors.Wrap(err, "element.notifyListeners failed")
+				}
+				continue
+			}
 			switch listener.(type) {
-			case *refinement:
-				if listener.(*refinement).GetAbstractConcept(hl) == ePtr {
-					refinedConcept := listener.(*refinement).GetRefinedConcept(hl)
-					if refinedConcept != nil {
-						err := ePtr.uOfD.queueFunctionExecutions(refinedConcept, abstractionChanged, hl)
-						if err != nil {
-							return errors.Wrap(err, "element.notifyListeners failed")
-						}
-					}
-				} else {
-					err := ePtr.uOfD.queueFunctionExecutions(listener, indicatedConceptChanged, hl)
+			case Reference:
+				if !(underlyingNotification.GetNatureOfChange() == ReferencedConceptChanged && underlyingNotification.GetReportingElementID() == listener.(Reference).GetConceptID(hl)) {
+					err := ePtr.uOfD.queueFunctionExecutions(listener, forwardingChangeNotification, hl)
 					if err != nil {
 						return errors.Wrap(err, "element.notifyListeners failed")
 					}
 				}
-			default:
-				err := ePtr.uOfD.queueFunctionExecutions(listener, indicatedConceptChanged, hl)
-				if err != nil {
-					return errors.Wrap(err, "element.notifyListeners failed")
+			case Refinement:
+				if !((underlyingNotification.GetNatureOfChange() == AbstractConceptChanged || underlyingNotification.GetNatureOfChange() == RefinedConceptChanged) && underlyingNotification.GetReportingElementID() == listener.(Refinement).GetConceptID(hl)) {
+					err := ePtr.uOfD.queueFunctionExecutions(listener, forwardingChangeNotification, hl)
+					if err != nil {
+						return errors.Wrap(err, "element.notifyListeners failed")
+					}
 				}
 			}
 		}
@@ -944,6 +976,18 @@ func (ePtr *element) recoverElementFields(unmarshaledData *map[string]json.RawMe
 		return err
 	}
 	ePtr.IsCore, err = strconv.ParseBool(recoveredIsCore)
+	if err != nil {
+		log.Printf("Conversion of IsCOre from string to bool failed")
+		return err
+	}
+	// ForwardNotificationsToOwner
+	var recoveredForwardNotificationsToOwner string
+	err = json.Unmarshal((*unmarshaledData)["ForwardNotificationsToOwner"], &recoveredForwardNotificationsToOwner)
+	if err != nil {
+		log.Printf("Recovery of Element.ForwardNotificationsToOwner as string failed\n")
+		return err
+	}
+	ePtr.ForwardNotificationsToOwner, err = strconv.ParseBool(recoveredForwardNotificationsToOwner)
 	if err != nil {
 		log.Printf("Conversion of IsCOre from string to bool failed")
 		return err
@@ -998,6 +1042,12 @@ func (ePtr *element) removeListener(listeningConceptID string, hl *HeldLocks) {
 	ePtr.uOfD.listenersMap.RemoveMappedValue(ePtr.ConceptID, listeningConceptID)
 }
 
+// Register adds the registration of an Observer
+func (ePtr *element) Register(observer Observer) error {
+	ePtr.observers.Add(observer)
+	return nil
+}
+
 // removeOwnedConcept removes the indicated Element as a child (owned) concept.
 func (ePtr *element) removeOwnedConcept(ownedConceptID string, hl *HeldLocks) error {
 	hl.ReadLockElement(ePtr)
@@ -1028,8 +1078,7 @@ func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 		if err2 != nil {
 			return errors.Wrap(err2, "element.SetDefinition failed")
 		}
-		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
-		err = ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		err = ePtr.uOfD.SendConceptChangeNotification(ePtr, beforeState, afterState, hl)
 		if err != nil {
 			return errors.Wrap(err, "element.SetDefinition failed")
 		}
@@ -1037,23 +1086,13 @@ func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 	return nil
 }
 
-func (ePtr *element) SetIsCoreRecursively(hl *HeldLocks) error {
-	err := ePtr.SetIsCore(hl)
-	if err != nil {
-		return errors.Wrap(err, "Element.SetIsCoreRecursively failed")
-	}
-	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
-	for id := range it.C {
-		el := ePtr.uOfD.GetElement(id.(string))
-		err = el.SetIsCoreRecursively(hl)
-		if err != nil {
-			return errors.Wrap(err, "Element.SetIsCoreRecursively failed")
-		}
-	}
-	return nil
+// SetForwardNotificationsToOwner returns the boolean indicating whether notifications should be forwareded to the owner
+func (ePtr *element) SetForwardNotificationsToOwner(newValue bool, hl *HeldLocks) {
+	hl.WriteLockElement(ePtr)
+	ePtr.ForwardNotificationsToOwner = newValue
 }
 
+// SetIsCore sets the flag indicating that the element is a Core concept and cannot be edited. Once set, this flag cannot be cleared.
 func (ePtr *element) SetIsCore(hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
 	if ePtr.IsCore != true {
@@ -1068,10 +1107,28 @@ func (ePtr *element) SetIsCore(hl *HeldLocks) error {
 		if err2 != nil {
 			return errors.Wrap(err2, "element.SetIsCore failed")
 		}
-		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
-		err = ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		err = ePtr.uOfD.SendConceptChangeNotification(ePtr, beforeState, afterState, hl)
 		if err != nil {
 			return errors.Wrap(err, "element.SetIsCore failed")
+		}
+	}
+	return nil
+}
+
+// SetIsCoreRecursively recursively sets the flag indicating that the element is a Core concept and cannot be edited. Once set, this flag cannot be cleared.
+func (ePtr *element) SetIsCoreRecursively(hl *HeldLocks) error {
+	hl.WriteLockElement(ePtr)
+	err := ePtr.SetIsCore(hl)
+	if err != nil {
+		return errors.Wrap(err, "Element.SetIsCoreRecursively failed")
+	}
+	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	defer it.Stop()
+	for id := range it.C {
+		el := ePtr.uOfD.GetElement(id.(string))
+		err = el.SetIsCoreRecursively(hl)
+		if err != nil {
+			return errors.Wrap(err, "Element.SetIsCoreRecursively failed")
 		}
 	}
 	return nil
@@ -1095,8 +1152,7 @@ func (ePtr *element) SetLabel(label string, hl *HeldLocks) error {
 		if err2 != nil {
 			return errors.Wrap(err2, "element.SetLabel failed")
 		}
-		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
-		err = ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		err = ePtr.uOfD.SendConceptChangeNotification(ePtr, beforeState, afterState, hl)
 		if err != nil {
 			return errors.Wrap(err, "element.SetLabel failed")
 		}
@@ -1148,20 +1204,29 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 		if err != nil {
 			return errors.Wrap(err, "element.SetOwningConceptID failed")
 		}
+		var ownerBeforeState *ConceptState
 		if oldOwner != nil {
 			oldOwner.removeOwnedConcept(ePtr.ConceptID, hl)
+			ownerBeforeState, err = NewConceptState(oldOwner)
+			if err != nil {
+				return errors.Wrap(err, "element.SetOwningConceptID failed")
+			}
 		}
 		ePtr.incrementVersion(hl)
+		var ownerAfterState *ConceptState
 		if newOwner != nil {
 			newOwner.addOwnedConcept(ePtr.ConceptID, hl)
+			ownerAfterState, err = NewConceptState(newOwner)
+			if err != nil {
+				return errors.Wrap(err, "element.SetOwningConceptID failed")
+			}
 		}
 		ePtr.OwningConceptID = ocID
 		afterState, err2 := NewConceptState(ePtr)
 		if err2 != nil {
 			return errors.Wrap(err2, "element.SetOwningConceptID failed")
 		}
-		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
-		err = ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		err = ePtr.uOfD.SendPointerChangeNotification(ePtr, OwningConceptChanged, beforeState, afterState, ownerBeforeState, ownerAfterState, hl)
 		if err != nil {
 			return errors.Wrap(err, "element.SetOwningConceptID failed")
 		}
@@ -1194,10 +1259,9 @@ func (ePtr *element) SetReadOnly(value bool, hl *HeldLocks) error {
 		if err2 != nil {
 			return errors.Wrap(err2, "element.SetDeSetReadOnlyfinition failed")
 		}
-		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
-		err = ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		err = ePtr.uOfD.SendConceptChangeNotification(ePtr, beforeState, afterState, hl)
 		if err != nil {
-			return errors.Wrap(err, "element.SetReadOnly failed")
+			return errors.Wrap(err, "element.SetDeSetReadOnlyfinition failed")
 		}
 	}
 	return nil
@@ -1249,8 +1313,7 @@ func (ePtr *element) SetURI(uri string, hl *HeldLocks) error {
 		if err2 != nil {
 			return errors.Wrap(err2, "element.SetURI failed")
 		}
-		notification := ePtr.uOfD.NewConceptChangeNotification(ePtr, beforeState, afterState, hl)
-		err = ePtr.uOfD.queueFunctionExecutions(ePtr, notification, hl)
+		err = ePtr.uOfD.SendConceptChangeNotification(ePtr, beforeState, afterState, hl)
 		if err != nil {
 			return errors.Wrap(err, "element.SetURI failed")
 		}
@@ -1288,6 +1351,7 @@ func (ePtr *element) TraceableWriteUnlock(hl *HeldLocks) {
 
 // Element is the representation of a concept
 type Element interface {
+	Subject
 	addListener(string, *HeldLocks)
 	addOwnedConcept(string, *HeldLocks)
 	addRecoveredOwnedConcept(string, *HeldLocks)
@@ -1311,6 +1375,7 @@ type Element interface {
 	GetFirstOwnedLiteralWithURI(string, *HeldLocks) Literal
 	GetFirstOwnedReferenceWithURI(string, *HeldLocks) Reference
 	GetFirstOwnedRefinementWithURI(string, *HeldLocks) Refinement
+	GetForwardNotificationsToOwner(*HeldLocks) bool
 	GetIsCore(*HeldLocks) bool
 	GetLabel(*HeldLocks) string
 	getLabelNoLock() string
@@ -1347,6 +1412,7 @@ type Element interface {
 	removeListener(string, *HeldLocks)
 	removeOwnedConcept(string, *HeldLocks) error
 	SetDefinition(string, *HeldLocks) error
+	SetForwardNotificationsToOwner(bool, *HeldLocks)
 	SetIsCore(*HeldLocks) error
 	SetIsCoreRecursively(*HeldLocks) error
 	SetLabel(string, *HeldLocks) error

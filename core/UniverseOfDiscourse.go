@@ -14,7 +14,7 @@ import (
 
 // UniverseOfDiscourse represents the scope of relevant concepts
 type UniverseOfDiscourse struct {
-	element
+	// element
 	computeFunctions functions
 	executedCalls    chan *pendingFunctionCall
 	undoManager      *undoManager
@@ -23,11 +23,13 @@ type UniverseOfDiscourse struct {
 	ownedIDsMap      *OneToNStringMap
 	listenersMap     *OneToNStringMap
 	abstractionsMap  *OneToNStringMap
+	observers        mapset.Set
 }
 
 // NewUniverseOfDiscourse creates and initializes a new UniverseOfDiscourse
 func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	var uOfD UniverseOfDiscourse
+	uOfD.observers = mapset.NewSet()
 	uOfD.computeFunctions = make(map[string][]crlExecutionFunction)
 	uOfD.undoManager = newUndoManager(&uOfD)
 	uOfD.uriUUIDMap = NewStringStringMap()
@@ -35,15 +37,15 @@ func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	uOfD.ownedIDsMap = NewOneToNStringMap()
 	uOfD.listenersMap = NewOneToNStringMap()
 	uOfD.abstractionsMap = NewOneToNStringMap()
-	uOfDID, _ := uOfD.generateConceptID(UniverseOfDiscourseURI)
-	uOfD.initializeElement(uOfDID, UniverseOfDiscourseURI)
-	uOfD.Label = "UniverseOfDiscourse"
-	uOfD.uOfD = &uOfD
+	// uOfDID, _ := uOfD.generateConceptID(UniverseOfDiscourseURI)
+	// uOfD.initializeElement(uOfDID, UniverseOfDiscourseURI)
+	// uOfD.Label = "UniverseOfDiscourse"
+	// uOfD.uOfD = &uOfD
 	hl := uOfD.NewHeldLocks()
-	uOfD.IsCore = true
-	uOfD.addElement(&uOfD, false, hl)
+	// uOfD.IsCore = true
+	// uOfD.addElement(&uOfD, false, hl)
 	uOfD.AddFunction(coreHousekeepingURI, coreHousekeeping)
-	hl.ReleaseLocksAndWait()
+	// hl.ReleaseLocksAndWait()
 	buildCoreDomain(&uOfD, hl)
 	hl.ReleaseLocksAndWait()
 	return &uOfD
@@ -161,7 +163,7 @@ func (uOfDPtr *UniverseOfDiscourse) Clone(hl *HeldLocks) *UniverseOfDiscourse {
 			}
 		}
 	}
-	newUofD.uuidElementMap.SetEntry(newUofD.ConceptID, newUofD)
+	// newUofD.uuidElementMap.SetEntry(newUofD.ConceptID, newUofD)
 
 	// uOfD.ownedIDsMap = NewOneToNStringMap()
 	for key, strings := range uOfDPtr.ownedIDsMap.CopyMap() {
@@ -302,6 +304,10 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, deletedElements ma
 		return errors.New("UniverseOfDiscource removeElement failed elcause Element was nil")
 	}
 	hl.WriteLockElement(el)
+	beforeState, err := NewConceptState(el)
+	if err != nil {
+		return errors.Wrap(err, "UniverseOfDiscourse.deleteElement failed")
+	}
 	uOfDPtr.undoManager.markRemovedElement(el, hl)
 	uuid := el.GetConceptID(hl)
 	uri := el.GetURI(hl)
@@ -353,6 +359,15 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, deletedElements ma
 	uOfDPtr.ownedIDsMap.DeleteKey(uuid)
 	uOfDPtr.uuidElementMap.DeleteEntry(uuid)
 	el.setUniverseOfDiscourse(nil, hl)
+	conceptRemovedNotification := uOfDPtr.newUofDConceptRemovedNotification(beforeState, hl)
+	err = uOfDPtr.NotifyAll(conceptRemovedNotification, hl)
+	if err != nil {
+		return errors.Wrap(err, "UniverseOfDiscourse.deleteElement failed")
+	}
+	err = el.NotifyAll(conceptRemovedNotification, hl)
+	if err != nil {
+		return errors.Wrap(err, "UniverseOfDiscourse.deleteElement failed")
+	}
 	return nil
 }
 
@@ -373,7 +388,7 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, hl *Held
 		if el.GetIsCore(hl) {
 			return errors.New("UniverseOfDiscourse.DeleteElements called on a CRL core concept")
 		}
-		if el.GetUniverseOfDiscourse(hl).getConceptIDNoLock() != uOfDPtr.getConceptIDNoLock() {
+		if el.GetUniverseOfDiscourse(hl) != uOfDPtr {
 			return errors.New("UniverseOfDiscourse.DeleteElements called on an Element in a different UofD")
 		}
 		if el.IsReadOnly(hl) {
@@ -386,17 +401,14 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, hl *Held
 		el := uOfDPtr.GetElement(id.(string))
 		hl.WriteLockElement(el)
 		uOfDPtr.preChange(el, hl)
-		beforeState, err := NewConceptState(el)
-		if err != nil {
-			return errors.Wrap(err, "UniverseOfDiscourse.DeleteElements failed")
-		}
 		uOfDPtr.deleteElement(el, elements, hl)
-		el.setUniverseOfDiscourse(nil, hl)
-		err = uOfDPtr.queueFunctionExecutions(uOfDPtr, uOfDPtr.newUofDConceptRemovedNotification(beforeState, hl), hl)
-		if err != nil {
-			return errors.Wrap(err, "UniverseOfDiscourse.DeleteElements failed")
-		}
 	}
+	return nil
+}
+
+// Deregister removes the registration of an Observer
+func (uOfDPtr *UniverseOfDiscourse) Deregister(observer Observer) error {
+	uOfDPtr.observers.Remove(observer)
 	return nil
 }
 
@@ -687,37 +699,115 @@ func (uOfDPtr *UniverseOfDiscourse) marshalConceptRecursively(el Element, hl *He
 // newUofDConceptAddedNotification creates a UofDConceptAdded notification
 func (uOfDPtr *UniverseOfDiscourse) newUofDConceptAddedNotification(afterState *ConceptState, hl *HeldLocks) *ChangeNotification {
 	var notification ChangeNotification
-	notification.reportingElementID = uOfDPtr.ConceptID
-	notification.reportingElementLabel = uOfDPtr.Label
-	notification.reportingElementType = reflect.TypeOf(uOfDPtr).String()
-	notification.afterState = afterState
-	notification.natureOfChange = UofDConceptAdded
+	notification.afterConceptState = afterState
+	notification.natureOfChange = ConceptAdded
 	notification.uOfD = uOfDPtr
 	return &notification
 }
 
-// NewConceptChangeNotification creates a ConceptChangeNotification
-func (uOfDPtr *UniverseOfDiscourse) NewConceptChangeNotification(reportingElement Element, beforeState *ConceptState, afterState *ConceptState, hl *HeldLocks) *ChangeNotification {
-	var notification ChangeNotification
-	notification.reportingElementID = reportingElement.GetConceptID(hl)
-	notification.reportingElementLabel = reportingElement.GetLabel(hl)
-	// Make sure we get the correct type
-	notification.reportingElementType = reflect.TypeOf(uOfDPtr.GetElement(notification.reportingElementID)).String()
-	notification.beforeState = beforeState
-	notification.afterState = afterState
+// SendConceptChangeNotification creates a ConceptChangeNotification
+func (uOfDPtr *UniverseOfDiscourse) SendConceptChangeNotification(reportingElement Element, beforeState *ConceptState, afterState *ConceptState, hl *HeldLocks) error {
+	notification := &ChangeNotification{}
+	reportingConceptState, err := NewConceptState(reportingElement)
+	if err != nil {
+		return errors.Wrap(err, "UniverseOfDiscourse.NewConceptChangeNotification failed")
+	}
+	notification.reportingElementState = reportingConceptState
+	notification.beforeConceptState = beforeState
+	notification.afterConceptState = afterState
 	notification.natureOfChange = ConceptChanged
 	notification.uOfD = uOfDPtr
-	return &notification
+	err = uOfDPtr.queueFunctionExecutions(reportingElement, notification, hl)
+	if err != nil {
+		return errors.Wrap(err, "UniverseOfDiscourse.SendConceptChangeNotification failed")
+	}
+	err = uOfDPtr.NotifyAll(notification, hl)
+	if err != nil {
+		return errors.Wrap(err, "UniverseOfDiscourse.SendConceptChangeNotification failed")
+	}
+	err = reportingElement.NotifyAll(notification, hl)
+	if err != nil {
+		return errors.Wrap(err, "UniverseOfDiscourse.SendConceptChangeNotification failed")
+	}
+	return nil
+}
+
+// SendPointerChangeNotification creates a PointerChangeNotification and sends it to the relevant parties
+func (uOfDPtr *UniverseOfDiscourse) SendPointerChangeNotification(reportingElement Element, natureOfChange NatureOfChange, beforeConceptState *ConceptState, afterConceptState *ConceptState, beforeReferencedState *ConceptState, afterReferencedState *ConceptState, hl *HeldLocks) error {
+	notification := &ChangeNotification{}
+	reportingConceptState, err := NewConceptState(reportingElement)
+	if err != nil {
+		return errors.Wrap(err, "UniverseOfDiscourse.NewPointerChangeNotification failed")
+	}
+	notification.reportingElementState = reportingConceptState
+	notification.beforeConceptState = beforeConceptState
+	notification.afterConceptState = afterConceptState
+	notification.beforeReferencedState = beforeReferencedState
+	notification.afterReferencedState = afterReferencedState
+	notification.natureOfChange = natureOfChange
+	notification.uOfD = uOfDPtr
+	err = uOfDPtr.queueFunctionExecutions(reportingElement, notification, hl)
+	if err != nil {
+		return errors.Wrap(err, "element.SetOwningConceptID failed")
+	}
+	var beforeReferencedConcept Element
+	if beforeReferencedState != nil {
+		beforeReferencedConcept = uOfDPtr.GetElement(beforeReferencedState.ConceptID)
+		if beforeReferencedConcept == nil {
+			return errors.New("UniverseOfDiscourse.SendPointerChangeNotification called with a beforeReferencedState, but the beforeReferencedConcept was not found")
+		}
+		err = uOfDPtr.queueFunctionExecutions(beforeReferencedConcept, notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
+		}
+		err = beforeReferencedConcept.NotifyAll(notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
+		}
+	}
+	var afterReferencedConcept Element
+	if afterReferencedState != nil {
+		afterReferencedConcept = uOfDPtr.GetElement(afterReferencedState.ConceptID)
+		if afterReferencedConcept == nil {
+			return errors.New("UniverseOfDiscourse.SendPointerChangeNotification called with a afterReferencedState, but the afterReferencedConcept was not found")
+		}
+		err = uOfDPtr.queueFunctionExecutions(afterReferencedConcept, notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
+		}
+		err = afterReferencedConcept.NotifyAll(notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
+		}
+	}
+	err = reportingElement.NotifyAll(notification, hl)
+	if err != nil {
+		return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
+	}
+	if beforeReferencedConcept != nil {
+		err = beforeReferencedConcept.NotifyAll(notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
+		}
+	}
+	if afterReferencedConcept != nil {
+		err = afterReferencedConcept.NotifyAll(notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
+		}
+	}
+	err = uOfDPtr.NotifyAll(notification, hl)
+	if err != nil {
+		return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
+	}
+	return nil
 }
 
 // newUofDConceptRemovedNotification creates a UniverseOfDiscourseRemoved notification
 func (uOfDPtr *UniverseOfDiscourse) newUofDConceptRemovedNotification(beforeState *ConceptState, hl *HeldLocks) *ChangeNotification {
 	var notification ChangeNotification
-	notification.natureOfChange = UofDConceptRemoved
-	notification.reportingElementID = uOfDPtr.ConceptID
-	notification.reportingElementLabel = uOfDPtr.Label
-	notification.reportingElementType = reflect.TypeOf(uOfDPtr).String()
-	notification.beforeState = beforeState
+	notification.natureOfChange = ConceptRemoved
+	notification.beforeConceptState = beforeState
 	notification.uOfD = uOfDPtr
 	return &notification
 }
@@ -725,33 +815,13 @@ func (uOfDPtr *UniverseOfDiscourse) newUofDConceptRemovedNotification(beforeStat
 // NewForwardingChangeNotification creates a ChangeNotification that records the reason for the change to the element,
 // including the nature of the change, an indication of which component originated the change, and whether there
 // was a preceeding notification that triggered this change.
-func (uOfDPtr *UniverseOfDiscourse) NewForwardingChangeNotification(reportingElement Element, beforeState *ConceptState, afterState *ConceptState, natureOfChange NatureOfChange, underlyingChange *ChangeNotification, hl *HeldLocks) (*ChangeNotification, error) {
+func (uOfDPtr *UniverseOfDiscourse) NewForwardingChangeNotification(reportingElement Element, natureOfChange NatureOfChange, underlyingChange *ChangeNotification, hl *HeldLocks) (*ChangeNotification, error) {
 	notification := &ChangeNotification{}
-	notification.reportingElementID = reportingElement.GetConceptID(hl)
-	notification.reportingElementLabel = reportingElement.GetLabel(hl)
-
-	// HACK temporary work-around for problem described below.
-	notification.reportingElementType = reflect.TypeOf(reportingElement).String()
-
-	// This logic does not work. First of all, part of the logic is simply incorrect: before and after states
-	// get passed on, so there is no reason to believe that the beforeState type has anything to do with
-	// the reportingElement. But the wierd part is that when the reportingElement is the UofDReference, the
-	// reference itself should be found in the uOfD and sometimes it is not.
-	// // Make sure we get the correct type
-	// reportingElementFromUofD := uOfDPtr.GetElement(notification.reportingElementID)
-	// if reportingElementFromUofD == nil {
-	// 	// This can occur if the reporting element itself has been deleted. In this case, the beforeState
-	// 	// should be the same element - we'll use its type
-	// 	if beforeState == nil {
-	// 		return nil, errors.New("UniverseOfDiscourse.NewForwardingChangeNotification called with reporting element not found in UofD and nil beforeState")
-	// 	}
-	// 	notification.reportingElementType = beforeState.ConceptType
-	// } else {
-	// 	notification.reportingElementType = reflect.TypeOf(reportingElementFromUofD).String()
-	// }
-
-	notification.afterState = afterState
-	notification.beforeState = beforeState
+	reportingElementState, err := NewConceptState(reportingElement)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewForwardingChangeNotification failed")
+	}
+	notification.reportingElementState = reportingElementState
 	notification.natureOfChange = natureOfChange
 	notification.underlyingChange = underlyingChange
 	notification.uOfD = uOfDPtr
@@ -943,15 +1013,28 @@ func (uOfDPtr *UniverseOfDiscourse) NewRefinement(hl *HeldLocks, uri ...string) 
 }
 
 // newUniverseOfDiscourseChangeNotification creates a new ChangeNotification for a UofD change
-func (uOfDPtr *UniverseOfDiscourse) newUniverseOfDiscourseChangeNotification(underlyingChange *ChangeNotification) *ChangeNotification {
-	var notification ChangeNotification
-	notification.reportingElementID = uOfDPtr.ConceptID
-	notification.reportingElementLabel = uOfDPtr.Label
-	notification.reportingElementType = reflect.TypeOf(uOfDPtr).String()
-	notification.natureOfChange = UofDConceptChanged
-	notification.underlyingChange = underlyingChange
-	notification.uOfD = uOfDPtr
-	return &notification
+// func (uOfDPtr *UniverseOfDiscourse) newUniverseOfDiscourseChangeNotification(underlyingChange *ChangeNotification) *ChangeNotification {
+// 	var notification ChangeNotification
+// 	notification.reportingElementID = uOfDPtr.ConceptID
+// 	notification.reportingElementLabel = uOfDPtr.Label
+// 	notification.reportingElementType = reflect.TypeOf(uOfDPtr).String()
+// 	notification.natureOfChange = UofDConceptChanged
+// 	notification.underlyingChange = underlyingChange
+// 	notification.uOfD = uOfDPtr
+// 	return &notification
+// }
+
+// NotifyAll passes the notification to all registered Observers
+func (uOfDPtr *UniverseOfDiscourse) NotifyAll(notification *ChangeNotification, hl *HeldLocks) error {
+	it := uOfDPtr.observers.Iterator()
+	defer it.Stop()
+	for observer := range it.C {
+		err := observer.(Observer).Update(notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "element.NotifyAll failed")
+		}
+	}
+	return nil
 }
 
 func (uOfDPtr *UniverseOfDiscourse) preChange(el Element, hl *HeldLocks) {
@@ -1146,6 +1229,12 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 	return nil
 }
 
+// Register adds the registration of an Observer
+func (uOfDPtr *UniverseOfDiscourse) Register(observer Observer) error {
+	uOfDPtr.observers.Add(observer)
+	return nil
+}
+
 // SetRecordingUndo turns undo/redo recording on and off
 func (uOfDPtr *UniverseOfDiscourse) SetRecordingUndo(newSetting bool) {
 	uOfDPtr.undoManager.setRecordingUndo(newSetting)
@@ -1173,12 +1262,10 @@ func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourse(el Element, hl *HeldL
 		if err != nil {
 			return errors.Wrap(err, "UniverseOfDiscourse.SetUniverseOfDiscourse failed")
 		}
-		err = uOfDPtr.queueFunctionExecutions(uOfDPtr, uOfDPtr.newUofDConceptAddedNotification(elementState, hl), hl)
-		if err != nil {
-			return errors.Wrap(err, "UniverseOfDiscourse.SetUniverseOfDiscourse failed")
-		}
+		conceptAddedNotification := uOfDPtr.newUofDConceptAddedNotification(elementState, hl)
 		el.setUniverseOfDiscourse(uOfDPtr, hl)
 		uOfDPtr.addElement(el, false, hl)
+		uOfDPtr.NotifyAll(conceptAddedNotification, hl)
 	}
 	return nil
 }

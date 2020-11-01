@@ -1,7 +1,6 @@
 package core
 
 import (
-	mapset "github.com/deckarep/golang-set"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"strconv"
@@ -64,8 +63,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetAfterState().Definition).To(Equal(definition))
-					Expect(pc.notification.GetBeforeState().Definition).To(Equal(""))
+					Expect(pc.notification.GetAfterConceptState().Definition).To(Equal(definition))
+					Expect(pc.notification.GetBeforeConceptState().Definition).To(Equal(""))
 					found = true
 				}
 			}
@@ -94,15 +93,15 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetAfterState().Label).To(Equal(label))
-					Expect(pc.notification.GetBeforeState().Label).To(Equal(""))
+					Expect(pc.notification.GetAfterConceptState().Label).To(Equal(label))
+					Expect(pc.notification.GetBeforeConceptState().Label).To(Equal(""))
 					found = true
 				}
 			}
 			Expect(found).To(BeTrue())
 			uOfD.executedCalls = nil
 		})
-		Specify("SetOwningConcept should generate a ConceptChanged", func() {
+		Specify("SetOwningConcept should generate an OwningConceptChanged for both the child and the owner", func() {
 			el, _ := uOfD.NewElement(hl)
 			newOwner, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
@@ -119,20 +118,34 @@ var _ = Describe("Verify housekeeping function execution", func() {
 					done = true
 				}
 			}
-			found := false
+			childFound := false
+			ownerFound := false
 			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetAfterState().OwningConceptID).To(Equal(newOwner.getConceptIDNoLock()))
-					Expect(pc.notification.GetBeforeState().OwningConceptID).To(Equal(""))
-					found = true
+				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" {
+					if pc.target == el {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(OwningConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().OwningConceptID).To(Equal(newOwner.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().OwningConceptID).To(Equal(""))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(newOwner.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState()).To(BeNil())
+						childFound = true
+					} else if pc.target == newOwner {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(OwningConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().OwningConceptID).To(Equal(newOwner.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().OwningConceptID).To(Equal(""))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(newOwner.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState()).To(BeNil())
+						ownerFound = true
+					}
 				}
 			}
-			Expect(found).To(BeTrue())
+			Expect(childFound).To(BeTrue())
+			Expect(ownerFound).To(BeTrue())
 			uOfD.executedCalls = nil
 		})
-		Specify("SetOwningConcept should generate a ConceptChanged for the old owner as well", func() {
+		Specify("SetOwningConcept should generate a OwningConceptChanged for the old owner as well", func() {
 			el, _ := uOfD.NewElement(hl)
 			oldOwner, _ := uOfD.NewElement(hl)
 			newOwner, _ := uOfD.NewElement(hl)
@@ -151,17 +164,31 @@ var _ = Describe("Verify housekeeping function execution", func() {
 					done = true
 				}
 			}
-			found := false
+			childFound := false
+			oldOwnerFound := false
 			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetAfterState().OwningConceptID).To(Equal(newOwner.getConceptIDNoLock()))
-					Expect(pc.notification.GetBeforeState().OwningConceptID).To(Equal(oldOwner.getConceptIDNoLock()))
-					found = true
+				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" {
+					if pc.target == el {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(OwningConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().OwningConceptID).To(Equal(newOwner.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().OwningConceptID).To(Equal(oldOwner.getConceptIDNoLock()))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(newOwner.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState().ConceptID).To(Equal(oldOwner.getConceptIDNoLock()))
+						childFound = true
+					} else if pc.target == oldOwner {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(OwningConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().OwningConceptID).To(Equal(newOwner.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().OwningConceptID).To(Equal(oldOwner.getConceptIDNoLock()))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(newOwner.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState().ConceptID).To(Equal(oldOwner.getConceptIDNoLock()))
+						oldOwnerFound = true
+					}
 				}
 			}
-			Expect(found).To(BeTrue())
+			Expect(childFound).To(BeTrue())
+			Expect(oldOwnerFound).To(BeTrue())
 			uOfD.executedCalls = nil
 		})
 		Specify("SetReadOnly should generate a ConceptChanged", func() {
@@ -185,8 +212,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(strconv.ParseBool(pc.notification.GetAfterState().ReadOnly)).To(BeTrue())
-					Expect(strconv.ParseBool(pc.notification.GetBeforeState().ReadOnly)).To(BeFalse())
+					Expect(strconv.ParseBool(pc.notification.GetAfterConceptState().ReadOnly)).To(BeTrue())
+					Expect(strconv.ParseBool(pc.notification.GetBeforeConceptState().ReadOnly)).To(BeFalse())
 					found = true
 				}
 			}
@@ -215,8 +242,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == el {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetAfterState().URI).To(Equal(uri))
-					Expect(pc.notification.GetBeforeState().URI).To(Equal(""))
+					Expect(pc.notification.GetAfterConceptState().URI).To(Equal(uri))
+					Expect(pc.notification.GetBeforeConceptState().URI).To(Equal(""))
 					found = true
 				}
 			}
@@ -248,8 +275,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == lit {
 					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
 					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetAfterState().LiteralValue).To(Equal(literalValue))
-					Expect(pc.notification.GetBeforeState().LiteralValue).To(Equal(""))
+					Expect(pc.notification.GetAfterConceptState().LiteralValue).To(Equal(literalValue))
+					Expect(pc.notification.GetBeforeConceptState().LiteralValue).To(Equal(""))
 					found = true
 				}
 			}
@@ -258,8 +285,8 @@ var _ = Describe("Verify housekeeping function execution", func() {
 		})
 	})
 
-	Describe("Test Reference ConceptChanged generation", func() {
-		Specify("SetReferencedConcept should generate ConceptChanged", func() {
+	Describe("Test ReferencedConceptChanged generation", func() {
+		Specify("SetReferencedConcept should generate ReferencedConceptChanged", func() {
 			ref, _ := uOfD.NewReference(hl)
 			target, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
@@ -276,23 +303,85 @@ var _ = Describe("Verify housekeeping function execution", func() {
 					done = true
 				}
 			}
-			found := false
+			refFound := false
+			targetFound := false
 			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == ref {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetAfterState().ReferencedConceptID).To(Equal(target.getConceptIDNoLock()))
-					Expect(pc.notification.GetBeforeState().ReferencedConceptID).To(Equal(""))
-					found = true
+				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" {
+
+					if pc.target == ref {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(ReferencedConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().ReferencedConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().ReferencedConceptID).To(Equal(""))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState()).To(BeNil())
+						refFound = true
+					} else if pc.target == target {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(ReferencedConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().ReferencedConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().ReferencedConceptID).To(Equal(""))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState()).To(BeNil())
+						targetFound = true
+					}
 				}
 			}
-			Expect(found).To(BeTrue())
+			Expect(refFound).To(BeTrue())
+			Expect(targetFound).To(BeTrue())
+			uOfD.executedCalls = nil
+		})
+		Specify("SetReferencedConcept should generate ReferencedConceptChanged for old target", func() {
+			ref, _ := uOfD.NewReference(hl)
+			oldTarget, _ := uOfD.NewElement(hl)
+			ref.SetReferencedConcept(oldTarget, hl)
+			target, _ := uOfD.NewElement(hl)
+			hl.ReleaseLocksAndWait()
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
+			ref.SetReferencedConceptID(target.getConceptIDNoLock(), hl)
+			hl.ReleaseLocksAndWait()
+			var calls []*pendingFunctionCall
+			done := false
+			for done == false {
+				select {
+				case pc := <-uOfD.getExecutedCalls():
+					calls = append(calls, pc)
+				default:
+					done = true
+				}
+			}
+			refFound := false
+			oldTargetFound := false
+			for _, pc := range calls {
+				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" {
+
+					if pc.target == ref {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(ReferencedConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().ReferencedConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().ReferencedConceptID).To(Equal(oldTarget.getConceptIDNoLock()))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState().ConceptID).To(Equal(oldTarget.getConceptIDNoLock()))
+						refFound = true
+					} else if pc.target == oldTarget {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(ReferencedConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().ReferencedConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().ReferencedConceptID).To(Equal(oldTarget.getConceptIDNoLock()))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState().ConceptID).To(Equal(oldTarget.getConceptIDNoLock()))
+						oldTargetFound = true
+					}
+				}
+			}
+			Expect(refFound).To(BeTrue())
+			Expect(oldTargetFound).To(BeTrue())
 			uOfD.executedCalls = nil
 		})
 	})
 
-	Describe("Test Refinement ConceptChanged generation", func() {
-		Specify("SetAbstractConcept should generate ConceptChanged", func() {
+	Describe("Test Refinement AbstractConceptChanged and RefinedConceptChanged generation", func() {
+		Specify("SetAbstractConcept should generate AbstractConceptChanged", func() {
 			ref, _ := uOfD.NewRefinement(hl)
 			target, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
@@ -309,20 +398,80 @@ var _ = Describe("Verify housekeeping function execution", func() {
 					done = true
 				}
 			}
-			found := false
+			refFound := false
+			targetFound := false
 			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == ref {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetAfterState().AbstractConceptID).To(Equal(target.getConceptIDNoLock()))
-					Expect(pc.notification.GetBeforeState().AbstractConceptID).To(Equal(""))
-					found = true
+				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" {
+					if pc.target == ref {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(AbstractConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().AbstractConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().AbstractConceptID).To(Equal(""))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState()).To(BeNil())
+						refFound = true
+					} else if pc.target == target {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(AbstractConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().AbstractConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().AbstractConceptID).To(Equal(""))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState()).To(BeNil())
+						targetFound = true
+					}
 				}
 			}
-			Expect(found).To(BeTrue())
+			Expect(refFound).To(BeTrue())
+			Expect(targetFound).To(BeTrue())
 			uOfD.executedCalls = nil
 		})
-		Specify("SetRefinedConcept should generate ConceptChanged", func() {
+		Specify("SetAbstractConcept should generate AbstractConceptChanged for old target", func() {
+			ref, _ := uOfD.NewRefinement(hl)
+			oldTarget, _ := uOfD.NewElement(hl)
+			ref.SetAbstractConcept(oldTarget, hl)
+			target, _ := uOfD.NewElement(hl)
+			hl.ReleaseLocksAndWait()
+			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
+			ref.SetAbstractConceptID(target.getConceptIDNoLock(), hl)
+			hl.ReleaseLocksAndWait()
+			var calls []*pendingFunctionCall
+			done := false
+			for done == false {
+				select {
+				case pc := <-uOfD.getExecutedCalls():
+					calls = append(calls, pc)
+				default:
+					done = true
+				}
+			}
+			refFound := false
+			oldTargetFound := false
+			for _, pc := range calls {
+				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" {
+					if pc.target == ref {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(AbstractConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().AbstractConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().AbstractConceptID).To(Equal(oldTarget.getConceptIDNoLock()))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState().ConceptID).To(Equal(oldTarget.getConceptIDNoLock()))
+						refFound = true
+					} else if pc.target == oldTarget {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(AbstractConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().AbstractConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().AbstractConceptID).To(Equal(oldTarget.getConceptIDNoLock()))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState().ConceptID).To(Equal(oldTarget.getConceptIDNoLock()))
+						oldTargetFound = true
+					}
+				}
+			}
+			Expect(refFound).To(BeTrue())
+			Expect(oldTargetFound).To(BeTrue())
+			uOfD.executedCalls = nil
+		})
+		Specify("SetRefinedConcept should generate RefinedConceptChanged", func() {
 			ref, _ := uOfD.NewRefinement(hl)
 			target, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
@@ -339,31 +488,41 @@ var _ = Describe("Verify housekeeping function execution", func() {
 					done = true
 				}
 			}
-			found := false
+			refFound := false
+			targetFound := false
 			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == ref {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					Expect(pc.notification.GetAfterState().RefinedConceptID).To(Equal(target.getConceptIDNoLock()))
-					Expect(pc.notification.GetBeforeState().RefinedConceptID).To(Equal(""))
-					found = true
+				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" {
+					if pc.target == ref {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(RefinedConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().RefinedConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().RefinedConceptID).To(Equal(""))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState()).To(BeNil())
+						refFound = true
+					} else if pc.target == target {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(RefinedConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().RefinedConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().RefinedConceptID).To(Equal(""))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState()).To(BeNil())
+						targetFound = true
+					}
 				}
 			}
-			Expect(found).To(BeTrue())
+			Expect(refFound).To(BeTrue())
+			Expect(targetFound).To(BeTrue())
 			uOfD.executedCalls = nil
 		})
-	})
-
-	Describe("Test Refinement Abstraction Changed generation", func() {
-		Specify("Abstraction changed should be generated when an IndicatedConceptChanged is received from the AbstactConcept", func() {
+		Specify("SetRefinedConcept should generate RefinedConceptChanged for old refined concept", func() {
 			ref, _ := uOfD.NewRefinement(hl)
-			abstractConcept, _ := uOfD.NewElement(hl)
-			refinedConcept, _ := uOfD.NewElement(hl)
-			ref.SetAbstractConceptID(abstractConcept.getConceptIDNoLock(), hl)
-			ref.SetRefinedConceptID(refinedConcept.getConceptIDNoLock(), hl)
+			oldTarget, _ := uOfD.NewElement(hl)
+			ref.SetRefinedConcept(oldTarget, hl)
+			target, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
 			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			abstractConcept.SetLabel("Label", hl)
+			ref.SetRefinedConceptID(target.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
 			done := false
@@ -375,31 +534,50 @@ var _ = Describe("Verify housekeeping function execution", func() {
 					done = true
 				}
 			}
-			found := false
+			refFound := false
+			oldTargetFound := false
 			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == refinedConcept {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(AbstractionChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ConceptChanged))
-					found = true
+				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" {
+					if pc.target == ref {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(RefinedConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().RefinedConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().RefinedConceptID).To(Equal(oldTarget.getConceptIDNoLock()))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState().ConceptID).To(Equal(oldTarget.getConceptIDNoLock()))
+						refFound = true
+					} else if pc.target == oldTarget {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(RefinedConceptChanged))
+						Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
+						Expect(pc.notification.GetAfterConceptState().RefinedConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeConceptState().RefinedConceptID).To(Equal(oldTarget.getConceptIDNoLock()))
+						Expect(pc.notification.GetAfterReferencedState().ConceptID).To(Equal(target.getConceptIDNoLock()))
+						Expect(pc.notification.GetBeforeReferencedState().ConceptID).To(Equal(oldTarget.getConceptIDNoLock()))
+						oldTargetFound = true
+					}
 				}
 			}
-			Expect(found).To(BeTrue())
+			Expect(refFound).To(BeTrue())
+			Expect(oldTargetFound).To(BeTrue())
 			uOfD.executedCalls = nil
 		})
 	})
 
-	Describe("Test ChildAbstractionChange generation", func() {
-		Specify("ChildAbstractionChange should be generated when an AbstractionChanged is received by the RefinedConcept", func() {
-			ref, _ := uOfD.NewRefinement(hl)
-			abstractConcept, _ := uOfD.NewElement(hl)
-			refinedConcept, _ := uOfD.NewElement(hl)
-			refinedConceptOwner, _ := uOfD.NewElement(hl)
-			refinedConcept.SetOwningConceptID(refinedConceptOwner.getConceptIDNoLock(), hl)
-			ref.SetAbstractConceptID(abstractConcept.getConceptIDNoLock(), hl)
-			ref.SetRefinedConceptID(refinedConcept.getConceptIDNoLock(), hl)
+	Describe("Test OwningConceptChanged propagation", func() {
+		Specify("After SetOwningConcept, OwningConceptChanged should be sent to listeners for both owner and child", func() {
+			el, _ := uOfD.NewElement(hl)
+			oldOwner, _ := uOfD.NewElement(hl)
+			el.SetOwningConcept(oldOwner, hl)
+			newOwner, _ := uOfD.NewElement(hl)
+			childRef, _ := uOfD.NewReference(hl)
+			childRef.SetReferencedConceptID(el.getConceptIDNoLock(), hl)
+			newOwnerRef, _ := uOfD.NewReference(hl)
+			newOwnerRef.SetReferencedConceptID(newOwner.getConceptIDNoLock(), hl)
+			oldOwnerRef, _ := uOfD.NewReference(hl)
+			oldOwnerRef.SetReferencedConceptID(oldOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			abstractConcept.SetLabel("Label", hl)
+			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
 			done := false
@@ -411,27 +589,45 @@ var _ = Describe("Verify housekeeping function execution", func() {
 					done = true
 				}
 			}
-			found := false
+			childRefFound := false
+			oldOwnerRefFound := false
+			newOwnerRefFound := false
 			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == refinedConceptOwner {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(ChildAbstractionChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(AbstractionChanged))
-					found = true
+				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" {
+					if pc.target == childRef {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(ForwardedChange))
+						Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(OwningConceptChanged))
+						childRefFound = true
+					} else if pc.target == oldOwnerRef {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(ForwardedChange))
+						Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(OwningConceptChanged))
+						oldOwnerRefFound = true
+					} else if pc.target == newOwnerRef {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(ForwardedChange))
+						Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(OwningConceptChanged))
+						newOwnerRefFound = true
+					}
 				}
 			}
-			Expect(found).To(BeTrue())
+			Expect(childRefFound).To(BeTrue())
+			Expect(oldOwnerRefFound).To(BeTrue())
+			Expect(newOwnerRefFound).To(BeTrue())
 			uOfD.executedCalls = nil
 		})
-
 	})
 
 	Describe("Test ConceptChanged propagation", func() {
-		Specify("After SetOwningConcept, UofDChanged should be sent to uOfD", func() {
+		Specify("After ConceptChanged, ForwardedChanged should be sent to owner if ForwardNotificationsToOwner is true", func() {
 			el, _ := uOfD.NewElement(hl)
+			el.SetForwardNotificationsToOwner(true, hl)
 			newOwner, _ := uOfD.NewElement(hl)
+			newOwner.SetForwardNotificationsToOwner(true, hl)
+			grandparent, _ := uOfD.NewElement(hl)
+			newOwner.SetOwningConceptID(grandparent.getConceptIDNoLock(), hl)
+			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
 			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
+			el.SetLabel("TestLabel", hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
 			done := false
@@ -443,159 +639,36 @@ var _ = Describe("Verify housekeeping function execution", func() {
 					done = true
 				}
 			}
-			found := false
+			newOwnerFound := false
+			grandparentFound := false
 			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == uOfD {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(UofDConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ConceptChanged))
-					found = true
+				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" {
+					if pc.target == grandparent {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(ForwardedChange))
+						Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ForwardedChange))
+						Expect(pc.notification.GetUnderlyingChange().GetUnderlyingChange().GetNatureOfChange()).To(Equal(ConceptChanged))
+						grandparentFound = true
+					} else if pc.target == newOwner {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(ForwardedChange))
+						Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ConceptChanged))
+						newOwnerFound = true
+					}
 				}
 			}
-			Expect(found).To(BeTrue())
+			Expect(newOwnerFound).To(BeTrue())
+			Expect(grandparentFound).To(BeTrue())
 			uOfD.executedCalls = nil
 		})
-		Specify("After SetOwningConcept, ChildChanged should be sent to both owner and old owner", func() {
+		Specify("After ConceptChanged, ForwardedChanged should not be sent to owner if ForwardNotificationsToOwner is false", func() {
 			el, _ := uOfD.NewElement(hl)
-			oldOwner, _ := uOfD.NewElement(hl)
-			newOwner, _ := uOfD.NewElement(hl)
-			el.SetOwningConceptID(oldOwner.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			oldFound := false
-			newFound := false
-			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == newOwner {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(ChildChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ConceptChanged))
-					newFound = true
-				}
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == oldOwner {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(ChildChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ConceptChanged))
-					oldFound = true
-				}
-			}
-			Expect(oldFound).To(BeTrue())
-			Expect(newFound).To(BeTrue())
-			uOfD.executedCalls = nil
-		})
-		Specify("After SetOwningConcept, function associated with element should be invoked", func() {
-			el, _ := uOfD.NewElement(hl)
-			df1Ref, _ := uOfD.NewRefinement(hl)
-			df1Ref.SetAbstractConceptID(df1.getConceptIDNoLock(), hl)
-			df1Ref.SetRefinedConceptID(el.getConceptIDNoLock(), hl)
-			newOwner, _ := uOfD.NewElement(hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			found := false
-			for _, pc := range calls {
-				if pc.functionID == df1URI && pc.target == el {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(ConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange()).To(BeNil())
-					found = true
-				}
-			}
-			Expect(found).To(BeTrue())
-			uOfD.executedCalls = nil
-		})
-		Specify("After SetOwningConcept, IndicatedConceptChanged should be sent to listeners", func() {
-			el, _ := uOfD.NewElement(hl)
-			newOwner, _ := uOfD.NewElement(hl)
-			ref, _ := uOfD.NewReference(hl)
-			ref.SetReferencedConceptID(el.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			found := false
-			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == ref {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ConceptChanged))
-					found = true
-				}
-			}
-			Expect(found).To(BeTrue())
-			uOfD.executedCalls = nil
-		})
-	})
-
-	Describe("Test ChildChange propagation", func() {
-		Specify("After ChildChanged, another ChildChanged should be sent to owner", func() {
-			el, _ := uOfD.NewElement(hl)
+			el.SetForwardNotificationsToOwner(true, hl)
 			newOwner, _ := uOfD.NewElement(hl)
 			grandparent, _ := uOfD.NewElement(hl)
 			newOwner.SetOwningConceptID(grandparent.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
 			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			found := false
-			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == grandparent {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(ChildChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ChildChanged))
-					Expect(pc.notification.GetDepth()).To(Equal(3))
-					found = true
-				}
-			}
-			Expect(found).To(BeTrue())
-			uOfD.executedCalls = nil
-		})
-		Specify("After ChildChanged, IndicatedConceptChanged should be sent to listeners", func() {
-			el, _ := uOfD.NewElement(hl)
-			newOwner, _ := uOfD.NewElement(hl)
-			grandparent, _ := uOfD.NewElement(hl)
-			newOwner.SetOwningConceptID(grandparent.getConceptIDNoLock(), hl)
-			ref, _ := uOfD.NewReference(hl)
-			ref.SetReferencedConceptID(grandparent.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
 			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
+			el.SetLabel("TestLabel", hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
 			done := false
@@ -607,330 +680,21 @@ var _ = Describe("Verify housekeeping function execution", func() {
 					done = true
 				}
 			}
-			found := false
+			newOwnerFound := false
+			grandparentFound := false
 			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == ref {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ChildChanged))
-					Expect(pc.notification.GetDepth()).To(Equal(4))
-					found = true
+				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" {
+					if pc.target == grandparent {
+						grandparentFound = true
+					} else if pc.target == newOwner {
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(ForwardedChange))
+						Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ConceptChanged))
+						newOwnerFound = true
+					}
 				}
 			}
-			Expect(found).To(BeTrue())
-			uOfD.executedCalls = nil
-		})
-	})
-
-	Describe("Test IndicatedConceptChanged propagation", func() {
-		Specify("After IndicatedConceptChanged, IndicatedConceptChanged should be sent to listener's owner", func() {
-			el, _ := uOfD.NewElement(hl)
-			newOwner, _ := uOfD.NewElement(hl)
-			ref, _ := uOfD.NewReference(hl)
-			ref.SetReferencedConceptID(el.getConceptIDNoLock(), hl)
-			refOwner, _ := uOfD.NewElement(hl)
-			ref.SetOwningConceptID(refOwner.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			found := false
-			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == refOwner {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
-					Expect(pc.notification.GetDepth()).To(Equal(3))
-					found = true
-				}
-			}
-			Expect(found).To(BeTrue())
-			uOfD.executedCalls = nil
-		})
-		Specify("After IndicatedConceptChanged, IndicatedConceptChanged should be sent to listener's grandparent", func() {
-			el, _ := uOfD.NewElement(hl)
-			newOwner, _ := uOfD.NewElement(hl)
-			ref, _ := uOfD.NewReference(hl)
-			ref.SetReferencedConceptID(el.getConceptIDNoLock(), hl)
-			refOwner, _ := uOfD.NewElement(hl)
-			ref.SetOwningConceptID(refOwner.getConceptIDNoLock(), hl)
-			refGrandparent, _ := uOfD.NewElement(hl)
-			refOwner.SetOwningConceptID(refGrandparent.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			found := false
-			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == refGrandparent {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
-					Expect(pc.notification.GetDepth()).To(Equal(4))
-					found = true
-				}
-			}
-			Expect(found).To(BeTrue())
-			uOfD.executedCalls = nil
-		})
-	})
-
-	Describe("Test AbstractionChanged propagation", func() {
-		Specify("When a refinedConcept is also the abstract concept of another refinement, AbstractionChanged is propagated to the other refinement's refined concept", func() {
-			ref, _ := uOfD.NewRefinement(hl)
-			abstractConcept, _ := uOfD.NewElement(hl)
-			refinedConcept, _ := uOfD.NewElement(hl)
-			ref.SetAbstractConceptID(abstractConcept.getConceptIDNoLock(), hl)
-			ref.SetRefinedConceptID(refinedConcept.getConceptIDNoLock(), hl)
-			refinedConcept2, _ := uOfD.NewElement(hl)
-			ref2, _ := uOfD.NewRefinement(hl)
-			ref2.SetAbstractConceptID(refinedConcept.getConceptIDNoLock(), hl)
-			ref2.SetRefinedConceptID(refinedConcept2.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			abstractConcept.SetLabel("Label", hl)
-			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			found := false
-			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == refinedConcept2 {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(AbstractionChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(AbstractionChanged))
-					found = true
-				}
-			}
-			Expect(found).To(BeTrue())
-			uOfD.executedCalls = nil
-		})
-		Specify("AbstractionChanged propagates as an IndicatedElementChanged to other listeners", func() {
-			ref, _ := uOfD.NewRefinement(hl)
-			abstractConcept, _ := uOfD.NewElement(hl)
-			refinedConcept, _ := uOfD.NewElement(hl)
-			ref.SetAbstractConceptID(abstractConcept.getConceptIDNoLock(), hl)
-			ref.SetRefinedConceptID(refinedConcept.getConceptIDNoLock(), hl)
-			listener, _ := uOfD.NewReference(hl)
-			listener.SetReferencedConceptID(refinedConcept.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			abstractConcept.SetLabel("Label", hl)
-			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			found := false
-			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == listener {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(AbstractionChanged))
-					found = true
-				}
-			}
-			Expect(found).To(BeTrue())
-			uOfD.executedCalls = nil
-		})
-	})
-
-	Describe("Test ChildAbstractionChanged propagation", func() {
-		Specify("ChildAbstractionChanged should propagate as ChildAbstractionChanged to owning concept", func() {
-			ref, _ := uOfD.NewRefinement(hl)
-			abstractConcept, _ := uOfD.NewElement(hl)
-			refinedConcept, _ := uOfD.NewElement(hl)
-			refinedConceptOwner, _ := uOfD.NewElement(hl)
-			refinedConcept.SetOwningConceptID(refinedConceptOwner.getConceptIDNoLock(), hl)
-			ref.SetAbstractConceptID(abstractConcept.getConceptIDNoLock(), hl)
-			ref.SetRefinedConceptID(refinedConcept.getConceptIDNoLock(), hl)
-			refinedConceptGrandparent, _ := uOfD.NewElement(hl)
-			refinedConceptOwner.SetOwningConceptID(refinedConceptGrandparent.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			abstractConcept.SetLabel("Label", hl)
-			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			found := false
-			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == refinedConceptGrandparent {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(ChildAbstractionChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ChildAbstractionChanged))
-					found = true
-				}
-			}
-			Expect(found).To(BeTrue())
-			uOfD.executedCalls = nil
-		})
-		Specify("ChildAbstractionChanged should propagate as AbstractionChanged to refinements of the recipient", func() {
-			ref, _ := uOfD.NewRefinement(hl)
-			abstractConcept, _ := uOfD.NewElement(hl)
-			refinedConcept, _ := uOfD.NewElement(hl)
-			refinedConceptOwner, _ := uOfD.NewElement(hl)
-			refinedConcept.SetOwningConceptID(refinedConceptOwner.getConceptIDNoLock(), hl)
-			ref.SetAbstractConceptID(abstractConcept.getConceptIDNoLock(), hl)
-			ref.SetRefinedConceptID(refinedConcept.getConceptIDNoLock(), hl)
-			refinedConcept2, _ := uOfD.NewElement(hl)
-			ref2, _ := uOfD.NewRefinement(hl)
-			ref2.SetAbstractConceptID(refinedConceptOwner.getConceptIDNoLock(), hl)
-			ref2.SetRefinedConceptID(refinedConcept2.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			abstractConcept.SetLabel("Label", hl)
-			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			found := false
-			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == refinedConcept2 {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(AbstractionChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ChildAbstractionChanged))
-					found = true
-				}
-			}
-			Expect(found).To(BeTrue())
-			uOfD.executedCalls = nil
-		})
-	})
-
-	Describe("UofDConceptChanged propagation", func() {
-		Specify("UofDConceptChange should propagate as IndicatedConceptChanged to uOfD listeners", func() {
-			el, _ := uOfD.NewElement(hl)
-			newOwner, _ := uOfD.NewElement(hl)
-			listener, _ := uOfD.NewReference(hl)
-			listener.SetReferencedConceptID(uOfD.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			found := false
-			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == listener {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(UofDConceptChanged))
-					found = true
-				}
-			}
-			Expect(found).To(BeTrue())
-			uOfD.executedCalls = nil
-		})
-	})
-	Describe("UofDConceptAdded propagation", func() {
-		Specify("UofDConceptAdded should propagate as IndicatedConceptChanged to uOfD listeners", func() {
-			listener, _ := uOfD.NewReference(hl)
-			listener.SetReferencedConceptID(uOfD.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			el, _ := uOfD.NewElement(hl)
-			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			found := false
-			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == listener {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(UofDConceptAdded))
-					Expect(pc.notification.GetUnderlyingChange().GetAfterState().ConceptID).To(Equal(el.getConceptIDNoLock()))
-					found = true
-				}
-			}
-			Expect(found).To(BeTrue())
-			uOfD.executedCalls = nil
-		})
-	})
-	Describe("UofDConceptRemoved propagation", func() {
-		Specify("UofDConceptRemoved should propagate as IndicatedConceptChanged to uOfD listeners", func() {
-			listener, _ := uOfD.NewReference(hl)
-			listener.SetReferencedConceptID(uOfD.getConceptIDNoLock(), hl)
-			el, _ := uOfD.NewElement(hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			deletedElements := mapset.NewSet(el.GetConceptID(hl))
-			uOfD.DeleteElements(deletedElements, hl)
-			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			found := false
-			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" && pc.target == listener {
-					Expect(pc.notification.GetNatureOfChange()).To(Equal(IndicatedConceptChanged))
-					Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(UofDConceptRemoved))
-					Expect(pc.notification.GetUnderlyingChange().GetBeforeState().ConceptID).To(Equal(el.getConceptIDNoLock()))
-					found = true
-				}
-			}
-			Expect(found).To(BeTrue())
+			Expect(newOwnerFound).To(BeTrue())
+			Expect(grandparentFound).To(BeFalse())
 			uOfD.executedCalls = nil
 		})
 	})

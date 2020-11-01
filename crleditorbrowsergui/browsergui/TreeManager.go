@@ -1,13 +1,14 @@
 package browsergui
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/pkg/errors"
 
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
-	"github.com/pbrown12303/activeCRL/crleditorbrowserguidomain"
+	// "github.com/pbrown12303/activeCRL/crleditorbrowserguidomain"
 )
 
 const treeNodeSuffix = "TreeNode"
@@ -135,21 +136,10 @@ func (tmPtr *treeManager) getChangeNotificationBelowUofD(changeNotification *cor
 
 // initialize sets up the uOfD monitoring
 func (tmPtr *treeManager) initialize(hl *core.HeldLocks) error {
-	var err error
-	tmPtr.treeNodeManager, err = tmPtr.browserGUI.GetUofD().CreateReplicateAsRefinementFromURI(crleditorbrowserguidomain.TreeNodeManagerURI, hl)
+	err := tmPtr.browserGUI.GetUofD().Register(tmPtr)
 	if err != nil {
 		return errors.Wrap(err, "treeManager.initialize failed")
 	}
-	tmPtr.treeNodeManager.SetOwningConcept(tmPtr.browserGUI.workingDomain, hl)
-	// tmPtr.treeNodeManager.SetIsCoreRecursively(hl)
-	hl.ReleaseLocksAndWait()
-	treeNodeManagerUOfDReference := tmPtr.treeNodeManager.GetFirstOwnedReferenceRefinedFromURI(crleditorbrowserguidomain.TreeNodeManagerUofDReferenceURI, hl)
-	if treeNodeManagerUOfDReference == nil {
-		return errors.New("in treeManager.initialize, treeNodeManagerUOfDReference not found")
-	}
-	treeNodeManagerUOfDReference.SetReferencedConcept(tmPtr.browserGUI.GetUofD(), hl)
-	hl.ReleaseLocksAndWait()
-	registerTreeViewFunctions(tmPtr.browserGUI.GetUofD())
 	return nil
 }
 
@@ -176,6 +166,29 @@ func (tmPtr *treeManager) initializeTree(hl *core.HeldLocks) error {
 				return errors.Wrap(err, "TreeManager.initializeTree failed")
 			}
 		}
+	}
+	return nil
+}
+
+// Update  is the callback function that manaages the tree view when elements in the Universe of Discourse change.
+// The changes being sought are the addition, removal, and re-parenting of base elements and the changes in their names.
+func (tmPtr *treeManager) Update(notification *core.ChangeNotification, hl *core.HeldLocks) error {
+	uOfD := hl.GetUniverseOfDiscourse()
+
+	// Tracing
+	if core.AdHocTrace == true {
+		log.Printf("In treeManager.Update()")
+	}
+
+	changedElementID := notification.GetChangedConceptID()
+	changedElement := uOfD.GetElement(changedElementID)
+	switch notification.GetNatureOfChange() {
+	case core.ConceptAdded:
+		tmPtr.addNode(changedElement, hl)
+	case core.ConceptChanged, core.OwningConceptChanged:
+		tmPtr.changeNode(changedElement, hl)
+	case core.ConceptRemoved:
+		tmPtr.removeNode(changedElementID, hl)
 	}
 	return nil
 }

@@ -265,8 +265,9 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 	if rPtr.isEditable(hl) == false {
 		return errors.New("reference.SetReferencedConceptID failed because the reference is not editable")
 	}
+	var newReferencedConcept Element
+	var oldReferencedConcept Element
 	if rPtr.ReferencedConceptID != rcID {
-		var newReferencedConcept Element
 		if rcID != "" {
 			newReferencedConcept = rPtr.uOfD.GetElement(rcID)
 			switch rPtr.GetReferencedAttributeName(hl) {
@@ -293,10 +294,15 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 		}
 		rPtr.uOfD.preChange(rPtr, hl)
 		rPtr.incrementVersion(hl)
+		var beforeReferencedState *ConceptState
 		if rPtr.ReferencedConceptID != "" {
-			oldReferencedConcept := rPtr.uOfD.GetElement(rPtr.ReferencedConceptID)
+			oldReferencedConcept = rPtr.uOfD.GetElement(rPtr.ReferencedConceptID)
 			if oldReferencedConcept != nil {
 				oldReferencedConcept.removeListener(rPtr.ConceptID, hl)
+				beforeReferencedState, err = NewConceptState(oldReferencedConcept)
+				if err != nil {
+					return errors.Wrap(err, "reference.SetReferencedConceptID failed")
+				}
 			}
 		}
 		if rcID != "" {
@@ -305,17 +311,21 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 			}
 		}
 		rPtr.ReferencedConceptID = rcID
+		var afterReferencedState *ConceptState
 		if newReferencedConcept == nil {
 			rPtr.ReferencedConceptVersion = 0
 		} else {
 			rPtr.ReferencedConceptVersion = newReferencedConcept.GetVersion(hl)
+			afterReferencedState, err = NewConceptState(newReferencedConcept)
+			if err != nil {
+				return errors.Wrap(err, "reference.SetReferencedConceptID failed")
+			}
 		}
 		afterState, err2 := NewConceptState(rPtr)
 		if err2 != nil {
 			return errors.Wrap(err2, "reference.SetReferencedConceptID failed")
 		}
-		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, beforeState, afterState, hl)
-		err = rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
+		err = rPtr.uOfD.SendPointerChangeNotification(rPtr, ReferencedConceptChanged, beforeState, afterState, beforeReferencedState, afterReferencedState, hl)
 		if err != nil {
 			return errors.Wrap(err, "reference.SetReferencedConceptID failed")
 		}
@@ -362,8 +372,7 @@ func (rPtr *reference) SetReferencedAttributeName(attributeName AttributeName, h
 		if err2 != nil {
 			return errors.Wrap(err2, "reference.SetReferencedAttributeName failed")
 		}
-		notification := rPtr.uOfD.NewConceptChangeNotification(rPtr, beforeState, afterState, hl)
-		err = rPtr.uOfD.queueFunctionExecutions(rPtr, notification, hl)
+		err = rPtr.uOfD.SendConceptChangeNotification(rPtr, beforeState, afterState, hl)
 		if err != nil {
 			return errors.Wrap(err, "reference.SetReferencedAttributeName failed")
 		}
