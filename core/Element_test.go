@@ -536,6 +536,10 @@ var _ = Describe("Element internals test", func() {
 			original.SetReadOnly(true, hl)
 			Expect(Equivalent(original, hl, copy, hl)).To(BeFalse())
 		})
+		Specify("Differences in ForwardNotificationsToOwner should be detected", func() {
+			original.SetForwardNotificationsToOwner(true, hl)
+			Expect(Equivalent(original, hl, copy, hl)).To(BeFalse())
+		})
 		Specify("Differences in version should be detected", func() {
 			original.incrementVersion(hl)
 			Expect(Equivalent(original, hl, copy, hl)).To(BeFalse())

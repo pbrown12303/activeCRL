@@ -784,18 +784,6 @@ func (uOfDPtr *UniverseOfDiscourse) SendPointerChangeNotification(reportingEleme
 	if err != nil {
 		return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
 	}
-	if beforeReferencedConcept != nil {
-		err = beforeReferencedConcept.NotifyAll(notification, hl)
-		if err != nil {
-			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
-		}
-	}
-	if afterReferencedConcept != nil {
-		err = afterReferencedConcept.NotifyAll(notification, hl)
-		if err != nil {
-			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
-		}
-	}
 	err = uOfDPtr.NotifyAll(notification, hl)
 	if err != nil {
 		return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
@@ -1134,7 +1122,9 @@ func (uOfDPtr *UniverseOfDiscourse) RecoverElement(data []byte, hl *HeldLocks) (
 
 // replicateAsRefinement replicates the structure of the original in the replicate, ignoring
 // Refinements The name from each original element is copied into the name of the
-// corresponding replicate element. This function is idempotent: if applied to an existing structure,
+// corresponding replicate element. The value of ForwardNotificationsToOwner is replicated. Most attributes
+// are not replicated, specifically any pointers, ReadOnly, Definition, IsCore, Version, and observers.
+// This function is idempotent: if applied to an existing structure,
 // Elements of that structure that have existing Refinement relationships with original Elements
 // will not be re-created.
 func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, replicate Element, hl *HeldLocks, uri ...string) error {
@@ -1143,6 +1133,7 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 
 	// Set the attributes - but no IDs
 	replicate.SetLabel(original.GetLabel(hl), hl)
+	replicate.SetForwardNotificationsToOwner(original.GetForwardNotificationsToOwner(hl), hl)
 	switch original.(type) {
 	case Reference:
 		replicate.(Reference).SetReferencedAttributeName(original.(Reference).GetReferencedAttributeName(hl), hl)

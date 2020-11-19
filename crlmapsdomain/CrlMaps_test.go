@@ -110,6 +110,7 @@ var _ = Describe("CrlMaps mapping tests", func() {
 	})
 	Describe("Target domain creation", func() {
 		Specify("The target domain should be created correctly", func() {
+			log.Printf("About set set sourceInstanceDomain")
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 			targetInstanceDomain := mapInstanceFolder.GetFirstOwnedConceptRefinedFrom(targetAbstractDomain, hl)

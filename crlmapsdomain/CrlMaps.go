@@ -115,6 +115,7 @@ func BuildCrlMapsDomain(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) erro
 	if err7 != nil {
 		return errors.Wrap(err7, "crlmaps.BuildCrlMapsDomain failed")
 	}
+	crlOneToOneMapSourceReference.SetForwardNotificationsToOwner(true, hl)
 	_, err8 := uOfD.NewCompleteRefinement(crlMapSource, crlOneToOneMapSourceReference, "Refines CrlMapSource", hl, CrlOneToOneMapSourceReferenceRefinementURI)
 	if err8 != nil {
 		return errors.Wrap(err8, "crlmaps.BuildCrlMapsDomain failed")

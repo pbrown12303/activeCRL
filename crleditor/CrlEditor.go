@@ -300,7 +300,7 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 	}
 	editor.workspaceManager.Initialize()
 	editor.workspaceManager.LoadUserPreferences(workspacePath)
-	if editor.userPreferences.WorkspacePath != workspacePath {
+	if workspacePath != "" && editor.userPreferences.WorkspacePath != workspacePath {
 		editor.SetWorkspacePath(workspacePath)
 	}
 	if editor.userPreferences.WorkspacePath == "" && promptWorkspaceSelection {

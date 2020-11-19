@@ -1056,6 +1056,16 @@ function crlPropertiesDisplayLiteralValue(data, row) {
     input.setSelectionRange(cursorPosition, cursorPosition);
 }
 
+function crlPropertiesDisplayForwardNotificationsToOwner(data, row) {
+    var typeRow = crlObtainPropertyRow(row);
+    typeRow.cells[0].innerHTML = "Forward Notifications to Owner";
+    var forwardNotificationsToOwner = ""
+    if (data.NotificationConceptState) {
+        forwardNotificationsToOwner = data.NotificationConceptState.ForwardNotificationsToOwner
+    }
+    typeRow.cells[1].innerHTML = forwardNotificationsToOwner;
+}
+
 function crlPropertiesDisplayOwningConcept(data, row) {
     var typeRow = crlObtainPropertyRow(row);
     typeRow.cells[0].innerHTML = "Owning Concept ID";
@@ -1064,6 +1074,16 @@ function crlPropertiesDisplayOwningConcept(data, row) {
         owningConceptID = data.NotificationConceptState.OwningConceptID
     }
     typeRow.cells[1].innerHTML = owningConceptID;
+}
+
+function crlPropertiesDisplayReadOnly(data, row) {
+    var typeRow = crlObtainPropertyRow(row);
+    typeRow.cells[0].innerHTML = "Read Only";
+    var readOnly = ""
+    if (data.NotificationConceptState) {
+        readOnly = data.NotificationConceptState.ReadOnly
+    }
+    typeRow.cells[1].innerHTML = readOnly;
 }
 
 function crlPropertiesDisplayReferencedAttributeName(data, row) {
@@ -1838,30 +1858,32 @@ function crlUpdateProperties(data) {
     crlPropertiesDisplayLabel(data, 5);
     crlPropertiesDisplayDefinition(data, 6);
     crlPropertiesDisplayURI(data, 7);
+    crlPropertiesDisplayReadOnly(data, 8);
+    crlPropertiesDisplayForwardNotificationsToOwner(data, 9);
     var type = "";
     if (data.NotificationConceptState) {
         type = data.NotificationConceptState.ConceptType;
     }
     switch (type) {
         case "*core.element":
-            crlPropertiesClearRow(9);
-            crlPropertiesClearRow(8);
+            crlPropertiesClearRow(11);
+            crlPropertiesClearRow(10);
             break;
         case "*core.literal":
-            crlPropertiesDisplayLiteralValue(data, 8);
-            crlPropertiesClearRow(9);
+            crlPropertiesDisplayLiteralValue(data, 10);
+            crlPropertiesClearRow(11);
             break;
         case "*core.reference":
-            crlPropertiesDisplayReferencedConcept(data, 8);
-            crlPropertiesDisplayReferencedAttributeName(data, 9)
+            crlPropertiesDisplayReferencedConcept(data, 10);
+            crlPropertiesDisplayReferencedAttributeName(data, 11)
             break;
         case "*core.refinement":
-            crlPropertiesDisplayAbstractConcept(data, 8);
-            crlPropertiesDisplayRefinedConcept(data, 9);
+            crlPropertiesDisplayAbstractConcept(data, 10);
+            crlPropertiesDisplayRefinedConcept(data, 11);
             break;
         default:
-            crlPropertiesClearRow(9);
-            crlPropertiesClearRow(8);
+            crlPropertiesClearRow(11);
+            crlPropertiesClearRow(10);
     };
 }
 

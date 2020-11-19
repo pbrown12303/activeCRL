@@ -56,15 +56,16 @@ func (noc NatureOfChange) String() string {
 // ConceptState is a flattened representation of all concept types. It is used to capture the current state of a concept
 type ConceptState struct {
 	// Element fields
-	ConceptID       string
-	ConceptType     string
-	OwningConceptID string
-	Label           string
-	Definition      string
-	URI             string
-	Version         string
-	IsCore          string
-	ReadOnly        string
+	ConceptID                   string
+	ConceptType                 string
+	OwningConceptID             string
+	Label                       string
+	Definition                  string
+	URI                         string
+	Version                     string
+	IsCore                      string
+	ReadOnly                    string
+	ForwardNotificationsToOwner string
 	// Literal fields
 	LiteralValue string
 	// Reference fields

@@ -172,6 +172,7 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			replicateURI = "https://activeCRL.com/ReplicateURI"
 			original, _ = uOfD.NewElement(hl)
 			original.SetLabel("Root", hl)
+			original.SetForwardNotificationsToOwner(true, hl)
 			oChild1, _ = uOfD.NewElement(hl)
 			oChild1.SetOwningConcept(original, hl)
 			oChild1Label = "Element"

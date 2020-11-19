@@ -644,8 +644,8 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 		// this is a new reference
 		newReference, _ := uOfD.NewReference(hl)
 		newReference.SetReferencedConcept(modelTarget, hl)
-		newReference.SetOwningConcept(modelSource, hl)
 		newReference.SetReferencedAttributeName(attributeName, hl)
+		newReference.SetOwningConcept(modelSource, hl)
 		diagramLink, err = crldiagramdomain.NewDiagramReferenceLink(uOfD, hl)
 		if err != nil {
 			return "", err
@@ -829,19 +829,20 @@ func (dmPtr *diagramManager) showAbstractConcept(elementID string, hl *core.Held
 	if diagramAbstractConcept == nil {
 		diagramAbstractConcept, _ = crldiagramdomain.NewDiagramNode(dmPtr.browserGUI.GetUofD(), hl)
 		crldiagramdomain.SetReferencedModelElement(diagramAbstractConcept, modelAbstractConcept, hl)
-		diagramAbstractConcept.SetOwningConcept(diagram, hl)
+		crldiagramdomain.SetDisplayLabel(diagramAbstractConcept, modelAbstractConcept.GetLabel(hl), hl)
 		diagramElementX := crldiagramdomain.GetNodeX(diagramElement, hl)
 		diagramElementY := crldiagramdomain.GetNodeY(diagramElement, hl)
 		crldiagramdomain.SetNodeX(diagramAbstractConcept, diagramElementX, hl)
 		crldiagramdomain.SetNodeY(diagramAbstractConcept, diagramElementY-100, hl)
+		diagramAbstractConcept.SetOwningConcept(diagram, hl)
 	}
 	elementPointer := crldiagramdomain.GetElementPointer(diagram, diagramElement, hl)
 	if elementPointer == nil {
 		elementPointer, _ = crldiagramdomain.NewDiagramAbstractPointer(dmPtr.browserGUI.GetUofD(), hl)
-		elementPointer.SetOwningConcept(diagram, hl)
 		crldiagramdomain.SetReferencedModelElement(elementPointer, modelConcept, hl)
 		crldiagramdomain.SetLinkSource(elementPointer, diagramElement, hl)
 		crldiagramdomain.SetLinkTarget(elementPointer, diagramAbstractConcept, hl)
+		elementPointer.SetOwningConcept(diagram, hl)
 	}
 	return nil
 }
@@ -871,19 +872,20 @@ func (dmPtr *diagramManager) showOwnedConcepts(elementID string, hl *core.HeldLo
 		if diagramChildConcept == nil {
 			diagramChildConcept, _ = crldiagramdomain.NewDiagramNode(dmPtr.browserGUI.GetUofD(), hl)
 			crldiagramdomain.SetReferencedModelElement(diagramChildConcept, child, hl)
-			diagramChildConcept.SetOwningConcept(diagram, hl)
+			crldiagramdomain.SetDisplayLabel(diagramChildConcept, child.GetLabel(hl), hl)
 			diagramElementX := crldiagramdomain.GetNodeX(diagramElement, hl)
 			diagramElementY := crldiagramdomain.GetNodeY(diagramElement, hl)
 			crldiagramdomain.SetNodeX(diagramChildConcept, diagramElementX+offset, hl)
 			crldiagramdomain.SetNodeY(diagramChildConcept, diagramElementY+50, hl)
+			diagramChildConcept.SetOwningConcept(diagram, hl)
 		}
 		ownerPointer := crldiagramdomain.GetOwnerPointer(diagram, diagramElement, hl)
 		if ownerPointer == nil {
 			ownerPointer, _ = crldiagramdomain.NewDiagramOwnerPointer(dmPtr.browserGUI.GetUofD(), hl)
-			ownerPointer.SetOwningConcept(diagram, hl)
 			crldiagramdomain.SetReferencedModelElement(ownerPointer, modelConcept, hl)
 			crldiagramdomain.SetLinkSource(ownerPointer, diagramChildConcept, hl)
 			crldiagramdomain.SetLinkTarget(ownerPointer, diagramElement, hl)
+			ownerPointer.SetOwningConcept(diagram, hl)
 		}
 		offset = offset + 50
 	}
@@ -911,19 +913,20 @@ func (dmPtr *diagramManager) showOwner(elementID string, hl *core.HeldLocks) err
 	if diagramConceptOwner == nil {
 		diagramConceptOwner, _ = crldiagramdomain.NewDiagramNode(dmPtr.browserGUI.GetUofD(), hl)
 		crldiagramdomain.SetReferencedModelElement(diagramConceptOwner, modelConceptOwner, hl)
-		diagramConceptOwner.SetOwningConcept(diagram, hl)
+		crldiagramdomain.SetDisplayLabel(diagramConceptOwner, modelConceptOwner.GetLabel(hl), hl)
 		diagramElementX := crldiagramdomain.GetNodeX(diagramElement, hl)
 		diagramElementY := crldiagramdomain.GetNodeY(diagramElement, hl)
 		crldiagramdomain.SetNodeX(diagramConceptOwner, diagramElementX, hl)
 		crldiagramdomain.SetNodeY(diagramConceptOwner, diagramElementY-100, hl)
+		diagramConceptOwner.SetOwningConcept(diagram, hl)
 	}
 	ownerPointer := crldiagramdomain.GetOwnerPointer(diagram, diagramElement, hl)
 	if ownerPointer == nil {
 		ownerPointer, _ = crldiagramdomain.NewDiagramOwnerPointer(dmPtr.browserGUI.GetUofD(), hl)
-		ownerPointer.SetOwningConcept(diagram, hl)
 		crldiagramdomain.SetReferencedModelElement(ownerPointer, modelConcept, hl)
 		crldiagramdomain.SetLinkSource(ownerPointer, diagramElement, hl)
 		crldiagramdomain.SetLinkTarget(ownerPointer, diagramConceptOwner, hl)
+		ownerPointer.SetOwningConcept(diagram, hl)
 	}
 	return nil
 }
@@ -960,11 +963,12 @@ func (dmPtr *diagramManager) showReferencedConcept(elementID string, hl *core.He
 		if diagramReferencedConcept == nil {
 			diagramReferencedConcept, _ = crldiagramdomain.NewDiagramNode(dmPtr.browserGUI.GetUofD(), hl)
 			crldiagramdomain.SetReferencedModelElement(diagramReferencedConcept, modelReferencedConcept, hl)
-			diagramReferencedConcept.SetOwningConcept(diagram, hl)
+			crldiagramdomain.SetDisplayLabel(diagramReferencedConcept, modelReferencedConcept.GetLabel(hl), hl)
 			diagramElementX := crldiagramdomain.GetNodeX(diagramElement, hl)
 			diagramElementY := crldiagramdomain.GetNodeY(diagramElement, hl)
 			crldiagramdomain.SetNodeX(diagramReferencedConcept, diagramElementX, hl)
 			crldiagramdomain.SetNodeY(diagramReferencedConcept, diagramElementY-100, hl)
+			diagramReferencedConcept.SetOwningConcept(diagram, hl)
 		}
 	case core.OwningConceptID:
 		diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConceptOwnerPointer(diagram, modelReferencedConcept, hl)
@@ -1036,19 +1040,20 @@ func (dmPtr *diagramManager) showRefinedConcept(elementID string, hl *core.HeldL
 	if diagramRefinedConcept == nil {
 		diagramRefinedConcept, _ = crldiagramdomain.NewDiagramNode(dmPtr.browserGUI.GetUofD(), hl)
 		crldiagramdomain.SetReferencedModelElement(diagramRefinedConcept, modelRefinedConcept, hl)
-		diagramRefinedConcept.SetOwningConcept(diagram, hl)
+		crldiagramdomain.SetDisplayLabel(diagramRefinedConcept, modelRefinedConcept.GetLabel(hl), hl)
 		diagramElementX := crldiagramdomain.GetNodeX(diagramElement, hl)
 		diagramElementY := crldiagramdomain.GetNodeY(diagramElement, hl)
 		crldiagramdomain.SetNodeX(diagramRefinedConcept, diagramElementX, hl)
 		crldiagramdomain.SetNodeY(diagramRefinedConcept, diagramElementY-100, hl)
+		diagramRefinedConcept.SetOwningConcept(diagram, hl)
 	}
 	elementPointer := crldiagramdomain.GetElementPointer(diagram, diagramElement, hl)
 	if elementPointer == nil {
 		elementPointer, _ = crldiagramdomain.NewDiagramRefinedPointer(dmPtr.browserGUI.GetUofD(), hl)
-		elementPointer.SetOwningConcept(diagram, hl)
 		crldiagramdomain.SetReferencedModelElement(elementPointer, modelConcept, hl)
 		crldiagramdomain.SetLinkSource(elementPointer, diagramElement, hl)
 		crldiagramdomain.SetLinkTarget(elementPointer, diagramRefinedConcept, hl)
+		elementPointer.SetOwningConcept(diagram, hl)
 	}
 	return nil
 }
