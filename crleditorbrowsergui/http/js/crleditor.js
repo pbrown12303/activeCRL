@@ -1957,9 +1957,9 @@ var crlNotificationUpdateDiagramNode = function (data) {
         };
         node.set("displayLabelYOffset", Number(params["DisplayLabelYOffset"]));
         node.set('position', { "x": Number(params["NodeX"]), "y": Number(params["NodeY"]) });
+        node.set('name', params["DisplayLabel"]);
         node.set('size', { "width": Number(params["NodeWidth"]), "height": Number(params["NodeHeight"]) });
         node.set('icon', params["Icon"]);
-        node.set('name', params["DisplayLabel"]);
         node.set("abstractions", params["Abstractions"]);
         node.set("lineColor", params["LineColor"]);
         node.set("bgColor", params["BGColor"]);

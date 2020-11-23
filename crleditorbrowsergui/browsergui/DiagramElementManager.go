@@ -138,6 +138,12 @@ func (demPtr *diagramElementManager) Update(changeNotification *core.ChangeNotif
 				currentLabel := currentConcept.Label
 				diagramElement.SetLabel(currentLabel, hl)
 				crldiagramdomain.SetDisplayLabel(diagramElement, currentLabel, hl)
+				additionalParameters := getNodeAdditionalParameters(diagramElement, hl)
+				conceptState, err := core.NewConceptState(diagramElement)
+				if err != nil {
+					return errors.Wrap(err, "DiagramView.go updateDiagrmElementView failed")
+				}
+				SendNotification("UpdateDiagramNode", diagramElement.GetConceptID(hl), conceptState, additionalParameters)
 			}
 		}
 		return nil

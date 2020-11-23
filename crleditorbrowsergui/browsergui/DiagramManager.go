@@ -19,14 +19,16 @@ const diagramSuffix = "Diagram"
 
 // diagramManager manages the diagram portion of the UI and all interactions with it
 type diagramManager struct {
-	browserGUI *BrowserGUI
-	diagrams   map[string]core.Element
+	browserGUI     *BrowserGUI
+	diagrams       map[string]core.Element
+	elementManager *diagramElementManager
 }
 
 func newDiagramManager(browserGUI *BrowserGUI) *diagramManager {
 	dm := &diagramManager{}
 	dm.browserGUI = browserGUI
 	dm.diagrams = map[string]core.Element{}
+	dm.elementManager = newDiagramElementManager(dm)
 	return dm
 }
 
@@ -184,6 +186,10 @@ func (dmPtr *diagramManager) addConceptViewImpl(uOfD *core.UniverseOfDiscourse, 
 	if err != nil {
 		return nil, errors.Wrap(err, "diagramManager.addConceptView failed")
 	}
+	err = newElement.Register(dmPtr.elementManager)
+	if err != nil {
+		return nil, errors.Wrap(err, "diagramManager.addConceptView failed")
+	}
 	hl.ReleaseLocksAndWait()
 
 	return newElement, nil
@@ -252,15 +258,6 @@ func (dmPtr *diagramManager) deleteDiagramElementView(elementID string, hl *core
 	return dmPtr.browserGUI.GetUofD().DeleteElements(dEls, hl)
 }
 
-// diagramChanged handles the update of the diagram tab when the diagram name changes
-func (dmPtr *diagramManager) diagramLabelChanged(diagramID string, diagram core.Element, hl *core.HeldLocks) (*NotificationResponse, error) {
-	conceptState, err := core.NewConceptState(diagram)
-	if err != nil {
-		return nil, errors.Wrap(err, "diagramManager.diagramLabelChanged failed")
-	}
-	return SendNotification("DiagramLabelChanged", diagramID, conceptState, map[string]string{})
-}
-
 // diagramClick handles the creation of a new Element and adding a node representation of it to the diagram
 func (dmPtr *diagramManager) diagramClick(request *Request, hl *core.HeldLocks) error {
 	uOfD := dmPtr.browserGUI.GetUofD()
@@ -293,7 +290,7 @@ func (dmPtr *diagramManager) diagramClick(request *Request, hl *core.HeldLocks) 
 		el.SetLabel(dmPtr.browserGUI.editor.GetDefaultDiagramLabel(), hl)
 	}
 	if err != nil {
-		return err
+		return errors.Wrap(err, "diagramManager.diagramClick failed")
 	}
 	el.SetOwningConceptID(diagram.GetOwningConceptID(hl), hl)
 	dmPtr.browserGUI.editor.SelectElement(el, hl)
@@ -302,16 +299,16 @@ func (dmPtr *diagramManager) diagramClick(request *Request, hl *core.HeldLocks) 
 	var x, y float64
 	x, err = strconv.ParseFloat(request.AdditionalParameters["NodeX"], 64)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "diagramManager.diagramClick failed")
 	}
 	y, err = strconv.ParseFloat(request.AdditionalParameters["NodeY"], 64)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "diagramManager.diagramClick failed")
 	}
 	var newNode core.Element
 	newNode, err = crldiagramdomain.NewDiagramNode(uOfD, hl)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "diagramManager.diagramClick failed")
 	}
 	crldiagramdomain.SetNodeX(newNode, x, hl)
 	crldiagramdomain.SetNodeY(newNode, y, hl)
@@ -320,8 +317,12 @@ func (dmPtr *diagramManager) diagramClick(request *Request, hl *core.HeldLocks) 
 	crldiagramdomain.SetDisplayLabel(newNode, el.GetLabel(hl), hl)
 
 	newNode.SetOwningConceptID(diagramID, hl)
-	hl.ReleaseLocksAndWait()
+	err = newNode.Register(dmPtr.elementManager)
+	if err != nil {
+		return errors.Wrap(err, "diagramManager.diagramClick failed")
+	}
 	dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
+	hl.ReleaseLocksAndWait()
 
 	return nil
 }
@@ -485,6 +486,10 @@ func (dmPtr *diagramManager) newDiagram(hl *core.HeldLocks) (core.Element, error
 	diagram.SetLabel(name, hl)
 	hl.ReleaseLocksAndWait()
 	dmPtr.diagrams[diagram.GetConceptID(hl)] = diagram
+	if err != nil {
+		return nil, errors.Wrap(err, "diagramManager.newDiagram failed")
+	}
+	err = diagram.Register(dmPtr)
 	if err != nil {
 		return nil, errors.Wrap(err, "diagramManager.newDiagram failed")
 	}
@@ -1087,10 +1092,21 @@ func (dmPtr *diagramManager) Update(notification *core.ChangeNotification, hl *c
 			newElement := uOfD.GetElement(afterState.ConceptID)
 			if crldiagramdomain.IsDiagramNode(newElement, hl) {
 				additionalParameters := getNodeAdditionalParameters(newElement, hl)
-				SendNotification("AddDiagramNode", newElement.GetConceptID(hl), afterState, additionalParameters)
+				_, err := SendNotification("AddDiagramNode", newElement.GetConceptID(hl), afterState, additionalParameters)
+				return err
 			} else if crldiagramdomain.IsDiagramLink(newElement, hl) {
 				additionalParameters := getLinkAdditionalParameters(newElement, hl)
-				SendNotification("AddDiagramLink", newElement.GetConceptID(hl), afterState, additionalParameters)
+				_, err := SendNotification("AddDiagramLink", newElement.GetConceptID(hl), afterState, additionalParameters)
+				return err
+			}
+		}
+	case core.ConceptChanged:
+		beforeState := notification.GetBeforeConceptState()
+		afterState := notification.GetAfterConceptState()
+		if beforeState != nil && afterState != nil {
+			if beforeState.Label != afterState.Label {
+				_, err := SendNotification("DiagramLabelChanged", afterState.ConceptID, afterState, map[string]string{})
+				return err
 			}
 		}
 	}
