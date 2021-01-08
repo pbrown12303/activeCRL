@@ -73,15 +73,15 @@ func (mgr *CrlWorkspaceManager) CloseWorkspace(hl *core.HeldLocks) error {
 
 // deleteFile deletes the file from the os
 func (mgr *CrlWorkspaceManager) deleteFile(wf *workspaceFile) error {
-	if wf.path == "" {
-		return errors.New("CrlWorkspaceManager.deleteFile called with wf.path empty")
-	}
-	qualifiedFilename := wf.path + wf.Info.Name()
 	err := wf.File.Close()
 	if err != nil {
 		return errors.Wrap(err, "CrlEditor.delete file failed")
 	}
-	return os.Remove(qualifiedFilename)
+	err = os.Remove(wf.filename)
+	if err != nil {
+		return errors.Wrap(err, "CrlEditor.delete file failed")
+	}
+	return nil
 }
 
 func (mgr *CrlWorkspaceManager) generateFilename(el core.Element, hl *core.HeldLocks) string {
