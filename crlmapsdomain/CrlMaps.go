@@ -102,7 +102,7 @@ func BuildCrlMapsDomain(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) erro
 		return errors.Wrap(err4, "crlmaps.BuildCrlMapsDomain failed")
 	}
 
-	// Element To Element Map
+	// One to One Map
 	crlOneToOneMap, err5 := uOfD.NewOwnedElement(crlMapsDomain, "CrlOneToOneMap", hl, CrlOneToOneMapURI)
 	if err5 != nil {
 		return errors.Wrap(err5, "crlmaps.BuildCrlMapsDomain failed")
@@ -115,7 +115,6 @@ func BuildCrlMapsDomain(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) erro
 	if err7 != nil {
 		return errors.Wrap(err7, "crlmaps.BuildCrlMapsDomain failed")
 	}
-	crlOneToOneMapSourceReference.SetForwardNotificationsToOwner(true, hl)
 	_, err8 := uOfD.NewCompleteRefinement(crlMapSource, crlOneToOneMapSourceReference, "Refines CrlMapSource", hl, CrlOneToOneMapSourceReferenceRefinementURI)
 	if err8 != nil {
 		return errors.Wrap(err8, "crlmaps.BuildCrlMapsDomain failed")

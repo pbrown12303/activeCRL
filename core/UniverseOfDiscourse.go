@@ -415,7 +415,11 @@ func (uOfDPtr *UniverseOfDiscourse) Deregister(observer Observer) error {
 func (uOfDPtr *UniverseOfDiscourse) generateConceptID(uri ...string) (string, error) {
 	var conceptID string
 	if len(uri) == 0 || (len(uri) == 1 && uri[0] == "") {
-		conceptID = uuid.NewV4().String()
+		newUUID, err := uuid.NewV4()
+		if err != nil {
+			return "", errors.Wrap(err, "UniverseOfDiscourse.generateConceptID failed")
+		}
+		conceptID = newUUID.String()
 	} else {
 		if len(uri) == 1 {
 			_, err := url.ParseRequestURI(uri[0])
@@ -1133,7 +1137,6 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 
 	// Set the attributes - but no IDs
 	replicate.SetLabel(original.GetLabel(hl), hl)
-	replicate.SetForwardNotificationsToOwner(original.GetForwardNotificationsToOwner(hl), hl)
 	switch original.(type) {
 	case Reference:
 		replicate.(Reference).SetReferencedAttributeName(original.(Reference).GetReferencedAttributeName(hl), hl)

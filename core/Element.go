@@ -16,17 +16,16 @@ import (
 // element is the root representation of a concept
 type element struct {
 	sync.RWMutex
-	ConceptID                   string
-	Definition                  string
-	ForwardNotificationsToOwner bool
-	Label                       string
-	IsCore                      bool
-	OwningConceptID             string
-	ReadOnly                    bool
-	Version                     *versionCounter
-	uOfD                        *UniverseOfDiscourse
-	URI                         string
-	observers                   mapset.Set
+	ConceptID       string
+	Definition      string
+	Label           string
+	IsCore          bool
+	OwningConceptID string
+	ReadOnly        bool
+	Version         *versionCounter
+	uOfD            *UniverseOfDiscourse
+	URI             string
+	observers       mapset.Set
 }
 
 // addOwnedConcept adds the indicated Element as a child (owned) concept.
@@ -375,12 +374,6 @@ func (ePtr *element) FindImmediateAbstractions(abstractions map[string]Element, 
 			}
 		}
 	}
-}
-
-// GetForwardNotificationsToOwner returns the boolean indicating whether notifications should be forwareded to the owner
-func (ePtr *element) GetForwardNotificationsToOwner(hl *HeldLocks) bool {
-	hl.ReadLockElement(ePtr)
-	return ePtr.ForwardNotificationsToOwner
 }
 
 // GetIsCore returns true if the element is one of the core elements of CRL. The purpose of this
@@ -808,12 +801,6 @@ func (ePtr *element) isEquivalent(hl1 *HeldLocks, el *element, hl2 *HeldLocks, p
 		}
 		return false
 	}
-	if ePtr.ForwardNotificationsToOwner != el.ForwardNotificationsToOwner {
-		if print {
-			log.Printf("In element.isEquivalent, ForwardNotificationsToOwner do not match")
-		}
-		return false
-	}
 	if ePtr.Label != el.Label {
 		if print {
 			log.Printf("In element.isEquivalent, Labels do not match")
@@ -883,7 +870,6 @@ func (ePtr *element) marshalElementFields(buffer *bytes.Buffer) error {
 	buffer.WriteString(fmt.Sprintf("\"URI\":\"%s\",", ePtr.URI))
 	buffer.WriteString(fmt.Sprintf("\"Version\":\"%d\",", ePtr.Version.getVersion()))
 	buffer.WriteString(fmt.Sprintf("\"IsCore\":\"%t\",", ePtr.IsCore))
-	buffer.WriteString(fmt.Sprintf("\"ForwardNotificationsToOwner\":\"%t\",", ePtr.ForwardNotificationsToOwner))
 	buffer.WriteString(fmt.Sprintf("\"ReadOnly\":\"%t\"", ePtr.ReadOnly))
 	return nil
 }
@@ -901,18 +887,18 @@ func (ePtr *element) NotifyAll(notification *ChangeNotification, hl *HeldLocks) 
 	return nil
 }
 
-func (ePtr *element) notifyListeners(underlyingNotification *ChangeNotification, hl *HeldLocks) error {
+func (ePtr *element) notifyListeners(notification *ChangeNotification, hl *HeldLocks) error {
 	hl.ReadLockElement(ePtr)
 	if ePtr.uOfD != nil {
-		forwardingChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(ePtr, ForwardedChange, underlyingNotification, hl)
-		if err != nil {
-			return errors.Wrap(err, "element.notifyListeners failed")
-		}
 		it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
 		defer it.Stop()
 		for id := range it.C {
 			listener := ePtr.uOfD.GetElement(id.(string))
-			if listener.GetConceptID(hl) == ePtr.OwningConceptID && ePtr.ForwardNotificationsToOwner == true {
+			if listener.GetConceptID(hl) == ePtr.OwningConceptID && notification.GetReportingElementType() == "core.Reference" {
+				forwardingChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(ePtr, ForwardedChange, notification, hl)
+				if err != nil {
+					return errors.Wrap(err, "element.notifyListeners failed")
+				}
 				err = ePtr.uOfD.queueFunctionExecutions(listener, forwardingChangeNotification, hl)
 				if err != nil {
 					return errors.Wrap(err, "element.notifyListeners failed")
@@ -921,15 +907,15 @@ func (ePtr *element) notifyListeners(underlyingNotification *ChangeNotification,
 			}
 			switch listener.(type) {
 			case Reference:
-				if !(underlyingNotification.GetNatureOfChange() == ReferencedConceptChanged && underlyingNotification.GetReportingElementID() == listener.(Reference).GetConceptID(hl)) {
-					err := ePtr.uOfD.queueFunctionExecutions(listener, forwardingChangeNotification, hl)
+				if !(notification.GetNatureOfChange() == ReferencedConceptChanged && notification.GetReportingElementID() == listener.(Reference).GetConceptID(hl)) {
+					err := ePtr.uOfD.queueFunctionExecutions(listener, notification, hl)
 					if err != nil {
 						return errors.Wrap(err, "element.notifyListeners failed")
 					}
 				}
 			case Refinement:
-				if !((underlyingNotification.GetNatureOfChange() == AbstractConceptChanged || underlyingNotification.GetNatureOfChange() == RefinedConceptChanged) && underlyingNotification.GetReportingElementID() == listener.(Refinement).GetConceptID(hl)) {
-					err := ePtr.uOfD.queueFunctionExecutions(listener, forwardingChangeNotification, hl)
+				if !((notification.GetNatureOfChange() == AbstractConceptChanged || notification.GetNatureOfChange() == RefinedConceptChanged) && notification.GetReportingElementID() == listener.(Refinement).GetConceptID(hl)) {
+					err := ePtr.uOfD.queueFunctionExecutions(listener, notification, hl)
 					if err != nil {
 						return errors.Wrap(err, "element.notifyListeners failed")
 					}
@@ -976,18 +962,6 @@ func (ePtr *element) recoverElementFields(unmarshaledData *map[string]json.RawMe
 		return err
 	}
 	ePtr.IsCore, err = strconv.ParseBool(recoveredIsCore)
-	if err != nil {
-		log.Printf("Conversion of IsCOre from string to bool failed")
-		return err
-	}
-	// ForwardNotificationsToOwner
-	var recoveredForwardNotificationsToOwner string
-	err = json.Unmarshal((*unmarshaledData)["ForwardNotificationsToOwner"], &recoveredForwardNotificationsToOwner)
-	if err != nil {
-		log.Printf("Recovery of Element.ForwardNotificationsToOwner as string failed\n")
-		return err
-	}
-	ePtr.ForwardNotificationsToOwner, err = strconv.ParseBool(recoveredForwardNotificationsToOwner)
 	if err != nil {
 		log.Printf("Conversion of IsCOre from string to bool failed")
 		return err
@@ -1084,12 +1058,6 @@ func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 		}
 	}
 	return nil
-}
-
-// SetForwardNotificationsToOwner returns the boolean indicating whether notifications should be forwareded to the owner
-func (ePtr *element) SetForwardNotificationsToOwner(newValue bool, hl *HeldLocks) {
-	hl.WriteLockElement(ePtr)
-	ePtr.ForwardNotificationsToOwner = newValue
 }
 
 // SetIsCore sets the flag indicating that the element is a Core concept and cannot be edited. Once set, this flag cannot be cleared.
@@ -1375,7 +1343,6 @@ type Element interface {
 	GetFirstOwnedLiteralWithURI(string, *HeldLocks) Literal
 	GetFirstOwnedReferenceWithURI(string, *HeldLocks) Reference
 	GetFirstOwnedRefinementWithURI(string, *HeldLocks) Refinement
-	GetForwardNotificationsToOwner(*HeldLocks) bool
 	GetIsCore(*HeldLocks) bool
 	GetLabel(*HeldLocks) string
 	getLabelNoLock() string
@@ -1412,7 +1379,6 @@ type Element interface {
 	removeListener(string, *HeldLocks)
 	removeOwnedConcept(string, *HeldLocks) error
 	SetDefinition(string, *HeldLocks) error
-	SetForwardNotificationsToOwner(bool, *HeldLocks)
 	SetIsCore(*HeldLocks) error
 	SetIsCoreRecursively(*HeldLocks) error
 	SetLabel(string, *HeldLocks) error

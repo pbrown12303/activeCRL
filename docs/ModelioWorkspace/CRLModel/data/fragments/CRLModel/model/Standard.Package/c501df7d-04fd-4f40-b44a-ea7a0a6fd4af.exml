@@ -1,0 +1,106 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="Core" version="4">
+  <OBJECT>
+    <ID name="Core" mc="Standard.Package" uid="c501df7d-04fd-4f40-b44a-ea7a0a6fd4af"/>
+    <PID name="crlmodel" mc="Standard.Package" uid="a6f852b7-9db9-4806-9f17-9b7bf15393cd"/>
+    <ATTRIBUTES>
+      <ATT name="IsInstantiable">false</ATT>
+      <ATT name="IsAbstract">false</ATT>
+      <ATT name="IsLeaf">false</ATT>
+      <ATT name="IsRoot">false</ATT>
+      <ATT name="Visibility">Public</ATT>
+      <ATT name="Name"><![CDATA[Core]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <COMP relation="OwnedElement">
+        <OBJECT>
+          <ID name="NatureOfChange" mc="Standard.Enumeration" uid="bc048915-28a9-401a-877b-3b5ea81ec497"/>
+          <ATTRIBUTES>
+            <ATT name="IsElementary">true</ATT>
+            <ATT name="IsAbstract">false</ATT>
+            <ATT name="IsLeaf">false</ATT>
+            <ATT name="IsRoot">false</ATT>
+            <ATT name="Visibility">Public</ATT>
+            <ATT name="Name"><![CDATA[NatureOfChange]]></ATT>
+            <ATT name="status">1970354901745664</ATT>
+          </ATTRIBUTES>
+          <DEPENDENCIES>
+            <COMP relation="Value">
+              <OBJECT>
+                <ID name="ConceptAdded" mc="Standard.EnumerationLiteral" uid="d11a5af4-29cc-4e1d-a378-0164f2334a39"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[ConceptAdded]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="ConceptRemoved" mc="Standard.EnumerationLiteral" uid="fb9046c4-72d3-4729-8c1e-0bc386aebe8b"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[ConceptRemoved]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="ConceptChanged" mc="Standard.EnumerationLiteral" uid="cd160e5e-455f-4f9f-8b50-b3d829e5186f"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[ConceptChanged]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="ReferencedConceptChanged" mc="Standard.EnumerationLiteral" uid="155b8892-4960-46cb-9c09-e389559c3a43"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[ReferencedConceptChanged]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="OwningConceptChanged" mc="Standard.EnumerationLiteral" uid="d022ac52-8dfc-4fe1-843b-1e4baed156e9"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[OwningConceptChanged]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="AbstractConceptChanged" mc="Standard.EnumerationLiteral" uid="3bfb34c5-aef3-429e-b2ff-b8a9b631d560"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[AbstractConceptChanged]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="RefinedConceptChanged" mc="Standard.EnumerationLiteral" uid="ab13ad7c-148a-44a9-a635-f94b210e7120"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[RefinedConceptChanged]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="ForwardedChange" mc="Standard.EnumerationLiteral" uid="6d5e947d-6bea-4e22-8f86-f5f5745ab1e6"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[ForwardedChange]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+            </COMP>
+          </DEPENDENCIES>
+        </OBJECT>
+        <COMPID name="ChangeNotification" mc="Standard.Class" uid="da1bf2e2-d8e9-4440-9d9b-df613141fb9a"/>
+        <COMPID name="ConceptState" mc="Standard.DataType" uid="cf08b660-5326-4bc5-ba09-ff37c693d5b8"/>
+        <COMPID name="UniverseOfDiscourse" mc="Standard.Class" uid="3d99237d-76f9-4580-a9ef-adb7fed709a0"/>
+      </COMP>
+      <COMP relation="Product">
+        <COMPID name="Notifications" mc="Standard.ClassDiagram" uid="8057248e-3625-4d49-a15e-ba22535bc9df"/>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>

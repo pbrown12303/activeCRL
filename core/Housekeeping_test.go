@@ -595,16 +595,13 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			for _, pc := range calls {
 				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" {
 					if pc.target == childRef {
-						Expect(pc.notification.GetNatureOfChange()).To(Equal(ForwardedChange))
-						Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(OwningConceptChanged))
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(OwningConceptChanged))
 						childRefFound = true
 					} else if pc.target == oldOwnerRef {
-						Expect(pc.notification.GetNatureOfChange()).To(Equal(ForwardedChange))
-						Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(OwningConceptChanged))
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(OwningConceptChanged))
 						oldOwnerRefFound = true
 					} else if pc.target == newOwnerRef {
-						Expect(pc.notification.GetNatureOfChange()).To(Equal(ForwardedChange))
-						Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(OwningConceptChanged))
+						Expect(pc.notification.GetNatureOfChange()).To(Equal(OwningConceptChanged))
 						newOwnerRefFound = true
 					}
 				}
@@ -616,86 +613,4 @@ var _ = Describe("Verify housekeeping function execution", func() {
 		})
 	})
 
-	Describe("Test ConceptChanged propagation", func() {
-		Specify("After ConceptChanged, ForwardedChanged should be sent to owner if ForwardNotificationsToOwner is true", func() {
-			el, _ := uOfD.NewElement(hl)
-			el.SetForwardNotificationsToOwner(true, hl)
-			newOwner, _ := uOfD.NewElement(hl)
-			newOwner.SetForwardNotificationsToOwner(true, hl)
-			grandparent, _ := uOfD.NewElement(hl)
-			newOwner.SetOwningConceptID(grandparent.getConceptIDNoLock(), hl)
-			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			el.SetLabel("TestLabel", hl)
-			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			newOwnerFound := false
-			grandparentFound := false
-			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" {
-					if pc.target == grandparent {
-						Expect(pc.notification.GetNatureOfChange()).To(Equal(ForwardedChange))
-						Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ForwardedChange))
-						Expect(pc.notification.GetUnderlyingChange().GetUnderlyingChange().GetNatureOfChange()).To(Equal(ConceptChanged))
-						grandparentFound = true
-					} else if pc.target == newOwner {
-						Expect(pc.notification.GetNatureOfChange()).To(Equal(ForwardedChange))
-						Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ConceptChanged))
-						newOwnerFound = true
-					}
-				}
-			}
-			Expect(newOwnerFound).To(BeTrue())
-			Expect(grandparentFound).To(BeTrue())
-			uOfD.executedCalls = nil
-		})
-		Specify("After ConceptChanged, ForwardedChanged should not be sent to owner if ForwardNotificationsToOwner is false", func() {
-			el, _ := uOfD.NewElement(hl)
-			el.SetForwardNotificationsToOwner(true, hl)
-			newOwner, _ := uOfD.NewElement(hl)
-			grandparent, _ := uOfD.NewElement(hl)
-			newOwner.SetOwningConceptID(grandparent.getConceptIDNoLock(), hl)
-			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)
-			hl.ReleaseLocksAndWait()
-			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			el.SetLabel("TestLabel", hl)
-			hl.ReleaseLocksAndWait()
-			var calls []*pendingFunctionCall
-			done := false
-			for done == false {
-				select {
-				case pc := <-uOfD.getExecutedCalls():
-					calls = append(calls, pc)
-				default:
-					done = true
-				}
-			}
-			newOwnerFound := false
-			grandparentFound := false
-			for _, pc := range calls {
-				if pc.functionID == "http://activeCrl.com/core/coreHousekeeping" {
-					if pc.target == grandparent {
-						grandparentFound = true
-					} else if pc.target == newOwner {
-						Expect(pc.notification.GetNatureOfChange()).To(Equal(ForwardedChange))
-						Expect(pc.notification.GetUnderlyingChange().GetNatureOfChange()).To(Equal(ConceptChanged))
-						newOwnerFound = true
-					}
-				}
-			}
-			Expect(newOwnerFound).To(BeTrue())
-			Expect(grandparentFound).To(BeFalse())
-			uOfD.executedCalls = nil
-		})
-	})
 })

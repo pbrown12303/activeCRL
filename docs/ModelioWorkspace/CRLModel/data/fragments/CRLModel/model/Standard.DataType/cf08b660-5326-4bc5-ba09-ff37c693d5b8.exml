@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="ConceptState" version="4">
+  <OBJECT>
+    <ID name="ConceptState" mc="Standard.DataType" uid="cf08b660-5326-4bc5-ba09-ff37c693d5b8"/>
+    <PID name="Core" mc="Standard.Package" uid="c501df7d-04fd-4f40-b44a-ea7a0a6fd4af"/>
+    <ATTRIBUTES>
+      <ATT name="IsElementary">true</ATT>
+      <ATT name="IsAbstract">false</ATT>
+      <ATT name="IsLeaf">false</ATT>
+      <ATT name="IsRoot">false</ATT>
+      <ATT name="Visibility">Public</ATT>
+      <ATT name="Name"><![CDATA[ConceptState]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES></DEPENDENCIES>
+  </OBJECT>
+</EXT>

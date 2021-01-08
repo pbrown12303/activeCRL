@@ -1,6 +1,7 @@
 package crlmapsdomain
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -76,6 +77,8 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		Expect(err).To(BeNil())
 		Expect(mapAbstractDomain.SetLabel("MapAbstractDomain", hl)).To(Succeed())
 		Expect(mapAbstractDomain.SetOwningConcept(mapAbstractFolder, hl)).To(Succeed())
+		mapAbstractDomainOwnedConcepts := mapAbstractDomain.GetOwnedConcepts(hl)
+		fmt.Print(mapAbstractDomainOwnedConcepts)
 		mapAbstractSourceRef := mapAbstractDomain.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
 		Expect(mapAbstractSourceRef.SetReferencedConcept(sourceAbstractDomain, hl)).To(Succeed())
 		mapAbstractTargetRef := mapAbstractDomain.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
