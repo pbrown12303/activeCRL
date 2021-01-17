@@ -660,6 +660,10 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 		crldiagramdomain.SetLinkTarget(diagramLink, diagramTarget, hl)
 		modelElement = newReference
 		diagramLink.SetOwningConcept(diagram, hl)
+		err = diagramLink.Register(dmPtr.elementManager)
+		if err != nil {
+			return "", errors.Wrap(err, "diagramManager.ReferenceLinkChanged failed")
+		}
 		dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramLink = uOfD.GetElement(linkID)
@@ -724,6 +728,10 @@ func (dmPtr *diagramManager) RefinementLinkChanged(linkID string, sourceID strin
 		crldiagramdomain.SetLinkTarget(diagramLink, diagramTarget, hl)
 		diagramLink.SetOwningConcept(diagram, hl)
 		modelElement = newRefinement
+		err = modelElement.Register(dmPtr.elementManager)
+		if err != nil {
+			return "", errors.Wrap(err, "diagramManager.ReferenceLinkChanged failed")
+		}
 		dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramLink = uOfD.GetElement(linkID)
@@ -767,6 +775,7 @@ func (dmPtr *diagramManager) refreshDiagram(diagram core.Element, hl *core.HeldL
 		if err2 != nil {
 			return errors.Wrap(err2, "diagramManager.refreshDiagram failed")
 		}
+		node.Register(dmPtr.elementManager)
 		notificationResponse, err := BrowserGUISingleton.SendNotification("AddDiagramNode", node.GetConceptID(hl), conceptState, additionalParameters)
 		if err != nil {
 			return errors.Wrap(err, "diagramManager.refreshDiagram failed")
@@ -782,6 +791,7 @@ func (dmPtr *diagramManager) refreshDiagram(diagram core.Element, hl *core.HeldL
 		if err2 != nil {
 			return errors.Wrap(err2, "diagramManager.refreshDiagram failed")
 		}
+		link.Register(dmPtr.elementManager)
 		notificationResponse, err := BrowserGUISingleton.SendNotification("AddDiagramLink", link.GetConceptID(hl), conceptState, additionalParameters)
 		if err != nil {
 			return errors.Wrap(err, "diagramManager.refreshDiagram failed")
@@ -1083,13 +1093,18 @@ func (dmPtr *diagramManager) Update(notification *core.ChangeNotification, hl *c
 			(notification.GetBeforeReferencedState() != nil && notification.GetBeforeReferencedState().ConceptID != notification.GetAfterReferencedState().ConceptID) {
 			// If the diagram was the owner but is no longer the owner, then remove the diagram element view
 			beforeState := notification.GetBeforeConceptState()
-			additionalParameters := map[string]string{"OwnerID": notification.GetBeforeReferencedState().ConceptID}
+			ownerID := ""
+			if notification.GetBeforeReferencedState() != nil {
+				ownerID = notification.GetBeforeReferencedState().ConceptID
+			}
+			additionalParameters := map[string]string{"OwnerID": ownerID}
 			SendNotification("DeleteDiagramElement", beforeState.ConceptID, beforeState, additionalParameters)
 		} else if notification.GetBeforeReferencedState() == nil ||
 			(notification.GetAfterReferencedState() != nil && notification.GetBeforeReferencedState().ConceptID != notification.GetAfterReferencedState().ConceptID) {
 			// we have to add the diagram element view
 			afterState := notification.GetAfterConceptState()
 			newElement := uOfD.GetElement(afterState.ConceptID)
+			newElement.Register(dmPtr.elementManager)
 			if crldiagramdomain.IsDiagramNode(newElement, hl) {
 				additionalParameters := getNodeAdditionalParameters(newElement, hl)
 				_, err := SendNotification("AddDiagramNode", newElement.GetConceptID(hl), afterState, additionalParameters)

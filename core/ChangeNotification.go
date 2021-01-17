@@ -189,6 +189,12 @@ func (cnPtr *ChangeNotification) GetReportingElementLabel() string {
 	return cnPtr.reportingElementState.Label
 }
 
+// GetReportingElementState returns the State of the element sending the notification
+// If this is nil, the report is coming from the uOfD
+func (cnPtr *ChangeNotification) GetReportingElementState() *ConceptState {
+	return cnPtr.reportingElementState
+}
+
 // GetReportingElementType returns the Type of the element sending the notification
 func (cnPtr *ChangeNotification) GetReportingElementType() string {
 	return cnPtr.reportingElementState.ConceptType
