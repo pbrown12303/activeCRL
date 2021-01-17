@@ -8,7 +8,6 @@ import (
 
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
-	// "github.com/pbrown12303/activeCRL/crleditorbrowserguidomain"
 )
 
 const treeNodeSuffix = "TreeNode"
@@ -107,6 +106,7 @@ func (tmPtr *treeManager) changeNode(el core.Element, hl *core.HeldLocks) error 
 	if notificationResponse != nil && notificationResponse.Result != 0 {
 		return errors.New("In TreeManager.changeNode, notification response was: " + notificationResponse.ErrorMessage)
 	}
+
 	return nil
 }
 
@@ -190,5 +190,6 @@ func (tmPtr *treeManager) Update(notification *core.ChangeNotification, hl *core
 	case core.ConceptRemoved:
 		tmPtr.removeNode(changedElementID, hl)
 	}
+
 	return nil
 }

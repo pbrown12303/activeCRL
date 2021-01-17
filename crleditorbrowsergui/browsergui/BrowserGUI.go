@@ -34,6 +34,7 @@ type BrowserGUI struct {
 	startBrowser              bool
 	treeDragSelection         core.Element
 	treeManager               *treeManager
+	propertyManager           *propertyManager
 	workingDomain             core.Element
 }
 
@@ -47,19 +48,6 @@ func InitializeBrowserGUISingleton(editor *crleditor.Editor, startBrowser bool) 
 	BrowserGUISingleton = browserGUI
 }
 
-// AddBrowserGUIDomain adds the concepts representing the various editor views to the universe of discourse
-// func AddBrowserGUIDomain(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
-// 	conceptSpace := uOfD.GetElementWithURI(crleditorbrowserguidomain.BrowserGUIDomainURI)
-// 	if conceptSpace == nil {
-// 		var err error
-// 		conceptSpace, err = crleditorbrowserguidomain.BuildBrowserGUIDomain(uOfD, hl)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 	}
-// 	return conceptSpace, nil
-// }
-
 // CloseDiagramView closes the gui display of the diagram
 func (bgPtr *BrowserGUI) CloseDiagramView(diagramID string, hl *core.HeldLocks) error {
 	_, err := SendNotification("CloseDiagramView", diagramID, nil, map[string]string{})
@@ -69,8 +57,16 @@ func (bgPtr *BrowserGUI) CloseDiagramView(diagramID string, hl *core.HeldLocks) 
 	return nil
 }
 
+// createPropertyManager creates an instance of the propertyManager
+func (bgPtr *BrowserGUI) createPropertyManager() error {
+	pm := &propertyManager{}
+	pm.browserGUI = bgPtr
+	bgPtr.propertyManager = pm
+	return nil
+}
+
 // createTreeManager creates an instance of the TreeManager
-func (bgPtr *BrowserGUI) createTreeManager(treeID string, hl *core.HeldLocks) error {
+func (bgPtr *BrowserGUI) createTreeManager(treeID string) error {
 	tm := &treeManager{}
 	tm.browserGUI = bgPtr
 	tm.treeID = treeID
@@ -244,9 +240,8 @@ func (bgPtr *BrowserGUI) GetUofD() *core.UniverseOfDiscourse {
 
 // Initialize must be called before any editor operation.
 func (bgPtr *BrowserGUI) Initialize(hl *core.HeldLocks) error {
-	// bgPtr.initialized = false
 	if bgPtr.treeManager == nil {
-		bgPtr.createTreeManager("#uOfD()", hl)
+		bgPtr.createTreeManager("#uOfD()")
 	}
 	err := bgPtr.treeManager.initialize(hl)
 	if err != nil {
@@ -261,6 +256,13 @@ func (bgPtr *BrowserGUI) Initialize(hl *core.HeldLocks) error {
 	}
 	if bgPtr.clientNotificationManager == nil {
 		bgPtr.clientNotificationManager = newClientNotificationManager()
+	}
+	if bgPtr.propertyManager == nil {
+		bgPtr.createPropertyManager()
+	}
+	err = bgPtr.propertyManager.initialize(hl)
+	if err != nil {
+		errors.Wrap(err, "BrowserGUI.Initialize failed")
 	}
 	return nil
 }

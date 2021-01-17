@@ -1473,6 +1473,9 @@ function crlInitializeWebSocket() {
                 case "UpdateDiagramNode":
                     crlNotificationUpdateDiagramNode(data);
                     break;
+                case "UpdateProperties":
+                    crlNotificationUpdateProperties(data);
+                    break;
                 case "WorkspacePath":
                     crlNotificationUpdateWorkspacePath(data);
                     break;
@@ -2001,6 +2004,10 @@ function crlNotificationUpdateTreeNode(data) {
         crlUpdateProperties(data);
     }
     crlSendNormalResponse()
+}
+
+var crlNotificationUpdateProperties = function(data){
+    crlUpdateProperties(data);
 }
 
 var crlNotificationUpdateWorkspacePath = function (data) {

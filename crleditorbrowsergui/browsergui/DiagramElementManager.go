@@ -106,6 +106,10 @@ func getNodeAdditionalParameters(node core.Element, hl *core.HeldLocks) map[stri
 // Update updates the client display of the diagram based on changes to the diagramElement
 func (demPtr *diagramElementManager) Update(changeNotification *core.ChangeNotification, hl *core.HeldLocks) error {
 	uOfD := hl.GetUniverseOfDiscourse()
+	// if the reportingElementState is nil, this notification comes from the uOfD. We can ignore these (I think)
+	if changeNotification.GetReportingElementState() == nil {
+		return nil
+	}
 	diagramElement := uOfD.GetElement(changeNotification.GetReportingElementID())
 	if diagramElement == nil {
 		return errors.New("In DiagramElementManager.Update, diagramElement not found in uOfD")
@@ -156,6 +160,20 @@ func (demPtr *diagramElementManager) Update(changeNotification *core.ChangeNotif
 				return errors.Wrap(err, "DiagramView.go updateDiagrmElementView failed")
 			}
 			SendNotification("UpdateDiagramLink", diagramElement.GetConceptID(hl), conceptState, additionalParameters)
+		case core.ConceptChanged:
+			currentConcept := changeNotification.GetAfterConceptState()
+			priorConcept := changeNotification.GetBeforeConceptState()
+			if currentConcept != nil && priorConcept != nil && currentConcept.Label != priorConcept.Label {
+				currentLabel := currentConcept.Label
+				diagramElement.SetLabel(currentLabel, hl)
+				crldiagramdomain.SetDisplayLabel(diagramElement, currentLabel, hl)
+				additionalParameters := getLinkAdditionalParameters(diagramElement, hl)
+				conceptState, err := core.NewConceptState(diagramElement)
+				if err != nil {
+					return errors.Wrap(err, "DiagramView.go updateDiagrmElementView failed")
+				}
+				SendNotification("UpdateDiagramLink", diagramElement.GetConceptID(hl), conceptState, additionalParameters)
+			}
 		}
 		return nil
 	}
