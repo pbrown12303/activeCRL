@@ -1,16 +1,18 @@
 package browsergui
 
 import (
-	"github.com/pkg/errors"
 	"log"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldatastructuresdomain"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 	"github.com/pbrown12303/activeCRL/crleditor"
+
 	// "github.com/pbrown12303/activeCRL/crleditorbrowserguidomain"
 	"github.com/pbrown12303/activeCRL/crleditordomain"
 )
@@ -269,9 +271,9 @@ func (bgPtr *BrowserGUI) Initialize(hl *core.HeldLocks) error {
 
 // InitializeGUI sets the client state after a browser refresh.
 func (bgPtr *BrowserGUI) InitializeGUI(hl *core.HeldLocks) error {
-	if bgPtr.serverRunning == false {
+	if !bgPtr.serverRunning {
 		go bgPtr.StartServer()
-		for bgPtr.IsInitialized() == false {
+		for !bgPtr.IsInitialized() {
 			time.Sleep(100 * time.Millisecond)
 		}
 		bgPtr.serverRunning = true
@@ -327,7 +329,7 @@ func (bgPtr *BrowserGUI) nullifyReferencedConcept(refID string, hl *core.HeldLoc
 	if ref == nil {
 		return errors.New("BrowserGUI.nullifyReferencedConcept called with refID not found in bgPtr.editor.GetUofD()")
 	}
-	err := ref.SetReferencedConceptID("", hl)
+	err := ref.SetReferencedConceptID("", core.NoAttribute, hl)
 	if err != nil {
 		return errors.Wrap(err, "BrowserGUI.nullifyReferencedConcept failed")
 	}
@@ -461,22 +463,22 @@ func (bgPtr *BrowserGUI) ShowConceptInTree(concept core.Element, hl *core.HeldLo
 func (bgPtr *BrowserGUI) UpdateDebugSettings(request *Request) {
 	traceChange, err := strconv.ParseBool(request.AdditionalParameters["EnableNotificationTracing"])
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		return
 	}
 	omitHousekeeingCalls, err := strconv.ParseBool(request.AdditionalParameters["OmitHousekeepingCalls"])
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		return
 	}
 	omitManageTreeNodesCalls, err := strconv.ParseBool(request.AdditionalParameters["OmitManageTreeNodesCalls"])
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		return
 	}
 	omitDiagramRelatedCalls, err := strconv.ParseBool(request.AdditionalParameters["OmitDiagramRelatedCalls"])
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		return
 	}
 	bgPtr.SetTraceChange(traceChange, omitHousekeeingCalls, omitManageTreeNodesCalls, omitDiagramRelatedCalls)

@@ -94,7 +94,7 @@ func (cnMgr *ClientNotificationManager) SendNotification(
 			return nil, fmt.Errorf("WebSocket closed for response to notification: %#v", notification)
 		default:
 			log.Printf("Error %s in parsing response to WebSocket notification: %#v", err.Error(), notification)
-			return nil, fmt.Errorf("Error %s in parsing response to WebSocket notification: %#v", err.Error(), notification)
+			return nil, fmt.Errorf("error %s in parsing response to WebSocket notification: %#v", err.Error(), notification)
 		}
 	}
 	if CrlLogClientNotifications {

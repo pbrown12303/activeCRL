@@ -13,7 +13,7 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 	hl.ReadLockElement(el)
 	// Supress circular notifications
 	underlyingNotification := notification.GetUnderlyingChange()
-	if underlyingNotification != nil && hasReportedPreviously(el.GetConceptID(hl), underlyingNotification) {
+	if underlyingNotification != nil && HasReportedPreviously(el.GetConceptID(hl), underlyingNotification) {
 		return nil
 	}
 	// Notify listeners
@@ -38,14 +38,14 @@ func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *Univer
 	return nil
 }
 
-// hasReportedPreviously checks to see whether the element was a reporting element in the notification or one of its nested notifications
-func hasReportedPreviously(elID string, notification *ChangeNotification) bool {
+// HasReportedPreviously checks to see whether the element was a reporting element in the notification or one of its nested notifications
+func HasReportedPreviously(elID string, notification *ChangeNotification) bool {
 	if notification.GetReportingElementID() == elID {
 		return true
 	}
 	nestedNotification := notification.GetUnderlyingChange()
 	if nestedNotification != nil {
-		return hasReportedPreviously(elID, nestedNotification)
+		return HasReportedPreviously(elID, nestedNotification)
 	}
 	return false
 }

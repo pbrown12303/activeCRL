@@ -79,7 +79,7 @@ func AddStringListMemberAfter(list core.Element, priorMemberLiteral core.Literal
 			return nil, errors.Wrap(err2, "AddStringListMemberAfter failed")
 		}
 		if referenceToLastMemberLiteral != nil {
-			referenceToLastMemberLiteral.SetReferencedConcept(newMemberLiteral, hl)
+			referenceToLastMemberLiteral.SetReferencedConcept(newMemberLiteral, core.NoAttribute, hl)
 		}
 	} else {
 		setPriorMemberLiteral(newPostMemberLiteral, newMemberLiteral, hl)
@@ -131,7 +131,7 @@ func AddStringListMemberBefore(list core.Element, postMemberLiteral core.Literal
 		// The new member is the only member of the list
 		referenceToFirstMemberLiteral, _ := getStringListReferenceToFirstMemberLiteral(list, hl)
 		if referenceToFirstMemberLiteral != nil {
-			referenceToFirstMemberLiteral.SetReferencedConcept(newMemberLiteral, hl)
+			referenceToFirstMemberLiteral.SetReferencedConcept(newMemberLiteral, core.NoAttribute, hl)
 		}
 	} else {
 		setNextMemberLiteral(newPriorMemberLiteral, newMemberLiteral, hl)
@@ -172,7 +172,7 @@ func AppendStringListMember(list core.Element, value string, hl *core.HeldLocks)
 		return nil, errors.Wrap(err2, "AppendStringListMember failed")
 	}
 	if referenceToLastMemberLiteral != nil {
-		err = referenceToLastMemberLiteral.SetReferencedConcept(newMemberLiteral, hl)
+		err = referenceToLastMemberLiteral.SetReferencedConcept(newMemberLiteral, core.NoAttribute, hl)
 		if err != nil {
 			return nil, errors.Wrap(err, "AppendStringListMember failed")
 		}
@@ -182,7 +182,7 @@ func AppendStringListMember(list core.Element, value string, hl *core.HeldLocks)
 		if err4 != nil {
 			return nil, errors.Wrap(err2, "AppendStringListMember failed")
 		}
-		err = referenceToFirstMemberLiteral.SetReferencedConcept(newMemberLiteral, hl)
+		err = referenceToFirstMemberLiteral.SetReferencedConcept(newMemberLiteral, core.NoAttribute, hl)
 		if err != nil {
 			return nil, errors.Wrap(err, "AppendStringListMember failed")
 		}
@@ -404,7 +404,7 @@ func PrependStringListMember(list core.Element, value string, hl *core.HeldLocks
 		return nil, errors.Wrap(err2, "PrependStringListMember failed")
 	}
 	if referenceToFirstMemberLiteral != nil {
-		err = referenceToFirstMemberLiteral.SetReferencedConcept(newMemberLiteral, hl)
+		err = referenceToFirstMemberLiteral.SetReferencedConcept(newMemberLiteral, core.NoAttribute, hl)
 		if err != nil {
 			return nil, errors.Wrap(err, "PrependStringListMember failed")
 		}
@@ -414,7 +414,7 @@ func PrependStringListMember(list core.Element, value string, hl *core.HeldLocks
 		if err4 != nil {
 			return nil, errors.Wrap(err2, "PrependStringListMember failed")
 		}
-		err = referenceToLastMemberLiteral.SetReferencedConcept(newMemberLiteral, hl)
+		err = referenceToLastMemberLiteral.SetReferencedConcept(newMemberLiteral, core.NoAttribute, hl)
 		if err != nil {
 			return nil, errors.Wrap(err, "PrependStringListMember failed")
 		}
@@ -446,13 +446,13 @@ func RemoveStringListMember(list core.Element, value string, hl *core.HeldLocks)
 				setNextMemberLiteral(priorMemberLiteral, nextMemberLiteral, hl)
 			} else {
 				referenceToFirstMemberLiteral, _ := getStringListReferenceToFirstMemberLiteral(list, hl)
-				referenceToFirstMemberLiteral.SetReferencedConcept(nextMemberLiteral, hl)
+				referenceToFirstMemberLiteral.SetReferencedConcept(nextMemberLiteral, core.NoAttribute, hl)
 			}
 			if nextMemberLiteral != nil {
 				setPriorMemberLiteral(nextMemberLiteral, priorMemberLiteral, hl)
 			} else {
 				referenceToLastMemberLiteral, _ := getStringListReferenceToLastMemberLiteral(list, hl)
-				referenceToLastMemberLiteral.SetReferencedConcept(priorMemberLiteral, hl)
+				referenceToLastMemberLiteral.SetReferencedConcept(priorMemberLiteral, core.NoAttribute, hl)
 			}
 			// Now delete the member literal
 			uOfD.DeleteElement(memberLiteral, hl)
@@ -469,7 +469,7 @@ func setNextMemberLiteral(memberLiteral core.Literal, nextLiteral core.Literal, 
 	if err != nil {
 		return errors.Wrap(err, "setNextMemberLiteral failed")
 	}
-	err = nextLiteralReference.SetReferencedConcept(nextLiteral, hl)
+	err = nextLiteralReference.SetReferencedConcept(nextLiteral, core.NoAttribute, hl)
 	if err != nil {
 		return errors.Wrap(err, "setNextMemberLiteral failed")
 	}
@@ -483,7 +483,7 @@ func setPriorMemberLiteral(memberLiteral core.Literal, priorLiteral core.Literal
 	if err != nil {
 		return errors.Wrap(err, "setNextMemberLiteral failed")
 	}
-	err = priorLiteralReference.SetReferencedConcept(priorLiteral, hl)
+	err = priorLiteralReference.SetReferencedConcept(priorLiteral, core.NoAttribute, hl)
 	if err != nil {
 		return errors.Wrap(err, "setNextMemberLiteral failed")
 	}

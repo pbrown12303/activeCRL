@@ -26,7 +26,7 @@ var notificationGraphs []*NotificationGraph
 // EnableNotificationPrint turns on the printing of notifications during tracing.
 var EnableNotificationPrint bool
 
-// traceFunctionCalls determines whether individual function calls will be graced. Its primary purpose is
+// traceFunctionCalls determines whether individual function calls will be traced. Its primary purpose is
 // to understand what notifications resulted in the call to the function. When true, every time a function call
 // is executed a graph of the function call and its antecedent notifications will be created and added to the
 // functionCallGraphs

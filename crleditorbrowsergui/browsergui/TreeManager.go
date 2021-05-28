@@ -10,13 +10,10 @@ import (
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 )
 
-const treeNodeSuffix = "TreeNode"
-
 // treeManager manages the client's tree display of the uOfD
 type treeManager struct {
-	treeNodeManager core.Element
-	treeID          string
-	browserGUI      *BrowserGUI
+	treeID     string
+	browserGUI *BrowserGUI
 }
 
 // addChildren adds the OwnedConcepts of the supplied Element to the client's tree
@@ -125,14 +122,14 @@ func (tmPtr *treeManager) removeNode(elID string, hl *core.HeldLocks) error {
 	return nil
 }
 
-func (tmPtr *treeManager) getChangeNotificationBelowUofD(changeNotification *core.ChangeNotification) *core.ChangeNotification {
-	if changeNotification.GetChangedConceptID() == "" { // only happens when uOfD is the reporting element
-		return changeNotification.GetUnderlyingChange()
-	} else if changeNotification.GetUnderlyingChange() != nil {
-		return tmPtr.getChangeNotificationBelowUofD(changeNotification.GetUnderlyingChange())
-	}
-	return nil
-}
+// func (tmPtr *treeManager) getChangeNotificationBelowUofD(changeNotification *core.ChangeNotification) *core.ChangeNotification {
+// 	if changeNotification.GetChangedConceptID() == "" { // only happens when uOfD is the reporting element
+// 		return changeNotification.GetUnderlyingChange()
+// 	} else if changeNotification.GetUnderlyingChange() != nil {
+// 		return tmPtr.getChangeNotificationBelowUofD(changeNotification.GetUnderlyingChange())
+// 	}
+// 	return nil
+// }
 
 // initialize sets up the uOfD monitoring
 func (tmPtr *treeManager) initialize(hl *core.HeldLocks) error {
@@ -176,7 +173,7 @@ func (tmPtr *treeManager) Update(notification *core.ChangeNotification, hl *core
 	uOfD := hl.GetUniverseOfDiscourse()
 
 	// Tracing
-	if core.AdHocTrace == true {
+	if core.AdHocTrace {
 		log.Printf("In treeManager.Update()")
 	}
 

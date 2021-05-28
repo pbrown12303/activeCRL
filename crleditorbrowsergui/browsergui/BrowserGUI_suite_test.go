@@ -1,14 +1,11 @@
 package browsergui_test
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
-	"runtime"
-	"syscall"
 	"testing"
+
 	// "time"
 
 	. "github.com/onsi/ginkgo"
@@ -20,7 +17,6 @@ import (
 	"github.com/pbrown12303/activeCRL/crleditorbrowsergui/browsergui"
 )
 
-var startCrlEditorServerCmd *exec.Cmd
 var page *agouti.Page
 var agoutiDriver *agouti.WebDriver
 var testRootDir string
@@ -99,26 +95,8 @@ var _ = AfterSuite(func() {
 	Expect(os.RemoveAll(testRootDir)).To(Succeed())
 })
 
-func stop() error {
-	var err error
-	if runtime.GOOS == "windows" {
-		err = startCrlEditorServerCmd.Process.Kill()
-	} else {
-		err = startCrlEditorServerCmd.Process.Signal(syscall.SIGTERM)
-	}
-	if err != nil {
-		return fmt.Errorf("failed to stop command: %s", err)
-	}
-
-	startCrlEditorServerCmd.Wait()
-
-	return nil
-}
-
 func TestCrlEditor(t *testing.T) {
 	RegisterFailHandler(Fail)
 
-	// startCrlEditorServerCmd = exec.Command("crlEditorServer")
-	// startCrlEditorServerCmd.Dir = "C:/GoWorkspace/bin/"
 	RunSpecs(t, "CrlEditor Suite")
 }

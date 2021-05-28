@@ -80,9 +80,9 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		mapAbstractDomainOwnedConcepts := mapAbstractDomain.GetOwnedConcepts(hl)
 		fmt.Print(mapAbstractDomainOwnedConcepts)
 		mapAbstractSourceRef := mapAbstractDomain.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
-		Expect(mapAbstractSourceRef.SetReferencedConcept(sourceAbstractDomain, hl)).To(Succeed())
+		Expect(mapAbstractSourceRef.SetReferencedConcept(sourceAbstractDomain, core.NoAttribute, hl)).To(Succeed())
 		mapAbstractTargetRef := mapAbstractDomain.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
-		Expect(mapAbstractTargetRef.SetReferencedConcept(targetAbstractDomain, hl)).To(Succeed())
+		Expect(mapAbstractTargetRef.SetReferencedConcept(targetAbstractDomain, core.NoAttribute, hl)).To(Succeed())
 
 		// Source Instance
 		sourceInstanceFolder, err = uOfD.NewOwnedElement(nil, "sourceInstanceFolder", hl)
@@ -114,7 +114,7 @@ var _ = Describe("CrlMaps mapping tests", func() {
 	Describe("Target domain creation", func() {
 		Specify("The target domain should be created correctly", func() {
 			log.Printf("About set set sourceInstanceDomain")
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 			targetInstanceDomain := mapInstanceFolder.GetFirstOwnedConceptRefinedFrom(targetAbstractDomain, hl)
 			Expect(targetInstanceDomain).ToNot(BeNil())
@@ -156,15 +156,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(elementToElementMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(elementToElementMap.SetLabel("ElementToElementMap", hl)).To(Succeed())
-			Expect(SetSource(elementToElementMap, sourceAbstractElement, hl)).To(Succeed())
-			Expect(SetTarget(elementToElementMap, targetAbstractElement, hl)).To(Succeed())
+			Expect(SetSource(elementToElementMap, sourceAbstractElement, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(elementToElementMap, targetAbstractElement, core.NoAttribute, hl)).To(Succeed())
 			// Add the element to the source instance
 			sourceInstanceElement, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractElement, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceElement.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceElement.SetLabel("SourceInstanceElement", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -194,15 +194,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(reference2ReferenceMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(reference2ReferenceMap.SetLabel("Reference2ReferenceMap", hl)).To(Succeed())
-			Expect(SetSource(reference2ReferenceMap, sourceAbstractReference, hl)).To(Succeed())
-			Expect(SetTarget(reference2ReferenceMap, targetAbstractReference, hl)).To(Succeed())
+			Expect(SetSource(reference2ReferenceMap, sourceAbstractReference, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(reference2ReferenceMap, targetAbstractReference, core.NoAttribute, hl)).To(Succeed())
 			// Add the reference to the source instance
 			sourceInstanceReference, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractReference, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceReference.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceReference.SetLabel("SourceInstanceReference", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -233,15 +233,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(referemce2LiteralMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(referemce2LiteralMap.SetLabel("Literal2LiteralMap", hl)).To(Succeed())
-			Expect(SetSource(referemce2LiteralMap, sourceAbstractLiteral, hl)).To(Succeed())
-			Expect(SetTarget(referemce2LiteralMap, targetAbstractLiteral, hl)).To(Succeed())
+			Expect(SetSource(referemce2LiteralMap, sourceAbstractLiteral, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(referemce2LiteralMap, targetAbstractLiteral, core.NoAttribute, hl)).To(Succeed())
 			// Add the literal to the source instance
 			sourceInstanceLiteral, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractLiteral, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceLiteral.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceLiteral.SetLabel("SourceInstanceLiteral", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -272,15 +272,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(referemce2RefinementMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(referemce2RefinementMap.SetLabel("Refinement2RefinementMap", hl)).To(Succeed())
-			Expect(SetSource(referemce2RefinementMap, sourceAbstractRefinement, hl)).To(Succeed())
-			Expect(SetTarget(referemce2RefinementMap, targetAbstractRefinement, hl)).To(Succeed())
+			Expect(SetSource(referemce2RefinementMap, sourceAbstractRefinement, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(referemce2RefinementMap, targetAbstractRefinement, core.NoAttribute, hl)).To(Succeed())
 			// Add the refinement to the source instance
 			sourceInstanceRefinement, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractRefinement, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceRefinement.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceRefinement.SetLabel("SourceInstanceRefinement", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -311,15 +311,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(elementToReferenceMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(elementToReferenceMap.SetLabel("ElementToReferenceMap", hl)).To(Succeed())
-			Expect(SetSource(elementToReferenceMap, sourceAbstractElement, hl)).To(Succeed())
-			Expect(SetTarget(elementToReferenceMap, targetAbstractReference, hl)).To(Succeed())
+			Expect(SetSource(elementToReferenceMap, sourceAbstractElement, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(elementToReferenceMap, targetAbstractReference, core.NoAttribute, hl)).To(Succeed())
 			// Add the element to the source instance
 			sourceInstanceElement, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractElement, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceElement.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceElement.SetLabel("SourceInstanceElement", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -349,15 +349,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(elementToLiteralMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(elementToLiteralMap.SetLabel("ElementToLiteralMap", hl)).To(Succeed())
-			Expect(SetSource(elementToLiteralMap, sourceAbstractElement, hl)).To(Succeed())
-			Expect(SetTarget(elementToLiteralMap, targetAbstractLiteral, hl)).To(Succeed())
+			Expect(SetSource(elementToLiteralMap, sourceAbstractElement, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(elementToLiteralMap, targetAbstractLiteral, core.NoAttribute, hl)).To(Succeed())
 			// Add the element to the source instance
 			sourceInstanceElement, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractElement, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceElement.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceElement.SetLabel("SourceInstanceElement", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -387,15 +387,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(elementToRefinementMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(elementToRefinementMap.SetLabel("ElementToRefinementMap", hl)).To(Succeed())
-			Expect(SetSource(elementToRefinementMap, sourceAbstractElement, hl)).To(Succeed())
-			Expect(SetTarget(elementToRefinementMap, targetAbstractRefinement, hl)).To(Succeed())
+			Expect(SetSource(elementToRefinementMap, sourceAbstractElement, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(elementToRefinementMap, targetAbstractRefinement, core.NoAttribute, hl)).To(Succeed())
 			// Add the element to the source instance
 			sourceInstanceElement, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractElement, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceElement.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceElement.SetLabel("SourceInstanceElement", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -425,15 +425,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(referenceToElementMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(referenceToElementMap.SetLabel("ReferenceToElementMap", hl)).To(Succeed())
-			Expect(SetSource(referenceToElementMap, sourceAbstractReference, hl)).To(Succeed())
-			Expect(SetTarget(referenceToElementMap, targetAbstractElement, hl)).To(Succeed())
+			Expect(SetSource(referenceToElementMap, sourceAbstractReference, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(referenceToElementMap, targetAbstractElement, core.NoAttribute, hl)).To(Succeed())
 			// Add the reference to the source instance
 			sourceInstanceReference, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractReference, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceReference.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceReference.SetLabel("SourceInstanceReference", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -466,15 +466,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(referenceToRefinementMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(referenceToRefinementMap.SetLabel("ReferenceToRefinementMap", hl)).To(Succeed())
-			Expect(SetSource(referenceToRefinementMap, sourceAbstractReference, hl)).To(Succeed())
-			Expect(SetTarget(referenceToRefinementMap, targetAbstractRefinement, hl)).To(Succeed())
+			Expect(SetSource(referenceToRefinementMap, sourceAbstractReference, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(referenceToRefinementMap, targetAbstractRefinement, core.NoAttribute, hl)).To(Succeed())
 			// Add the reference to the source instance
 			sourceInstanceReference, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractReference, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceReference.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceReference.SetLabel("SourceInstanceReference", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -504,15 +504,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(literalToElementMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(literalToElementMap.SetLabel("LiteralToElementMap", hl)).To(Succeed())
-			Expect(SetSource(literalToElementMap, sourceAbstractLiteral, hl)).To(Succeed())
-			Expect(SetTarget(literalToElementMap, targetAbstractElement, hl)).To(Succeed())
+			Expect(SetSource(literalToElementMap, sourceAbstractLiteral, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(literalToElementMap, targetAbstractElement, core.NoAttribute, hl)).To(Succeed())
 			// Add the literal to the source instance
 			sourceInstanceLiteral, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractLiteral, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceLiteral.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceLiteral.SetLabel("SourceInstanceLiteral", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -542,15 +542,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(literalToReferenceMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(literalToReferenceMap.SetLabel("LiteralToReferenceMap", hl)).To(Succeed())
-			Expect(SetSource(literalToReferenceMap, sourceAbstractLiteral, hl)).To(Succeed())
-			Expect(SetTarget(literalToReferenceMap, targetAbstractReference, hl)).To(Succeed())
+			Expect(SetSource(literalToReferenceMap, sourceAbstractLiteral, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(literalToReferenceMap, targetAbstractReference, core.NoAttribute, hl)).To(Succeed())
 			// Add the literal to the source instance
 			sourceInstanceLiteral, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractLiteral, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceLiteral.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceLiteral.SetLabel("SourceInstanceLiteral", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -580,15 +580,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(literalToRefinementMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(literalToRefinementMap.SetLabel("LiteralToRefinementMap", hl)).To(Succeed())
-			Expect(SetSource(literalToRefinementMap, sourceAbstractLiteral, hl)).To(Succeed())
-			Expect(SetTarget(literalToRefinementMap, targetAbstractRefinement, hl)).To(Succeed())
+			Expect(SetSource(literalToRefinementMap, sourceAbstractLiteral, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(literalToRefinementMap, targetAbstractRefinement, core.NoAttribute, hl)).To(Succeed())
 			// Add the literal to the source instance
 			sourceInstanceLiteral, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractLiteral, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceLiteral.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceLiteral.SetLabel("SourceInstanceLiteral", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -618,15 +618,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(refinementToElementMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(refinementToElementMap.SetLabel("RefinementToElementMap", hl)).To(Succeed())
-			Expect(SetSource(refinementToElementMap, sourceAbstractRefinement, hl)).To(Succeed())
-			Expect(SetTarget(refinementToElementMap, targetAbstractElement, hl)).To(Succeed())
+			Expect(SetSource(refinementToElementMap, sourceAbstractRefinement, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(refinementToElementMap, targetAbstractElement, core.NoAttribute, hl)).To(Succeed())
 			// Add the refinement to the source instance
 			sourceInstanceRefinement, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractRefinement, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceRefinement.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceRefinement.SetLabel("SourceInstanceRefinement", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -656,15 +656,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(refinementToReferenceMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(refinementToReferenceMap.SetLabel("RefinementToReferenceMap", hl)).To(Succeed())
-			Expect(SetSource(refinementToReferenceMap, sourceAbstractRefinement, hl)).To(Succeed())
-			Expect(SetTarget(refinementToReferenceMap, targetAbstractReference, hl)).To(Succeed())
+			Expect(SetSource(refinementToReferenceMap, sourceAbstractRefinement, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(refinementToReferenceMap, targetAbstractReference, core.NoAttribute, hl)).To(Succeed())
 			// Add the refinement to the source instance
 			sourceInstanceRefinement, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractRefinement, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceRefinement.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceRefinement.SetLabel("SourceInstanceRefinement", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -694,15 +694,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(refinementToLiteralMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(refinementToLiteralMap.SetLabel("RefinementToLiteralMap", hl)).To(Succeed())
-			Expect(SetSource(refinementToLiteralMap, sourceAbstractRefinement, hl)).To(Succeed())
-			Expect(SetTarget(refinementToLiteralMap, targetAbstractLiteral, hl)).To(Succeed())
+			Expect(SetSource(refinementToLiteralMap, sourceAbstractRefinement, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(refinementToLiteralMap, targetAbstractLiteral, core.NoAttribute, hl)).To(Succeed())
 			// Add the refinement to the source instance
 			sourceInstanceRefinement, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractRefinement, hl)
 			Expect(err2).To(BeNil())
 			Expect(sourceInstanceRefinement.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceRefinement.SetLabel("SourceInstanceRefinement", hl)).To(Succeed())
 			// Trigger the mapping
-			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
@@ -754,7 +754,7 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			sourceAbstractReference, err = uOfD.NewOwnedReference(sourceAbstractElement1, "SourceAbstractReference", hl)
 			Expect(err).To(BeNil())
-			Expect(sourceAbstractReference.SetReferencedConcept(sourceAbstractElement2, hl)).To(Succeed())
+			Expect(sourceAbstractReference.SetReferencedConcept(sourceAbstractElement2, core.NoAttribute, hl)).To(Succeed())
 			// sourceAbstractRefinement, err = uOfD.NewOwnedRefinement(sourceAbstractDomain, "SourceAbstractRefinement", hl)
 			// Expect(err).To(BeNil())
 			// sourceAbstractLiteral, err = uOfD.NewOwnedLiteral(sourceAbstractDomain, "SourceAbstractLiteral", hl)
@@ -766,7 +766,7 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			targetAbstractReference, err = uOfD.NewOwnedReference(targetAbstractElement2, "TargetAbstractReference", hl)
 			Expect(err).To(BeNil())
-			Expect(targetAbstractReference.SetReferencedConcept(targetAbstractElement1, hl)).To(Succeed())
+			Expect(targetAbstractReference.SetReferencedConcept(targetAbstractElement1, core.NoAttribute, hl)).To(Succeed())
 			// targetAbstractRefinement, err = uOfD.NewOwnedRefinement(targetAbstractDomain, "TargetAbstractRefinement", hl)
 			// Expect(err).To(BeNil())
 			// targetAbstractLiteral, err = uOfD.NewOwnedLiteral(targetAbstractDomain, "TargetAbstractLiteral", hl)
@@ -778,22 +778,22 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			Expect(element1ToElement1Map.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(element1ToElement1Map.SetLabel("Element1ToElement1Map", hl)).To(Succeed())
-			Expect(SetSource(element1ToElement1Map, sourceAbstractElement1, hl)).To(Succeed())
-			Expect(SetTarget(element1ToElement1Map, targetAbstractElement1, hl)).To(Succeed())
+			Expect(SetSource(element1ToElement1Map, sourceAbstractElement1, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(element1ToElement1Map, targetAbstractElement1, core.NoAttribute, hl)).To(Succeed())
 
 			element2ToElement2Map, err = uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, hl)
 			Expect(err).To(BeNil())
 			Expect(element2ToElement2Map.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(element2ToElement2Map.SetLabel("Element2ToElement2Map", hl)).To(Succeed())
-			Expect(SetSource(element2ToElement2Map, sourceAbstractElement2, hl)).To(Succeed())
-			Expect(SetTarget(element2ToElement2Map, targetAbstractElement2, hl)).To(Succeed())
+			Expect(SetSource(element2ToElement2Map, sourceAbstractElement2, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(element2ToElement2Map, targetAbstractElement2, core.NoAttribute, hl)).To(Succeed())
 
 			reference2ReferenceMap, err = uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, hl)
 			Expect(err).To(BeNil())
 			Expect(reference2ReferenceMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
 			Expect(reference2ReferenceMap.SetLabel("Reference2ReferenceMap", hl)).To(Succeed())
-			Expect(SetSource(reference2ReferenceMap, sourceAbstractReference, hl)).To(Succeed())
-			Expect(SetTarget(reference2ReferenceMap, targetAbstractReference, hl)).To(Succeed())
+			Expect(SetSource(reference2ReferenceMap, sourceAbstractReference, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(reference2ReferenceMap, targetAbstractReference, core.NoAttribute, hl)).To(Succeed())
 
 			// Source Instance Setup
 			sourceInstanceElement1, err = uOfD.CreateReplicateAsRefinement(sourceAbstractElement1, hl)

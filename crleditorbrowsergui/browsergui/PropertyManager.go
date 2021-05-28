@@ -27,7 +27,7 @@ func (pmPtr *propertyManager) Update(notification *core.ChangeNotification, hl *
 	uOfD := hl.GetUniverseOfDiscourse()
 
 	// Tracing
-	if core.AdHocTrace == true {
+	if core.AdHocTrace {
 		log.Printf("In propertyManager.Update()")
 	}
 

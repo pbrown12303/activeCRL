@@ -196,8 +196,7 @@ var _ = Describe("CrlDiagramtest", func() {
 			Expect(floatX).To(Equal(-1.0))
 		})
 		Specify("0.5 should equal 0.5", func() {
-			var fixedX fixed.Int26_6
-			fixedX = 1 << 5
+			var fixedX fixed.Int26_6 = 1 << 5
 			floatX := Int26_6ToFloat(fixedX)
 			Expect(floatX).To(Equal(0.5))
 		})

@@ -56,9 +56,9 @@ func (bgPtr *baseGraph) addNotification(notification *ChangeNotification, parent
 
 	bgPtr.graphParentsRecursively(reportingElement, parentGraph)
 
-	switch reportingElement.(type) {
+	switch typedReportingElement := reportingElement.(type) {
 	case Reference:
-		indicatedElement := reportingElement.(Reference).getReferencedConceptNoLock()
+		indicatedElement := typedReportingElement.getReferencedConceptNoLock()
 		if indicatedElement != nil {
 			indicatedElementID := makeGraphID(indicatedElement.getConceptIDNoLock(), bgPtr.parentGraphNodePrefix[parentGraph])
 			bgPtr.nodeElementLabels[indicatedElementID] = indicatedElement.getLabelNoLock()
@@ -68,7 +68,7 @@ func (bgPtr *baseGraph) addNotification(notification *ChangeNotification, parent
 			bgPtr.graphParentsRecursively(indicatedElement, parentGraph)
 		}
 	case Refinement:
-		abstractConcept := reportingElement.(Refinement).getAbstractConceptNoLock()
+		abstractConcept := typedReportingElement.getAbstractConceptNoLock()
 		if abstractConcept != nil {
 			abstractConceptID := makeGraphID(abstractConcept.getConceptIDNoLock(), bgPtr.parentGraphNodePrefix[parentGraph])
 			bgPtr.nodeElementLabels[abstractConceptID] = abstractConcept.getLabelNoLock()
@@ -77,7 +77,7 @@ func (bgPtr *baseGraph) addNotification(notification *ChangeNotification, parent
 			bgPtr.makeAbstractConceptEdge(reportingElementNodeID, abstractConceptID)
 			bgPtr.graphParentsRecursively(abstractConcept, parentGraph)
 		}
-		refinedConcept := reportingElement.(Refinement).getAbstractConceptNoLock()
+		refinedConcept := typedReportingElement.getAbstractConceptNoLock()
 		if refinedConcept != nil {
 			refinedConceptID := makeGraphID(refinedConcept.getConceptIDNoLock(), bgPtr.parentGraphNodePrefix[parentGraph])
 			bgPtr.nodeElementLabels[refinedConceptID] = refinedConcept.getLabelNoLock()
@@ -95,9 +95,9 @@ func (bgPtr *baseGraph) addNotification(notification *ChangeNotification, parent
 	return reportingElementNodeID
 }
 
-func (bgPtr *baseGraph) getRootNodeID(parentGraph string) string {
-	return bgPtr.rootNodeIDs[parentGraph]
-}
+// func (bgPtr *baseGraph) getRootNodeID(parentGraph string) string {
+// 	return bgPtr.rootNodeIDs[parentGraph]
+// }
 
 func (bgPtr *baseGraph) graphParentsRecursively(child Element, parentGraph string) {
 	if child == nil {
@@ -132,8 +132,8 @@ func (bgPtr *baseGraph) makeAbstractConceptEdge(sourceID string, targetID string
 	abstractEdgeAttrs["dir"] = "both"
 	err := bgPtr.graph.AddEdge(sourceID, targetID, true, abstractEdgeAttrs)
 	if err != nil {
-		log.Printf("Error in BaseGraph.makeAbstractConceptEdge")
-		log.Printf(err.Error())
+		log.Print("Error in BaseGraph.makeAbstractConceptEdge")
+		log.Print(err.Error())
 	}
 }
 func (bgPtr *baseGraph) makeRefinedConceptEdge(sourceID string, targetID string) {
@@ -143,8 +143,8 @@ func (bgPtr *baseGraph) makeRefinedConceptEdge(sourceID string, targetID string)
 	refinedEdgeAttrs["dir"] = "both"
 	err := bgPtr.graph.AddEdge(sourceID, targetID, true, refinedEdgeAttrs)
 	if err != nil {
-		log.Printf("Error in BaseGraph.makeRefinedConceptEdge")
-		log.Printf(err.Error())
+		log.Print("Error in BaseGraph.makeRefinedConceptEdge")
+		log.Print(err.Error())
 	}
 }
 func (bgPtr *baseGraph) makeIndicatedElementEdge(sourceID string, targetID string) {
@@ -154,8 +154,8 @@ func (bgPtr *baseGraph) makeIndicatedElementEdge(sourceID string, targetID strin
 	referenceEdgeAttrs["dir"] = "both"
 	err := bgPtr.graph.AddEdge(sourceID, targetID, true, referenceEdgeAttrs)
 	if err != nil {
-		log.Printf("Error in BaseGraph.makeIndicatedElementEdge")
-		log.Printf(err.Error())
+		log.Print("Error in BaseGraph.makeIndicatedElementEdge")
+		log.Print(err.Error())
 	}
 }
 
@@ -166,17 +166,17 @@ func (bgPtr *baseGraph) makeNotificationEdge(sourceID string, targetID string) {
 	notificationEdgeAttrs["dir"] = "both"
 	err := bgPtr.graph.AddEdge(sourceID, targetID, true, notificationEdgeAttrs)
 	if err != nil {
-		log.Printf("Error in BaseGraph.makeNotificationEdge")
-		log.Printf(err.Error())
+		log.Print("Error in BaseGraph.makeNotificationEdge")
+		log.Print(err.Error())
 	}
 }
 
 func (bgPtr *baseGraph) makeNode(conceptID string, typeString string, label string, parentGraph string, root bool, functionName string) string {
 	if conceptID == "" || typeString == "" {
-		log.Printf("baseGraph.makeNode called will empty strings")
+		log.Print("baseGraph.makeNode called will empty strings")
 	}
 	id := makeGraphID(conceptID, bgPtr.parentGraphNodePrefix[parentGraph])
-	if bgPtr.graph.IsNode(id) != true {
+	if !bgPtr.graph.IsNode(id) {
 		nodeAttrs := make(map[string]string)
 		if root {
 			nodeAttrs["shape"] = "none"
@@ -193,8 +193,8 @@ func (bgPtr *baseGraph) makeNode(conceptID string, typeString string, label stri
 		}
 		err := bgPtr.graph.AddNode(parentGraph, id, nodeAttrs)
 		if err != nil {
-			log.Printf("Error in BaseGraph.makeNode")
-			log.Printf(err.Error())
+			log.Print("Error in BaseGraph.makeNode")
+			log.Print(err.Error())
 		}
 		bgPtr.nodeToGraphName[id] = parentGraph
 	}
@@ -220,7 +220,7 @@ func (bgPtr *baseGraph) makeOwnerEdge(parentID string, childID string) {
 	ownerEdgeAttrs["dir"] = "both"
 	err := bgPtr.graph.AddEdge(parentID, childID, true, ownerEdgeAttrs)
 	if err != nil {
-		log.Printf("Error in BaseGraph.makeOwnerEdge")
-		log.Printf(err.Error())
+		log.Print("Error in BaseGraph.makeOwnerEdge")
+		log.Print(err.Error())
 	}
 }

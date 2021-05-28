@@ -1,8 +1,9 @@
 package browsergui
 
 import (
-	"github.com/pkg/errors"
 	"strconv"
+
+	"github.com/pkg/errors"
 
 	//	"fmt"
 	"log"
@@ -13,9 +14,6 @@ import (
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 	// "github.com/pbrown12303/activeCRL/crleditorbrowserguidomain"
 )
-
-const diagramContainerSuffix = "DiagramContainer"
-const diagramSuffix = "Diagram"
 
 // diagramManager manages the diagram portion of the UI and all interactions with it
 type diagramManager struct {
@@ -43,10 +41,9 @@ func (dmPtr *diagramManager) abstractPointerChanged(linkID string, sourceID stri
 		return "", errors.New("diagramManager.elementPoiabstractPointerChangednterChanged called with model source not found")
 	}
 	var modelRefinement core.Refinement
-	switch modelSource.(type) {
+	switch typedModelSource := modelSource.(type) {
 	case core.Refinement:
-		modelRefinement = modelSource.(core.Refinement)
-		break
+		modelRefinement = typedModelSource
 	default:
 		return "", errors.New("diagramManager.abstractPointerChanged called with source not being a Refinement")
 	}
@@ -131,13 +128,13 @@ func (dmPtr *diagramManager) addConceptViewImpl(uOfD *core.UniverseOfDiscourse, 
 	if createAsLink {
 		var modelSourceConcept core.Element
 		var modelTargetConcept core.Element
-		switch el.(type) {
+		switch elTyped := el.(type) {
 		case core.Reference:
 			newElement, err = crldiagramdomain.NewDiagramReferenceLink(uOfD, hl)
 			if err != nil {
 				return nil, err
 			}
-			reference := el.(core.Reference)
+			reference := elTyped
 			modelSourceConcept = reference.GetOwningConcept(hl)
 			modelTargetConcept = reference.GetReferencedConcept(hl)
 		case core.Refinement:
@@ -145,7 +142,7 @@ func (dmPtr *diagramManager) addConceptViewImpl(uOfD *core.UniverseOfDiscourse, 
 			if err != nil {
 				return nil, err
 			}
-			refinement := el.(core.Refinement)
+			refinement := elTyped
 			modelSourceConcept = refinement.GetRefinedConcept(hl)
 			modelTargetConcept = refinement.GetAbstractConcept(hl)
 		}
@@ -409,10 +406,9 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 		return "", errors.New("diagramManager.elementPointerChanged called with model source not found")
 	}
 	var modelReference core.Reference
-	switch modelSource.(type) {
+	switch typedModelSource := modelSource.(type) {
 	case core.Reference:
-		modelReference = modelSource.(core.Reference)
-		break
+		modelReference = typedModelSource
 	default:
 		return "", errors.New("diagramManager.elementPointerChanged called with source not being a Reference")
 	}
@@ -437,7 +433,6 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 	case "RefinedConceptID":
 		attributeName = core.RefinedConceptID
 	}
-	modelReference.SetReferencedAttributeName(attributeName, hl)
 	if linkID == "" {
 		// this is a new link
 		diagramPointer, err = crldiagramdomain.NewDiagramElementPointer(uOfD, hl)
@@ -447,7 +442,12 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 		crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
 		crldiagramdomain.SetLinkSource(diagramPointer, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramPointer, diagramTarget, hl)
-		modelReference.SetReferencedConcept(modelTarget, hl)
+		if attributeName == core.NoAttribute {
+			modelReference.SetReferencedConcept(modelTarget, attributeName, hl)
+		} else {
+			// for references to pointers, it is the pointer owner that is the referenced concept
+			modelReference.SetReferencedConcept(modelSource, attributeName, hl)
+		}
 		diagramPointer.SetOwningConceptID(diagramSource.GetOwningConceptID(hl), hl)
 		dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
@@ -464,8 +464,16 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 		if modelSource != crldiagramdomain.GetReferencedModelElement(diagramPointer, hl) {
 			crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
 		}
-		if modelTarget != modelReference.GetReferencedConcept(hl) {
-			modelReference.SetReferencedConcept(modelTarget, hl)
+		if attributeName == core.NoAttribute {
+			if modelTarget != modelReference.GetReferencedConcept(hl) {
+				modelReference.SetReferencedConcept(modelTarget, attributeName, hl)
+			}
+		} else {
+			// for references to pointers, it is the pointer owner that is the referenced concept
+			if modelSource != modelReference.GetReferencedConcept(hl) {
+				modelReference.SetReferencedConcept(modelSource, attributeName, hl)
+			}
+
 		}
 	}
 
@@ -564,10 +572,9 @@ func (dmPtr *diagramManager) refinedPointerChanged(linkID string, sourceID strin
 		return "", errors.New("diagramManager.elementPoirefinedPointerChangednterChanged called with model source not found")
 	}
 	var modelRefinement core.Refinement
-	switch modelSource.(type) {
+	switch typedModelSource := modelSource.(type) {
 	case core.Refinement:
-		modelRefinement = modelSource.(core.Refinement)
-		break
+		modelRefinement = typedModelSource.(core.Refinement)
 	default:
 		return "", errors.New("diagramManager.refinedPointerChanged called with source not being a Refinement")
 	}
@@ -651,8 +658,7 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 	if linkID == "" {
 		// this is a new reference
 		newReference, _ := uOfD.NewReference(hl)
-		newReference.SetReferencedConcept(modelTarget, hl)
-		newReference.SetReferencedAttributeName(attributeName, hl)
+		newReference.SetReferencedConcept(modelTarget, attributeName, hl)
 		newReference.SetOwningConcept(modelSource, hl)
 		diagramLink, err = crldiagramdomain.NewDiagramReferenceLink(uOfD, hl)
 		if err != nil {
@@ -672,9 +678,9 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 		diagramLink = uOfD.GetElement(linkID)
 		modelElement = crldiagramdomain.GetReferencedModelElement(diagramLink, hl)
 		if modelElement != nil {
-			switch modelElement.(type) {
+			switch typedModelElement := modelElement.(type) {
 			case core.Reference:
-				reference := modelElement.(core.Reference)
+				reference := typedModelElement
 				if diagramLink == nil {
 					return "", errors.New("diagramManager.refinementLinkChanged called with diagramPointer not found in diagram")
 				}
@@ -682,9 +688,8 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 					reference.SetOwningConcept(modelSource, hl)
 				}
 				if reference.GetReferencedConcept(hl) != modelTarget {
-					reference.SetReferencedConcept(modelTarget, hl)
+					reference.SetReferencedConcept(modelTarget, attributeName, hl)
 				}
-				reference.SetReferencedAttributeName(attributeName, hl)
 			}
 		}
 	}
@@ -740,9 +745,9 @@ func (dmPtr *diagramManager) RefinementLinkChanged(linkID string, sourceID strin
 		diagramLink = uOfD.GetElement(linkID)
 		modelElement = crldiagramdomain.GetReferencedModelElement(diagramLink, hl)
 		if modelElement != nil {
-			switch modelElement.(type) {
+			switch typedModelElement := modelElement.(type) {
 			case core.Refinement:
-				refinement := modelElement.(core.Refinement)
+				refinement := typedModelElement
 				if diagramLink == nil {
 					return "", errors.New("diagramManager.refinementLinkChanged called with diagramPointer not found in diagram")
 				}
@@ -832,10 +837,9 @@ func (dmPtr *diagramManager) showAbstractConcept(elementID string, hl *core.Held
 		return errors.New("diagramManager.showAbstractConcept modelConcept not found for elementID " + elementID)
 	}
 	var modelRefinement core.Refinement
-	switch modelConcept.(type) {
+	switch typedModelConcept := modelConcept.(type) {
 	case core.Refinement:
-		modelRefinement = modelConcept.(core.Refinement)
-		break
+		modelRefinement = typedModelConcept
 	default:
 		return errors.New("diagramManager.showAbstractConcept modelConcept is not a Refinement")
 	}
@@ -963,10 +967,9 @@ func (dmPtr *diagramManager) showReferencedConcept(elementID string, hl *core.He
 		return errors.New("diagramManager.showReferencedConcept modelConcept not found for elementID " + elementID)
 	}
 	var modelReference core.Reference
-	switch modelConcept.(type) {
+	switch typedModelConcept := modelConcept.(type) {
 	case core.Reference:
-		modelReference = modelConcept.(core.Reference)
-		break
+		modelReference = typedModelConcept
 	default:
 		return errors.New("diagramManager.showReferencedConcept modelConcept is not a Reference")
 	}
@@ -994,25 +997,25 @@ func (dmPtr *diagramManager) showReferencedConcept(elementID string, hl *core.He
 			return errors.New("No representation of the owner pointer currently exists in this diagram")
 		}
 	case core.ReferencedConceptID:
-		switch modelReferencedConcept.(type) {
+		switch typedModelReferencedConcept := modelReferencedConcept.(type) {
 		case core.Reference:
-			diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConceptElementPointer(diagram, modelReferencedConcept.(core.Reference), hl)
+			diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConceptElementPointer(diagram, typedModelReferencedConcept, hl)
 			if diagramReferencedConcept == nil {
 				return errors.New("No representation of the referenced concept pointer currently exists in this diagram")
 			}
 		}
 	case core.AbstractConceptID:
-		switch modelReferencedConcept.(type) {
+		switch typedModelReferencedConcept := modelReferencedConcept.(type) {
 		case core.Refinement:
-			diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConceptAbstractPointer(diagram, modelReferencedConcept.(core.Refinement), hl)
+			diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConceptAbstractPointer(diagram, typedModelReferencedConcept, hl)
 		}
 		if diagramReferencedConcept == nil {
 			return errors.New("No representation of the abstract concept pointer currently exists in this diagram")
 		}
 	case core.RefinedConceptID:
-		switch modelReferencedConcept.(type) {
+		switch typedModelReferencedConcept := modelReferencedConcept.(type) {
 		case core.Refinement:
-			diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConceptRefinedPointer(diagram, modelReferencedConcept.(core.Refinement), hl)
+			diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConceptRefinedPointer(diagram, typedModelReferencedConcept, hl)
 			if diagramReferencedConcept == nil {
 				return errors.New("No representation of the refined concept pointer currently exists in this diagram")
 			}
@@ -1043,10 +1046,9 @@ func (dmPtr *diagramManager) showRefinedConcept(elementID string, hl *core.HeldL
 		return errors.New("diagramManager.showRefinedConcept modelConcept not found for elementID " + elementID)
 	}
 	var modelRefinement core.Refinement
-	switch modelConcept.(type) {
+	switch typedModelConcept := modelConcept.(type) {
 	case core.Refinement:
-		modelRefinement = modelConcept.(core.Refinement)
-		break
+		modelRefinement = typedModelConcept
 	default:
 		return errors.New("diagramManager.showRefinedConcept modelConcept is not a Refinement")
 	}

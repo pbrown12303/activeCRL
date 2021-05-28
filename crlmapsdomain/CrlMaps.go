@@ -276,7 +276,7 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 			targetRefinement.SetAbstractConcept(absTarget, hl)
 			targetRefinement.SetRefinedConcept(target, hl)
 			target.SetLabel("Refinement of "+absTarget.GetLabel(hl)+"From"+source.GetLabel(hl), hl)
-			targetRef.SetReferencedConcept(target, hl)
+			targetRef.SetReferencedConcept(target, core.NoAttribute, hl)
 		}
 		if mapInstance.GetOwningConcept(hl) != nil {
 			if isRootMap(mapInstance, hl) {
@@ -312,21 +312,21 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 		var sourceAttributeValueConcept core.Element
 		switch sourceAttributeName {
 		case core.ReferencedConceptID:
-			switch source.(type) {
+			switch sourceElement := source.(type) {
 			case core.Reference:
-				sourceAttributeValue = source.(core.Reference).GetReferencedConceptID(hl)
+				sourceAttributeValue = sourceElement.GetReferencedConceptID(hl)
 				sourceAttributeValueConcept = uOfD.GetElement(sourceAttributeValue)
 			}
 		case core.AbstractConceptID:
-			switch source.(type) {
+			switch sourceElement := source.(type) {
 			case core.Refinement:
-				sourceAttributeValue = source.(core.Refinement).GetAbstractConceptID(hl)
+				sourceAttributeValue = sourceElement.GetAbstractConceptID(hl)
 				sourceAttributeValueConcept = uOfD.GetElement(sourceAttributeValue)
 			}
 		case core.RefinedConceptID:
-			switch source.(type) {
+			switch sourceElement := source.(type) {
 			case core.Refinement:
-				sourceAttributeValue = source.(core.Refinement).GetRefinedConceptID(hl)
+				sourceAttributeValue = sourceElement.GetRefinedConceptID(hl)
 				sourceAttributeValueConcept = uOfD.GetElement(sourceAttributeValue)
 			}
 		case core.OwningConceptID:
@@ -349,34 +349,34 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 
 		switch targetRef.GetReferencedAttributeName(hl) {
 		case core.NoAttribute:
-			targetRef.SetReferencedConcept(foundTarget, hl)
+			targetRef.SetReferencedConcept(foundTarget, core.NoAttribute, hl)
 		default:
-			targetRef.SetReferencedConcept(target, hl)
+			targetRef.SetReferencedConcept(target, core.NoAttribute, hl)
 		}
 
 		switch targetRef.GetReferencedAttributeName(hl) {
 		case core.NoAttribute:
 			// This case is valid only if the target is a reference, in which case we are setting the reference's referencedConceptID
-			switch target.(type) {
+			switch targetElement := target.(type) {
 			case core.Reference:
-				err := target.(core.Reference).SetReferencedConceptID(foundTargetValue, hl)
+				err := targetElement.SetReferencedConceptID(foundTargetValue, core.NoAttribute, hl)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
 			}
 		case core.ReferencedConceptID:
 			// This case is valid only if the target is a reference
-			switch target.(type) {
+			switch targetElement := target.(type) {
 			case core.Reference:
-				err := target.(core.Reference).SetReferencedConceptID(foundTargetValue, hl)
+				err := targetElement.SetReferencedConceptID(foundTargetValue, core.NoAttribute, hl)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
 			}
 		case core.AbstractConceptID:
-			switch target.(type) {
+			switch targetElement := target.(type) {
 			case core.Refinement:
-				err := target.(core.Refinement).SetAbstractConceptID(foundTargetValue, hl)
+				err := targetElement.SetAbstractConceptID(foundTargetValue, hl)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
@@ -384,17 +384,17 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 		case core.RefinedConceptID:
 			// If the targetRef is an attribute value reference, set its value
 			// If the target is a reference, set the referenced elementID
-			switch target.(type) {
+			switch targetElement := target.(type) {
 			case core.Refinement:
-				err := target.(core.Refinement).SetRefinedConceptID(foundTargetValue, hl)
+				err := targetElement.SetRefinedConceptID(foundTargetValue, hl)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
 			}
 		case core.LiteralValue:
-			switch target.(type) {
+			switch targetElement := target.(type) {
 			case core.Literal:
-				err := target.(core.Literal).SetLiteralValue(foundTargetValue, hl)
+				err := targetElement.SetLiteralValue(foundTargetValue, hl)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
@@ -531,12 +531,18 @@ func instantiateChildren(abstractMap core.Element, parentMap core.Element, sourc
 					return errors.New("In CrlMaps.go instantiateChildren, the parentMap does not have a parentMapSource")
 				}
 				// We must find the Element whose attribute is being referenced. Two known cases are possible here (there may be others yet to be encountered).
-				// Either the parent's map source is that Element, or the sought-after Element is a Reference that is owned by the parent's map source.
-				// This latter case only occurs when the attribute name is ReferencedConceptID.
+				// Case 1: the parent's map source is that Element
+				// Case 2: The sought-after Element is a Reference that is owned by the parent's map source.
+				//         This latter case only occurs when the attribute name is ReferencedConceptID.
 				// We first check to see whether the parent's map source is a refinement of the abstractChildMapSource. This condition may fail during editing scenarios
 				// in which the owner of the childMap has not yet been assigned to the correct owner. This is not an error - it is an expected condition
 				// If it is not, we then perform a secondary check to see whether the parent's map source has a child reference that is a refinement
 				// of the abstractChildMapSource.
+
+				// BUG There is a flaw in the following logic. The logic seems to assume that the reference to the owner pointer is a reference to the concept that
+				// owns the pointer, while the reality is that the referenced conecpt is the concept to which the pointer refers. The assumption appears to be
+				// the correct logic, so the reference to the pointer needs to be fixed.
+
 				foundChildSource := parentMapSource // assume it's going to be the parent map source
 				if !parentMapSource.IsRefinementOf(abstractChildMapSource, hl) {
 					if abstractChildMapSourceReference.GetReferencedAttributeName(hl) == core.ReferencedConceptID {
@@ -571,7 +577,7 @@ func instantiateChildren(abstractMap core.Element, parentMap core.Element, sourc
 					return errors.New("In crlmaps.instantiateChildren, newSourceRef is nil")
 				}
 				if foundChildSource != nil && newSourceRef.GetReferencedConceptID(hl) != foundChildSource.GetConceptID(hl) {
-					err := newSourceRef.SetReferencedConcept(foundChildSource, hl)
+					err := newSourceRef.SetReferencedConcept(foundChildSource, core.NoAttribute, hl)
 					if err != nil {
 						return errors.Wrap(err, "crlmaps.instantiateChildren failed")
 					}
@@ -606,7 +612,7 @@ func instantiateChildren(abstractMap core.Element, parentMap core.Element, sourc
 					if newSourceRef == nil {
 						return errors.New("In crlmaps.instantiateChildren, newSourceRef is nil")
 					}
-					err := newSourceRef.SetReferencedConcept(sourceEl, hl)
+					err := newSourceRef.SetReferencedConcept(sourceEl, core.NoAttribute, hl)
 					if err != nil {
 						return errors.Wrap(err, "crlmaps.instantiateChildren failed")
 					}
@@ -627,37 +633,37 @@ func isRootMap(candidate core.Element, hl *core.HeldLocks) bool {
 }
 
 // SetSource sets the source referenced by the given map
-func SetSource(theMap core.Element, newSource core.Element, hl *core.HeldLocks) error {
+func SetSource(theMap core.Element, newSource core.Element, attributeName core.AttributeName, hl *core.HeldLocks) error {
 	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
 	if ref == nil {
 		return errors.New("CrlMaps.SetSource called with map that does not have a source reference")
 	}
-	return ref.SetReferencedConcept(newSource, hl)
+	return ref.SetReferencedConcept(newSource, attributeName, hl)
 }
 
-// SetSourceAttributeName sets the source attribute name referenced by the given map
-func SetSourceAttributeName(theMap core.Element, attributeName core.AttributeName, hl *core.HeldLocks) error {
-	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
-	if ref == nil {
-		return errors.New("CrlMaps.SetSourceAttributeName called with map that does not have a source reference")
-	}
-	return ref.SetReferencedAttributeName(attributeName, hl)
-}
+// // SetSourceAttributeName sets the source attribute name referenced by the given map
+// func SetSourceAttributeName(theMap core.Element, attributeName core.AttributeName, hl *core.HeldLocks) error {
+// 	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
+// 	if ref == nil {
+// 		return errors.New("CrlMaps.SetSourceAttributeName called with map that does not have a source reference")
+// 	}
+// 	return ref.SetReferencedAttributeName(attributeName, hl)
+// }
 
 // SetTarget sets the target referenced by the given map
-func SetTarget(theMap core.Element, newTarget core.Element, hl *core.HeldLocks) error {
+func SetTarget(theMap core.Element, newTarget core.Element, attributeName core.AttributeName, hl *core.HeldLocks) error {
 	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
 	if ref == nil {
 		return errors.New("CrlMaps.SetTarget called with map that does not have a target reference")
 	}
-	return ref.SetReferencedConcept(newTarget, hl)
+	return ref.SetReferencedConcept(newTarget, attributeName, hl)
 }
 
-// SetTargetAttributeName sets the target attribute name referenced by the given map
-func SetTargetAttributeName(theMap core.Element, attributeName core.AttributeName, hl *core.HeldLocks) error {
-	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
-	if ref == nil {
-		return errors.New("CrlMaps.SetTargetAttributeName called with map that does not have a target reference")
-	}
-	return ref.SetReferencedAttributeName(attributeName, hl)
-}
+// // SetTargetAttributeName sets the target attribute name referenced by the given map
+// func SetTargetAttributeName(theMap core.Element, attributeName core.AttributeName, hl *core.HeldLocks) error {
+// 	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
+// 	if ref == nil {
+// 		return errors.New("CrlMaps.SetTargetAttributeName called with map that does not have a target reference")
+// 	}
+// 	return ref.SetReferencedAttributeName(attributeName, hl)
+// }

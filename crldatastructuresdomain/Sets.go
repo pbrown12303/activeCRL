@@ -22,7 +22,7 @@ func NewSet(uOfD *core.UniverseOfDiscourse, setType core.Element, hl *core.HeldL
 	}
 	newSet, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlSetURI, hl)
 	typeReference := newSet.GetFirstOwnedReferenceRefinedFromURI(CrlSetTypeReferenceURI, hl)
-	typeReference.SetReferencedConcept(setType, hl)
+	typeReference.SetReferencedConcept(setType, core.NoAttribute, hl)
 	return newSet, nil
 }
 
@@ -38,7 +38,7 @@ func AddSetMember(set core.Element, newMember core.Element, hl *core.HeldLocks) 
 	}
 	newMemberReference, _ := uOfD.CreateReplicateReferenceAsRefinementFromURI(CrlSetMemberReferenceURI, hl)
 	newMemberReference.SetOwningConcept(set, hl)
-	newMemberReference.SetReferencedConcept(newMember, hl)
+	newMemberReference.SetReferencedConcept(newMember, core.NoAttribute, hl)
 	return nil
 }
 

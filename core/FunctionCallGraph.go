@@ -30,8 +30,8 @@ func NewFunctionCallGraph(functionID string, executingElement Element, notificat
 	fcGraph.addNotification(notification, graphName)
 	err := fcGraph.graph.AddEdge(executingElementNodeID, fcGraph.rootNodeIDs[graphName], true, map[string]string{})
 	if err != nil {
-		log.Printf("Error in FunctionCallGraph.NewFunctionCallGraph adding an edge from executing element to the subgraph root node")
-		log.Printf(err.Error())
+		log.Print("Error in FunctionCallGraph.NewFunctionCallGraph adding an edge from executing element to the subgraph root node")
+		log.Print(err.Error())
 	}
 	for _, node := range fcGraph.graph.Nodes.Nodes {
 		if node.Name == executingElementNodeID {

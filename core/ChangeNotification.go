@@ -6,10 +6,11 @@ package core
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
 	"log"
 	"reflect"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 // NatureOfChange indicates the type of base element change:
@@ -206,18 +207,19 @@ func (cnPtr *ChangeNotification) GetUnderlyingChange() *ChangeNotification {
 	return cnPtr.underlyingChange
 }
 
-func (cnPtr *ChangeNotification) isReferenced(el Element) bool {
-	if cnPtr.GetChangedConceptID() == el.getConceptIDNoLock() {
+func (cnPtr *ChangeNotification) IsReferenced(el Element) bool {
+	elID := el.getConceptIDNoLock()
+	if cnPtr.GetChangedConceptID() == elID || cnPtr.GetReportingElementID() == elID {
 		return true
 	} else if cnPtr.underlyingChange != nil {
-		return cnPtr.underlyingChange.isReferenced(el)
+		return cnPtr.underlyingChange.IsReferenced(el)
 	}
 	return false
 }
 
 // Print prints the change notification for diagnostic purposes to the log
 func (cnPtr *ChangeNotification) Print(prefix string, hl *HeldLocks) {
-	if EnableNotificationPrint == true {
+	if EnableNotificationPrint {
 		startCount := 0
 		cnPtr.printRecursively(prefix, hl, startCount)
 	}

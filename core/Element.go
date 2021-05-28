@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"log"
 	"reflect"
 	"strconv"
 	"sync"
+
+	"github.com/pkg/errors"
 
 	mapset "github.com/deckarep/golang-set"
 )
@@ -34,7 +35,7 @@ type element struct {
 // is performed by the child
 func (ePtr *element) addOwnedConcept(ownedConceptID string, hl *HeldLocks) {
 	hl.ReadLockElement(ePtr)
-	if ePtr.uOfD.ownedIDsMap.ContainsMappedValue(ePtr.ConceptID, ownedConceptID) == false {
+	if !ePtr.uOfD.ownedIDsMap.ContainsMappedValue(ePtr.ConceptID, ownedConceptID) {
 		ePtr.uOfD.preChange(ePtr, hl)
 		ePtr.incrementVersion(hl)
 		ePtr.uOfD.ownedIDsMap.AddMappedValue(ePtr.GetConceptID(hl), ownedConceptID)
@@ -48,7 +49,7 @@ func (ePtr *element) addOwnedConcept(ownedConceptID string, hl *HeldLocks) {
 // is performed by the child
 func (ePtr *element) addRecoveredOwnedConcept(ownedConceptID string, hl *HeldLocks) {
 	hl.ReadLockElement(ePtr)
-	if ePtr.uOfD.ownedIDsMap.ContainsMappedValue(ePtr.ConceptID, ownedConceptID) == false {
+	if !ePtr.uOfD.ownedIDsMap.ContainsMappedValue(ePtr.ConceptID, ownedConceptID) {
 		ePtr.uOfD.preChange(ePtr, hl)
 		ePtr.uOfD.ownedIDsMap.AddMappedValue(ePtr.ConceptID, ownedConceptID)
 	}
@@ -58,7 +59,7 @@ func (ePtr *element) addRecoveredOwnedConcept(ownedConceptID string, hl *HeldLoc
 // This is an internal housekeeping method.
 func (ePtr *element) addListener(listeningConceptID string, hl *HeldLocks) {
 	hl.ReadLockElement(ePtr)
-	if ePtr.uOfD.listenersMap.ContainsMappedValue(ePtr.ConceptID, listeningConceptID) == false {
+	if !ePtr.uOfD.listenersMap.ContainsMappedValue(ePtr.ConceptID, listeningConceptID) {
 		ePtr.uOfD.preChange(ePtr, hl)
 		ePtr.uOfD.listenersMap.AddMappedValue(ePtr.ConceptID, listeningConceptID)
 	}
@@ -159,10 +160,10 @@ func (ePtr *element) GetFirstOwnedLiteralRefinementOf(abstraction Element, hl *H
 	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
-		switch element.(type) {
+		switch typedElement := element.(type) {
 		case Literal:
 			if element.IsRefinementOf(abstraction, hl) {
-				return element.(Literal)
+				return typedElement
 			}
 		}
 	}
@@ -190,10 +191,10 @@ func (ePtr *element) GetFirstOwnedReferenceRefinedFrom(abstraction Element, hl *
 	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
-		switch element.(type) {
+		switch typedElement := element.(type) {
 		case Reference:
 			if element.(Reference).IsRefinementOf(abstraction, hl) {
-				return element.(Reference)
+				return typedElement
 			}
 		}
 	}
@@ -224,10 +225,10 @@ func (ePtr *element) GetFirstOwnedRefinementRefinedFrom(abstraction Element, hl 
 	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
-		switch element.(type) {
+		switch typedElement := element.(type) {
 		case Refinement:
 			if element.IsRefinementOf(abstraction, hl) {
-				return element.(Refinement)
+				return typedElement
 			}
 		}
 	}
@@ -266,10 +267,10 @@ func (ePtr *element) GetFirstOwnedLiteralRefinedFrom(abstraction Element, hl *He
 	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
-		switch element.(type) {
+		switch typedElement := element.(type) {
 		case Literal:
 			if element.IsRefinementOf(abstraction, hl) {
-				return element.(Literal)
+				return typedElement
 			}
 		}
 	}
@@ -291,10 +292,10 @@ func (ePtr *element) GetFirstOwnedLiteralWithURI(uri string, hl *HeldLocks) Lite
 	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
-		switch element.(type) {
+		switch typedElement := element.(type) {
 		case *literal:
 			if element.GetURI(hl) == uri {
-				return element.(*literal)
+				return typedElement
 			}
 		}
 	}
@@ -307,10 +308,10 @@ func (ePtr *element) GetFirstOwnedReferenceWithURI(uri string, hl *HeldLocks) Re
 	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
-		switch element.(type) {
+		switch typedElement := element.(type) {
 		case *reference:
 			if element.GetURI(hl) == uri {
-				return element.(*reference)
+				return typedElement
 			}
 		}
 	}
@@ -323,10 +324,10 @@ func (ePtr *element) GetFirstOwnedRefinementWithURI(uri string, hl *HeldLocks) R
 	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
-		switch element.(type) {
+		switch typedElement := element.(type) {
 		case *refinement:
 			if element.GetURI(hl) == uri {
-				return element.(*refinement)
+				return typedElement
 			}
 		}
 	}
@@ -345,9 +346,9 @@ func (ePtr *element) FindAbstractions(abstractions map[string]Element, hl *HeldL
 	defer it.Stop()
 	for id := range it.C {
 		listener := ePtr.uOfD.GetElement(id.(string))
-		switch listener.(type) {
+		switch typedElement := listener.(type) {
 		case *refinement:
-			abstraction := listener.(*refinement).GetAbstractConcept(hl)
+			abstraction := typedElement.GetAbstractConcept(hl)
 			if abstraction != nil && abstraction.getConceptIDNoLock() != ePtr.getConceptIDNoLock() {
 				abstractions[abstraction.GetConceptID(hl)] = abstraction
 				abstraction.FindAbstractions(abstractions, hl)
@@ -366,9 +367,9 @@ func (ePtr *element) FindImmediateAbstractions(abstractions map[string]Element, 
 	defer it.Stop()
 	for id := range it.C {
 		listener := ePtr.uOfD.GetElement(id.(string))
-		switch listener.(type) {
+		switch typedElement := listener.(type) {
 		case *refinement:
-			abstraction := listener.(*refinement).GetAbstractConcept(hl)
+			abstraction := typedElement.GetAbstractConcept(hl)
 			if abstraction != nil && abstraction.getConceptIDNoLock() != ePtr.getConceptIDNoLock() {
 				abstractions[abstraction.GetConceptID(hl)] = abstraction
 			}
@@ -513,10 +514,10 @@ func (ePtr *element) GetOwnedLiteralsRefinedFrom(abstraction Element, hl *HeldLo
 	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
-		switch element.(type) {
+		switch typedElement := element.(type) {
 		case Literal:
 			if element.IsRefinementOf(abstraction, hl) {
-				matches[element.GetConceptID(hl)] = element.(Literal)
+				matches[element.GetConceptID(hl)] = typedElement
 			}
 		}
 	}
@@ -534,10 +535,10 @@ func (ePtr *element) GetOwnedLiteralsRefinedFromURI(abstractionURI string, hl *H
 		defer it.Stop()
 		for id := range it.C {
 			element := ePtr.uOfD.GetElement(id.(string))
-			switch element.(type) {
+			switch typedElement := element.(type) {
 			case Literal:
 				if element.IsRefinementOf(abstraction, hl) {
-					matches[element.GetConceptID(hl)] = element.(Literal)
+					matches[element.GetConceptID(hl)] = typedElement
 				}
 			}
 		}
@@ -554,10 +555,10 @@ func (ePtr *element) GetOwnedReferencesRefinedFrom(abstraction Element, hl *Held
 	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
-		switch element.(type) {
+		switch typedElement := element.(type) {
 		case Reference:
 			if element.IsRefinementOf(abstraction, hl) {
-				matches[element.GetConceptID(hl)] = element.(Reference)
+				matches[element.GetConceptID(hl)] = typedElement
 			}
 		}
 	}
@@ -575,10 +576,10 @@ func (ePtr *element) GetOwnedReferencesRefinedFromURI(abstractionURI string, hl 
 		defer it.Stop()
 		for id := range it.C {
 			element := ePtr.uOfD.GetElement(id.(string))
-			switch element.(type) {
+			switch typedElement := element.(type) {
 			case Reference:
 				if element.IsRefinementOf(abstraction, hl) {
-					matches[element.GetConceptID(hl)] = element.(Reference)
+					matches[element.GetConceptID(hl)] = typedElement
 				}
 			}
 		}
@@ -595,10 +596,10 @@ func (ePtr *element) GetOwnedRefinementsRefinedFrom(abstraction Element, hl *Hel
 	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
-		switch element.(type) {
+		switch typedElement := element.(type) {
 		case Refinement:
 			if element.IsRefinementOf(abstraction, hl) {
-				matches[element.GetConceptID(hl)] = element.(Refinement)
+				matches[element.GetConceptID(hl)] = typedElement
 			}
 		}
 	}
@@ -616,10 +617,10 @@ func (ePtr *element) GetOwnedRefinementsRefinedFromURI(abstractionURI string, hl
 		defer it.Stop()
 		for id := range it.C {
 			element := ePtr.uOfD.GetElement(id.(string))
-			switch element.(type) {
+			switch typedElement := element.(type) {
 			case Refinement:
 				if element.IsRefinementOf(abstraction, hl) {
-					matches[element.GetConceptID(hl)] = element.(Refinement)
+					matches[element.GetConceptID(hl)] = typedElement
 				}
 			}
 		}
@@ -698,9 +699,9 @@ func (ePtr *element) IsRefinementOf(abstraction Element, hl *HeldLocks) bool {
 	defer it.Stop()
 	for id := range it.C {
 		listener := ePtr.uOfD.GetElement(id.(string))
-		switch listener.(type) {
+		switch typedElement := listener.(type) {
 		case Refinement:
-			foundAbstraction := listener.(Refinement).GetAbstractConcept(hl)
+			foundAbstraction := typedElement.GetAbstractConcept(hl)
 			if foundAbstraction == nil {
 				continue
 			}
@@ -905,9 +906,9 @@ func (ePtr *element) notifyListeners(notification *ChangeNotification, hl *HeldL
 				}
 				continue
 			}
-			switch listener.(type) {
+			switch typedElement := listener.(type) {
 			case Reference:
-				if !(notification.GetNatureOfChange() == ReferencedConceptChanged && notification.GetReportingElementID() == listener.(Reference).GetConceptID(hl)) {
+				if !(notification.GetNatureOfChange() == ReferencedConceptChanged && notification.GetReportingElementID() == typedElement.GetConceptID(hl)) {
 					err := ePtr.uOfD.queueFunctionExecutions(listener, notification, hl)
 					if err != nil {
 						return errors.Wrap(err, "element.notifyListeners failed")
@@ -1037,7 +1038,7 @@ func (ePtr *element) removeOwnedConcept(ownedConceptID string, hl *HeldLocks) er
 // SetDefinition sets the definition of the Element
 func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	if ePtr.isEditable(hl) == false {
+	if !ePtr.isEditable(hl) {
 		return errors.New("element.SetDefinition failed because the element is not editable")
 	}
 	if ePtr.Definition != def {
@@ -1063,7 +1064,7 @@ func (ePtr *element) SetDefinition(def string, hl *HeldLocks) error {
 // SetIsCore sets the flag indicating that the element is a Core concept and cannot be edited. Once set, this flag cannot be cleared.
 func (ePtr *element) SetIsCore(hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	if ePtr.IsCore != true {
+	if !ePtr.IsCore {
 		ePtr.uOfD.preChange(ePtr, hl)
 		beforeState, err := NewConceptState(ePtr)
 		if err != nil {
@@ -1105,7 +1106,7 @@ func (ePtr *element) SetIsCoreRecursively(hl *HeldLocks) error {
 // SetLabel sets the label of the Element
 func (ePtr *element) SetLabel(label string, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	if ePtr.isEditable(hl) == false {
+	if !ePtr.isEditable(hl) {
 		return errors.New("element.SetLabel failed because the element is not editable")
 	}
 	if ePtr.Label != label {
@@ -1134,7 +1135,7 @@ func (ePtr *element) SetOwningConcept(el Element, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
 	id := ""
 	if el != nil {
-		if el.isEditable(hl) == false {
+		if !el.isEditable(hl) {
 			return errors.New("element.SetOwningConcept called with an owner that is not editable")
 		}
 		id = el.getConceptIDNoLock()
@@ -1151,18 +1152,18 @@ func (ePtr *element) SetOwningConcept(el Element, hl *HeldLocks) error {
 // the correct type of the owning concept is recorded.
 func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	if ePtr.isEditable(hl) == false {
+	if !ePtr.isEditable(hl) {
 		return errors.New("element.SetOwningConceptID failed because the element is not editable")
 	}
 	if ocID == ePtr.ConceptID {
 		return errors.New("element.SetOwningConceptID called with itself as owner")
 	}
 	newOwner := ePtr.uOfD.GetElement(ocID)
-	if newOwner != nil && newOwner.isEditable(hl) == false {
+	if newOwner != nil && !newOwner.isEditable(hl) {
 		return errors.New("element.SetOwningConceptID called with new owner not editable")
 	}
 	oldOwner := ePtr.GetOwningConcept(hl)
-	if oldOwner != nil && oldOwner.isEditable(hl) == false {
+	if oldOwner != nil && !oldOwner.isEditable(hl) {
 		return errors.New("element.SetOwningConceptID called with old owner not editable")
 	}
 	// Do nothing if there is no change
@@ -1207,11 +1208,11 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *HeldLocks) error {
 // throw an error if its owner is read only and this call tries to set read only false.
 func (ePtr *element) SetReadOnly(value bool, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	if ePtr.GetIsCore(hl) == true {
+	if ePtr.GetIsCore(hl) {
 		return errors.New("element.SetReadOnly failed because element is a core element")
 	}
 	if ePtr.GetOwningConcept(hl) != nil {
-		if ePtr.GetOwningConcept(hl).IsReadOnly(hl) == true && value == false {
+		if ePtr.GetOwningConcept(hl).IsReadOnly(hl) && !value {
 			return errors.New("element.SetReadOnly failed because the owner is read only")
 		}
 	}
@@ -1261,7 +1262,7 @@ func (ePtr *element) setUniverseOfDiscourse(uOfD *UniverseOfDiscourse, hl *HeldL
 // SetURI sets the URI of the Element
 func (ePtr *element) SetURI(uri string, hl *HeldLocks) error {
 	hl.WriteLockElement(ePtr)
-	if ePtr.isEditable(hl) == false {
+	if !ePtr.isEditable(hl) {
 		return errors.New("element.SetURI failed because the elementis not editable")
 	}
 	if ePtr.URI != uri {

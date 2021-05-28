@@ -3,10 +3,11 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"log"
 	"net/url"
 	"reflect"
+
+	"github.com/pkg/errors"
 
 	mapset "github.com/deckarep/golang-set"
 	uuid "github.com/satori/go.uuid"
@@ -325,7 +326,7 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, deletedElements ma
 		listener := uOfDPtr.GetElement(id.(string))
 		switch listener.(type) {
 		case Reference:
-			listener.(Reference).SetReferencedConcept(nil, hl)
+			listener.(Reference).SetReferencedConcept(nil, NoAttribute, hl)
 		case Refinement:
 			refinement := listener.(Refinement)
 			if refinement.GetAbstractConcept(hl) == el {
@@ -1053,8 +1054,8 @@ func (uOfDPtr *UniverseOfDiscourse) queueFunctionExecutions(el Element, notifica
 				(OmitManageTreeNodesCalls && functionIdentifier == "http://activeCrl.com/crlEditor/Editor/TreeViews/ManageTreeNodes") ||
 				(OmitDiagramRelatedCalls && isDiagramRelatedFunction(functionIdentifier))
 			if omitTrace == false {
-				log.Printf("queueFunctionExecutions adding function, URI: %s notification: %s target: %p", functionIdentifier, notification.GetNatureOfChange().String(), el)
-				log.Printf("   Function target: %T %s %s %p", el, el.getConceptIDNoLock(), el.GetLabel(hl), el)
+				go log.Printf("queueFunctionExecutions adding function, URI: %s notification: %s target: %p", functionIdentifier, notification.GetNatureOfChange().String(), el)
+				go log.Printf("   Function target: %T %s %s %p", el, el.getConceptIDNoLock(), el.GetLabel(hl), el)
 				notification.Print("Notification: ", hl)
 			}
 		}
@@ -1137,13 +1138,9 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 
 	// Set the attributes - but no IDs
 	replicate.SetLabel(original.GetLabel(hl), hl)
-	switch original.(type) {
-	case Reference:
-		replicate.(Reference).SetReferencedAttributeName(original.(Reference).GetReferencedAttributeName(hl), hl)
-	}
 
 	// Determine whether there is already a refinement in place; if not, create it
-	if replicate.IsRefinementOf(original, hl) == false {
+	if !replicate.IsRefinementOf(original, hl) {
 		refinementURI := ""
 		if len(uri) == 1 && uri[0] != "" {
 			refinementURI = uri[0] + original.GetConceptID(hl) + "/Refinement"

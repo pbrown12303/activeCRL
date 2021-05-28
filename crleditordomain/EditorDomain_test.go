@@ -5,20 +5,20 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldatastructuresdomain"
-	"github.com/pbrown12303/activeCRL/crldiagram"
+	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 )
 
 var _ = Describe("EdditorDomain tests", func() {
 	Specify("Editor domain creation should be idempotent", func() {
 		uOfD1 := core.NewUniverseOfDiscourse()
 		hl1 := uOfD1.NewHeldLocks()
-		crldiagram.BuildCrlDiagramDomain(uOfD1, hl1)
+		crldiagramdomain.BuildCrlDiagramDomain(uOfD1, hl1)
 		crldatastructuresdomain.BuildCrlDataStructuresDomain(uOfD1, hl1)
 		Expect(BuildEditorDomain(uOfD1, hl1)).ShouldNot(BeNil())
 		cs1 := uOfD1.GetElementWithURI(EditorDomainURI)
 		uOfD2 := core.NewUniverseOfDiscourse()
 		hl2 := uOfD2.NewHeldLocks()
-		crldiagram.BuildCrlDiagramDomain(uOfD2, hl2)
+		crldiagramdomain.BuildCrlDiagramDomain(uOfD2, hl2)
 		crldatastructuresdomain.BuildCrlDataStructuresDomain(uOfD2, hl2)
 		Expect(BuildEditorDomain(uOfD2, hl2)).ShouldNot(BeNil())
 		cs2 := uOfD2.GetElementWithURI(EditorDomainURI)
@@ -27,14 +27,14 @@ var _ = Describe("EdditorDomain tests", func() {
 	Specify("Refinement of OpenDiagrams list with URIs should serialize and deserialzie properly", func() {
 		uOfD1 := core.NewUniverseOfDiscourse()
 		hl1 := uOfD1.NewHeldLocks()
-		crldiagram.BuildCrlDiagramDomain(uOfD1, hl1)
+		crldiagramdomain.BuildCrlDiagramDomain(uOfD1, hl1)
 		crldatastructuresdomain.BuildCrlDataStructuresDomain(uOfD1, hl1)
 		Expect(BuildEditorDomain(uOfD1, hl1)).ShouldNot(BeNil())
 		hl1.ReleaseLocksAndWait()
 
 		uOfD2 := core.NewUniverseOfDiscourse()
 		hl2 := uOfD2.NewHeldLocks()
-		crldiagram.BuildCrlDiagramDomain(uOfD2, hl2)
+		crldiagramdomain.BuildCrlDiagramDomain(uOfD2, hl2)
 		crldatastructuresdomain.BuildCrlDataStructuresDomain(uOfD2, hl2)
 		Expect(BuildEditorDomain(uOfD2, hl2)).ShouldNot(BeNil())
 		hl2.ReleaseLocksAndWait()

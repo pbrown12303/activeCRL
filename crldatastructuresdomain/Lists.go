@@ -40,7 +40,7 @@ func NewList(uOfD *core.UniverseOfDiscourse, setType core.Element, hl *core.Held
 	if typeReference == nil {
 		return nil, errors.New("In Lists.go, NewList failed to find a type reference")
 	}
-	typeReference.SetReferencedConcept(setType, hl)
+	typeReference.SetReferencedConcept(setType, core.NoAttribute, hl)
 	return newList, nil
 }
 
@@ -82,7 +82,7 @@ func AddListMemberAfter(list core.Element, priorMemberReference core.Reference, 
 	}
 	newMemberReference, _ := uOfD.CreateReplicateReferenceAsRefinementFromURI(CrlListMemberReferenceURI, hl)
 	newMemberReference.SetOwningConcept(list, hl)
-	newMemberReference.SetReferencedConcept(newMember, hl)
+	newMemberReference.SetReferencedConcept(newMember, core.NoAttribute, hl)
 	// Wire up prior references
 	setNextMemberReference(priorMemberReference, newMemberReference, hl)
 
@@ -94,7 +94,7 @@ func AddListMemberAfter(list core.Element, priorMemberReference core.Reference, 
 			return nil, errors.Wrap(err2, "AddListMemberAfter failed")
 		}
 		if referenceToLastMemberReference != nil {
-			referenceToLastMemberReference.SetReferencedConcept(newMemberReference, hl)
+			referenceToLastMemberReference.SetReferencedConcept(newMemberReference, core.NoAttribute, hl)
 		}
 	} else {
 		setPriorMemberReference(newPostMemberReference, newMemberReference, hl)
@@ -141,7 +141,7 @@ func AddListMemberBefore(list core.Element, postMemberReference core.Reference, 
 	// Create the newMemberReference
 	newMemberReference, _ := uOfD.CreateReplicateReferenceAsRefinementFromURI(CrlListMemberReferenceURI, hl)
 	newMemberReference.SetOwningConcept(list, hl)
-	newMemberReference.SetReferencedConcept(newMember, hl)
+	newMemberReference.SetReferencedConcept(newMember, core.NoAttribute, hl)
 	// Wire up post references - be careful if inserting at the end
 	setPriorMemberReference(postMemberReference, newMemberReference, hl)
 	setNextMemberReference(newMemberReference, postMemberReference, hl)
@@ -150,7 +150,7 @@ func AddListMemberBefore(list core.Element, postMemberReference core.Reference, 
 		// The new member is the only member of the list
 		referenceToFirstMemberReference, _ := getListReferenceToFirstMemberReference(list, hl)
 		if referenceToFirstMemberReference != nil {
-			referenceToFirstMemberReference.SetReferencedConcept(newMemberReference, hl)
+			referenceToFirstMemberReference.SetReferencedConcept(newMemberReference, core.NoAttribute, hl)
 		}
 	} else {
 		setNextMemberReference(newPriorMemberReference, newMemberReference, hl)
@@ -185,7 +185,7 @@ func AppendListMember(list core.Element, newMember core.Element, hl *core.HeldLo
 	if err != nil {
 		return nil, errors.Wrap(err, "AppendListMember failed")
 	}
-	err = newMemberReference.SetReferencedConcept(newMember, hl)
+	err = newMemberReference.SetReferencedConcept(newMember, core.NoAttribute, hl)
 	if err != nil {
 		return nil, errors.Wrap(err, "AppendListMember failed")
 	}
@@ -195,7 +195,7 @@ func AppendListMember(list core.Element, newMember core.Element, hl *core.HeldLo
 		return nil, errors.Wrap(err2, "AppendListMember failed")
 	}
 	if referenceToLastMemberReference != nil {
-		err = referenceToLastMemberReference.SetReferencedConcept(newMemberReference, hl)
+		err = referenceToLastMemberReference.SetReferencedConcept(newMemberReference, core.NoAttribute, hl)
 		if err != nil {
 			return nil, errors.Wrap(err, "AppendListMember failed")
 		}
@@ -205,7 +205,7 @@ func AppendListMember(list core.Element, newMember core.Element, hl *core.HeldLo
 		if err4 != nil {
 			return nil, errors.Wrap(err2, "AppendListMember failed")
 		}
-		err = referenceToFirstMemberReference.SetReferencedConcept(newMemberReference, hl)
+		err = referenceToFirstMemberReference.SetReferencedConcept(newMemberReference, core.NoAttribute, hl)
 		if err != nil {
 			return nil, errors.Wrap(err, "AppendListMember failed")
 		}
@@ -430,7 +430,7 @@ func PrependListMember(list core.Element, newMember core.Element, hl *core.HeldL
 	if err != nil {
 		return nil, errors.Wrap(err, "PrependListMember failed")
 	}
-	err = newMemberReference.SetReferencedConcept(newMember, hl)
+	err = newMemberReference.SetReferencedConcept(newMember, core.NoAttribute, hl)
 	if err != nil {
 		return nil, errors.Wrap(err, "PrependListMember failed")
 	}
@@ -440,7 +440,7 @@ func PrependListMember(list core.Element, newMember core.Element, hl *core.HeldL
 		return nil, errors.Wrap(err2, "PrependListMember failed")
 	}
 	if referenceToFirstMemberReference != nil {
-		err = referenceToFirstMemberReference.SetReferencedConcept(newMemberReference, hl)
+		err = referenceToFirstMemberReference.SetReferencedConcept(newMemberReference, core.NoAttribute, hl)
 		if err != nil {
 			return nil, errors.Wrap(err, "PrependListMember failed")
 		}
@@ -450,7 +450,7 @@ func PrependListMember(list core.Element, newMember core.Element, hl *core.HeldL
 		if err4 != nil {
 			return nil, errors.Wrap(err2, "PrependListMember failed")
 		}
-		err = referenceToLastMemberReference.SetReferencedConcept(newMemberReference, hl)
+		err = referenceToLastMemberReference.SetReferencedConcept(newMemberReference, core.NoAttribute, hl)
 		if err != nil {
 			return nil, errors.Wrap(err, "PrependListMember failed")
 		}
@@ -482,13 +482,13 @@ func RemoveListMember(list core.Element, el core.Element, hl *core.HeldLocks) er
 				setNextMemberReference(priorMemberReference, nextMemberReference, hl)
 			} else {
 				referenceToFirstMemberReference, _ := getListReferenceToFirstMemberReference(list, hl)
-				referenceToFirstMemberReference.SetReferencedConcept(nextMemberReference, hl)
+				referenceToFirstMemberReference.SetReferencedConcept(nextMemberReference, core.NoAttribute, hl)
 			}
 			if nextMemberReference != nil {
 				setPriorMemberReference(nextMemberReference, priorMemberReference, hl)
 			} else {
 				referenceToLastMemberReference, _ := getListReferenceToLastMemberReference(list, hl)
-				referenceToLastMemberReference.SetReferencedConcept(priorMemberReference, hl)
+				referenceToLastMemberReference.SetReferencedConcept(priorMemberReference, core.NoAttribute, hl)
 			}
 			// Now delete the member reference
 			uOfD.DeleteElement(memberReference, hl)
@@ -512,7 +512,7 @@ func SetListType(list core.Element, listType core.Element, hl *core.HeldLocks) e
 	if typeReference.GetReferencedConcept(hl) != nil {
 		return errors.New("List already has an assigned type")
 	}
-	return typeReference.SetReferencedConcept(listType, hl)
+	return typeReference.SetReferencedConcept(listType, core.NoAttribute, hl)
 }
 
 // setNextMemberReference takes a memberReference and sets its next reference
@@ -522,7 +522,7 @@ func setNextMemberReference(memberReference core.Reference, nextReference core.R
 	if err != nil {
 		return errors.Wrap(err, "setNextMemberReference failed")
 	}
-	err = nextReferenceReference.SetReferencedConcept(nextReference, hl)
+	err = nextReferenceReference.SetReferencedConcept(nextReference, core.NoAttribute, hl)
 	if err != nil {
 		return errors.Wrap(err, "setNextMemberReference failed")
 	}
@@ -536,7 +536,7 @@ func setPriorMemberReference(memberReference core.Reference, priorReference core
 	if err != nil {
 		return errors.Wrap(err, "setNextMemberReference failed")
 	}
-	err = priorReferenceReference.SetReferencedConcept(priorReference, hl)
+	err = priorReferenceReference.SetReferencedConcept(priorReference, core.NoAttribute, hl)
 	if err != nil {
 		return errors.Wrap(err, "setNextMemberReference failed")
 	}

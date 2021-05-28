@@ -1,10 +1,11 @@
 package core
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"reflect"
 	"strconv"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Element internals test", func() {
@@ -67,8 +68,7 @@ var _ = Describe("Element internals test", func() {
 			ref, _ := uOfD.NewReference(hl)
 			target, _ := uOfD.NewElement(hl)
 			target.SetLabel("TargetLabel", hl) // force the version to increment
-			ref.SetReferencedConcept(target, hl)
-			ref.SetReferencedAttributeName(OwningConceptID, hl)
+			ref.SetReferencedConcept(target, OwningConceptID, hl)
 			cs, err := NewConceptState(ref)
 			Expect(err).To(BeNil())
 			Expect(ref.GetConceptID(hl)).To(Equal(cs.ConceptID))

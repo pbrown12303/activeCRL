@@ -106,7 +106,7 @@ var _ = Describe("Test Observer functionality", func() {
 			Expect(originalOwner.Register(obs3)).To(Succeed())
 			newOwner, _ := uOfD.NewElement(hl)
 			Expect(newOwner.Register(obs4)).To(Succeed())
-			Expect(ref.SetReferencedConcept(originalOwner, hl)).To(Succeed())
+			Expect(ref.SetReferencedConcept(originalOwner, NoAttribute, hl)).To(Succeed())
 			Expect(len(obs1.notifications)).To(Equal(4))
 			Expect(obs1.notifications[3].GetNatureOfChange()).To(Equal(ReferencedConceptChanged))
 			Expect(obs1.notifications[3].GetAfterConceptState().ReferencedConceptID).To(Equal(originalOwner.GetConceptID(hl)))
@@ -118,7 +118,7 @@ var _ = Describe("Test Observer functionality", func() {
 			Expect(obs3.notifications[0].GetAfterConceptState().ReferencedConceptID).To(Equal(originalOwner.GetConceptID(hl)))
 			Expect(obs3.notifications[0].GetAfterReferencedState().ConceptID).To(Equal(originalOwner.GetConceptID(hl)))
 			// Now the new owner
-			Expect(ref.SetReferencedConcept(newOwner, hl)).To(Succeed())
+			Expect(ref.SetReferencedConcept(newOwner, NoAttribute, hl)).To(Succeed())
 			Expect(len(obs1.notifications)).To(Equal(5))
 			Expect(obs1.notifications[4].GetNatureOfChange()).To(Equal(ReferencedConceptChanged))
 			Expect(obs1.notifications[4].GetAfterConceptState().ReferencedConceptID).To(Equal(newOwner.GetConceptID(hl)))

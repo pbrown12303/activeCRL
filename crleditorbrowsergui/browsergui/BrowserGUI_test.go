@@ -2,7 +2,7 @@ package browsergui_test
 
 import (
 	//	"fmt"
-	// "log"
+	"log"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -24,7 +24,7 @@ var _ = Describe("Test CrlEditor", func() {
 
 	AssertServerRequestProcessingComplete := func() {
 		EventuallyWithOffset(1, func() bool {
-			// log.Printf("GetRequestInProgress: %t", browsergui.GetRequestInProgress())
+			log.Printf("GetRequestInProgress: %t", browsergui.GetRequestInProgress())
 			return browsergui.GetRequestInProgress() == false
 		}, time.Second*10).Should(BeTrue())
 	}
@@ -95,7 +95,6 @@ var _ = Describe("Test CrlEditor", func() {
 	}
 
 	BeforeEach(func() {
-		hl = uOfD.NewHeldLocks()
 		// Get current workspace path
 		workspacePath := testWorkspaceDir
 		// Open workspace (the same one - assumes nothing has been saved)
@@ -106,7 +105,7 @@ var _ = Describe("Test CrlEditor", func() {
 		// log.Printf("Editor initialized with Workspace path: " + workspacePath)
 		AssertServerRequestProcessingComplete()
 		uOfD = testEditor.GetUofD()
-
+		hl = uOfD.NewHeldLocks()
 	})
 
 	AfterEach(func() {
@@ -406,6 +405,7 @@ var _ = Describe("Test CrlEditor", func() {
 	}
 	CreateElementPointer := func(diagram core.Element, sourceView core.Element, targetView core.Element) (core.Reference, core.Element) {
 		var toolbarID string
+		// core.TraceLocks = true
 		Expect(page.RunScript("return crlElementPointerToolbarButtonID", nil, &toolbarID)).To(Succeed())
 		Expect(page.FindByID(toolbarID).MouseToElement()).To(Succeed())
 		Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
@@ -413,12 +413,15 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(page.RunScript("return crlCurrentToolbarButton == crlElementPointerToolbarButtonID;", nil, &correctToolbarSelection)).To(Succeed())
 		Expect(correctToolbarSelection).To(BeTrue())
 		// Now move the mouse to r1, click, drag to e1, and release
+		browsergui.CrlLogClientRequests = true
 		targetCellID := GetCellViewIDFromViewElementID(diagram, targetView.GetConceptID(hl))
 		sourceCellID := GetCellViewIDFromViewElementID(diagram, sourceView.GetConceptID(hl))
+		// hl.ReleaseLocksAndWait()
 		Expect(page.FindByID(sourceCellID).MouseToElement()).To(Succeed())
 		Expect(page.Click(agouti.HoldClick, agouti.LeftButton)).To(Succeed())
 		Expect(page.FindByID(targetCellID).MouseToElement()).To(Succeed())
 		Expect(page.Click(agouti.ReleaseClick, agouti.LeftButton)).To(Succeed())
+		// core.TraceChange = true
 		hl.ReleaseLocksAndWait()
 		AssertServerRequestProcessingComplete()
 		Eventually(func() bool {
@@ -426,10 +429,13 @@ var _ = Describe("Test CrlEditor", func() {
 			page.RunScript("return crlCurrentToolbarButton == crlCursorToolbarButtonID;", nil, &correctToolbarSelection)
 			return correctToolbarSelection
 		}, 3).Should(BeTrue())
+		// core.TraceChange = false
+		browsergui.CrlLogClientRequests = false
 		referenceID := crldiagramdomain.GetReferencedModelElement(sourceView, hl).GetConceptID(hl)
 		reference := uOfD.GetReference(referenceID)
 		elementPointerView := crldiagramdomain.GetFirstElementRepresentingConceptElementPointer(diagram, reference, hl)
 		hl.ReleaseLocksAndWait()
+		// core.TraceLocks = false
 		return reference, elementPointerView
 	}
 
@@ -1065,13 +1071,13 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(crldiagramdomain.GetLinkTarget(epView, hl).GetConceptID(hl)).To(Equal(targetView.GetConceptID(hl)))
 						PerformUndoRedoTest(5)
 					})
-					Specify("for a node source and an OwnerPointer target", func() {
+					FSpecify("for a node source and an OwnerPointer target", func() {
 						source, sourceView := CreateReferenceNode(diagram, 100, 150)
-						_, e1View := CreateElement(diagram, 200, 100)
+						e1, e1View := CreateElement(diagram, 200, 100)
 						_, e2View := CreateElement(diagram, 200, 200)
 						target, targetView := CreateOwnerPointer(diagram, e1View, e2View)
 						epModel, epView := CreateElementPointer(diagram, sourceView, targetView)
-						Expect(epModel.GetConceptID(hl)).To(Equal(source.GetConceptID(hl)))
+						Expect(epModel.GetConceptID(hl)).To(Equal(e1.GetConceptID(hl)))
 						Expect(source.GetReferencedConceptID(hl)).To(Equal(target.GetConceptID(hl)))
 						Expect(source.GetReferencedAttributeName(hl)).To(Equal(core.OwningConceptID))
 						Expect(crldiagramdomain.GetLinkSource(epView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))

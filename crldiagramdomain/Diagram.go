@@ -21,10 +21,11 @@
 package crldiagramdomain
 
 import (
-	"github.com/pkg/errors"
 	"log"
 	"math"
 	"strconv"
+
+	"github.com/pkg/errors"
 
 	"golang.org/x/image/math/fixed"
 
@@ -49,8 +50,10 @@ const NodePadWidth = 1.0
 
 var goRegularFont *truetype.Font
 var goBoldFont *truetype.Font
+
 var go12PtRegularFace font.Face
 var go12PtBoldFace font.Face
+
 var go10PtRegularFace font.Face
 var go10PtItalicFace font.Face
 
@@ -290,7 +293,7 @@ func GetBGColor(diagramElement core.Element, hl *core.HeldLocks) string {
 
 // GetFirstElementRepresentingConcept returns the first diagram element that represents the indicated concept
 func GetFirstElementRepresentingConcept(diagram core.Element, concept core.Element, hl *core.HeldLocks) core.Element {
-	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
 		log.Printf("GetFirstElementRepresentingConcept called with diagram of incorrect type")
 		return nil
 	}
@@ -304,7 +307,7 @@ func GetFirstElementRepresentingConcept(diagram core.Element, concept core.Eleme
 
 // GetFirstElementRepresentingConceptID returns the first diagram element that represents the indicated concept
 func GetFirstElementRepresentingConceptID(diagram core.Element, conceptID string, hl *core.HeldLocks) core.Element {
-	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
 		log.Printf("GetFirstElementRepresentingConceptID called with diagram of incorrect type")
 		return nil
 	}
@@ -318,7 +321,7 @@ func GetFirstElementRepresentingConceptID(diagram core.Element, conceptID string
 
 // GetFirstElementRepresentingConceptOwnerPointer returns the first diagram element that represents the indicated concept's OwnerPointer
 func GetFirstElementRepresentingConceptOwnerPointer(diagram core.Element, concept core.Element, hl *core.HeldLocks) core.Element {
-	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
 		log.Printf("GetFirstElementRepresentingConceptOwnerPointer called with diagram of incorrect type")
 		return nil
 	}
@@ -332,7 +335,7 @@ func GetFirstElementRepresentingConceptOwnerPointer(diagram core.Element, concep
 
 // GetFirstElementRepresentingConceptIDOwnerPointer returns the first diagram element that represents the indicated concept's OwnerPointer
 func GetFirstElementRepresentingConceptIDOwnerPointer(diagram core.Element, conceptID string, hl *core.HeldLocks) core.Element {
-	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
 		log.Printf("GetFirstElementRepresentingConceptIDOwnerPointer called with diagram of incorrect type")
 		return nil
 	}
@@ -346,7 +349,7 @@ func GetFirstElementRepresentingConceptIDOwnerPointer(diagram core.Element, conc
 
 // GetFirstElementRepresentingConceptElementPointer returns the first diagram element that represents the indicated concept's ElementPointer
 func GetFirstElementRepresentingConceptElementPointer(diagram core.Element, concept core.Reference, hl *core.HeldLocks) core.Element {
-	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
 		log.Printf("GetFirstElementRepresentingConceptElementPointer called with diagram of incorrect type")
 		return nil
 	}
@@ -360,7 +363,7 @@ func GetFirstElementRepresentingConceptElementPointer(diagram core.Element, conc
 
 // GetFirstElementRepresentingConceptIDElementPointer returns the first diagram element that represents the indicated concept's ElementPointer
 func GetFirstElementRepresentingConceptIDElementPointer(diagram core.Element, conceptID string, hl *core.HeldLocks) core.Element {
-	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
 		log.Printf("GetFirstElementRepresentingConceptIDElementPointer called with diagram of incorrect type")
 		return nil
 	}
@@ -374,7 +377,7 @@ func GetFirstElementRepresentingConceptIDElementPointer(diagram core.Element, co
 
 // GetFirstElementRepresentingConceptAbstractPointer returns the first diagram element that represents the indicated concept's AbstractPointer
 func GetFirstElementRepresentingConceptAbstractPointer(diagram core.Element, concept core.Refinement, hl *core.HeldLocks) core.Element {
-	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
 		log.Printf("GetFirstElementRepresentingConceptAbstractPointer called with diagram of incorrect type")
 		return nil
 	}
@@ -388,7 +391,7 @@ func GetFirstElementRepresentingConceptAbstractPointer(diagram core.Element, con
 
 // GetFirstElementRepresentingConceptIDAbstractPointer returns the first diagram element that represents the indicated concept's AbstractPointer
 func GetFirstElementRepresentingConceptIDAbstractPointer(diagram core.Element, conceptID string, hl *core.HeldLocks) core.Element {
-	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
 		log.Printf("GetFirstElementRepresentingConceptIDAbstractPointer called with diagram of incorrect type")
 		return nil
 	}
@@ -402,7 +405,7 @@ func GetFirstElementRepresentingConceptIDAbstractPointer(diagram core.Element, c
 
 // GetFirstElementRepresentingConceptRefinedPointer returns the first diagram element that represents the indicated concept's RefinedPointer
 func GetFirstElementRepresentingConceptRefinedPointer(diagram core.Element, concept core.Refinement, hl *core.HeldLocks) core.Element {
-	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
 		log.Printf("GetFirstElementRepresentingConceptRefinedPointer called with diagram of incorrect type")
 		return nil
 	}
@@ -416,7 +419,7 @@ func GetFirstElementRepresentingConceptRefinedPointer(diagram core.Element, conc
 
 // GetFirstElementRepresentingConceptIDRefinedPointer returns the first diagram element that represents the indicated concept's RefinedPointer
 func GetFirstElementRepresentingConceptIDRefinedPointer(diagram core.Element, conceptID string, hl *core.HeldLocks) core.Element {
-	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
 		log.Printf("GetFirstElementRepresentingConceptIDRefinedPointer called with diagram of incorrect type")
 		return nil
 	}
@@ -534,7 +537,7 @@ func GetDisplayLabelYOffset(diagramNode core.Element, hl *core.HeldLocks) float6
 
 // GetOwnerPointer returns the ownerPointer for the concept if one exists
 func GetOwnerPointer(diagram core.Element, concept core.Element, hl *core.HeldLocks) core.Element {
-	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
 		log.Printf("GetOwnerPointer called with diagram of incorrect type")
 		return nil
 	}
@@ -548,7 +551,7 @@ func GetOwnerPointer(diagram core.Element, concept core.Element, hl *core.HeldLo
 
 // GetElementPointer returns the elementPointer for the concept if one exists
 func GetElementPointer(diagram core.Element, concept core.Element, hl *core.HeldLocks) core.Element {
-	if diagram.IsRefinementOfURI(CrlDiagramURI, hl) == false {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
 		log.Printf("GetElementPointer called with diagram of incorrect type")
 		return nil
 	}
@@ -579,16 +582,16 @@ func init() {
 	// Set up fonts and faces
 	goRegularFont, err = truetype.Parse(goregular.TTF)
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 	}
 	goBoldFont, err = truetype.Parse(gobold.TTF)
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 	}
 
 	goItalicFont, err := truetype.Parse(goitalic.TTF)
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 	}
 
 	options12Pt := truetype.Options{Size: 12.0}
@@ -782,7 +785,7 @@ func SetLinkSource(diagramLink core.Element, source core.Element, hl *core.HeldL
 	}
 	sourceReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, hl)
 	if sourceReference != nil {
-		sourceReference.SetReferencedConcept(source, hl)
+		sourceReference.SetReferencedConcept(source, core.NoAttribute, hl)
 	}
 }
 
@@ -793,7 +796,7 @@ func SetLinkTarget(diagramLink core.Element, target core.Element, hl *core.HeldL
 	}
 	targetReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, hl)
 	if targetReference != nil {
-		targetReference.SetReferencedConcept(target, hl)
+		targetReference.SetReferencedConcept(target, core.NoAttribute, hl)
 	}
 }
 
@@ -867,7 +870,7 @@ func SetReferencedModelElement(diagramElement core.Element, el core.Element, hl 
 	if reference == nil {
 		return
 	}
-	reference.SetReferencedConcept(el, hl)
+	reference.SetReferencedConcept(el, core.NoAttribute, hl)
 }
 
 // BuildCrlDiagramDomain builds the CrlDiagram concept space and adds it to the uOfD
@@ -1366,9 +1369,14 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 	defer hl.ReleaseLocksAndWait()
 	hl.WriteLockElement(diagramElement)
 	// core Elements should always be ignored
-	if diagramElement.GetIsCore(hl) == true {
+	if diagramElement.GetIsCore(hl) {
 		return nil
 	}
+	// Suppress circular notifications
+	if notification.IsReferenced(diagramElement) {
+		return nil
+	}
+
 	// There are several notifications of interest here:
 	//   - the deletion of the referenced model element
 	//   - the label of the referenced model element
@@ -1401,11 +1409,10 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 					diagram := diagramElement.GetOwningConcept(hl)
 					oldLinkTarget := GetLinkTarget(diagramElement, hl)
 					oldTargetModelElement := GetReferencedModelElement(oldLinkTarget, hl)
-					switch modelElement.(type) {
+					switch typedElement := modelElement.(type) {
 					case core.Reference:
-						reference := modelElement.(core.Reference)
 						if IsDiagramElementPointer(diagramElement, hl) {
-							newTargetModelElement := reference.GetReferencedConcept(hl)
+							newTargetModelElement := typedElement.GetReferencedConcept(hl)
 							if oldTargetModelElement != newTargetModelElement {
 								if newTargetModelElement == nil {
 									uOfD.DeleteElement(diagramElement, hl)
@@ -1415,10 +1422,10 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 								}
 							}
 						} else if IsDiagramReferenceLink(diagramElement, hl) {
-							updateDiagramElementForModelElementChange(diagramElement, reference, hl)
-							SetDisplayLabel(diagramElement, reference.GetLabel(hl), hl)
-							newModelTarget := reference.GetReferencedConcept(hl)
-							newModelSource := reference.GetOwningConcept(hl)
+							updateDiagramElementForModelElementChange(diagramElement, typedElement, hl)
+							SetDisplayLabel(diagramElement, typedElement.GetLabel(hl), hl)
+							newModelTarget := typedElement.GetReferencedConcept(hl)
+							newModelSource := typedElement.GetOwningConcept(hl)
 							if newModelSource == nil || newModelTarget == nil {
 								uOfD.DeleteElement(diagramElement, hl)
 								return nil
@@ -1558,9 +1565,9 @@ func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.C
 			underlyingNotification := notification.GetUnderlyingChange()
 			switch underlyingNotification.GetNatureOfChange() {
 			case core.ReferencedConceptChanged:
-				switch reportingElement.(type) {
+				switch typedElement := reportingElement.(type) {
 				case core.Reference:
-					if reportingElement.(core.Reference).GetReferencedConcept(hl) == nil {
+					if typedElement.GetReferencedConcept(hl) == nil {
 						uOfD.DeleteElement(diagramPointer, hl)
 					}
 				}

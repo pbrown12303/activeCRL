@@ -1,9 +1,10 @@
 package core
 
 import (
+	"strconv"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"strconv"
 )
 
 var df1URI = "http://dummy.function.uri,df1"
@@ -291,7 +292,7 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			target, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
 			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			ref.SetReferencedConceptID(target.getConceptIDNoLock(), hl)
+			ref.SetReferencedConceptID(target.getConceptIDNoLock(), NoAttribute, hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
 			done := false
@@ -334,11 +335,11 @@ var _ = Describe("Verify housekeeping function execution", func() {
 		Specify("SetReferencedConcept should generate ReferencedConceptChanged for old target", func() {
 			ref, _ := uOfD.NewReference(hl)
 			oldTarget, _ := uOfD.NewElement(hl)
-			ref.SetReferencedConcept(oldTarget, hl)
+			ref.SetReferencedConcept(oldTarget, NoAttribute, hl)
 			target, _ := uOfD.NewElement(hl)
 			hl.ReleaseLocksAndWait()
 			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
-			ref.SetReferencedConceptID(target.getConceptIDNoLock(), hl)
+			ref.SetReferencedConceptID(target.getConceptIDNoLock(), NoAttribute, hl)
 			hl.ReleaseLocksAndWait()
 			var calls []*pendingFunctionCall
 			done := false
@@ -570,11 +571,11 @@ var _ = Describe("Verify housekeeping function execution", func() {
 			el.SetOwningConcept(oldOwner, hl)
 			newOwner, _ := uOfD.NewElement(hl)
 			childRef, _ := uOfD.NewReference(hl)
-			childRef.SetReferencedConceptID(el.getConceptIDNoLock(), hl)
+			childRef.SetReferencedConceptID(el.getConceptIDNoLock(), NoAttribute, hl)
 			newOwnerRef, _ := uOfD.NewReference(hl)
-			newOwnerRef.SetReferencedConceptID(newOwner.getConceptIDNoLock(), hl)
+			newOwnerRef.SetReferencedConceptID(newOwner.getConceptIDNoLock(), NoAttribute, hl)
 			oldOwnerRef, _ := uOfD.NewReference(hl)
-			oldOwnerRef.SetReferencedConceptID(oldOwner.getConceptIDNoLock(), hl)
+			oldOwnerRef.SetReferencedConceptID(oldOwner.getConceptIDNoLock(), NoAttribute, hl)
 			hl.ReleaseLocksAndWait()
 			uOfD.executedCalls = make(chan *pendingFunctionCall, 100)
 			el.SetOwningConceptID(newOwner.getConceptIDNoLock(), hl)

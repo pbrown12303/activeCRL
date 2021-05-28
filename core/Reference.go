@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"log"
 	"reflect"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 // AttributeName indicates the attribute being referenced (if any):
@@ -125,21 +126,21 @@ func (rPtr *reference) GetReferencedAttributeValue(hl *HeldLocks) string {
 			if rPtr.ReferencedAttributeName == OwningConceptID {
 				return referencedConcept.GetOwningConceptID(hl)
 			}
-			switch referencedConcept.(type) {
+			switch typedReferencedConcept := referencedConcept.(type) {
 			case Reference:
 				if rPtr.ReferencedAttributeName == ReferencedConceptID {
-					return referencedConcept.(Reference).GetReferencedConceptID(hl)
+					return typedReferencedConcept.GetReferencedConceptID(hl)
 				}
 			case Refinement:
 				if rPtr.ReferencedAttributeName == AbstractConceptID {
-					return referencedConcept.(Refinement).GetAbstractConceptID(hl)
+					return typedReferencedConcept.GetAbstractConceptID(hl)
 				}
 				if rPtr.ReferencedAttributeName == RefinedConceptID {
-					return referencedConcept.(Refinement).GetRefinedConceptID(hl)
+					return typedReferencedConcept.GetRefinedConceptID(hl)
 				}
 			case Literal:
 				if rPtr.ReferencedAttributeName == LiteralValue {
-					return referencedConcept.(Literal).GetLiteralValue(hl)
+					return typedReferencedConcept.GetLiteralValue(hl)
 				}
 			}
 		}
@@ -250,24 +251,24 @@ func (rPtr *reference) recoverReferenceFields(unmarshaledData *map[string]json.R
 
 // SetReferencedConcept sets the referenced concept by calling SetReferencedConceptID using the ID of the
 // supplied Element
-func (rPtr *reference) SetReferencedConcept(el Element, hl *HeldLocks) error {
+func (rPtr *reference) SetReferencedConcept(el Element, attributeName AttributeName, hl *HeldLocks) error {
 	hl.WriteLockElement(rPtr)
 	id := ""
 	if el != nil {
 		id = el.getConceptIDNoLock()
 	}
-	return rPtr.SetReferencedConceptID(id, hl)
+	return rPtr.SetReferencedConceptID(id, attributeName, hl)
 }
 
 // SetReferencedConceptID sets the referenced concept using the supplied ID.
-func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error {
+func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName AttributeName, hl *HeldLocks) error {
 	hl.WriteLockElement(rPtr)
-	if rPtr.isEditable(hl) == false {
+	if !rPtr.isEditable(hl) {
 		return errors.New("reference.SetReferencedConceptID failed because the reference is not editable")
 	}
 	var newReferencedConcept Element
 	var oldReferencedConcept Element
-	if rPtr.ReferencedConceptID != rcID {
+	if rPtr.ReferencedConceptID != rcID || rPtr.ReferencedAttributeName != attributeName {
 		if rcID != "" {
 			newReferencedConcept = rPtr.uOfD.GetElement(rcID)
 			switch rPtr.GetReferencedAttributeName(hl) {
@@ -312,6 +313,7 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 		}
 		rPtr.ReferencedConceptID = rcID
 		var afterReferencedState *ConceptState
+		rPtr.ReferencedAttributeName = attributeName
 		if newReferencedConcept == nil {
 			rPtr.ReferencedConceptVersion = 0
 		} else {
@@ -333,52 +335,52 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, hl *HeldLocks) error 
 	return nil
 }
 
-// SetReferencedConceptAttribute sets the value indicating whether a specific attribute of the referenced concept is being
-// referenced
-func (rPtr *reference) SetReferencedAttributeName(attributeName AttributeName, hl *HeldLocks) error {
-	hl.WriteLockElement(rPtr)
-	if rPtr.isEditable(hl) == false {
-		return errors.New("reference.SetReferencedAttributeName failed because reference is not editable")
-	}
-	if rPtr.ReferencedAttributeName != attributeName {
-		var referencedConcept Element
-		if rPtr.ReferencedConceptID != "" {
-			referencedConcept = rPtr.uOfD.GetElement(rPtr.ReferencedConceptID)
-			if referencedConcept != nil {
-			}
-			switch rPtr.GetReferencedAttributeName(hl) {
-			case ReferencedConceptID:
-				switch referencedConcept.(type) {
-				case Reference:
-				default:
-					return errors.New("In reference.SetReferencedConceptID, the ReferencedAttributeName was ReferencedConceptID, but the referenced concept is not a Reference")
-				}
-			case AbstractConceptID, RefinedConceptID:
-				switch referencedConcept.(type) {
-				case Refinement:
-				default:
-					return errors.New("In reference.SetReferencedConceptID, the ReferencedAttributeName was AbstractConceptID or RefinedConceptID, but the referenced concept is not a Refinement")
-				}
-			}
-		}
-		rPtr.uOfD.preChange(rPtr, hl)
-		beforeState, err := NewConceptState(rPtr)
-		if err != nil {
-			return errors.Wrap(err, "reference.SetReferencedAttributeName failed")
-		}
-		rPtr.incrementVersion(hl)
-		rPtr.ReferencedAttributeName = attributeName
-		afterState, err2 := NewConceptState(rPtr)
-		if err2 != nil {
-			return errors.Wrap(err2, "reference.SetReferencedAttributeName failed")
-		}
-		err = rPtr.uOfD.SendConceptChangeNotification(rPtr, beforeState, afterState, hl)
-		if err != nil {
-			return errors.Wrap(err, "reference.SetReferencedAttributeName failed")
-		}
-	}
-	return nil
-}
+// // SetReferencedConceptAttribute sets the value indicating whether a specific attribute of the referenced concept is being
+// // referenced
+// func (rPtr *reference) SetReferencedAttributeName(attributeName AttributeName, hl *HeldLocks) error {
+// 	hl.WriteLockElement(rPtr)
+// 	if rPtr.isEditable(hl) == false {
+// 		return errors.New("reference.SetReferencedAttributeName failed because reference is not editable")
+// 	}
+// 	if rPtr.ReferencedAttributeName != attributeName {
+// 		var referencedConcept Element
+// 		if rPtr.ReferencedConceptID != "" {
+// 			referencedConcept = rPtr.uOfD.GetElement(rPtr.ReferencedConceptID)
+// 			if referencedConcept != nil {
+// 			}
+// 			switch rPtr.GetReferencedAttributeName(hl) {
+// 			case ReferencedConceptID:
+// 				switch referencedConcept.(type) {
+// 				case Reference:
+// 				default:
+// 					return errors.New("In reference.SetReferencedConceptID, the ReferencedAttributeName was ReferencedConceptID, but the referenced concept is not a Reference")
+// 				}
+// 			case AbstractConceptID, RefinedConceptID:
+// 				switch referencedConcept.(type) {
+// 				case Refinement:
+// 				default:
+// 					return errors.New("In reference.SetReferencedConceptID, the ReferencedAttributeName was AbstractConceptID or RefinedConceptID, but the referenced concept is not a Refinement")
+// 				}
+// 			}
+// 		}
+// 		rPtr.uOfD.preChange(rPtr, hl)
+// 		beforeState, err := NewConceptState(rPtr)
+// 		if err != nil {
+// 			return errors.Wrap(err, "reference.SetReferencedAttributeName failed")
+// 		}
+// 		rPtr.incrementVersion(hl)
+// 		rPtr.ReferencedAttributeName = attributeName
+// 		afterState, err2 := NewConceptState(rPtr)
+// 		if err2 != nil {
+// 			return errors.Wrap(err2, "reference.SetReferencedAttributeName failed")
+// 		}
+// 		err = rPtr.uOfD.SendConceptChangeNotification(rPtr, beforeState, afterState, hl)
+// 		if err != nil {
+// 			return errors.Wrap(err, "reference.SetReferencedAttributeName failed")
+// 		}
+// 	}
+// 	return nil
+// }
 
 // Reference represents a concept that is a pointer to another concept
 type Reference interface {
@@ -389,7 +391,7 @@ type Reference interface {
 	GetReferencedAttributeValue(*HeldLocks) string
 	GetReferencedConceptVersion(*HeldLocks) int
 	getReferencedConceptNoLock() Element
-	SetReferencedConcept(Element, *HeldLocks) error
-	SetReferencedAttributeName(attributeName AttributeName, hl *HeldLocks) error
-	SetReferencedConceptID(string, *HeldLocks) error
+	SetReferencedConcept(Element, AttributeName, *HeldLocks) error
+	// SetReferencedAttributeName(attributeName AttributeName, hl *HeldLocks) error
+	SetReferencedConceptID(string, AttributeName, *HeldLocks) error
 }

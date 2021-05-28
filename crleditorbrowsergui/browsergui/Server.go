@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"os/exec"
 	"runtime"
@@ -13,7 +12,6 @@ import (
 
 	//	"log"
 	"net/http"
-	"regexp"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -62,7 +60,6 @@ type page struct {
 var root = "C:/GoWorkspace/src/github.com/pbrown12303/activeCRL/"
 
 var templates = template.Must(template.ParseFiles(root+"crleditorbrowsergui/http/index.html", root+"crleditorbrowsergui/http/graph.html"))
-var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 
 // WebSocket upgrader
 var upgrader = websocket.Upgrader{
@@ -75,7 +72,7 @@ func Exit() error {
 	// Save the settings
 	err := BrowserGUISingleton.editor.SaveUserPreferences()
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 	}
 	BrowserGUISingleton.editor.SetExitRequested()
 	err = server.Shutdown(context.Background())
@@ -100,14 +97,14 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "index", p)
 }
 
-func loadPage(title string) (*page, error) {
-	filename := root + "crlEditor/data/" + title + ".txt"
-	body, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-	return &page{Title: title, Body: body}, nil
-}
+// func loadPage(title string) (*page, error) {
+// 	filename := root + "crlEditor/data/" + title + ".txt"
+// 	body, err := ioutil.ReadFile(filename)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return &page{Title: title, Body: body}, nil
+// }
 
 // openBrowser tries to open the URL in a browser,
 // and returns whether it succeed in doing so.
@@ -289,6 +286,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			request.AdditionalParameters["SourceID"],
 			request.AdditionalParameters["TargetID"],
 			request.AdditionalParameters["TargetAttributeName"], hl)
+		hl.ReleaseLocksAndWait()
 		if err != nil {
 			sendReply(w, 1, "Error processing ElementPointerChanged: "+err.Error(), "", nil)
 		} else {
@@ -318,7 +316,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 	case "InitializeClient":
 		log.Printf("InitializeClient requested")
 		sendReply(w, 0, "Client will be initialized", "", nil)
-		for rh.ready == false {
+		for !rh.ready {
 			time.Sleep(100 * time.Millisecond)
 		}
 		err := BrowserGUISingleton.InitializeGUI(hl)
@@ -341,9 +339,9 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
 		el := BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil {
-			switch el.(type) {
+			switch typedEl := el.(type) {
 			case core.Literal:
-				el.(core.Literal).SetLiteralValue(request.AdditionalParameters["NewValue"], hl)
+				typedEl.SetLiteralValue(request.AdditionalParameters["NewValue"], hl)
 			}
 		}
 		hl.ReleaseLocksAndWait()
@@ -430,7 +428,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		reply.AdditionalParameters = map[string]string{"NumberOfAvailableGraphs": strconv.Itoa(count)}
 		err := json.NewEncoder(w).Encode(reply)
 		if err != nil {
-			log.Printf(err.Error())
+			log.Print(err.Error())
 		}
 	case "SaveWorkspace":
 		err := BrowserGUISingleton.editor.SaveWorkspace(hl)
@@ -559,7 +557,10 @@ func sendReply(w http.ResponseWriter, code int, message string, resultConceptID 
 	reply.ResultConcept = resultConcept
 	err := json.NewEncoder(w).Encode(reply)
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
+	}
+	if CrlLogClientRequests {
+		log.Printf("Sent reply: %#v", reply)
 	}
 }
 
@@ -606,7 +607,7 @@ func (bgPtr *BrowserGUI) StartServer() {
 	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir(root+"crleditorbrowsergui/http/css"))))
 	mux.HandleFunc("/index/request", rh.handleRequest)
 
-	if bgPtr.startBrowser == true {
+	if bgPtr.startBrowser {
 		openBrowser("http://localhost:8082/index")
 	}
 
