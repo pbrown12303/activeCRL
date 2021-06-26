@@ -26,7 +26,7 @@ func NewCrlGraph(graphName string) *CrlGraph {
 
 // AddConceptRecursively will add the given concept and all its child descendants to the graph.
 // it will also add any referenced concepts, but not recursively. Existing concepts will not be duplicated.
-func (graphPtr *CrlGraph) AddConceptRecursively(concept Element, hl *HeldLocks) error {
+func (graphPtr *CrlGraph) AddConceptRecursively(concept Element, hl *Transaction) error {
 	err := graphPtr.addConcept(concept, hl)
 	if err != nil {
 		return errors.Wrap(err, "CrlGraph.AddConceptRecursively failed")
@@ -72,7 +72,7 @@ func (graphPtr *CrlGraph) AddConceptRecursively(concept Element, hl *HeldLocks) 
 	return nil
 }
 
-func (graphPtr *CrlGraph) addConcept(concept Element, hl *HeldLocks) error {
+func (graphPtr *CrlGraph) addConcept(concept Element, hl *Transaction) error {
 	switch typedConcept := concept.(type) {
 	case Refinement:
 		abstractConcept := typedConcept.GetAbstractConcept(hl)
@@ -146,7 +146,7 @@ func (graphPtr *CrlGraph) addConcept(concept Element, hl *HeldLocks) error {
 	return nil
 }
 
-func (graphPtr *CrlGraph) addOwnerEdge(parent Element, child Element, hl *HeldLocks) error {
+func (graphPtr *CrlGraph) addOwnerEdge(parent Element, child Element, hl *Transaction) error {
 	parentID := "\"" + parent.GetConceptID(hl) + "\""
 	if !graphPtr.gvgraph.IsNode(parentID) {
 		return errors.New("CrlGraph.addOwnerEdge called with parent node not present")
@@ -167,7 +167,7 @@ func (graphPtr *CrlGraph) addOwnerEdge(parent Element, child Element, hl *HeldLo
 	return nil
 }
 
-func (graphPtr *CrlGraph) addReferencedElementEdge(reference Element, referencedElement Element, hl *HeldLocks) error {
+func (graphPtr *CrlGraph) addReferencedElementEdge(reference Element, referencedElement Element, hl *Transaction) error {
 	referenceID := "\"" + reference.GetConceptID(hl) + "\""
 	if !graphPtr.gvgraph.IsNode(referenceID) {
 		return errors.New("CrlGraph.addReferencedElementEdge called with reference node not present")
@@ -190,7 +190,7 @@ func (graphPtr *CrlGraph) addReferencedElementEdge(reference Element, referenced
 	return nil
 }
 
-func (graphPtr *CrlGraph) addRefinementEdge(abstractConcept Element, refinedConcept Element, hl *HeldLocks) error {
+func (graphPtr *CrlGraph) addRefinementEdge(abstractConcept Element, refinedConcept Element, hl *Transaction) error {
 	abstractConceptID := "\"" + abstractConcept.GetConceptID(hl) + "\""
 	if !graphPtr.gvgraph.IsNode(abstractConceptID) {
 		return errors.New("CrlGraph.addRefinementEdge called with abstractConcept node not present")

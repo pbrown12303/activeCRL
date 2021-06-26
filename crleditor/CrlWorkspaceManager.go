@@ -41,7 +41,7 @@ func (mgr *CrlWorkspaceManager) Initialize() {
 
 // ClearWorkspace deletes all of the files in the workspace that correspond to uOfD root elements
 // and removes the corresponding entry in workspaceFiles
-func (mgr *CrlWorkspaceManager) ClearWorkspace(workspacePath string, hl *core.HeldLocks) error {
+func (mgr *CrlWorkspaceManager) ClearWorkspace(workspacePath string, hl *core.Transaction) error {
 	var err error
 	rootElements := mgr.editor.uOfDManager.UofD.GetRootElements(hl)
 	for id, wf := range mgr.workspaceFiles {
@@ -57,7 +57,7 @@ func (mgr *CrlWorkspaceManager) ClearWorkspace(workspacePath string, hl *core.He
 }
 
 // CloseWorkspace saves and closes all workspace files
-func (mgr *CrlWorkspaceManager) CloseWorkspace(hl *core.HeldLocks) error {
+func (mgr *CrlWorkspaceManager) CloseWorkspace(hl *core.Transaction) error {
 	err := mgr.SaveWorkspace(hl)
 	if err != nil {
 		return errors.Wrap(err, "CrlWorkspaceManager.CloseWorkspace failed")
@@ -84,7 +84,7 @@ func (mgr *CrlWorkspaceManager) deleteFile(wf *workspaceFile) error {
 	return nil
 }
 
-func (mgr *CrlWorkspaceManager) generateFilename(el core.Element, hl *core.HeldLocks) string {
+func (mgr *CrlWorkspaceManager) generateFilename(el core.Element, hl *core.Transaction) string {
 	return mgr.editor.userPreferences.WorkspacePath + "/" + el.GetLabel(hl) + "--" + el.GetConceptID(hl) + ".acrl"
 }
 
@@ -94,7 +94,7 @@ func (mgr *CrlWorkspaceManager) GetUofD() *core.UniverseOfDiscourse {
 }
 
 // newFile creates a file with the name being the ConceptID of the supplied Element and returns the workspaceFile struct
-func (mgr *CrlWorkspaceManager) newFile(el core.Element, hl *core.HeldLocks) (*workspaceFile, error) {
+func (mgr *CrlWorkspaceManager) newFile(el core.Element, hl *core.Transaction) (*workspaceFile, error) {
 	if mgr.editor.userPreferences.WorkspacePath == "" {
 		return nil, errors.New("CrlBrowserEditor.NewFile called with no settings.WorkspacePath defined")
 	}
@@ -117,7 +117,7 @@ func (mgr *CrlWorkspaceManager) newFile(el core.Element, hl *core.HeldLocks) (*w
 }
 
 // openFile opens the file and returns a workspaceFile struct
-func (mgr *CrlWorkspaceManager) openFile(fileInfo os.FileInfo, hl *core.HeldLocks) (*workspaceFile, error) {
+func (mgr *CrlWorkspaceManager) openFile(fileInfo os.FileInfo, hl *core.Transaction) (*workspaceFile, error) {
 	writable := (fileInfo.Mode().Perm() & 0200) > 0
 	mode := os.O_RDONLY
 	if writable {
@@ -170,7 +170,7 @@ func (mgr *CrlWorkspaceManager) LoadUserPreferences(workspaceArg string) error {
 }
 
 // LoadWorkspace loads the workspace currently designated by the userPreferences.WorkspacePath. If the path is empty, it is a no-op.
-func (mgr *CrlWorkspaceManager) LoadWorkspace(hl *core.HeldLocks) error {
+func (mgr *CrlWorkspaceManager) LoadWorkspace(hl *core.Transaction) error {
 	files, err := ioutil.ReadDir(mgr.editor.userPreferences.WorkspacePath)
 	if err != nil {
 		return errors.Wrap(err, "CrlWorkspaceManager.LoadWorkspace failed")
@@ -195,7 +195,7 @@ func (mgr *CrlWorkspaceManager) LoadWorkspace(hl *core.HeldLocks) error {
 }
 
 // saveFile saves the file and updates the fileInfo
-func (mgr *CrlWorkspaceManager) saveFile(wf *workspaceFile, hl *core.HeldLocks) error {
+func (mgr *CrlWorkspaceManager) saveFile(wf *workspaceFile, hl *core.Transaction) error {
 	hl.ReadLockElement(wf.Domain)
 	if wf.File == nil {
 		return errors.New("CrlBrowserEditor.SaveFile called with nil file")
@@ -242,7 +242,7 @@ func (mgr *CrlWorkspaceManager) saveFile(wf *workspaceFile, hl *core.HeldLocks) 
 }
 
 // SaveWorkspace saves all top-level concepts whose versions are different than the last retrieved version.
-func (mgr *CrlWorkspaceManager) SaveWorkspace(hl *core.HeldLocks) error {
+func (mgr *CrlWorkspaceManager) SaveWorkspace(hl *core.Transaction) error {
 	rootElements := mgr.editor.uOfDManager.UofD.GetRootElements(hl)
 	var err error
 	for id, el := range rootElements {

@@ -82,7 +82,7 @@ var CrlIDToReferenceMapTargetURI = CrlIDToReferenceMapURI + "/Target"
 var CrlIDToReferenceMapTargetRefinementURI = CrlIDToReferenceMapTargetURI + "/Refinement"
 
 // BuildCrlMapsDomain constructs the domain for CRL maps
-func BuildCrlMapsDomain(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) error {
+func BuildCrlMapsDomain(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) error {
 	crlMapsDomain, err1 := uOfD.NewOwnedElement(nil, "CrlMapsDomain", hl, CrlMapsDomainURI)
 	if err1 != nil {
 		return errors.Wrap(err1, "crlmaps.BuildCrlMapsDomain failed")
@@ -417,7 +417,7 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 }
 
 // GetSource returns the source referenced by the given map
-func GetSource(theMap core.Element, hl *core.HeldLocks) core.Element {
+func GetSource(theMap core.Element, hl *core.Transaction) core.Element {
 	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
 	if ref == nil {
 		return nil
@@ -426,12 +426,12 @@ func GetSource(theMap core.Element, hl *core.HeldLocks) core.Element {
 }
 
 // GetSourceReference returns the source reference for the given map
-func GetSourceReference(theMap core.Element, hl *core.HeldLocks) core.Reference {
+func GetSourceReference(theMap core.Element, hl *core.Transaction) core.Reference {
 	return theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
 }
 
 // GetTarget returns the target referenced by the given map
-func GetTarget(theMap core.Element, hl *core.HeldLocks) core.Element {
+func GetTarget(theMap core.Element, hl *core.Transaction) core.Element {
 	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
 	if ref == nil {
 		return nil
@@ -440,11 +440,11 @@ func GetTarget(theMap core.Element, hl *core.HeldLocks) core.Element {
 }
 
 // GetTargetReference returns the target reference for the given map
-func GetTargetReference(theMap core.Element, hl *core.HeldLocks) core.Reference {
+func GetTargetReference(theMap core.Element, hl *core.Transaction) core.Reference {
 	return theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
 }
 
-func getRootMap(theMap core.Element, hl *core.HeldLocks) core.Element {
+func getRootMap(theMap core.Element, hl *core.Transaction) core.Element {
 	owner := theMap.GetOwningConcept(hl)
 	if owner != nil && isMap(owner, hl) {
 		return getRootMap(owner, hl)
@@ -452,7 +452,7 @@ func getRootMap(theMap core.Element, hl *core.HeldLocks) core.Element {
 	return theMap
 }
 
-func getParentMapTarget(theMap core.Element, hl *core.HeldLocks) core.Element {
+func getParentMapTarget(theMap core.Element, hl *core.Transaction) core.Element {
 	parentMap := theMap.GetOwningConcept(hl)
 	ref := parentMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
 	if ref == nil {
@@ -461,7 +461,7 @@ func getParentMapTarget(theMap core.Element, hl *core.HeldLocks) core.Element {
 	return ref.GetReferencedConcept(hl)
 }
 
-func getRootMapTarget(theMap core.Element, hl *core.HeldLocks) core.Element {
+func getRootMapTarget(theMap core.Element, hl *core.Transaction) core.Element {
 	rootMap := getRootMap(theMap, hl)
 	ref := rootMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
 	if ref == nil {
@@ -471,7 +471,7 @@ func getRootMapTarget(theMap core.Element, hl *core.HeldLocks) core.Element {
 }
 
 // FindMapForSource locates the map corresponding to the given source, if any.
-func FindMapForSource(currentMap core.Element, source core.Element, hl *core.HeldLocks) core.Element {
+func FindMapForSource(currentMap core.Element, source core.Element, hl *core.Transaction) core.Element {
 	if GetSource(currentMap, hl) == source && GetSourceReference(currentMap, hl).GetReferencedAttributeName(hl) == core.NoAttribute {
 		return currentMap
 	}
@@ -485,7 +485,7 @@ func FindMapForSource(currentMap core.Element, source core.Element, hl *core.Hel
 }
 
 // FindMapForSourceAttribute locates the map corresponding to the given source attribute, if any.
-func FindMapForSourceAttribute(currentMap core.Element, source core.Element, attributeName core.AttributeName, hl *core.HeldLocks) core.Element {
+func FindMapForSourceAttribute(currentMap core.Element, source core.Element, attributeName core.AttributeName, hl *core.Transaction) core.Element {
 	if GetSource(currentMap, hl) == source && GetSourceReference(currentMap, hl).GetReferencedAttributeName(hl) == attributeName {
 		return currentMap
 	}
@@ -499,7 +499,7 @@ func FindMapForSourceAttribute(currentMap core.Element, source core.Element, att
 }
 
 // FindTargetForSource locates the map corresponding to the given source (if any) and then returns its target
-func FindTargetForSource(currentMap core.Element, source core.Element, hl *core.HeldLocks) core.Element {
+func FindTargetForSource(currentMap core.Element, source core.Element, hl *core.Transaction) core.Element {
 	// get root map
 	rootMap := getRootMap(currentMap, hl)
 	// search the root map for a mapping whose source is the given source. If found, return target of the map
@@ -510,7 +510,7 @@ func FindTargetForSource(currentMap core.Element, source core.Element, hl *core.
 	return nil
 }
 
-func instantiateChildren(abstractMap core.Element, parentMap core.Element, source core.Element, target core.Element, uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) error {
+func instantiateChildren(abstractMap core.Element, parentMap core.Element, source core.Element, target core.Element, uOfD *core.UniverseOfDiscourse, hl *core.Transaction) error {
 	// for each of the abstractMap's children that is a map
 	for _, abstractChildMap := range abstractMap.GetOwnedConceptsRefinedFromURI(CrlMapURI, hl) {
 		abstractChildMapSource := GetSource(abstractChildMap, hl)
@@ -623,17 +623,17 @@ func instantiateChildren(abstractMap core.Element, parentMap core.Element, sourc
 	return nil
 }
 
-func isMap(candidate core.Element, hl *core.HeldLocks) bool {
+func isMap(candidate core.Element, hl *core.Transaction) bool {
 	return candidate != nil && candidate.IsRefinementOfURI(CrlMapURI, hl)
 }
 
-func isRootMap(candidate core.Element, hl *core.HeldLocks) bool {
+func isRootMap(candidate core.Element, hl *core.Transaction) bool {
 	rootMap := getRootMap(candidate, hl)
 	return rootMap == candidate
 }
 
 // SetSource sets the source referenced by the given map
-func SetSource(theMap core.Element, newSource core.Element, attributeName core.AttributeName, hl *core.HeldLocks) error {
+func SetSource(theMap core.Element, newSource core.Element, attributeName core.AttributeName, hl *core.Transaction) error {
 	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
 	if ref == nil {
 		return errors.New("CrlMaps.SetSource called with map that does not have a source reference")
@@ -651,7 +651,7 @@ func SetSource(theMap core.Element, newSource core.Element, attributeName core.A
 // }
 
 // SetTarget sets the target referenced by the given map
-func SetTarget(theMap core.Element, newTarget core.Element, attributeName core.AttributeName, hl *core.HeldLocks) error {
+func SetTarget(theMap core.Element, newTarget core.Element, attributeName core.AttributeName, hl *core.Transaction) error {
 	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
 	if ref == nil {
 		return errors.New("CrlMaps.SetTarget called with map that does not have a target reference")

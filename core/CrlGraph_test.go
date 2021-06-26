@@ -10,7 +10,7 @@ import (
 
 var _ = Describe("CrlGraph tests", func() {
 	var uOfD *UniverseOfDiscourse
-	var hl *HeldLocks
+	var hl *Transaction
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()

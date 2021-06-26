@@ -80,7 +80,7 @@ type reference struct {
 	ReferencedConceptVersion int
 }
 
-func (rPtr *reference) clone(hl *HeldLocks) Reference {
+func (rPtr *reference) clone(hl *Transaction) Reference {
 	hl.ReadLockElement(rPtr)
 	var ref reference
 	ref.initializeReference("", "")
@@ -88,7 +88,7 @@ func (rPtr *reference) clone(hl *HeldLocks) Reference {
 	return &ref
 }
 
-func (rPtr *reference) cloneAttributes(source *reference, hl *HeldLocks) {
+func (rPtr *reference) cloneAttributes(source *reference, hl *Transaction) {
 	rPtr.element.cloneAttributes(&source.element, hl)
 	rPtr.ReferencedConceptID = source.ReferencedConceptID
 	rPtr.ReferencedConceptVersion = source.ReferencedConceptVersion
@@ -96,7 +96,7 @@ func (rPtr *reference) cloneAttributes(source *reference, hl *HeldLocks) {
 
 // GetReferencedConcept returns the element representing  the concept being referenced
 // Note that this is a cached value
-func (rPtr *reference) GetReferencedConcept(hl *HeldLocks) Element {
+func (rPtr *reference) GetReferencedConcept(hl *Transaction) Element {
 	hl.ReadLockElement(rPtr)
 	return rPtr.getReferencedConceptNoLock()
 }
@@ -106,19 +106,19 @@ func (rPtr *reference) getReferencedConceptNoLock() Element {
 }
 
 // GetReferencedConceptID returns the identifier of the concept being referenced
-func (rPtr *reference) GetReferencedConceptID(hl *HeldLocks) string {
+func (rPtr *reference) GetReferencedConceptID(hl *Transaction) string {
 	hl.ReadLockElement(rPtr)
 	return rPtr.ReferencedConceptID
 }
 
 // GetReferencedAttributeName returns an indicator of which attribute is being referenced (if any)
-func (rPtr *reference) GetReferencedAttributeName(hl *HeldLocks) AttributeName {
+func (rPtr *reference) GetReferencedAttributeName(hl *Transaction) AttributeName {
 	hl.ReadLockElement(rPtr)
 	return rPtr.ReferencedAttributeName
 }
 
 // GetReferencedAttributeValue returns the string value of the referenced attribute (if any)
-func (rPtr *reference) GetReferencedAttributeValue(hl *HeldLocks) string {
+func (rPtr *reference) GetReferencedAttributeValue(hl *Transaction) string {
 	hl.ReadLockElement(rPtr)
 	if rPtr.ReferencedConceptID != "" {
 		referencedConcept := rPtr.GetReferencedConcept(hl)
@@ -149,7 +149,7 @@ func (rPtr *reference) GetReferencedAttributeValue(hl *HeldLocks) string {
 }
 
 // GetReferencedConceptVersion returns the last known version of the referenced concept
-func (rPtr *reference) GetReferencedConceptVersion(hl *HeldLocks) int {
+func (rPtr *reference) GetReferencedConceptVersion(hl *Transaction) int {
 	hl.ReadLockElement(rPtr)
 	return rPtr.ReferencedConceptVersion
 }
@@ -158,7 +158,7 @@ func (rPtr *reference) initializeReference(conceptID string, uri string) {
 	rPtr.initializeElement(conceptID, uri)
 }
 
-func (rPtr *reference) isEquivalent(hl1 *HeldLocks, el *reference, hl2 *HeldLocks, printExceptions ...bool) bool {
+func (rPtr *reference) isEquivalent(hl1 *Transaction, el *reference, hl2 *Transaction, printExceptions ...bool) bool {
 	var print bool
 	if len(printExceptions) > 0 {
 		print = printExceptions[0]
@@ -207,7 +207,7 @@ func (rPtr *reference) marshalReferenceFields(buffer *bytes.Buffer) error {
 // recoverReferenceFields() is used when de-serializing an element. The activities in restoring the
 // element are not considered changes so the version counter is not incremented and the monitors of this
 // element are not notified of chaanges.
-func (rPtr *reference) recoverReferenceFields(unmarshaledData *map[string]json.RawMessage, hl *HeldLocks) error {
+func (rPtr *reference) recoverReferenceFields(unmarshaledData *map[string]json.RawMessage, hl *Transaction) error {
 	err := rPtr.recoverElementFields(unmarshaledData, hl)
 	if err != nil {
 		return err
@@ -251,7 +251,7 @@ func (rPtr *reference) recoverReferenceFields(unmarshaledData *map[string]json.R
 
 // SetReferencedConcept sets the referenced concept by calling SetReferencedConceptID using the ID of the
 // supplied Element
-func (rPtr *reference) SetReferencedConcept(el Element, attributeName AttributeName, hl *HeldLocks) error {
+func (rPtr *reference) SetReferencedConcept(el Element, attributeName AttributeName, hl *Transaction) error {
 	hl.WriteLockElement(rPtr)
 	id := ""
 	if el != nil {
@@ -261,7 +261,7 @@ func (rPtr *reference) SetReferencedConcept(el Element, attributeName AttributeN
 }
 
 // SetReferencedConceptID sets the referenced concept using the supplied ID.
-func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName AttributeName, hl *HeldLocks) error {
+func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName AttributeName, hl *Transaction) error {
 	hl.WriteLockElement(rPtr)
 	if !rPtr.isEditable(hl) {
 		return errors.New("reference.SetReferencedConceptID failed because the reference is not editable")
@@ -385,13 +385,13 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName Attribu
 // Reference represents a concept that is a pointer to another concept
 type Reference interface {
 	Element
-	GetReferencedConcept(*HeldLocks) Element
-	GetReferencedConceptID(*HeldLocks) string
-	GetReferencedAttributeName(*HeldLocks) AttributeName
-	GetReferencedAttributeValue(*HeldLocks) string
-	GetReferencedConceptVersion(*HeldLocks) int
+	GetReferencedConcept(*Transaction) Element
+	GetReferencedConceptID(*Transaction) string
+	GetReferencedAttributeName(*Transaction) AttributeName
+	GetReferencedAttributeValue(*Transaction) string
+	GetReferencedConceptVersion(*Transaction) int
 	getReferencedConceptNoLock() Element
-	SetReferencedConcept(Element, AttributeName, *HeldLocks) error
+	SetReferencedConcept(Element, AttributeName, *Transaction) error
 	// SetReferencedAttributeName(attributeName AttributeName, hl *HeldLocks) error
-	SetReferencedConceptID(string, AttributeName, *HeldLocks) error
+	SetReferencedConceptID(string, AttributeName, *Transaction) error
 }

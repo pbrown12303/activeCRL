@@ -20,7 +20,7 @@ import (
 var _ = Describe("Test CrlEditor", func() {
 
 	var uOfD *core.UniverseOfDiscourse
-	var hl *core.HeldLocks
+	var hl *core.Transaction
 
 	AssertServerRequestProcessingComplete := func() {
 		EventuallyWithOffset(1, func() bool {
@@ -421,7 +421,8 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(page.Click(agouti.HoldClick, agouti.LeftButton)).To(Succeed())
 		Expect(page.FindByID(targetCellID).MouseToElement()).To(Succeed())
 		Expect(page.Click(agouti.ReleaseClick, agouti.LeftButton)).To(Succeed())
-		// core.TraceChange = true
+		core.TraceChange = true
+		core.EnableNotificationPrint = true
 		hl.ReleaseLocksAndWait()
 		AssertServerRequestProcessingComplete()
 		Eventually(func() bool {
@@ -429,7 +430,8 @@ var _ = Describe("Test CrlEditor", func() {
 			page.RunScript("return crlCurrentToolbarButton == crlCursorToolbarButtonID;", nil, &correctToolbarSelection)
 			return correctToolbarSelection
 		}, 3).Should(BeTrue())
-		// core.TraceChange = false
+		core.TraceChange = false
+		core.EnableNotificationPrint = false
 		browsergui.CrlLogClientRequests = false
 		referenceID := crldiagramdomain.GetReferencedModelElement(sourceView, hl).GetConceptID(hl)
 		reference := uOfD.GetReference(referenceID)
@@ -583,9 +585,9 @@ var _ = Describe("Test CrlEditor", func() {
 			var diagramID string
 			var diagram core.Element
 			var beforeUofD *core.UniverseOfDiscourse
-			var beforeHL *core.HeldLocks
+			var beforeHL *core.Transaction
 			var afterUofD *core.UniverseOfDiscourse
-			var afterHL *core.HeldLocks
+			var afterHL *core.Transaction
 
 			BeforeEach(func() {
 				cs1ID, cs1 = CreateDomain()

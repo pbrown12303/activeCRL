@@ -10,14 +10,14 @@ type testObserver struct {
 	notifications []*ChangeNotification
 }
 
-func (toPtr *testObserver) Update(notification *ChangeNotification, heldLocks *HeldLocks) error {
+func (toPtr *testObserver) Update(notification *ChangeNotification, heldLocks *Transaction) error {
 	toPtr.notifications = append(toPtr.notifications, notification)
 	return nil
 }
 
 var _ = Describe("Test Observer functionality", func() {
 	var uOfD *UniverseOfDiscourse
-	var hl *HeldLocks
+	var hl *Transaction
 	var obs1 *testObserver
 	var obs2 *testObserver
 	var obs3 *testObserver

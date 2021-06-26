@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"log"
 	"reflect"
+
+	"github.com/pkg/errors"
 )
 
 type literal struct {
@@ -14,7 +15,7 @@ type literal struct {
 	LiteralValue string
 }
 
-func (lPtr *literal) clone(hl *HeldLocks) Literal {
+func (lPtr *literal) clone(hl *Transaction) Literal {
 	hl.ReadLockElement(lPtr)
 	var clonedLiteral literal
 	clonedLiteral.initializeLiteral("", "")
@@ -22,13 +23,13 @@ func (lPtr *literal) clone(hl *HeldLocks) Literal {
 	return &clonedLiteral
 }
 
-func (lPtr *literal) cloneAttributes(source *literal, hl *HeldLocks) {
+func (lPtr *literal) cloneAttributes(source *literal, hl *Transaction) {
 	lPtr.element.cloneAttributes(&source.element, hl)
 	lPtr.LiteralValue = source.LiteralValue
 	lPtr.element.cloneAttributes(&source.element, hl)
 }
 
-func (lPtr *literal) GetLiteralValue(hl *HeldLocks) string {
+func (lPtr *literal) GetLiteralValue(hl *Transaction) string {
 	hl.ReadLockElement(lPtr)
 	return lPtr.LiteralValue
 }
@@ -37,7 +38,7 @@ func (lPtr *literal) initializeLiteral(conceptID string, uri string) {
 	lPtr.initializeElement(conceptID, uri)
 }
 
-func (lPtr *literal) isEquivalent(hl1 *HeldLocks, ref *literal, hl2 *HeldLocks, printExceptions ...bool) bool {
+func (lPtr *literal) isEquivalent(hl1 *Transaction, ref *literal, hl2 *Transaction, printExceptions ...bool) bool {
 	var print bool
 	if len(printExceptions) > 0 {
 		print = printExceptions[0]
@@ -71,7 +72,7 @@ func (lPtr *literal) marshalLiteralFields(buffer *bytes.Buffer) error {
 // recoverLiteralFields() is used when de-serializing an element. The activities in restoring the
 // literal are not considered changes so the version counter is not incremented and the monitors of this
 // element are not notified of chaanges.
-func (lPtr *literal) recoverLiteralFields(unmarshaledData *map[string]json.RawMessage, hl *HeldLocks) error {
+func (lPtr *literal) recoverLiteralFields(unmarshaledData *map[string]json.RawMessage, hl *Transaction) error {
 	err := lPtr.recoverElementFields(unmarshaledData, hl)
 	if err != nil {
 		return err
@@ -87,9 +88,9 @@ func (lPtr *literal) recoverLiteralFields(unmarshaledData *map[string]json.RawMe
 	return nil
 }
 
-func (lPtr *literal) SetLiteralValue(value string, hl *HeldLocks) error {
+func (lPtr *literal) SetLiteralValue(value string, hl *Transaction) error {
 	hl.WriteLockElement(lPtr)
-	if lPtr.isEditable(hl) == false {
+	if !lPtr.isEditable(hl) {
 		return errors.New("literal.SetLiteralValue failed because the literal is not editable")
 	}
 	if lPtr.LiteralValue != value {
@@ -115,6 +116,6 @@ func (lPtr *literal) SetLiteralValue(value string, hl *HeldLocks) error {
 // Literal is a concept that is, literally, a literal
 type Literal interface {
 	Element
-	GetLiteralValue(*HeldLocks) string
-	SetLiteralValue(string, *HeldLocks) error
+	GetLiteralValue(*Transaction) string
+	SetLiteralValue(string, *Transaction) error
 }

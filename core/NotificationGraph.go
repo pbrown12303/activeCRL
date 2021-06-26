@@ -8,7 +8,7 @@ type NotificationGraph struct {
 // NewNotificationGraph creates a graphviz graph of the information in the ChangeNotification
 // The prefix parameter provides the opportunity for the caller to insert a string prefix into the
 // node identifier.
-func NewNotificationGraph(notification *ChangeNotification, hl *HeldLocks) *NotificationGraph {
+func NewNotificationGraph(notification *ChangeNotification, hl *Transaction) *NotificationGraph {
 	var nGraph NotificationGraph
 	graphName := "NotificationGraph"
 	nGraph.initializeBaseGraph(graphName)

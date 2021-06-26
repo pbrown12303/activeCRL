@@ -7,7 +7,7 @@ import (
 
 var _ = Describe("Literal Tests", func() {
 	var uOfD *UniverseOfDiscourse
-	var hl *HeldLocks
+	var hl *Transaction
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()

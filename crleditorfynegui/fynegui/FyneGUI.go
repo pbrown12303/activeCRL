@@ -76,37 +76,37 @@ func (gui *FyneGUI) GetWindow() fyne.Window {
 }
 
 // CloseDiagramView
-func (gui *FyneGUI) CloseDiagramView(diagramID string, hl *core.HeldLocks) error {
+func (gui *FyneGUI) CloseDiagramView(diagramID string, hl *core.Transaction) error {
 	return nil
 }
 
 // ElementDeleted
-func (gui *FyneGUI) ElementDeleted(elID string, hl *core.HeldLocks) error {
+func (gui *FyneGUI) ElementDeleted(elID string, hl *core.Transaction) error {
 	return nil
 }
 
 // ElementSelected
-func (gui *FyneGUI) ElementSelected(el core.Element, hl *core.HeldLocks) error {
+func (gui *FyneGUI) ElementSelected(el core.Element, hl *core.Transaction) error {
 	return nil
 }
 
 // FileLoaded
-func (gui *FyneGUI) FileLoaded(el core.Element, hl *core.HeldLocks) {
+func (gui *FyneGUI) FileLoaded(el core.Element, hl *core.Transaction) {
 	// noop
 }
 
 // GetNoSaveDomains
-func (gui *FyneGUI) GetNoSaveDomains(noSaveDomains map[string]core.Element, hl *core.HeldLocks) {
+func (gui *FyneGUI) GetNoSaveDomains(noSaveDomains map[string]core.Element, hl *core.Transaction) {
 	// noop
 }
 
 // Initialize
-func (gui *FyneGUI) Initialize(hl *core.HeldLocks) error {
+func (gui *FyneGUI) Initialize(hl *core.Transaction) error {
 	return nil
 }
 
 // InitializeGUI
-func (gui *FyneGUI) InitializeGUI(hl *core.HeldLocks) error {
+func (gui *FyneGUI) InitializeGUI(hl *core.Transaction) error {
 	return nil
 }
 

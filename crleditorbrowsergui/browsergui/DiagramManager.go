@@ -30,7 +30,7 @@ func newDiagramManager(browserGUI *BrowserGUI) *diagramManager {
 	return dm
 }
 
-func (dmPtr *diagramManager) abstractPointerChanged(linkID string, sourceID string, targetID string, hl *core.HeldLocks) (string, error) {
+func (dmPtr *diagramManager) abstractPointerChanged(linkID string, sourceID string, targetID string, hl *core.Transaction) (string, error) {
 	uOfD := dmPtr.browserGUI.GetUofD()
 	diagramSource := uOfD.GetElement(sourceID)
 	if diagramSource == nil {
@@ -91,7 +91,7 @@ func (dmPtr *diagramManager) abstractPointerChanged(linkID string, sourceID stri
 	return diagramPointer.GetConceptID(hl), nil
 }
 
-func (dmPtr *diagramManager) addConceptView(request *Request, hl *core.HeldLocks) (core.Element, error) {
+func (dmPtr *diagramManager) addConceptView(request *Request, hl *core.Transaction) (core.Element, error) {
 	uOfD := dmPtr.browserGUI.GetUofD()
 	diagramID := request.AdditionalParameters["DiagramID"]
 	diagram := uOfD.GetElement(diagramID)
@@ -113,7 +113,7 @@ func (dmPtr *diagramManager) addConceptView(request *Request, hl *core.HeldLocks
 }
 
 // addConceptViewImpl creates the concept view and adds it to the diagram
-func (dmPtr *diagramManager) addConceptViewImpl(uOfD *core.UniverseOfDiscourse, diagram core.Element, el core.Element, x float64, y float64, hl *core.HeldLocks) (core.Element, error) {
+func (dmPtr *diagramManager) addConceptViewImpl(uOfD *core.UniverseOfDiscourse, diagram core.Element, el core.Element, x float64, y float64, hl *core.Transaction) (core.Element, error) {
 
 	createAsLink := false
 	switch el.(type) {
@@ -193,7 +193,7 @@ func (dmPtr *diagramManager) addConceptViewImpl(uOfD *core.UniverseOfDiscourse, 
 }
 
 // addCopyWithRefinement creates a copy with refinement of the selected item and places it in the diagram.
-func (dmPtr *diagramManager) addCopyWithRefinement(request *Request, hl *core.HeldLocks) (core.Element, error) {
+func (dmPtr *diagramManager) addCopyWithRefinement(request *Request, hl *core.Transaction) (core.Element, error) {
 	uOfD := dmPtr.browserGUI.GetUofD()
 	diagramID := request.AdditionalParameters["DiagramID"]
 	diagram := uOfD.GetElement(diagramID)
@@ -227,7 +227,7 @@ func (dmPtr *diagramManager) addCopyWithRefinement(request *Request, hl *core.He
 	return copy, nil
 }
 
-func (dmPtr *diagramManager) addDiagram(ownerID string, hl *core.HeldLocks) (core.Element, error) {
+func (dmPtr *diagramManager) addDiagram(ownerID string, hl *core.Transaction) (core.Element, error) {
 	diagram, err := dmPtr.newDiagram(hl)
 	if err != nil {
 		return nil, errors.Wrap(err, "diagramManager.addDiagram failed")
@@ -249,7 +249,7 @@ func (dmPtr *diagramManager) addDiagram(ownerID string, hl *core.HeldLocks) (cor
 	return diagram, nil
 }
 
-func (dmPtr *diagramManager) deleteDiagramElementView(elementID string, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) deleteDiagramElementView(elementID string, hl *core.Transaction) error {
 	diagramElement := dmPtr.browserGUI.GetUofD().GetElement(elementID)
 	if diagramElement == nil {
 		return errors.New("diagramManager.deleteDiagramElementView diagramElement not found for elementID " + elementID)
@@ -259,7 +259,7 @@ func (dmPtr *diagramManager) deleteDiagramElementView(elementID string, hl *core
 }
 
 // diagramClick handles the creation of a new Element and adding a node representation of it to the diagram
-func (dmPtr *diagramManager) diagramClick(request *Request, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) diagramClick(request *Request, hl *core.Transaction) error {
 	uOfD := dmPtr.browserGUI.GetUofD()
 	diagramID := request.AdditionalParameters["DiagramID"]
 	diagram := uOfD.GetElement(diagramID)
@@ -328,7 +328,7 @@ func (dmPtr *diagramManager) diagramClick(request *Request, hl *core.HeldLocks) 
 }
 
 // diagramDrop evaluates the request resulting from a drop in the diagram
-func (dmPtr *diagramManager) diagramDrop(request *Request, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) diagramDrop(request *Request, hl *core.Transaction) error {
 	if request.AdditionalParameters["Shift"] == "false" {
 		_, err := dmPtr.addConceptView(request, hl)
 		if err != nil {
@@ -346,7 +346,7 @@ func (dmPtr *diagramManager) diagramDrop(request *Request, hl *core.HeldLocks) e
 }
 
 // DiagramViewHasBeenClosed notifies the server that the client has closed the diagram view
-func (dmPtr *diagramManager) DiagramViewHasBeenClosed(diagramID string, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) DiagramViewHasBeenClosed(diagramID string, hl *core.Transaction) error {
 	if dmPtr.browserGUI.editor.IsDiagramDisplayed(diagramID, hl) {
 		dmPtr.browserGUI.editor.RemoveDiagramFromDisplayedList(diagramID, hl)
 	}
@@ -354,7 +354,7 @@ func (dmPtr *diagramManager) DiagramViewHasBeenClosed(diagramID string, hl *core
 }
 
 // displayDiagram tells the client to display the indicated diagram.
-func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.Transaction) error {
 	diagramID := diagram.GetConceptID(hl)
 	if !diagram.IsRefinementOfURI(crldiagramdomain.CrlDiagramURI, hl) {
 		return errors.New("In diagramManager.displayDiagram, the supplied diagram is not a refinement of CrlDiagramURI")
@@ -389,13 +389,13 @@ func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.HeldL
 	return dmPtr.refreshDiagram(diagram, hl)
 }
 
-func (dmPtr *diagramManager) formatChanged(diagramElement core.Element, lineColor string, bgColor string, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) formatChanged(diagramElement core.Element, lineColor string, bgColor string, hl *core.Transaction) error {
 	crldiagramdomain.SetLineColor(diagramElement, lineColor, hl)
 	crldiagramdomain.SetBGColor(diagramElement, bgColor, hl)
 	return nil
 }
 
-func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID string, targetID string, targetAttributeName string, hl *core.HeldLocks) (string, error) {
+func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID string, targetID string, targetAttributeName string, hl *core.Transaction) (string, error) {
 	uOfD := dmPtr.browserGUI.GetUofD()
 	diagramSource := uOfD.GetElement(sourceID)
 	if diagramSource == nil {
@@ -486,7 +486,7 @@ func (dmPtr *diagramManager) initialize() error {
 }
 
 // newDiagram creates a new crldiagram
-func (dmPtr *diagramManager) newDiagram(hl *core.HeldLocks) (core.Element, error) {
+func (dmPtr *diagramManager) newDiagram(hl *core.Transaction) (core.Element, error) {
 	// Insert name prompt here
 	name := dmPtr.browserGUI.editor.GetDefaultDiagramLabel()
 	uOfD := BrowserGUISingleton.GetUofD()
@@ -507,7 +507,7 @@ func (dmPtr *diagramManager) newDiagram(hl *core.HeldLocks) (core.Element, error
 	return diagram, nil
 }
 
-func (dmPtr *diagramManager) ownerPointerChanged(linkID string, sourceID string, targetID string, hl *core.HeldLocks) (string, error) {
+func (dmPtr *diagramManager) ownerPointerChanged(linkID string, sourceID string, targetID string, hl *core.Transaction) (string, error) {
 	uOfD := dmPtr.browserGUI.GetUofD()
 	diagramSource := uOfD.GetElement(sourceID)
 	if diagramSource == nil {
@@ -561,7 +561,7 @@ func (dmPtr *diagramManager) ownerPointerChanged(linkID string, sourceID string,
 	return diagramPointer.GetConceptID(hl), nil
 }
 
-func (dmPtr *diagramManager) refinedPointerChanged(linkID string, sourceID string, targetID string, hl *core.HeldLocks) (string, error) {
+func (dmPtr *diagramManager) refinedPointerChanged(linkID string, sourceID string, targetID string, hl *core.Transaction) (string, error) {
 	uOfD := dmPtr.browserGUI.GetUofD()
 	diagramSource := uOfD.GetElement(sourceID)
 	if diagramSource == nil {
@@ -622,7 +622,7 @@ func (dmPtr *diagramManager) refinedPointerChanged(linkID string, sourceID strin
 	return diagramPointer.GetConceptID(hl), nil
 }
 
-func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string, targetID string, targetAttributeName string, hl *core.HeldLocks) (string, error) {
+func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string, targetID string, targetAttributeName string, hl *core.Transaction) (string, error) {
 	uOfD := dmPtr.browserGUI.GetUofD()
 	diagramSource := uOfD.GetElement(sourceID)
 	if diagramSource == nil {
@@ -698,7 +698,7 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 	return diagramLink.GetConceptID(hl), nil
 }
 
-func (dmPtr *diagramManager) RefinementLinkChanged(linkID string, sourceID string, targetID string, hl *core.HeldLocks) (string, error) {
+func (dmPtr *diagramManager) RefinementLinkChanged(linkID string, sourceID string, targetID string, hl *core.Transaction) (string, error) {
 	uOfD := dmPtr.browserGUI.GetUofD()
 	diagramSource := uOfD.GetElement(sourceID)
 	if diagramSource == nil {
@@ -766,7 +766,7 @@ func (dmPtr *diagramManager) RefinementLinkChanged(linkID string, sourceID strin
 }
 
 // refreshDiagramUsingURI finds the diagram and resends all diagram elements to the browser
-func (dmPtr *diagramManager) refreshDiagramUsingURI(diagramID string, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) refreshDiagramUsingURI(diagramID string, hl *core.Transaction) error {
 	diagram := dmPtr.browserGUI.GetUofD().GetElement(diagramID)
 	if diagram == nil {
 		return errors.New("In diagramManager.refreshDiagram, diagram not found for ID: " + diagramID)
@@ -775,7 +775,7 @@ func (dmPtr *diagramManager) refreshDiagramUsingURI(diagramID string, hl *core.H
 }
 
 // refreshDiagram resends all diagram elements to the browser
-func (dmPtr *diagramManager) refreshDiagram(diagram core.Element, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) refreshDiagram(diagram core.Element, hl *core.Transaction) error {
 	nodes := diagram.GetOwnedConceptsRefinedFromURI(crldiagramdomain.CrlDiagramNodeURI, hl)
 	for _, node := range nodes {
 		additionalParameters := getNodeAdditionalParameters(node, hl)
@@ -812,7 +812,7 @@ func (dmPtr *diagramManager) refreshDiagram(diagram core.Element, hl *core.HeldL
 }
 
 // setDiagramNodePosition sets the position of the diagram node
-func (dmPtr *diagramManager) setDiagramNodePosition(nodeID string, x float64, y float64, hl *core.HeldLocks) {
+func (dmPtr *diagramManager) setDiagramNodePosition(nodeID string, x float64, y float64, hl *core.Transaction) {
 	node := BrowserGUISingleton.GetUofD().GetElement(nodeID)
 	if node == nil {
 		// This can happen when the concept space containing the diagram is deleted???
@@ -823,7 +823,7 @@ func (dmPtr *diagramManager) setDiagramNodePosition(nodeID string, x float64, y 
 	crldiagramdomain.SetNodeY(node, y, hl)
 }
 
-func (dmPtr *diagramManager) showAbstractConcept(elementID string, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) showAbstractConcept(elementID string, hl *core.Transaction) error {
 	diagramElement := dmPtr.browserGUI.GetUofD().GetElement(elementID)
 	if diagramElement == nil {
 		return errors.New("diagramManager.showAbstractConcept diagramElement not found for elementID " + elementID)
@@ -869,7 +869,7 @@ func (dmPtr *diagramManager) showAbstractConcept(elementID string, hl *core.Held
 	return nil
 }
 
-func (dmPtr *diagramManager) showOwnedConcepts(elementID string, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) showOwnedConcepts(elementID string, hl *core.Transaction) error {
 	diagramElement := dmPtr.browserGUI.GetUofD().GetElement(elementID)
 	if diagramElement == nil {
 		return errors.New("diagramManager.showOwnedConcepts diagramElement not found for elementID " + elementID)
@@ -914,7 +914,7 @@ func (dmPtr *diagramManager) showOwnedConcepts(elementID string, hl *core.HeldLo
 	return nil
 }
 
-func (dmPtr *diagramManager) showOwner(elementID string, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) showOwner(elementID string, hl *core.Transaction) error {
 	diagramElement := dmPtr.browserGUI.GetUofD().GetElement(elementID)
 	if diagramElement == nil {
 		return errors.New("diagramManager.showOwner diagramElement not found for elementID " + elementID)
@@ -953,7 +953,7 @@ func (dmPtr *diagramManager) showOwner(elementID string, hl *core.HeldLocks) err
 	return nil
 }
 
-func (dmPtr *diagramManager) showReferencedConcept(elementID string, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) showReferencedConcept(elementID string, hl *core.Transaction) error {
 	diagramElement := dmPtr.browserGUI.GetUofD().GetElement(elementID)
 	if diagramElement == nil {
 		return errors.New("diagramManager.showReferencedConcept diagramElement not found for elementID " + elementID)
@@ -1032,7 +1032,7 @@ func (dmPtr *diagramManager) showReferencedConcept(elementID string, hl *core.He
 	return nil
 }
 
-func (dmPtr *diagramManager) showRefinedConcept(elementID string, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) showRefinedConcept(elementID string, hl *core.Transaction) error {
 	diagramElement := dmPtr.browserGUI.GetUofD().GetElement(elementID)
 	if diagramElement == nil {
 		return errors.New("diagramManager.showRefinedConcept diagramElement not found for elementID " + elementID)
@@ -1081,7 +1081,7 @@ func (dmPtr *diagramManager) showRefinedConcept(elementID string, hl *core.HeldL
 // Update handles additions and removals of diagram elements from the diagram view
 // Note that it cannot delete the diagram view in the GUI because this function will never get called: once the diagram has been
 // deleted, queuing of functions related to it is suppressed. That's what the DiagramViewMonitor is for.
-func (dmPtr *diagramManager) Update(notification *core.ChangeNotification, hl *core.HeldLocks) error {
+func (dmPtr *diagramManager) Update(notification *core.ChangeNotification, hl *core.Transaction) error {
 	uOfD := hl.GetUniverseOfDiscourse()
 	switch notification.GetNatureOfChange() {
 	case core.ConceptRemoved:

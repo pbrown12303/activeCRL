@@ -6,11 +6,11 @@ import (
 
 // UofDInitializationFunction is a function that adds core elements to the uOfD during its initialization process. These
 // functions are called by the UofDManager after a new UniverseOfDiscourse has been created
-type UofDInitializationFunction func(uOFD *UniverseOfDiscourse, hl *HeldLocks) error
+type UofDInitializationFunction func(uOFD *UniverseOfDiscourse, hl *Transaction) error
 
 // UofDPostInitializationFunction is an application-specific function that is called after a UofD has been created and all
 // UofDInitializationFunctions have been invoked.
-type UofDPostInitializationFunction func(uOfD *UniverseOfDiscourse, hl *HeldLocks) error
+type UofDPostInitializationFunction func(uOfD *UniverseOfDiscourse, hl *Transaction) error
 
 // UofDManager manages a universe of discourse and the functions used to initialize it
 type UofDManager struct {

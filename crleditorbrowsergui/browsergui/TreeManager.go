@@ -17,7 +17,7 @@ type treeManager struct {
 }
 
 // addChildren adds the OwnedConcepts of the supplied Element to the client's tree
-func (tmPtr *treeManager) addChildren(el core.Element, hl *core.HeldLocks) error {
+func (tmPtr *treeManager) addChildren(el core.Element, hl *core.Transaction) error {
 	uOfD := tmPtr.browserGUI.GetUofD()
 	it := uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator()
 	defer it.Stop()
@@ -39,7 +39,7 @@ func (tmPtr *treeManager) addChildren(el core.Element, hl *core.HeldLocks) error
 }
 
 // addNode adds a node to the tree
-func (tmPtr *treeManager) addNode(el core.Element, hl *core.HeldLocks) error {
+func (tmPtr *treeManager) addNode(el core.Element, hl *core.Transaction) error {
 	if el == nil {
 		return errors.New("treeManger.addNode called with nil element")
 	}
@@ -62,7 +62,7 @@ func (tmPtr *treeManager) addNode(el core.Element, hl *core.HeldLocks) error {
 }
 
 // addNodeRecursively adds the node and all of its descendants to the tree
-func (tmPtr *treeManager) addNodeRecursively(el core.Element, hl *core.HeldLocks) error {
+func (tmPtr *treeManager) addNodeRecursively(el core.Element, hl *core.Transaction) error {
 	err := tmPtr.addNode(el, hl)
 	if err != nil {
 		return errors.Wrap(err, "TreeManager.addNodeRecursively failed")
@@ -84,7 +84,7 @@ func (tmPtr *treeManager) addNodeRecursively(el core.Element, hl *core.HeldLocks
 }
 
 // changeNode updates the tree node
-func (tmPtr *treeManager) changeNode(el core.Element, hl *core.HeldLocks) error {
+func (tmPtr *treeManager) changeNode(el core.Element, hl *core.Transaction) error {
 	if el == nil {
 		return errors.New("treeManager.changeNode called with nil Element")
 	}
@@ -108,7 +108,7 @@ func (tmPtr *treeManager) changeNode(el core.Element, hl *core.HeldLocks) error 
 }
 
 // removeNode removes the tree node
-func (tmPtr *treeManager) removeNode(elID string, hl *core.HeldLocks) error {
+func (tmPtr *treeManager) removeNode(elID string, hl *core.Transaction) error {
 	if elID == "" {
 		return errors.New("treeManager.removeNode called with no ConceptID")
 	}
@@ -132,7 +132,7 @@ func (tmPtr *treeManager) removeNode(elID string, hl *core.HeldLocks) error {
 // }
 
 // initialize sets up the uOfD monitoring
-func (tmPtr *treeManager) initialize(hl *core.HeldLocks) error {
+func (tmPtr *treeManager) initialize(hl *core.Transaction) error {
 	err := tmPtr.browserGUI.GetUofD().Register(tmPtr)
 	if err != nil {
 		return errors.Wrap(err, "treeManager.initialize failed")
@@ -141,7 +141,7 @@ func (tmPtr *treeManager) initialize(hl *core.HeldLocks) error {
 }
 
 // initializeTree initializes the display of the tree in the client
-func (tmPtr *treeManager) initializeTree(hl *core.HeldLocks) error {
+func (tmPtr *treeManager) initializeTree(hl *core.Transaction) error {
 	notificationResponse, err := BrowserGUISingleton.GetClientNotificationManager().SendNotification("ClearTree", "", nil, map[string]string{})
 	if err != nil {
 		return errors.Wrap(err, "TreeManager.initializeTree failed")
@@ -169,7 +169,7 @@ func (tmPtr *treeManager) initializeTree(hl *core.HeldLocks) error {
 
 // Update  is the callback function that manaages the tree view when elements in the Universe of Discourse change.
 // The changes being sought are the addition, removal, and re-parenting of base elements and the changes in their names.
-func (tmPtr *treeManager) Update(notification *core.ChangeNotification, hl *core.HeldLocks) error {
+func (tmPtr *treeManager) Update(notification *core.ChangeNotification, hl *core.Transaction) error {
 	uOfD := hl.GetUniverseOfDiscourse()
 
 	// Tracing

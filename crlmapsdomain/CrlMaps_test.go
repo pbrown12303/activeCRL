@@ -39,7 +39,7 @@ var _ = Describe("CrlMaps domain test", func() {
 
 var _ = Describe("CrlMaps mapping tests", func() {
 	var uOfD *core.UniverseOfDiscourse
-	var hl *core.HeldLocks
+	var hl *core.Transaction
 	var sourceAbstractFolder core.Element
 	var sourceAbstractDomain core.Element
 	var targetAbstractFolder core.Element

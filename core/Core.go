@@ -1,7 +1,5 @@
 package core
 
-import ()
-
 //	"time"
 
 // Copyright 2017, 2018 Paul C. Brown. All rights reserved.
@@ -37,10 +35,10 @@ var AdHocTrace = false
 func init() {
 	TraceChange = false
 	notificationsLimit = 0
-	notificationsCount = 0
+	// notificationsCount = 0
 }
 
-func buildCoreDomain(uOfD *UniverseOfDiscourse, hl *HeldLocks) Element {
+func buildCoreDomain(uOfD *UniverseOfDiscourse, hl *Transaction) Element {
 	coreElement, _ := uOfD.NewElement(hl, CoreDomainURI)
 	coreElementID := coreElement.getConceptIDNoLock()
 	coreElement.SetLabel("CoreDomain", hl)

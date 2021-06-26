@@ -13,7 +13,7 @@ type FunctionCallGraph struct {
 }
 
 // NewFunctionCallGraph creates a function call graph for the indicated function, executing element, and notifications
-func NewFunctionCallGraph(functionID string, executingElement Element, notification *ChangeNotification, hl *HeldLocks) *FunctionCallGraph {
+func NewFunctionCallGraph(functionID string, executingElement Element, notification *ChangeNotification, hl *Transaction) *FunctionCallGraph {
 	var fcGraph FunctionCallGraph
 	graphName := "FunctionCallGraph"
 	fcGraph.initializeBaseGraph(graphName)

@@ -5,10 +5,11 @@
 package core
 
 import (
-	"github.com/pkg/errors"
 	"log"
 	"sync"
 	"sync/atomic"
+
+	"github.com/pkg/errors"
 )
 
 var pendingFunctionCount int32
@@ -109,10 +110,6 @@ func (queue *pendingFunctionCallQueue) findFirstPendingCall(functionID string, t
 	return nil
 }
 
-func (queue *pendingFunctionCallQueue) isEmpty() bool {
-	return queue.queueHead == nil
-}
-
 // The functions type maps core Element identifiers to the array of crlExecutionFunctions associated with the identfier.
 type functions map[string][]crlExecutionFunction
 
@@ -130,7 +127,7 @@ func newFunctionCallManager(uOfD *UniverseOfDiscourse) *functionCallManager {
 	return &fcm
 }
 
-// addFunctionCall adds a pending function call to the manager for each function associated with the functionIK.
+// addFunctionCall adds a pending function call to the manager for each function associated with the functionID.
 // The Element is the element that will eventually "execute" the function, and the ChangeNotification is the trigger
 // that caused the function to be queued for execution.
 func (fcm *functionCallManager) addFunctionCall(functionID string, targetElement Element, notification *ChangeNotification) error {
@@ -140,7 +137,7 @@ func (fcm *functionCallManager) addFunctionCall(functionID string, targetElement
 			return errors.Wrap(err, "functionCallManager.addFunctionCall failed")
 		}
 		newCount := atomic.AddInt32(&pendingFunctionCount, 1)
-		if CrlLogPendingFunctionCount == true {
+		if CrlLogPendingFunctionCount {
 			log.Printf("Pending function count: %d", newCount)
 		}
 		fcm.functionCallQueue.enqueue(pendingCall)
@@ -161,17 +158,17 @@ func isDiagramRelatedFunction(functionID string) bool {
 }
 
 // callQueuedFunctions calls each function on the pending function queue
-func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) error {
+func (fcm *functionCallManager) callQueuedFunctions(hl *Transaction) error {
 	for fcm.functionCallQueue.queueHead != nil {
 		pendingCall := fcm.functionCallQueue.dequeue()
 		if fcm.uOfD.getExecutedCalls() != nil {
 			fcm.uOfD.getExecutedCalls() <- pendingCall
 		}
-		if TraceLocks == true || TraceChange == true {
+		if TraceLocks || TraceChange {
 			omitCall := (OmitHousekeepingCalls && pendingCall.functionID == "http://activeCrl.com/core/coreHousekeeping") ||
 				(OmitManageTreeNodesCalls && pendingCall.functionID == "http://activeCrl.com/crlEditor/EditorDomain/TreeViews/TreeNodeManager") ||
 				(OmitDiagramRelatedCalls && isDiagramRelatedFunction(pendingCall.functionID))
-			if omitCall == false {
+			if !omitCall {
 				log.Printf("About to execute %s with notification %s target %p", pendingCall.functionID, pendingCall.notification.GetNatureOfChange().String(), pendingCall.target)
 				log.Printf("   Function target: %T %s %s %p", pendingCall.target, pendingCall.target.getConceptIDNoLock(), pendingCall.target.getLabelNoLock(), pendingCall.target)
 				functionCallGraphs = append(functionCallGraphs, NewFunctionCallGraph(pendingCall.functionID, pendingCall.target, pendingCall.notification, hl))
@@ -182,7 +179,7 @@ func (fcm *functionCallManager) callQueuedFunctions(hl *HeldLocks) error {
 			return errors.Wrap(err, "functionCallManager.callQueuedFunctions failed")
 		}
 		newCount := atomic.AddInt32(&pendingFunctionCount, -1)
-		if CrlLogPendingFunctionCount == true {
+		if CrlLogPendingFunctionCount {
 			log.Printf("Pending function count: %d", newCount)
 			log.Printf("Dequeued call: %+v", pendingCall)
 		}

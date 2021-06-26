@@ -1,8 +1,9 @@
 package browsergui
 
 import (
-	"github.com/pkg/errors"
 	"strconv"
+
+	"github.com/pkg/errors"
 
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
@@ -28,7 +29,7 @@ func newDiagramElementManager(diagramManager *diagramManager) *diagramElementMan
 	return dem
 }
 
-func getLinkAdditionalParameters(link core.Element, hl *core.HeldLocks) map[string]string {
+func getLinkAdditionalParameters(link core.Element, hl *core.Transaction) map[string]string {
 	var linkType string
 	var represents string
 	if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramRefinementLinkURI, hl) {
@@ -72,7 +73,7 @@ func getLinkAdditionalParameters(link core.Element, hl *core.HeldLocks) map[stri
 	return additionalParameters
 }
 
-func getNodeAdditionalParameters(node core.Element, hl *core.HeldLocks) map[string]string {
+func getNodeAdditionalParameters(node core.Element, hl *core.Transaction) map[string]string {
 	var represents string
 	referencedModelElement := crldiagramdomain.GetReferencedModelElement(node, hl)
 	if referencedModelElement != nil {
@@ -104,7 +105,7 @@ func getNodeAdditionalParameters(node core.Element, hl *core.HeldLocks) map[stri
 }
 
 // Update updates the client display of the diagram based on changes to the diagramElement
-func (demPtr *diagramElementManager) Update(changeNotification *core.ChangeNotification, hl *core.HeldLocks) error {
+func (demPtr *diagramElementManager) Update(changeNotification *core.ChangeNotification, hl *core.Transaction) error {
 	uOfD := hl.GetUniverseOfDiscourse()
 	// if the reportingElementState is nil, this notification comes from the uOfD. We can ignore these (I think)
 	if changeNotification.GetReportingElementState() == nil {

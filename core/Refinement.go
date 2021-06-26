@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"log"
 	"reflect"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 type refinement struct {
@@ -18,7 +19,7 @@ type refinement struct {
 	RefinedConceptVersion  int
 }
 
-func (rPtr *refinement) clone(hl *HeldLocks) Refinement {
+func (rPtr *refinement) clone(hl *Transaction) Refinement {
 	hl.ReadLockElement(rPtr)
 	var ref refinement
 	ref.initializeRefinement("", "")
@@ -26,7 +27,7 @@ func (rPtr *refinement) clone(hl *HeldLocks) Refinement {
 	return &ref
 }
 
-func (rPtr *refinement) cloneAttributes(source *refinement, hl *HeldLocks) {
+func (rPtr *refinement) cloneAttributes(source *refinement, hl *Transaction) {
 	rPtr.element.cloneAttributes(&source.element, hl)
 	rPtr.AbstractConceptID = source.AbstractConceptID
 	//	rPtr.abstractConcept = newCachedPointer(rPtr.getConceptIDNoLock(), false)
@@ -36,7 +37,7 @@ func (rPtr *refinement) cloneAttributes(source *refinement, hl *HeldLocks) {
 	rPtr.RefinedConceptVersion = source.RefinedConceptVersion
 }
 
-func (rPtr *refinement) GetAbstractConcept(hl *HeldLocks) Element {
+func (rPtr *refinement) GetAbstractConcept(hl *Transaction) Element {
 	hl.ReadLockElement(rPtr)
 	return rPtr.uOfD.GetElement(rPtr.AbstractConceptID)
 }
@@ -45,7 +46,7 @@ func (rPtr *refinement) getAbstractConceptNoLock() Element {
 	return rPtr.uOfD.GetElement(rPtr.AbstractConceptID)
 }
 
-func (rPtr *refinement) GetAbstractConceptID(hl *HeldLocks) string {
+func (rPtr *refinement) GetAbstractConceptID(hl *Transaction) string {
 	hl.ReadLockElement(rPtr)
 	return rPtr.AbstractConceptID
 }
@@ -54,12 +55,12 @@ func (rPtr *refinement) getAbstractConceptIDNoLock() string {
 	return rPtr.AbstractConceptID
 }
 
-func (rPtr *refinement) GetAbstractConceptVersion(hl *HeldLocks) int {
+func (rPtr *refinement) GetAbstractConceptVersion(hl *Transaction) int {
 	hl.ReadLockElement(rPtr)
 	return rPtr.AbstractConceptVersion
 }
 
-func (rPtr *refinement) GetRefinedConcept(hl *HeldLocks) Element {
+func (rPtr *refinement) GetRefinedConcept(hl *Transaction) Element {
 	hl.ReadLockElement(rPtr)
 	return rPtr.uOfD.GetElement(rPtr.RefinedConceptID)
 }
@@ -68,7 +69,7 @@ func (rPtr *refinement) getRefinedConceptNoLock() Element {
 	return rPtr.uOfD.GetElement(rPtr.RefinedConceptID)
 }
 
-func (rPtr *refinement) GetRefinedConceptID(hl *HeldLocks) string {
+func (rPtr *refinement) GetRefinedConceptID(hl *Transaction) string {
 	hl.ReadLockElement(rPtr)
 	return rPtr.RefinedConceptID
 }
@@ -77,7 +78,7 @@ func (rPtr *refinement) getRefinedConceptIDNoLock() string {
 	return rPtr.RefinedConceptID
 }
 
-func (rPtr *refinement) GetRefinedConceptVersion(hl *HeldLocks) int {
+func (rPtr *refinement) GetRefinedConceptVersion(hl *Transaction) int {
 	hl.ReadLockElement(rPtr)
 	return rPtr.RefinedConceptVersion
 }
@@ -86,7 +87,7 @@ func (rPtr *refinement) initializeRefinement(conceptID string, uri string) {
 	rPtr.initializeElement(conceptID, uri)
 }
 
-func (rPtr *refinement) isEquivalent(hl1 *HeldLocks, ref *refinement, hl2 *HeldLocks, printExceptions ...bool) bool {
+func (rPtr *refinement) isEquivalent(hl1 *Transaction, ref *refinement, hl2 *Transaction, printExceptions ...bool) bool {
 	var print bool
 	if len(printExceptions) > 0 {
 		print = printExceptions[0]
@@ -142,7 +143,7 @@ func (rPtr *refinement) marshalRefinementFields(buffer *bytes.Buffer) error {
 // recoverRefinementFields() is used when de-serializing an element. The activities in restoring the
 // element are not considered changes so the version counter is not incremented and the monitors of this
 // element are not notified of chaanges.
-func (rPtr *refinement) recoverRefinementFields(unmarshaledData *map[string]json.RawMessage, hl *HeldLocks) error {
+func (rPtr *refinement) recoverRefinementFields(unmarshaledData *map[string]json.RawMessage, hl *Transaction) error {
 	err := rPtr.recoverElementFields(unmarshaledData, hl)
 	if err != nil {
 		return err
@@ -191,7 +192,7 @@ func (rPtr *refinement) recoverRefinementFields(unmarshaledData *map[string]json
 }
 
 // SetAbstractConcept sets the abstract concept using the ID of the supplied Element
-func (rPtr *refinement) SetAbstractConcept(el Element, hl *HeldLocks) error {
+func (rPtr *refinement) SetAbstractConcept(el Element, hl *Transaction) error {
 	hl.WriteLockElement(rPtr)
 	id := ""
 	if el != nil {
@@ -200,9 +201,9 @@ func (rPtr *refinement) SetAbstractConcept(el Element, hl *HeldLocks) error {
 	return rPtr.SetAbstractConceptID(id, hl)
 }
 
-func (rPtr *refinement) SetAbstractConceptID(acID string, hl *HeldLocks) error {
+func (rPtr *refinement) SetAbstractConceptID(acID string, hl *Transaction) error {
 	hl.WriteLockElement(rPtr)
-	if rPtr.isEditable(hl) == false {
+	if !rPtr.isEditable(hl) {
 		return errors.New("refinement.SetAbstractConceptID failed because the refinement is not editable")
 	}
 	if rPtr.AbstractConceptID != acID {
@@ -257,7 +258,7 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *HeldLocks) error {
 	return nil
 }
 
-func (rPtr *refinement) SetRefinedConcept(el Element, hl *HeldLocks) error {
+func (rPtr *refinement) SetRefinedConcept(el Element, hl *Transaction) error {
 	hl.WriteLockElement(rPtr)
 	id := ""
 	if el != nil {
@@ -266,9 +267,9 @@ func (rPtr *refinement) SetRefinedConcept(el Element, hl *HeldLocks) error {
 	return rPtr.SetRefinedConceptID(id, hl)
 }
 
-func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *HeldLocks) error {
+func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *Transaction) error {
 	hl.WriteLockElement(rPtr)
-	if rPtr.isEditable(hl) == false {
+	if !rPtr.isEditable(hl) {
 		return errors.New("refinement.SetReferencedConceptID failed because the refinement is not editable")
 	}
 	if rPtr.RefinedConceptID != rcID {
@@ -323,18 +324,18 @@ func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *HeldLocks) error {
 // Refinement is the reification of a refinement association between an abstract Element and a refined Element
 type Refinement interface {
 	Element
-	GetAbstractConceptID(*HeldLocks) string
+	GetAbstractConceptID(*Transaction) string
 	getAbstractConceptIDNoLock() string
-	GetAbstractConcept(*HeldLocks) Element
+	GetAbstractConcept(*Transaction) Element
 	getAbstractConceptNoLock() Element
-	GetAbstractConceptVersion(*HeldLocks) int
-	GetRefinedConceptID(*HeldLocks) string
+	GetAbstractConceptVersion(*Transaction) int
+	GetRefinedConceptID(*Transaction) string
 	getRefinedConceptIDNoLock() string
-	GetRefinedConcept(*HeldLocks) Element
+	GetRefinedConcept(*Transaction) Element
 	getRefinedConceptNoLock() Element
-	GetRefinedConceptVersion(*HeldLocks) int
-	SetAbstractConcept(Element, *HeldLocks) error
-	SetAbstractConceptID(string, *HeldLocks) error
-	SetRefinedConcept(Element, *HeldLocks) error
-	SetRefinedConceptID(string, *HeldLocks) error
+	GetRefinedConceptVersion(*Transaction) int
+	SetAbstractConcept(Element, *Transaction) error
+	SetAbstractConceptID(string, *Transaction) error
+	SetRefinedConcept(Element, *Transaction) error
+	SetRefinedConceptID(string, *Transaction) error
 }

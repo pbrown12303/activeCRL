@@ -26,16 +26,16 @@ func GetConceptTypeString(el Element) string {
 // // PrintMutex provides a mututal exclusion for print routhines shared across threads
 // var PrintMutex printMutexStruct
 
-func clone(el Element, hl *HeldLocks) Element {
-	switch el.(type) {
+func clone(el Element, hl *Transaction) Element {
+	switch typedEl := el.(type) {
 	case *literal:
-		return el.(*literal).clone(hl)
+		return typedEl.clone(hl)
 	case *reference:
-		return el.(*reference).clone(hl)
+		return typedEl.clone(hl)
 	case *refinement:
-		return el.(*refinement).clone(hl)
+		return typedEl.clone(hl)
 	case *element:
-		return el.(*element).clone(hl)
+		return typedEl.clone(hl)
 	}
 	log.Printf("clone called with unhandled type %T\n", el)
 	debug.PrintStack()
@@ -43,7 +43,7 @@ func clone(el Element, hl *HeldLocks) Element {
 }
 
 // Equivalent returns true if the two elements are equivalent
-func Equivalent(be1 Element, hl1 *HeldLocks, be2 Element, hl2 *HeldLocks, printExceptions ...bool) bool {
+func Equivalent(be1 Element, hl1 *Transaction, be2 Element, hl2 *Transaction, printExceptions ...bool) bool {
 	var print bool
 	if len(printExceptions) > 0 {
 		print = printExceptions[0]
@@ -62,7 +62,7 @@ func Equivalent(be1 Element, hl1 *HeldLocks, be2 Element, hl2 *HeldLocks, printE
 }
 
 // RecursivelyEquivalent returns true if two elements and all of their children are equivalent
-func RecursivelyEquivalent(e1 Element, hl1 *HeldLocks, e2 Element, hl2 *HeldLocks, printExceptions ...bool) bool {
+func RecursivelyEquivalent(e1 Element, hl1 *Transaction, e2 Element, hl2 *Transaction, printExceptions ...bool) bool {
 	var print bool
 	if len(printExceptions) == 1 {
 		print = printExceptions[0]
@@ -107,7 +107,7 @@ func RecursivelyEquivalent(e1 Element, hl1 *HeldLocks, e2 Element, hl2 *HeldLock
 	return true
 }
 
-func equivalent(be1 Element, hl1 *HeldLocks, be2 Element, hl2 *HeldLocks, printExceptions ...bool) bool {
+func equivalent(be1 Element, hl1 *Transaction, be2 Element, hl2 *Transaction, printExceptions ...bool) bool {
 	var print bool
 	if len(printExceptions) > 0 {
 		print = printExceptions[0]
@@ -137,11 +137,11 @@ func equivalent(be1 Element, hl1 *HeldLocks, be2 Element, hl2 *HeldLocks, printE
 }
 
 // Print prints the indicated element and its ownedConcepts, recursively
-func Print(el Element, prefix string, hl *HeldLocks) {
+func Print(el Element, prefix string, hl *Transaction) {
 	printElement(el, prefix, hl)
 }
 
-func printElement(el Element, prefix string, hl *HeldLocks) {
+func printElement(el Element, prefix string, hl *Transaction) {
 	if el == nil {
 		return
 	}
@@ -158,28 +158,28 @@ func printElement(el Element, prefix string, hl *HeldLocks) {
 }
 
 // PrintURIIndex prints the URI index of the uOfD with full Element information
-func PrintURIIndex(uOfD *UniverseOfDiscourse, hl *HeldLocks) {
+func PrintURIIndex(uOfD *UniverseOfDiscourse, hl *Transaction) {
 	uOfD.uriUUIDMap.Print(hl)
 }
 
-func restoreValueOwningElementFieldsRecursively(el Element, hl *HeldLocks) {
-	// if hl == nil {
-	// 	hl = NewHeldLocks(nil)
-	// 	defer hl.ReleaseLocks()
-	// }
-	// for _, child := range el.GetOwnedConcepts(hl) {
-	// 	switch child.(type) {
-	// 	//@TODO add reference to case
-	// 	case *element:
-	// 		restoreValueOwningElementFieldsRecursively(child.(*element), hl)
-	// 	case *reference:
-	// 		restoreValueOwningElementFieldsRecursively(child.(*reference), hl)
-	// 	case *literal:
-	// 		child.(*literal).internalSetOwningElement(el, hl)
-	// 	case *refinement:
-	// 		restoreValueOwningElementFieldsRecursively(child.(*refinement), hl)
-	// 	default:
-	// 		log.Printf("No case for %T in restoreValueOwningElementFieldsRecursively \n", child)
-	// 	}
-	// }
-}
+// func restoreValueOwningElementFieldsRecursively(el Element, hl *HeldLocks) {
+// if hl == nil {
+// 	hl = NewHeldLocks(nil)
+// 	defer hl.ReleaseLocks()
+// }
+// for _, child := range el.GetOwnedConcepts(hl) {
+// 	switch child.(type) {
+// 	//@TODO add reference to case
+// 	case *element:
+// 		restoreValueOwningElementFieldsRecursively(child.(*element), hl)
+// 	case *reference:
+// 		restoreValueOwningElementFieldsRecursively(child.(*reference), hl)
+// 	case *literal:
+// 		child.(*literal).internalSetOwningElement(el, hl)
+// 	case *refinement:
+// 		restoreValueOwningElementFieldsRecursively(child.(*refinement), hl)
+// 	default:
+// 		log.Printf("No case for %T in restoreValueOwningElementFieldsRecursively \n", child)
+// 	}
+// }
+// }

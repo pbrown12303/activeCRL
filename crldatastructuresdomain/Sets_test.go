@@ -8,7 +8,7 @@ import (
 
 var _ = Describe("Set test", func() {
 	var uOfD *core.UniverseOfDiscourse
-	var hl *core.HeldLocks
+	var hl *core.Transaction
 
 	BeforeEach(func() {
 		uOfD = core.NewUniverseOfDiscourse()

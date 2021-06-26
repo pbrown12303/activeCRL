@@ -30,11 +30,11 @@ func newUndoManager(uOfD *UniverseOfDiscourse) *undoManager {
 }
 
 // markChangedElement() If undo is enabled, updates the undo stack.
-func (undoMgr *undoManager) markChangedElement(changedElement Element, hl *HeldLocks) error {
+func (undoMgr *undoManager) markChangedElement(changedElement Element, hl *Transaction) error {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	hl.ReadLockElement(changedElement)
-	if undoMgr.debugUndo == true {
+	if undoMgr.debugUndo {
 		debug.PrintStack()
 	}
 	priorState := clone(changedElement, hl)
@@ -47,14 +47,14 @@ func (undoMgr *undoManager) markChangedElement(changedElement Element, hl *HeldL
 }
 
 // markNewElement() If undo is enabled, updates the undo stack.
-func (undoMgr *undoManager) markNewElement(el Element, hl *HeldLocks) error {
+func (undoMgr *undoManager) markNewElement(el Element, hl *Transaction) error {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	if hl == nil {
 		return errors.New("UndoManager.markNewElement called with nil HeldLocks")
 	}
 	hl.ReadLockElement(el)
-	if undoMgr.debugUndo == true {
+	if undoMgr.debugUndo {
 		debug.PrintStack()
 	}
 	if undoMgr.recordingUndo {
@@ -62,7 +62,7 @@ func (undoMgr *undoManager) markNewElement(el Element, hl *HeldLocks) error {
 		priorOwnedElements := undoMgr.uOfD.ownedIDsMap.GetMappedValues(el.GetConceptID(hl)).Clone()
 		priorListeners := undoMgr.uOfD.listenersMap.GetMappedValues(el.GetConceptID(hl)).Clone()
 		stackEntry := newUndoRedoStackEntry(Creation, clone, priorOwnedElements, priorListeners, el)
-		if undoMgr.debugUndo == true {
+		if undoMgr.debugUndo {
 			PrintStackEntry(stackEntry, hl)
 		}
 		undoMgr.undoStack.Push(stackEntry)
@@ -71,14 +71,14 @@ func (undoMgr *undoManager) markNewElement(el Element, hl *HeldLocks) error {
 }
 
 // markRemoveElement() If undo is enabled, updates the undo stack.
-func (undoMgr *undoManager) markRemovedElement(el Element, hl *HeldLocks) error {
+func (undoMgr *undoManager) markRemovedElement(el Element, hl *Transaction) error {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	if hl == nil {
 		return errors.New("UndoManager.markRemovedElement called with nil HeldLocks")
 	}
 	hl.ReadLockElement(el)
-	if undoMgr.debugUndo == true {
+	if undoMgr.debugUndo {
 		debug.PrintStack()
 	}
 	if undoMgr.recordingUndo {
@@ -133,7 +133,7 @@ func PrintUndoStack(s undoStack, stackName string, uOfD *UniverseOfDiscourse) {
 }
 
 // PrintStackEntry prints the entry on the stack. It is intended for use only in debugging
-func PrintStackEntry(entry *undoRedoStackEntry, hl *HeldLocks) {
+func PrintStackEntry(entry *undoRedoStackEntry, hl *Transaction) {
 	var changeType string
 	switch entry.changeType {
 	case Creation:
@@ -160,7 +160,7 @@ func PrintStackEntry(entry *undoRedoStackEntry, hl *HeldLocks) {
 	Print(entry.changedElement, "      ", hl)
 }
 
-func (undoMgr *undoManager) redo(hl *HeldLocks) {
+func (undoMgr *undoManager) redo(hl *Transaction) {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	uOfD := undoMgr.uOfD
@@ -313,8 +313,8 @@ func (undoMgr *undoManager) redo(hl *HeldLocks) {
 
 // restoreState is used as part of the undo process. It changes the currentState object
 // to have the priorState.
-func (undoMgr *undoManager) restoreState(priorState Element, currentState Element, hl *HeldLocks) {
-	if undoMgr.debugUndo == true {
+func (undoMgr *undoManager) restoreState(priorState Element, currentState Element, hl *Transaction) {
+	if undoMgr.debugUndo {
 		log.Printf("Restoring State")
 		log.Printf("   Current state:")
 		Print(currentState, "      ", hl)
@@ -335,11 +335,11 @@ func (undoMgr *undoManager) restoreState(priorState Element, currentState Elemen
 	}
 }
 
-func (undoMgr *undoManager) setDebugUndo(newSetting bool) {
-	undoMgr.TraceableLock()
-	defer undoMgr.TraceableUnlock()
-	undoMgr.debugUndo = newSetting
-}
+// func (undoMgr *undoManager) setDebugUndo(newSetting bool) {
+// 	undoMgr.TraceableLock()
+// 	defer undoMgr.TraceableUnlock()
+// 	undoMgr.debugUndo = newSetting
+// }
 
 func (undoMgr *undoManager) setRecordingUndo(newSetting bool) {
 	undoMgr.TraceableLock()
@@ -361,7 +361,7 @@ func (undoMgr *undoManager) TraceableUnlock() {
 	undoMgr.Unlock()
 }
 
-func (undoMgr *undoManager) undo(hl *HeldLocks) {
+func (undoMgr *undoManager) undo(hl *Transaction) {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	uOfD := undoMgr.uOfD

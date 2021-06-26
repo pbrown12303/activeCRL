@@ -30,7 +30,7 @@ var EnableNotificationPrint bool
 // to understand what notifications resulted in the call to the function. When true, every time a function call
 // is executed a graph of the function call and its antecedent notifications will be created and added to the
 // functionCallGraphs
-var traceFunctionCalls bool
+// var traceFunctionCalls bool
 var functionCallGraphs []*FunctionCallGraph
 
 // notificationsLimit places an absolute limit on the number of notifications allowed. A value of 0 means no limit.
@@ -74,3 +74,5 @@ func SetNotificationsLimit(limit int) {
 	notificationsCount = 0
 	notificationGraphs = nil
 }
+
+// TODO Complete implementation of NotificationsLimit - the limit can be set, but it is never enforced.

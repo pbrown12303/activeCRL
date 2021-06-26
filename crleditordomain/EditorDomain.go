@@ -15,7 +15,7 @@ var EditorSettingsURI = EditorDomainURI + "/Settings"
 var EditorOpenDiagramsURI = EditorSettingsURI + "/OpenDiagrams"
 
 // BuildEditorDomain programmatically constructs the EditorDomain
-func BuildEditorDomain(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) (core.Element, error) {
+func BuildEditorDomain(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) (core.Element, error) {
 	// EditorDomain
 	// Assumes that the DiagramDomain has already been added to the uOfD
 	domain, _ := uOfD.NewElement(hl, EditorDomainURI)

@@ -10,9 +10,9 @@ import (
 	"sync"
 )
 
-// HeldLocks maintains a record of which elements are currently read and write locked and provides facilities
+// Transaction maintains a record of which elements are currently read and write locked and provides facilities
 // for locking additional elements.
-type HeldLocks struct {
+type Transaction struct {
 	sync.Mutex
 	functionCallManager *functionCallManager
 	readLocks           map[string]Element
@@ -21,7 +21,7 @@ type HeldLocks struct {
 }
 
 // GetUniverseOfDiscourse returns the UniverseOfDiscourse to which this HeldLocks belongs
-func (hlPtr *HeldLocks) GetUniverseOfDiscourse() *UniverseOfDiscourse {
+func (hlPtr *Transaction) GetUniverseOfDiscourse() *UniverseOfDiscourse {
 	return hlPtr.uOfD
 }
 
@@ -37,7 +37,7 @@ func (hlPtr *HeldLocks) GetUniverseOfDiscourse() *UniverseOfDiscourse {
 // ReadLockElement checks to see whether this HeldLocks structure already has a record of the Element being
 // locked, either read or write. If it does, it simply returns. If not, it attempts to acquire the read on the Element and makes
 // a record of the fact that the read lock has been obtained.
-func (hlPtr *HeldLocks) ReadLockElement(el Element) {
+func (hlPtr *Transaction) ReadLockElement(el Element) {
 	hlPtr.Lock()
 	defer hlPtr.Unlock()
 	id := el.getConceptIDNoLock()
@@ -55,7 +55,7 @@ func (hlPtr *HeldLocks) ReadLockElement(el Element) {
 // WriteLockElement checks to see whether this HeldLocks structure already has a record of the Element being
 // write locked. If it does, it simply returns. If not, it attempts to acquire the write lock on the Element and makes
 // a record of the fact that the lock has been obtained.
-func (hlPtr *HeldLocks) WriteLockElement(el Element) error {
+func (hlPtr *Transaction) WriteLockElement(el Element) error {
 	hlPtr.Lock()
 	defer hlPtr.Unlock()
 	id := el.getConceptIDNoLock()
@@ -72,7 +72,7 @@ func (hlPtr *HeldLocks) WriteLockElement(el Element) error {
 }
 
 // ReleaseLocks releases all pending functions for execution (asynchronously) and releases all currently held locks
-func (hlPtr *HeldLocks) ReleaseLocks() {
+func (hlPtr *Transaction) ReleaseLocks() {
 	hlPtr.Lock()
 	if TraceLocks {
 		log.Printf("HL %p about to ReleaseLocks", hlPtr)
@@ -95,7 +95,7 @@ func (hlPtr *HeldLocks) ReleaseLocks() {
 // ReleaseLocksAndWait releases all pending functions for execution (asynchronously) and releases all currently held locks.
 // It returns when all of the asynchronous function executions have completed. This is particularly useful to when you want
 // to wait for all of the side effects for some change to complete before proceeding with additonal changes.
-func (hlPtr *HeldLocks) ReleaseLocksAndWait() {
+func (hlPtr *Transaction) ReleaseLocksAndWait() {
 	if TraceLocks {
 		log.Printf("HL %p about to ReleaseLocksAndWait 11111111111111111111111111111111111111111111", hlPtr)
 	}

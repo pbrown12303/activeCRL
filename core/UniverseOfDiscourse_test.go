@@ -1,16 +1,17 @@
 package core
 
 import (
+	"reflect"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	uuid "github.com/satori/go.uuid"
-	"reflect"
 )
 
 var _ = Describe("UniverseOfDiscourse", func() {
 
 	var uOfD *UniverseOfDiscourse
-	var hl *HeldLocks
+	var hl *Transaction
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
@@ -482,9 +483,9 @@ var _ = Describe("UniverseOfDiscourse", func() {
 
 	Describe("Test UofD Equivalence", func() {
 		var uOfD1 *UniverseOfDiscourse
-		var hl1 *HeldLocks
+		var hl1 *Transaction
 		var uOfD2 *UniverseOfDiscourse
-		var hl2 *HeldLocks
+		var hl2 *Transaction
 
 		BeforeEach(func() {
 			uOfD1 = NewUniverseOfDiscourse()

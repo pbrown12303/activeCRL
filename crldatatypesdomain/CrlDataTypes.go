@@ -8,7 +8,7 @@ import (
 var CrlDataTypesDomainURI = "http://activeCRL.com/crldatastructuresdomain/CrlDataTypes"
 
 // BuildCrlDataTypesDomain constructs the concept space for CRL data structures
-func BuildCrlDataTypesDomain(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCrlDataTypesDomain(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) {
 	crlDataTypes, _ := uOfD.NewElement(hl, CrlDataTypesDomainURI)
 	crlDataTypes.SetLabel("CrlDataTypesDomain", hl)
 	BuildCrlBooleanConcept(uOfD, crlDataTypes, hl)

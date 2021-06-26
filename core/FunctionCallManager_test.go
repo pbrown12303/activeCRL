@@ -7,7 +7,7 @@ import (
 
 var _ = Describe("FunctionCall Queue Tests", func() {
 	var uOfD *UniverseOfDiscourse
-	var hl *HeldLocks
+	var hl *Transaction
 	var queue *pendingFunctionCallQueue
 	var element Element
 	BeforeEach(func() {

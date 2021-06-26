@@ -17,7 +17,7 @@ func dummyChangeFunction(Element, *ChangeNotification, *UniverseOfDiscourse) err
 
 var _ = Describe("Verify housekeeping function execution", func() {
 	var uOfD *UniverseOfDiscourse
-	var hl *HeldLocks
+	var hl *Transaction
 	var df1 Element
 	var df2 Element
 	var df3 Element

@@ -218,7 +218,7 @@ func (cnPtr *ChangeNotification) IsReferenced(el Element) bool {
 }
 
 // Print prints the change notification for diagnostic purposes to the log
-func (cnPtr *ChangeNotification) Print(prefix string, hl *HeldLocks) {
+func (cnPtr *ChangeNotification) Print(prefix string, hl *Transaction) {
 	if EnableNotificationPrint {
 		startCount := 0
 		cnPtr.printRecursively(prefix, hl, startCount)
@@ -227,9 +227,12 @@ func (cnPtr *ChangeNotification) Print(prefix string, hl *HeldLocks) {
 
 // printRecursively prints the change notification for diagnostic purposes to the log. The startCount
 // indicates the depth of nesting of the print so that the printout can be indented appropriately.
-func (cnPtr *ChangeNotification) printRecursively(prefix string, hl *HeldLocks, startCount int) {
+func (cnPtr *ChangeNotification) printRecursively(prefix string, hl *Transaction, startCount int) {
 	notificationType := "+++ " + cnPtr.natureOfChange.String()
 	log.Printf("%s%s: \n", prefix, "### Notification Level: "+strconv.Itoa(startCount)+" Type: "+notificationType)
+	if cnPtr.reportingElementState != nil {
+		log.Printf(prefix+"  ReportingElementState: %+v", cnPtr.reportingElementState)
+	}
 	if cnPtr.afterConceptState != nil {
 		log.Printf(prefix+"  AfterState: %+v", cnPtr.afterConceptState)
 	}

@@ -14,7 +14,7 @@ type propertyManager struct {
 }
 
 // initialize sets up the uOfD monitoring
-func (pmPtr *propertyManager) initialize(hl *core.HeldLocks) error {
+func (pmPtr *propertyManager) initialize(hl *core.Transaction) error {
 	err := pmPtr.browserGUI.GetUofD().Register(pmPtr)
 	if err != nil {
 		return errors.Wrap(err, "propertyManager.initialize failed")
@@ -23,7 +23,7 @@ func (pmPtr *propertyManager) initialize(hl *core.HeldLocks) error {
 }
 
 // Update  is the callback function that manaages the properties view for the selected element when elements in the Universe of Discourse change.
-func (pmPtr *propertyManager) Update(notification *core.ChangeNotification, hl *core.HeldLocks) error {
+func (pmPtr *propertyManager) Update(notification *core.ChangeNotification, hl *core.Transaction) error {
 	uOfD := hl.GetUniverseOfDiscourse()
 
 	// Tracing

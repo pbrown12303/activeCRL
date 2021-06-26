@@ -9,7 +9,7 @@ import (
 
 var _ = Describe("CrlDiagramtest", func() {
 	var uOfD *core.UniverseOfDiscourse
-	var hl *core.HeldLocks
+	var hl *core.Transaction
 
 	BeforeEach(func() {
 		uOfD = core.NewUniverseOfDiscourse()

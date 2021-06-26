@@ -7,7 +7,7 @@ import (
 
 var _ = Describe("Refinement tests", func() {
 	var uOfD *UniverseOfDiscourse
-	var hl *HeldLocks
+	var hl *Transaction
 	var ref Refinement
 	var abstractConcept Element
 	var refinedConcept Element

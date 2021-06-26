@@ -8,7 +8,7 @@ import (
 var CrlDataStructuresDomainURI = "http://activeCRL.com/crldatastructuresdomain/CrlDataStructuresDomain"
 
 // BuildCrlDataStructuresDomain constructs the concept space for CRL data structures
-func BuildCrlDataStructuresDomain(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) {
+func BuildCrlDataStructuresDomain(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) {
 	crlDataStructures, _ := uOfD.NewElement(hl, CrlDataStructuresDomainURI)
 	crlDataStructures.SetLabel("CrlDataStructuresDomain", hl)
 	BuildCrlSetsConcepts(uOfD, crlDataStructures, hl)

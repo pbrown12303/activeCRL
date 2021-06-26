@@ -51,7 +51,7 @@ func InitializeBrowserGUISingleton(editor *crleditor.Editor, startBrowser bool) 
 }
 
 // CloseDiagramView closes the gui display of the diagram
-func (bgPtr *BrowserGUI) CloseDiagramView(diagramID string, hl *core.HeldLocks) error {
+func (bgPtr *BrowserGUI) CloseDiagramView(diagramID string, hl *core.Transaction) error {
 	_, err := SendNotification("CloseDiagramView", diagramID, nil, map[string]string{})
 	if err != nil {
 		return errors.Wrap(err, "BrowserGUI.CloseDiagramView failed")
@@ -77,7 +77,7 @@ func (bgPtr *BrowserGUI) createTreeManager(treeID string) error {
 }
 
 // DisplayCallGraph opens a new tab and displays the selected graph
-func (bgPtr *BrowserGUI) DisplayCallGraph(indexString string, hl *core.HeldLocks) error {
+func (bgPtr *BrowserGUI) DisplayCallGraph(indexString string, hl *core.Transaction) error {
 	index, err := strconv.ParseInt(indexString, 10, 32)
 	if err != nil {
 		return err
@@ -106,7 +106,7 @@ func (bgPtr *BrowserGUI) DisplayCallGraph(indexString string, hl *core.HeldLocks
 
 }
 
-func (bgPtr *BrowserGUI) displayCallGraph(functionCallGraph *core.FunctionCallGraph, hl *core.HeldLocks) error {
+func (bgPtr *BrowserGUI) displayCallGraph(functionCallGraph *core.FunctionCallGraph, hl *core.Transaction) error {
 	graph := functionCallGraph.GetGraph()
 	if graph == nil {
 		return errors.New("In BrowserGUI.displayCallGraph, graph is nil")
@@ -120,13 +120,13 @@ func (bgPtr *BrowserGUI) displayCallGraph(functionCallGraph *core.FunctionCallGr
 }
 
 // ElementDeleted is used to inform the gui that the element has been deleted
-func (bgPtr *BrowserGUI) ElementDeleted(elID string, hl *core.HeldLocks) error {
+func (bgPtr *BrowserGUI) ElementDeleted(elID string, hl *core.Transaction) error {
 	return nil
 }
 
 // ElementSelected selects the indicated Element in the tree, displays the Element in the Properties window, and selects it in the
 // current diagram (if present).
-func (bgPtr *BrowserGUI) ElementSelected(el core.Element, hl *core.HeldLocks) error {
+func (bgPtr *BrowserGUI) ElementSelected(el core.Element, hl *core.Transaction) error {
 	elID := ""
 	var conceptState *core.ConceptState
 	var err error
@@ -145,7 +145,7 @@ func (bgPtr *BrowserGUI) ElementSelected(el core.Element, hl *core.HeldLocks) er
 }
 
 // FileLoaded informs the BrowserGUI that a file has been loaded
-func (bgPtr *BrowserGUI) FileLoaded(el core.Element, hl *core.HeldLocks) {
+func (bgPtr *BrowserGUI) FileLoaded(el core.Element, hl *core.Transaction) {
 	bgPtr.treeManager.addNodeRecursively(el, hl)
 }
 
@@ -170,7 +170,7 @@ func (bgPtr *BrowserGUI) getDiagramManager() *diagramManager {
 }
 
 // GetNoSaveDomains reports gui-specific domains that should not be saved
-func (bgPtr *BrowserGUI) GetNoSaveDomains(noSaveDomains map[string]core.Element, hl *core.HeldLocks) {
+func (bgPtr *BrowserGUI) GetNoSaveDomains(noSaveDomains map[string]core.Element, hl *core.Transaction) {
 	if bgPtr.workingDomain != nil {
 		noSaveDomains[bgPtr.workingDomain.GetConceptID(hl)] = bgPtr.workingDomain
 	}
@@ -202,7 +202,7 @@ func (bgPtr *BrowserGUI) GetTraceChange() bool {
 }
 
 // GetIconPath returns the path to the icon to be used in representing the given Element
-func GetIconPath(el core.Element, hl *core.HeldLocks) string {
+func GetIconPath(el core.Element, hl *core.Transaction) string {
 	isDiagram := crldiagramdomain.IsDiagram(el, hl)
 	switch el.(type) {
 	case core.Reference:
@@ -226,7 +226,7 @@ func (bgPtr *BrowserGUI) GetTreeDragSelection() core.Element {
 }
 
 // GetTreeDragSelectionID returns the ConceptID of the Element being dragged from the tree
-func (bgPtr *BrowserGUI) GetTreeDragSelectionID(hl *core.HeldLocks) string {
+func (bgPtr *BrowserGUI) GetTreeDragSelectionID(hl *core.Transaction) string {
 	return bgPtr.treeDragSelection.GetConceptID(hl)
 }
 
@@ -241,7 +241,7 @@ func (bgPtr *BrowserGUI) GetUofD() *core.UniverseOfDiscourse {
 }
 
 // Initialize must be called before any editor operation.
-func (bgPtr *BrowserGUI) Initialize(hl *core.HeldLocks) error {
+func (bgPtr *BrowserGUI) Initialize(hl *core.Transaction) error {
 	if bgPtr.treeManager == nil {
 		bgPtr.createTreeManager("#uOfD()")
 	}
@@ -270,7 +270,7 @@ func (bgPtr *BrowserGUI) Initialize(hl *core.HeldLocks) error {
 }
 
 // InitializeGUI sets the client state after a browser refresh.
-func (bgPtr *BrowserGUI) InitializeGUI(hl *core.HeldLocks) error {
+func (bgPtr *BrowserGUI) InitializeGUI(hl *core.Transaction) error {
 	if !bgPtr.serverRunning {
 		go bgPtr.StartServer()
 		for !bgPtr.IsInitialized() {
@@ -282,7 +282,7 @@ func (bgPtr *BrowserGUI) InitializeGUI(hl *core.HeldLocks) error {
 }
 
 // initializeClientState sets the client state at any desired time
-func (bgPtr *BrowserGUI) initializeClientState(hl *core.HeldLocks) error {
+func (bgPtr *BrowserGUI) initializeClientState(hl *core.Transaction) error {
 	err := bgPtr.getTreeManager().initializeTree(hl)
 	if err != nil {
 		return errors.Wrap(err, "BrowserGUI.initializeClientState failed")
@@ -324,7 +324,7 @@ func (bgPtr *BrowserGUI) IsInitialized() bool {
 	return bgPtr.initialized
 }
 
-func (bgPtr *BrowserGUI) nullifyReferencedConcept(refID string, hl *core.HeldLocks) error {
+func (bgPtr *BrowserGUI) nullifyReferencedConcept(refID string, hl *core.Transaction) error {
 	ref := bgPtr.editor.GetUofD().GetReference(refID)
 	if ref == nil {
 		return errors.New("BrowserGUI.nullifyReferencedConcept called with refID not found in bgPtr.editor.GetUofD()")
@@ -395,7 +395,7 @@ func (bgPtr *BrowserGUI) SendDebugSettings() {
 }
 
 // SendUserPreferences sends the editor settings to the client so that they can be edited
-func (bgPtr *BrowserGUI) SendUserPreferences(hl *core.HeldLocks) {
+func (bgPtr *BrowserGUI) SendUserPreferences(hl *core.Transaction) {
 	params := make(map[string]string)
 	params["DropReferenceAsLink"] = strconv.FormatBool(bgPtr.editor.GetDropDiagramReferenceAsLink(hl))
 	params["DropRefinementAsLink"] = strconv.FormatBool(bgPtr.editor.GetDropDiagramRefinementAsLink(hl))
@@ -444,7 +444,7 @@ func (bgPtr *BrowserGUI) SetTreeDragSelection(elID string) {
 }
 
 // ShowConceptInTree shows the concept in the tree
-func (bgPtr *BrowserGUI) ShowConceptInTree(concept core.Element, hl *core.HeldLocks) error {
+func (bgPtr *BrowserGUI) ShowConceptInTree(concept core.Element, hl *core.Transaction) error {
 	if concept == nil {
 		return errors.New("BrowserGUI.ShowConceptInTree called with nil concept")
 	}
@@ -486,7 +486,7 @@ func (bgPtr *BrowserGUI) UpdateDebugSettings(request *Request) {
 }
 
 // UpdateUserPreferences updates the values of the editor settings and sends a notification of the change to the client.
-func (bgPtr *BrowserGUI) UpdateUserPreferences(request *Request, hl *core.HeldLocks) {
+func (bgPtr *BrowserGUI) UpdateUserPreferences(request *Request, hl *core.Transaction) {
 	value, _ := strconv.ParseBool(request.AdditionalParameters["DropReferenceAsLink"])
 	bgPtr.editor.SetDropDiagramReferenceAsLink(value, hl)
 	value, _ = strconv.ParseBool(request.AdditionalParameters["DropRefinementAsLink"])

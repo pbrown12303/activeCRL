@@ -28,7 +28,7 @@ var CrlListReferenceToPriorMemberReferenceURI = CrlListURI + "/ReferenceToPriorM
 var CrlListTypeReferenceURI = CrlListURI + "/ListTypeReference"
 
 // NewList creates an instance of a list
-func NewList(uOfD *core.UniverseOfDiscourse, setType core.Element, hl *core.HeldLocks, newURI ...string) (core.Element, error) {
+func NewList(uOfD *core.UniverseOfDiscourse, setType core.Element, hl *core.Transaction, newURI ...string) (core.Element, error) {
 	if setType == nil {
 		return nil, errors.New("No type specified for list")
 	}
@@ -47,7 +47,7 @@ func NewList(uOfD *core.UniverseOfDiscourse, setType core.Element, hl *core.Held
 // AddListMemberAfter adds a member to the list after the priorMemberReference and returns the newMemberReference.
 // If the priorMemberReference is nil, the member is added to the beginning of the list. An error is returned if the
 // supplied list is not a list, the newElement is nil, or the priorElementReference is not a CrlListMemberReference in this list.
-func AddListMemberAfter(list core.Element, priorMemberReference core.Reference, newMember core.Element, hl *core.HeldLocks) (core.Reference, error) {
+func AddListMemberAfter(list core.Element, priorMemberReference core.Reference, newMember core.Element, hl *core.Transaction) (core.Reference, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	if !IsList(list, hl) {
 		return nil, errors.New("In AddListMemberAfter, supplied Element is not a CRL List")
@@ -106,7 +106,7 @@ func AddListMemberAfter(list core.Element, priorMemberReference core.Reference, 
 
 // AddListMemberBefore adds a member to the list before the postMember.
 // If the postMember is nil, the member is added at the end of the list.
-func AddListMemberBefore(list core.Element, postMemberReference core.Reference, newMember core.Element, hl *core.HeldLocks) (core.Reference, error) {
+func AddListMemberBefore(list core.Element, postMemberReference core.Reference, newMember core.Element, hl *core.Transaction) (core.Reference, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	if !IsList(list, hl) {
 		return nil, errors.New("In AddListMemberBefore, Supplied Element is not a CRL List")
@@ -160,7 +160,7 @@ func AddListMemberBefore(list core.Element, postMemberReference core.Reference, 
 }
 
 // AppendListMember adds a member to the end of the list
-func AppendListMember(list core.Element, newMember core.Element, hl *core.HeldLocks) (core.Reference, error) {
+func AppendListMember(list core.Element, newMember core.Element, hl *core.Transaction) (core.Reference, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	if !IsList(list, hl) {
 		return nil, errors.New("In AddListMemberBefore, Supplied Element is not a CRL List")
@@ -223,7 +223,7 @@ func AppendListMember(list core.Element, newMember core.Element, hl *core.HeldLo
 }
 
 // ClearList removes all members from the list
-func ClearList(list core.Element, hl *core.HeldLocks) {
+func ClearList(list core.Element, hl *core.Transaction) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
 	defer it.Stop()
@@ -237,7 +237,7 @@ func ClearList(list core.Element, hl *core.HeldLocks) {
 
 // GetFirstMemberReference returns the reference to the first member of the list. It returns an error if the
 // list is not a list. It returns nil if the list is empty
-func GetFirstMemberReference(list core.Element, hl *core.HeldLocks) (core.Reference, error) {
+func GetFirstMemberReference(list core.Element, hl *core.Transaction) (core.Reference, error) {
 	refRef, err := getListReferenceToFirstMemberReference(list, hl)
 	if err != nil {
 		return nil, err
@@ -254,7 +254,7 @@ func GetFirstMemberReference(list core.Element, hl *core.HeldLocks) (core.Refere
 
 // GetFirstReferenceForMember returns the first reference to the given member. It returns an error if the list is not a list.
 // It returns nil if the element it is not found in the list.
-func GetFirstReferenceForMember(list core.Element, member core.Element, hl *core.HeldLocks) (core.Reference, error) {
+func GetFirstReferenceForMember(list core.Element, member core.Element, hl *core.Transaction) (core.Reference, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
 	defer it.Stop()
@@ -271,7 +271,7 @@ func GetFirstReferenceForMember(list core.Element, member core.Element, hl *core
 
 // GetLastMemberReference returns the reference to the last member of the list. It returns an error if list is not a list.
 // It returns nil if the list is empty
-func GetLastMemberReference(list core.Element, hl *core.HeldLocks) (core.Reference, error) {
+func GetLastMemberReference(list core.Element, hl *core.Transaction) (core.Reference, error) {
 	refRef, err := getListReferenceToLastMemberReference(list, hl)
 	if err != nil {
 		return nil, err
@@ -287,7 +287,7 @@ func GetLastMemberReference(list core.Element, hl *core.HeldLocks) (core.Referen
 }
 
 // getListReferenceToFirstMemberReference returns the reference to the first member reference. It returns an error if list is not a List
-func getListReferenceToFirstMemberReference(list core.Element, hl *core.HeldLocks) (core.Reference, error) {
+func getListReferenceToFirstMemberReference(list core.Element, hl *core.Transaction) (core.Reference, error) {
 	if IsList(list, hl) == false {
 		return nil, errors.New("Argument is not a CrlDataStructures.List")
 	}
@@ -299,7 +299,7 @@ func getListReferenceToFirstMemberReference(list core.Element, hl *core.HeldLock
 }
 
 // getListReferenceToLastMemberReference returns the reference to the last member reference. It returns an error if list is not a List
-func getListReferenceToLastMemberReference(list core.Element, hl *core.HeldLocks) (core.Reference, error) {
+func getListReferenceToLastMemberReference(list core.Element, hl *core.Transaction) (core.Reference, error) {
 	if IsList(list, hl) == false {
 		return nil, errors.New("Argument is not a CrlDataStructures.List")
 	}
@@ -307,7 +307,7 @@ func getListReferenceToLastMemberReference(list core.Element, hl *core.HeldLocks
 }
 
 // GetListType returns the element that should be an abstraction of every member. It returns an error if the argument is not a list
-func GetListType(list core.Element, hl *core.HeldLocks) (core.Element, error) {
+func GetListType(list core.Element, hl *core.Transaction) (core.Element, error) {
 	if list.IsRefinementOfURI(CrlListURI, hl) == false {
 		return nil, errors.New("Argument is not a list")
 	}
@@ -316,7 +316,7 @@ func GetListType(list core.Element, hl *core.HeldLocks) (core.Element, error) {
 }
 
 // GetNextMemberReference returns the successor member reference in the list
-func GetNextMemberReference(memberReference core.Reference, hl *core.HeldLocks) (core.Reference, error) {
+func GetNextMemberReference(memberReference core.Reference, hl *core.Transaction) (core.Reference, error) {
 	if !IsListMemberReference(memberReference, hl) {
 		return nil, errors.New("Supplied memberReference is not a refinement of CrlListMemberReference")
 	}
@@ -332,7 +332,7 @@ func GetNextMemberReference(memberReference core.Reference, hl *core.HeldLocks) 
 }
 
 // GetPriorMemberReference returns the predecessor member reference in the list
-func GetPriorMemberReference(memberReference core.Reference, hl *core.HeldLocks) (core.Reference, error) {
+func GetPriorMemberReference(memberReference core.Reference, hl *core.Transaction) (core.Reference, error) {
 	if !IsListMemberReference(memberReference, hl) {
 		return nil, errors.New("Supplied memberReference is not a refinement of CrlListMemberReference")
 	}
@@ -349,7 +349,7 @@ func GetPriorMemberReference(memberReference core.Reference, hl *core.HeldLocks)
 
 // getReferenceToNextMemberReference returns the reference to the next member of the list.
 // It returns nil if the reference is the last member of the list
-func getReferenceToNextMemberReference(memberReference core.Reference, hl *core.HeldLocks) (core.Reference, error) {
+func getReferenceToNextMemberReference(memberReference core.Reference, hl *core.Transaction) (core.Reference, error) {
 	if memberReference == nil {
 		return nil, errors.New("GetNextMemberReference called with nil memberReference")
 	}
@@ -366,7 +366,7 @@ func getReferenceToNextMemberReference(memberReference core.Reference, hl *core.
 // getReferenceToPriorMemberReference returns the reference to the previous member of the list. It returns an error if the memberReference
 // is either nil or is not a refinement of CrlListMemberReference
 // It returns nil if the reference is the first member of the list
-func getReferenceToPriorMemberReference(memberReference core.Reference, hl *core.HeldLocks) (core.Reference, error) {
+func getReferenceToPriorMemberReference(memberReference core.Reference, hl *core.Transaction) (core.Reference, error) {
 	if memberReference == nil {
 		return nil, errors.New("getReferenceToPriorMemberReference called with nil memberReference")
 	}
@@ -381,12 +381,12 @@ func getReferenceToPriorMemberReference(memberReference core.Reference, hl *core
 }
 
 // IsList returns true if the supplied Element is a refinement of List
-func IsList(list core.Element, hl *core.HeldLocks) bool {
+func IsList(list core.Element, hl *core.Transaction) bool {
 	return list.IsRefinementOfURI(CrlListURI, hl)
 }
 
 // IsListMember returns true if the element is a memeber of the given list
-func IsListMember(list core.Element, el core.Element, hl *core.HeldLocks) bool {
+func IsListMember(list core.Element, el core.Element, hl *core.Transaction) bool {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
 	defer it.Stop()
@@ -400,12 +400,12 @@ func IsListMember(list core.Element, el core.Element, hl *core.HeldLocks) bool {
 }
 
 // IsListMemberReference returns true if the supplied Reference is a refinement of ListMemberReference
-func IsListMemberReference(memberReference core.Reference, hl *core.HeldLocks) bool {
+func IsListMemberReference(memberReference core.Reference, hl *core.Transaction) bool {
 	return memberReference.IsRefinementOfURI(CrlListMemberReferenceURI, hl)
 }
 
 // PrependListMember adds a member to the end of the list
-func PrependListMember(list core.Element, newMember core.Element, hl *core.HeldLocks) (core.Reference, error) {
+func PrependListMember(list core.Element, newMember core.Element, hl *core.Transaction) (core.Reference, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	if !IsList(list, hl) {
 		return nil, errors.New("In PrependListMember, Supplied Element is not a CRL List")
@@ -468,7 +468,7 @@ func PrependListMember(list core.Element, newMember core.Element, hl *core.HeldL
 }
 
 // RemoveListMember removes the first occurrance of an element from the given list
-func RemoveListMember(list core.Element, el core.Element, hl *core.HeldLocks) error {
+func RemoveListMember(list core.Element, el core.Element, hl *core.Transaction) error {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
 	defer it.Stop()
@@ -501,7 +501,7 @@ func RemoveListMember(list core.Element, el core.Element, hl *core.HeldLocks) er
 // SetListType sets the element that should be an abstraction of every member. It is only valid on a list that
 // does not already have a list type assigned, i.e. you can't change the type of a list once it has been set.
 // It returns an error if the argument is not a list or if the list already has a type assigned
-func SetListType(list core.Element, listType core.Element, hl *core.HeldLocks) error {
+func SetListType(list core.Element, listType core.Element, hl *core.Transaction) error {
 	if list.IsRefinementOfURI(CrlListURI, hl) == false {
 		return errors.New("Argument is not a list")
 	}
@@ -516,7 +516,7 @@ func SetListType(list core.Element, listType core.Element, hl *core.HeldLocks) e
 }
 
 // setNextMemberReference takes a memberReference and sets its next reference
-func setNextMemberReference(memberReference core.Reference, nextReference core.Reference, hl *core.HeldLocks) error {
+func setNextMemberReference(memberReference core.Reference, nextReference core.Reference, hl *core.Transaction) error {
 	// since this is an internal function we assume that the references are refinements of CrlListMemberReference
 	nextReferenceReference, err := getReferenceToNextMemberReference(memberReference, hl)
 	if err != nil {
@@ -530,7 +530,7 @@ func setNextMemberReference(memberReference core.Reference, nextReference core.R
 }
 
 // setPriorMemberReference takes a memberReference and sets its prior reference
-func setPriorMemberReference(memberReference core.Reference, priorReference core.Reference, hl *core.HeldLocks) error {
+func setPriorMemberReference(memberReference core.Reference, priorReference core.Reference, hl *core.Transaction) error {
 	// since this is an internal function we assume that the references are refinements of CrlListMemberReference
 	priorReferenceReference, err := getReferenceToPriorMemberReference(memberReference, hl)
 	if err != nil {
@@ -544,7 +544,7 @@ func setPriorMemberReference(memberReference core.Reference, priorReference core
 }
 
 // BuildCrlListsConcepts builds the CrlList concept and adds it as a child of the provided parent concept space
-func BuildCrlListsConcepts(uOfD *core.UniverseOfDiscourse, parentSpace core.Element, hl *core.HeldLocks) {
+func BuildCrlListsConcepts(uOfD *core.UniverseOfDiscourse, parentSpace core.Element, hl *core.Transaction) {
 	crlList, _ := uOfD.NewElement(hl, CrlListURI)
 	crlList.SetLabel("CrlList", hl)
 	crlList.SetOwningConcept(parentSpace, hl)

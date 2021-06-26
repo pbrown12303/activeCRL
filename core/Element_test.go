@@ -8,7 +8,7 @@ import (
 
 var _ = Describe("Element internals test", func() {
 	var uOfD *UniverseOfDiscourse
-	var hl *HeldLocks
+	var hl *Transaction
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
