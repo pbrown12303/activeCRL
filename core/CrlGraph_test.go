@@ -14,7 +14,7 @@ var _ = Describe("CrlGraph tests", func() {
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 	})
 
 	AfterEach(func() {

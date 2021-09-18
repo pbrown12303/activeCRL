@@ -151,7 +151,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	hl := BrowserGUISingleton.GetUofD().NewHeldLocks()
+	hl := BrowserGUISingleton.GetUofD().NewTransaction()
 	defer hl.ReleaseLocksAndWait()
 	if CrlLogClientRequests {
 		log.Printf("Received request: %#v", request)

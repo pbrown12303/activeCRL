@@ -9,11 +9,11 @@ import (
 var _ = Describe("CrlDataTypes test", func() {
 	Specify("Domain cration should be idempotent", func() {
 		uOfD1 := core.NewUniverseOfDiscourse()
-		hl1 := uOfD1.NewHeldLocks()
+		hl1 := uOfD1.NewTransaction()
 		BuildCrlDataTypesDomain(uOfD1, hl1)
 		cs1 := uOfD1.GetElementWithURI(CrlDataTypesDomainURI)
 		uOfD2 := core.NewUniverseOfDiscourse()
-		hl2 := uOfD2.NewHeldLocks()
+		hl2 := uOfD2.NewTransaction()
 		BuildCrlDataTypesDomain(uOfD2, hl2)
 		cs2 := uOfD2.GetElementWithURI(CrlDataTypesDomainURI)
 		Expect(core.RecursivelyEquivalent(cs1, hl1, cs2, hl2)).To(BeTrue())

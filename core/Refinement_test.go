@@ -13,7 +13,7 @@ var _ = Describe("Refinement tests", func() {
 	var refinedConcept Element
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 		ref, _ = uOfD.NewRefinement(hl)
 		abstractConcept, _ = uOfD.NewElement(hl)
 		refinedConcept, _ = uOfD.NewElement(hl)
@@ -147,7 +147,7 @@ var _ = Describe("Refinement tests", func() {
 			mRc, err3 := rc.MarshalJSON()
 			Expect(err3).To(BeNil())
 			uOfD2 := NewUniverseOfDiscourse()
-			hl2 := uOfD2.NewHeldLocks()
+			hl2 := uOfD2.NewTransaction()
 			rRef, err4 := uOfD2.RecoverElement(mRef, hl2)
 			Expect(err4).To(BeNil())
 			rAc, err5 := uOfD2.RecoverElement(mAc, hl2)

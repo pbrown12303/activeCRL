@@ -105,7 +105,7 @@ var _ = Describe("Test CrlEditor", func() {
 		// log.Printf("Editor initialized with Workspace path: " + workspacePath)
 		AssertServerRequestProcessingComplete()
 		uOfD = testEditor.GetUofD()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 	})
 
 	AfterEach(func() {
@@ -552,11 +552,11 @@ var _ = Describe("Test CrlEditor", func() {
 		Specify("UndoRedo of a concept space should work", func() {
 			uOfD.MarkUndoPoint()
 			beforeUofD := uOfD.Clone(hl)
-			beforeHL := beforeUofD.NewHeldLocks()
+			beforeHL := beforeUofD.NewTransaction()
 			_, cs1 := CreateDomain()
 			Expect(cs1).ToNot(BeNil())
 			afterUofD := uOfD.Clone(hl)
-			afterHL := afterUofD.NewHeldLocks()
+			afterHL := afterUofD.NewTransaction()
 			Undo()
 			Expect(uOfD.IsEquivalent(hl, beforeUofD, beforeHL, true)).To(BeTrue())
 			Redo()
@@ -568,11 +568,11 @@ var _ = Describe("Test CrlEditor", func() {
 			Expect(cs1).ToNot(BeNil())
 			uOfD.MarkUndoPoint()
 			beforeUofD := uOfD.Clone(hl)
-			beforeHL := beforeUofD.NewHeldLocks()
+			beforeHL := beforeUofD.NewTransaction()
 			_, diag := CreateDiagram(cs1)
 			Expect(diag).ToNot(BeNil())
 			afterUofD := uOfD.Clone(hl)
-			afterHL := afterUofD.NewHeldLocks()
+			afterHL := afterUofD.NewTransaction()
 			Undo()
 			Expect(uOfD.IsEquivalent(hl, beforeUofD, beforeHL, true)).To(BeTrue())
 			Redo()
@@ -598,12 +598,12 @@ var _ = Describe("Test CrlEditor", func() {
 				// Expect(page.RunScript("return crlGetJointGraphIDFromDiagramID(diagramID)", map[string]interface{}{"diagramID": diagramID}, &diagramGraphID)).To(Succeed())
 				uOfD.MarkUndoPoint()
 				beforeUofD = uOfD.Clone(hl)
-				beforeHL = beforeUofD.NewHeldLocks()
+				beforeHL = beforeUofD.NewTransaction()
 			})
 
 			PerformUndoRedoTest := func(count int) {
 				afterUofD = uOfD.Clone(hl)
-				afterHL = afterUofD.NewHeldLocks()
+				afterHL = afterUofD.NewTransaction()
 				for i := 0; i < count; i++ {
 					Undo()
 				}

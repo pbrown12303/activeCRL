@@ -7,14 +7,14 @@ import (
 
 var _ = Describe("FunctionCall Queue Tests", func() {
 	var uOfD *UniverseOfDiscourse
-	var hl *Transaction
+	var trans *Transaction
 	var queue *pendingFunctionCallQueue
 	var element Element
 	BeforeEach(func() {
 		queue = newPendingFunctionCallQueue()
 		uOfD = NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
-		element, _ = uOfD.NewElement(hl)
+		trans = uOfD.NewTransaction()
+		element, _ = uOfD.NewElement(trans)
 	})
 	Specify("An empty queue should handle calls gracefully", func() {
 		Expect(queue.dequeue()).To(BeNil())
@@ -62,8 +62,8 @@ var _ = Describe("FunctionCall Queue Tests", func() {
 	})
 	Specify("findFirstPendincCall should find matching entry", func() {
 		uOfD := NewUniverseOfDiscourse()
-		hl := uOfD.NewHeldLocks()
-		el, _ := uOfD.NewElement(hl)
+		trans := uOfD.NewTransaction()
+		el, _ := uOfD.NewElement(trans)
 		entry, err := newPendingFunctionCall("ABC", nil, el, nil)
 		Expect(err).To(BeNil())
 		Expect(queue.enqueue(entry)).To(Succeed())

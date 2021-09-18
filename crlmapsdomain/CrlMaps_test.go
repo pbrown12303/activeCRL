@@ -13,18 +13,18 @@ import (
 var _ = Describe("CrlMaps domain test", func() {
 	Specify("Domain generation should be idempotent", func() {
 		uOfD1 := core.NewUniverseOfDiscourse()
-		hl1 := uOfD1.NewHeldLocks()
+		hl1 := uOfD1.NewTransaction()
 		BuildCrlMapsDomain(uOfD1, hl1)
 		cs1 := uOfD1.GetElementWithURI(CrlMapsDomainURI)
 		uOfD2 := core.NewUniverseOfDiscourse()
-		hl2 := uOfD2.NewHeldLocks()
+		hl2 := uOfD2.NewTransaction()
 		BuildCrlMapsDomain(uOfD2, hl2)
 		cs2 := uOfD2.GetElementWithURI(CrlMapsDomainURI)
 		Expect(core.RecursivelyEquivalent(cs1, hl1, cs2, hl2)).To(BeTrue())
 	})
 	Specify("Each URI should have an associated Element or Reference", func() {
 		uOfD1 := core.NewUniverseOfDiscourse()
-		hl1 := uOfD1.NewHeldLocks()
+		hl1 := uOfD1.NewTransaction()
 		BuildCrlMapsDomain(uOfD1, hl1)
 		domain := uOfD1.GetElementWithURI(CrlMapsDomainURI)
 		Expect(domain).ShouldNot(BeNil())
@@ -54,7 +54,7 @@ var _ = Describe("CrlMaps mapping tests", func() {
 
 	BeforeEach(func() {
 		uOfD = core.NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 		BuildCrlMapsDomain(uOfD, hl)
 		var err error
 

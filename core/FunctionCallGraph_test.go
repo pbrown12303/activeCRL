@@ -16,7 +16,7 @@ var _ = Describe("Verify function call graph generation", func() {
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 		uOfD.AddFunction(df1URI, dummyChangeFunction)
 		uOfD.AddFunction(df2URI, dummyChangeFunction)
 		uOfD.AddFunction(df3URI, dummyChangeFunction)

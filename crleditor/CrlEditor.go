@@ -315,7 +315,7 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 		}
 	}
 	editor.cutBuffer = make(map[string]core.Element)
-	hl := editor.uOfDManager.UofD.NewHeldLocks()
+	hl := editor.uOfDManager.UofD.NewTransaction()
 	editor.resetDefaultLabelCounts()
 
 	crldatatypesdomain.BuildCrlDataTypesDomain(editor.GetUofD(), hl)

@@ -15,7 +15,7 @@ var _ = Describe("UniverseOfDiscourse", func() {
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 	})
 
 	AfterEach(func() {
@@ -420,40 +420,40 @@ var _ = Describe("UniverseOfDiscourse", func() {
 	Describe("Test cloning of a Universe of Discourse", func() {
 		Specify("Cloning of an empty uOfD should produce an equivalent uOfD", func() {
 			uOfD1 := NewUniverseOfDiscourse()
-			hl1 := uOfD1.NewHeldLocks()
+			hl1 := uOfD1.NewTransaction()
 			uOfD2 := uOfD1.Clone(hl1)
-			hl2 := uOfD2.NewHeldLocks()
+			hl2 := uOfD2.NewTransaction()
 			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2, true)).To(BeTrue())
 		})
 		Specify("Compute function entries should copy correctly", func() {
 			uOfD1 := NewUniverseOfDiscourse()
-			hl1 := uOfD1.NewHeldLocks()
+			hl1 := uOfD1.NewTransaction()
 
 			dummyURI := "dummyURI"
 			// dummyChangeFunction declared in Housekeeping_test.go
 			uOfD1.AddFunction(dummyURI, dummyChangeFunction)
 			uOfD2 := uOfD1.Clone(hl1)
-			hl2 := uOfD2.NewHeldLocks()
+			hl2 := uOfD2.NewTransaction()
 			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2, true)).To(BeTrue())
 			Expect(reflect.ValueOf(uOfD2.computeFunctions[dummyURI][0]).Pointer()).To(Equal(reflect.ValueOf(dummyChangeFunction).Pointer()))
 		})
 		Specify("uriUUIDs should copy correctly", func() {
 			uOfD1 := NewUniverseOfDiscourse()
-			hl1 := uOfD1.NewHeldLocks()
+			hl1 := uOfD1.NewTransaction()
 
 			uOfD1.uriUUIDMap.SetEntry("A", "X")
 			uOfD2 := uOfD1.Clone(hl1)
-			hl2 := uOfD2.NewHeldLocks()
+			hl2 := uOfD2.NewTransaction()
 			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2, true)).To(BeTrue())
 			Expect(uOfD2.uriUUIDMap.GetEntry("A")).To(Equal("X"))
 		})
 		Specify("uuidElementMap should copy correctly", func() {
 			uOfD1 := NewUniverseOfDiscourse()
-			hl1 := uOfD1.NewHeldLocks()
+			hl1 := uOfD1.NewTransaction()
 			el1, _ := uOfD1.NewElement(hl1)
 
 			uOfD2 := uOfD1.Clone(hl1)
-			hl2 := uOfD2.NewHeldLocks()
+			hl2 := uOfD2.NewTransaction()
 			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2, true)).To(BeTrue())
 			el2 := uOfD2.uuidElementMap.GetEntry(el1.GetConceptID(hl1))
 			Expect(el2).ToNot(BeNil())
@@ -461,21 +461,21 @@ var _ = Describe("UniverseOfDiscourse", func() {
 		})
 		Specify("ownedIDs should copy correctly", func() {
 			uOfD1 := NewUniverseOfDiscourse()
-			hl1 := uOfD1.NewHeldLocks()
+			hl1 := uOfD1.NewTransaction()
 
 			uOfD1.ownedIDsMap.AddMappedValue("A", "X")
 			uOfD2 := uOfD1.Clone(hl1)
-			hl2 := uOfD2.NewHeldLocks()
+			hl2 := uOfD2.NewTransaction()
 			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2, true)).To(BeTrue())
 			Expect(uOfD2.ownedIDsMap.GetMappedValues("A").Contains("X")).To(BeTrue())
 		})
 		Specify("listenersMap should copy correctly", func() {
 			uOfD1 := NewUniverseOfDiscourse()
-			hl1 := uOfD1.NewHeldLocks()
+			hl1 := uOfD1.NewTransaction()
 
 			uOfD1.listenersMap.AddMappedValue("A", "X")
 			uOfD2 := uOfD1.Clone(hl1)
-			hl2 := uOfD2.NewHeldLocks()
+			hl2 := uOfD2.NewTransaction()
 			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2, true)).To(BeTrue())
 			Expect(uOfD2.listenersMap.GetMappedValues("A").Contains("X")).To(BeTrue())
 		})
@@ -489,9 +489,9 @@ var _ = Describe("UniverseOfDiscourse", func() {
 
 		BeforeEach(func() {
 			uOfD1 = NewUniverseOfDiscourse()
-			hl1 = uOfD1.NewHeldLocks()
+			hl1 = uOfD1.NewTransaction()
 			uOfD2 = NewUniverseOfDiscourse()
-			hl2 = uOfD2.NewHeldLocks()
+			hl2 = uOfD2.NewTransaction()
 		})
 
 		Specify("Empty uOfDs should be equivalent", func() {

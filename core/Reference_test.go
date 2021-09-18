@@ -11,7 +11,7 @@ var _ = Describe("Reference Tests", func() {
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 	})
 
 	AfterEach(func() {
@@ -148,7 +148,7 @@ var _ = Describe("Reference Tests", func() {
 			mTarget, err3 := target.MarshalJSON()
 			Expect(err3).To(BeNil())
 			uOfD2 := NewUniverseOfDiscourse()
-			hl2 := uOfD2.NewHeldLocks()
+			hl2 := uOfD2.NewTransaction()
 			rRef, err2 := uOfD2.RecoverElement(mRef, hl2)
 			Expect(err2).To(BeNil())
 			rTarget, err4 := uOfD2.RecoverElement(mTarget, hl2)

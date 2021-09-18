@@ -12,7 +12,7 @@ var _ = Describe("Set test", func() {
 
 	BeforeEach(func() {
 		uOfD = core.NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 		BuildCrlDataStructuresDomain(uOfD, hl)
 		hl.ReleaseLocksAndWait()
 	})

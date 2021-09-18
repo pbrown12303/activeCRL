@@ -13,7 +13,7 @@ var _ = Describe("CrlDiagramtest", func() {
 
 	BeforeEach(func() {
 		uOfD = core.NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 	})
 
 	AfterEach(func() {

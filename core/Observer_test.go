@@ -25,7 +25,7 @@ var _ = Describe("Test Observer functionality", func() {
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 		obs1 = &testObserver{}
 		obs2 = &testObserver{}
 		obs3 = &testObserver{}

@@ -42,7 +42,7 @@ func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	// uOfD.initializeElement(uOfDID, UniverseOfDiscourseURI)
 	// uOfD.Label = "UniverseOfDiscourse"
 	// uOfD.uOfD = &uOfD
-	hl := uOfD.NewHeldLocks()
+	hl := uOfD.NewTransaction()
 	// uOfD.IsCore = true
 	// uOfD.addElement(&uOfD, false, hl)
 	uOfD.AddFunction(coreHousekeepingURI, coreHousekeeping)
@@ -413,10 +413,7 @@ func (uOfDPtr *UniverseOfDiscourse) Deregister(observer Observer) error {
 func (uOfDPtr *UniverseOfDiscourse) generateConceptID(uri ...string) (string, error) {
 	var conceptID string
 	if len(uri) == 0 || (len(uri) == 1 && uri[0] == "") {
-		newUUID, err := uuid.NewV4()
-		if err != nil {
-			return "", errors.Wrap(err, "UniverseOfDiscourse.generateConceptID failed")
-		}
+		newUUID := uuid.NewV4()
 		conceptID = newUUID.String()
 	} else {
 		if len(uri) == 1 {
@@ -838,13 +835,14 @@ func (uOfDPtr *UniverseOfDiscourse) NewElement(hl *Transaction, uri ...string) (
 	return &el, nil
 }
 
-// NewHeldLocks creates and initializes a HeldLocks structure utilizing the supplied WaitGroup
-func (uOfDPtr *UniverseOfDiscourse) NewHeldLocks() *Transaction {
+// NewTransaction creates and initializes a HeldLocks structure utilizing the supplied WaitGroup
+func (uOfDPtr *UniverseOfDiscourse) NewTransaction() *Transaction {
 	var hl Transaction
 	hl.readLocks = make(map[string]Element)
 	hl.writeLocks = make(map[string]Element)
 	hl.uOfD = uOfDPtr
-	hl.functionCallManager = newFunctionCallManager(hl.uOfD)
+	hl.functionCallQueue = newPendingFunctionCallQueue()
+	// hl.functionCallManager = newFunctionCallManager(hl.uOfD)
 	return &hl
 }
 
@@ -1056,7 +1054,7 @@ func (uOfDPtr *UniverseOfDiscourse) queueFunctionExecutions(el Element, notifica
 				log.Printf("       Function target: %T %s %s %p", el, el.getConceptIDNoLock(), el.GetLabel(hl), el)
 			}
 		}
-		err := hl.functionCallManager.addFunctionCall(functionIdentifier, el, notification)
+		err := hl.addFunctionCall(functionIdentifier, el, notification)
 		if err != nil {
 			return errors.Wrap(err, "UniverseOfDiscourse.queueFunctionExecutions failed")
 		}

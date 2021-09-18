@@ -12,7 +12,7 @@ var _ = Describe("Boolean test", func() {
 
 	BeforeEach(func() {
 		uOfD = core.NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 		BuildCrlDataTypesDomain(uOfD, hl)
 		hl.ReleaseLocksAndWait()
 	})

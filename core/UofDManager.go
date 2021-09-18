@@ -35,7 +35,7 @@ func (mgr *UofDManager) AddPostInitializationFunction(function UofDInitializatio
 // and then calls all of the post-initialization functions.
 func (mgr *UofDManager) Initialize() error {
 	mgr.UofD = NewUniverseOfDiscourse()
-	hl := mgr.UofD.NewHeldLocks()
+	hl := mgr.UofD.NewTransaction()
 	defer hl.ReleaseLocksAndWait()
 	for _, function := range mgr.initializationFunctions {
 		err := function(mgr.UofD, hl)

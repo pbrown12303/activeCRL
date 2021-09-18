@@ -12,7 +12,7 @@ var _ = Describe("List test", func() {
 
 	BeforeEach(func() {
 		uOfD = core.NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 		BuildCrlDataStructuresDomain(uOfD, hl)
 		hl.ReleaseLocksAndWait()
 	})
@@ -466,7 +466,7 @@ var _ = Describe("List test", func() {
 	Describe("Serialization tests", func() {
 		Specify("Instantiated lists should serialize and de-serialze properly", func() {
 			uOfD2 := core.NewUniverseOfDiscourse()
-			hl2 := uOfD.NewHeldLocks()
+			hl2 := uOfD.NewTransaction()
 			BuildCrlDataStructuresDomain(uOfD2, hl)
 			hl2.ReleaseLocksAndWait()
 			type1 := uOfD.GetElementWithURI(core.ElementURI)

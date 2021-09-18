@@ -12,6 +12,7 @@ type FyneTreeManager struct {
 // NewFyneTreeManager returns an initialized FyneTreeManager
 func NewFyneTreeManager() *FyneTreeManager {
 	var treeManager FyneTreeManager
-	treeManager.tree = widget.NewTree()
+	// TODO: update this for the latest version of fyne
+	//	treeManager.tree = widget.NewTree()
 	return &treeManager
 }

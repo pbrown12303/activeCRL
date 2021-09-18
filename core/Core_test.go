@@ -8,7 +8,7 @@ import (
 var _ = Describe("Core should build properly", func() {
 	Specify("All core concepts should be present and be marked as core", func() {
 		uOfD := NewUniverseOfDiscourse()
-		hl := uOfD.NewHeldLocks()
+		hl := uOfD.NewTransaction()
 		core := uOfD.GetElementWithURI(CoreDomainURI)
 		Expect(core).ToNot(BeNil())
 		Expect(core.GetIsCore(hl)).To(BeTrue())
@@ -27,10 +27,10 @@ var _ = Describe("Core should build properly", func() {
 	})
 	Specify("The creation of the core domain should be idempotent", func() {
 		uOfD1 := NewUniverseOfDiscourse()
-		hl1 := uOfD1.NewHeldLocks()
+		hl1 := uOfD1.NewTransaction()
 		cs1 := uOfD1.GetElementWithURI(CoreDomainURI)
 		uOfD2 := NewUniverseOfDiscourse()
-		hl2 := uOfD2.NewHeldLocks()
+		hl2 := uOfD2.NewTransaction()
 		cs2 := uOfD2.GetElementWithURI(CoreDomainURI)
 		Expect(RecursivelyEquivalent(cs1, hl1, cs2, hl2)).To(BeTrue())
 	})

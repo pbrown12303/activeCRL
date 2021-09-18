@@ -11,13 +11,13 @@ import (
 var _ = Describe("EdditorDomain tests", func() {
 	Specify("Editor domain creation should be idempotent", func() {
 		uOfD1 := core.NewUniverseOfDiscourse()
-		hl1 := uOfD1.NewHeldLocks()
+		hl1 := uOfD1.NewTransaction()
 		crldiagramdomain.BuildCrlDiagramDomain(uOfD1, hl1)
 		crldatastructuresdomain.BuildCrlDataStructuresDomain(uOfD1, hl1)
 		Expect(BuildEditorDomain(uOfD1, hl1)).ShouldNot(BeNil())
 		cs1 := uOfD1.GetElementWithURI(EditorDomainURI)
 		uOfD2 := core.NewUniverseOfDiscourse()
-		hl2 := uOfD2.NewHeldLocks()
+		hl2 := uOfD2.NewTransaction()
 		crldiagramdomain.BuildCrlDiagramDomain(uOfD2, hl2)
 		crldatastructuresdomain.BuildCrlDataStructuresDomain(uOfD2, hl2)
 		Expect(BuildEditorDomain(uOfD2, hl2)).ShouldNot(BeNil())
@@ -26,14 +26,14 @@ var _ = Describe("EdditorDomain tests", func() {
 	})
 	Specify("Refinement of OpenDiagrams list with URIs should serialize and deserialzie properly", func() {
 		uOfD1 := core.NewUniverseOfDiscourse()
-		hl1 := uOfD1.NewHeldLocks()
+		hl1 := uOfD1.NewTransaction()
 		crldiagramdomain.BuildCrlDiagramDomain(uOfD1, hl1)
 		crldatastructuresdomain.BuildCrlDataStructuresDomain(uOfD1, hl1)
 		Expect(BuildEditorDomain(uOfD1, hl1)).ShouldNot(BeNil())
 		hl1.ReleaseLocksAndWait()
 
 		uOfD2 := core.NewUniverseOfDiscourse()
-		hl2 := uOfD2.NewHeldLocks()
+		hl2 := uOfD2.NewTransaction()
 		crldiagramdomain.BuildCrlDiagramDomain(uOfD2, hl2)
 		crldatastructuresdomain.BuildCrlDataStructuresDomain(uOfD2, hl2)
 		Expect(BuildEditorDomain(uOfD2, hl2)).ShouldNot(BeNil())

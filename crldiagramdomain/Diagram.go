@@ -244,61 +244,61 @@ var CrlDiagramRefinementLinkSourceURI = CrlDiagramRefinementLinkURI + "/" + "Sou
 var CrlDiagramRefinementLinkTargetURI = CrlDiagramRefinementLinkURI + "/" + "Target"
 
 // GetDisplayLabel is a convenience function for getting the DisplayLabel value of a DiagramElement
-func GetDisplayLabel(diagramElement core.Element, hl *core.Transaction) string {
+func GetDisplayLabel(diagramElement core.Element, trans *core.Transaction) string {
 	if diagramElement == nil {
 		return ""
 	}
-	displayLabelLiteral := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementDisplayLabelURI, hl)
+	displayLabelLiteral := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementDisplayLabelURI, trans)
 	if displayLabelLiteral != nil {
-		return displayLabelLiteral.GetLiteralValue(hl)
+		return displayLabelLiteral.GetLiteralValue(trans)
 	}
 	return ""
 }
 
 // GetAbstractionDisplayLabel is a convenience function for getting the DisplayLabel value of a node's position
-func GetAbstractionDisplayLabel(diagramElement core.Element, hl *core.Transaction) string {
+func GetAbstractionDisplayLabel(diagramElement core.Element, trans *core.Transaction) string {
 	if diagramElement == nil {
 		return ""
 	}
-	abstractionDisplayLabelLiteral := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementAbstractionDisplayLabelURI, hl)
+	abstractionDisplayLabelLiteral := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementAbstractionDisplayLabelURI, trans)
 	if abstractionDisplayLabelLiteral != nil {
-		return abstractionDisplayLabelLiteral.GetLiteralValue(hl)
+		return abstractionDisplayLabelLiteral.GetLiteralValue(trans)
 	}
 	return ""
 }
 
 // GetLineColor is a convenience function for getting the LineColor value of a DiagramElement
-func GetLineColor(diagramElement core.Element, hl *core.Transaction) string {
+func GetLineColor(diagramElement core.Element, trans *core.Transaction) string {
 	if diagramElement == nil {
 		return ""
 	}
-	lineColorLiteral := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementLineColorURI, hl)
+	lineColorLiteral := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementLineColorURI, trans)
 	if lineColorLiteral != nil {
-		return lineColorLiteral.GetLiteralValue(hl)
+		return lineColorLiteral.GetLiteralValue(trans)
 	}
 	return ""
 }
 
 // GetBGColor is a convenience function for getting the backgound color value of a DiagramElement
-func GetBGColor(diagramElement core.Element, hl *core.Transaction) string {
+func GetBGColor(diagramElement core.Element, trans *core.Transaction) string {
 	if diagramElement == nil {
 		return ""
 	}
-	BGColorLiteral := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementBGColorURI, hl)
+	BGColorLiteral := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementBGColorURI, trans)
 	if BGColorLiteral != nil {
-		return BGColorLiteral.GetLiteralValue(hl)
+		return BGColorLiteral.GetLiteralValue(trans)
 	}
 	return ""
 }
 
 // GetFirstElementRepresentingConcept returns the first diagram element that represents the indicated concept
-func GetFirstElementRepresentingConcept(diagram core.Element, concept core.Element, hl *core.Transaction) core.Element {
-	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
+func GetFirstElementRepresentingConcept(diagram core.Element, concept core.Element, trans *core.Transaction) core.Element {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, trans) {
 		log.Printf("GetFirstElementRepresentingConcept called with diagram of incorrect type")
 		return nil
 	}
-	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, hl) {
-		if GetReferencedModelElement(el, hl) == concept && !el.IsRefinementOfURI(CrlDiagramPointerURI, hl) {
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, trans) {
+		if GetReferencedModelElement(el, trans) == concept && !el.IsRefinementOfURI(CrlDiagramPointerURI, trans) {
 			return el
 		}
 	}
@@ -306,13 +306,13 @@ func GetFirstElementRepresentingConcept(diagram core.Element, concept core.Eleme
 }
 
 // GetFirstElementRepresentingConceptID returns the first diagram element that represents the indicated concept
-func GetFirstElementRepresentingConceptID(diagram core.Element, conceptID string, hl *core.Transaction) core.Element {
-	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
+func GetFirstElementRepresentingConceptID(diagram core.Element, conceptID string, trans *core.Transaction) core.Element {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, trans) {
 		log.Printf("GetFirstElementRepresentingConceptID called with diagram of incorrect type")
 		return nil
 	}
-	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, hl) {
-		if GetReferencedModelElement(el, hl).GetConceptID(hl) == conceptID && !el.IsRefinementOfURI(CrlDiagramPointerURI, hl) {
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, trans) {
+		if GetReferencedModelElement(el, trans).GetConceptID(trans) == conceptID && !el.IsRefinementOfURI(CrlDiagramPointerURI, trans) {
 			return el
 		}
 	}
@@ -320,13 +320,13 @@ func GetFirstElementRepresentingConceptID(diagram core.Element, conceptID string
 }
 
 // GetFirstElementRepresentingConceptOwnerPointer returns the first diagram element that represents the indicated concept's OwnerPointer
-func GetFirstElementRepresentingConceptOwnerPointer(diagram core.Element, concept core.Element, hl *core.Transaction) core.Element {
-	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
+func GetFirstElementRepresentingConceptOwnerPointer(diagram core.Element, concept core.Element, trans *core.Transaction) core.Element {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, trans) {
 		log.Printf("GetFirstElementRepresentingConceptOwnerPointer called with diagram of incorrect type")
 		return nil
 	}
-	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, hl) {
-		if GetReferencedModelElement(el, hl) == concept {
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
+		if GetReferencedModelElement(el, trans) == concept {
 			return el
 		}
 	}
@@ -334,13 +334,13 @@ func GetFirstElementRepresentingConceptOwnerPointer(diagram core.Element, concep
 }
 
 // GetFirstElementRepresentingConceptIDOwnerPointer returns the first diagram element that represents the indicated concept's OwnerPointer
-func GetFirstElementRepresentingConceptIDOwnerPointer(diagram core.Element, conceptID string, hl *core.Transaction) core.Element {
-	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
+func GetFirstElementRepresentingConceptIDOwnerPointer(diagram core.Element, conceptID string, trans *core.Transaction) core.Element {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, trans) {
 		log.Printf("GetFirstElementRepresentingConceptIDOwnerPointer called with diagram of incorrect type")
 		return nil
 	}
-	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, hl) {
-		if GetReferencedModelElement(el, hl).GetConceptID(hl) == conceptID {
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
+		if GetReferencedModelElement(el, trans).GetConceptID(trans) == conceptID {
 			return el
 		}
 	}
@@ -348,13 +348,13 @@ func GetFirstElementRepresentingConceptIDOwnerPointer(diagram core.Element, conc
 }
 
 // GetFirstElementRepresentingConceptElementPointer returns the first diagram element that represents the indicated concept's ElementPointer
-func GetFirstElementRepresentingConceptElementPointer(diagram core.Element, concept core.Reference, hl *core.Transaction) core.Element {
-	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
+func GetFirstElementRepresentingConceptElementPointer(diagram core.Element, concept core.Reference, trans *core.Transaction) core.Element {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, trans) {
 		log.Printf("GetFirstElementRepresentingConceptElementPointer called with diagram of incorrect type")
 		return nil
 	}
-	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, hl) {
-		if GetReferencedModelElement(el, hl) == concept {
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
+		if GetReferencedModelElement(el, trans) == concept {
 			return el
 		}
 	}
@@ -362,13 +362,13 @@ func GetFirstElementRepresentingConceptElementPointer(diagram core.Element, conc
 }
 
 // GetFirstElementRepresentingConceptIDElementPointer returns the first diagram element that represents the indicated concept's ElementPointer
-func GetFirstElementRepresentingConceptIDElementPointer(diagram core.Element, conceptID string, hl *core.Transaction) core.Element {
-	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
+func GetFirstElementRepresentingConceptIDElementPointer(diagram core.Element, conceptID string, trans *core.Transaction) core.Element {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, trans) {
 		log.Printf("GetFirstElementRepresentingConceptIDElementPointer called with diagram of incorrect type")
 		return nil
 	}
-	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, hl) {
-		if GetReferencedModelElement(el, hl).GetConceptID(hl) == conceptID {
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
+		if GetReferencedModelElement(el, trans).GetConceptID(trans) == conceptID {
 			return el
 		}
 	}
@@ -376,13 +376,13 @@ func GetFirstElementRepresentingConceptIDElementPointer(diagram core.Element, co
 }
 
 // GetFirstElementRepresentingConceptAbstractPointer returns the first diagram element that represents the indicated concept's AbstractPointer
-func GetFirstElementRepresentingConceptAbstractPointer(diagram core.Element, concept core.Refinement, hl *core.Transaction) core.Element {
-	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
+func GetFirstElementRepresentingConceptAbstractPointer(diagram core.Element, concept core.Refinement, trans *core.Transaction) core.Element {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, trans) {
 		log.Printf("GetFirstElementRepresentingConceptAbstractPointer called with diagram of incorrect type")
 		return nil
 	}
-	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramAbstractPointerURI, hl) {
-		if GetReferencedModelElement(el, hl) == concept {
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramAbstractPointerURI, trans) {
+		if GetReferencedModelElement(el, trans) == concept {
 			return el
 		}
 	}
@@ -390,13 +390,13 @@ func GetFirstElementRepresentingConceptAbstractPointer(diagram core.Element, con
 }
 
 // GetFirstElementRepresentingConceptIDAbstractPointer returns the first diagram element that represents the indicated concept's AbstractPointer
-func GetFirstElementRepresentingConceptIDAbstractPointer(diagram core.Element, conceptID string, hl *core.Transaction) core.Element {
-	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
+func GetFirstElementRepresentingConceptIDAbstractPointer(diagram core.Element, conceptID string, trans *core.Transaction) core.Element {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, trans) {
 		log.Printf("GetFirstElementRepresentingConceptIDAbstractPointer called with diagram of incorrect type")
 		return nil
 	}
-	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramAbstractPointerURI, hl) {
-		if GetReferencedModelElement(el, hl).GetConceptID(hl) == conceptID {
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramAbstractPointerURI, trans) {
+		if GetReferencedModelElement(el, trans).GetConceptID(trans) == conceptID {
 			return el
 		}
 	}
@@ -404,13 +404,13 @@ func GetFirstElementRepresentingConceptIDAbstractPointer(diagram core.Element, c
 }
 
 // GetFirstElementRepresentingConceptRefinedPointer returns the first diagram element that represents the indicated concept's RefinedPointer
-func GetFirstElementRepresentingConceptRefinedPointer(diagram core.Element, concept core.Refinement, hl *core.Transaction) core.Element {
-	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
+func GetFirstElementRepresentingConceptRefinedPointer(diagram core.Element, concept core.Refinement, trans *core.Transaction) core.Element {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, trans) {
 		log.Printf("GetFirstElementRepresentingConceptRefinedPointer called with diagram of incorrect type")
 		return nil
 	}
-	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramRefinedPointerURI, hl) {
-		if GetReferencedModelElement(el, hl) == concept {
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramRefinedPointerURI, trans) {
+		if GetReferencedModelElement(el, trans) == concept {
 			return el
 		}
 	}
@@ -418,13 +418,13 @@ func GetFirstElementRepresentingConceptRefinedPointer(diagram core.Element, conc
 }
 
 // GetFirstElementRepresentingConceptIDRefinedPointer returns the first diagram element that represents the indicated concept's RefinedPointer
-func GetFirstElementRepresentingConceptIDRefinedPointer(diagram core.Element, conceptID string, hl *core.Transaction) core.Element {
-	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
+func GetFirstElementRepresentingConceptIDRefinedPointer(diagram core.Element, conceptID string, trans *core.Transaction) core.Element {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, trans) {
 		log.Printf("GetFirstElementRepresentingConceptIDRefinedPointer called with diagram of incorrect type")
 		return nil
 	}
-	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramRefinedPointerURI, hl) {
-		if GetReferencedModelElement(el, hl).GetConceptID(hl) == conceptID {
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramRefinedPointerURI, trans) {
+		if GetReferencedModelElement(el, trans).GetConceptID(trans) == conceptID {
 			return el
 		}
 	}
@@ -432,37 +432,37 @@ func GetFirstElementRepresentingConceptIDRefinedPointer(diagram core.Element, co
 }
 
 // GetLinkSource is a convenience function for getting the source concept of a link
-func GetLinkSource(diagramLink core.Element, hl *core.Transaction) core.Element {
+func GetLinkSource(diagramLink core.Element, trans *core.Transaction) core.Element {
 	if diagramLink == nil {
 		return nil
 	}
-	sourceReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, hl)
+	sourceReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, trans)
 	if sourceReference != nil {
-		return sourceReference.GetReferencedConcept(hl)
+		return sourceReference.GetReferencedConcept(trans)
 	}
 	return nil
 }
 
 // GetLinkTarget is a convenience function for getting the target concept of a link
-func GetLinkTarget(diagramLink core.Element, hl *core.Transaction) core.Element {
+func GetLinkTarget(diagramLink core.Element, trans *core.Transaction) core.Element {
 	if diagramLink == nil {
 		return nil
 	}
-	targetReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, hl)
+	targetReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
 	if targetReference != nil {
-		return targetReference.GetReferencedConcept(hl)
+		return targetReference.GetReferencedConcept(trans)
 	}
 	return nil
 }
 
 // GetNodeHeight is a convenience function for getting the Height value of a node's position
-func GetNodeHeight(diagramNode core.Element, hl *core.Transaction) float64 {
+func GetNodeHeight(diagramNode core.Element, trans *core.Transaction) float64 {
 	if diagramNode == nil {
 		return 0.0
 	}
-	heightLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeHeightURI, hl)
+	heightLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeHeightURI, trans)
 	if heightLiteral != nil {
-		value := heightLiteral.GetLiteralValue(hl)
+		value := heightLiteral.GetLiteralValue(trans)
 		numericValue, err := strconv.ParseFloat(value, 64)
 		if err == nil {
 			return numericValue
@@ -472,13 +472,13 @@ func GetNodeHeight(diagramNode core.Element, hl *core.Transaction) float64 {
 }
 
 // GetNodeWidth is a convenience function for getting the Width value of a node's position
-func GetNodeWidth(diagramNode core.Element, hl *core.Transaction) float64 {
+func GetNodeWidth(diagramNode core.Element, trans *core.Transaction) float64 {
 	if diagramNode == nil {
 		return 0.0
 	}
-	widthLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeWidthURI, hl)
+	widthLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeWidthURI, trans)
 	if widthLiteral != nil {
-		value := widthLiteral.GetLiteralValue(hl)
+		value := widthLiteral.GetLiteralValue(trans)
 		numericValue, err := strconv.ParseFloat(value, 64)
 		if err == nil {
 			return numericValue
@@ -488,13 +488,13 @@ func GetNodeWidth(diagramNode core.Element, hl *core.Transaction) float64 {
 }
 
 // GetNodeX is a convenience function for getting the X value of a node's position
-func GetNodeX(diagramNode core.Element, hl *core.Transaction) float64 {
+func GetNodeX(diagramNode core.Element, trans *core.Transaction) float64 {
 	if diagramNode == nil {
 		return 0.0
 	}
-	xLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeXURI, hl)
+	xLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeXURI, trans)
 	if xLiteral != nil {
-		value := xLiteral.GetLiteralValue(hl)
+		value := xLiteral.GetLiteralValue(trans)
 		numericValue, err := strconv.ParseFloat(value, 64)
 		if err == nil {
 			return numericValue
@@ -504,13 +504,13 @@ func GetNodeX(diagramNode core.Element, hl *core.Transaction) float64 {
 }
 
 // GetNodeY is a convenience function for getting the X value of a node's position
-func GetNodeY(diagramNode core.Element, hl *core.Transaction) float64 {
+func GetNodeY(diagramNode core.Element, trans *core.Transaction) float64 {
 	if diagramNode == nil {
 		return 0.0
 	}
-	yLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeYURI, hl)
+	yLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeYURI, trans)
 	if yLiteral != nil {
-		value := yLiteral.GetLiteralValue(hl)
+		value := yLiteral.GetLiteralValue(trans)
 		numericValue, err := strconv.ParseFloat(value, 64)
 		if err == nil {
 			return numericValue
@@ -520,13 +520,13 @@ func GetNodeY(diagramNode core.Element, hl *core.Transaction) float64 {
 }
 
 // GetDisplayLabelYOffset is a convenience function for getting the Display Label's Y offset within the node
-func GetDisplayLabelYOffset(diagramNode core.Element, hl *core.Transaction) float64 {
+func GetDisplayLabelYOffset(diagramNode core.Element, trans *core.Transaction) float64 {
 	if diagramNode == nil {
 		return 0.0
 	}
-	yOffsetLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeDisplayLabelYOffsetURI, hl)
+	yOffsetLiteral := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeDisplayLabelYOffsetURI, trans)
 	if yOffsetLiteral != nil {
-		value := yOffsetLiteral.GetLiteralValue(hl)
+		value := yOffsetLiteral.GetLiteralValue(trans)
 		numericValue, err := strconv.ParseFloat(value, 64)
 		if err == nil {
 			return numericValue
@@ -536,13 +536,13 @@ func GetDisplayLabelYOffset(diagramNode core.Element, hl *core.Transaction) floa
 }
 
 // GetOwnerPointer returns the ownerPointer for the concept if one exists
-func GetOwnerPointer(diagram core.Element, concept core.Element, hl *core.Transaction) core.Element {
-	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
+func GetOwnerPointer(diagram core.Element, concept core.Element, trans *core.Transaction) core.Element {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, trans) {
 		log.Printf("GetOwnerPointer called with diagram of incorrect type")
 		return nil
 	}
-	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, hl) {
-		if GetReferencedModelElement(el, hl) == concept {
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
+		if GetReferencedModelElement(el, trans) == concept {
 			return el
 		}
 	}
@@ -550,13 +550,13 @@ func GetOwnerPointer(diagram core.Element, concept core.Element, hl *core.Transa
 }
 
 // GetElementPointer returns the elementPointer for the concept if one exists
-func GetElementPointer(diagram core.Element, concept core.Element, hl *core.Transaction) core.Element {
-	if !diagram.IsRefinementOfURI(CrlDiagramURI, hl) {
+func GetElementPointer(diagram core.Element, concept core.Element, trans *core.Transaction) core.Element {
+	if !diagram.IsRefinementOfURI(CrlDiagramURI, trans) {
 		log.Printf("GetElementPointer called with diagram of incorrect type")
 		return nil
 	}
-	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, hl) {
-		if GetReferencedModelElement(el, hl) == concept {
+	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
+		if GetReferencedModelElement(el, trans) == concept {
 			return el
 		}
 	}
@@ -565,13 +565,13 @@ func GetElementPointer(diagram core.Element, concept core.Element, hl *core.Tran
 
 // GetReferencedModelElement is a function on a CrlDiagramNode that returns the model element represented by the
 // diagram node
-func GetReferencedModelElement(diagramElement core.Element, hl *core.Transaction) core.Element {
+func GetReferencedModelElement(diagramElement core.Element, trans *core.Transaction) core.Element {
 	if diagramElement == nil {
 		return nil
 	}
-	reference := diagramElement.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, hl)
+	reference := diagramElement.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, trans)
 	if reference != nil {
-		return reference.GetReferencedConcept(hl)
+		return reference.GetReferencedConcept(trans)
 	}
 	return nil
 }
@@ -609,767 +609,766 @@ func Int26_6ToFloat(val fixed.Int26_6) float64 {
 }
 
 // IsDiagram returns true if the supplied element is a CrlDiagram
-func IsDiagram(el core.Element, hl *core.Transaction) bool {
+func IsDiagram(el core.Element, trans *core.Transaction) bool {
 	switch el.(type) {
 	case core.Element:
-		return el.IsRefinementOfURI(CrlDiagramURI, hl)
+		return el.IsRefinementOfURI(CrlDiagramURI, trans)
 	}
 	return false
 }
 
 // IsDiagramAbstractPointer returns true if the supplied element is a CrlDiagramAbstractPointer
-func IsDiagramAbstractPointer(el core.Element, hl *core.Transaction) bool {
-	return el.IsRefinementOfURI(CrlDiagramAbstractPointerURI, hl)
+func IsDiagramAbstractPointer(el core.Element, trans *core.Transaction) bool {
+	return el.IsRefinementOfURI(CrlDiagramAbstractPointerURI, trans)
 }
 
 // IsDiagramElement returns true if the supplied element is a CrlDiagramElement
-func IsDiagramElement(el core.Element, hl *core.Transaction) bool {
-	return el.IsRefinementOfURI(CrlDiagramElementURI, hl)
+func IsDiagramElement(el core.Element, trans *core.Transaction) bool {
+	return el.IsRefinementOfURI(CrlDiagramElementURI, trans)
 }
 
 // IsDiagramElementPointer returns true if the supplied element is a CrlDiagramElementPointer
-func IsDiagramElementPointer(el core.Element, hl *core.Transaction) bool {
-	return el.IsRefinementOfURI(CrlDiagramElementPointerURI, hl)
+func IsDiagramElementPointer(el core.Element, trans *core.Transaction) bool {
+	return el.IsRefinementOfURI(CrlDiagramElementPointerURI, trans)
 }
 
 // IsDiagramLink returns true if the supplied element is a CrlDiagramLink
-func IsDiagramLink(el core.Element, hl *core.Transaction) bool {
-	return el.IsRefinementOfURI(CrlDiagramLinkURI, hl)
+func IsDiagramLink(el core.Element, trans *core.Transaction) bool {
+	return el.IsRefinementOfURI(CrlDiagramLinkURI, trans)
 }
 
 // IsDiagramNode returns true if the supplied element is a CrlDiagramNode
-func IsDiagramNode(el core.Element, hl *core.Transaction) bool {
-	return el.IsRefinementOfURI(CrlDiagramNodeURI, hl)
+func IsDiagramNode(el core.Element, trans *core.Transaction) bool {
+	return el.IsRefinementOfURI(CrlDiagramNodeURI, trans)
 }
 
 // IsDiagramOwnerPointer returns true if the supplied element is a CrlDiagramOwnerPointer
-func IsDiagramOwnerPointer(el core.Element, hl *core.Transaction) bool {
-	return el.IsRefinementOfURI(CrlDiagramOwnerPointerURI, hl)
+func IsDiagramOwnerPointer(el core.Element, trans *core.Transaction) bool {
+	return el.IsRefinementOfURI(CrlDiagramOwnerPointerURI, trans)
 }
 
 // IsDiagramPointer returns true if the supplied element is a CrlDiagramPointer
-func IsDiagramPointer(el core.Element, hl *core.Transaction) bool {
-	return el.IsRefinementOfURI(CrlDiagramPointerURI, hl)
+func IsDiagramPointer(el core.Element, trans *core.Transaction) bool {
+	return el.IsRefinementOfURI(CrlDiagramPointerURI, trans)
 }
 
 // IsDiagramRefinedPointer returns true if the supplied element is a CrlDiagramRefinedPointer
-func IsDiagramRefinedPointer(el core.Element, hl *core.Transaction) bool {
-	return el.IsRefinementOfURI(CrlDiagramRefinedPointerURI, hl)
+func IsDiagramRefinedPointer(el core.Element, trans *core.Transaction) bool {
+	return el.IsRefinementOfURI(CrlDiagramRefinedPointerURI, trans)
 }
 
 // IsDiagramReferenceLink returns true if the supplied element is a CrlDiagramReferenceLink
-func IsDiagramReferenceLink(el core.Element, hl *core.Transaction) bool {
-	return el.IsRefinementOfURI(CrlDiagramReferenceLinkURI, hl)
+func IsDiagramReferenceLink(el core.Element, trans *core.Transaction) bool {
+	return el.IsRefinementOfURI(CrlDiagramReferenceLinkURI, trans)
 }
 
 // IsDiagramRefinementLink returns true if the supplied element is a CrlDiagramRefinementLink
-func IsDiagramRefinementLink(el core.Element, hl *core.Transaction) bool {
-	return el.IsRefinementOfURI(CrlDiagramRefinementLinkURI, hl)
+func IsDiagramRefinementLink(el core.Element, trans *core.Transaction) bool {
+	return el.IsRefinementOfURI(CrlDiagramRefinementLinkURI, trans)
 }
 
 // IsModelReference returns true if the supplied element is a ModelReference
-func IsModelReference(el core.Element, hl *core.Transaction) bool {
-	return el.IsRefinementOfURI(CrlDiagramElementModelReferenceURI, hl)
+func IsModelReference(el core.Element, trans *core.Transaction) bool {
+	return el.IsRefinementOfURI(CrlDiagramElementModelReferenceURI, trans)
 }
 
 // NewDiagram creates a new diagram
-func NewDiagram(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) (core.Element, error) {
-	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramURI, hl)
+func NewDiagram(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Element, error) {
+	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramURI, trans)
 }
 
 // NewDiagramReferenceLink creates a new diagram link to represent a reference
-func NewDiagramReferenceLink(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) (core.Element, error) {
-	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramReferenceLinkURI, hl)
+func NewDiagramReferenceLink(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Element, error) {
+	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramReferenceLinkURI, trans)
 }
 
 // NewDiagramRefinementLink creates a new diagram link
-func NewDiagramRefinementLink(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) (core.Element, error) {
-	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramRefinementLinkURI, hl)
+func NewDiagramRefinementLink(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Element, error) {
+	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramRefinementLinkURI, trans)
 }
 
 // NewDiagramNode creates a new diagram node
-func NewDiagramNode(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) (core.Element, error) {
-	newNode, err := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, hl)
+func NewDiagramNode(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Element, error) {
+	newNode, err := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "Diagram.go NewDiagramNode failed")
 	}
-	SetLineColor(newNode, "#000000", hl)
+	SetLineColor(newNode, "#000000", trans)
 	return newNode, nil
 }
 
 // NewDiagramOwnerPointer creates a new DiagramOwnerPointer
-func NewDiagramOwnerPointer(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) (core.Element, error) {
-	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramOwnerPointerURI, hl)
+func NewDiagramOwnerPointer(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Element, error) {
+	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramOwnerPointerURI, trans)
 }
 
 // NewDiagramElementPointer creates a new DiagramElementPointer
-func NewDiagramElementPointer(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) (core.Element, error) {
-	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramElementPointerURI, hl)
+func NewDiagramElementPointer(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Element, error) {
+	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramElementPointerURI, trans)
 }
 
 // NewDiagramAbstractPointer creates a new DiagramAbstractPointer
-func NewDiagramAbstractPointer(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) (core.Element, error) {
-	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramAbstractPointerURI, hl)
+func NewDiagramAbstractPointer(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Element, error) {
+	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramAbstractPointerURI, trans)
 }
 
 // NewDiagramRefinedPointer creates a new DiagramRefinedPointer
-func NewDiagramRefinedPointer(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) (core.Element, error) {
-	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramRefinedPointerURI, hl)
+func NewDiagramRefinedPointer(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Element, error) {
+	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramRefinedPointerURI, trans)
 }
 
 // SetAbstractionDisplayLabel is a function on a CrlDiagramNode that sets the display label of the diagram node
-func SetAbstractionDisplayLabel(diagramElement core.Element, value string, hl *core.Transaction) {
+func SetAbstractionDisplayLabel(diagramElement core.Element, value string, trans *core.Transaction) {
 	if diagramElement == nil {
 		return
 	}
-	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementAbstractionDisplayLabelURI, hl)
+	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementAbstractionDisplayLabelURI, trans)
 	if literal == nil {
 		return
 	}
-	literal.SetLiteralValue(value, hl)
-	updateNodeSize(diagramElement, hl)
+	literal.SetLiteralValue(value, trans)
+	updateNodeSize(diagramElement, trans)
 }
 
 // SetDisplayLabel is a function on a CrlDiagramNode that sets the display label of the diagram element.
 // If the diagram element is a pointer, the value is ignored and the label is set to the empty string
-func SetDisplayLabel(diagramElement core.Element, value string, hl *core.Transaction) {
+func SetDisplayLabel(diagramElement core.Element, value string, trans *core.Transaction) {
 	if diagramElement == nil {
 		return
 	}
-	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementDisplayLabelURI, hl)
+	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementDisplayLabelURI, trans)
 	if literal == nil {
 		return
 	}
-	if IsDiagramPointer(diagramElement, hl) {
-		literal.SetLiteralValue("", hl)
+	if IsDiagramPointer(diagramElement, trans) {
+		literal.SetLiteralValue("", trans)
 	} else {
-		literal.SetLiteralValue(value, hl)
+		literal.SetLiteralValue(value, trans)
 	}
-	literal.SetLiteralValue(value, hl)
-	updateNodeSize(diagramElement, hl)
+	literal.SetLiteralValue(value, trans)
+	updateNodeSize(diagramElement, trans)
 }
 
 // SetLineColor is a function on a CrlDiagramElement that sets the line color for the diagram element.
-func SetLineColor(diagramElement core.Element, value string, hl *core.Transaction) {
+func SetLineColor(diagramElement core.Element, value string, trans *core.Transaction) {
 	if diagramElement == nil {
 		return
 	}
-	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementLineColorURI, hl)
+	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementLineColorURI, trans)
 	if literal == nil {
 		return
 	}
-	literal.SetLiteralValue(value, hl)
+	literal.SetLiteralValue(value, trans)
 }
 
 // SetBGColor is a function on a CrlDiagramNode that sets the background color for the diagram element.
 // If the diagram element is a pointer, the value is ignored and the label is set to the empty string
-func SetBGColor(diagramElement core.Element, value string, hl *core.Transaction) {
+func SetBGColor(diagramElement core.Element, value string, trans *core.Transaction) {
 	if diagramElement == nil {
 		return
 	}
-	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementBGColorURI, hl)
+	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementBGColorURI, trans)
 	if literal == nil {
 		return
 	}
-	if IsDiagramPointer(diagramElement, hl) {
-		literal.SetLiteralValue("", hl)
+	if IsDiagramPointer(diagramElement, trans) {
+		literal.SetLiteralValue("", trans)
 	} else {
-		literal.SetLiteralValue(value, hl)
+		literal.SetLiteralValue(value, trans)
 	}
 }
 
 // SetLinkSource is a convenience function for setting the source concept of a link
-func SetLinkSource(diagramLink core.Element, source core.Element, hl *core.Transaction) {
+func SetLinkSource(diagramLink core.Element, source core.Element, trans *core.Transaction) {
 	if diagramLink == nil {
 		return
 	}
-	sourceReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, hl)
+	sourceReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, trans)
 	if sourceReference != nil {
-		sourceReference.SetReferencedConcept(source, core.NoAttribute, hl)
+		sourceReference.SetReferencedConcept(source, core.NoAttribute, trans)
 	}
 }
 
 // SetLinkTarget is a convenience function for setting the target concept of a link
-func SetLinkTarget(diagramLink core.Element, target core.Element, hl *core.Transaction) {
+func SetLinkTarget(diagramLink core.Element, target core.Element, trans *core.Transaction) {
 	if diagramLink == nil {
 		return
 	}
-	targetReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, hl)
+	targetReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
 	if targetReference != nil {
-		targetReference.SetReferencedConcept(target, core.NoAttribute, hl)
+		targetReference.SetReferencedConcept(target, core.NoAttribute, trans)
 	}
 }
 
 // SetNodeHeight is a function on a CrlDiagramNode that sets the height of the diagram node
-func SetNodeHeight(diagramNode core.Element, value float64, hl *core.Transaction) {
+func SetNodeHeight(diagramNode core.Element, value float64, trans *core.Transaction) {
 	if diagramNode == nil {
 		return
 	}
-	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeHeightURI, hl)
+	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeHeightURI, trans)
 	if literal == nil {
 		return
 	}
-	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), hl)
+	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), trans)
 }
 
 // SetNodeWidth is a function on a CrlDiagramNode that sets the width of the diagram node
-func SetNodeWidth(diagramNode core.Element, value float64, hl *core.Transaction) {
+func SetNodeWidth(diagramNode core.Element, value float64, trans *core.Transaction) {
 	if diagramNode == nil {
 		return
 	}
-	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeWidthURI, hl)
+	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeWidthURI, trans)
 	if literal == nil {
 		return
 	}
-	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), hl)
+	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), trans)
 }
 
 // SetNodeX is a function on a CrlDiagramNode that sets the x of the diagram node
-func SetNodeX(diagramNode core.Element, value float64, hl *core.Transaction) {
+func SetNodeX(diagramNode core.Element, value float64, trans *core.Transaction) {
 	if diagramNode == nil {
 		return
 	}
-	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeXURI, hl)
+	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeXURI, trans)
 	if literal == nil {
 		return
 	}
-	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), hl)
+	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), trans)
 }
 
 // SetNodeY is a function on a CrlDiagramNode that sets the y of the diagram node
-func SetNodeY(diagramNode core.Element, value float64, hl *core.Transaction) {
+func SetNodeY(diagramNode core.Element, value float64, trans *core.Transaction) {
 	if diagramNode == nil {
 		return
 	}
-	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeYURI, hl)
+	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeYURI, trans)
 	if literal == nil {
 		return
 	}
-	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), hl)
+	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), trans)
 }
 
 // SetNodeDisplayLabelYOffset is a function on a CrlDiagramNode that sets the y offset of the display label within the node
-func SetNodeDisplayLabelYOffset(diagramNode core.Element, value float64, hl *core.Transaction) {
+func SetNodeDisplayLabelYOffset(diagramNode core.Element, value float64, trans *core.Transaction) {
 	if diagramNode == nil {
 		return
 	}
-	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeDisplayLabelYOffsetURI, hl)
+	literal := diagramNode.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeDisplayLabelYOffsetURI, trans)
 	if literal == nil {
 		return
 	}
-	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), hl)
+	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), trans)
 }
 
 // SetReferencedModelElement is a function on a CrlDiagramNode that sets the model element represented by the
 // diagram node
-func SetReferencedModelElement(diagramElement core.Element, el core.Element, hl *core.Transaction) {
+func SetReferencedModelElement(diagramElement core.Element, el core.Element, trans *core.Transaction) {
 	if diagramElement == nil {
 		return
 	}
-	reference := diagramElement.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, hl)
+	reference := diagramElement.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, trans)
 	if reference == nil {
 		return
 	}
-	reference.SetReferencedConcept(el, core.NoAttribute, hl)
+	reference.SetReferencedConcept(el, core.NoAttribute, trans)
 }
 
 // BuildCrlDiagramDomain builds the CrlDiagram concept space and adds it to the uOfD
-func BuildCrlDiagramDomain(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) core.Element {
+func BuildCrlDiagramDomain(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) core.Element {
 	// CrlDiagramDomain
-	crlDiagramDomain, _ := uOfD.NewElement(hl, CrlDiagramDomainURI)
-	crlDiagramDomain.SetLabel("CrlDiagramDomain", hl)
+	crlDiagramDomain, _ := uOfD.NewElement(trans, CrlDiagramDomainURI)
+	crlDiagramDomain.SetLabel("CrlDiagramDomain", trans)
 
 	//
 	// CrlDiagram
 	//
-	crlDiagram, _ := uOfD.NewElement(hl, CrlDiagramURI)
-	crlDiagram.SetLabel("CrlDiagram", hl)
-	crlDiagram.SetOwningConcept(crlDiagramDomain, hl)
+	crlDiagram, _ := uOfD.NewElement(trans, CrlDiagramURI)
+	crlDiagram.SetLabel("CrlDiagram", trans)
+	crlDiagram.SetOwningConcept(crlDiagramDomain, trans)
 
-	crlDiagramWidth, _ := uOfD.NewLiteral(hl, CrlDiagramWidthURI)
-	crlDiagramWidth.SetLabel("Width", hl)
-	crlDiagramWidth.SetOwningConcept(crlDiagram, hl)
+	crlDiagramWidth, _ := uOfD.NewLiteral(trans, CrlDiagramWidthURI)
+	crlDiagramWidth.SetLabel("Width", trans)
+	crlDiagramWidth.SetOwningConcept(crlDiagram, trans)
 
-	crlDiagramHeight, _ := uOfD.NewLiteral(hl, CrlDiagramHeightURI)
-	crlDiagramHeight.SetLabel("Height", hl)
-	crlDiagramHeight.SetOwningConcept(crlDiagram, hl)
+	crlDiagramHeight, _ := uOfD.NewLiteral(trans, CrlDiagramHeightURI)
+	crlDiagramHeight.SetLabel("Height", trans)
+	crlDiagramHeight.SetOwningConcept(crlDiagram, trans)
 
 	//
 	// CrlDiagramElement
 	//
-	crlDiagramElement, _ := uOfD.NewElement(hl, CrlDiagramElementURI)
-	crlDiagramElement.SetLabel("CrlDiagramElement", hl)
-	crlDiagramElement.SetOwningConcept(crlDiagramDomain, hl)
+	crlDiagramElement, _ := uOfD.NewElement(trans, CrlDiagramElementURI)
+	crlDiagramElement.SetLabel("CrlDiagramElement", trans)
+	crlDiagramElement.SetOwningConcept(crlDiagramDomain, trans)
 
-	crlDiagramElementModelReference, _ := uOfD.NewReference(hl, CrlDiagramElementModelReferenceURI)
-	crlDiagramElementModelReference.SetLabel("ModelReference", hl)
-	crlDiagramElementModelReference.SetOwningConcept(crlDiagramElement, hl)
+	crlDiagramElementModelReference, _ := uOfD.NewReference(trans, CrlDiagramElementModelReferenceURI)
+	crlDiagramElementModelReference.SetLabel("ModelReference", trans)
+	crlDiagramElementModelReference.SetOwningConcept(crlDiagramElement, trans)
 
-	crlDiagramElementDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramElementDisplayLabelURI)
-	crlDiagramElementDisplayLabel.SetLabel("DisplayLabel", hl)
-	crlDiagramElementDisplayLabel.SetOwningConcept(crlDiagramElement, hl)
+	crlDiagramElementDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramElementDisplayLabelURI)
+	crlDiagramElementDisplayLabel.SetLabel("DisplayLabel", trans)
+	crlDiagramElementDisplayLabel.SetOwningConcept(crlDiagramElement, trans)
 
-	crlDiagramElementAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramElementAbstractionDisplayLabelURI)
-	crlDiagramElementAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
-	crlDiagramElementAbstractionDisplayLabel.SetOwningConcept(crlDiagramElement, hl)
+	crlDiagramElementAbstractionDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramElementAbstractionDisplayLabelURI)
+	crlDiagramElementAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", trans)
+	crlDiagramElementAbstractionDisplayLabel.SetOwningConcept(crlDiagramElement, trans)
 
-	crlDiagramElementLineColor, _ := uOfD.NewOwnedLiteral(crlDiagramElement, "LineColor", hl, CrlDiagramElementLineColorURI)
-	crlDiagramElementBGColor, _ := uOfD.NewOwnedLiteral(crlDiagramElement, "BGColor", hl, CrlDiagramElementBGColorURI)
+	crlDiagramElementLineColor, _ := uOfD.NewOwnedLiteral(crlDiagramElement, "LineColor", trans, CrlDiagramElementLineColorURI)
+	crlDiagramElementBGColor, _ := uOfD.NewOwnedLiteral(crlDiagramElement, "BGColor", trans, CrlDiagramElementBGColorURI)
 
 	//
 	// CrlDiagramNode
 	//
-	crlDiagramNode, _ := uOfD.NewElement(hl, CrlDiagramNodeURI)
-	crlDiagramNode.SetLabel("CrlDiagramNode", hl)
-	crlDiagramNode.SetOwningConcept(crlDiagramDomain, hl)
+	crlDiagramNode, _ := uOfD.NewElement(trans, CrlDiagramNodeURI)
+	crlDiagramNode.SetLabel("CrlDiagramNode", trans)
+	crlDiagramNode.SetOwningConcept(crlDiagramDomain, trans)
 
-	crlDiagramNodeRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramNodeRefinement.SetOwningConcept(crlDiagramNode, hl)
-	crlDiagramNodeRefinement.SetAbstractConcept(crlDiagramElement, hl)
-	crlDiagramNodeRefinement.SetRefinedConcept(crlDiagramNode, hl)
+	crlDiagramNodeRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramNodeRefinement.SetOwningConcept(crlDiagramNode, trans)
+	crlDiagramNodeRefinement.SetAbstractConcept(crlDiagramElement, trans)
+	crlDiagramNodeRefinement.SetRefinedConcept(crlDiagramNode, trans)
 
-	crlDiagramNodeModelReference, _ := uOfD.NewReference(hl, CrlDiagramNodeModelReferenceURI)
-	crlDiagramNodeModelReference.SetLabel("ModelReference", hl)
-	crlDiagramNodeModelReference.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeModelReference, _ := uOfD.NewReference(trans, CrlDiagramNodeModelReferenceURI)
+	crlDiagramNodeModelReference.SetLabel("ModelReference", trans)
+	crlDiagramNodeModelReference.SetOwningConcept(crlDiagramNode, trans)
 
-	crlDiagramNodeModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramNodeModelReferenceRefinement.SetOwningConcept(crlDiagramNodeModelReference, hl)
-	crlDiagramNodeModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, hl)
-	crlDiagramNodeModelReferenceRefinement.SetRefinedConcept(crlDiagramNodeModelReference, hl)
+	crlDiagramNodeModelReferenceRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramNodeModelReferenceRefinement.SetOwningConcept(crlDiagramNodeModelReference, trans)
+	crlDiagramNodeModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, trans)
+	crlDiagramNodeModelReferenceRefinement.SetRefinedConcept(crlDiagramNodeModelReference, trans)
 
-	crlDiagramNodeDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramNodeDisplayLabelURI)
-	crlDiagramNodeDisplayLabel.SetLabel("DisplayLabel", hl)
-	crlDiagramNodeDisplayLabel.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramNodeDisplayLabelURI)
+	crlDiagramNodeDisplayLabel.SetLabel("DisplayLabel", trans)
+	crlDiagramNodeDisplayLabel.SetOwningConcept(crlDiagramNode, trans)
 
-	crlDiagramNodeDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramNodeDisplayLabelRefinement.SetOwningConcept(crlDiagramNodeDisplayLabel, hl)
-	crlDiagramNodeDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, hl)
-	crlDiagramNodeDisplayLabelRefinement.SetRefinedConcept(crlDiagramNodeDisplayLabel, hl)
+	crlDiagramNodeDisplayLabelRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramNodeDisplayLabelRefinement.SetOwningConcept(crlDiagramNodeDisplayLabel, trans)
+	crlDiagramNodeDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, trans)
+	crlDiagramNodeDisplayLabelRefinement.SetRefinedConcept(crlDiagramNodeDisplayLabel, trans)
 
-	crlDiagramNodeAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramNodeAbstractionDisplayLabelURI)
-	crlDiagramNodeAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
-	crlDiagramNodeAbstractionDisplayLabel.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeAbstractionDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramNodeAbstractionDisplayLabelURI)
+	crlDiagramNodeAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", trans)
+	crlDiagramNodeAbstractionDisplayLabel.SetOwningConcept(crlDiagramNode, trans)
 
-	crlDiagramNodeAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramNodeAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramNodeAbstractionDisplayLabel, hl)
-	crlDiagramNodeAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
-	crlDiagramNodeAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramNodeAbstractionDisplayLabel, hl)
+	crlDiagramNodeAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramNodeAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramNodeAbstractionDisplayLabel, trans)
+	crlDiagramNodeAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, trans)
+	crlDiagramNodeAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramNodeAbstractionDisplayLabel, trans)
 
-	crlDiagramNodeLineColor, _ := uOfD.NewOwnedLiteral(crlDiagramNode, "LineColor", hl, CrlDiagramNodeLineColorURI)
-	crlDiagramNodeLineColor.SetLiteralValue("#000000", hl)
-	uOfD.NewCompleteRefinement(crlDiagramElementLineColor, crlDiagramNodeLineColor, "LineColorRefinement", hl)
+	crlDiagramNodeLineColor, _ := uOfD.NewOwnedLiteral(crlDiagramNode, "LineColor", trans, CrlDiagramNodeLineColorURI)
+	crlDiagramNodeLineColor.SetLiteralValue("#000000", trans)
+	uOfD.NewCompleteRefinement(crlDiagramElementLineColor, crlDiagramNodeLineColor, "LineColorRefinement", trans)
 
-	crlDiagramNodeBGColor, _ := uOfD.NewOwnedLiteral(crlDiagramNode, "BGColor", hl, CrlDiagramNodeBGColorURI)
-	uOfD.NewCompleteRefinement(crlDiagramElementBGColor, crlDiagramNodeBGColor, "BGColorRefinement", hl)
+	crlDiagramNodeBGColor, _ := uOfD.NewOwnedLiteral(crlDiagramNode, "BGColor", trans, CrlDiagramNodeBGColorURI)
+	uOfD.NewCompleteRefinement(crlDiagramElementBGColor, crlDiagramNodeBGColor, "BGColorRefinement", trans)
 
-	crlDiagramNodeX, _ := uOfD.NewLiteral(hl, CrlDiagramNodeXURI)
-	crlDiagramNodeX.SetLabel("X", hl)
-	crlDiagramNodeX.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeX, _ := uOfD.NewLiteral(trans, CrlDiagramNodeXURI)
+	crlDiagramNodeX.SetLabel("X", trans)
+	crlDiagramNodeX.SetOwningConcept(crlDiagramNode, trans)
 
-	crlDiagramNodeY, _ := uOfD.NewLiteral(hl, CrlDiagramNodeYURI)
-	crlDiagramNodeY.SetLabel("Y", hl)
-	crlDiagramNodeY.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeY, _ := uOfD.NewLiteral(trans, CrlDiagramNodeYURI)
+	crlDiagramNodeY.SetLabel("Y", trans)
+	crlDiagramNodeY.SetOwningConcept(crlDiagramNode, trans)
 
-	crlDiagramNodeHeight, _ := uOfD.NewLiteral(hl, CrlDiagramNodeHeightURI)
-	crlDiagramNodeHeight.SetLabel("Height", hl)
-	crlDiagramNodeHeight.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeHeight, _ := uOfD.NewLiteral(trans, CrlDiagramNodeHeightURI)
+	crlDiagramNodeHeight.SetLabel("Height", trans)
+	crlDiagramNodeHeight.SetOwningConcept(crlDiagramNode, trans)
 
-	crlDiagramNodeWidth, _ := uOfD.NewLiteral(hl, CrlDiagramNodeWidthURI)
-	crlDiagramNodeWidth.SetLabel("Width", hl)
-	crlDiagramNodeWidth.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeWidth, _ := uOfD.NewLiteral(trans, CrlDiagramNodeWidthURI)
+	crlDiagramNodeWidth.SetLabel("Width", trans)
+	crlDiagramNodeWidth.SetOwningConcept(crlDiagramNode, trans)
 
-	crlDiagramNodeDisplayLabelYOffset, _ := uOfD.NewLiteral(hl, CrlDiagramNodeDisplayLabelYOffsetURI)
-	crlDiagramNodeDisplayLabelYOffset.SetLabel("DisplayLabelYOffset", hl)
-	crlDiagramNodeDisplayLabelYOffset.SetOwningConcept(crlDiagramNode, hl)
+	crlDiagramNodeDisplayLabelYOffset, _ := uOfD.NewLiteral(trans, CrlDiagramNodeDisplayLabelYOffsetURI)
+	crlDiagramNodeDisplayLabelYOffset.SetLabel("DisplayLabelYOffset", trans)
+	crlDiagramNodeDisplayLabelYOffset.SetOwningConcept(crlDiagramNode, trans)
 
 	//
 	// CrlDiagramLink
 	//
-	crlDiagramLink, _ := uOfD.NewElement(hl, CrlDiagramLinkURI)
-	crlDiagramLink.SetLabel("CrlDiagramLink", hl)
-	crlDiagramLink.SetOwningConcept(crlDiagramDomain, hl)
+	crlDiagramLink, _ := uOfD.NewElement(trans, CrlDiagramLinkURI)
+	crlDiagramLink.SetLabel("CrlDiagramLink", trans)
+	crlDiagramLink.SetOwningConcept(crlDiagramDomain, trans)
 
-	crlDiagramLinkRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramLinkRefinement.SetOwningConcept(crlDiagramLink, hl)
-	crlDiagramLinkRefinement.SetAbstractConcept(crlDiagramElement, hl)
-	crlDiagramLinkRefinement.SetRefinedConcept(crlDiagramLink, hl)
+	crlDiagramLinkRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramLinkRefinement.SetOwningConcept(crlDiagramLink, trans)
+	crlDiagramLinkRefinement.SetAbstractConcept(crlDiagramElement, trans)
+	crlDiagramLinkRefinement.SetRefinedConcept(crlDiagramLink, trans)
 
-	crlDiagramLinkSource, _ := uOfD.NewReference(hl, CrlDiagramLinkSourceURI)
-	crlDiagramLinkSource.SetLabel("Source", hl)
-	crlDiagramLinkSource.SetOwningConcept(crlDiagramLink, hl)
+	crlDiagramLinkSource, _ := uOfD.NewReference(trans, CrlDiagramLinkSourceURI)
+	crlDiagramLinkSource.SetLabel("Source", trans)
+	crlDiagramLinkSource.SetOwningConcept(crlDiagramLink, trans)
 
-	crlDiagramLinkTarget, _ := uOfD.NewReference(hl, CrlDiagramLinkTargetURI)
-	crlDiagramLinkTarget.SetLabel("Target", hl)
-	crlDiagramLinkTarget.SetOwningConcept(crlDiagramLink, hl)
+	crlDiagramLinkTarget, _ := uOfD.NewReference(trans, CrlDiagramLinkTargetURI)
+	crlDiagramLinkTarget.SetLabel("Target", trans)
+	crlDiagramLinkTarget.SetOwningConcept(crlDiagramLink, trans)
 
 	//
 	// Pointer
 	//
-	crlDiagramPointer, _ := uOfD.NewElement(hl, CrlDiagramPointerURI)
-	crlDiagramPointer.SetLabel("Pointer", hl)
-	crlDiagramPointer.SetOwningConcept(crlDiagramDomain, hl)
+	crlDiagramPointer, _ := uOfD.NewElement(trans, CrlDiagramPointerURI)
+	crlDiagramPointer.SetLabel("Pointer", trans)
+	crlDiagramPointer.SetOwningConcept(crlDiagramDomain, trans)
 
-	crlDiagramPointerRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramPointerRefinement.SetOwningConcept(crlDiagramPointer, hl)
-	crlDiagramPointerRefinement.SetAbstractConcept(crlDiagramLink, hl)
-	crlDiagramPointerRefinement.SetRefinedConcept(crlDiagramPointer, hl)
+	crlDiagramPointerRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramPointerRefinement.SetOwningConcept(crlDiagramPointer, trans)
+	crlDiagramPointerRefinement.SetAbstractConcept(crlDiagramLink, trans)
+	crlDiagramPointerRefinement.SetRefinedConcept(crlDiagramPointer, trans)
 
 	//
 	// AbstractPointer
 	//
-	crlDiagramAbstractPointer, _ := uOfD.NewElement(hl, CrlDiagramAbstractPointerURI)
-	crlDiagramAbstractPointer.SetLabel("AbstractPointer", hl)
-	crlDiagramAbstractPointer.SetOwningConcept(crlDiagramDomain, hl)
+	crlDiagramAbstractPointer, _ := uOfD.NewElement(trans, CrlDiagramAbstractPointerURI)
+	crlDiagramAbstractPointer.SetLabel("AbstractPointer", trans)
+	crlDiagramAbstractPointer.SetOwningConcept(crlDiagramDomain, trans)
 
-	crlDiagramAbstractPointerRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramAbstractPointerRefinement.SetOwningConcept(crlDiagramAbstractPointer, hl)
-	crlDiagramAbstractPointerRefinement.SetAbstractConcept(crlDiagramPointer, hl)
-	crlDiagramAbstractPointerRefinement.SetRefinedConcept(crlDiagramAbstractPointer, hl)
+	crlDiagramAbstractPointerRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramAbstractPointerRefinement.SetOwningConcept(crlDiagramAbstractPointer, trans)
+	crlDiagramAbstractPointerRefinement.SetAbstractConcept(crlDiagramPointer, trans)
+	crlDiagramAbstractPointerRefinement.SetRefinedConcept(crlDiagramAbstractPointer, trans)
 
-	crlDiagramAbstractPointerModelReference, _ := uOfD.NewReference(hl, CrlDiagramAbstractPointerModelReferenceURI)
-	crlDiagramAbstractPointerModelReference.SetLabel("ModelReference", hl)
-	crlDiagramAbstractPointerModelReference.SetOwningConcept(crlDiagramAbstractPointer, hl)
+	crlDiagramAbstractPointerModelReference, _ := uOfD.NewReference(trans, CrlDiagramAbstractPointerModelReferenceURI)
+	crlDiagramAbstractPointerModelReference.SetLabel("ModelReference", trans)
+	crlDiagramAbstractPointerModelReference.SetOwningConcept(crlDiagramAbstractPointer, trans)
 
-	crlDiagramAbstractPointerModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramAbstractPointerModelReferenceRefinement.SetOwningConcept(crlDiagramAbstractPointerModelReference, hl)
-	crlDiagramAbstractPointerModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, hl)
-	crlDiagramAbstractPointerModelReferenceRefinement.SetRefinedConcept(crlDiagramAbstractPointerModelReference, hl)
+	crlDiagramAbstractPointerModelReferenceRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramAbstractPointerModelReferenceRefinement.SetOwningConcept(crlDiagramAbstractPointerModelReference, trans)
+	crlDiagramAbstractPointerModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, trans)
+	crlDiagramAbstractPointerModelReferenceRefinement.SetRefinedConcept(crlDiagramAbstractPointerModelReference, trans)
 
-	crlDiagramAbstractPointerDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramAbstractPointerDisplayLabelURI)
-	crlDiagramAbstractPointerDisplayLabel.SetLabel("DisplayLabel", hl)
-	crlDiagramAbstractPointerDisplayLabel.SetOwningConcept(crlDiagramAbstractPointer, hl)
+	crlDiagramAbstractPointerDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramAbstractPointerDisplayLabelURI)
+	crlDiagramAbstractPointerDisplayLabel.SetLabel("DisplayLabel", trans)
+	crlDiagramAbstractPointerDisplayLabel.SetOwningConcept(crlDiagramAbstractPointer, trans)
 
-	crlDiagramAbstractPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramAbstractPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramAbstractPointerDisplayLabel, hl)
-	crlDiagramAbstractPointerDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, hl)
-	crlDiagramAbstractPointerDisplayLabelRefinement.SetRefinedConcept(crlDiagramAbstractPointerDisplayLabel, hl)
+	crlDiagramAbstractPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramAbstractPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramAbstractPointerDisplayLabel, trans)
+	crlDiagramAbstractPointerDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, trans)
+	crlDiagramAbstractPointerDisplayLabelRefinement.SetRefinedConcept(crlDiagramAbstractPointerDisplayLabel, trans)
 
-	crlDiagramAbstractPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramAbstractPointerAbstractionDisplayLabelURI)
-	crlDiagramAbstractPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
-	crlDiagramAbstractPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramAbstractPointer, hl)
+	crlDiagramAbstractPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramAbstractPointerAbstractionDisplayLabelURI)
+	crlDiagramAbstractPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", trans)
+	crlDiagramAbstractPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramAbstractPointer, trans)
 
-	crlDiagramAbstractPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramAbstractPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramAbstractPointerAbstractionDisplayLabel, hl)
-	crlDiagramAbstractPointerAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
-	crlDiagramAbstractPointerAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramAbstractPointerAbstractionDisplayLabel, hl)
+	crlDiagramAbstractPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramAbstractPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramAbstractPointerAbstractionDisplayLabel, trans)
+	crlDiagramAbstractPointerAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, trans)
+	crlDiagramAbstractPointerAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramAbstractPointerAbstractionDisplayLabel, trans)
 
-	crlDiagramAbstractPointerSource, _ := uOfD.NewReference(hl, CrlDiagramAbstractPointerSourceURI)
-	crlDiagramAbstractPointerSource.SetLabel("Source", hl)
-	crlDiagramAbstractPointerSource.SetOwningConcept(crlDiagramAbstractPointer, hl)
+	crlDiagramAbstractPointerSource, _ := uOfD.NewReference(trans, CrlDiagramAbstractPointerSourceURI)
+	crlDiagramAbstractPointerSource.SetLabel("Source", trans)
+	crlDiagramAbstractPointerSource.SetOwningConcept(crlDiagramAbstractPointer, trans)
 
-	crlDiagramAbstractPointerSourceRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramAbstractPointerSourceRefinement.SetOwningConcept(crlDiagramAbstractPointerSource, hl)
-	crlDiagramAbstractPointerSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, hl)
-	crlDiagramAbstractPointerSourceRefinement.SetRefinedConcept(crlDiagramAbstractPointerSource, hl)
+	crlDiagramAbstractPointerSourceRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramAbstractPointerSourceRefinement.SetOwningConcept(crlDiagramAbstractPointerSource, trans)
+	crlDiagramAbstractPointerSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, trans)
+	crlDiagramAbstractPointerSourceRefinement.SetRefinedConcept(crlDiagramAbstractPointerSource, trans)
 
-	crlDiagramAbstractPointerTarget, _ := uOfD.NewReference(hl, CrlDiagramAbstractPointerTargetURI)
-	crlDiagramAbstractPointerTarget.SetLabel("Target", hl)
-	crlDiagramAbstractPointerTarget.SetOwningConcept(crlDiagramAbstractPointer, hl)
+	crlDiagramAbstractPointerTarget, _ := uOfD.NewReference(trans, CrlDiagramAbstractPointerTargetURI)
+	crlDiagramAbstractPointerTarget.SetLabel("Target", trans)
+	crlDiagramAbstractPointerTarget.SetOwningConcept(crlDiagramAbstractPointer, trans)
 
-	crlDiagramAbstractPointerTargetRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramAbstractPointerTargetRefinement.SetOwningConcept(crlDiagramAbstractPointerTarget, hl)
-	crlDiagramAbstractPointerTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, hl)
-	crlDiagramAbstractPointerTargetRefinement.SetRefinedConcept(crlDiagramAbstractPointerTarget, hl)
+	crlDiagramAbstractPointerTargetRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramAbstractPointerTargetRefinement.SetOwningConcept(crlDiagramAbstractPointerTarget, trans)
+	crlDiagramAbstractPointerTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, trans)
+	crlDiagramAbstractPointerTargetRefinement.SetRefinedConcept(crlDiagramAbstractPointerTarget, trans)
 
 	//
 	// ElementPointer
 	//
-	crlDiagramElementPointer, _ := uOfD.NewElement(hl, CrlDiagramElementPointerURI)
-	crlDiagramElementPointer.SetLabel("ElementPointer", hl)
-	crlDiagramElementPointer.SetOwningConcept(crlDiagramDomain, hl)
+	crlDiagramElementPointer, _ := uOfD.NewElement(trans, CrlDiagramElementPointerURI)
+	crlDiagramElementPointer.SetLabel("ElementPointer", trans)
+	crlDiagramElementPointer.SetOwningConcept(crlDiagramDomain, trans)
 
-	crlDiagramElementPointerRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramElementPointerRefinement.SetOwningConcept(crlDiagramElementPointer, hl)
-	crlDiagramElementPointerRefinement.SetAbstractConcept(crlDiagramPointer, hl)
-	crlDiagramElementPointerRefinement.SetRefinedConcept(crlDiagramElementPointer, hl)
+	crlDiagramElementPointerRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramElementPointerRefinement.SetOwningConcept(crlDiagramElementPointer, trans)
+	crlDiagramElementPointerRefinement.SetAbstractConcept(crlDiagramPointer, trans)
+	crlDiagramElementPointerRefinement.SetRefinedConcept(crlDiagramElementPointer, trans)
 
-	crlDiagramElementPointerModelReference, _ := uOfD.NewReference(hl, CrlDiagramElementPointerModelReferenceURI)
-	crlDiagramElementPointerModelReference.SetLabel("ModelReference", hl)
-	crlDiagramElementPointerModelReference.SetOwningConcept(crlDiagramElementPointer, hl)
+	crlDiagramElementPointerModelReference, _ := uOfD.NewReference(trans, CrlDiagramElementPointerModelReferenceURI)
+	crlDiagramElementPointerModelReference.SetLabel("ModelReference", trans)
+	crlDiagramElementPointerModelReference.SetOwningConcept(crlDiagramElementPointer, trans)
 
-	crlDiagramElementPointerModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramElementPointerModelReferenceRefinement.SetOwningConcept(crlDiagramElementPointerModelReference, hl)
-	crlDiagramElementPointerModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, hl)
-	crlDiagramElementPointerModelReferenceRefinement.SetRefinedConcept(crlDiagramElementPointerModelReference, hl)
+	crlDiagramElementPointerModelReferenceRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramElementPointerModelReferenceRefinement.SetOwningConcept(crlDiagramElementPointerModelReference, trans)
+	crlDiagramElementPointerModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, trans)
+	crlDiagramElementPointerModelReferenceRefinement.SetRefinedConcept(crlDiagramElementPointerModelReference, trans)
 
-	crlDiagramElementPointerDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramElementPointerDisplayLabelURI)
-	crlDiagramElementPointerDisplayLabel.SetLabel("DisplayLabel", hl)
-	crlDiagramElementPointerDisplayLabel.SetOwningConcept(crlDiagramElementPointer, hl)
+	crlDiagramElementPointerDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramElementPointerDisplayLabelURI)
+	crlDiagramElementPointerDisplayLabel.SetLabel("DisplayLabel", trans)
+	crlDiagramElementPointerDisplayLabel.SetOwningConcept(crlDiagramElementPointer, trans)
 
-	crlDiagramElementPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramElementPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramElementPointerDisplayLabel, hl)
-	crlDiagramElementPointerDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, hl)
-	crlDiagramElementPointerDisplayLabelRefinement.SetRefinedConcept(crlDiagramElementPointerDisplayLabel, hl)
+	crlDiagramElementPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramElementPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramElementPointerDisplayLabel, trans)
+	crlDiagramElementPointerDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, trans)
+	crlDiagramElementPointerDisplayLabelRefinement.SetRefinedConcept(crlDiagramElementPointerDisplayLabel, trans)
 
-	crlDiagramElementPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramElementPointerAbstractionDisplayLabelURI)
-	crlDiagramElementPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
-	crlDiagramElementPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramElementPointer, hl)
+	crlDiagramElementPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramElementPointerAbstractionDisplayLabelURI)
+	crlDiagramElementPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", trans)
+	crlDiagramElementPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramElementPointer, trans)
 
-	crlDiagramElementPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramElementPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramElementPointerAbstractionDisplayLabel, hl)
-	crlDiagramElementPointerAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
-	crlDiagramElementPointerAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramElementPointerAbstractionDisplayLabel, hl)
+	crlDiagramElementPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramElementPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramElementPointerAbstractionDisplayLabel, trans)
+	crlDiagramElementPointerAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, trans)
+	crlDiagramElementPointerAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramElementPointerAbstractionDisplayLabel, trans)
 
-	crlDiagramElementPointerSource, _ := uOfD.NewReference(hl, CrlDiagramElementPointerSourceURI)
-	crlDiagramElementPointerSource.SetLabel("Source", hl)
-	crlDiagramElementPointerSource.SetOwningConcept(crlDiagramElementPointer, hl)
+	crlDiagramElementPointerSource, _ := uOfD.NewReference(trans, CrlDiagramElementPointerSourceURI)
+	crlDiagramElementPointerSource.SetLabel("Source", trans)
+	crlDiagramElementPointerSource.SetOwningConcept(crlDiagramElementPointer, trans)
 
-	crlDiagramElementPointerSourceRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramElementPointerSourceRefinement.SetOwningConcept(crlDiagramElementPointerSource, hl)
-	crlDiagramElementPointerSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, hl)
-	crlDiagramElementPointerSourceRefinement.SetRefinedConcept(crlDiagramElementPointerSource, hl)
+	crlDiagramElementPointerSourceRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramElementPointerSourceRefinement.SetOwningConcept(crlDiagramElementPointerSource, trans)
+	crlDiagramElementPointerSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, trans)
+	crlDiagramElementPointerSourceRefinement.SetRefinedConcept(crlDiagramElementPointerSource, trans)
 
-	crlDiagramElementPointerTarget, _ := uOfD.NewReference(hl, CrlDiagramElementPointerTargetURI)
-	crlDiagramElementPointerTarget.SetLabel("Target", hl)
-	crlDiagramElementPointerTarget.SetOwningConcept(crlDiagramElementPointer, hl)
+	crlDiagramElementPointerTarget, _ := uOfD.NewReference(trans, CrlDiagramElementPointerTargetURI)
+	crlDiagramElementPointerTarget.SetLabel("Target", trans)
+	crlDiagramElementPointerTarget.SetOwningConcept(crlDiagramElementPointer, trans)
 
-	crlDiagramElementPointerTargetRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramElementPointerTargetRefinement.SetOwningConcept(crlDiagramElementPointerTarget, hl)
-	crlDiagramElementPointerTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, hl)
-	crlDiagramElementPointerTargetRefinement.SetRefinedConcept(crlDiagramElementPointerTarget, hl)
+	crlDiagramElementPointerTargetRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramElementPointerTargetRefinement.SetOwningConcept(crlDiagramElementPointerTarget, trans)
+	crlDiagramElementPointerTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, trans)
+	crlDiagramElementPointerTargetRefinement.SetRefinedConcept(crlDiagramElementPointerTarget, trans)
 
 	//
 	// OwnerPointer
 	//
-	crlDiagramOwnerPointer, _ := uOfD.NewElement(hl, CrlDiagramOwnerPointerURI)
-	crlDiagramOwnerPointer.SetLabel("OwnerPointer", hl)
-	crlDiagramOwnerPointer.SetOwningConcept(crlDiagramDomain, hl)
+	crlDiagramOwnerPointer, _ := uOfD.NewElement(trans, CrlDiagramOwnerPointerURI)
+	crlDiagramOwnerPointer.SetLabel("OwnerPointer", trans)
+	crlDiagramOwnerPointer.SetOwningConcept(crlDiagramDomain, trans)
 
-	crlDiagramOwnerPointerRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramOwnerPointerRefinement.SetOwningConcept(crlDiagramOwnerPointer, hl)
-	crlDiagramOwnerPointerRefinement.SetAbstractConcept(crlDiagramPointer, hl)
-	crlDiagramOwnerPointerRefinement.SetRefinedConcept(crlDiagramOwnerPointer, hl)
+	crlDiagramOwnerPointerRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramOwnerPointerRefinement.SetOwningConcept(crlDiagramOwnerPointer, trans)
+	crlDiagramOwnerPointerRefinement.SetAbstractConcept(crlDiagramPointer, trans)
+	crlDiagramOwnerPointerRefinement.SetRefinedConcept(crlDiagramOwnerPointer, trans)
 
-	crlDiagramOwnerPointerModelReference, _ := uOfD.NewReference(hl, CrlDiagramOwnerPointerModelReferenceURI)
-	crlDiagramOwnerPointerModelReference.SetLabel("ModelReference", hl)
-	crlDiagramOwnerPointerModelReference.SetOwningConcept(crlDiagramOwnerPointer, hl)
+	crlDiagramOwnerPointerModelReference, _ := uOfD.NewReference(trans, CrlDiagramOwnerPointerModelReferenceURI)
+	crlDiagramOwnerPointerModelReference.SetLabel("ModelReference", trans)
+	crlDiagramOwnerPointerModelReference.SetOwningConcept(crlDiagramOwnerPointer, trans)
 
-	crlDiagramOwnerPointerModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramOwnerPointerModelReferenceRefinement.SetOwningConcept(crlDiagramOwnerPointerModelReference, hl)
-	crlDiagramOwnerPointerModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, hl)
-	crlDiagramOwnerPointerModelReferenceRefinement.SetRefinedConcept(crlDiagramOwnerPointerModelReference, hl)
+	crlDiagramOwnerPointerModelReferenceRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramOwnerPointerModelReferenceRefinement.SetOwningConcept(crlDiagramOwnerPointerModelReference, trans)
+	crlDiagramOwnerPointerModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, trans)
+	crlDiagramOwnerPointerModelReferenceRefinement.SetRefinedConcept(crlDiagramOwnerPointerModelReference, trans)
 
-	crlDiagramOwnerPointerDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramOwnerPointerDisplayLabelURI)
-	crlDiagramOwnerPointerDisplayLabel.SetLabel("DisplayLabel", hl)
-	crlDiagramOwnerPointerDisplayLabel.SetOwningConcept(crlDiagramOwnerPointer, hl)
+	crlDiagramOwnerPointerDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramOwnerPointerDisplayLabelURI)
+	crlDiagramOwnerPointerDisplayLabel.SetLabel("DisplayLabel", trans)
+	crlDiagramOwnerPointerDisplayLabel.SetOwningConcept(crlDiagramOwnerPointer, trans)
 
-	crlDiagramOwnerPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramOwnerPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramOwnerPointerDisplayLabel, hl)
-	crlDiagramOwnerPointerDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, hl)
-	crlDiagramOwnerPointerDisplayLabelRefinement.SetRefinedConcept(crlDiagramOwnerPointerDisplayLabel, hl)
+	crlDiagramOwnerPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramOwnerPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramOwnerPointerDisplayLabel, trans)
+	crlDiagramOwnerPointerDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, trans)
+	crlDiagramOwnerPointerDisplayLabelRefinement.SetRefinedConcept(crlDiagramOwnerPointerDisplayLabel, trans)
 
-	crlDiagramOwnerPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramOwnerPointerAbstractionDisplayLabelURI)
-	crlDiagramOwnerPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
-	crlDiagramOwnerPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramOwnerPointer, hl)
+	crlDiagramOwnerPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramOwnerPointerAbstractionDisplayLabelURI)
+	crlDiagramOwnerPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", trans)
+	crlDiagramOwnerPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramOwnerPointer, trans)
 
-	crlDiagramOwnerPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramOwnerPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramOwnerPointerAbstractionDisplayLabel, hl)
-	crlDiagramOwnerPointerAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
-	crlDiagramOwnerPointerAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramOwnerPointerAbstractionDisplayLabel, hl)
+	crlDiagramOwnerPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramOwnerPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramOwnerPointerAbstractionDisplayLabel, trans)
+	crlDiagramOwnerPointerAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, trans)
+	crlDiagramOwnerPointerAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramOwnerPointerAbstractionDisplayLabel, trans)
 
-	crlDiagramOwnerPointerSource, _ := uOfD.NewReference(hl, CrlDiagramOwnerPointerSourceURI)
-	crlDiagramOwnerPointerSource.SetLabel("Source", hl)
-	crlDiagramOwnerPointerSource.SetOwningConcept(crlDiagramOwnerPointer, hl)
+	crlDiagramOwnerPointerSource, _ := uOfD.NewReference(trans, CrlDiagramOwnerPointerSourceURI)
+	crlDiagramOwnerPointerSource.SetLabel("Source", trans)
+	crlDiagramOwnerPointerSource.SetOwningConcept(crlDiagramOwnerPointer, trans)
 
-	crlDiagramOwnerPointerSourceRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramOwnerPointerSourceRefinement.SetOwningConcept(crlDiagramOwnerPointerSource, hl)
-	crlDiagramOwnerPointerSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, hl)
-	crlDiagramOwnerPointerSourceRefinement.SetRefinedConcept(crlDiagramOwnerPointerSource, hl)
+	crlDiagramOwnerPointerSourceRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramOwnerPointerSourceRefinement.SetOwningConcept(crlDiagramOwnerPointerSource, trans)
+	crlDiagramOwnerPointerSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, trans)
+	crlDiagramOwnerPointerSourceRefinement.SetRefinedConcept(crlDiagramOwnerPointerSource, trans)
 
-	crlDiagramOwnerPointerTarget, _ := uOfD.NewReference(hl, CrlDiagramOwnerPointerTargetURI)
-	crlDiagramOwnerPointerTarget.SetLabel("Target", hl)
-	crlDiagramOwnerPointerTarget.SetOwningConcept(crlDiagramOwnerPointer, hl)
+	crlDiagramOwnerPointerTarget, _ := uOfD.NewReference(trans, CrlDiagramOwnerPointerTargetURI)
+	crlDiagramOwnerPointerTarget.SetLabel("Target", trans)
+	crlDiagramOwnerPointerTarget.SetOwningConcept(crlDiagramOwnerPointer, trans)
 
-	crlDiagramOwnerPointerTargetRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramOwnerPointerTargetRefinement.SetOwningConcept(crlDiagramOwnerPointerTarget, hl)
-	crlDiagramOwnerPointerTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, hl)
-	crlDiagramOwnerPointerTargetRefinement.SetRefinedConcept(crlDiagramOwnerPointerTarget, hl)
+	crlDiagramOwnerPointerTargetRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramOwnerPointerTargetRefinement.SetOwningConcept(crlDiagramOwnerPointerTarget, trans)
+	crlDiagramOwnerPointerTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, trans)
+	crlDiagramOwnerPointerTargetRefinement.SetRefinedConcept(crlDiagramOwnerPointerTarget, trans)
 
 	//
 	// RefinedPointer
 	//
-	crlDiagramRefinedPointer, _ := uOfD.NewElement(hl, CrlDiagramRefinedPointerURI)
-	crlDiagramRefinedPointer.SetLabel("RefinedPointer", hl)
-	crlDiagramRefinedPointer.SetOwningConcept(crlDiagramDomain, hl)
+	crlDiagramRefinedPointer, _ := uOfD.NewElement(trans, CrlDiagramRefinedPointerURI)
+	crlDiagramRefinedPointer.SetLabel("RefinedPointer", trans)
+	crlDiagramRefinedPointer.SetOwningConcept(crlDiagramDomain, trans)
 
-	crlDiagramRefinedPointerRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramRefinedPointerRefinement.SetOwningConcept(crlDiagramRefinedPointer, hl)
-	crlDiagramRefinedPointerRefinement.SetAbstractConcept(crlDiagramPointer, hl)
-	crlDiagramRefinedPointerRefinement.SetRefinedConcept(crlDiagramRefinedPointer, hl)
+	crlDiagramRefinedPointerRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramRefinedPointerRefinement.SetOwningConcept(crlDiagramRefinedPointer, trans)
+	crlDiagramRefinedPointerRefinement.SetAbstractConcept(crlDiagramPointer, trans)
+	crlDiagramRefinedPointerRefinement.SetRefinedConcept(crlDiagramRefinedPointer, trans)
 
-	crlDiagramRefinedPointerModelReference, _ := uOfD.NewReference(hl, CrlDiagramRefinedPointerModelReferenceURI)
-	crlDiagramRefinedPointerModelReference.SetLabel("ModelReference", hl)
-	crlDiagramRefinedPointerModelReference.SetOwningConcept(crlDiagramRefinedPointer, hl)
+	crlDiagramRefinedPointerModelReference, _ := uOfD.NewReference(trans, CrlDiagramRefinedPointerModelReferenceURI)
+	crlDiagramRefinedPointerModelReference.SetLabel("ModelReference", trans)
+	crlDiagramRefinedPointerModelReference.SetOwningConcept(crlDiagramRefinedPointer, trans)
 
-	crlDiagramRefinedPointerModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramRefinedPointerModelReferenceRefinement.SetOwningConcept(crlDiagramRefinedPointerModelReference, hl)
-	crlDiagramRefinedPointerModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, hl)
-	crlDiagramRefinedPointerModelReferenceRefinement.SetRefinedConcept(crlDiagramRefinedPointerModelReference, hl)
+	crlDiagramRefinedPointerModelReferenceRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramRefinedPointerModelReferenceRefinement.SetOwningConcept(crlDiagramRefinedPointerModelReference, trans)
+	crlDiagramRefinedPointerModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, trans)
+	crlDiagramRefinedPointerModelReferenceRefinement.SetRefinedConcept(crlDiagramRefinedPointerModelReference, trans)
 
-	crlDiagramRefinedPointerDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramRefinedPointerDisplayLabelURI)
-	crlDiagramRefinedPointerDisplayLabel.SetLabel("DisplayLabel", hl)
-	crlDiagramRefinedPointerDisplayLabel.SetOwningConcept(crlDiagramRefinedPointer, hl)
+	crlDiagramRefinedPointerDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramRefinedPointerDisplayLabelURI)
+	crlDiagramRefinedPointerDisplayLabel.SetLabel("DisplayLabel", trans)
+	crlDiagramRefinedPointerDisplayLabel.SetOwningConcept(crlDiagramRefinedPointer, trans)
 
-	crlDiagramRefinedPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramRefinedPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinedPointerDisplayLabel, hl)
-	crlDiagramRefinedPointerDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, hl)
-	crlDiagramRefinedPointerDisplayLabelRefinement.SetRefinedConcept(crlDiagramRefinedPointerDisplayLabel, hl)
+	crlDiagramRefinedPointerDisplayLabelRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramRefinedPointerDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinedPointerDisplayLabel, trans)
+	crlDiagramRefinedPointerDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, trans)
+	crlDiagramRefinedPointerDisplayLabelRefinement.SetRefinedConcept(crlDiagramRefinedPointerDisplayLabel, trans)
 
-	crlDiagramRefinedPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramRefinedPointerAbstractionDisplayLabelURI)
-	crlDiagramRefinedPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
-	crlDiagramRefinedPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramRefinedPointer, hl)
+	crlDiagramRefinedPointerAbstractionDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramRefinedPointerAbstractionDisplayLabelURI)
+	crlDiagramRefinedPointerAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", trans)
+	crlDiagramRefinedPointerAbstractionDisplayLabel.SetOwningConcept(crlDiagramRefinedPointer, trans)
 
-	crlDiagramRefinedPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramRefinedPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinedPointerAbstractionDisplayLabel, hl)
-	crlDiagramRefinedPointerAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
-	crlDiagramRefinedPointerAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramRefinedPointerAbstractionDisplayLabel, hl)
+	crlDiagramRefinedPointerAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramRefinedPointerAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinedPointerAbstractionDisplayLabel, trans)
+	crlDiagramRefinedPointerAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, trans)
+	crlDiagramRefinedPointerAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramRefinedPointerAbstractionDisplayLabel, trans)
 
-	crlDiagramRefinedPointerSource, _ := uOfD.NewReference(hl, CrlDiagramRefinedPointerSourceURI)
-	crlDiagramRefinedPointerSource.SetLabel("Source", hl)
-	crlDiagramRefinedPointerSource.SetOwningConcept(crlDiagramRefinedPointer, hl)
+	crlDiagramRefinedPointerSource, _ := uOfD.NewReference(trans, CrlDiagramRefinedPointerSourceURI)
+	crlDiagramRefinedPointerSource.SetLabel("Source", trans)
+	crlDiagramRefinedPointerSource.SetOwningConcept(crlDiagramRefinedPointer, trans)
 
-	crlDiagramRefinedPointerSourceRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramRefinedPointerSourceRefinement.SetOwningConcept(crlDiagramRefinedPointerSource, hl)
-	crlDiagramRefinedPointerSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, hl)
-	crlDiagramRefinedPointerSourceRefinement.SetRefinedConcept(crlDiagramRefinedPointerSource, hl)
+	crlDiagramRefinedPointerSourceRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramRefinedPointerSourceRefinement.SetOwningConcept(crlDiagramRefinedPointerSource, trans)
+	crlDiagramRefinedPointerSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, trans)
+	crlDiagramRefinedPointerSourceRefinement.SetRefinedConcept(crlDiagramRefinedPointerSource, trans)
 
-	crlDiagramRefinedPointerTarget, _ := uOfD.NewReference(hl, CrlDiagramRefinedPointerTargetURI)
-	crlDiagramRefinedPointerTarget.SetLabel("Target", hl)
-	crlDiagramRefinedPointerTarget.SetOwningConcept(crlDiagramRefinedPointer, hl)
+	crlDiagramRefinedPointerTarget, _ := uOfD.NewReference(trans, CrlDiagramRefinedPointerTargetURI)
+	crlDiagramRefinedPointerTarget.SetLabel("Target", trans)
+	crlDiagramRefinedPointerTarget.SetOwningConcept(crlDiagramRefinedPointer, trans)
 
-	crlDiagramRefinedPointerTargetRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramRefinedPointerTargetRefinement.SetOwningConcept(crlDiagramRefinedPointerTarget, hl)
-	crlDiagramRefinedPointerTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, hl)
-	crlDiagramRefinedPointerTargetRefinement.SetRefinedConcept(crlDiagramRefinedPointerTarget, hl)
+	crlDiagramRefinedPointerTargetRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramRefinedPointerTargetRefinement.SetOwningConcept(crlDiagramRefinedPointerTarget, trans)
+	crlDiagramRefinedPointerTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, trans)
+	crlDiagramRefinedPointerTargetRefinement.SetRefinedConcept(crlDiagramRefinedPointerTarget, trans)
 
 	//
 	// ReferenceLink
 	//
-	crlDiagramReferenceLink, _ := uOfD.NewElement(hl, CrlDiagramReferenceLinkURI)
-	crlDiagramReferenceLink.SetLabel("ReferenceLink", hl)
-	crlDiagramReferenceLink.SetOwningConcept(crlDiagramDomain, hl)
+	crlDiagramReferenceLink, _ := uOfD.NewElement(trans, CrlDiagramReferenceLinkURI)
+	crlDiagramReferenceLink.SetLabel("ReferenceLink", trans)
+	crlDiagramReferenceLink.SetOwningConcept(crlDiagramDomain, trans)
 
-	crlDiagramReferenceLinkRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramReferenceLinkRefinement.SetOwningConcept(crlDiagramReferenceLink, hl)
-	crlDiagramReferenceLinkRefinement.SetAbstractConcept(crlDiagramLink, hl)
-	crlDiagramReferenceLinkRefinement.SetRefinedConcept(crlDiagramReferenceLink, hl)
+	crlDiagramReferenceLinkRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramReferenceLinkRefinement.SetOwningConcept(crlDiagramReferenceLink, trans)
+	crlDiagramReferenceLinkRefinement.SetAbstractConcept(crlDiagramLink, trans)
+	crlDiagramReferenceLinkRefinement.SetRefinedConcept(crlDiagramReferenceLink, trans)
 
-	crlDiagramReferenceLinkModelReference, _ := uOfD.NewReference(hl, CrlDiagramReferenceLinkModelReferenceURI)
-	crlDiagramReferenceLinkModelReference.SetLabel("ModelReference", hl)
-	crlDiagramReferenceLinkModelReference.SetOwningConcept(crlDiagramReferenceLink, hl)
+	crlDiagramReferenceLinkModelReference, _ := uOfD.NewReference(trans, CrlDiagramReferenceLinkModelReferenceURI)
+	crlDiagramReferenceLinkModelReference.SetLabel("ModelReference", trans)
+	crlDiagramReferenceLinkModelReference.SetOwningConcept(crlDiagramReferenceLink, trans)
 
-	crlDiagramReferenceLinkModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramReferenceLinkModelReferenceRefinement.SetOwningConcept(crlDiagramReferenceLinkModelReference, hl)
-	crlDiagramReferenceLinkModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, hl)
-	crlDiagramReferenceLinkModelReferenceRefinement.SetRefinedConcept(crlDiagramReferenceLinkModelReference, hl)
+	crlDiagramReferenceLinkModelReferenceRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramReferenceLinkModelReferenceRefinement.SetOwningConcept(crlDiagramReferenceLinkModelReference, trans)
+	crlDiagramReferenceLinkModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, trans)
+	crlDiagramReferenceLinkModelReferenceRefinement.SetRefinedConcept(crlDiagramReferenceLinkModelReference, trans)
 
-	crlDiagramReferenceLinkDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramReferenceLinkDisplayLabelURI)
-	crlDiagramReferenceLinkDisplayLabel.SetLabel("DisplayLabel", hl)
-	crlDiagramReferenceLinkDisplayLabel.SetOwningConcept(crlDiagramReferenceLink, hl)
+	crlDiagramReferenceLinkDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramReferenceLinkDisplayLabelURI)
+	crlDiagramReferenceLinkDisplayLabel.SetLabel("DisplayLabel", trans)
+	crlDiagramReferenceLinkDisplayLabel.SetOwningConcept(crlDiagramReferenceLink, trans)
 
-	crlDiagramReferenceLinkDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramReferenceLinkDisplayLabelRefinement.SetOwningConcept(crlDiagramReferenceLinkDisplayLabel, hl)
-	crlDiagramReferenceLinkDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, hl)
-	crlDiagramReferenceLinkDisplayLabelRefinement.SetRefinedConcept(crlDiagramReferenceLinkDisplayLabel, hl)
+	crlDiagramReferenceLinkDisplayLabelRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramReferenceLinkDisplayLabelRefinement.SetOwningConcept(crlDiagramReferenceLinkDisplayLabel, trans)
+	crlDiagramReferenceLinkDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, trans)
+	crlDiagramReferenceLinkDisplayLabelRefinement.SetRefinedConcept(crlDiagramReferenceLinkDisplayLabel, trans)
 
-	crlDiagramReferenceLinkAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramReferenceLinkAbstractionDisplayLabelURI)
-	crlDiagramReferenceLinkAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
-	crlDiagramReferenceLinkAbstractionDisplayLabel.SetOwningConcept(crlDiagramReferenceLink, hl)
+	crlDiagramReferenceLinkAbstractionDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramReferenceLinkAbstractionDisplayLabelURI)
+	crlDiagramReferenceLinkAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", trans)
+	crlDiagramReferenceLinkAbstractionDisplayLabel.SetOwningConcept(crlDiagramReferenceLink, trans)
 
-	crlDiagramReferenceLinkAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramReferenceLinkAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramReferenceLinkAbstractionDisplayLabel, hl)
-	crlDiagramReferenceLinkAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
-	crlDiagramReferenceLinkAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramReferenceLinkAbstractionDisplayLabel, hl)
+	crlDiagramReferenceLinkAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramReferenceLinkAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramReferenceLinkAbstractionDisplayLabel, trans)
+	crlDiagramReferenceLinkAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, trans)
+	crlDiagramReferenceLinkAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramReferenceLinkAbstractionDisplayLabel, trans)
 
-	crlDiagramReferenceLinkSource, _ := uOfD.NewReference(hl, CrlDiagramReferenceLinkSourceURI)
-	crlDiagramReferenceLinkSource.SetLabel("Source", hl)
-	crlDiagramReferenceLinkSource.SetOwningConcept(crlDiagramReferenceLink, hl)
+	crlDiagramReferenceLinkSource, _ := uOfD.NewReference(trans, CrlDiagramReferenceLinkSourceURI)
+	crlDiagramReferenceLinkSource.SetLabel("Source", trans)
+	crlDiagramReferenceLinkSource.SetOwningConcept(crlDiagramReferenceLink, trans)
 
-	crlDiagramReferenceLinkSourceRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramReferenceLinkSourceRefinement.SetOwningConcept(crlDiagramReferenceLinkSource, hl)
-	crlDiagramReferenceLinkSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, hl)
-	crlDiagramReferenceLinkSourceRefinement.SetRefinedConcept(crlDiagramReferenceLinkSource, hl)
+	crlDiagramReferenceLinkSourceRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramReferenceLinkSourceRefinement.SetOwningConcept(crlDiagramReferenceLinkSource, trans)
+	crlDiagramReferenceLinkSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, trans)
+	crlDiagramReferenceLinkSourceRefinement.SetRefinedConcept(crlDiagramReferenceLinkSource, trans)
 
-	crlDiagramReferenceLinkTarget, _ := uOfD.NewReference(hl, CrlDiagramReferenceLinkTargetURI)
-	crlDiagramReferenceLinkTarget.SetLabel("Target", hl)
-	crlDiagramReferenceLinkTarget.SetOwningConcept(crlDiagramReferenceLink, hl)
+	crlDiagramReferenceLinkTarget, _ := uOfD.NewReference(trans, CrlDiagramReferenceLinkTargetURI)
+	crlDiagramReferenceLinkTarget.SetLabel("Target", trans)
+	crlDiagramReferenceLinkTarget.SetOwningConcept(crlDiagramReferenceLink, trans)
 
-	crlDiagramReferenceLinkTargetRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramReferenceLinkTargetRefinement.SetOwningConcept(crlDiagramReferenceLinkTarget, hl)
-	crlDiagramReferenceLinkTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, hl)
-	crlDiagramReferenceLinkTargetRefinement.SetRefinedConcept(crlDiagramReferenceLinkTarget, hl)
+	crlDiagramReferenceLinkTargetRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramReferenceLinkTargetRefinement.SetOwningConcept(crlDiagramReferenceLinkTarget, trans)
+	crlDiagramReferenceLinkTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, trans)
+	crlDiagramReferenceLinkTargetRefinement.SetRefinedConcept(crlDiagramReferenceLinkTarget, trans)
 
 	//
 	// RefinementLink
 	//
-	crlDiagramRefinementLink, _ := uOfD.NewElement(hl, CrlDiagramRefinementLinkURI)
-	crlDiagramRefinementLink.SetLabel("RefinementLink", hl)
-	crlDiagramRefinementLink.SetOwningConcept(crlDiagramDomain, hl)
+	crlDiagramRefinementLink, _ := uOfD.NewElement(trans, CrlDiagramRefinementLinkURI)
+	crlDiagramRefinementLink.SetLabel("RefinementLink", trans)
+	crlDiagramRefinementLink.SetOwningConcept(crlDiagramDomain, trans)
 
-	crlDiagramRefinementLinkRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramRefinementLinkRefinement.SetOwningConcept(crlDiagramRefinementLink, hl)
-	crlDiagramRefinementLinkRefinement.SetAbstractConcept(crlDiagramLink, hl)
-	crlDiagramRefinementLinkRefinement.SetRefinedConcept(crlDiagramRefinementLink, hl)
+	crlDiagramRefinementLinkRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramRefinementLinkRefinement.SetOwningConcept(crlDiagramRefinementLink, trans)
+	crlDiagramRefinementLinkRefinement.SetAbstractConcept(crlDiagramLink, trans)
+	crlDiagramRefinementLinkRefinement.SetRefinedConcept(crlDiagramRefinementLink, trans)
 
-	crlDiagramRefinementLinkModelReference, _ := uOfD.NewReference(hl, CrlDiagramRefinementLinkModelReferenceURI)
-	crlDiagramRefinementLinkModelReference.SetLabel("ModelReference", hl)
-	crlDiagramRefinementLinkModelReference.SetOwningConcept(crlDiagramRefinementLink, hl)
+	crlDiagramRefinementLinkModelReference, _ := uOfD.NewReference(trans, CrlDiagramRefinementLinkModelReferenceURI)
+	crlDiagramRefinementLinkModelReference.SetLabel("ModelReference", trans)
+	crlDiagramRefinementLinkModelReference.SetOwningConcept(crlDiagramRefinementLink, trans)
 
-	crlDiagramRefinementLinkModelReferenceRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramRefinementLinkModelReferenceRefinement.SetOwningConcept(crlDiagramRefinementLinkModelReference, hl)
-	crlDiagramRefinementLinkModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, hl)
-	crlDiagramRefinementLinkModelReferenceRefinement.SetRefinedConcept(crlDiagramRefinementLinkModelReference, hl)
+	crlDiagramRefinementLinkModelReferenceRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramRefinementLinkModelReferenceRefinement.SetOwningConcept(crlDiagramRefinementLinkModelReference, trans)
+	crlDiagramRefinementLinkModelReferenceRefinement.SetAbstractConcept(crlDiagramElementModelReference, trans)
+	crlDiagramRefinementLinkModelReferenceRefinement.SetRefinedConcept(crlDiagramRefinementLinkModelReference, trans)
 
-	crlDiagramRefinementLinkDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramRefinementLinkDisplayLabelURI)
-	crlDiagramRefinementLinkDisplayLabel.SetLabel("DisplayLabel", hl)
-	crlDiagramRefinementLinkDisplayLabel.SetOwningConcept(crlDiagramRefinementLink, hl)
+	crlDiagramRefinementLinkDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramRefinementLinkDisplayLabelURI)
+	crlDiagramRefinementLinkDisplayLabel.SetLabel("DisplayLabel", trans)
+	crlDiagramRefinementLinkDisplayLabel.SetOwningConcept(crlDiagramRefinementLink, trans)
 
-	crlDiagramRefinementLinkDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramRefinementLinkDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinementLinkDisplayLabel, hl)
-	crlDiagramRefinementLinkDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, hl)
-	crlDiagramRefinementLinkDisplayLabelRefinement.SetRefinedConcept(crlDiagramRefinementLinkDisplayLabel, hl)
+	crlDiagramRefinementLinkDisplayLabelRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramRefinementLinkDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinementLinkDisplayLabel, trans)
+	crlDiagramRefinementLinkDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementDisplayLabel, trans)
+	crlDiagramRefinementLinkDisplayLabelRefinement.SetRefinedConcept(crlDiagramRefinementLinkDisplayLabel, trans)
 
-	crlDiagramRefinementLinkAbstractionDisplayLabel, _ := uOfD.NewLiteral(hl, CrlDiagramRefinementLinkAbstractionDisplayLabelURI)
-	crlDiagramRefinementLinkAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", hl)
-	crlDiagramRefinementLinkAbstractionDisplayLabel.SetOwningConcept(crlDiagramRefinementLink, hl)
+	crlDiagramRefinementLinkAbstractionDisplayLabel, _ := uOfD.NewLiteral(trans, CrlDiagramRefinementLinkAbstractionDisplayLabelURI)
+	crlDiagramRefinementLinkAbstractionDisplayLabel.SetLabel("AbstractionDisplayLabel", trans)
+	crlDiagramRefinementLinkAbstractionDisplayLabel.SetOwningConcept(crlDiagramRefinementLink, trans)
 
-	crlDiagramRefinementLinkAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramRefinementLinkAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinementLinkAbstractionDisplayLabel, hl)
-	crlDiagramRefinementLinkAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, hl)
-	crlDiagramRefinementLinkAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramRefinementLinkAbstractionDisplayLabel, hl)
+	crlDiagramRefinementLinkAbstractionDisplayLabelRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramRefinementLinkAbstractionDisplayLabelRefinement.SetOwningConcept(crlDiagramRefinementLinkAbstractionDisplayLabel, trans)
+	crlDiagramRefinementLinkAbstractionDisplayLabelRefinement.SetAbstractConcept(crlDiagramElementAbstractionDisplayLabel, trans)
+	crlDiagramRefinementLinkAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramRefinementLinkAbstractionDisplayLabel, trans)
 
-	crlDiagramRefinementLinkSource, _ := uOfD.NewReference(hl, CrlDiagramRefinementLinkSourceURI)
-	crlDiagramRefinementLinkSource.SetLabel("Source", hl)
-	crlDiagramRefinementLinkSource.SetOwningConcept(crlDiagramRefinementLink, hl)
+	crlDiagramRefinementLinkSource, _ := uOfD.NewReference(trans, CrlDiagramRefinementLinkSourceURI)
+	crlDiagramRefinementLinkSource.SetLabel("Source", trans)
+	crlDiagramRefinementLinkSource.SetOwningConcept(crlDiagramRefinementLink, trans)
 
-	crlDiagramRefinementLinkSourceRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramRefinementLinkSourceRefinement.SetOwningConcept(crlDiagramRefinementLinkSource, hl)
-	crlDiagramRefinementLinkSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, hl)
-	crlDiagramRefinementLinkSourceRefinement.SetRefinedConcept(crlDiagramRefinementLinkSource, hl)
+	crlDiagramRefinementLinkSourceRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramRefinementLinkSourceRefinement.SetOwningConcept(crlDiagramRefinementLinkSource, trans)
+	crlDiagramRefinementLinkSourceRefinement.SetAbstractConcept(crlDiagramLinkSource, trans)
+	crlDiagramRefinementLinkSourceRefinement.SetRefinedConcept(crlDiagramRefinementLinkSource, trans)
 
-	crlDiagramRefinementLinkTarget, _ := uOfD.NewReference(hl, CrlDiagramRefinementLinkTargetURI)
-	crlDiagramRefinementLinkTarget.SetLabel("Target", hl)
-	crlDiagramRefinementLinkTarget.SetOwningConcept(crlDiagramRefinementLink, hl)
+	crlDiagramRefinementLinkTarget, _ := uOfD.NewReference(trans, CrlDiagramRefinementLinkTargetURI)
+	crlDiagramRefinementLinkTarget.SetLabel("Target", trans)
+	crlDiagramRefinementLinkTarget.SetOwningConcept(crlDiagramRefinementLink, trans)
 
-	crlDiagramRefinementLinkTargetRefinement, _ := uOfD.NewRefinement(hl)
-	crlDiagramRefinementLinkTargetRefinement.SetOwningConcept(crlDiagramRefinementLinkTarget, hl)
-	crlDiagramRefinementLinkTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, hl)
-	crlDiagramRefinementLinkTargetRefinement.SetRefinedConcept(crlDiagramRefinementLinkTarget, hl)
+	crlDiagramRefinementLinkTargetRefinement, _ := uOfD.NewRefinement(trans)
+	crlDiagramRefinementLinkTargetRefinement.SetOwningConcept(crlDiagramRefinementLinkTarget, trans)
+	crlDiagramRefinementLinkTargetRefinement.SetAbstractConcept(crlDiagramLinkTarget, trans)
+	crlDiagramRefinementLinkTargetRefinement.SetRefinedConcept(crlDiagramRefinementLinkTarget, trans)
 
 	uOfD.AddFunction(CrlDiagramElementURI, updateDiagramElement)
 	uOfD.AddFunction(CrlDiagramOwnerPointerURI, updateDiagramOwnerPointer)
 
-	crlDiagramDomain.SetIsCoreRecursively(hl)
+	crlDiagramDomain.SetIsCoreRecursively(trans)
 	return crlDiagramDomain
 }
 
 // updateDiagramElement updates the diagram node based on changes to the modelElement it represents
-func updateDiagramElement(diagramElement core.Element, notification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) error {
-	hl := uOfD.NewHeldLocks()
-	defer hl.ReleaseLocksAndWait()
-	hl.WriteLockElement(diagramElement)
+func updateDiagramElement(diagramElement core.Element, notification *core.ChangeNotification, trans *core.Transaction) error {
+	uOfD := trans.GetUniverseOfDiscourse()
+	trans.WriteLockElement(diagramElement)
 	// core Elements should always be ignored
-	if diagramElement.GetIsCore(hl) {
+	if diagramElement.GetIsCore(trans) {
 		return nil
 	}
 	// Suppress circular notifications
@@ -1382,122 +1381,122 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 	//   - the label of the referenced model element
 	//   - the list of immediate abstractions of the referenced model element.
 	// First, determine whether it is the referenced model element that has changed
-	diagramElementModelReference := diagramElement.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, hl)
+	diagramElementModelReference := diagramElement.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, trans)
 	if diagramElementModelReference == nil {
 		// Without a model reference, there is nothing to do. This scenario can occur during diagramElement deletion.
 		return nil
 	}
-	modelElement := GetReferencedModelElement(diagramElement, hl)
+	modelElement := GetReferencedModelElement(diagramElement, trans)
 	// if the modelElement is nil, it has gone away. Delete the diagramElement.
 	if modelElement == nil {
-		uOfD.DeleteElement(diagramElement, hl)
+		uOfD.DeleteElement(diagramElement, trans)
 		return nil
 	}
 	switch notification.GetNatureOfChange() {
 	case core.ForwardedChange:
-		if notification.GetReportingElementID() == diagramElementModelReference.GetConceptID(hl) {
+		if notification.GetReportingElementID() == diagramElementModelReference.GetConceptID(trans) {
 			modelReferenceNotification := notification.GetUnderlyingChange()
 			switch modelReferenceNotification.GetNatureOfChange() {
 			case core.ConceptChanged:
-				if IsDiagramNode(diagramElement, hl) {
+				if IsDiagramNode(diagramElement, trans) {
 					currentModelElement := modelReferenceNotification.GetAfterConceptState()
 					previousModelElement := modelReferenceNotification.GetBeforeConceptState()
 					if currentModelElement != nil && previousModelElement != nil {
-						updateDiagramElementForModelElementChange(diagramElement, modelElement, hl)
+						updateDiagramElementForModelElementChange(diagramElement, modelElement, trans)
 					}
-				} else if IsDiagramLink(diagramElement, hl) {
-					diagram := diagramElement.GetOwningConcept(hl)
-					oldLinkTarget := GetLinkTarget(diagramElement, hl)
-					oldTargetModelElement := GetReferencedModelElement(oldLinkTarget, hl)
+				} else if IsDiagramLink(diagramElement, trans) {
+					diagram := diagramElement.GetOwningConcept(trans)
+					oldLinkTarget := GetLinkTarget(diagramElement, trans)
+					oldTargetModelElement := GetReferencedModelElement(oldLinkTarget, trans)
 					switch typedElement := modelElement.(type) {
 					case core.Reference:
-						if IsDiagramElementPointer(diagramElement, hl) {
-							newTargetModelElement := typedElement.GetReferencedConcept(hl)
+						if IsDiagramElementPointer(diagramElement, trans) {
+							newTargetModelElement := typedElement.GetReferencedConcept(trans)
 							if oldTargetModelElement != newTargetModelElement {
 								if newTargetModelElement == nil {
-									uOfD.DeleteElement(diagramElement, hl)
+									uOfD.DeleteElement(diagramElement, trans)
 								} else {
-									newTargetDiagramElement := GetFirstElementRepresentingConcept(diagram, newTargetModelElement, hl)
-									SetLinkTarget(diagramElement, newTargetDiagramElement, hl)
+									newTargetDiagramElement := GetFirstElementRepresentingConcept(diagram, newTargetModelElement, trans)
+									SetLinkTarget(diagramElement, newTargetDiagramElement, trans)
 								}
 							}
-						} else if IsDiagramReferenceLink(diagramElement, hl) {
-							updateDiagramElementForModelElementChange(diagramElement, typedElement, hl)
-							SetDisplayLabel(diagramElement, typedElement.GetLabel(hl), hl)
-							newModelTarget := typedElement.GetReferencedConcept(hl)
-							newModelSource := typedElement.GetOwningConcept(hl)
+						} else if IsDiagramReferenceLink(diagramElement, trans) {
+							updateDiagramElementForModelElementChange(diagramElement, typedElement, trans)
+							SetDisplayLabel(diagramElement, typedElement.GetLabel(trans), trans)
+							newModelTarget := typedElement.GetReferencedConcept(trans)
+							newModelSource := typedElement.GetOwningConcept(trans)
 							if newModelSource == nil || newModelTarget == nil {
-								uOfD.DeleteElement(diagramElement, hl)
+								uOfD.DeleteElement(diagramElement, trans)
 								return nil
 							}
-							currentDiagramSource := GetLinkSource(diagramElement, hl)
-							currentModelSource := GetReferencedModelElement(currentDiagramSource, hl)
-							currentDiagramTarget := GetLinkTarget(diagramElement, hl)
-							currentModelTarget := GetReferencedModelElement(currentDiagramTarget, hl)
+							currentDiagramSource := GetLinkSource(diagramElement, trans)
+							currentModelSource := GetReferencedModelElement(currentDiagramSource, trans)
+							currentDiagramTarget := GetLinkTarget(diagramElement, trans)
+							currentModelTarget := GetReferencedModelElement(currentDiagramTarget, trans)
 							if currentModelSource != newModelSource {
-								newDiagramSource := GetFirstElementRepresentingConcept(diagram, newModelSource, hl)
+								newDiagramSource := GetFirstElementRepresentingConcept(diagram, newModelSource, trans)
 								if newDiagramSource == nil {
-									uOfD.DeleteElement(diagramElement, hl)
+									uOfD.DeleteElement(diagramElement, trans)
 									return nil
 								}
-								SetLinkSource(diagramElement, newDiagramSource, hl)
+								SetLinkSource(diagramElement, newDiagramSource, trans)
 							}
 							if currentModelTarget != newModelTarget {
-								newDiagramTarget := GetFirstElementRepresentingConcept(diagram, newModelTarget, hl)
+								newDiagramTarget := GetFirstElementRepresentingConcept(diagram, newModelTarget, trans)
 								if newDiagramTarget == nil {
-									uOfD.DeleteElement(diagramElement, hl)
+									uOfD.DeleteElement(diagramElement, trans)
 									return nil
 								}
-								SetLinkTarget(diagramElement, newDiagramTarget, hl)
+								SetLinkTarget(diagramElement, newDiagramTarget, trans)
 							}
 						}
 					case core.Refinement:
 						refinement := modelElement.(core.Refinement)
-						if IsDiagramPointer(diagramElement, hl) {
+						if IsDiagramPointer(diagramElement, trans) {
 							var newTargetModelElement core.Element
-							if IsDiagramAbstractPointer(diagramElement, hl) {
-								newTargetModelElement = refinement.GetAbstractConcept(hl)
-							} else if IsDiagramRefinedPointer(diagramElement, hl) {
-								newTargetModelElement = refinement.GetRefinedConcept(hl)
-							} else if IsDiagramOwnerPointer(diagramElement, hl) {
-								newTargetModelElement = refinement.GetOwningConcept(hl)
+							if IsDiagramAbstractPointer(diagramElement, trans) {
+								newTargetModelElement = refinement.GetAbstractConcept(trans)
+							} else if IsDiagramRefinedPointer(diagramElement, trans) {
+								newTargetModelElement = refinement.GetRefinedConcept(trans)
+							} else if IsDiagramOwnerPointer(diagramElement, trans) {
+								newTargetModelElement = refinement.GetOwningConcept(trans)
 							}
 							if oldTargetModelElement != newTargetModelElement {
 								if newTargetModelElement == nil {
-									uOfD.DeleteElement(diagramElement, hl)
+									uOfD.DeleteElement(diagramElement, trans)
 								} else {
-									newTargetDiagramElement := GetFirstElementRepresentingConcept(diagram, newTargetModelElement, hl)
-									SetLinkTarget(diagramElement, newTargetDiagramElement, hl)
+									newTargetDiagramElement := GetFirstElementRepresentingConcept(diagram, newTargetModelElement, trans)
+									SetLinkTarget(diagramElement, newTargetDiagramElement, trans)
 								}
 							}
-						} else if IsDiagramRefinementLink(diagramElement, hl) {
-							updateDiagramElementForModelElementChange(diagramElement, modelElement, hl)
-							SetDisplayLabel(diagramElement, refinement.GetLabel(hl), hl)
-							newModelTarget := refinement.GetAbstractConcept(hl)
-							newModelSource := refinement.GetRefinedConcept(hl)
+						} else if IsDiagramRefinementLink(diagramElement, trans) {
+							updateDiagramElementForModelElementChange(diagramElement, modelElement, trans)
+							SetDisplayLabel(diagramElement, refinement.GetLabel(trans), trans)
+							newModelTarget := refinement.GetAbstractConcept(trans)
+							newModelSource := refinement.GetRefinedConcept(trans)
 							if newModelTarget == nil || newModelSource == nil {
-								uOfD.DeleteElement(diagramElement, hl)
+								uOfD.DeleteElement(diagramElement, trans)
 								return nil
 							}
-							currentDiagramTarget := GetLinkTarget(diagramElement, hl)
-							currentModelTarget := GetReferencedModelElement(currentDiagramTarget, hl)
-							currentDiagramSource := GetLinkSource(diagramElement, hl)
-							currentModelSource := GetReferencedModelElement(currentDiagramSource, hl)
+							currentDiagramTarget := GetLinkTarget(diagramElement, trans)
+							currentModelTarget := GetReferencedModelElement(currentDiagramTarget, trans)
+							currentDiagramSource := GetLinkSource(diagramElement, trans)
+							currentModelSource := GetReferencedModelElement(currentDiagramSource, trans)
 							if currentModelTarget != newModelTarget {
-								newDiagramTarget := GetFirstElementRepresentingConcept(diagram, newModelTarget, hl)
+								newDiagramTarget := GetFirstElementRepresentingConcept(diagram, newModelTarget, trans)
 								if newDiagramTarget == nil {
-									uOfD.DeleteElement(diagramElement, hl)
+									uOfD.DeleteElement(diagramElement, trans)
 									return nil
 								}
-								SetLinkTarget(diagramElement, newDiagramTarget, hl)
+								SetLinkTarget(diagramElement, newDiagramTarget, trans)
 							}
 							if currentModelSource != newModelSource {
-								newDiagramSource := GetFirstElementRepresentingConcept(diagram, newModelSource, hl)
+								newDiagramSource := GetFirstElementRepresentingConcept(diagram, newModelSource, trans)
 								if newDiagramSource == nil {
-									uOfD.DeleteElement(diagramElement, hl)
+									uOfD.DeleteElement(diagramElement, trans)
 									return nil
 								}
-								SetLinkSource(diagramElement, newDiagramSource, hl)
+								SetLinkSource(diagramElement, newDiagramSource, trans)
 							}
 						}
 					}
@@ -1508,49 +1507,48 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 
 	case core.ReferencedConceptChanged:
 		// We are looking for the model diagramElementModelReference reporting a ConceptChanged which would be the result of setting the referencedConcept
-		if notification.GetAfterConceptState().ConceptID != diagramElementModelReference.GetConceptID(hl) {
+		if notification.GetAfterConceptState().ConceptID != diagramElementModelReference.GetConceptID(trans) {
 			break
 		}
-		if diagramElementModelReference.(core.Reference).GetReferencedConceptID(hl) == "" {
-			uOfD.DeleteElement(diagramElement, hl)
+		if diagramElementModelReference.(core.Reference).GetReferencedConceptID(trans) == "" {
+			uOfD.DeleteElement(diagramElement, trans)
 		} else {
-			updateDiagramElementForModelElementChange(diagramElement, modelElement, hl)
+			updateDiagramElementForModelElementChange(diagramElement, modelElement, trans)
 		}
 	}
 	return nil
 }
 
 // updateDiagramOwnerPointer updates the ownerPointer's target if the ownership of the represented modelElement changes
-func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.ChangeNotification, uOfD *core.UniverseOfDiscourse) error {
+func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.ChangeNotification, trans *core.Transaction) error {
 	// There is one change of interest here: the model element's owner has changed
-	hl := uOfD.NewHeldLocks()
-	defer hl.ReleaseLocksAndWait()
-	hl.WriteLockElement(diagramPointer)
+	uOfD := trans.GetUniverseOfDiscourse()
+	trans.WriteLockElement(diagramPointer)
 	reportingElement := uOfD.GetElement(notification.GetReportingElementID())
-	diagram := diagramPointer.GetOwningConcept(hl)
-	modelElement := GetReferencedModelElement(diagramPointer, hl)
+	diagram := diagramPointer.GetOwningConcept(trans)
+	modelElement := GetReferencedModelElement(diagramPointer, trans)
 	switch notification.GetNatureOfChange() {
 	case core.ForwardedChange:
 		if reportingElement == modelElement {
 			underlyingNotification := notification.GetUnderlyingChange()
 			switch underlyingNotification.GetNatureOfChange() {
 			case core.OwningConceptChanged:
-				if underlyingNotification.GetAfterConceptState().ConceptID == modelElement.GetConceptID(hl) {
-					modelOwner := modelElement.GetOwningConcept(hl)
+				if underlyingNotification.GetAfterConceptState().ConceptID == modelElement.GetConceptID(trans) {
+					modelOwner := modelElement.GetOwningConcept(trans)
 					var oldModelOwner core.Element
-					diagramTarget := GetLinkTarget(diagramPointer, hl)
+					diagramTarget := GetLinkTarget(diagramPointer, trans)
 					if diagramTarget != nil {
-						oldModelOwner = GetReferencedModelElement(diagramTarget, hl)
+						oldModelOwner = GetReferencedModelElement(diagramTarget, trans)
 					}
 					if modelOwner != oldModelOwner {
 						// Need to determine whether there is a view of the new owner in the diagram
-						newDiagramTarget := GetFirstElementRepresentingConcept(diagram, modelOwner, hl)
+						newDiagramTarget := GetFirstElementRepresentingConcept(diagram, modelOwner, trans)
 						if newDiagramTarget == nil {
 							// There is no view, delete the modelElement
-							dEls := mapset.NewSet(diagramPointer.GetConceptID(hl))
-							uOfD.DeleteElements(dEls, hl)
+							dEls := mapset.NewSet(diagramPointer.GetConceptID(trans))
+							uOfD.DeleteElements(dEls, trans)
 						} else {
-							SetLinkTarget(diagramPointer, newDiagramTarget, hl)
+							SetLinkTarget(diagramPointer, newDiagramTarget, trans)
 						}
 					}
 				}
@@ -1559,16 +1557,16 @@ func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.C
 		}
 		// We are looking for a notification from either the source or target reference in the diagram
 		// If either source or target are nil, delete the pointer
-		sourceReference := diagramPointer.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, hl)
-		targetReference := diagramPointer.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, hl)
+		sourceReference := diagramPointer.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, trans)
+		targetReference := diagramPointer.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
 		if reportingElement == sourceReference || reportingElement == targetReference {
 			underlyingNotification := notification.GetUnderlyingChange()
 			switch underlyingNotification.GetNatureOfChange() {
 			case core.ReferencedConceptChanged:
 				switch typedElement := reportingElement.(type) {
 				case core.Reference:
-					if typedElement.GetReferencedConcept(hl) == nil {
-						uOfD.DeleteElement(diagramPointer, hl)
+					if typedElement.GetReferencedConcept(trans) == nil {
+						uOfD.DeleteElement(diagramPointer, trans)
 					}
 				}
 			}
@@ -1577,35 +1575,35 @@ func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.C
 	return nil
 }
 
-func updateDiagramElementForModelElementChange(diagramElement core.Element, modelElement core.Element, hl *core.Transaction) {
+func updateDiagramElementForModelElementChange(diagramElement core.Element, modelElement core.Element, trans *core.Transaction) {
 	modelElementLabel := ""
 	if modelElement != nil {
-		modelElementLabel = modelElement.GetLabel(hl)
-		if modelElementLabel != diagramElement.GetLabel(hl) {
-			diagramElement.SetLabel(modelElementLabel, hl)
-			if !IsDiagramPointer(diagramElement, hl) {
-				SetDisplayLabel(diagramElement, modelElementLabel, hl)
+		modelElementLabel = modelElement.GetLabel(trans)
+		if modelElementLabel != diagramElement.GetLabel(trans) {
+			diagramElement.SetLabel(modelElementLabel, trans)
+			if !IsDiagramPointer(diagramElement, trans) {
+				SetDisplayLabel(diagramElement, modelElementLabel, trans)
 			}
 		}
 		abstractions := make(map[string]core.Element)
-		modelElement.FindImmediateAbstractions(abstractions, hl)
+		modelElement.FindImmediateAbstractions(abstractions, trans)
 		abstractionsLabel := ""
 		for _, abs := range abstractions {
 			if len(abstractionsLabel) != 0 {
 				abstractionsLabel += "\n"
 			}
-			abstractionsLabel += abs.GetLabel(hl)
+			abstractionsLabel += abs.GetLabel(trans)
 		}
-		if GetAbstractionDisplayLabel(diagramElement, hl) != abstractionsLabel {
-			SetAbstractionDisplayLabel(diagramElement, abstractionsLabel, hl)
+		if GetAbstractionDisplayLabel(diagramElement, trans) != abstractionsLabel {
+			SetAbstractionDisplayLabel(diagramElement, abstractionsLabel, trans)
 		}
 	}
 }
 
 // updateNodeSize recalcualtes the size of the node based on the string sizes for the display label and
 // abstractions listed
-func updateNodeSize(node core.Element, hl *core.Transaction) {
-	displayLabel := GetDisplayLabel(node, hl)
+func updateNodeSize(node core.Element, trans *core.Transaction) {
+	displayLabel := GetDisplayLabel(node, trans)
 	displayLabelBounds, _ := font.BoundString(go12PtBoldFace, displayLabel)
 	displayLabelMaxHeight := Int26_6ToFloat(displayLabelBounds.Max.Y)
 	displayLabelMaxWidth := Int26_6ToFloat(displayLabelBounds.Max.X)
@@ -1613,7 +1611,7 @@ func updateNodeSize(node core.Element, hl *core.Transaction) {
 	displayLabelMinWidth := Int26_6ToFloat(displayLabelBounds.Min.X)
 	displayLabelHeight := displayLabelMaxHeight - displayLabelMinHeight
 	displayLabelWidth := displayLabelMaxWidth - displayLabelMinWidth
-	abstractionDisplayLabel := GetAbstractionDisplayLabel(node, hl)
+	abstractionDisplayLabel := GetAbstractionDisplayLabel(node, trans)
 	abstractionDisplayLabelBounds, _ := font.BoundString(go10PtItalicFace, abstractionDisplayLabel)
 	abstractionDisplayLabelMaxWidth := Int26_6ToFloat(abstractionDisplayLabelBounds.Max.X)
 	abstractionDisplayLabelMaxHeight := Int26_6ToFloat(abstractionDisplayLabelBounds.Max.Y)
@@ -1626,7 +1624,7 @@ func updateNodeSize(node core.Element, hl *core.Transaction) {
 	topWidth := IconSize + 1*NodePadWidth + abstractionDisplayLabelWidth
 	width := math.Max(topWidth, displayLabelWidth) + 2*NodeLineWidth + 2*NodePadWidth
 	displayLabelYOffset := topHeight + NodeLineWidth + 2*NodePadWidth
-	SetNodeHeight(node, height, hl)
-	SetNodeWidth(node, width, hl)
-	SetNodeDisplayLabelYOffset(node, displayLabelYOffset, hl)
+	SetNodeHeight(node, height, trans)
+	SetNodeWidth(node, width, trans)
+	SetNodeDisplayLabelYOffset(node, displayLabelYOffset, trans)
 }

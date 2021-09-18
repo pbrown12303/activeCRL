@@ -120,8 +120,8 @@ func (gui *FyneGUI) RegisterUofDPostInitializationFunctions(uOfDManager *core.Uo
 	return nil
 }
 
-func shortcutFocused(s fyne.Shortcut, w fyne.Window) {
-	if focused, ok := w.Canvas().Focused().(fyne.Shortcutable); ok {
-		focused.TypedShortcut(s)
-	}
-}
+// func shortcutFocused(s fyne.Shortcut, w fyne.Window) {
+// 	if focused, ok := w.Canvas().Focused().(fyne.Shortcutable); ok {
+// 		focused.TypedShortcut(s)
+// 	}
+// }

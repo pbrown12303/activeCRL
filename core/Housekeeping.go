@@ -7,29 +7,28 @@ import (
 var coreHousekeepingURI = CorePrefix + "coreHousekeeping"
 
 // coreHousekeeping does the housekeeping for the core concepts
-func coreHousekeeping(el Element, notification *ChangeNotification, uOfD *UniverseOfDiscourse) error {
-	hl := uOfD.NewHeldLocks()
-	defer hl.ReleaseLocksAndWait()
-	hl.ReadLockElement(el)
+func coreHousekeeping(el Element, notification *ChangeNotification, trans *Transaction) error {
+	uOfD := trans.uOfD
+	trans.ReadLockElement(el)
 	// Supress circular notifications
 	underlyingNotification := notification.GetUnderlyingChange()
-	if underlyingNotification != nil && HasReportedPreviously(el.GetConceptID(hl), underlyingNotification) {
+	if underlyingNotification != nil && HasReportedPreviously(el.GetConceptID(trans), underlyingNotification) {
 		return nil
 	}
 	// Notify listeners
-	err := el.notifyListeners(notification, hl)
+	err := el.notifyListeners(notification, trans)
 	if err != nil {
 		return errors.Wrap(err, "coreHousekeeping failed")
 	}
 	// Notify owner if needed
 	switch el.(type) {
 	case Reference:
-		if el.GetOwningConcept(hl) != nil && !(notification.GetNatureOfChange() == OwningConceptChanged && notification.GetReportingElementID() != el.GetConceptID(hl)) {
-			forwardingNotification, err := uOfD.NewForwardingChangeNotification(el, ForwardedChange, notification, hl)
+		if el.GetOwningConcept(trans) != nil && !(notification.GetNatureOfChange() == OwningConceptChanged && notification.GetReportingElementID() != el.GetConceptID(trans)) {
+			forwardingNotification, err := uOfD.NewForwardingChangeNotification(el, ForwardedChange, notification, trans)
 			if err != nil {
 				return errors.Wrap(err, "coreHousekeeping failed")
 			}
-			err = uOfD.queueFunctionExecutions(el.GetOwningConcept(hl), forwardingNotification, hl)
+			err = uOfD.queueFunctionExecutions(el.GetOwningConcept(trans), forwardingNotification, trans)
 			if err != nil {
 				return errors.Wrap(err, "element.SetDefinition failed")
 			}

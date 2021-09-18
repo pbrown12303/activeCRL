@@ -11,7 +11,7 @@ var _ = Describe("Literal Tests", func() {
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 	})
 
 	AfterEach(func() {
@@ -69,7 +69,7 @@ var _ = Describe("Literal Tests", func() {
 			mLit, err1 := lit.MarshalJSON()
 			Expect(err1).To(BeNil())
 			uOfD2 := NewUniverseOfDiscourse()
-			hl2 := uOfD2.NewHeldLocks()
+			hl2 := uOfD2.NewTransaction()
 			rLit, err2 := uOfD2.RecoverElement(mLit, hl2)
 			Expect(err2).To(BeNil())
 			Expect(Equivalent(lit, hl, rLit, hl2)).To(BeTrue())

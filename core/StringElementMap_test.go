@@ -13,7 +13,7 @@ var _ = Describe("StringElementMap Test", func() {
 	var elID string
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 		seMap = NewStringElementMap()
 		el, _ = uOfD.NewElement(hl)
 		elID = el.getConceptIDNoLock()

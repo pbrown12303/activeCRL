@@ -12,7 +12,7 @@ var _ = Describe("Element internals test", func() {
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
-		hl = uOfD.NewHeldLocks()
+		hl = uOfD.NewTransaction()
 	})
 
 	AfterEach(func() {
@@ -261,7 +261,7 @@ var _ = Describe("Element internals test", func() {
 		var parent Element
 		BeforeEach(func() {
 			uOfD = NewUniverseOfDiscourse()
-			hl = uOfD.NewHeldLocks()
+			hl = uOfD.NewTransaction()
 		})
 		AfterEach(func() {
 			hl.ReleaseLocksAndWait()
@@ -325,7 +325,7 @@ var _ = Describe("Element internals test", func() {
 		It("should change the uOfD pointer correctly", func() {
 			el, _ := uOfD.NewElement(hl)
 			uOfD2 := NewUniverseOfDiscourse()
-			hl2 := uOfD2.NewHeldLocks()
+			hl2 := uOfD2.NewTransaction()
 			Expect(el.GetUniverseOfDiscourse(hl) == uOfD).To(BeTrue())
 			Expect(el.(*element).uOfD == uOfD).To(BeTrue())
 			// Can't set new uOfD without removing it from the old uOfD first
@@ -553,7 +553,7 @@ var _ = Describe("Element internals test", func() {
 			marshalledElement, err := el.MarshalJSON()
 			Expect(err).To(BeNil())
 			uOfD2 := NewUniverseOfDiscourse()
-			hl2 := uOfD2.NewHeldLocks()
+			hl2 := uOfD2.NewTransaction()
 			recoveredElement, err := uOfD2.RecoverElement(marshalledElement, hl2)
 			Expect(err).To(BeNil())
 			Expect(Equivalent(el, hl, recoveredElement, hl2))
@@ -567,7 +567,7 @@ var _ = Describe("Element internals test", func() {
 			mOwner, err2 := owner.MarshalJSON()
 			Expect(err2).To(BeNil())
 			uOfD2 := NewUniverseOfDiscourse()
-			hl2 := uOfD2.NewHeldLocks()
+			hl2 := uOfD2.NewTransaction()
 			rEl, err3 := uOfD2.RecoverElement(mEl, hl2)
 			Expect(err3).To(BeNil())
 			rOwner, err4 := uOfD2.RecoverElement(mOwner, hl2)

@@ -5,7 +5,6 @@
 package core
 
 import (
-	"log"
 	"sync"
 	"sync/atomic"
 
@@ -21,7 +20,7 @@ var CrlLogPendingFunctionCount bool
 // its children) experience a change. Its arguments are the element that changed, the array of ChangeNotifications, and
 // a pointer to a WaitGroup that is used to determine (on a larger scale) when the execution of the triggered functions
 // has completed.
-type crlExecutionFunction func(Element, *ChangeNotification, *UniverseOfDiscourse) error
+type crlExecutionFunction func(Element, *ChangeNotification, *Transaction) error
 
 type pendingFunctionCall struct {
 	function     crlExecutionFunction
@@ -113,38 +112,6 @@ func (queue *pendingFunctionCallQueue) findFirstPendingCall(functionID string, t
 // The functions type maps core Element identifiers to the array of crlExecutionFunctions associated with the identfier.
 type functions map[string][]crlExecutionFunction
 
-// functionCallManager manages the set of pending function calls
-type functionCallManager struct {
-	functionCallQueue *pendingFunctionCallQueue
-	uOfD              *UniverseOfDiscourse
-}
-
-// newFunctionCallManager creates and initializes a FunctionCallManager
-func newFunctionCallManager(uOfD *UniverseOfDiscourse) *functionCallManager {
-	var fcm functionCallManager
-	fcm.uOfD = uOfD
-	fcm.functionCallQueue = newPendingFunctionCallQueue()
-	return &fcm
-}
-
-// addFunctionCall adds a pending function call to the manager for each function associated with the functionID.
-// The Element is the element that will eventually "execute" the function, and the ChangeNotification is the trigger
-// that caused the function to be queued for execution.
-func (fcm *functionCallManager) addFunctionCall(functionID string, targetElement Element, notification *ChangeNotification) error {
-	for _, function := range fcm.uOfD.getFunctions(functionID) {
-		pendingCall, err := newPendingFunctionCall(functionID, function, targetElement, notification)
-		if err != nil {
-			return errors.Wrap(err, "functionCallManager.addFunctionCall failed")
-		}
-		newCount := atomic.AddInt32(&pendingFunctionCount, 1)
-		if CrlLogPendingFunctionCount {
-			log.Printf("Pending function count: %d", newCount)
-		}
-		fcm.functionCallQueue.enqueue(pendingCall)
-	}
-	return nil
-}
-
 // isDiagramRelatedFunction returns true if the functionID matches one of the diagram related functions
 func isDiagramRelatedFunction(functionID string) bool {
 	if functionID == "http://activeCrl.com/corediagram/CoreDiagram/CrlDiagram" ||
@@ -155,36 +122,6 @@ func isDiagramRelatedFunction(functionID string) bool {
 		return true
 	}
 	return false
-}
-
-// callQueuedFunctions calls each function on the pending function queue
-func (fcm *functionCallManager) callQueuedFunctions(hl *Transaction) error {
-	for fcm.functionCallQueue.queueHead != nil {
-		pendingCall := fcm.functionCallQueue.dequeue()
-		if fcm.uOfD.getExecutedCalls() != nil {
-			fcm.uOfD.getExecutedCalls() <- pendingCall
-		}
-		if TraceLocks || TraceChange {
-			omitCall := (OmitHousekeepingCalls && pendingCall.functionID == "http://activeCrl.com/core/coreHousekeeping") ||
-				(OmitManageTreeNodesCalls && pendingCall.functionID == "http://activeCrl.com/crlEditor/EditorDomain/TreeViews/TreeNodeManager") ||
-				(OmitDiagramRelatedCalls && isDiagramRelatedFunction(pendingCall.functionID))
-			if !omitCall {
-				log.Printf("About to execute %s with notification %s target %p", pendingCall.functionID, pendingCall.notification.GetNatureOfChange().String(), pendingCall.target)
-				log.Printf("   Function target: %T %s %s %p", pendingCall.target, pendingCall.target.getConceptIDNoLock(), pendingCall.target.getLabelNoLock(), pendingCall.target)
-				functionCallGraphs = append(functionCallGraphs, NewFunctionCallGraph(pendingCall.functionID, pendingCall.target, pendingCall.notification, hl))
-			}
-		}
-		err := pendingCall.function(pendingCall.target, pendingCall.notification, fcm.uOfD)
-		if err != nil {
-			return errors.Wrap(err, "functionCallManager.callQueuedFunctions failed")
-		}
-		newCount := atomic.AddInt32(&pendingFunctionCount, -1)
-		if CrlLogPendingFunctionCount {
-			log.Printf("Pending function count: %d", newCount)
-			log.Printf("Dequeued call: %+v", pendingCall)
-		}
-	}
-	return nil
 }
 
 // GetPendingFunctionCallCount returns the count of all pending functions from all function managers (i.e. from all HeldLocks objects)
