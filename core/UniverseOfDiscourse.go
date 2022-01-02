@@ -17,7 +17,7 @@ import (
 type UniverseOfDiscourse struct {
 	// element
 	computeFunctions functions
-	executedCalls    chan *pendingFunctionCall
+	executedCalls    chan *functionCallRecord
 	undoManager      *undoManager
 	uriUUIDMap       *StringStringMap
 	uuidElementMap   *StringElementMap
@@ -48,7 +48,7 @@ func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	uOfD.AddFunction(coreHousekeepingURI, coreHousekeeping)
 	// hl.ReleaseLocksAndWait()
 	buildCoreDomain(&uOfD, hl)
-	hl.ReleaseLocksAndWait()
+	hl.ReleaseLocks()
 	return &uOfD
 }
 
@@ -397,9 +397,11 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, hl *Tran
 	defer it2.Stop()
 	for id := range it2.C {
 		el := uOfDPtr.GetElement(id.(string))
-		hl.WriteLockElement(el)
-		uOfDPtr.preChange(el, hl)
-		uOfDPtr.deleteElement(el, elements, hl)
+		if el != nil {
+			hl.WriteLockElement(el)
+			uOfDPtr.preChange(el, hl)
+			uOfDPtr.deleteElement(el, elements, hl)
+		}
 	}
 	return nil
 }
@@ -450,7 +452,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetElementWithURI(uri string) Element {
 	return uOfDPtr.GetElement(uOfDPtr.uriUUIDMap.GetEntry(uri))
 }
 
-func (uOfDPtr *UniverseOfDiscourse) getExecutedCalls() chan *pendingFunctionCall {
+func (uOfDPtr *UniverseOfDiscourse) getExecutedCalls() chan *functionCallRecord {
 	return uOfDPtr.executedCalls
 }
 
@@ -648,6 +650,10 @@ func (uOfDPtr *UniverseOfDiscourse) IsEquivalent(hl1 *Transaction, uOfD2 *Univer
 
 // IsRecordingUndo reveals whether undo recording is on
 func (uOfDPtr *UniverseOfDiscourse) IsRecordingUndo() bool {
+	// TODO Remove this debugging code
+	if uOfDPtr == nil {
+		log.Fatal("In UniverseOfDiscourse.IsRecordingUndo() will nil uOfDPtr")
+	}
 	return uOfDPtr.undoManager.recordingUndo
 }
 
@@ -841,8 +847,6 @@ func (uOfDPtr *UniverseOfDiscourse) NewTransaction() *Transaction {
 	hl.readLocks = make(map[string]Element)
 	hl.writeLocks = make(map[string]Element)
 	hl.uOfD = uOfDPtr
-	hl.functionCallQueue = newPendingFunctionCallQueue()
-	// hl.functionCallManager = newFunctionCallManager(hl.uOfD)
 	return &hl
 }
 
@@ -1054,7 +1058,7 @@ func (uOfDPtr *UniverseOfDiscourse) queueFunctionExecutions(el Element, notifica
 				log.Printf("       Function target: %T %s %s %p", el, el.getConceptIDNoLock(), el.GetLabel(hl), el)
 			}
 		}
-		err := hl.addFunctionCall(functionIdentifier, el, notification)
+		err := hl.callFunctions(functionIdentifier, el, notification)
 		if err != nil {
 			return errors.Wrap(err, "UniverseOfDiscourse.queueFunctionExecutions failed")
 		}
@@ -1132,7 +1136,10 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 	hl.WriteLockElement(replicate)
 
 	// Set the attributes - but no IDs
-	replicate.SetLabel(original.GetLabel(hl), hl)
+	err := replicate.SetLabel(original.GetLabel(hl), hl)
+	if err != nil {
+		return errors.Wrap(err, "UniverseOfDiscourse.replicateAsRefinement replicate.SetLabel failed")
+	}
 
 	// Determine whether there is already a refinement in place; if not, create it
 	if !replicate.IsRefinementOf(original, hl) {
@@ -1167,7 +1174,7 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 		it2 := uOfDPtr.GetConceptsOwnedConceptIDs(replicateID).Iterator()
 		defer it2.Stop()
 		for id := range it2.C {
-			currentChild := uOfDPtr.GetElement(id.(string))
+			currentChild := uOfDPtr.GetElement(id.(string)) // TODO: suppress check if current child is a refinement
 			currentChildAbstractions := make(map[string]Element)
 			currentChild.FindAbstractions(currentChildAbstractions, hl)
 			for _, currentChildAbstraction := range currentChildAbstractions {
@@ -1179,22 +1186,16 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 		// If the replicate child is nil at this point, there is no existing replicate child that corresponds
 		// to the original child - create one.
 		if replicateChild == nil {
-			childURI := ""
-			refinementURI := ""
-			if len(uri) == 1 && uri[0] != "" {
-				childURI = uri[0] + "/" + originalChild.GetConceptID(hl)
-				refinementURI = childURI + "/Refinement"
-			}
 			switch originalChild.(type) {
 			case Reference:
-				replicateChild, _ = uOfDPtr.NewReference(hl, childURI)
+				replicateChild, _ = uOfDPtr.NewReference(hl)
 			case Literal:
-				replicateChild, _ = uOfDPtr.NewLiteral(hl, childURI)
+				replicateChild, _ = uOfDPtr.NewLiteral(hl)
 			case Element:
-				replicateChild, _ = uOfDPtr.NewElement(hl, childURI)
+				replicateChild, _ = uOfDPtr.NewElement(hl)
 			}
 			replicateChild.SetOwningConcept(replicate, hl)
-			refinement, err := uOfDPtr.NewRefinement(hl, refinementURI)
+			refinement, err := uOfDPtr.NewRefinement(hl)
 			if err != nil {
 				return err
 			}

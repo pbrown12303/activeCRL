@@ -30,14 +30,13 @@ var _ = Describe("EdditorDomain tests", func() {
 		crldiagramdomain.BuildCrlDiagramDomain(uOfD1, hl1)
 		crldatastructuresdomain.BuildCrlDataStructuresDomain(uOfD1, hl1)
 		Expect(BuildEditorDomain(uOfD1, hl1)).ShouldNot(BeNil())
-		hl1.ReleaseLocksAndWait()
 
 		uOfD2 := core.NewUniverseOfDiscourse()
 		hl2 := uOfD2.NewTransaction()
+		defer hl2.ReleaseLocks()
 		crldiagramdomain.BuildCrlDiagramDomain(uOfD2, hl2)
 		crldatastructuresdomain.BuildCrlDataStructuresDomain(uOfD2, hl2)
 		Expect(BuildEditorDomain(uOfD2, hl2)).ShouldNot(BeNil())
-		hl2.ReleaseLocksAndWait()
 
 		// Refine settings and persist
 		coreSettings1 := uOfD1.GetElementWithURI(EditorSettingsURI)

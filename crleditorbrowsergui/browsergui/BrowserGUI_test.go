@@ -40,7 +40,6 @@ var _ = Describe("Test CrlEditor", func() {
 		treeNode := page.FindByID(treeNodeID)
 		treeNode.MouseToElement()
 		page.Click(agouti.SingleClick, agouti.LeftButton)
-		hl.ReleaseLocksAndWait()
 		Eventually(func() bool {
 			return testEditor.GetCurrentSelection() != nil && testEditor.GetCurrentSelection().GetConceptID(hl) == el.GetConceptID(hl)
 		}).Should(BeTrue())
@@ -86,7 +85,6 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(page.RunScript("return crlSelectedConceptID", nil, &newDiagramID)).To(Succeed())
 		newDiagram := uOfD.GetElement(newDiagramID)
 		Expect(newDiagram).ToNot(BeNil())
-		hl.ReleaseLocksAndWait()
 		// browsergui.CrlLogClientRequests = true
 		Eventually(func() bool {
 			return browsergui.GetRequestInProgress() == false
@@ -109,18 +107,17 @@ var _ = Describe("Test CrlEditor", func() {
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocksAndWait()
 		// Clear existing workspace
 		// log.Printf("**************************** About to hit ClearWorkspaceButton")
 		var fileMenuButton = page.FindByID("FileMenuButton")
 		Expect(fileMenuButton.Click()).To(Succeed())
 		var clearWorkspaceButton = page.FindByID("ClearWorkspaceButton")
 		Expect(clearWorkspaceButton.Click()).To(Succeed())
-		hl.ReleaseLocksAndWait()
 		Eventually(func() bool {
 			return browsergui.GetRequestInProgress() == false
 		}, time.Second*5).Should(BeTrue())
 		// log.Printf("**************************** ClearWorkspace Request Complete")
+		hl.ReleaseLocks()
 	})
 
 	GetCellViewIDFromViewElementID := func(diagram core.Element, viewElementID string) string {
@@ -173,7 +170,6 @@ var _ = Describe("Test CrlEditor", func() {
 		// Now move mouse to correct position
 		MouseToDiagramPosition(diagram, x, y)
 		Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
-		hl.ReleaseLocksAndWait()
 		AssertServerRequestProcessingComplete()
 		Eventually(func() bool {
 			var correctToolbarSelection bool
@@ -189,7 +185,6 @@ var _ = Describe("Test CrlEditor", func() {
 		conceptView := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, newConcept, hl)
 		Expect(conceptView).ToNot(BeNil())
 		Expect(crldiagramdomain.GetReferencedModelElement(conceptView, hl)).To(Equal(newConcept))
-		hl.ReleaseLocksAndWait()
 		return newConcept, conceptView
 	}
 	CreateLiteral := func(diagram core.Element, x int, y int) (core.Literal, core.Element) {
@@ -203,7 +198,6 @@ var _ = Describe("Test CrlEditor", func() {
 		// Now move mouse to correct position
 		MouseToDiagramPosition(diagram, x, y)
 		Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
-		hl.ReleaseLocksAndWait()
 		AssertServerRequestProcessingComplete()
 		Eventually(func() bool {
 			var correctToolbarSelection bool
@@ -225,7 +219,6 @@ var _ = Describe("Test CrlEditor", func() {
 		conceptView := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, newConcept, hl)
 		Expect(conceptView).ToNot(BeNil())
 		Expect(crldiagramdomain.GetReferencedModelElement(conceptView, hl)).To(Equal(newConcept))
-		hl.ReleaseLocksAndWait()
 		return newConcept.(core.Literal), conceptView
 	}
 	CreateReferenceNode := func(diagram core.Element, x int, y int) (core.Reference, core.Element) {
@@ -239,7 +232,6 @@ var _ = Describe("Test CrlEditor", func() {
 		// Now move mouse to correct position
 		MouseToDiagramPosition(diagram, x, y)
 		Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
-		hl.ReleaseLocksAndWait()
 		AssertServerRequestProcessingComplete()
 		Eventually(func() bool {
 			var correctToolbarSelection bool
@@ -261,7 +253,6 @@ var _ = Describe("Test CrlEditor", func() {
 		conceptView := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, newConcept, hl)
 		Expect(conceptView).ToNot(BeNil())
 		Expect(crldiagramdomain.GetReferencedModelElement(conceptView, hl)).To(Equal(newConcept))
-		hl.ReleaseLocksAndWait()
 		return newConcept.(core.Reference), conceptView
 	}
 	CreateReferenceLink := func(diagram core.Element, sourceView core.Element, targetView core.Element) (core.Reference, core.Element) {
@@ -279,7 +270,6 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(page.Click(agouti.HoldClick, agouti.LeftButton)).To(Succeed())
 		Expect(page.FindByID(targetCellID).MouseToElement()).To(Succeed())
 		Expect(page.Click(agouti.ReleaseClick, agouti.LeftButton)).To(Succeed())
-		hl.ReleaseLocksAndWait()
 		AssertServerRequestProcessingComplete()
 		Eventually(func() bool {
 			var correctToolbarSelection bool
@@ -298,7 +288,6 @@ var _ = Describe("Test CrlEditor", func() {
 		source := crldiagramdomain.GetReferencedModelElement(sourceView, hl)
 		Expect(newReference.GetOwningConceptID(hl)).To(Equal(source.GetConceptID(hl)))
 		newReferenceView := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, newReference, hl)
-		hl.ReleaseLocksAndWait()
 		return newReference, newReferenceView
 	}
 	CreateRefinementNode := func(diagram core.Element, x int, y int) (core.Refinement, core.Element) {
@@ -312,7 +301,6 @@ var _ = Describe("Test CrlEditor", func() {
 		// Now move mouse to correct position
 		MouseToDiagramPosition(diagram, x, y)
 		Expect(page.Click(agouti.SingleClick, agouti.LeftButton)).To(Succeed())
-		hl.ReleaseLocksAndWait()
 		AssertServerRequestProcessingComplete()
 		Eventually(func() bool {
 			var correctToolbarSelection bool
@@ -335,7 +323,6 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(conceptView).ToNot(BeNil())
 		Expect(crldiagramdomain.GetReferencedModelElement(conceptView, hl)).To(Equal(newConcept))
 		Expect(newConcept.GetOwningConceptID(hl)).To(Equal(diagram.GetOwningConceptID(hl)))
-		hl.ReleaseLocksAndWait()
 		return newConcept.(core.Refinement), conceptView
 	}
 	CreateRefinementLink := func(diagram core.Element, sourceView core.Element, targetView core.Element) (core.Refinement, core.Element) {
@@ -353,7 +340,6 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(page.Click(agouti.HoldClick, agouti.LeftButton)).To(Succeed())
 		Expect(page.FindByID(targetCellID).MouseToElement()).To(Succeed())
 		Expect(page.Click(agouti.ReleaseClick, agouti.LeftButton)).To(Succeed())
-		hl.ReleaseLocksAndWait()
 		AssertServerRequestProcessingComplete()
 		Eventually(func() bool {
 			var correctToolbarSelection bool
@@ -373,7 +359,6 @@ var _ = Describe("Test CrlEditor", func() {
 		newRefinementView := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, newRefinement, hl)
 		Expect(newRefinementView).ToNot(BeNil())
 		Expect(newRefinement.GetOwningConceptID(hl)).To(Equal(diagram.GetOwningConceptID(hl)))
-		hl.ReleaseLocksAndWait()
 		return newRefinement, newRefinementView
 	}
 	CreateOwnerPointer := func(diagram core.Element, sourceView core.Element, targetView core.Element) (core.Element, core.Element) {
@@ -391,7 +376,6 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(page.Click(agouti.HoldClick, agouti.LeftButton)).To(Succeed())
 		Expect(page.FindByID(targetCellID).MouseToElement()).To(Succeed())
 		Expect(page.Click(agouti.ReleaseClick, agouti.LeftButton)).To(Succeed())
-		hl.ReleaseLocksAndWait()
 		AssertServerRequestProcessingComplete()
 		Eventually(func() bool {
 			var correctToolbarSelection bool
@@ -400,7 +384,6 @@ var _ = Describe("Test CrlEditor", func() {
 		}, 3).Should(BeTrue())
 		source := crldiagramdomain.GetReferencedModelElement(sourceView, hl)
 		ownerPointerView := crldiagramdomain.GetFirstElementRepresentingConceptOwnerPointer(diagram, source, hl)
-		hl.ReleaseLocksAndWait()
 		return source, ownerPointerView
 	}
 	CreateElementPointer := func(diagram core.Element, sourceView core.Element, targetView core.Element) (core.Reference, core.Element) {
@@ -414,29 +397,29 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(correctToolbarSelection).To(BeTrue())
 		// Now move the mouse to r1, click, drag to e1, and release
 		browsergui.CrlLogClientRequests = true
+		browsergui.CrlLogClientNotifications = true
 		targetCellID := GetCellViewIDFromViewElementID(diagram, targetView.GetConceptID(hl))
 		sourceCellID := GetCellViewIDFromViewElementID(diagram, sourceView.GetConceptID(hl))
-		// hl.ReleaseLocksAndWait()
 		Expect(page.FindByID(sourceCellID).MouseToElement()).To(Succeed())
 		Expect(page.Click(agouti.HoldClick, agouti.LeftButton)).To(Succeed())
 		Expect(page.FindByID(targetCellID).MouseToElement()).To(Succeed())
 		Expect(page.Click(agouti.ReleaseClick, agouti.LeftButton)).To(Succeed())
-		core.TraceChange = true
-		core.EnableNotificationPrint = true
-		hl.ReleaseLocksAndWait()
-		AssertServerRequestProcessingComplete()
+		// core.TraceChange = true
+		// core.EnableNotificationPrint = true
+		// AssertServerRequestProcessingComplete()
+		time.Sleep(time.Second * 3)
 		Eventually(func() bool {
 			var correctToolbarSelection bool
 			page.RunScript("return crlCurrentToolbarButton == crlCursorToolbarButtonID;", nil, &correctToolbarSelection)
 			return correctToolbarSelection
 		}, 3).Should(BeTrue())
-		core.TraceChange = false
-		core.EnableNotificationPrint = false
+		// core.TraceChange = false
+		// core.EnableNotificationPrint = false
 		browsergui.CrlLogClientRequests = false
+		browsergui.CrlLogClientNotifications = false
 		referenceID := crldiagramdomain.GetReferencedModelElement(sourceView, hl).GetConceptID(hl)
 		reference := uOfD.GetReference(referenceID)
 		elementPointerView := crldiagramdomain.GetFirstElementRepresentingConceptElementPointer(diagram, reference, hl)
-		hl.ReleaseLocksAndWait()
 		// core.TraceLocks = false
 		return reference, elementPointerView
 	}
@@ -456,7 +439,6 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(page.Click(agouti.HoldClick, agouti.LeftButton)).To(Succeed())
 		Expect(page.FindByID(targetCellID).MouseToElement()).To(Succeed())
 		Expect(page.Click(agouti.ReleaseClick, agouti.LeftButton)).To(Succeed())
-		hl.ReleaseLocksAndWait()
 		AssertServerRequestProcessingComplete()
 		Eventually(func() bool {
 			var correctToolbarSelection bool
@@ -466,7 +448,6 @@ var _ = Describe("Test CrlEditor", func() {
 		refinementID := crldiagramdomain.GetReferencedModelElement(sourceView, hl).GetConceptID(hl)
 		refinement := uOfD.GetRefinement(refinementID)
 		elementPointerView := crldiagramdomain.GetFirstElementRepresentingConceptAbstractPointer(diagram, refinement, hl)
-		hl.ReleaseLocksAndWait()
 		return refinement, elementPointerView
 	}
 
@@ -485,7 +466,6 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(page.Click(agouti.HoldClick, agouti.LeftButton)).To(Succeed())
 		Expect(page.FindByID(targetCellID).MouseToElement()).To(Succeed())
 		Expect(page.Click(agouti.ReleaseClick, agouti.LeftButton)).To(Succeed())
-		hl.ReleaseLocksAndWait()
 		AssertServerRequestProcessingComplete()
 		Eventually(func() bool {
 			var correctToolbarSelection bool
@@ -495,7 +475,6 @@ var _ = Describe("Test CrlEditor", func() {
 		refinementID := crldiagramdomain.GetReferencedModelElement(sourceView, hl).GetConceptID(hl)
 		refinement := uOfD.GetRefinement(refinementID)
 		elementPointerView := crldiagramdomain.GetFirstElementRepresentingConceptRefinedPointer(diagram, refinement, hl)
-		hl.ReleaseLocksAndWait()
 		return refinement, elementPointerView
 	}
 
@@ -541,7 +520,6 @@ var _ = Describe("Test CrlEditor", func() {
 			treeNode := page.FindByID(treeNodeID)
 			treeNode.MouseToElement()
 			page.Click(agouti.SingleClick, agouti.LeftButton)
-			hl.ReleaseLocksAndWait()
 			AssertServerRequestProcessingComplete()
 			Eventually(func() bool {
 				return testEditor.GetCurrentSelection() != nil && testEditor.GetCurrentSelection().GetConceptID(hl) == coreDomain.GetConceptID(hl)
@@ -620,7 +598,6 @@ var _ = Describe("Test CrlEditor", func() {
 				Expect(page.RunScript("crlSendDiagramDrop(ID, x, y, shiftKey)", map[string]interface{}{"ID": diagramID, "x": "100", "y": "100", "shiftKey": "false"}, nil)).To(Succeed())
 				// Some form of sleep is required here as this thread blocks socket communications. Eventually accomplishes this as it will not
 				// be true until after all of the expected client communication has completed.
-				hl.ReleaseLocksAndWait()
 				AssertServerRequestProcessingComplete()
 				Eventually(func() bool {
 					return browsergui.BrowserGUISingleton.GetTreeDragSelection() == nil
@@ -650,7 +627,6 @@ var _ = Describe("Test CrlEditor", func() {
 				Expect(page.RunScript("crlSendDiagramDrop(ID, x, y, shiftKey)", map[string]interface{}{"ID": diagramID, "x": "200", "y": "200", "shiftKey": "false"}, nil)).To(Succeed())
 				// Some form of sleep is required here as this thread blocks socket communications. Eventually accomplishes this as it will not
 				// be true until after all of the expected client communication has completed.
-				hl.ReleaseLocksAndWait()
 				AssertServerRequestProcessingComplete()
 				Eventually(func() bool {
 					return browsergui.BrowserGUISingleton.GetTreeDragSelection() == nil
@@ -665,7 +641,6 @@ var _ = Describe("Test CrlEditor", func() {
 				Expect(newNode2).ToNot(BeNil())
 				Expect(newNode2.GetLabel(hl)).To(Equal(coreDomain.GetLabel(hl)))
 				Expect(crldiagramdomain.GetDisplayLabel(newNode2, hl)).To(Equal(coreDomain.GetLabel(hl)))
-				hl.ReleaseLocksAndWait()
 				// Verify the tree structure
 				var treeNode2ID string
 				Expect(page.RunScript("return crlGetTreeNodeIDFromConceptID(conceptID);",
@@ -683,7 +658,6 @@ var _ = Describe("Test CrlEditor", func() {
 					var initialSelectionID string
 					Expect(page.RunScript("return crlSelectedConceptID", nil, &initialSelectionID)).To(Succeed())
 					Expect(page.RunScript("crlSendAddDiagramChild(conceptSpaceID);", map[string]interface{}{"conceptSpaceID": cs1ID}, nil)).To(Succeed())
-					hl.ReleaseLocksAndWait()
 					AssertServerRequestProcessingComplete()
 					Eventually(func() string {
 						var retrievedSelectionID string
@@ -702,7 +676,6 @@ var _ = Describe("Test CrlEditor", func() {
 					var initialSelectionID string
 					Expect(page.RunScript("return crlSelectedConceptID", nil, &initialSelectionID)).To(Succeed())
 					Expect(page.RunScript("crlSendAddElementChild(conceptSpaceID);", map[string]interface{}{"conceptSpaceID": cs1ID}, nil)).To(Succeed())
-					hl.ReleaseLocksAndWait()
 					AssertServerRequestProcessingComplete()
 					Eventually(func() string {
 						var retrievedSelectionID string
@@ -720,7 +693,6 @@ var _ = Describe("Test CrlEditor", func() {
 					var initialSelectionID string
 					Expect(page.RunScript("return crlSelectedConceptID", nil, &initialSelectionID)).To(Succeed())
 					Expect(page.RunScript("crlSendAddLiteralChild(conceptSpaceID);", map[string]interface{}{"conceptSpaceID": cs1ID}, nil)).To(Succeed())
-					hl.ReleaseLocksAndWait()
 					AssertServerRequestProcessingComplete()
 					Eventually(func() string {
 						var retrievedSelectionID string
@@ -744,7 +716,6 @@ var _ = Describe("Test CrlEditor", func() {
 					var initialSelectionID string
 					Expect(page.RunScript("return crlSelectedConceptID", nil, &initialSelectionID)).To(Succeed())
 					Expect(page.RunScript("crlSendAddReferenceChild(conceptSpaceID);", map[string]interface{}{"conceptSpaceID": cs1ID}, nil)).To(Succeed())
-					hl.ReleaseLocksAndWait()
 					AssertServerRequestProcessingComplete()
 					Eventually(func() string {
 						var retrievedSelectionID string
@@ -768,7 +739,6 @@ var _ = Describe("Test CrlEditor", func() {
 					var initialSelectionID string
 					Expect(page.RunScript("return crlSelectedConceptID", nil, &initialSelectionID)).To(Succeed())
 					Expect(page.RunScript("crlSendAddRefinementChild(conceptSpaceID);", map[string]interface{}{"conceptSpaceID": cs1ID}, nil)).To(Succeed())
-					hl.ReleaseLocksAndWait()
 					AssertServerRequestProcessingComplete()
 					Eventually(func() string {
 						var retrievedSelectionID string
@@ -1033,7 +1003,7 @@ var _ = Describe("Test CrlEditor", func() {
 						PerformUndoRedoTest(5)
 					})
 				})
-				Describe("ElementPointer creation should work", func() {
+				FDescribe("ElementPointer creation should work", func() {
 					Specify("for a node source and node target", func() {
 						target, targetView := CreateElement(diagram, 100, 100)
 						source, sourceView := CreateReferenceNode(diagram, 100, 200)
@@ -1073,7 +1043,7 @@ var _ = Describe("Test CrlEditor", func() {
 						Expect(crldiagramdomain.GetLinkTarget(epView, hl).GetConceptID(hl)).To(Equal(targetView.GetConceptID(hl)))
 						PerformUndoRedoTest(5)
 					})
-					FSpecify("for a node source and an OwnerPointer target", func() {
+					Specify("for a node source and an OwnerPointer target", func() {
 						source, sourceView := CreateReferenceNode(diagram, 100, 150)
 						e1, e1View := CreateElement(diagram, 200, 100)
 						_, e2View := CreateElement(diagram, 200, 200)
@@ -1143,14 +1113,12 @@ var _ = Describe("Test CrlEditor", func() {
 					Expect(page.Click(agouti.HoldClick, agouti.LeftButton)).To(Succeed())
 					Expect(page.FindByID(e1CellID).MouseToElement()).To(Succeed())
 					Expect(page.Click(agouti.ReleaseClick, agouti.LeftButton)).To(Succeed())
-					hl.ReleaseLocksAndWait()
 					AssertServerRequestProcessingComplete()
 					Eventually(func() bool {
 						var correctToolbarSelection bool
 						page.RunScript("return crlCurrentToolbarButton == crlCursorToolbarButtonID;", nil, &correctToolbarSelection)
 						return correctToolbarSelection
 					}, 3).Should(BeTrue())
-					hl.ReleaseLocksAndWait()
 					// Now check the results
 					Expect(r1.GetAbstractConcept(hl)).To(Equal(e1))
 					PerformUndoRedoTest(3)
@@ -1172,14 +1140,12 @@ var _ = Describe("Test CrlEditor", func() {
 					Expect(page.Click(agouti.HoldClick, agouti.LeftButton)).To(Succeed())
 					Expect(page.FindByID(e1CellID).MouseToElement()).To(Succeed())
 					Expect(page.Click(agouti.ReleaseClick, agouti.LeftButton)).To(Succeed())
-					hl.ReleaseLocksAndWait()
 					AssertServerRequestProcessingComplete()
 					Eventually(func() bool {
 						var correctToolbarSelection bool
 						page.RunScript("return crlCurrentToolbarButton == crlCursorToolbarButtonID;", nil, &correctToolbarSelection)
 						return correctToolbarSelection
 					}, 3).Should(BeTrue())
-					hl.ReleaseLocksAndWait()
 					// Now check the results
 					Expect(r1.GetRefinedConcept(hl)).To(Equal(e1))
 					PerformUndoRedoTest(3)

@@ -99,7 +99,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		Expect(err).To(BeNil())
 		Expect(mapInstanceDomain.SetLabel("MapInstanceDomain", hl)).To(Succeed())
 		Expect(mapInstanceDomain.SetOwningConcept(mapInstanceFolder, hl)).To(Succeed())
-		hl.ReleaseLocksAndWait()
 
 		// Get the tempDir
 		tempDirPath = os.TempDir()
@@ -115,7 +114,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		Specify("The target domain should be created correctly", func() {
 			log.Printf("About set set sourceInstanceDomain")
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 			targetInstanceDomain := mapInstanceFolder.GetFirstOwnedConceptRefinedFrom(targetAbstractDomain, hl)
 			Expect(targetInstanceDomain).ToNot(BeNil())
 		})
@@ -148,7 +146,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 			targetAbstractLiteral, err = uOfD.NewOwnedLiteral(targetAbstractDomain, "TargetAbstractLiteral", hl)
 			Expect(err).To(BeNil())
-			hl.ReleaseLocksAndWait()
 		})
 		Specify("Element to Element Map", func() {
 			// Set up the abstract map
@@ -165,7 +162,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceElement.SetLabel("SourceInstanceElement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("ElementMapTest")
@@ -203,7 +199,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceReference.SetLabel("SourceInstanceReference", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("ElementMapTest")
@@ -242,7 +237,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceLiteral.SetLabel("SourceInstanceLiteral", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("ElementMapTest")
@@ -281,7 +275,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceRefinement.SetLabel("SourceInstanceRefinement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("ElementMapTest")
@@ -320,7 +313,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceElement.SetLabel("SourceInstanceElement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("Element2ReferenceMapTest")
@@ -358,7 +350,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceElement.SetLabel("SourceInstanceElement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("Element2LiteralMapTest")
@@ -396,7 +387,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceElement.SetLabel("SourceInstanceElement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("Element2RefinementMapTest")
@@ -434,7 +424,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceReference.SetLabel("SourceInstanceReference", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("Reference2ElementMapTest")
@@ -475,7 +464,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceReference.SetLabel("SourceInstanceReference", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("Reference2RefinementMapTest")
@@ -513,7 +501,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceLiteral.SetLabel("SourceInstanceLiteral", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("Literal2ElementMapTest")
@@ -551,7 +538,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceLiteral.SetLabel("SourceInstanceLiteral", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("Literal2ReferenceMapTest")
@@ -589,7 +575,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceLiteral.SetLabel("SourceInstanceLiteral", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("Literal2RefinementMapTest")
@@ -627,7 +612,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceRefinement.SetLabel("SourceInstanceRefinement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("Refinement2ElementMapTest")
@@ -665,7 +649,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceRefinement.SetLabel("SourceInstanceRefinement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("Refinement2ReferenceMapTest")
@@ -703,7 +686,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceRefinement.SetLabel("SourceInstanceRefinement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 
 			// Diagnostics view
 			// graph := core.NewCrlGraph("Refinement2LiteralMapTest")
@@ -771,7 +753,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			// Expect(err).To(BeNil())
 			// targetAbstractLiteral, err = uOfD.NewOwnedLiteral(targetAbstractDomain, "TargetAbstractLiteral", hl)
 			// Expect(err).To(BeNil())
-			hl.ReleaseLocksAndWait()
 
 			// Abstract Map Setup
 			element1ToElement1Map, err = uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, hl)

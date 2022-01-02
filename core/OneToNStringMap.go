@@ -78,7 +78,7 @@ func (onMap *OneToNStringMap) IsEquivalent(sem *OneToNStringMap) bool {
 			return false
 		}
 	}
-	return len(onMap.oneToNStringMap) != len(sem.oneToNStringMap)
+	return len(onMap.oneToNStringMap) == len(sem.oneToNStringMap)
 }
 
 // AddMappedValue adds the Element UUID as a child of the owner UUID

@@ -193,6 +193,9 @@ func (rPtr *refinement) recoverRefinementFields(unmarshaledData *map[string]json
 
 // SetAbstractConcept sets the abstract concept using the ID of the supplied Element
 func (rPtr *refinement) SetAbstractConcept(el Element, hl *Transaction) error {
+	if rPtr.uOfD == nil {
+		return errors.New("refinement.SetAbstractConcept failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(rPtr)
 	id := ""
 	if el != nil {
@@ -202,6 +205,9 @@ func (rPtr *refinement) SetAbstractConcept(el Element, hl *Transaction) error {
 }
 
 func (rPtr *refinement) SetAbstractConceptID(acID string, hl *Transaction) error {
+	if rPtr.uOfD == nil {
+		return errors.New("refinement.SetAbstractConceptID failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(rPtr)
 	if !rPtr.isEditable(hl) {
 		return errors.New("refinement.SetAbstractConceptID failed because the refinement is not editable")
@@ -259,6 +265,9 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *Transaction) error
 }
 
 func (rPtr *refinement) SetRefinedConcept(el Element, hl *Transaction) error {
+	if rPtr.uOfD == nil {
+		return errors.New("refinement.SetRefinedConcept failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(rPtr)
 	id := ""
 	if el != nil {
@@ -268,6 +277,9 @@ func (rPtr *refinement) SetRefinedConcept(el Element, hl *Transaction) error {
 }
 
 func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *Transaction) error {
+	if rPtr.uOfD == nil {
+		return errors.New("refinement.SetRefinedConceptID failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(rPtr)
 	if !rPtr.isEditable(hl) {
 		return errors.New("refinement.SetReferencedConceptID failed because the refinement is not editable")

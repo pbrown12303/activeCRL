@@ -14,11 +14,10 @@ var _ = Describe("Set test", func() {
 		uOfD = core.NewUniverseOfDiscourse()
 		hl = uOfD.NewTransaction()
 		BuildCrlDataStructuresDomain(uOfD, hl)
-		hl.ReleaseLocksAndWait()
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocksAndWait()
+		hl.ReleaseLocks()
 	})
 
 	Describe("Set should be created correctly", func() {

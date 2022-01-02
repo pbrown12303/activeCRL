@@ -18,7 +18,7 @@ var _ = Describe("Element internals test", func() {
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocksAndWait()
+		hl.ReleaseLocks()
 	})
 
 	Describe("Creating a ConceptState", func() {

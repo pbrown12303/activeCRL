@@ -14,11 +14,10 @@ var _ = Describe("List test", func() {
 		uOfD = core.NewUniverseOfDiscourse()
 		hl = uOfD.NewTransaction()
 		BuildCrlDataStructuresDomain(uOfD, hl)
-		hl.ReleaseLocksAndWait()
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocksAndWait()
+		hl.ReleaseLocks()
 	})
 
 	Describe("List should be created correctly", func() {
@@ -467,19 +466,17 @@ var _ = Describe("List test", func() {
 		Specify("Instantiated lists should serialize and de-serialze properly", func() {
 			uOfD2 := core.NewUniverseOfDiscourse()
 			hl2 := uOfD.NewTransaction()
+			defer hl2.ReleaseLocks()
 			BuildCrlDataStructuresDomain(uOfD2, hl)
-			hl2.ReleaseLocksAndWait()
 			type1 := uOfD.GetElementWithURI(core.ElementURI)
 			domain1, _ := uOfD.NewElement(hl)
 			list1, err0 := NewList(uOfD, type1, hl)
 			list1.SetOwningConcept(domain1, hl)
-			hl.ReleaseLocksAndWait()
 			Expect(err0).To(BeNil())
 			Expect(list1).ToNot(BeNil())
 			serialized1, err := uOfD.MarshalDomain(domain1, hl)
 			Expect(err).To(BeNil())
 			domain2, err2 := uOfD2.RecoverDomain(serialized1, hl2)
-			hl2.ReleaseLocksAndWait()
 			Expect(err2).To(BeNil())
 			Expect(domain2).ToNot(BeNil())
 			Expect(core.RecursivelyEquivalent(domain1, hl, domain2, hl2)).To(BeTrue())

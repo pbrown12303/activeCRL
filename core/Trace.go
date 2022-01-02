@@ -36,9 +36,6 @@ var functionCallGraphs []*FunctionCallGraph
 // notificationsLimit places an absolute limit on the number of notifications allowed. A value of 0 means no limit.
 var notificationsLimit int
 
-// notificationsCount counts the number of notifications that have occurred
-var notificationsCount int
-
 // ClearFunctionCallGraphs deletes all existing FunctionCallGraphs
 func ClearFunctionCallGraphs() {
 	functionCallGraphs = nil
@@ -58,21 +55,3 @@ func GetFunctionCallGraphs() []*FunctionCallGraph {
 func GetNotificationGraphs() []*NotificationGraph {
 	return notificationGraphs
 }
-
-// GetNotificationsLimit returns the current limit on the number of notifications allowed. The default value
-// of 0 indicates that there is no limit. This is the normal operating value. A limit may be imposed to aid
-// in troubleshooting scenarios that have large numbers of notifications within a single "transaction" as
-// defined as the scope of the changes that occur before locks are released
-func GetNotificationsLimit() int {
-	return notificationsLimit
-}
-
-// SetNotificationsLimit is provided as a debugging aid. It limits the number of change notifications allowed.
-// A value of 0 is unlimited and is the normal production value.
-func SetNotificationsLimit(limit int) {
-	notificationsLimit = limit
-	notificationsCount = 0
-	notificationGraphs = nil
-}
-
-// TODO Complete implementation of NotificationsLimit - the limit can be set, but it is never enforced.

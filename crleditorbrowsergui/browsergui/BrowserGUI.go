@@ -314,7 +314,6 @@ func (bgPtr *BrowserGUI) initializeClientState(hl *core.Transaction) error {
 		}
 		openDiagramLiteral, _ = crldatastructuresdomain.GetNextMemberLiteral(openDiagramLiteral, hl)
 	}
-	hl.ReleaseLocksAndWait()
 	bgPtr.SendClientInitializationComplete()
 	return nil
 }
@@ -431,11 +430,6 @@ func (bgPtr *BrowserGUI) SetTraceChange(newValue bool, omitHousekeepingCalls boo
 	core.OmitManageTreeNodesCalls = omitManageTreeNodesCalls
 	core.OmitDiagramRelatedCalls = omitDiagramRelatedCalls
 	core.ClearFunctionCallGraphs()
-}
-
-// SetTraceChangeLimit sets the value of the TraceChangeLimit used in troubleshooting
-func (bgPtr *BrowserGUI) SetTraceChangeLimit(limit int) {
-	core.SetNotificationsLimit(limit)
 }
 
 // SetTreeDragSelection identifies the Element as the one being dragged from the tree

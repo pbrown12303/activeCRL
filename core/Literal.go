@@ -89,6 +89,9 @@ func (lPtr *literal) recoverLiteralFields(unmarshaledData *map[string]json.RawMe
 }
 
 func (lPtr *literal) SetLiteralValue(value string, hl *Transaction) error {
+	if lPtr.uOfD == nil {
+		return errors.New("literal.SetLiteralValue failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(lPtr)
 	if !lPtr.isEditable(hl) {
 		return errors.New("literal.SetLiteralValue failed because the literal is not editable")

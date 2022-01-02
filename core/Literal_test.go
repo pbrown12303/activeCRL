@@ -15,7 +15,7 @@ var _ = Describe("Literal Tests", func() {
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocksAndWait()
+		hl.ReleaseLocks()
 	})
 
 	Describe("Getting and setting the literal value", func() {

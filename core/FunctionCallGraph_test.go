@@ -26,22 +26,19 @@ var _ = Describe("Verify function call graph generation", func() {
 		df2.SetURI(df2URI, hl)
 		df3, _ = uOfD.NewElement(hl)
 		df3.SetURI(df3URI, hl)
-		hl.ReleaseLocksAndWait()
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocksAndWait()
+		hl.ReleaseLocks()
 	})
 
 	Describe("Test FunctionCallGraph for Element ConceptChanged generation", func() {
 		Specify("SetDefinition should generate a FunctionCallGraph for ConceptChanged", func() {
 			el, _ := uOfD.NewElement(hl)
-			hl.ReleaseLocksAndWait()
 			// Initiate the graph capture
 			TraceChange = true
 			definition := "Definition"
 			el.SetDefinition(definition, hl)
-			hl.ReleaseLocksAndWait()
 			Expect(len(functionCallGraphs) > 0).To(BeTrue())
 			fcgZero := functionCallGraphs[0]
 			Expect(fcgZero.executingElement).To(Equal(el))

@@ -15,7 +15,7 @@ var _ = Describe("Reference Tests", func() {
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocksAndWait()
+		hl.ReleaseLocks()
 	})
 
 	Describe("Setting and getting the ReferencedConcept", func() {

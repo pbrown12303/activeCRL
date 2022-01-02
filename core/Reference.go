@@ -252,6 +252,9 @@ func (rPtr *reference) recoverReferenceFields(unmarshaledData *map[string]json.R
 // SetReferencedConcept sets the referenced concept by calling SetReferencedConceptID using the ID of the
 // supplied Element
 func (rPtr *reference) SetReferencedConcept(el Element, attributeName AttributeName, hl *Transaction) error {
+	if rPtr.uOfD == nil {
+		return errors.New("reference.SetReferencedConcept failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(rPtr)
 	id := ""
 	if el != nil {
@@ -262,6 +265,9 @@ func (rPtr *reference) SetReferencedConcept(el Element, attributeName AttributeN
 
 // SetReferencedConceptID sets the referenced concept using the supplied ID.
 func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName AttributeName, hl *Transaction) error {
+	if rPtr.uOfD == nil {
+		return errors.New("reference.SetReferencedConceptID failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(rPtr)
 	if !rPtr.isEditable(hl) {
 		return errors.New("reference.SetReferencedConceptID failed because the reference is not editable")

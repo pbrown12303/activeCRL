@@ -20,7 +20,7 @@ var _ = Describe("Refinement tests", func() {
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocksAndWait()
+		hl.ReleaseLocks()
 	})
 
 	Describe("Setting abstract and refined concepts should work properly", func() {

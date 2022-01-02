@@ -15,7 +15,7 @@ var _ = Describe("UndoManager internals test", func() {
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocksAndWait()
+		hl.ReleaseLocks()
 	})
 
 	Describe("Test undo redo on empty stack", func() {

@@ -14,11 +14,10 @@ var _ = Describe("Boolean test", func() {
 		uOfD = core.NewUniverseOfDiscourse()
 		hl = uOfD.NewTransaction()
 		BuildCrlDataTypesDomain(uOfD, hl)
-		hl.ReleaseLocksAndWait()
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocksAndWait()
+		hl.ReleaseLocks()
 	})
 
 	Specify("Boolean should be created correctly", func() {

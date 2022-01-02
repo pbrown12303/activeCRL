@@ -411,7 +411,6 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	if err != nil {
 		return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 	}
-	trans.ReleaseLocksAndWait()
 	return nil
 }
 

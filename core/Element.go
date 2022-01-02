@@ -673,7 +673,7 @@ func (ePtr *element) GetVersion(hl *Transaction) int {
 func (ePtr *element) IsRefinementOf(abstraction Element, hl *Transaction) bool {
 	hl.ReadLockElement(ePtr)
 	// Get the actual element so that we can get the correct type
-	fullElement := ePtr.uOfD.GetElement(ePtr.ConceptID)
+	fullElement := hl.uOfD.GetElement(ePtr.ConceptID)
 	// Check to see whether the abstraction is one of the core classes
 	abstractionURI := abstraction.GetURI(hl)
 	switch abstractionURI {
@@ -695,7 +695,7 @@ func (ePtr *element) IsRefinementOf(abstraction Element, hl *Transaction) bool {
 			return true
 		}
 	}
-	it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
+	it := hl.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
 	defer it.Stop()
 	for id := range it.C {
 		listener := ePtr.uOfD.GetElement(id.(string))
@@ -1037,6 +1037,9 @@ func (ePtr *element) removeOwnedConcept(ownedConceptID string, hl *Transaction) 
 
 // SetDefinition sets the definition of the Element
 func (ePtr *element) SetDefinition(def string, hl *Transaction) error {
+	if ePtr.uOfD == nil {
+		return errors.New("element.SetDefinition failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(ePtr)
 	if !ePtr.isEditable(hl) {
 		return errors.New("element.SetDefinition failed because the element is not editable")
@@ -1063,6 +1066,9 @@ func (ePtr *element) SetDefinition(def string, hl *Transaction) error {
 
 // SetIsCore sets the flag indicating that the element is a Core concept and cannot be edited. Once set, this flag cannot be cleared.
 func (ePtr *element) SetIsCore(hl *Transaction) error {
+	if ePtr.uOfD == nil {
+		return errors.New("element.SetIsCore failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(ePtr)
 	if !ePtr.IsCore {
 		ePtr.uOfD.preChange(ePtr, hl)
@@ -1086,6 +1092,9 @@ func (ePtr *element) SetIsCore(hl *Transaction) error {
 
 // SetIsCoreRecursively recursively sets the flag indicating that the element is a Core concept and cannot be edited. Once set, this flag cannot be cleared.
 func (ePtr *element) SetIsCoreRecursively(hl *Transaction) error {
+	if ePtr.uOfD == nil {
+		return errors.New("element.SetIsCoreRecursively failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(ePtr)
 	err := ePtr.SetIsCore(hl)
 	if err != nil {
@@ -1105,6 +1114,9 @@ func (ePtr *element) SetIsCoreRecursively(hl *Transaction) error {
 
 // SetLabel sets the label of the Element
 func (ePtr *element) SetLabel(label string, hl *Transaction) error {
+	if ePtr.uOfD == nil {
+		return errors.New("element.SetLabel failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(ePtr)
 	if !ePtr.isEditable(hl) {
 		return errors.New("element.SetLabel failed because the element is not editable")
@@ -1132,6 +1144,9 @@ func (ePtr *element) SetLabel(label string, hl *Transaction) error {
 // SetOwningConcept takes the ID of the supplied concept and call SetOwningConceptID. It first checks to
 // determine whether the new owner is editable and will throw an error if it is not
 func (ePtr *element) SetOwningConcept(el Element, hl *Transaction) error {
+	if ePtr.uOfD == nil {
+		return errors.New("element.SetOwningConcept failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(ePtr)
 	id := ""
 	if el != nil {
@@ -1151,6 +1166,9 @@ func (ePtr *element) SetOwningConcept(el Element, hl *Transaction) error {
 // Design Note: the argument is the identifier rather than the Element to ensure
 // the correct type of the owning concept is recorded.
 func (ePtr *element) SetOwningConceptID(ocID string, hl *Transaction) error {
+	if ePtr.uOfD == nil {
+		return errors.New("element.SetOwningConceptID failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(ePtr)
 	if !ePtr.isEditable(hl) {
 		return errors.New("element.SetOwningConceptID failed because the element is not editable")
@@ -1207,6 +1225,9 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *Transaction) error {
 // if the concept is one of the CRL core concepts, as these can never be made writable. It will also
 // throw an error if its owner is read only and this call tries to set read only false.
 func (ePtr *element) SetReadOnly(value bool, hl *Transaction) error {
+	if ePtr.uOfD == nil {
+		return errors.New("element.SetReadOnly failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(ePtr)
 	if ePtr.GetIsCore(hl) {
 		return errors.New("element.SetReadOnly failed because element is a core element")
@@ -1237,6 +1258,9 @@ func (ePtr *element) SetReadOnly(value bool, hl *Transaction) error {
 }
 
 func (ePtr *element) SetReadOnlyRecursively(value bool, hl *Transaction) error {
+	if ePtr.uOfD == nil {
+		return errors.New("element.SetReadOnlyRecursively failed because the element uOfD is nil")
+	}
 	err := ePtr.SetReadOnly(value, hl)
 	if err != nil {
 		return errors.Wrap(err, "Element.SetReadOnlyRecursively failed")
@@ -1261,6 +1285,9 @@ func (ePtr *element) setUniverseOfDiscourse(uOfD *UniverseOfDiscourse, hl *Trans
 
 // SetURI sets the URI of the Element
 func (ePtr *element) SetURI(uri string, hl *Transaction) error {
+	if ePtr.uOfD == nil {
+		return errors.New("element.SetURI failed because the element uOfD is nil")
+	}
 	hl.WriteLockElement(ePtr)
 	if !ePtr.isEditable(hl) {
 		return errors.New("element.SetURI failed because the elementis not editable")

@@ -1387,11 +1387,6 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 		return nil
 	}
 	modelElement := GetReferencedModelElement(diagramElement, trans)
-	// if the modelElement is nil, it has gone away. Delete the diagramElement.
-	if modelElement == nil {
-		uOfD.DeleteElement(diagramElement, trans)
-		return nil
-	}
 	switch notification.GetNatureOfChange() {
 	case core.ForwardedChange:
 		if notification.GetReportingElementID() == diagramElementModelReference.GetConceptID(trans) {

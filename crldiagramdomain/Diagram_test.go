@@ -17,7 +17,7 @@ var _ = Describe("CrlDiagramtest", func() {
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocksAndWait()
+		hl.ReleaseLocks()
 	})
 
 	Describe("TestBuildCrlDiagramDomain", func() {
@@ -90,7 +90,6 @@ var _ = Describe("CrlDiagramtest", func() {
 	Describe("Test convenience functions", func() {
 		Specify("GetReferencedElement and SetReferencedElement should work", func() {
 			BuildCrlDiagramDomain(uOfD, hl)
-			hl.ReleaseLocksAndWait()
 			node, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, hl)
 			target, _ := uOfD.NewElement(hl)
 			SetReferencedModelElement(node, target, hl)
@@ -100,19 +99,16 @@ var _ = Describe("CrlDiagramtest", func() {
 		})
 		Specify("SetReferencedElement should gracefully handle a nil argument", func() {
 			BuildCrlDiagramDomain(uOfD, hl)
-			hl.ReleaseLocksAndWait()
 			target, _ := uOfD.NewElement(hl)
 			SetReferencedModelElement(nil, target, hl)
 		})
 		Specify("SetReferencedElement should gracefully handle a nil argument", func() {
 			BuildCrlDiagramDomain(uOfD, hl)
-			hl.ReleaseLocksAndWait()
 			node, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, hl)
 			SetReferencedModelElement(node, nil, hl)
 		})
 		Specify("Test GetAbstractionDisplayLabel and SetAbstractionDisplayLabel", func() {
 			BuildCrlDiagramDomain(uOfD, hl)
-			hl.ReleaseLocksAndWait()
 			node, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, hl)
 			displayLabel := "displayLabel"
 			SetAbstractionDisplayLabel(node, displayLabel, hl)
@@ -120,7 +116,6 @@ var _ = Describe("CrlDiagramtest", func() {
 		})
 		Specify("Test GetDisplayLabel and SetDisplayLabel", func() {
 			BuildCrlDiagramDomain(uOfD, hl)
-			hl.ReleaseLocksAndWait()
 			node, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, hl)
 			displayLabel := "displayLabel"
 			SetDisplayLabel(node, displayLabel, hl)
@@ -128,7 +123,6 @@ var _ = Describe("CrlDiagramtest", func() {
 		})
 		Specify("Test GetNodeHeight and SetNodeHeight", func() {
 			BuildCrlDiagramDomain(uOfD, hl)
-			hl.ReleaseLocksAndWait()
 			node, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, hl)
 			value := 123.45
 			SetNodeHeight(node, value, hl)
@@ -136,7 +130,6 @@ var _ = Describe("CrlDiagramtest", func() {
 		})
 		Specify("Test GetNodeWidth and SetNodeWidth", func() {
 			BuildCrlDiagramDomain(uOfD, hl)
-			hl.ReleaseLocksAndWait()
 			node, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, hl)
 			value := 123.45
 			SetNodeWidth(node, value, hl)
@@ -144,7 +137,6 @@ var _ = Describe("CrlDiagramtest", func() {
 		})
 		Specify("Test GetNodeX and SetNodeX", func() {
 			BuildCrlDiagramDomain(uOfD, hl)
-			hl.ReleaseLocksAndWait()
 			node, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, hl)
 			value := 123.45
 			SetNodeX(node, value, hl)
@@ -152,7 +144,6 @@ var _ = Describe("CrlDiagramtest", func() {
 		})
 		Specify("Test GetNodeY and SetNodeY", func() {
 			BuildCrlDiagramDomain(uOfD, hl)
-			hl.ReleaseLocksAndWait()
 			node, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramNodeURI, hl)
 			value := 123.45
 			SetNodeY(node, value, hl)
@@ -160,7 +151,6 @@ var _ = Describe("CrlDiagramtest", func() {
 		})
 		Specify("GetLinkSource and SetLinkSource should work", func() {
 			BuildCrlDiagramDomain(uOfD, hl)
-			hl.ReleaseLocksAndWait()
 			link, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramLinkURI, hl)
 			target, _ := uOfD.NewElement(hl)
 			SetLinkSource(link, target, hl)
@@ -170,7 +160,6 @@ var _ = Describe("CrlDiagramtest", func() {
 		})
 		Specify("GetLinkTarget and SetLinkTarget should work", func() {
 			BuildCrlDiagramDomain(uOfD, hl)
-			hl.ReleaseLocksAndWait()
 			link, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramLinkURI, hl)
 			target, _ := uOfD.NewElement(hl)
 			SetLinkTarget(link, target, hl)
@@ -205,7 +194,6 @@ var _ = Describe("CrlDiagramtest", func() {
 	Describe("Test New... functions", func() {
 		BeforeEach(func() {
 			BuildCrlDiagramDomain(uOfD, hl)
-			hl.ReleaseLocksAndWait()
 		})
 		Specify("Creating a new node shoud work", func() {
 			node, err := NewDiagramNode(uOfD, hl)

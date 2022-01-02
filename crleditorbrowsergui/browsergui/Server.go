@@ -152,7 +152,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	hl := BrowserGUISingleton.GetUofD().NewTransaction()
-	defer hl.ReleaseLocksAndWait()
+	defer hl.ReleaseLocks()
 	if CrlLogClientRequests {
 		log.Printf("Received request: %#v", request)
 	}
@@ -214,7 +214,6 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		if el != nil {
 			el.SetDefinition(request.AdditionalParameters["NewValue"], hl)
 		}
-		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed DefinitionChanged", request.RequestConceptID, el)
 	case "DeleteDiagramElementView":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
@@ -277,7 +276,6 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			diagramManager := BrowserGUISingleton.getDiagramManager()
 			diagramManager.displayDiagram(el, hl)
 		}
-		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed DisplayDiagramSelected", request.RequestConceptID, el)
 	case "ElementPointerChanged":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
@@ -286,7 +284,6 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			request.AdditionalParameters["SourceID"],
 			request.AdditionalParameters["TargetID"],
 			request.AdditionalParameters["TargetAttributeName"], hl)
-		hl.ReleaseLocksAndWait()
 		if err != nil {
 			sendReply(w, 1, "Error processing ElementPointerChanged: "+err.Error(), "", nil)
 		} else {
@@ -307,7 +304,6 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		if diagramElement != nil {
 			err = BrowserGUISingleton.diagramManager.formatChanged(diagramElement, request.AdditionalParameters["LineColor"], request.AdditionalParameters["BGColor"], hl)
 		}
-		hl.ReleaseLocksAndWait()
 		if err == nil {
 			sendReply(w, 0, "Processed FormatChanged", request.RequestConceptID, diagramElement)
 		} else {
@@ -333,7 +329,6 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		if el != nil {
 			el.SetLabel(request.AdditionalParameters["NewValue"], hl)
 		}
-		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed LabelChanged", request.RequestConceptID, el)
 	case "LiteralValueChanged":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
@@ -344,7 +339,6 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 				typedEl.SetLiteralValue(request.AdditionalParameters["NewValue"], hl)
 			}
 		}
-		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed LiteralValueChanged", request.RequestConceptID, el)
 	case "NewDomainRequest":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
@@ -533,7 +527,6 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		if el != nil {
 			el.SetURI(request.AdditionalParameters["NewValue"], hl)
 		}
-		hl.ReleaseLocksAndWait()
 		sendReply(w, 0, "Processed URI changed", request.RequestConceptID, el)
 	default:
 		log.Printf("Unhandled request: %s", request.Action)

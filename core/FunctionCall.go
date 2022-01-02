@@ -5,16 +5,8 @@
 package core
 
 import (
-	"sync"
-	"sync/atomic"
-
 	"github.com/pkg/errors"
 )
-
-var pendingFunctionCount int32
-
-// CrlLogPendingFunctionCount is a debugging aid. When set to true, all changes to the pending function count will be printed to the log
-var CrlLogPendingFunctionCount bool
 
 // The crlExecutionFunction is the standard signature of a function that gets called when an element (including
 // its children) experience a change. Its arguments are the element that changed, the array of ChangeNotifications, and
@@ -22,91 +14,23 @@ var CrlLogPendingFunctionCount bool
 // has completed.
 type crlExecutionFunction func(Element, *ChangeNotification, *Transaction) error
 
-type pendingFunctionCall struct {
+type functionCallRecord struct {
 	function     crlExecutionFunction
 	functionID   string
 	target       Element
 	notification *ChangeNotification
 }
 
-func newPendingFunctionCall(functionID string, function crlExecutionFunction, target Element, notification *ChangeNotification) (*pendingFunctionCall, error) {
+func newFunctionCallRecord(functionID string, function crlExecutionFunction, target Element, notification *ChangeNotification) (*functionCallRecord, error) {
 	if target == nil {
 		return nil, errors.New("FunctionCallManager.go newPendingFunctionCall invoked with nil target")
 	}
-	var pendingCall pendingFunctionCall
-	pendingCall.function = function
-	pendingCall.functionID = functionID
-	pendingCall.target = target
-	pendingCall.notification = notification
-	return &pendingCall, nil
-}
-
-type pendingFunctionCallEntry struct {
-	pendingCall *pendingFunctionCall
-	next        *pendingFunctionCallEntry
-}
-
-func newPendingFunctionCallEntry(pendingCall *pendingFunctionCall) *pendingFunctionCallEntry {
-	var entry pendingFunctionCallEntry
-	entry.pendingCall = pendingCall
-	return &entry
-}
-
-// pendingFunctionCallQueue maintains a linked list of pending function calls
-type pendingFunctionCallQueue struct {
-	sync.Mutex
-	queueHead *pendingFunctionCallEntry
-	queueTail *pendingFunctionCallEntry
-}
-
-func newPendingFunctionCallQueue() *pendingFunctionCallQueue {
-	var queue pendingFunctionCallQueue
-	return &queue
-}
-
-func (queue *pendingFunctionCallQueue) enqueue(pendingCall *pendingFunctionCall) error {
-	queue.Mutex.Lock()
-	defer queue.Mutex.Unlock()
-	if pendingCall == nil {
-		return errors.New("pendingFunctionCallQueue.enqueue called with nil pendingCall")
-	}
-	currentTail := queue.queueTail
-	newTail := newPendingFunctionCallEntry(pendingCall)
-	if currentTail == nil {
-		queue.queueHead = newTail
-	} else {
-		currentTail.next = newTail
-	}
-	queue.queueTail = newTail
-	return nil
-}
-
-func (queue *pendingFunctionCallQueue) dequeue() *pendingFunctionCall {
-	queue.Mutex.Lock()
-	defer queue.Mutex.Unlock()
-	currentHead := queue.queueHead
-	if currentHead != nil {
-		queue.queueHead = currentHead.next
-		if currentHead.next == nil {
-			queue.queueTail = nil
-		} else {
-			currentHead.next = nil
-		}
-		return currentHead.pendingCall
-	}
-	return nil
-}
-
-func (queue *pendingFunctionCallQueue) findFirstPendingCall(functionID string, target Element) *pendingFunctionCall {
-	currentCandidate := queue.queueHead
-	for currentCandidate != nil {
-		currentCall := currentCandidate.pendingCall
-		if currentCall.functionID == functionID && currentCall.target == target {
-			return currentCall
-		}
-		currentCandidate = currentCandidate.next
-	}
-	return nil
+	var functionCall functionCallRecord
+	functionCall.function = function
+	functionCall.functionID = functionID
+	functionCall.target = target
+	functionCall.notification = notification
+	return &functionCall, nil
 }
 
 // The functions type maps core Element identifiers to the array of crlExecutionFunctions associated with the identfier.
@@ -122,9 +46,4 @@ func isDiagramRelatedFunction(functionID string) bool {
 		return true
 	}
 	return false
-}
-
-// GetPendingFunctionCallCount returns the count of all pending functions from all function managers (i.e. from all HeldLocks objects)
-func GetPendingFunctionCallCount() int32 {
-	return atomic.LoadInt32(&pendingFunctionCount)
 }

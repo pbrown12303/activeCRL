@@ -19,7 +19,7 @@ var _ = Describe("UniverseOfDiscourse", func() {
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocksAndWait()
+		hl.ReleaseLocks()
 	})
 
 	Describe("Creating Initialized UniverseOfDiscourse", func() {
@@ -154,7 +154,6 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			uri := CorePrefix + "test"
 			Expect(uOfD.GetElementWithURI(uri)).To(BeNil())
 			el.SetURI(uri, hl)
-			hl.ReleaseLocksAndWait()
 			Expect(uOfD.GetElementWithURI(uri)).To(Equal(el))
 		})
 	})
@@ -189,7 +188,6 @@ var _ = Describe("UniverseOfDiscourse", func() {
 		Specify("Replicate should work properly", func() {
 			replicate, err := uOfD.CreateReplicateAsRefinement(original, hl, replicateURI)
 			Expect(err).To(BeNil())
-			hl.ReleaseLocksAndWait()
 			Expect(replicate.IsRefinementOf(original, hl)).To(BeTrue())
 			Expect(replicate.GetURI(hl)).To(Equal(replicateURI))
 			Expect(uOfD.GetElementWithURI(replicateURI)).To(Equal(replicate))
@@ -254,7 +252,6 @@ var _ = Describe("UniverseOfDiscourse", func() {
 		Specify("Replicate should work properly", func() {
 			replicate, err := uOfD.CreateReplicateAsRefinement(original, hl, replicateURI)
 			Expect(err).To(BeNil())
-			hl.ReleaseLocksAndWait()
 			Expect(replicate.IsRefinementOf(original, hl)).To(BeTrue())
 			Expect(replicate.GetURI(hl)).To(Equal(replicateURI))
 			Expect(uOfD.GetElementWithURI(replicateURI)).To(Equal(replicate))
@@ -318,7 +315,6 @@ var _ = Describe("UniverseOfDiscourse", func() {
 		Specify("Replicate should work properly", func() {
 			replicate, err := uOfD.CreateReplicateAsRefinement(original, hl, replicateURI)
 			Expect(err).To(BeNil())
-			hl.ReleaseLocksAndWait()
 			Expect(replicate.IsRefinementOf(original, hl)).To(BeTrue())
 			Expect(replicate.GetURI(hl)).To(Equal(replicateURI))
 			Expect(uOfD.GetElementWithURI(replicateURI)).To(Equal(replicate))
@@ -382,7 +378,6 @@ var _ = Describe("UniverseOfDiscourse", func() {
 		Specify("Replicate should work properly", func() {
 			replicate, err := uOfD.CreateReplicateAsRefinement(original, hl, replicateURI)
 			Expect(err).To(BeNil())
-			hl.ReleaseLocksAndWait()
 			Expect(replicate.IsRefinementOf(original, hl)).To(BeTrue())
 			Expect(replicate.GetURI(hl)).To(Equal(replicateURI))
 			Expect(uOfD.GetElementWithURI(replicateURI)).To(Equal(replicate))

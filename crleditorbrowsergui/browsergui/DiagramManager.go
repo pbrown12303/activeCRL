@@ -187,7 +187,6 @@ func (dmPtr *diagramManager) addConceptViewImpl(uOfD *core.UniverseOfDiscourse, 
 	if err != nil {
 		return nil, errors.Wrap(err, "diagramManager.addConceptView failed")
 	}
-	hl.ReleaseLocksAndWait()
 
 	return newElement, nil
 }
@@ -219,7 +218,6 @@ func (dmPtr *diagramManager) addCopyWithRefinement(request *Request, hl *core.Tr
 		return nil, errors.Wrap(err, "diagramManager.addCopyWithRefinement failed")
 	}
 	copy.SetOwningConcept(diagram.GetOwningConcept(hl), hl)
-	hl.ReleaseLocksAndWait()
 	_, err2 := dmPtr.addConceptViewImpl(uOfD, diagram, copy, x, y, hl)
 	if err2 != nil {
 		return nil, errors.Wrap(err2, "diagramManager.addCopyWithRefinement failed")
@@ -240,12 +238,10 @@ func (dmPtr *diagramManager) addDiagram(ownerID string, hl *core.Transaction) (c
 	if err != nil {
 		return nil, errors.Wrap(err, "diagramManager.addDiagram failed")
 	}
-	hl.ReleaseLocksAndWait()
 	err = dmPtr.displayDiagram(diagram, hl)
 	if err != nil {
 		return nil, errors.Wrap(err, "diagramManager.addDiagram failed")
 	}
-	hl.ReleaseLocksAndWait()
 	return diagram, nil
 }
 
@@ -322,7 +318,6 @@ func (dmPtr *diagramManager) diagramClick(request *Request, hl *core.Transaction
 		return errors.Wrap(err, "diagramManager.diagramClick failed")
 	}
 	dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
-	hl.ReleaseLocksAndWait()
 
 	return nil
 }
@@ -495,7 +490,6 @@ func (dmPtr *diagramManager) newDiagram(hl *core.Transaction) (core.Element, err
 		return nil, errors.Wrap(err, "diagramManager.newDiagram failed")
 	}
 	diagram.SetLabel(name, hl)
-	hl.ReleaseLocksAndWait()
 	dmPtr.diagrams[diagram.GetConceptID(hl)] = diagram
 	if err != nil {
 		return nil, errors.Wrap(err, "diagramManager.newDiagram failed")
@@ -574,7 +568,7 @@ func (dmPtr *diagramManager) refinedPointerChanged(linkID string, sourceID strin
 	var modelRefinement core.Refinement
 	switch typedModelSource := modelSource.(type) {
 	case core.Refinement:
-		modelRefinement = typedModelSource.(core.Refinement)
+		modelRefinement = typedModelSource
 	default:
 		return "", errors.New("diagramManager.refinedPointerChanged called with source not being a Refinement")
 	}

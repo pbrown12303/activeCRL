@@ -16,7 +16,7 @@ var _ = Describe("Element internals test", func() {
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocksAndWait()
+		hl.ReleaseLocks()
 	})
 
 	Describe("Creating an Element", func() {
@@ -264,7 +264,7 @@ var _ = Describe("Element internals test", func() {
 			hl = uOfD.NewTransaction()
 		})
 		AfterEach(func() {
-			hl.ReleaseLocksAndWait()
+			hl.ReleaseLocks()
 		})
 		Context("Owner is not readOnly", func() {
 			It("should succed", func() {
@@ -326,13 +326,14 @@ var _ = Describe("Element internals test", func() {
 			el, _ := uOfD.NewElement(hl)
 			uOfD2 := NewUniverseOfDiscourse()
 			hl2 := uOfD2.NewTransaction()
+			defer hl2.ReleaseLocks()
 			Expect(el.GetUniverseOfDiscourse(hl) == uOfD).To(BeTrue())
 			Expect(el.(*element).uOfD == uOfD).To(BeTrue())
 			// Can't set new uOfD without removing it from the old uOfD first
 			Expect(uOfD2.SetUniverseOfDiscourse(el, hl)).ToNot(Succeed())
 			deleteElements := mapset.NewSet(el.GetConceptID(hl))
 			Expect(uOfD.DeleteElements(deleteElements, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
+			hl.ReleaseLocks()
 			Expect(uOfD2.SetUniverseOfDiscourse(el, hl2)).To(Succeed())
 			Expect(el.GetUniverseOfDiscourse(hl2) == uOfD2).To(BeTrue())
 			Expect(el.(*element).uOfD == uOfD2).To(BeTrue())
@@ -343,7 +344,6 @@ var _ = Describe("Element internals test", func() {
 		var el Element
 		BeforeEach(func() {
 			el, _ = uOfD.NewElement(hl)
-			hl.ReleaseLocksAndWait()
 		})
 		Specify("URI should initially nil", func() {
 			Expect(el.GetURI(hl)).To(Equal(""))
@@ -352,7 +352,6 @@ var _ = Describe("Element internals test", func() {
 			uri := CorePrefix + "test"
 			initialVersion := el.GetVersion(hl)
 			Expect(el.SetURI(uri, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 			Expect(el.GetURI(hl) == uri).To(BeTrue())
 			Expect(uOfD.GetElementWithURI(uri)).To(Equal(el))
 			Expect(el.GetVersion(hl)).To(Equal(initialVersion + 1))
@@ -365,7 +364,6 @@ var _ = Describe("Element internals test", func() {
 		var el Element
 		BeforeEach(func() {
 			el, _ = uOfD.NewElement(hl)
-			hl.ReleaseLocksAndWait()
 		})
 		Specify("Label should initially nil", func() {
 			Expect(el.GetLabel(hl)).To(Equal(""))
@@ -374,7 +372,6 @@ var _ = Describe("Element internals test", func() {
 			label := CorePrefix + "test"
 			initialVersion := el.GetVersion(hl)
 			Expect(el.SetLabel(label, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 			Expect(el.GetLabel(hl) == label).To(BeTrue())
 			Expect(el.GetVersion(hl)).To(Equal(initialVersion + 1))
 		})
@@ -384,7 +381,6 @@ var _ = Describe("Element internals test", func() {
 		var el Element
 		BeforeEach(func() {
 			el, _ = uOfD.NewElement(hl)
-			hl.ReleaseLocksAndWait()
 		})
 		Specify("Definition should initially nil", func() {
 			Expect(el.GetDefinition(hl)).To(Equal(""))
@@ -393,7 +389,6 @@ var _ = Describe("Element internals test", func() {
 			definition := CorePrefix + "test"
 			initialVersion := el.GetVersion(hl)
 			Expect(el.SetDefinition(definition, hl)).To(Succeed())
-			hl.ReleaseLocksAndWait()
 			Expect(el.GetDefinition(hl) == definition).To(BeTrue())
 			Expect(el.GetVersion(hl)).To(Equal(initialVersion + 1))
 		})
@@ -501,9 +496,7 @@ var _ = Describe("Element internals test", func() {
 			copy = clone(original, hl)
 		})
 		Specify("Differences in ConceptID should be detected", func() {
-			// Have to release locks because HeldLocks keeps track by ConceptID
-			hl.ReleaseLocksAndWait()
-			original.(*element).ConceptID = "123"
+			copy.(*element).ConceptID = "123"
 			Expect(Equivalent(original, hl, copy, hl)).To(BeFalse())
 		})
 		Specify("Differences in Definition should be detected", func() {

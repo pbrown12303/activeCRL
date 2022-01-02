@@ -18,7 +18,7 @@ var _ = Describe("CrlGraph tests", func() {
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocksAndWait()
+		hl.ReleaseLocks()
 	})
 
 	Specify("Creation of core diagram", func() {
@@ -35,7 +35,6 @@ var _ = Describe("CrlGraph tests", func() {
 		graph := NewCrlGraph("CoreDomain")
 		coreDomain := uOfD.GetElementWithURI(CoreDomainURI)
 		Expect(graph.AddConceptRecursively(coreDomain, hl)).To(Succeed())
-		hl.ReleaseLocksAndWait()
 		Expect(graph.ExportDOT(tempDirPath, "CoreDomain")).To(Succeed())
 	})
 })

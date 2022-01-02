@@ -131,7 +131,7 @@ func (editor *Editor) CloseWorkspace(hl *core.Transaction) error {
 		}
 	}
 	// The hl here is from the old UofD. Initialize will create a new one, so we first release the locks on the old one
-	hl.ReleaseLocksAndWait()
+	hl.ReleaseLocks()
 	editor.SetWorkspacePath("")
 	err = editor.Initialize("", false)
 	if err != nil {
@@ -155,7 +155,6 @@ func (editor *Editor) createSettings(hl *core.Transaction) error {
 
 // DeleteElement removes the element from the UniverseOfDiscourse
 func (editor *Editor) DeleteElement(elID string, hl *core.Transaction) error {
-	defer hl.ReleaseLocksAndWait()
 	el := editor.GetUofD().GetElement(elID)
 	if el != nil {
 		// TODO: Populate cut buffer with full set of deleted elements
@@ -253,11 +252,6 @@ func (editor *Editor) GetExitRequested() bool {
 	return editor.exitRequested
 }
 
-// GetNotificationsLimit returns the current value of the core NotificationsLimit used in troubleshooting
-func (editor *Editor) GetNotificationsLimit() int {
-	return core.GetNotificationsLimit()
-}
-
 // getNoSaveDomains returns a map of the editor domains that should not be saved
 func (editor *Editor) getNoSaveDomains(hl *core.Transaction) map[string]core.Element {
 	noSaveDomains := make(map[string]core.Element)
@@ -326,7 +320,6 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 	if err != nil {
 		return errors.Wrap(err, "Editor.Initialize failed")
 	}
-	hl.ReleaseLocksAndWait()
 
 	for _, editor := range editor.editorGUIs {
 		err = editor.Initialize(hl)
@@ -334,7 +327,6 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 			return errors.Wrap(err, "Editor.Initialize failed")
 		}
 	}
-	hl.ReleaseLocksAndWait()
 
 	if editor.userPreferences.WorkspacePath != "" {
 		err = editor.workspaceManager.LoadWorkspace(hl)
@@ -348,7 +340,6 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 			return errors.Wrap(err, "Editor.Initialize failed")
 		}
 	}
-	hl.ReleaseLocksAndWait()
 
 	for _, editor := range editor.editorGUIs {
 		err = editor.InitializeGUI(hl)
@@ -356,7 +347,6 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 			return errors.Wrap(err, "Editor.Initialize failed")
 		}
 	}
-	hl.ReleaseLocksAndWait()
 
 	editor.uOfDManager.UofD.SetRecordingUndo(true)
 	return nil
@@ -520,7 +510,6 @@ func (editor *Editor) setSettings(settings core.Element, hl *core.Transaction) e
 		if err != nil {
 			return errors.Wrap(err, "Editor.setSettings failed")
 		}
-		hl.ReleaseLocksAndWait()
 	}
 	editor.settings = settings
 	return nil
