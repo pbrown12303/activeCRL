@@ -2,7 +2,7 @@ package browsergui_test
 
 import (
 	//	"fmt"
-	"log"
+
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -24,7 +24,7 @@ var _ = Describe("Test CrlEditor", func() {
 
 	AssertServerRequestProcessingComplete := func() {
 		EventuallyWithOffset(1, func() bool {
-			log.Printf("GetRequestInProgress: %t", browsergui.GetRequestInProgress())
+			// log.Printf("GetRequestInProgress: %t", browsergui.GetRequestInProgress())
 			return browsergui.GetRequestInProgress() == false
 		}, time.Second*10).Should(BeTrue())
 	}
@@ -396,8 +396,8 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(page.RunScript("return crlCurrentToolbarButton == crlElementPointerToolbarButtonID;", nil, &correctToolbarSelection)).To(Succeed())
 		Expect(correctToolbarSelection).To(BeTrue())
 		// Now move the mouse to r1, click, drag to e1, and release
-		browsergui.CrlLogClientRequests = true
-		browsergui.CrlLogClientNotifications = true
+		// browsergui.CrlLogClientRequests = true
+		// browsergui.CrlLogClientNotifications = true
 		targetCellID := GetCellViewIDFromViewElementID(diagram, targetView.GetConceptID(hl))
 		sourceCellID := GetCellViewIDFromViewElementID(diagram, sourceView.GetConceptID(hl))
 		Expect(page.FindByID(sourceCellID).MouseToElement()).To(Succeed())
@@ -415,8 +415,8 @@ var _ = Describe("Test CrlEditor", func() {
 		}, 3).Should(BeTrue())
 		// core.TraceChange = false
 		// core.EnableNotificationPrint = false
-		browsergui.CrlLogClientRequests = false
-		browsergui.CrlLogClientNotifications = false
+		// browsergui.CrlLogClientRequests = false
+		// browsergui.CrlLogClientNotifications = false
 		referenceID := crldiagramdomain.GetReferencedModelElement(sourceView, hl).GetConceptID(hl)
 		reference := uOfD.GetReference(referenceID)
 		elementPointerView := crldiagramdomain.GetFirstElementRepresentingConceptElementPointer(diagram, reference, hl)
@@ -1003,7 +1003,7 @@ var _ = Describe("Test CrlEditor", func() {
 						PerformUndoRedoTest(5)
 					})
 				})
-				FDescribe("ElementPointer creation should work", func() {
+				Describe("ElementPointer creation should work", func() {
 					Specify("for a node source and node target", func() {
 						target, targetView := CreateElement(diagram, 100, 100)
 						source, sourceView := CreateReferenceNode(diagram, 100, 200)
@@ -1046,10 +1046,12 @@ var _ = Describe("Test CrlEditor", func() {
 					Specify("for a node source and an OwnerPointer target", func() {
 						source, sourceView := CreateReferenceNode(diagram, 100, 150)
 						e1, e1View := CreateElement(diagram, 200, 100)
-						_, e2View := CreateElement(diagram, 200, 200)
+						e2, e2View := CreateElement(diagram, 200, 200)
+						Expect(e1).ToNot(BeNil())
+						Expect(e2).ToNot(BeNil())
 						target, targetView := CreateOwnerPointer(diagram, e1View, e2View)
 						epModel, epView := CreateElementPointer(diagram, sourceView, targetView)
-						Expect(epModel.GetConceptID(hl)).To(Equal(e1.GetConceptID(hl)))
+						Expect(epModel.GetConceptID(hl)).To(Equal(source.GetConceptID(hl)))
 						Expect(source.GetReferencedConceptID(hl)).To(Equal(target.GetConceptID(hl)))
 						Expect(source.GetReferencedAttributeName(hl)).To(Equal(core.OwningConceptID))
 						Expect(crldiagramdomain.GetLinkSource(epView, hl).GetConceptID(hl)).To(Equal(sourceView.GetConceptID(hl)))

@@ -2,6 +2,7 @@ package core
 
 import (
 	"reflect"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -200,12 +201,21 @@ var _ = Describe("UniverseOfDiscourse", func() {
 				replicateChild := uOfD.GetElement(id.(string))
 				if replicateChild.IsRefinementOf(oChild1, hl) {
 					foundChild1Replicate = true
+					replicateChildURI := replicateChild.GetURI(hl)
+					Expect(replicateChildURI).ToNot(BeNil())
+					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
 				if replicateChild.IsRefinementOf(oChild2, hl) {
 					foundChild2Replicate = true
+					replicateChildURI := replicateChild.GetURI(hl)
+					Expect(replicateChildURI).ToNot(BeNil())
+					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
 				if replicateChild.IsRefinementOf(oChild3, hl) {
 					foundChild3Replicate = true
+					replicateChildURI := replicateChild.GetURI(hl)
+					Expect(replicateChildURI).ToNot(BeNil())
+					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
 			}
 			Expect(foundChild1Replicate).To(BeTrue())
@@ -264,12 +274,21 @@ var _ = Describe("UniverseOfDiscourse", func() {
 				replicateChild := uOfD.GetElement(id.(string))
 				if replicateChild.IsRefinementOf(oChild1, hl) {
 					foundChild1Replicate = true
+					replicateChildURI := replicateChild.GetURI(hl)
+					Expect(replicateChildURI).ToNot(BeNil())
+					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
 				if replicateChild.IsRefinementOf(oChild2, hl) {
 					foundChild2Replicate = true
+					replicateChildURI := replicateChild.GetURI(hl)
+					Expect(replicateChildURI).ToNot(BeNil())
+					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
 				if replicateChild.IsRefinementOf(oChild3, hl) {
 					foundChild3Replicate = true
+					replicateChildURI := replicateChild.GetURI(hl)
+					Expect(replicateChildURI).ToNot(BeNil())
+					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
 			}
 			Expect(foundChild1Replicate).To(BeTrue())
@@ -327,12 +346,21 @@ var _ = Describe("UniverseOfDiscourse", func() {
 				replicateChild := uOfD.GetElement(id.(string))
 				if replicateChild.IsRefinementOf(oChild1, hl) {
 					foundChild1Replicate = true
+					replicateChildURI := replicateChild.GetURI(hl)
+					Expect(replicateChildURI).ToNot(BeNil())
+					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
 				if replicateChild.IsRefinementOf(oChild2, hl) {
 					foundChild2Replicate = true
+					replicateChildURI := replicateChild.GetURI(hl)
+					Expect(replicateChildURI).ToNot(BeNil())
+					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
 				if replicateChild.IsRefinementOf(oChild3, hl) {
 					foundChild3Replicate = true
+					replicateChildURI := replicateChild.GetURI(hl)
+					Expect(replicateChildURI).ToNot(BeNil())
+					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
 			}
 			Expect(foundChild1Replicate).To(BeTrue())

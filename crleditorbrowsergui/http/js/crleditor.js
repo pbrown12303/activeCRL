@@ -2008,6 +2008,7 @@ function crlNotificationUpdateTreeNode(data) {
 
 var crlNotificationUpdateProperties = function(data){
     crlUpdateProperties(data);
+    crlSendNormalResponse()
 }
 
 var crlNotificationUpdateWorkspacePath = function (data) {

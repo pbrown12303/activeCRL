@@ -437,12 +437,7 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 		crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
 		crldiagramdomain.SetLinkSource(diagramPointer, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramPointer, diagramTarget, hl)
-		if attributeName == core.NoAttribute {
-			modelReference.SetReferencedConcept(modelTarget, attributeName, hl)
-		} else {
-			// for references to pointers, it is the pointer owner that is the referenced concept
-			modelReference.SetReferencedConcept(modelSource, attributeName, hl)
-		}
+		modelReference.SetReferencedConcept(modelTarget, attributeName, hl)
 		diagramPointer.SetOwningConceptID(diagramSource.GetOwningConceptID(hl), hl)
 		dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {

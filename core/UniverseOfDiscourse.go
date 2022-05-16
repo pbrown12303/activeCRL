@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/url"
 	"reflect"
+	"strconv"
 
 	"github.com/pkg/errors"
 
@@ -1163,6 +1164,8 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 	it := uOfDPtr.GetConceptsOwnedConceptIDs(originalID).Iterator()
 	defer it.Stop()
 	for id := range it.C {
+		newChildCount := 0
+		newChildURI := ""
 		originalChild := uOfDPtr.GetElement(id.(string))
 		switch originalChild.(type) {
 		case Refinement:
@@ -1186,13 +1189,17 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 		// If the replicate child is nil at this point, there is no existing replicate child that corresponds
 		// to the original child - create one.
 		if replicateChild == nil {
+			if uri != nil {
+				newChildCount++
+				newChildURI = uri[0] + ".child" + strconv.Itoa(newChildCount)
+			}
 			switch originalChild.(type) {
 			case Reference:
-				replicateChild, _ = uOfDPtr.NewReference(hl)
+				replicateChild, _ = uOfDPtr.NewReference(hl, newChildURI)
 			case Literal:
-				replicateChild, _ = uOfDPtr.NewLiteral(hl)
+				replicateChild, _ = uOfDPtr.NewLiteral(hl, newChildURI)
 			case Element:
-				replicateChild, _ = uOfDPtr.NewElement(hl)
+				replicateChild, _ = uOfDPtr.NewElement(hl, newChildURI)
 			}
 			replicateChild.SetOwningConcept(replicate, hl)
 			refinement, err := uOfDPtr.NewRefinement(hl)

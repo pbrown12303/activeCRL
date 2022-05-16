@@ -278,7 +278,11 @@ func (bgPtr *BrowserGUI) InitializeGUI(hl *core.Transaction) error {
 		}
 		bgPtr.serverRunning = true
 	}
-	return bgPtr.initializeClientState(hl)
+	err := bgPtr.initializeClientState(hl)
+	if err != nil {
+		return errors.Wrap(err, "Error in BrowserGUI.InitializeGUI")
+	}
+	return nil
 }
 
 // initializeClientState sets the client state at any desired time
@@ -301,7 +305,7 @@ func (bgPtr *BrowserGUI) initializeClientState(hl *core.Transaction) error {
 	}
 	openDiagramLiteral, err2 := crldatastructuresdomain.GetFirstMemberLiteral(openDiagrams, hl)
 	if err2 != nil {
-		return err2
+		return errors.Wrap(err2, "In BrowserGUI.initializeClientState getting first member literal failed")
 	}
 	for openDiagramLiteral != nil {
 		diagram := bgPtr.editor.GetUofD().GetElement(openDiagramLiteral.GetLiteralValue(hl))

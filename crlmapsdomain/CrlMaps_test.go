@@ -1,8 +1,6 @@
 package crlmapsdomain
 
 import (
-	"fmt"
-	"log"
 	"os"
 
 	. "github.com/onsi/ginkgo"
@@ -77,8 +75,8 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		Expect(err).To(BeNil())
 		Expect(mapAbstractDomain.SetLabel("MapAbstractDomain", hl)).To(Succeed())
 		Expect(mapAbstractDomain.SetOwningConcept(mapAbstractFolder, hl)).To(Succeed())
-		mapAbstractDomainOwnedConcepts := mapAbstractDomain.GetOwnedConcepts(hl)
-		fmt.Print(mapAbstractDomainOwnedConcepts)
+		// mapAbstractDomainOwnedConcepts := mapAbstractDomain.GetOwnedConcepts(hl)
+		// fmt.Print(mapAbstractDomainOwnedConcepts)
 		mapAbstractSourceRef := mapAbstractDomain.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, hl)
 		Expect(mapAbstractSourceRef.SetReferencedConcept(sourceAbstractDomain, core.NoAttribute, hl)).To(Succeed())
 		mapAbstractTargetRef := mapAbstractDomain.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, hl)
@@ -102,17 +100,17 @@ var _ = Describe("CrlMaps mapping tests", func() {
 
 		// Get the tempDir
 		tempDirPath = os.TempDir()
-		log.Printf("TempDirPath: " + tempDirPath)
+		// log.Printf("TempDirPath: " + tempDirPath)
 		err = os.Mkdir(tempDirPath, os.ModeDir)
 		if !(err == nil || os.IsExist(err)) {
 			Expect(err).NotTo(HaveOccurred())
 		}
-		log.Printf("TempDir created")
+		// log.Printf("TempDir created")
 
 	})
 	Describe("Target domain creation", func() {
 		Specify("The target domain should be created correctly", func() {
-			log.Printf("About set set sourceInstanceDomain")
+			// log.Printf("About set set sourceInstanceDomain")
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 			targetInstanceDomain := mapInstanceFolder.GetFirstOwnedConceptRefinedFrom(targetAbstractDomain, hl)
 			Expect(targetInstanceDomain).ToNot(BeNil())

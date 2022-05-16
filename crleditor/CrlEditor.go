@@ -310,6 +310,7 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 	}
 	editor.cutBuffer = make(map[string]core.Element)
 	hl := editor.uOfDManager.UofD.NewTransaction()
+	defer hl.ReleaseLocks()
 	editor.resetDefaultLabelCounts()
 
 	crldatatypesdomain.BuildCrlDataTypesDomain(editor.GetUofD(), hl)
@@ -321,8 +322,8 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 		return errors.Wrap(err, "Editor.Initialize failed")
 	}
 
-	for _, editor := range editor.editorGUIs {
-		err = editor.Initialize(hl)
+	for _, editorGUI := range editor.editorGUIs {
+		err = editorGUI.Initialize(hl)
 		if err != nil {
 			return errors.Wrap(err, "Editor.Initialize failed")
 		}
@@ -341,8 +342,8 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 		}
 	}
 
-	for _, editor := range editor.editorGUIs {
-		err = editor.InitializeGUI(hl)
+	for _, editorGUI := range editor.editorGUIs {
+		err = editorGUI.InitializeGUI(hl)
 		if err != nil {
 			return errors.Wrap(err, "Editor.Initialize failed")
 		}

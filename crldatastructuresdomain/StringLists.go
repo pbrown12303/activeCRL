@@ -217,7 +217,7 @@ func ClearStringList(list core.Element, hl *core.Transaction) {
 func GetFirstMemberLiteral(list core.Element, hl *core.Transaction) (core.Literal, error) {
 	refRef, err := getStringListReferenceToFirstMemberLiteral(list, hl)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "GetFirstMemberLiteral failed")
 	}
 	if refRef == nil {
 		return nil, errors.New("In StringList GetFirstMemberLiteral, No reference to first member literal found")
