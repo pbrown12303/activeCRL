@@ -28,6 +28,30 @@ var _ = Describe("StringList test", func() {
 			Expect(GetLastMemberLiteral(newStringList, hl)).To(BeNil())
 		})
 	})
+
+	Describe("uOfD.CreateReplicateLiteralAsRefinementFromURI of StringListLiteralMember should produce the member with prior and next references", func() {
+		Specify("Replicate from URI without new URI", func() {
+			newLiteralMember, err := uOfD.CreateReplicateLiteralAsRefinementFromURI(CrlStringListMemberLiteralURI, hl)
+			Expect(err).To(BeNil())
+			priorLiteralReference, err2 := getReferenceToPriorMemberLiteral(newLiteralMember, hl)
+			Expect(err2).To(BeNil())
+			Expect(priorLiteralReference).ToNot(BeNil())
+			nextLiteralReference, err3 := getReferenceToNextMemberLiteral(newLiteralMember, hl)
+			Expect(err3).To(BeNil())
+			Expect(nextLiteralReference).ToNot(BeNil())
+		})
+		Specify("Replicate from URI with new URI", func() {
+			newLiteralMember, err := uOfD.CreateReplicateLiteralAsRefinementFromURI(CrlStringListMemberLiteralURI, hl, CrlDataStructuresDomainURI+"/test")
+			Expect(err).To(BeNil())
+			priorLiteralReference, err2 := getReferenceToPriorMemberLiteral(newLiteralMember, hl)
+			Expect(err2).To(BeNil())
+			Expect(priorLiteralReference).ToNot(BeNil())
+			nextLiteralReference, err3 := getReferenceToNextMemberLiteral(newLiteralMember, hl)
+			Expect(err3).To(BeNil())
+			Expect(nextLiteralReference).ToNot(BeNil())
+		})
+	})
+
 	Describe("AddStringListMemberAfter should work correctly", func() {
 		Specify("Add after existing solo member should work correctly", func() {
 			newStringList, _ := NewStringList(uOfD, hl)
@@ -35,7 +59,14 @@ var _ = Describe("StringList test", func() {
 			valueA := "A"
 			memberLiteralA, err0 := AppendStringListMember(newStringList, valueA, hl)
 			Expect(err0).ShouldNot(HaveOccurred())
+			// Make sure this member literal has the requisite references as children
 			Expect(memberLiteralA.IsRefinementOfURI(CrlStringListMemberLiteralURI, hl)).To(BeTrue())
+			priorLiteralReference, err2 := getReferenceToPriorMemberLiteral(memberLiteralA, hl)
+			Expect(err2).To(BeNil())
+			Expect(priorLiteralReference).ToNot(BeNil())
+			nextLiteralReference, err3 := getReferenceToNextMemberLiteral(memberLiteralA, hl)
+			Expect(err3).To(BeNil())
+			Expect(nextLiteralReference).ToNot(BeNil())
 			// Add newValue
 			newValue := "NewValue"
 			newMemberLiteral, err := AddStringListMemberAfter(newStringList, memberLiteralA, newValue, hl)

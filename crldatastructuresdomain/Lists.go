@@ -214,10 +214,10 @@ func AppendListMember(list core.Element, newMember core.Element, hl *core.Transa
 		if err != nil {
 			return nil, errors.Wrap(err, "AppendListMember failed")
 		}
-	}
-	err = setPriorMemberReference(newMemberReference, oldLastMemberReference, hl)
-	if err != nil {
-		return nil, errors.Wrap(err, "AppendListMember failed")
+		err = setPriorMemberReference(newMemberReference, oldLastMemberReference, hl)
+		if err != nil {
+			return nil, errors.Wrap(err, "AppendListMember failed")
+		}
 	}
 	return newMemberReference, nil
 }

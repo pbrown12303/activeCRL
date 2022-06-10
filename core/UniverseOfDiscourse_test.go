@@ -192,9 +192,15 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			Expect(replicate.IsRefinementOf(original, hl)).To(BeTrue())
 			Expect(replicate.GetURI(hl)).To(Equal(replicateURI))
 			Expect(uOfD.GetElementWithURI(replicateURI)).To(Equal(replicate))
-			var foundChild1Replicate = false
-			var foundChild2Replicate = false
-			var foundChild3Replicate = false
+			foundChild1Replicate := false
+			foundChild2Replicate := false
+			foundChild3Replicate := false
+			child1Suffix := ""
+			child1PrefixFound := false
+			child2Suffix := ""
+			child2PrefixFound := false
+			child3Suffix := ""
+			child3PrefixFound := false
 			it := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Iterator()
 			defer it.Stop()
 			for id := range it.C {
@@ -203,24 +209,30 @@ var _ = Describe("UniverseOfDiscourse", func() {
 					foundChild1Replicate = true
 					replicateChildURI := replicateChild.GetURI(hl)
 					Expect(replicateChildURI).ToNot(BeNil())
-					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
+					_, child1Suffix, child1PrefixFound = strings.Cut(replicateChildURI, replicateURI+".child")
+					Expect(child1PrefixFound).To(BeTrue())
 				}
 				if replicateChild.IsRefinementOf(oChild2, hl) {
 					foundChild2Replicate = true
 					replicateChildURI := replicateChild.GetURI(hl)
 					Expect(replicateChildURI).ToNot(BeNil())
-					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
+					_, child2Suffix, child2PrefixFound = strings.Cut(replicateChildURI, replicateURI+".child")
+					Expect(child2PrefixFound).To(BeTrue())
 				}
 				if replicateChild.IsRefinementOf(oChild3, hl) {
 					foundChild3Replicate = true
 					replicateChildURI := replicateChild.GetURI(hl)
 					Expect(replicateChildURI).ToNot(BeNil())
-					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
+					_, child3Suffix, child3PrefixFound = strings.Cut(replicateChildURI, replicateURI+".child")
+					Expect(child3PrefixFound).To(BeTrue())
 				}
 			}
 			Expect(foundChild1Replicate).To(BeTrue())
 			Expect(foundChild2Replicate).To(BeTrue())
 			Expect(foundChild3Replicate).To(BeTrue())
+			Expect(child1Suffix != child2Suffix).To(BeTrue())
+			Expect(child1Suffix != child3Suffix).To(BeTrue())
+			Expect(child2Suffix != child3Suffix).To(BeTrue())
 		})
 
 		Specify("replicateAsRefinement should be idempotent", func() {

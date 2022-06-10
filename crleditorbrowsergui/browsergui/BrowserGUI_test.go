@@ -547,8 +547,10 @@ var _ = Describe("Test CrlEditor", func() {
 			uOfD.MarkUndoPoint()
 			beforeUofD := uOfD.Clone(hl)
 			beforeHL := beforeUofD.NewTransaction()
+			browsergui.CrlLogClientRequests = true
 			_, diag := CreateDiagram(cs1)
 			Expect(diag).ToNot(BeNil())
+			browsergui.CrlLogClientRequests = false
 			afterUofD := uOfD.Clone(hl)
 			afterHL := afterUofD.NewTransaction()
 			Undo()

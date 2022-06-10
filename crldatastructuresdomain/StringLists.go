@@ -191,10 +191,10 @@ func AppendStringListMember(list core.Element, value string, hl *core.Transactio
 		if err != nil {
 			return nil, errors.Wrap(err, "AppendStringListMember failed")
 		}
-	}
-	err = setPriorMemberLiteral(newMemberLiteral, oldLastMemberLiteral, hl)
-	if err != nil {
-		return nil, errors.Wrap(err, "AppendStringListMember failed")
+		err = setPriorMemberLiteral(newMemberLiteral, oldLastMemberLiteral, hl)
+		if err != nil {
+			return nil, errors.Wrap(err, "AppendStringListMember failed")
+		}
 	}
 	return newMemberLiteral, nil
 }
@@ -497,22 +497,22 @@ func BuildCrlStringListsConcepts(uOfD *core.UniverseOfDiscourse, parentSpace cor
 	crlStringList.SetOwningConcept(parentSpace, hl)
 
 	crlFirstMemberLiteral, _ := uOfD.NewReference(hl, CrlStringListReferenceToFirstMemberLiteralURI)
-	crlFirstMemberLiteral.SetLabel("FirstMemberLiteral", hl)
+	crlFirstMemberLiteral.SetLabel("StringListFirstMemberLiteral", hl)
 	crlFirstMemberLiteral.SetOwningConcept(crlStringList, hl)
 
 	crlLastMemberLiteral, _ := uOfD.NewReference(hl, CrlStringListReferenceToLastMemberLiteralURI)
-	crlLastMemberLiteral.SetLabel("LastMemberLiteral", hl)
+	crlLastMemberLiteral.SetLabel("StringListLastMemberLiteral", hl)
 	crlLastMemberLiteral.SetOwningConcept(crlStringList, hl)
 
 	crlStringListMemberLiteral, _ := uOfD.NewLiteral(hl, CrlStringListMemberLiteralURI)
-	crlStringListMemberLiteral.SetLabel("MemberLiteral", hl)
+	crlStringListMemberLiteral.SetLabel("StringListMemberLiteral", hl)
 	crlStringListMemberLiteral.SetOwningConcept(parentSpace, hl)
 
 	crlNextMemberLiteral, _ := uOfD.NewReference(hl, CrlStringListReferenceToNextMemberLiteralURI)
-	crlNextMemberLiteral.SetLabel("NextMemberLiteral", hl)
+	crlNextMemberLiteral.SetLabel("StringListNextMemberLiteral", hl)
 	crlNextMemberLiteral.SetOwningConcept(crlStringListMemberLiteral, hl)
 
 	crlPriorMemberLiteral, _ := uOfD.NewReference(hl, CrlStringListReferenceToPriorMemberLiteralURI)
-	crlPriorMemberLiteral.SetLabel("PriorMemberLiteral", hl)
+	crlPriorMemberLiteral.SetLabel("StringListPriorMemberLiteral", hl)
 	crlPriorMemberLiteral.SetOwningConcept(crlStringListMemberLiteral, hl)
 }

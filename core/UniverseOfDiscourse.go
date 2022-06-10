@@ -1150,7 +1150,7 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 		}
 		refinement, err := uOfDPtr.NewRefinement(hl, refinementURI)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "UniverseOfDiscourse.replicateAsRefinement failed: ")
 		}
 		refinement.SetOwningConcept(replicate, hl)
 		refinement.SetAbstractConcept(original, hl)
@@ -1163,8 +1163,8 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 	replicateID := replicate.GetConceptID(hl)
 	it := uOfDPtr.GetConceptsOwnedConceptIDs(originalID).Iterator()
 	defer it.Stop()
+	newChildCount := 0
 	for id := range it.C {
-		newChildCount := 0
 		newChildURI := ""
 		originalChild := uOfDPtr.GetElement(id.(string))
 		switch originalChild.(type) {
@@ -1177,7 +1177,11 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 		it2 := uOfDPtr.GetConceptsOwnedConceptIDs(replicateID).Iterator()
 		defer it2.Stop()
 		for id := range it2.C {
-			currentChild := uOfDPtr.GetElement(id.(string)) // TODO: suppress check if current child is a refinement
+			currentChild := uOfDPtr.GetElement(id.(string))
+			switch currentChild.(type) {
+			case Refinement:
+				continue
+			}
 			currentChildAbstractions := make(map[string]Element)
 			currentChild.FindAbstractions(currentChildAbstractions, hl)
 			for _, currentChildAbstraction := range currentChildAbstractions {
@@ -1189,34 +1193,42 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 		// If the replicate child is nil at this point, there is no existing replicate child that corresponds
 		// to the original child - create one.
 		if replicateChild == nil {
-			if uri != nil {
-				newChildCount++
+			newChildCount++
+			if uri != nil && uri[0] != "" {
 				newChildURI = uri[0] + ".child" + strconv.Itoa(newChildCount)
+			} else {
+				newChildURI = ""
 			}
+			var replicateError error
 			switch originalChild.(type) {
 			case Reference:
-				replicateChild, _ = uOfDPtr.NewReference(hl, newChildURI)
+				replicateChild, replicateError = uOfDPtr.NewReference(hl, newChildURI)
 			case Literal:
-				replicateChild, _ = uOfDPtr.NewLiteral(hl, newChildURI)
+				replicateChild, replicateError = uOfDPtr.NewLiteral(hl, newChildURI)
 			case Element:
-				replicateChild, _ = uOfDPtr.NewElement(hl, newChildURI)
+				replicateChild, replicateError = uOfDPtr.NewElement(hl, newChildURI)
 			}
-			replicateChild.SetOwningConcept(replicate, hl)
-			refinement, err := uOfDPtr.NewRefinement(hl)
-			if err != nil {
-				return err
+			if replicateError != nil {
+				return errors.Wrap(replicateError, "UniverseOfDiscourse.replicateAsRefinement failed: ")
 			}
-			refinement.SetOwningConcept(replicateChild, hl)
-			refinement.SetAbstractConcept(originalChild, hl)
-			refinement.SetRefinedConcept(replicateChild, hl)
-			refinement.SetLabel("Refines "+originalChild.GetLabel(hl), hl)
-			replicateChild.SetLabel(originalChild.GetLabel(hl), hl)
-		}
-		switch originalChild.(type) {
-		case Element, Literal, Reference:
-			err := uOfDPtr.replicateAsRefinement(originalChild, replicateChild, hl)
-			if err != nil {
-				return err
+			if replicateChild != nil {
+				replicateChild.SetOwningConcept(replicate, hl)
+				// refinement, err := uOfDPtr.NewRefinement(hl)
+				// if err != nil {
+				// 	return err
+				// }
+				// refinement.SetOwningConcept(replicateChild, hl)
+				// refinement.SetAbstractConcept(originalChild, hl)
+				// refinement.SetRefinedConcept(replicateChild, hl)
+				// refinement.SetLabel("Refines "+originalChild.GetLabel(hl), hl)
+				// replicateChild.SetLabel(originalChild.GetLabel(hl), hl)
+				// switch originalChild.(type) {
+				// case Element, Literal, Reference:
+				err := uOfDPtr.replicateAsRefinement(originalChild, replicateChild, hl, newChildURI)
+				if err != nil {
+					return err
+				}
+				// }
 			}
 		}
 	}
