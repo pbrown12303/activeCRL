@@ -1,10 +1,11 @@
 // Package crldiagramdomain defines the Diagram domain. This is a pre-defined domain that is, itself,
 // represented as a CRLElement and identified with the CrlDiagramDomainURI. This concept space contains the prototypes of all Elements used to construct CrlDiagrams.
 // Included are:
-// 	CrlDiagram: the diagram itself
-// 	CrlDiagramNode: a node in the diagram
-// 	CrlDiagramLink: a link in the diagram
-//  CrlDiagramPointer: a pointer shown as a link in the diagram
+//
+//		CrlDiagram: the diagram itself
+//		CrlDiagramNode: a node in the diagram
+//		CrlDiagramLink: a link in the diagram
+//	 CrlDiagramPointer: a pointer shown as a link in the diagram
 //
 // These classes are intended to hold all of the information about the diagram that is not specific to the rendering engine.
 //
@@ -1392,12 +1393,16 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 		if notification.GetReportingElementID() == diagramElementModelReference.GetConceptID(trans) {
 			modelReferenceNotification := notification.GetUnderlyingChange()
 			switch modelReferenceNotification.GetNatureOfChange() {
-			case core.ConceptChanged:
+			case core.ReferencedConceptChanged:
 				if IsDiagramNode(diagramElement, trans) {
 					currentModelElement := modelReferenceNotification.GetAfterConceptState()
 					previousModelElement := modelReferenceNotification.GetBeforeConceptState()
 					if currentModelElement != nil && previousModelElement != nil {
-						updateDiagramElementForModelElementChange(diagramElement, modelElement, trans)
+						if currentModelElement.ReferencedConceptID == "" && previousModelElement.ReferencedConceptID != "" {
+							uOfD.DeleteElement(diagramElement, trans)
+						} else {
+							updateDiagramElementForModelElementChange(diagramElement, modelElement, trans)
+						}
 					}
 				} else if IsDiagramLink(diagramElement, trans) {
 					diagram := diagramElement.GetOwningConcept(trans)
