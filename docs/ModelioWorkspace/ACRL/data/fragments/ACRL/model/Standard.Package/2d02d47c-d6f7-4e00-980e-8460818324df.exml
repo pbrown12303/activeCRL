@@ -1,0 +1,207 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="core" version="4">
+  <OBJECT>
+    <ID name="core" mc="Standard.Package" uid="2d02d47c-d6f7-4e00-980e-8460818324df"/>
+    <PID name="acrl" mc="Standard.Package" uid="491ccbde-db73-47d4-8503-ebafcc73e08b"/>
+    <ATTRIBUTES>
+      <ATT name="IsInstantiable">false</ATT>
+      <ATT name="IsAbstract">false</ATT>
+      <ATT name="IsLeaf">false</ATT>
+      <ATT name="IsRoot">false</ATT>
+      <ATT name="Visibility">Public</ATT>
+      <ATT name="Name"><![CDATA[core]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <COMP relation="OwnedBehavior">
+        <COMPID name="Communication Interaction" mc="Standard.CommunicationInteraction" uid="31c7a6ec-e608-4a3a-af5b-b188b601224c"/>
+      </COMP>
+      <COMP relation="OwnedElement">
+        <COMPID name="Element" mc="Standard.Class" uid="3b6f1faf-41d3-461a-a9b1-8ada4ba1125e"/>
+        <COMPID name="Refinement" mc="Standard.Class" uid="d717203a-556a-48e8-85ed-5dc42fb7d3b3"/>
+        <COMPID name="Reference" mc="Standard.Class" uid="c073854a-9799-4bbc-b3a0-e4bc6b4ca32f"/>
+        <COMPID name="Literal" mc="Standard.Class" uid="6a98564e-103c-4b93-b9b3-078ad837f2f7"/>
+        <OBJECT>
+          <ID name="AttributeName" mc="Standard.Enumeration" uid="86069414-114a-4bcd-b0d9-40299707c604"/>
+          <ATTRIBUTES>
+            <ATT name="IsElementary">true</ATT>
+            <ATT name="IsAbstract">false</ATT>
+            <ATT name="IsLeaf">false</ATT>
+            <ATT name="IsRoot">false</ATT>
+            <ATT name="Visibility">Public</ATT>
+            <ATT name="Name"><![CDATA[AttributeName]]></ATT>
+            <ATT name="status">1970354901745664</ATT>
+          </ATTRIBUTES>
+          <DEPENDENCIES>
+            <COMP relation="Value">
+              <OBJECT>
+                <ID name="NoAttribute" mc="Standard.EnumerationLiteral" uid="66528fab-914d-4f60-b861-687a7691ec65"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[NoAttribute]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="OwningConceptID" mc="Standard.EnumerationLiteral" uid="672ebbed-145a-4efe-ad34-65cd430e4046"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[OwningConceptID]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="ReferencedConceptID" mc="Standard.EnumerationLiteral" uid="333a95f6-9bdf-4564-80ed-8d1d48a4db55"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[ReferencedConceptID]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="AbstractConceptID" mc="Standard.EnumerationLiteral" uid="c52d0f98-b8bb-4428-b535-c6acf54f29b6"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[AbstractConceptID]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="RefinedConceptID" mc="Standard.EnumerationLiteral" uid="58dae126-bc5d-41ad-beff-ed7ff65e39c0"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[RefinedConceptID]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="LiteralValue" mc="Standard.EnumerationLiteral" uid="aafe7db2-4dfa-48c5-9772-fce15073a8c2"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[LiteralValue]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="Label" mc="Standard.EnumerationLiteral" uid="e46a39d4-005b-45f8-8eee-c8b53b5346e3"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[Label]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="Definition" mc="Standard.EnumerationLiteral" uid="659df2d8-b4b6-4a59-a03d-e2f7c55c7852"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[Definition]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+            </COMP>
+          </DEPENDENCIES>
+        </OBJECT>
+        <COMPID name="Observer" mc="Standard.Class" uid="418f79ca-3226-4c92-b2dc-6302902bf61b"/>
+        <OBJECT>
+          <ID name="NatureOfChange" mc="Standard.Enumeration" uid="37e9cecb-7e00-49a3-a8ac-09b8552a57ea"/>
+          <ATTRIBUTES>
+            <ATT name="IsElementary">true</ATT>
+            <ATT name="IsAbstract">false</ATT>
+            <ATT name="IsLeaf">false</ATT>
+            <ATT name="IsRoot">false</ATT>
+            <ATT name="Visibility">Public</ATT>
+            <ATT name="Name"><![CDATA[NatureOfChange]]></ATT>
+            <ATT name="status">1970354901745664</ATT>
+          </ATTRIBUTES>
+          <DEPENDENCIES>
+            <COMP relation="Value">
+              <OBJECT>
+                <ID name="ConceptAdded" mc="Standard.EnumerationLiteral" uid="369600bd-de64-4f54-bb9d-e6ff1eca5e1a"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[ConceptAdded]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="ConceptChanged" mc="Standard.EnumerationLiteral" uid="295dda43-c1b8-4c81-b444-028f0faa3526"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[ConceptChanged]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="ConceptRemoved" mc="Standard.EnumerationLiteral" uid="9b20cb6a-7b40-4cc5-b2b7-2317b3c5ec83"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[ConceptRemoved]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="OwningConceptChanged" mc="Standard.EnumerationLiteral" uid="8a68882c-e39a-49e1-b735-be139ffcf3e3"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[OwningConceptChanged]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="ReferencedConceptChanged" mc="Standard.EnumerationLiteral" uid="510b4cb7-35db-48a2-bf71-aa3e7121caf4"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[ReferencedConceptChanged]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="AbstractConceptChanged" mc="Standard.EnumerationLiteral" uid="94c4fcc8-71c5-4c2b-8488-25396e602639"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[AbstractConceptChanged]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="ReferencedConceptChanged" mc="Standard.EnumerationLiteral" uid="746b2a18-0f61-4cdd-95b0-273f7e379e94"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[ReferencedConceptChanged]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="ForwardedChange" mc="Standard.EnumerationLiteral" uid="2c6af2a5-c716-4fef-be11-dc6a0808a8b9"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[ForwardedChange]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+            </COMP>
+          </DEPENDENCIES>
+        </OBJECT>
+      </COMP>
+      <COMP relation="Product">
+        <COMPID name="Core Concepts - Abstract" mc="Standard.ClassDiagram" uid="54653922-8165-4d95-8d0a-0341c4add328"/>
+        <COMPID name="Element" mc="Standard.ClassDiagram" uid="8e96540c-5b2f-42da-9650-a28a3b692857"/>
+        <COMPID name="Element Ownership Implementation" mc="Standard.ClassDiagram" uid="b0df5f22-a84f-4119-a9ce-81a0d6db9480"/>
+        <COMPID name="Element Ownership Abstraction" mc="Standard.ClassDiagram" uid="40290715-135b-46a0-a4c3-e83f81df49c9"/>
+        <COMPID name="Reference Abstraction" mc="Standard.ClassDiagram" uid="7033d6f1-6a49-4318-81f2-a7020a686683"/>
+        <COMPID name="Reference Implementation (partial)" mc="Standard.ClassDiagram" uid="d2b43ab8-0ed0-4cab-a35d-c5d733cd8fde"/>
+        <COMPID name="Literal Abstraction" mc="Standard.ClassDiagram" uid="3fe42406-c414-40e8-ac3a-348e7ceeac09"/>
+        <COMPID name="Refinement Abstraction" mc="Standard.ClassDiagram" uid="c36d58f5-2aa8-43e8-9d67-e0ae9a2a4a96"/>
+        <COMPID name="Refinement Implementation" mc="Standard.ClassDiagram" uid="47ca5b45-528c-48e0-9d2e-6b4ac51d723f"/>
+        <COMPID name="Reference Implementation (complete)" mc="Standard.ClassDiagram" uid="9e3f3813-c504-4021-8306-2673e78c45aa"/>
+        <COMPID name="Core Concepts - Implementation" mc="Standard.ClassDiagram" uid="bc65d36d-0d52-4520-89ea-e33dd576d6fb"/>
+        <COMPID name="Element with ActiveCRL Attributes" mc="Standard.ClassDiagram" uid="f310295e-3147-4976-83f6-b65353d27e1a"/>
+        <COMPID name="Element with CRL Convenience Features" mc="Standard.ClassDiagram" uid="06815039-8058-42f5-a1a0-15c60acd1f51"/>
+        <COMPID name="Observer" mc="Standard.ClassDiagram" uid="2deac63d-feed-4ab6-861e-a28beebd53b0"/>
+        <COMPID name="Reference with ACRL Attributes" mc="Standard.ClassDiagram" uid="c6220584-94de-4032-9395-bbb1294bba3b"/>
+        <COMPID name="Refinement ActiveCRL Implementation" mc="Standard.ClassDiagram" uid="e02a5321-7dd1-4da1-988f-fdfc54271fa1"/>
+        <COMPID name="Nature of Changed" mc="Standard.ClassDiagram" uid="47de857d-c1d1-4aca-964f-4118b33bfe91"/>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>

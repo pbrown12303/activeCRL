@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="crldatastructures" version="4">
+  <OBJECT>
+    <ID name="crldatastructures" mc="Standard.Package" uid="1c3dbff2-3c4b-4727-a5e9-cadd127cd8aa"/>
+    <PID name="acrl" mc="Standard.Package" uid="491ccbde-db73-47d4-8503-ebafcc73e08b"/>
+    <ATTRIBUTES>
+      <ATT name="IsInstantiable">false</ATT>
+      <ATT name="IsAbstract">false</ATT>
+      <ATT name="IsLeaf">false</ATT>
+      <ATT name="IsRoot">false</ATT>
+      <ATT name="Visibility">Public</ATT>
+      <ATT name="Name"><![CDATA[crldatastructures]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <COMP relation="OwnedElement">
+        <COMPID name="CrlDataStructures.go" mc="Standard.Class" uid="014f43ad-d035-46bd-9d3e-39613bce7184"/>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>

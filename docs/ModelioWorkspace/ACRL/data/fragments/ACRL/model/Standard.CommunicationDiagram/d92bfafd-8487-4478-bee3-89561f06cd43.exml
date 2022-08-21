@@ -1,0 +1,40 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="Communication Interaction Communication diagram" version="4">
+  <OBJECT>
+    <ID name="Communication Interaction Communication diagram" mc="Standard.CommunicationDiagram" uid="d92bfafd-8487-4478-bee3-89561f06cd43"/>
+    <PID name="Communication Interaction" mc="Standard.CommunicationInteraction" uid="31c7a6ec-e608-4a3a-af5b-b188b601224c"/>
+    <ATTRIBUTES>
+      <ATT name="UiDataVersion">7</ATT>
+      <ATT name="UiData"><![CDATA[eJztWW1vokAQ/iuE7yBbXsRobVrt9Zral9i7S+6TWdnB0i7QLGuVf3+Lb/WFKlpEL/Eb2WVmZ2afZ5gZahdDn0ofwCIvDM5lpGqydFGvPXZfweGSR8SSLPH4Hc7lkPVUPyRAvVDt+1R1Qt/vB56DuRAlHu4x7KtAPB4yFSj4EPAo/aUbvzG/3Bwvy5KPX0PWmRmjyfXaEwvfgfFYCrAvbKA4Dvu8iTkWe38w7cPEuKBPqVyq10pTgRXRZx5TkBdcO0tzbWpklLyfOMBAHctmsK+BIwcTINPDroe8DW7GUx6EiomkBEPe7N4KG0ePycP9WFLS1eGSo6WxS+ucZ0AxByJsWYrbfbIkfSQrSYhwQDAjatr1SKRy1nWxSxTbsMuKYZRtpQugK3bFtJCrWQ4x9PVXQHHE74JwELRwF+iSJc+ceUFPri+cLd0GHBh2Rs+LO5MI1kojJWudDyncBkL6PYy8RPaLkzOoarx4lDBINLS8iC+gSc+PKIGQXmbJg1hbgSDagiJtYSgOegm6Jvetl7Uqss0q0rSqqW1NH2Pv9Em4MyZqoYhPQi2daQYxHNdUiFHBimFCRak4OlKAWKZmYWTaupED3J3jAbC5fwA/Mc/HLE7F8jbpfhXLWlXbFcdWVhwLVcP422BeRs0JzKm67rE3sv2boC7vH9Q/QVwzK758sYvFrXXCbU5JOHoJBx3PWVFxFYozcDALDGd9WO/dSNMbxIOQkQ3KXEyjTdo4dt46kai4IMzHNJoS9AyqPqE15nPa1hwRKvvn+A8B5Bx4npSzvUTHxPcN4E0hPdJOX6sjZL0oa3ogJdchvYxgkmMayMLcQ+WBrLYVkwhQjsOKgnowS5v0YGin2hXtf4ZxyCbMsDEYhOhK2Ta7IhNortK1bFdxyq5hu1CuWM6GmGXKBAwdTxeGCpgj7LkN2xHKmecJ+XzZ0AnQhXZiqID5wqFaMVTwDAEdoiz7H7F76saKL8IKGLkcTztW8BDm9NE6NWTH3pCtbi0Z0PKCt2hWImx8/arXZHggbrWFY0HWRf6lzn5muWWaVMhYQaTSRIXIKAsaiykXtpM6jj+23jJ4p/Rq3qity7/X7c7VZePupv34+6G5S3m4DkVfapm/u08Yzf/XXzsjO4Fi76D49fiUNxq+3PoHeXU7vg==]]></ATT>
+      <ATT name="PreviewData"><![CDATA[data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWgAAABGCAIAAABuVplwAAAFJElEQVR4nO3cW24aSRSAYS/Nm4lhGXlxjCHv3kASx/ZDbyF2GsESWjJKAiJSLp37xTdsUl2X7q42NBxi4wb9v+rBw8DMqHz0URTRbIyJiIRtPPR/ABGtXsBBROKAg4jEAQcRiQMOIhIHHEQkDjiISBxwEJE44CAicTPgeLy5yZpzLecXRuU9+BiszSrf59lwjP9+sOvso78+ufU5W+exv7649dVbF99y67tbP7x1+TO3fiXrSq3f/vpTXKO//jpz6zxb1xf+unTryls3o9y6duvGW/mNogo038T6Q7vg3OZHt3x6JQNcNsP+GC84yflhXnyegQM41irgAA7gIHHAARzAQeKAAziAg8QBB3AAB4kDDuAADhIHHMABHCQOOIADOEgccAAHcJA44AAO4CBxwAEcwEHigAM4gIPEAQdwAAeJAw7gAA4SBxzAARwkDjiAAzhIHHAAB3CQOOAADuAgccABHMV9jw+2iv9nxOZx1FQ/7ERLgSNq1cMhcFS65cERbqt/VxDOnt744FFhbvcOTqfC0X++Z55WfxEDx93BsRX2PbCXBkd8VH+8CRxVbzlwxC+tBXPDsRW+sycOf4yLcJh3x6DDiWMWHNGu+gVsB7vm15Db+vaT5JH2/HD0wpoT/bCnd7wX1pXc+2HTPF4LO/uW81bo9vpt8hz7qr7Z6Kil/rIZJlJsaixG424rfbsIusBR3e4DjqihR7RhRjRTYzIc5iTSngrHuL2jn6Cm9zSb2INeAof+W7kZ7uWG842BQw98I9AjHXQKA/zOwGEH+LBmx35oydCPm+PMYWzhGGYvPxp621haReAwvwDfbCEc9gflRWfHmW32vRYOzsYDQ0YjGp3HekP1pl/ordyN1HZ3dvWDKRwKCLXXnSBRpsOJY1W6NzjUiH5NjxspHwvAkY5x9p5nKSmeONxIn407Df1gCof62Z443ABfuAFO4TDD3HYDPNID3IyUIMPDvYSJgf70rZ7ZitQk67fGoJvbxtIqAsd2tNAdh9prt/vHgb7y0AeNkyAPdn0/TqgO9RPCZLvtFis49IOttna6HbhDh95N4/RA/xMSnoFjJbq/E0fkz+1UOGbfcZg3v1d2YpPDcjK95tCRg+NEP+FEHzReB/bQYU8ckf2oYgbYHJ/DwB067AAPFBx9N8B6krUguc8p5n2xq4e5m7z86H22jaWtHBxTThzplVJ2b3oyG47By+KrEkTsR5XEZuBYtaoKhz5x9J/peVPvc7/HEyb22INj8OLWE14X4Zg8wPajSnSdhyM9O+fg0EcP7+VPu9k2lrYucHgnjnSJThzZlRJwrG6VhuPKnZqbr/wTx8TL0fyJI7scnX7iyC5HJ8GRTvK0E8dqXo5OgOOu7jjK4Ci54wCOlezh4Zhxx6G9+N87jhSOkjuOAhwjN8Dezd063nFMhsM/WdWeh3N8q1ICR8m3KgU40nNdcvkMHFWt8nDYb1XU6Ma3v1Upfh079VuVKPs6duq3KgU41u1bFf7kKN1h9wEHf3L0dsABHGsVcAAHcJA44AAO4CBxwAEcwEHigAM4gIPEAQdwAAeJAw7gAA4SBxzAARwkDjiAAzhIHHAAB3CQOOAADuAgccABHMBB4oADOICDxAEHcAAHiQMO4AAOEgccwAEcJA44gAM4SBxwAAdwkDjgAA7gIHHAURU4WHOuO5h6+u8efAzWZpXv8ww4iIhuBxxEJA44iEgccBCROOAgInHAQUTigIOIxAEHEYkDDiISBxxEJO4fQWvQZlnm3qoAAAAASUVORK5CYII=]]></ATT>
+      <ATT name="Name"><![CDATA[Communication Interaction Communication diagram]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <LINK relation="Represented">
+        <REFOBJ>
+          <ID name="c" mc="Standard.CommunicationNode" uid="204d4cf5-d49a-45e9-9c31-ed6506a15834"/>
+        </REFOBJ>
+        <REFOBJ>
+          <ID name="r1" mc="Standard.CommunicationNode" uid="48ae4dd3-785b-450f-b68f-c7f48fe796c0"/>
+        </REFOBJ>
+      </LINK>
+      <COMP relation="Descriptor">
+        <OBJECT>
+          <ID name="" mc="Infrastructure.Note" uid="fd780ff7-8a8d-48a7-adb2-eb3d1fff4b35"/>
+          <ATTRIBUTES>
+            <ATT name="Content"></ATT>
+            <ATT name="MimeType"><![CDATA[text/plain]]></ATT>
+            <ATT name="Name"></ATT>
+            <ATT name="status">1970354901745664</ATT>
+          </ATTRIBUTES>
+          <DEPENDENCIES>
+            <LINK relation="Model">
+              <FOREIGNID name="description" mc="Infrastructure.NoteType" uid="00000000-0000-3e81-0000-000000000000"/>
+            </LINK>
+          </DEPENDENCIES>
+        </OBJECT>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>

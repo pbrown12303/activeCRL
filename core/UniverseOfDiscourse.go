@@ -336,6 +336,16 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, deletedElements ma
 			}
 		}
 	}
+	// Spread the news
+	conceptRemovedNotification := uOfDPtr.newUofDConceptRemovedNotification(beforeState, hl)
+	err = uOfDPtr.NotifyAll(conceptRemovedNotification, hl)
+	if err != nil {
+		return errors.Wrap(err, "UniverseOfDiscourse.deleteElement failed")
+	}
+	err = el.NotifyAll(conceptRemovedNotification, hl)
+	if err != nil {
+		return errors.Wrap(err, "UniverseOfDiscourse.deleteElement failed")
+	}
 	// Remove element from all listener's lists
 	switch typedEl := el.(type) {
 	case *reference:
@@ -357,16 +367,8 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, deletedElements ma
 	uOfDPtr.abstractionsMap.DeleteKey(uuid)
 	uOfDPtr.ownedIDsMap.DeleteKey(uuid)
 	uOfDPtr.uuidElementMap.DeleteEntry(uuid)
+	// Finally, remove from the universe of discourse
 	el.setUniverseOfDiscourse(nil, hl)
-	conceptRemovedNotification := uOfDPtr.newUofDConceptRemovedNotification(beforeState, hl)
-	err = uOfDPtr.NotifyAll(conceptRemovedNotification, hl)
-	if err != nil {
-		return errors.Wrap(err, "UniverseOfDiscourse.deleteElement failed")
-	}
-	err = el.NotifyAll(conceptRemovedNotification, hl)
-	if err != nil {
-		return errors.Wrap(err, "UniverseOfDiscourse.deleteElement failed")
-	}
 	return nil
 }
 

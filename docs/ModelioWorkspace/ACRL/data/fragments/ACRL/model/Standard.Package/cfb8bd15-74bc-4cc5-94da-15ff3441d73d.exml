@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="http" version="4">
+  <OBJECT>
+    <ID name="http" mc="Standard.Package" uid="cfb8bd15-74bc-4cc5-94da-15ff3441d73d"/>
+    <PID name="ACRL" mc="Standard.Project" uid="83c25b42-9005-48df-b4bf-69e561f34201"/>
+    <ATTRIBUTES>
+      <ATT name="IsInstantiable">false</ATT>
+      <ATT name="IsAbstract">false</ATT>
+      <ATT name="IsLeaf">false</ATT>
+      <ATT name="IsRoot">false</ATT>
+      <ATT name="Visibility">Public</ATT>
+      <ATT name="Name"><![CDATA[http]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <COMP relation="OwnedElement">
+        <COMPID name="Server" mc="Standard.Class" uid="2a160d60-ba11-47eb-bfc9-cf0233083022"/>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>

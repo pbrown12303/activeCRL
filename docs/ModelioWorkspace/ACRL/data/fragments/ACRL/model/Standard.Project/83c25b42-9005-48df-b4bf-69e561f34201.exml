@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="ACRL" version="4">
+  <OBJECT>
+    <ID name="ACRL" mc="Standard.Project" uid="83c25b42-9005-48df-b4bf-69e561f34201"/>
+    <ATTRIBUTES>
+      <ATT name="ProjectContext"></ATT>
+      <ATT name="ProjectDescr"></ATT>
+      <ATT name="Name"><![CDATA[ACRL]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <COMP relation="Model">
+        <COMPID name="acrl" mc="Standard.Package" uid="491ccbde-db73-47d4-8503-ebafcc73e08b"/>
+        <COMPID name="http" mc="Standard.Package" uid="cfb8bd15-74bc-4cc5-94da-15ff3441d73d"/>
+      </COMP>
+      <COMP relation="DiagramRoot">
+        <COMPID name="ACRL" mc="Infrastructure.DiagramSet" uid="cf6d9600-ae6f-40c2-aa2b-13c5217ed0ed"/>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>

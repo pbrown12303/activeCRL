@@ -1,6 +1,8 @@
 package crlmapsdomain
 
 import (
+	"log"
+
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pkg/errors"
 )
@@ -196,7 +198,7 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	uOfD := trans.GetUniverseOfDiscourse()
 	trans.WriteLockElement(mapInstance)
 
-	// log.Printf("Executing executeOneToOneMap for map labeled %s", mapInstance.GetLabel(trans))
+	log.Printf("Executing executeOneToOneMap for map labeled %s", mapInstance.GetLabel(trans))
 
 	// As an initial assumption, it probably doesn't matter what kind of notification has been received.
 	// Validate that this instance is a refinement of an element that is, in turn, a refinement of CrlOneToOneMap
@@ -523,8 +525,8 @@ func instantiateChildren(abstractMap core.Element, parentMap core.Element, sourc
 				// Check to see whether there is already a map instance for this source
 				parentMapSource := GetSource(parentMap, trans)
 				if parentMapSource == nil {
-					// TODO This may not be an error - it may be a deletion that is being processed
-					return errors.New("In CrlMaps.go instantiateChildren, the parentMap does not have a parentMapSource")
+					// This may not be an error - it may be a deletion that is being processed
+					return nil
 				}
 				// We must find the Element whose attribute is being referenced. Two known cases are possible here (there may be others yet to be encountered).
 				// Case 1: the parent's map source is that Element

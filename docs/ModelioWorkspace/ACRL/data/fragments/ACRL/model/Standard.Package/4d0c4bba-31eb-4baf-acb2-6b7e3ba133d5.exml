@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="crlMaps" version="4">
+  <OBJECT>
+    <ID name="crlMaps" mc="Standard.Package" uid="4d0c4bba-31eb-4baf-acb2-6b7e3ba133d5"/>
+    <PID name="acrl" mc="Standard.Package" uid="491ccbde-db73-47d4-8503-ebafcc73e08b"/>
+    <ATTRIBUTES>
+      <ATT name="IsInstantiable">false</ATT>
+      <ATT name="IsAbstract">false</ATT>
+      <ATT name="IsLeaf">false</ATT>
+      <ATT name="IsRoot">false</ATT>
+      <ATT name="Visibility">Public</ATT>
+      <ATT name="Name"><![CDATA[crlMaps]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <COMP relation="OwnedBehavior">
+        <COMPID name="Activity" mc="Standard.Activity" uid="87f8fa17-894b-44d7-bd42-a63b7beabfa7"/>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>

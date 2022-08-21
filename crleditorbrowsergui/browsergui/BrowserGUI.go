@@ -310,11 +310,12 @@ func (bgPtr *BrowserGUI) initializeClientState(hl *core.Transaction) error {
 	for openDiagramLiteral != nil {
 		diagram := bgPtr.editor.GetUofD().GetElement(openDiagramLiteral.GetLiteralValue(hl))
 		if diagram == nil {
-			return errors.New("Failed to load diagram with ID: " + openDiagramLiteral.GetLiteralValue(hl))
+			log.Printf("In BrowserGui.initializeClientState: Failed to load diagram with ID: %s", openDiagramLiteral.GetLiteralValue(hl))
+			continue
 		}
 		err2 = bgPtr.diagramManager.displayDiagram(diagram, hl)
 		if err2 != nil {
-			return err2
+			return errors.Wrap(err2, "In BrowserGUI.initializeClientState diagram "+diagram.GetLabel(hl)+" did not display")
 		}
 		openDiagramLiteral, _ = crldatastructuresdomain.GetNextMemberLiteral(openDiagramLiteral, hl)
 	}

@@ -2040,7 +2040,7 @@ var crlOnChangePosition = function (modelElement, position) {
 }
 
 var crlOnCloseDiagramView = function () {
-    var diagramID = document.getElementById("diagramTabDropdown").getAttribute("diagramID");
+    var diagramID = crlGetDiagramIDFromDiagramContainerID(crlCurrentDiagramContainerID);
     crlCloseDiagramView(diagramID);
 }
 

@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="crldiagram" version="4">
+  <OBJECT>
+    <ID name="crldiagram" mc="Standard.Package" uid="9b3c4103-c29c-455f-b089-9ddc1736548e"/>
+    <PID name="acrl" mc="Standard.Package" uid="491ccbde-db73-47d4-8503-ebafcc73e08b"/>
+    <ATTRIBUTES>
+      <ATT name="IsInstantiable">false</ATT>
+      <ATT name="IsAbstract">false</ATT>
+      <ATT name="IsLeaf">false</ATT>
+      <ATT name="IsRoot">false</ATT>
+      <ATT name="Visibility">Public</ATT>
+      <ATT name="Name"><![CDATA[crldiagram]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <COMP relation="OwnedElement">
+        <COMPID name="CrlDiagram.go" mc="Standard.Class" uid="05a0121e-bbc7-4293-ae7f-506386b8c872"/>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>
