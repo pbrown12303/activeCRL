@@ -1510,7 +1510,7 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 		if notification.GetAfterConceptState().ConceptID != diagramElementModelReference.GetConceptID(trans) {
 			break
 		}
-		if diagramElementModelReference.(core.Reference).GetReferencedConceptID(trans) == "" {
+		if diagramElementModelReference.GetReferencedConceptID(trans) == "" {
 			uOfD.DeleteElement(diagramElement, trans)
 		} else {
 			updateDiagramElementForModelElementChange(diagramElement, modelElement, trans)
