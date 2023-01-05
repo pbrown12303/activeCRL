@@ -140,10 +140,7 @@ func (uOfDPtr *UniverseOfDiscourse) Clone(hl *Transaction) *UniverseOfDiscourse 
 	for uri, functionArray = range uOfDPtr.computeFunctions {
 		// Housekeeping functions are already present in a new uOfD
 		if uri != "http://activeCrl.com/core/coreHousekeeping" {
-			var crlFunction crlExecutionFunction
-			for _, crlFunction = range functionArray {
-				newUofD.computeFunctions[uri] = append(newUofD.computeFunctions[uri], crlFunction)
-			}
+			newUofD.computeFunctions[uri] = append(newUofD.computeFunctions[uri], functionArray...)
 		}
 	}
 
@@ -725,7 +722,7 @@ func (uOfDPtr *UniverseOfDiscourse) SendConceptChangeNotification(reportingEleme
 	notification.afterConceptState = afterState
 	notification.natureOfChange = ConceptChanged
 	notification.uOfD = uOfDPtr
-	err = uOfDPtr.queueFunctionExecutions(reportingElement, notification, hl)
+	err = uOfDPtr.callAssociatedFunctions(reportingElement, notification, hl)
 	if err != nil {
 		return errors.Wrap(err, "UniverseOfDiscourse.SendConceptChangeNotification failed")
 	}
@@ -754,17 +751,19 @@ func (uOfDPtr *UniverseOfDiscourse) SendPointerChangeNotification(reportingEleme
 	notification.afterReferencedState = afterReferencedState
 	notification.natureOfChange = natureOfChange
 	notification.uOfD = uOfDPtr
-	err = uOfDPtr.queueFunctionExecutions(reportingElement, notification, hl)
+	err = uOfDPtr.callAssociatedFunctions(reportingElement, notification, hl)
 	if err != nil {
 		return errors.Wrap(err, "element.SetOwningConceptID failed")
 	}
+	// TODO: Re-evaluate why notifications are being sent to the concepts that are being (or were being) referenced. What purpose does this serve?
+	// Possible partial answer: refined elements might want to know when their abstractions change
 	var beforeReferencedConcept Element
 	if beforeReferencedState != nil {
 		beforeReferencedConcept = uOfDPtr.GetElement(beforeReferencedState.ConceptID)
 		if beforeReferencedConcept == nil {
 			return errors.New("UniverseOfDiscourse.SendPointerChangeNotification called with a beforeReferencedState, but the beforeReferencedConcept was not found")
 		}
-		err = uOfDPtr.queueFunctionExecutions(beforeReferencedConcept, notification, hl)
+		err = uOfDPtr.callAssociatedFunctions(beforeReferencedConcept, notification, hl)
 		if err != nil {
 			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
 		}
@@ -779,7 +778,7 @@ func (uOfDPtr *UniverseOfDiscourse) SendPointerChangeNotification(reportingEleme
 		if afterReferencedConcept == nil {
 			return errors.New("UniverseOfDiscourse.SendPointerChangeNotification called with a afterReferencedState, but the afterReferencedConcept was not found")
 		}
-		err = uOfDPtr.queueFunctionExecutions(afterReferencedConcept, notification, hl)
+		err = uOfDPtr.callAssociatedFunctions(afterReferencedConcept, notification, hl)
 		if err != nil {
 			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
 		}
@@ -788,6 +787,7 @@ func (uOfDPtr *UniverseOfDiscourse) SendPointerChangeNotification(reportingEleme
 			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
 		}
 	}
+	// TODO possibly add call to callAssociatedFunctions here
 	err = reportingElement.NotifyAll(notification, hl)
 	if err != nil {
 		return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
@@ -1038,7 +1038,7 @@ func (uOfDPtr *UniverseOfDiscourse) preChange(el Element, hl *Transaction) {
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) queueFunctionExecutions(el Element, notification *ChangeNotification, hl *Transaction) error {
+func (uOfDPtr *UniverseOfDiscourse) callAssociatedFunctions(el Element, notification *ChangeNotification, hl *Transaction) error {
 	if el == nil {
 		return errors.New("UniverseOfDiscourse.queueFunctionExecution called with a nil Element")
 	}
@@ -1047,7 +1047,7 @@ func (uOfDPtr *UniverseOfDiscourse) queueFunctionExecutions(el Element, notifica
 		return nil
 	}
 	if notification.GetNatureOfChange() == 0 {
-		return errors.New("UniverseOfDiscourse.queueFunctionExecution called without of NatureOfChange")
+		return errors.New("UniverseOfDiscourse.callAssociatedFunctions called without of NatureOfChange")
 	}
 	functionIdentifiers := uOfDPtr.findFunctions(el, notification, hl)
 	for _, functionIdentifier := range functionIdentifiers {
@@ -1056,14 +1056,14 @@ func (uOfDPtr *UniverseOfDiscourse) queueFunctionExecutions(el Element, notifica
 				(OmitManageTreeNodesCalls && functionIdentifier == "http://activeCrl.com/crlEditor/Editor/TreeViews/ManageTreeNodes") ||
 				(OmitDiagramRelatedCalls && isDiagramRelatedFunction(functionIdentifier))
 			if !omitTrace {
-				log.Printf("      queueFunctionExecutions adding function, URI: %s notification: %s target: %p", functionIdentifier, notification.GetNatureOfChange().String(), el)
+				log.Printf("Calling function with URI: %s notification: %s target: %p", functionIdentifier, notification.GetNatureOfChange().String(), el)
 				notification.Print("      Notification: ", hl)
-				log.Printf("       Function target: %T %s %s %p", el, el.getConceptIDNoLock(), el.GetLabel(hl), el)
+				log.Printf("  Function target: %T %s %s %p", el, el.getConceptIDNoLock(), el.GetLabel(hl), el)
 			}
 		}
 		err := hl.callFunctions(functionIdentifier, el, notification)
 		if err != nil {
-			return errors.Wrap(err, "UniverseOfDiscourse.queueFunctionExecutions failed")
+			return errors.Wrap(err, "UniverseOfDiscourse.callAssociatedFunctions failed")
 		}
 	}
 	return nil
@@ -1129,7 +1129,7 @@ func (uOfDPtr *UniverseOfDiscourse) RecoverElement(data []byte, hl *Transaction)
 
 // replicateAsRefinement replicates the structure of the original in the replicate, ignoring
 // Refinements The name from each original element is copied into the name of the
-// corresponding replicate element. The value of ForwardNotificationsToOwner is replicated. Most attributes
+// corresponding replicate element. Most attributes
 // are not replicated, specifically any pointers, ReadOnly, Definition, IsCore, Version, and observers.
 // This function is idempotent: if applied to an existing structure,
 // Elements of that structure that have existing Refinement relationships with original Elements
@@ -1142,6 +1142,13 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 	err := replicate.SetLabel(original.GetLabel(hl), hl)
 	if err != nil {
 		return errors.Wrap(err, "UniverseOfDiscourse.replicateAsRefinement replicate.SetLabel failed")
+	}
+	switch castOriginal := original.(type) {
+	case Reference:
+		switch castReplicate := replicate.(type) {
+		case Reference:
+			castReplicate.SetReferencedConcept(nil, castOriginal.GetReferencedAttributeName(hl), hl)
+		}
 	}
 
 	// Determine whether there is already a refinement in place; if not, create it
@@ -1215,17 +1222,6 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 			}
 			if replicateChild != nil {
 				replicateChild.SetOwningConcept(replicate, hl)
-				// refinement, err := uOfDPtr.NewRefinement(hl)
-				// if err != nil {
-				// 	return err
-				// }
-				// refinement.SetOwningConcept(replicateChild, hl)
-				// refinement.SetAbstractConcept(originalChild, hl)
-				// refinement.SetRefinedConcept(replicateChild, hl)
-				// refinement.SetLabel("Refines "+originalChild.GetLabel(hl), hl)
-				// replicateChild.SetLabel(originalChild.GetLabel(hl), hl)
-				// switch originalChild.(type) {
-				// case Element, Literal, Reference:
 				err := uOfDPtr.replicateAsRefinement(originalChild, replicateChild, hl, newChildURI)
 				if err != nil {
 					return err
