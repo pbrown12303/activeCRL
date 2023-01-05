@@ -116,25 +116,9 @@
           <DEPENDENCIES>
             <COMP relation="Value">
               <OBJECT>
-                <ID name="ConceptAdded" mc="Standard.EnumerationLiteral" uid="369600bd-de64-4f54-bb9d-e6ff1eca5e1a"/>
-                <ATTRIBUTES>
-                  <ATT name="Name"><![CDATA[ConceptAdded]]></ATT>
-                  <ATT name="status">1970354901745664</ATT>
-                </ATTRIBUTES>
-                <DEPENDENCIES></DEPENDENCIES>
-              </OBJECT>
-              <OBJECT>
                 <ID name="ConceptChanged" mc="Standard.EnumerationLiteral" uid="295dda43-c1b8-4c81-b444-028f0faa3526"/>
                 <ATTRIBUTES>
                   <ATT name="Name"><![CDATA[ConceptChanged]]></ATT>
-                  <ATT name="status">1970354901745664</ATT>
-                </ATTRIBUTES>
-                <DEPENDENCIES></DEPENDENCIES>
-              </OBJECT>
-              <OBJECT>
-                <ID name="ConceptRemoved" mc="Standard.EnumerationLiteral" uid="9b20cb6a-7b40-4cc5-b2b7-2317b3c5ec83"/>
-                <ATTRIBUTES>
-                  <ATT name="Name"><![CDATA[ConceptRemoved]]></ATT>
                   <ATT name="status">1970354901745664</ATT>
                 </ATTRIBUTES>
                 <DEPENDENCIES></DEPENDENCIES>
@@ -172,9 +156,33 @@
                 <DEPENDENCIES></DEPENDENCIES>
               </OBJECT>
               <OBJECT>
-                <ID name="ForwardedChange" mc="Standard.EnumerationLiteral" uid="2c6af2a5-c716-4fef-be11-dc6a0808a8b9"/>
+                <ID name="OwnedConceptChanged" mc="Standard.EnumerationLiteral" uid="2c6af2a5-c716-4fef-be11-dc6a0808a8b9"/>
                 <ATTRIBUTES>
-                  <ATT name="Name"><![CDATA[ForwardedChange]]></ATT>
+                  <ATT name="Name"><![CDATA[OwnedConceptChanged]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="IndicatedConceptChanged" mc="Standard.EnumerationLiteral" uid="51a49862-9e50-47a2-a557-f05be72ba813"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[IndicatedConceptChanged]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="ConceptAdded" mc="Standard.EnumerationLiteral" uid="369600bd-de64-4f54-bb9d-e6ff1eca5e1a"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[ConceptAdded]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="ConceptRemoved" mc="Standard.EnumerationLiteral" uid="31edd698-12f7-461e-9375-83e36eda61fd"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[ConceptRemoved]]></ATT>
                   <ATT name="status">1970354901745664</ATT>
                 </ATTRIBUTES>
                 <DEPENDENCIES></DEPENDENCIES>
@@ -182,6 +190,9 @@
             </COMP>
           </DEPENDENCIES>
         </OBJECT>
+        <COMPID name="ChangeNotification" mc="Standard.Class" uid="c0a8935e-ac09-4891-976e-c8d57ace9569"/>
+        <COMPID name="ConceptState" mc="Standard.Class" uid="4e8035b6-1f07-454b-b8f9-8e0597ad2cd3"/>
+        <COMPID name="UniverseOfDiscourse" mc="Standard.Class" uid="5f203b74-81a7-4d95-82cf-c44d96ff944f"/>
       </COMP>
       <COMP relation="Product">
         <COMPID name="Core Concepts - Abstract" mc="Standard.ClassDiagram" uid="54653922-8165-4d95-8d0a-0341c4add328"/>
@@ -200,7 +211,8 @@
         <COMPID name="Observer" mc="Standard.ClassDiagram" uid="2deac63d-feed-4ab6-861e-a28beebd53b0"/>
         <COMPID name="Reference with ACRL Attributes" mc="Standard.ClassDiagram" uid="c6220584-94de-4032-9395-bbb1294bba3b"/>
         <COMPID name="Refinement ActiveCRL Implementation" mc="Standard.ClassDiagram" uid="e02a5321-7dd1-4da1-988f-fdfc54271fa1"/>
-        <COMPID name="Nature of Changed" mc="Standard.ClassDiagram" uid="47de857d-c1d1-4aca-964f-4118b33bfe91"/>
+        <COMPID name="Nature of Change" mc="Standard.ClassDiagram" uid="47de857d-c1d1-4aca-964f-4118b33bfe91"/>
+        <COMPID name="Notification" mc="Standard.ClassDiagram" uid="943d6984-7674-4178-80e9-223e6dfc6f95"/>
       </COMP>
     </DEPENDENCIES>
   </OBJECT>

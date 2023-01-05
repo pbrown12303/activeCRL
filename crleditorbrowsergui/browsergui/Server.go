@@ -239,6 +239,15 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		} else {
 			sendReply(w, 0, "Processed DiagramDrop", request.RequestConceptID, nil)
 		}
+	case "DiagramElementSelected":
+		BrowserGUISingleton.GetUofD().MarkUndoPoint()
+		elementID := request.RequestConceptID
+		element := BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID)
+		if element != nil {
+			modelElement := crldiagramdomain.GetReferencedModelElement(element, hl)
+			BrowserGUISingleton.editor.SelectElement(modelElement, hl)
+		}
+		sendReply(w, 0, "Processed DiagramElementSelected", elementID, BrowserGUISingleton.GetUofD().GetElement(elementID))
 	case "DiagramNodeNewPosition":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
 		x, err := strconv.ParseFloat(request.AdditionalParameters["NodeX"], 64)
@@ -252,15 +261,6 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			BrowserGUISingleton.getDiagramManager().setDiagramNodePosition(request.RequestConceptID, x, y, hl)
 			sendReply(w, 0, "Processed DiagramNodeNewPosition", "", nil)
 		}
-	case "DiagramElementSelected":
-		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		elementID := request.RequestConceptID
-		element := BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID)
-		if element != nil {
-			modelElement := crldiagramdomain.GetReferencedModelElement(element, hl)
-			BrowserGUISingleton.editor.SelectElement(modelElement, hl)
-		}
-		sendReply(w, 0, "Processed DiagramElementSelected", elementID, BrowserGUISingleton.GetUofD().GetElement(elementID))
 	case "DiagramViewHasBeenClosed":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
 		err := BrowserGUISingleton.getDiagramManager().DiagramViewHasBeenClosed(request.RequestConceptID, hl)
@@ -432,6 +432,18 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			sendReply(w, 0, "Processed SaveWorkspace", "", nil)
 		}
 	case "ShowConceptInNavigator":
+		requestedConcept := BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID)
+		if requestedConcept == nil {
+			sendReply(w, 1, "Selected concept not found", "", nil)
+			break
+		}
+		err := BrowserGUISingleton.ShowConceptInTree(requestedConcept, hl)
+		if err != nil {
+			sendReply(w, 1, "ShowConceptInNavigator failed: "+err.Error(), "", nil)
+		} else {
+			sendReply(w, 0, "Processed ShowConceptInNavigator", "", nil)
+		}
+	case "ShowModelConceptInNavigator":
 		diagramElement := BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID)
 		if diagramElement == nil {
 			sendReply(w, 1, "Selected diagram element not found", "", nil)
@@ -444,9 +456,9 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		}
 		err := BrowserGUISingleton.ShowConceptInTree(modelElement, hl)
 		if err != nil {
-			sendReply(w, 1, "ShowConceptInNavigator failed: "+err.Error(), "", nil)
+			sendReply(w, 1, "ShowModelConceptInNavigator failed: "+err.Error(), "", nil)
 		} else {
-			sendReply(w, 0, "Processed ShowConceptInNavigator", "", nil)
+			sendReply(w, 0, "Processed ShowModelConceptInNavigator", "", nil)
 		}
 	case "ShowDiagramElementInNavigator":
 		diagramElement := BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID)

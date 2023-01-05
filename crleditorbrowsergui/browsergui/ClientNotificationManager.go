@@ -30,7 +30,7 @@ type NotificationResponse struct {
 	Result          int
 	ErrorMessage    string
 	ResultConceptID string
-	// ResultConcept core.Element
+	BooleanResult   bool
 }
 
 // ClientNotificationManager manages notification communications from server to client

@@ -48,7 +48,7 @@ var _ = Describe("Test Observer functionality", func() {
 		Expect(obs1.notifications[1].GetNatureOfChange()).To(Equal(ConceptRemoved))
 		Expect(obs1.notifications[1].GetBeforeConceptState().ConceptID).To(Equal(el.GetConceptID(hl)))
 	})
-	Specify("Element changed should be reported to uOfD observer and concept observer", func() {
+	FSpecify("Element changed should be reported to uOfD observer and concept observer", func() {
 		Expect(uOfD.Register(obs1)).To(Succeed())
 		el, err := uOfD.NewElement(hl)
 		Expect(el.Register(obs2)).To(Succeed())

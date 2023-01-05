@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="Diagram Structure" version="4">
+  <OBJECT>
+    <ID name="Diagram Structure" mc="Standard.Package" uid="1285afc5-dcbe-4967-9099-d9854b2e7caf"/>
+    <PID name="editor" mc="Standard.Package" uid="5c7f45de-cf98-451f-88f8-1d0dfdfd9527"/>
+    <ATTRIBUTES>
+      <ATT name="IsInstantiable">false</ATT>
+      <ATT name="IsAbstract">false</ATT>
+      <ATT name="IsLeaf">false</ATT>
+      <ATT name="IsRoot">false</ATT>
+      <ATT name="Visibility">Public</ATT>
+      <ATT name="Name"><![CDATA[Diagram Structure]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <COMP relation="OwnedElement">
+        <COMPID name="Model Domain" mc="Standard.Class" uid="595c96c9-13c5-4f15-b681-dc6d88c40e25"/>
+        <COMPID name="Model Element" mc="Standard.Class" uid="947a5944-578c-44ea-8328-17a0486d7620"/>
+        <COMPID name="Diagram" mc="Standard.Class" uid="6fb91321-93ad-4398-805b-64307d66deae"/>
+        <COMPID name="Diagram Element" mc="Standard.Class" uid="02b3ad1e-4389-4a1f-8281-2544828b60de"/>
+        <COMPID name="Display Label" mc="Standard.Class" uid="574b2470-327d-4862-8737-c4e04713a430"/>
+        <COMPID name="Model Reference" mc="Standard.Class" uid="2d3813c1-6cdf-49c2-a6c5-480b0f0f5d26"/>
+      </COMP>
+      <COMP relation="Product">
+        <COMPID name="Element in Diagram" mc="Standard.ClassDiagram" uid="6a266f58-8d69-4ee9-b695-f720eb941c71"/>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>

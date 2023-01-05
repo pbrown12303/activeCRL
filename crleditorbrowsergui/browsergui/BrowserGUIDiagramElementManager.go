@@ -7,8 +7,9 @@ import (
 
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
+
 	// "github.com/pbrown12303/activeCRL/crleditorbrowserguidomain"
-	//	"log"
+	"log"
 )
 
 // func addDiagramViewFunctionsToUofD(uOfD *core.UniverseOfDiscourse) {
@@ -107,6 +108,10 @@ func getNodeAdditionalParameters(node core.Element, hl *core.Transaction) map[st
 // Update updates the client display of the diagram based on changes to the diagramElement
 func (demPtr *diagramElementManager) Update(changeNotification *core.ChangeNotification, hl *core.Transaction) error {
 	uOfD := hl.GetUniverseOfDiscourse()
+	if core.TraceChange {
+		log.Printf("    diagramElementManager: Update called with notification: %s ", changeNotification.GetNatureOfChange().String())
+	}
+
 	// if the reportingElementState is nil, this notification comes from the uOfD. We can ignore these (I think)
 	if changeNotification.GetReportingElementState() == nil {
 		return nil

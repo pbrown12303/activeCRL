@@ -23,14 +23,14 @@ func coreHousekeeping(el Element, notification *ChangeNotification, trans *Trans
 	// Notify owner if needed
 	switch el.(type) {
 	case Reference:
-		if el.GetOwningConcept(trans) != nil && !(notification.GetNatureOfChange() == OwningConceptChanged && notification.GetReportingElementID() != el.GetConceptID(trans)) {
+		if el.GetOwningConcept(trans) != nil && !(notification.GetNatureOfChange() == OwningConceptChanged) {
 			forwardingNotification, err := uOfD.NewForwardingChangeNotification(el, ForwardedChange, notification, trans)
 			if err != nil {
 				return errors.Wrap(err, "coreHousekeeping failed")
 			}
-			err = uOfD.queueFunctionExecutions(el.GetOwningConcept(trans), forwardingNotification, trans)
+			err = uOfD.callAssociatedFunctions(el.GetOwningConcept(trans), forwardingNotification, trans)
 			if err != nil {
-				return errors.Wrap(err, "element.SetDefinition failed")
+				return errors.Wrap(err, "coreHousekeeping failed")
 			}
 		}
 	}

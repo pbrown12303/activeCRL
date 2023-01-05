@@ -37,8 +37,6 @@ func (transPtr *Transaction) callFunctions(functionID string, targetElement Elem
 				(OmitManageTreeNodesCalls && functionID == "http://activeCrl.com/crlEditor/EditorDomain/TreeViews/TreeNodeManager") ||
 				(OmitDiagramRelatedCalls && isDiagramRelatedFunction(functionID))
 			if !omitCall {
-				log.Printf("About to execute %s with notification %s target %p", functionID, notification.GetNatureOfChange().String(), targetElement)
-				log.Printf("   Function target: %T %s %s %p", targetElement, targetElement.getConceptIDNoLock(), targetElement.getLabelNoLock(), targetElement)
 				functionCallGraphs = append(functionCallGraphs, NewFunctionCallGraph(functionID, targetElement, notification, transPtr))
 			}
 		}

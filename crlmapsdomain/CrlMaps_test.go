@@ -160,17 +160,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceElement.SetLabel("SourceInstanceElement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("ElementMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Expect(graph.ExportDOT(tempDirPath, "ElementMapTest")).To(Succeed())
-
 			// Check the result
 			elementMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceElement, hl)
 			Expect(elementMapInstance).ToNot(BeNil())
@@ -197,18 +186,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceReference.SetLabel("SourceInstanceReference", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("ElementMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Troubleshooting aid
-			// Expect(graph.ExportDOT(tempDirPath, "ElementMapTest")).To(Succeed())
-
 			// Check the result
 			referenceMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceReference, hl)
 			Expect(referenceMapInstance).ToNot(BeNil())
@@ -235,18 +212,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceLiteral.SetLabel("SourceInstanceLiteral", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("ElementMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Troubleshooting aid
-			// Expect(graph.ExportDOT(tempDirPath, "ElementMapTest")).To(Succeed())
-
 			// Check the result
 			literalMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceLiteral, hl)
 			Expect(literalMapInstance).ToNot(BeNil())
@@ -273,18 +238,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceRefinement.SetLabel("SourceInstanceRefinement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("ElementMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Troubleshooting aid
-			// Expect(graph.ExportDOT(tempDirPath, "ElementMapTest")).To(Succeed())
-
 			// Check the result
 			refinementMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceRefinement, hl)
 			Expect(refinementMapInstance).ToNot(BeNil())
@@ -311,17 +264,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceElement.SetLabel("SourceInstanceElement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("Element2ReferenceMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Expect(graph.ExportDOT(tempDirPath, "Element2ReferenceMapTest")).To(Succeed())
-
 			// Check the result
 			element2ReferenceMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceElement, hl)
 			Expect(element2ReferenceMapInstance).ToNot(BeNil())
@@ -348,17 +290,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceElement.SetLabel("SourceInstanceElement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("Element2LiteralMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Expect(graph.ExportDOT(tempDirPath, "Element2LiteralMapTest")).To(Succeed())
-
 			// Check the result
 			element2LiteralMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceElement, hl)
 			Expect(element2LiteralMapInstance).ToNot(BeNil())
@@ -385,17 +316,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceElement.SetLabel("SourceInstanceElement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("Element2RefinementMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Expect(graph.ExportDOT(tempDirPath, "Element2RefinementMapTest")).To(Succeed())
-
 			// Check the result
 			element2RefinementMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceElement, hl)
 			Expect(element2RefinementMapInstance).ToNot(BeNil())
@@ -422,17 +342,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceReference.SetLabel("SourceInstanceReference", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("Reference2ElementMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Expect(graph.ExportDOT(tempDirPath, "Reference2ElementMapTest")).To(Succeed())
-
 			// Check the result
 			reference2ElementMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceReference, hl)
 			Expect(reference2ElementMapInstance).ToNot(BeNil())
@@ -444,8 +353,31 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(targetInstanceElement2).ToNot(BeNil())
 			Expect(targetInstanceElement2).To(Equal(targetInstanceElement))
 		})
-		Specify("Reference2LiteralMap", func() {
-
+		FSpecify("Reference2LiteralMap", func() {
+			// Set up the abstract map
+			reference2LiteralMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, hl)
+			Expect(err).To(BeNil())
+			Expect(reference2LiteralMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
+			Expect(reference2LiteralMap.SetLabel("Reference2LiteralMap", hl)).To(Succeed())
+			Expect(SetSource(reference2LiteralMap, sourceAbstractReference, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(reference2LiteralMap, targetAbstractLiteral, core.NoAttribute, hl)).To(Succeed())
+			// Add the reference to the source instance
+			sourceInstanceReference, err2 := uOfD.CreateReplicateAsRefinement(sourceAbstractReference, hl)
+			Expect(err2).To(BeNil())
+			Expect(sourceInstanceReference.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
+			Expect(sourceInstanceReference.SetLabel("SourceInstanceReference", hl)).To(Succeed())
+			// Trigger the mapping
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
+			// Check the result
+			reference2LiteralMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceReference, hl)
+			Expect(reference2LiteralMapInstance).ToNot(BeNil())
+			targetInstanceElement := GetTarget(reference2LiteralMapInstance, hl)
+			Expect(targetInstanceElement).ToNot(BeNil())
+			targetInstanceDomain := mapInstanceFolder.GetFirstOwnedConceptRefinedFrom(targetAbstractDomain, hl)
+			Expect(targetInstanceDomain).ToNot(BeNil())
+			targetInstanceElement2 := targetInstanceDomain.GetFirstOwnedConceptRefinedFrom(targetAbstractLiteral, hl)
+			Expect(targetInstanceElement2).ToNot(BeNil())
+			Expect(targetInstanceElement2).To(Equal(targetInstanceElement))
 		})
 		Specify("Reference2RefinementMap", func() {
 			// Set up the abstract map
@@ -462,17 +394,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceReference.SetLabel("SourceInstanceReference", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("Reference2RefinementMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Expect(graph.ExportDOT(tempDirPath, "Reference2RefinementMapTest")).To(Succeed())
-
 			// Check the result
 			reference2RefinementMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceReference, hl)
 			Expect(reference2RefinementMapInstance).ToNot(BeNil())
@@ -499,17 +420,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceLiteral.SetLabel("SourceInstanceLiteral", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("Literal2ElementMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Expect(graph.ExportDOT(tempDirPath, "Literal2ElementMapTest")).To(Succeed())
-
 			// Check the result
 			literal2ElementMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceLiteral, hl)
 			Expect(literal2ElementMapInstance).ToNot(BeNil())
@@ -536,17 +446,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceLiteral.SetLabel("SourceInstanceLiteral", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("Literal2ReferenceMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Expect(graph.ExportDOT(tempDirPath, "Literal2ReferenceMapTest")).To(Succeed())
-
 			// Check the result
 			literal2ReferenceMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceLiteral, hl)
 			Expect(literal2ReferenceMapInstance).ToNot(BeNil())
@@ -573,17 +472,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceLiteral.SetLabel("SourceInstanceLiteral", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("Literal2RefinementMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Expect(graph.ExportDOT(tempDirPath, "Literal2RefinementMapTest")).To(Succeed())
-
 			// Check the result
 			literal2RefinementMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceLiteral, hl)
 			Expect(literal2RefinementMapInstance).ToNot(BeNil())
@@ -610,17 +498,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceRefinement.SetLabel("SourceInstanceRefinement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("Refinement2ElementMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Expect(graph.ExportDOT(tempDirPath, "Refinement2ElementMapTest")).To(Succeed())
-
 			// Check the result
 			refinement2ElementMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceRefinement, hl)
 			Expect(refinement2ElementMapInstance).ToNot(BeNil())
@@ -647,17 +524,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceRefinement.SetLabel("SourceInstanceRefinement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("Refinement2ReferenceMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Expect(graph.ExportDOT(tempDirPath, "Refinement2ReferenceMapTest")).To(Succeed())
-
 			// Check the result
 			refinement2ReferenceMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceRefinement, hl)
 			Expect(refinement2ReferenceMapInstance).ToNot(BeNil())
@@ -684,17 +550,6 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(sourceInstanceRefinement.SetLabel("SourceInstanceRefinement", hl)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
-
-			// Diagnostics view
-			// graph := core.NewCrlGraph("Refinement2LiteralMapTest")
-			// Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-			// Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-			// hl.ReleaseLocksAndWait()
-			// Expect(graph.ExportDOT(tempDirPath, "Refinement2LiteralMapTest")).To(Succeed())
-
 			// Check the result
 			refinement2LiteralMapInstance := FindMapForSource(mapInstanceDomain, sourceInstanceRefinement, hl)
 			Expect(refinement2LiteralMapInstance).ToNot(BeNil())
@@ -707,65 +562,51 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(targetInstanceLiteral2).To(Equal(targetInstanceLiteral))
 		})
 	})
-	Describe("Individual Concept Mapping - any to any", func() {
-		var sourceAbstractElement1 core.Element
-		var sourceAbstractElement2 core.Element
+	Describe("Individual Pointer Mapping - any to any", func() {
+		var sourceAbstractPointerTarget core.Element
 		var sourceAbstractReference core.Reference
 		// var sourceAbstractRefinement core.Refinement
 		// var sourceAbstractLiteral core.Literal
-		var targetAbstractElement1 core.Element
-		var targetAbstractElement2 core.Element
+		var targetAbstractPointerTarget core.Element
 		var targetAbstractReference core.Reference
 		// var targetAbstractRefinement core.Refinement
 		// var targetAbstractLiteral core.Literal
 
-		var element1ToElement1Map core.Element
-		var element2ToElement2Map core.Element
+		var pointerTarget2PointerTargetMap core.Element
 		var reference2ReferenceMap core.Element
-		var sourceInstanceElement1 core.Element
-		var sourceInstanceElement2 core.Element
+
+		var sourceInstancePointerTarget core.Element
 		var sourceInstanceReference core.Reference
 
 		BeforeEach(func() {
 			var err error
-			sourceAbstractElement1, err = uOfD.NewOwnedElement(sourceAbstractDomain, "SourceAbstractElement1", hl)
+			sourceAbstractPointerTarget, err = uOfD.NewOwnedElement(sourceAbstractDomain, "SourceAbstractPointerTarget", hl)
 			Expect(err).To(BeNil())
-			sourceAbstractElement2, err = uOfD.NewOwnedElement(sourceAbstractDomain, "SourceAbstractElement2", hl)
+			sourceAbstractReference, err = uOfD.NewOwnedReference(sourceAbstractDomain, "SourceAbstractReference", hl)
 			Expect(err).To(BeNil())
-			sourceAbstractReference, err = uOfD.NewOwnedReference(sourceAbstractElement1, "SourceAbstractReference", hl)
-			Expect(err).To(BeNil())
-			Expect(sourceAbstractReference.SetReferencedConcept(sourceAbstractElement2, core.NoAttribute, hl)).To(Succeed())
+			Expect(sourceAbstractReference.SetReferencedConcept(sourceAbstractPointerTarget, core.NoAttribute, hl)).To(Succeed())
 			// sourceAbstractRefinement, err = uOfD.NewOwnedRefinement(sourceAbstractDomain, "SourceAbstractRefinement", hl)
 			// Expect(err).To(BeNil())
 			// sourceAbstractLiteral, err = uOfD.NewOwnedLiteral(sourceAbstractDomain, "SourceAbstractLiteral", hl)
 			// Expect(err).To(BeNil())
 
-			targetAbstractElement1, err = uOfD.NewOwnedElement(targetAbstractDomain, "TargetAbstractElement1", hl)
+			targetAbstractPointerTarget, err = uOfD.NewOwnedElement(targetAbstractDomain, "TargetAbstractPointerTarget", hl)
 			Expect(err).To(BeNil())
-			targetAbstractElement2, err = uOfD.NewOwnedElement(targetAbstractDomain, "TargetAbstractElement2", hl)
+			targetAbstractReference, err = uOfD.NewOwnedReference(targetAbstractDomain, "TargetAbstractReference", hl)
 			Expect(err).To(BeNil())
-			targetAbstractReference, err = uOfD.NewOwnedReference(targetAbstractElement2, "TargetAbstractReference", hl)
-			Expect(err).To(BeNil())
-			Expect(targetAbstractReference.SetReferencedConcept(targetAbstractElement1, core.NoAttribute, hl)).To(Succeed())
+			Expect(targetAbstractReference.SetReferencedConcept(targetAbstractPointerTarget, core.NoAttribute, hl)).To(Succeed())
 			// targetAbstractRefinement, err = uOfD.NewOwnedRefinement(targetAbstractDomain, "TargetAbstractRefinement", hl)
 			// Expect(err).To(BeNil())
 			// targetAbstractLiteral, err = uOfD.NewOwnedLiteral(targetAbstractDomain, "TargetAbstractLiteral", hl)
 			// Expect(err).To(BeNil())
 
 			// Abstract Map Setup
-			element1ToElement1Map, err = uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, hl)
+			pointerTarget2PointerTargetMap, err = uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, hl)
 			Expect(err).To(BeNil())
-			Expect(element1ToElement1Map.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
-			Expect(element1ToElement1Map.SetLabel("Element1ToElement1Map", hl)).To(Succeed())
-			Expect(SetSource(element1ToElement1Map, sourceAbstractElement1, core.NoAttribute, hl)).To(Succeed())
-			Expect(SetTarget(element1ToElement1Map, targetAbstractElement1, core.NoAttribute, hl)).To(Succeed())
-
-			element2ToElement2Map, err = uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, hl)
-			Expect(err).To(BeNil())
-			Expect(element2ToElement2Map.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
-			Expect(element2ToElement2Map.SetLabel("Element2ToElement2Map", hl)).To(Succeed())
-			Expect(SetSource(element2ToElement2Map, sourceAbstractElement2, core.NoAttribute, hl)).To(Succeed())
-			Expect(SetTarget(element2ToElement2Map, targetAbstractElement2, core.NoAttribute, hl)).To(Succeed())
+			Expect(pointerTarget2PointerTargetMap.SetOwningConcept(mapAbstractDomain, hl)).To(Succeed())
+			Expect(pointerTarget2PointerTargetMap.SetLabel("Element2ToElement2Map", hl)).To(Succeed())
+			Expect(SetSource(pointerTarget2PointerTargetMap, sourceAbstractPointerTarget, core.NoAttribute, hl)).To(Succeed())
+			Expect(SetTarget(pointerTarget2PointerTargetMap, targetAbstractPointerTarget, core.NoAttribute, hl)).To(Succeed())
 
 			reference2ReferenceMap, err = uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, hl)
 			Expect(err).To(BeNil())
@@ -775,69 +616,60 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(SetTarget(reference2ReferenceMap, targetAbstractReference, core.NoAttribute, hl)).To(Succeed())
 
 			// Source Instance Setup
-			sourceInstanceElement1, err = uOfD.CreateReplicateAsRefinement(sourceAbstractElement1, hl)
-			Expect(err).To(BeNil())
-			Expect(sourceInstanceElement1.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
-			Expect(sourceInstanceElement1.SetLabel("SourceInstanceElement1", hl)).To(Succeed())
 
-			sourceInstanceElement2, err = uOfD.CreateReplicateAsRefinement(sourceAbstractElement2, hl)
+			sourceInstancePointerTarget, err = uOfD.CreateReplicateAsRefinement(sourceAbstractPointerTarget, hl)
 			Expect(err).To(BeNil())
-			Expect(sourceInstanceElement2.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
-			Expect(sourceInstanceElement2.SetLabel("SourceInstanceElement2", hl)).To(Succeed())
+			Expect(sourceInstancePointerTarget.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
+			Expect(sourceInstancePointerTarget.SetLabel("SourceInstancePointerTarget", hl)).To(Succeed())
 
 			sourceInstanceReference, err = uOfD.CreateReplicateReferenceAsRefinement(sourceAbstractReference, hl)
 			Expect(err).To(BeNil())
 			Expect(sourceInstanceReference.SetOwningConcept(sourceInstanceDomain, hl)).To(Succeed())
 			Expect(sourceInstanceReference.SetLabel("SourceInstanceReference", hl)).To(Succeed())
 
-			// Map Instance Setup
 		})
-		// FSpecify("Pointer to Reference Pointer", func() {
-		// 	// Add the pointer map
-		// 	pointer2ReferencePointerMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, hl)
-		// 	Expect(err).To(BeNil())
-		// 	Expect(pointer2ReferencePointerMap.SetOwningConcept(reference2ReferenceMap, hl)).To(Succeed())
-		// 	Expect(pointer2ReferencePointerMap.SetLabel("Pointer2ReferencePointerMap", hl)).To(Succeed())
-		// 	Expect(SetSource(pointer2ReferencePointerMap, sourceAbstractReference, hl)).To(Succeed())
-		// 	Expect(SetSourceAttributeName(pointer2ReferencePointerMap, core.OwningConceptID, hl)).To(Succeed())
-		// 	Expect(SetTarget(pointer2ReferencePointerMap, targetAbstractReference, hl)).To(Succeed())
-		// 	Expect(SetTargetAttributeName(pointer2ReferencePointerMap, core.ReferencedConceptID, hl)).To(Succeed())
+		FSpecify("Reference Pointer to Reference Pointer", func() {
+			// Add the pointer map
+			pointer2ReferencePointerMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, hl)
+			Expect(err).To(BeNil())
+			Expect(pointer2ReferencePointerMap.SetOwningConcept(reference2ReferenceMap, hl)).To(Succeed())
+			Expect(pointer2ReferencePointerMap.SetLabel("Pointer2ReferencePointerMap", hl)).To(Succeed())
+			Expect(SetSource(pointer2ReferencePointerMap, sourceAbstractReference, core.ReferencedConceptID, hl)).To(Succeed())
+			Expect(SetTarget(pointer2ReferencePointerMap, targetAbstractReference, core.ReferencedConceptID, hl)).To(Succeed())
 
-		// 	// Trigger the map
-		// 	Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, hl)).To(Succeed())
-		// 	hl.ReleaseLocksAndWait()
+			// Trigger the map
+			Expect(SetSource(mapInstanceDomain, sourceInstanceDomain, core.NoAttribute, hl)).To(Succeed())
 
-		// 	// Diagnostics view
-		// 	graph := core.NewCrlGraph("Pointer2RferencePointerMapTest")
-		// 	Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
-		// 	Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
-		// 	Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
-		// 	Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
-		// 	Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
-		// 	hl.ReleaseLocksAndWait()
-		// 	Expect(graph.ExportDOT(tempDirPath, "Pointer2RferencePointerMapTest")).To(Succeed())
+			// Diagnostics view
+			graph := core.NewCrlGraph("Pointer2RferencePointerMapTest")
+			Expect(graph.AddConceptRecursively(sourceAbstractFolder, hl)).To(Succeed())
+			Expect(graph.AddConceptRecursively(targetAbstractFolder, hl)).To(Succeed())
+			Expect(graph.AddConceptRecursively(mapAbstractFolder, hl)).To(Succeed())
+			Expect(graph.AddConceptRecursively(sourceInstanceFolder, hl)).To(Succeed())
+			Expect(graph.AddConceptRecursively(mapInstanceFolder, hl)).To(Succeed())
+			Expect(graph.ExportDOT(tempDirPath, "Pointer2RferencePointerMapTest")).To(Succeed())
 
-		// 	// Check the result
-		// 	sourceInstanceReferenceMap := FindMapForSource(mapInstanceDomain, sourceInstanceReference, hl)
-		// 	Expect(sourceInstanceReferenceMap).ToNot(BeNil())
-		// 	sourceInstanceReferenceAttributeMap := FindMapForSourceAttribute(mapInstanceDomain, sourceInstanceReference, core.OwningConceptID, hl)
-		// 	Expect(sourceInstanceReferenceAttributeMap).ToNot(BeNil())
-		// 	Expect(sourceInstanceReferenceAttributeMap.GetOwningConcept(hl).GetConceptID(hl)).To(Equal(sourceInstanceReferenceMap.GetConceptID(hl)))
-		// 	targetInstance := GetTarget(sourceInstanceReferenceMap, hl)
-		// 	Expect(targetInstance).ToNot(BeNil())
-		// 	targetInstanceAttribute := GetTarget(sourceInstanceReferenceAttributeMap, hl)
-		// 	Expect(targetInstanceAttribute).To(Equal(targetInstance))
+			// Check the result
+			sourceInstanceReferenceMap := FindMapForSource(mapInstanceDomain, sourceInstanceReference, hl)
+			Expect(sourceInstanceReferenceMap).ToNot(BeNil())
+			sourceInstanceAttributeReferenceMap := FindAttributeMapForSource(mapInstanceDomain, sourceInstanceReference, core.ReferencedConceptID, hl)
+			Expect(sourceInstanceAttributeReferenceMap).ToNot(BeNil())
+			Expect(sourceInstanceAttributeReferenceMap.GetOwningConcept(hl).GetConceptID(hl)).To(Equal(sourceInstanceReferenceMap.GetConceptID(hl)))
+			targetInstance := GetTarget(sourceInstanceReferenceMap, hl)
+			Expect(targetInstance).ToNot(BeNil())
+			targetInstanceAttribute := GetTarget(sourceInstanceAttributeReferenceMap, hl)
+			Expect(targetInstanceAttribute).To(Equal(targetInstance))
 
-		// 	targetInstanceElement1Map := FindMapForSource(mapInstanceDomain, sourceInstanceElement1, hl)
-		// 	Expect(targetInstanceElement1Map).ToNot(BeNil())
-		// 	targetInstanceElement1 := GetTarget(targetInstanceElement1Map, hl)
-		// 	Expect(targetInstanceElement1).ToNot(BeNil())
+			targetInstanceElement1Map := FindMapForSource(mapInstanceDomain, sourceInstancePointerTarget, hl)
+			Expect(targetInstanceElement1Map).ToNot(BeNil())
+			targetInstanceElement1 := GetTarget(targetInstanceElement1Map, hl)
+			Expect(targetInstanceElement1).ToNot(BeNil())
 
-		// 	switch targetInstance.(type) {
-		// 	case core.Reference:
-		// 		Expect(targetInstance.(core.Reference).GetReferencedConcept(hl).GetConceptID(hl)).To(Equal(targetInstanceElement1.GetConceptID(hl)))
-		// 	}
-		// })
+			switch castInstance := targetInstance.(type) {
+			case core.Reference:
+				Expect(castInstance.GetReferencedConcept(hl).GetConceptID(hl)).To(Equal(targetInstanceElement1.GetConceptID(hl)))
+			}
+		})
 		Specify("Pointer to Reference Owner", func() {
 
 		})

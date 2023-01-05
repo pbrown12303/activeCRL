@@ -1,10 +1,8 @@
-#Sun Aug 21 15:28:44 EDT 2022
-org.modelio.app.diagram.editor.OpenedDiagrams4='Reference with ACRL Attributes' {c6220584-94de-4032-9395-bbb1294bba3b} Standard.ClassDiagram
-org.modelio.app.diagram.editor.OpenedDiagrams3='Element with ActiveCRL Attributes' {f310295e-3147-4976-83f6-b65353d27e1a} Standard.ClassDiagram
-org.modelio.app.diagram.editor.OpenedDiagrams2='Element' {8e96540c-5b2f-42da-9650-a28a3b692857} Standard.ClassDiagram
-org.modelio.app.diagram.editor.OpenedDiagrams1='Core Concepts - Abstract' {54653922-8165-4d95-8d0a-0341c4add328} Standard.ClassDiagram
-org.modelio.app.diagram.editor.OpenedDiagrams0='Reference Mapping Depending on AttributeName' {469c5c4e-03fa-4571-a4dd-b1439a8294d3} Standard.ActivityDiagram
+#Thu Jan 05 09:05:27 EST 2023
+org.modelio.app.diagram.editor.OpenedDiagrams4='Element Ownership Abstraction' {40290715-135b-46a0-a4c3-e83f81df49c9} Standard.ClassDiagram
+org.modelio.app.diagram.editor.OpenedDiagrams3='Element Ownership Implementation' {b0df5f22-a84f-4119-a9ce-81a0d6db9480} Standard.ClassDiagram
+org.modelio.app.diagram.editor.OpenedDiagrams2='Notification' {943d6984-7674-4178-80e9-223e6dfc6f95} Standard.ClassDiagram
+org.modelio.app.diagram.editor.OpenedDiagrams1='Nature of Change' {47de857d-c1d1-4aca-964f-4118b33bfe91} Standard.ClassDiagram
+org.modelio.app.diagram.editor.OpenedDiagrams0='Element' {8e96540c-5b2f-42da-9650-a28a3b692857} Standard.ClassDiagram
 org.modelio.diagram.editor.OpenedDiagrams1='ClientStart' {08fa16f2-7e40-45cc-84b5-51e349eb22af} Standard.SequenceDiagram
 org.modelio.diagram.editor.OpenedDiagrams0='Startup Sequence' {3e696c93-7fda-4956-9670-0e963cb86635} Standard.SequenceDiagram
-org.modelio.app.diagram.editor.OpenedDiagrams6='Nature of Changed' {47de857d-c1d1-4aca-964f-4118b33bfe91} Standard.ClassDiagram
-org.modelio.app.diagram.editor.OpenedDiagrams5='Refinement ActiveCRL Implementation' {e02a5321-7dd1-4da1-988f-fdfc54271fa1} Standard.ClassDiagram

@@ -294,7 +294,7 @@ func GetBGColor(diagramElement core.Element, trans *core.Transaction) string {
 
 // GetFirstElementRepresentingConcept returns the first diagram element that represents the indicated concept
 func GetFirstElementRepresentingConcept(diagram core.Element, concept core.Element, trans *core.Transaction) core.Element {
-	if !diagram.IsRefinementOfURI(CrlDiagramURI, trans) {
+	if diagram == nil || !diagram.IsRefinementOfURI(CrlDiagramURI, trans) {
 		log.Printf("GetFirstElementRepresentingConcept called with diagram of incorrect type")
 		return nil
 	}
@@ -1393,6 +1393,8 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 		if notification.GetReportingElementID() == diagramElementModelReference.GetConceptID(trans) {
 			modelReferenceNotification := notification.GetUnderlyingChange()
 			switch modelReferenceNotification.GetNatureOfChange() {
+			case core.ConceptChanged:
+				updateDiagramElementForModelElementChange(diagramElement, modelElement, trans)
 			case core.ReferencedConceptChanged:
 				if IsDiagramNode(diagramElement, trans) {
 					currentModelElement := modelReferenceNotification.GetAfterConceptState()

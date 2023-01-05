@@ -1056,16 +1056,6 @@ function crlPropertiesDisplayLiteralValue(data, row) {
     input.setSelectionRange(cursorPosition, cursorPosition);
 }
 
-function crlPropertiesDisplayForwardNotificationsToOwner(data, row) {
-    var typeRow = crlObtainPropertyRow(row);
-    typeRow.cells[0].innerHTML = "Forward Notifications to Owner";
-    var forwardNotificationsToOwner = ""
-    if (data.NotificationConceptState) {
-        forwardNotificationsToOwner = data.NotificationConceptState.ForwardNotificationsToOwner
-    }
-    typeRow.cells[1].innerHTML = forwardNotificationsToOwner;
-}
-
 function crlPropertiesDisplayOwningConcept(data, row) {
     var typeRow = crlObtainPropertyRow(row);
     typeRow.cells[0].innerHTML = "Owning Concept ID";
@@ -1209,7 +1199,7 @@ function crlFindCellInGraphID(graphID, crlJointID) {
 
 function crlFindCellInGraph(graph, crlJointID) {
     var cells = graph.getCells();
-    var cell
+    var cell = null;
     cells.forEach(function (item) {
         if (item.get("crlJointID") == crlJointID) {
             cell = item;
@@ -1449,6 +1439,9 @@ function crlInitializeWebSocket() {
                     break;
                 case "DisplayGraph":
                     crlNotificationDisplayGraph(data);
+                    break;
+                case "DoesLinkExist":
+                    crlNotificationDoesLinkExist(data);
                     break;
                 case "UserPreferences":
                     crlNotificationSaveUserPreferences(data);
@@ -1837,6 +1830,29 @@ function crlNotificationDisplayGraph(data) {
     crlSendNormalResponse();
 }
 
+function crlNotificationDoesLinkExist(data) {
+    var concept = data.NotificationConceptState;
+    var params = data.AdditionalParameters;
+    var owningConceptID = concept.OwningConceptID;
+    var graphID = crlGetJointGraphIDFromDiagramID(owningConceptID);
+    var graph = crlGraphsGlobal[graphID];
+    if (graph != null) {
+        // The absence of a graph indicates that there is no view of the diagram at present
+        var linkID = crlGetJointCellIDFromConceptID(concept.ConceptID);
+        var link = crlFindLinkInGraph(graphID, linkID)
+        var sourceJointID = crlGetJointCellIDFromConceptID(params["LinkSourceID"]);
+        var targetJointID = crlGetJointCellIDFromConceptID(params["LinkTargetID"]);
+        var linkSource = crlFindCellInGraph(graph, sourceJointID)
+        var linkTarget = crlFindCellInGraph(graph, targetJointID)
+        if (link != null && linkSource != null && linkTarget != null) {
+            crlSendBooleanResponse(true);
+            crlSendNormalResponse();
+            return;
+        }
+    }
+    crlSendBooleanResponse(false);
+}
+
 function crlNotificationElementSelected(data) {
     if (data.NotificationConceptID != crlSelectedConceptID) {
         crlSelectedConceptID = data.NotificationConceptID
@@ -1862,31 +1878,30 @@ function crlUpdateProperties(data) {
     crlPropertiesDisplayDefinition(data, 6);
     crlPropertiesDisplayURI(data, 7);
     crlPropertiesDisplayReadOnly(data, 8);
-    crlPropertiesDisplayForwardNotificationsToOwner(data, 9);
     var type = "";
     if (data.NotificationConceptState) {
         type = data.NotificationConceptState.ConceptType;
     }
     switch (type) {
         case "*core.element":
-            crlPropertiesClearRow(11);
             crlPropertiesClearRow(10);
+            crlPropertiesClearRow(9);
             break;
         case "*core.literal":
-            crlPropertiesDisplayLiteralValue(data, 10);
-            crlPropertiesClearRow(11);
+            crlPropertiesDisplayLiteralValue(data, 9);
+            crlPropertiesClearRow(10);
             break;
         case "*core.reference":
-            crlPropertiesDisplayReferencedConcept(data, 10);
-            crlPropertiesDisplayReferencedAttributeName(data, 11)
+            crlPropertiesDisplayReferencedConcept(data, 9);
+            crlPropertiesDisplayReferencedAttributeName(data, 10)
             break;
         case "*core.refinement":
-            crlPropertiesDisplayAbstractConcept(data, 10);
-            crlPropertiesDisplayRefinedConcept(data, 11);
+            crlPropertiesDisplayAbstractConcept(data, 9);
+            crlPropertiesDisplayRefinedConcept(data, 10);
             break;
         default:
-            crlPropertiesClearRow(11);
             crlPropertiesClearRow(10);
+            crlPropertiesClearRow(9);
     };
 }
 
@@ -2558,11 +2573,20 @@ function crlSendURIChanged(evt, obj) {
     crlSendRequest(xhr, data)
 }
 
+function crlSendBooleanResponse(booleanValue) {
+    var data = {};
+    data["Result"] = 0;
+    data["ErrorMessage"] = "none";
+    data["BooleanValue"] = booleanValue;
+    crlWebsocketGlobal.send(JSON.stringify(data));
+    console.log(data);
+}
+
 function crlSendNormalResponse() {
     var data = {};
     data["Result"] = 0;
-    data["ErrorMessage"] = "none"
-    crlWebsocketGlobal.send(JSON.stringify(data))
+    data["ErrorMessage"] = "none";
+    crlWebsocketGlobal.send(JSON.stringify(data));
     console.log(data);
 }
 
@@ -2614,12 +2638,12 @@ var crlShowAbstractConcept = function (evt) {
     crlSendRequest(xhr, data);
 }
 
-var crlShowConceptInNavigator = function (evt) {
+var crlShowModelConceptInNavigator = function (evt) {
     var cellView = crlDiagramCellDropdownMenu.attributes.cellView;
     var jointID = cellView.model.attributes.crlJointID;
     var diagramElementID = crlGetConceptIDFromJointElementID(jointID)
     var xhr = crlCreateEmptyRequest();
-    var data = JSON.stringify({ "Action": "ShowConceptInNavigator", "RequestConceptID": diagramElementID });
+    var data = JSON.stringify({ "Action": "ShowModelConceptInNavigator", "RequestConceptID": diagramElementID });
     crlSendRequest(xhr, data);
 }
 

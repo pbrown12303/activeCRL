@@ -104,7 +104,12 @@ func (graphPtr *CrlGraph) addConcept(concept Element, hl *Transaction) error {
 		if !graphPtr.gvgraph.IsNode(id) {
 			nodeAttrs := make(map[string]string)
 			nodeAttrs["shape"] = "none"
-			nodeAttrs["label"] = "<<TABLE><TR><TD>" + typeName + "</TD></TR><TR><TD>" + label + "</TD></TR><TR><TD>" + id + "</TD></TR></TABLE>>"
+			referencedAttributeNameExt := ""
+			switch possibleReference := typedConcept.(type) {
+			case Reference:
+				referencedAttributeNameExt = "<TR><TD>" + possibleReference.GetReferencedAttributeName(hl).String() + "</TD></TR>"
+			}
+			nodeAttrs["label"] = "<<TABLE><TR><TD>" + typeName + "</TD></TR><TR><TD>" + label + "</TD></TR><TR><TD>" + id + "</TD></TR>" + referencedAttributeNameExt + " </TABLE>>"
 			err := graphPtr.gvgraph.AddNode("", id, nodeAttrs)
 			if err != nil {
 				return errors.Wrap(err, "CrlGraph.addConcept failed")

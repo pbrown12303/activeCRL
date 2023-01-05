@@ -900,7 +900,7 @@ func (ePtr *element) notifyListeners(notification *ChangeNotification, hl *Trans
 				if err != nil {
 					return errors.Wrap(err, "element.notifyListeners failed")
 				}
-				err = ePtr.uOfD.queueFunctionExecutions(listener, forwardingChangeNotification, hl)
+				err = ePtr.uOfD.callAssociatedFunctions(listener, forwardingChangeNotification, hl)
 				if err != nil {
 					return errors.Wrap(err, "element.notifyListeners failed")
 				}
@@ -909,19 +909,27 @@ func (ePtr *element) notifyListeners(notification *ChangeNotification, hl *Trans
 			switch typedElement := listener.(type) {
 			case Reference:
 				if !(notification.GetNatureOfChange() == ReferencedConceptChanged && notification.GetReportingElementID() == typedElement.GetConceptID(hl)) {
-					err := ePtr.uOfD.queueFunctionExecutions(listener, notification, hl)
+					err := ePtr.uOfD.callAssociatedFunctions(listener, notification, hl)
 					if err != nil {
 						return errors.Wrap(err, "element.notifyListeners failed")
 					}
 				}
 			case Refinement:
 				if !((notification.GetNatureOfChange() == AbstractConceptChanged || notification.GetNatureOfChange() == RefinedConceptChanged) && notification.GetReportingElementID() == listener.(Refinement).GetConceptID(hl)) {
-					err := ePtr.uOfD.queueFunctionExecutions(listener, notification, hl)
+					err := ePtr.uOfD.callAssociatedFunctions(listener, notification, hl)
 					if err != nil {
 						return errors.Wrap(err, "element.notifyListeners failed")
 					}
 				}
 			}
+		}
+		forwardingChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(ePtr, ForwardedChange, notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "element.notifyListeners failed")
+		}
+		err = ePtr.NotifyAll(forwardingChangeNotification, hl)
+		if err != nil {
+			return errors.Wrap(err, "element.notifyListeners failed")
 		}
 	}
 	return nil

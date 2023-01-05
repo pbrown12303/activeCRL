@@ -23,6 +23,7 @@
         <COMPID name="CrlEditor.go" mc="Standard.Class" uid="52cdbfa1-71c3-4069-8d19-189dc18e021b"/>
         <COMPID name="TreeManager.go" mc="Standard.Class" uid="d5d85c7a-1c3e-4b3b-aaf3-5f8743dab03b"/>
         <COMPID name="DiagramManager.go" mc="Standard.Class" uid="566071f3-7c0b-4f88-858a-4514d070492b"/>
+        <COMPID name="Diagram Structure" mc="Standard.Package" uid="1285afc5-dcbe-4967-9099-d9854b2e7caf"/>
       </COMP>
     </DEPENDENCIES>
   </OBJECT>

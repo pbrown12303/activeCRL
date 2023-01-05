@@ -297,7 +297,8 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 			}
 		}
 	case core.OwningConceptID, core.LiteralValue, core.ReferencedConceptID, core.AbstractConceptID, core.RefinedConceptID, core.Label, core.Definition:
-		target = getParentMapTarget(mapInstance, trans)
+		// target = getParentMapTarget(mapInstance, trans)
+		target = getAttributeTarget(mapInstance, trans)
 	}
 	if !target.IsRefinementOf(absTarget, trans) {
 		return errors.New("In crlmaps.executeOneToOneMap, the found target is not refinement of abstraction target")
@@ -334,40 +335,47 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 		case core.LiteralValue:
 			sourceAttributeValue = source.(core.Literal).GetLiteralValue(trans)
 		}
-		var foundTarget core.Element
-		var foundTargetValue string
+
+		// The found target is going to be the target of the parent map
+		parentMap := mapInstance.GetOwningConcept(trans)
+		if parentMap == nil {
+			return errors.New("In crlmaps.executeOneToOneMap, parentMap was nil")
+		}
+		foundTarget := GetTarget(parentMap, trans)
+		if foundTarget == nil {
+			// mapping may not have been completed yet
+			return nil
+		}
+
+		var foundTargetAttributeValue string
 		switch source.(type) {
 		case core.Literal:
-			foundTargetValue = sourceAttributeValue
+			foundTargetAttributeValue = sourceAttributeValue
 		default:
-			foundTarget = FindTargetForSource(mapInstance, sourceAttributeValueConcept, trans)
-			if foundTarget != nil {
-				foundTargetValue = foundTarget.GetConceptID(trans)
+			sourceAttributeValueConcept = uOfD.GetElement(sourceAttributeValue)
+			if sourceAttributeValueConcept == nil {
+				return errors.New("In crlmaps.executeOneToOneMap, the sourceAttributeValueConcept was not found")
 			}
-		}
-
-		switch targetRef.GetReferencedAttributeName(trans) {
-		case core.NoAttribute:
-			targetRef.SetReferencedConcept(foundTarget, core.NoAttribute, trans)
-		default:
-			targetRef.SetReferencedConcept(target, core.NoAttribute, trans)
-		}
-
-		switch targetRef.GetReferencedAttributeName(trans) {
-		case core.NoAttribute:
-			// This case is valid only if the target is a reference, in which case we are setting the reference's referencedConceptID
-			switch targetElement := target.(type) {
-			case core.Reference:
-				err := targetElement.SetReferencedConceptID(foundTargetValue, core.NoAttribute, trans)
-				if err != nil {
-					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+			sourceMap := SearchForMapForSource(mapInstance, sourceAttributeValueConcept, trans)
+			if sourceMap != nil {
+				pointerTargetConcept := GetTarget(sourceMap, trans)
+				if pointerTargetConcept != nil {
+					foundTargetAttributeValue = pointerTargetConcept.GetConceptID(trans)
 				}
 			}
+		}
+
+		referencedAttributeName := targetRef.GetReferencedAttributeName(trans)
+		targetRef.SetReferencedConcept(foundTarget, referencedAttributeName, trans)
+
+		switch referencedAttributeName {
+		case core.NoAttribute:
+			// Nothing to be done
 		case core.ReferencedConceptID:
 			// This case is valid only if the target is a reference
 			switch targetElement := target.(type) {
 			case core.Reference:
-				err := targetElement.SetReferencedConceptID(foundTargetValue, core.NoAttribute, trans)
+				err := targetElement.SetReferencedConceptID(foundTargetAttributeValue, core.NoAttribute, trans)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
@@ -375,7 +383,7 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 		case core.AbstractConceptID:
 			switch targetElement := target.(type) {
 			case core.Refinement:
-				err := targetElement.SetAbstractConceptID(foundTargetValue, trans)
+				err := targetElement.SetAbstractConceptID(foundTargetAttributeValue, trans)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
@@ -385,7 +393,7 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 			// If the target is a reference, set the referenced elementID
 			switch targetElement := target.(type) {
 			case core.Refinement:
-				err := targetElement.SetRefinedConceptID(foundTargetValue, trans)
+				err := targetElement.SetRefinedConceptID(foundTargetAttributeValue, trans)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
@@ -393,13 +401,13 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 		case core.LiteralValue:
 			switch targetElement := target.(type) {
 			case core.Literal:
-				err := targetElement.SetLiteralValue(foundTargetValue, trans)
+				err := targetElement.SetLiteralValue(foundTargetAttributeValue, trans)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
 			}
 		case core.OwningConceptID:
-			err := target.SetOwningConceptID(foundTargetValue, trans)
+			err := target.SetOwningConceptID(foundTargetAttributeValue, trans)
 			if err != nil {
 				return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 			}
@@ -410,6 +418,39 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	err := instantiateChildren(abstractMap, mapInstance, source, target, uOfD, trans)
 	if err != nil {
 		return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+	}
+	return nil
+}
+
+func getAbstractMap(thisMap core.Element, trans *core.Transaction) core.Element {
+	immediateAbstractions := map[string]core.Element{}
+	thisMap.FindImmediateAbstractions(immediateAbstractions, trans)
+	for _, abstraction := range immediateAbstractions {
+		if abstraction.IsRefinementOfURI(CrlOneToOneMapURI, trans) {
+			return abstraction
+		}
+	}
+	return nil
+}
+
+func getAttributeTarget(attributeMap core.Element, trans *core.Transaction) core.Element {
+	// Assumes that the parent map's target is either the desired target or an ancestor of the desired target
+	// The target is either going to be the parent map's target or one of its descendants
+	parentTarget := getParentMapTarget(attributeMap, trans)
+	if parentTarget == nil {
+		return nil
+	}
+	// Get the abstract attributeMap
+	abstractMap := getAbstractMap(attributeMap, trans)
+	// Get the abstract attributeMap's target
+	abstractTarget := GetTarget(abstractMap, trans)
+	// Find the descendent of the parent target that has the attributeMap's target as an ancestor
+	if parentTarget.IsRefinementOf(abstractTarget, trans) {
+		return parentTarget
+	}
+	childTarget := parentTarget.GetFirstOwnedConceptRefinedFrom(abstractTarget, trans)
+	if childTarget != nil {
+		return childTarget
 	}
 	return nil
 }
@@ -459,16 +500,30 @@ func getParentMapTarget(theMap core.Element, trans *core.Transaction) core.Eleme
 	return ref.GetReferencedConcept(trans)
 }
 
-func getRootMapTarget(theMap core.Element, trans *core.Transaction) core.Element {
-	rootMap := getRootMap(theMap, trans)
-	ref := rootMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, trans)
-	if ref == nil {
-		return nil
+// func getRootMapTarget(theMap core.Element, trans *core.Transaction) core.Element {
+// 	rootMap := getRootMap(theMap, trans)
+// 	ref := rootMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, trans)
+// 	if ref == nil {
+// 		return nil
+// 	}
+// 	return ref.GetReferencedConcept(trans)
+// }
+
+// FindAttributeMapForSource locates the attribute map referencing the given source, if any.
+func FindAttributeMapForSource(currentMap core.Element, source core.Element, attributeName core.AttributeName, trans *core.Transaction) core.Element {
+	if GetSource(currentMap, trans) == source && GetSourceReference(currentMap, trans).GetReferencedAttributeName(trans) == attributeName {
+		return currentMap
 	}
-	return ref.GetReferencedConcept(trans)
+	for _, childMap := range currentMap.GetOwnedConceptsRefinedFromURI(CrlOneToOneMapURI, trans) {
+		foundMap := FindAttributeMapForSource(childMap, source, attributeName, trans)
+		if foundMap != nil {
+			return foundMap
+		}
+	}
+	return nil
 }
 
-// FindMapForSource locates the map corresponding to the given source, if any.
+// FindMapForSource locates the map corresponding to the given source, if any. It explores the current map and its descendants.
 func FindMapForSource(currentMap core.Element, source core.Element, trans *core.Transaction) core.Element {
 	if GetSource(currentMap, trans) == source && GetSourceReference(currentMap, trans).GetReferencedAttributeName(trans) == core.NoAttribute {
 		return currentMap
@@ -480,6 +535,20 @@ func FindMapForSource(currentMap core.Element, source core.Element, trans *core.
 		}
 	}
 	return nil
+}
+
+// SearchForMapForSource locates the map corresponding to the given source, if any. It starts with the current map.
+// If not found, it then goes up one level to the parent map. It keeps going up until either a target is found or
+// there is no parent. This method returns the first map found if there is more than one map.
+func SearchForMapForSource(currentMap core.Element, source core.Element, trans *core.Transaction) core.Element {
+	foundMap := FindMapForSource(currentMap, source, trans)
+	if foundMap == nil {
+		parentMap := currentMap.GetOwningConcept(trans)
+		if parentMap != nil {
+			foundMap = SearchForMapForSource(parentMap, source, trans)
+		}
+	}
+	return foundMap
 }
 
 // FindMapForSourceAttribute locates the map corresponding to the given source attribute, if any.
@@ -518,7 +587,8 @@ func instantiateChildren(abstractMap core.Element, parentMap core.Element, sourc
 			if abstractChildMapSourceReference == nil {
 				return errors.New("In CrlMaps.go instantiateChildren, the abstractChildMapSource does not have a ChildMapSourceReference")
 			}
-			if abstractChildMapSourceReference.GetReferencedAttributeName(trans) != core.NoAttribute {
+			abstractChildMapSourceReferenceAttributeName := abstractChildMapSourceReference.GetReferencedAttributeName(trans)
+			if abstractChildMapSourceReferenceAttributeName != core.NoAttribute {
 				// If the abstractChildMap's source reference is to a pointer, then the actual source for the child is going to be
 				// the parent's source. Error checking is required to ensure that the parent's source is of the appropriate type for the AttributeName
 				// on the reference. In this case there will only be one instance of the abstractChildMap created.
@@ -575,7 +645,7 @@ func instantiateChildren(abstractMap core.Element, parentMap core.Element, sourc
 					return errors.New("In crlmaps.instantiateChildren, newSourceRef is nil")
 				}
 				if foundChildSource != nil && newSourceRef.GetReferencedConceptID(trans) != foundChildSource.GetConceptID(trans) {
-					err := newSourceRef.SetReferencedConcept(foundChildSource, core.NoAttribute, trans)
+					err := newSourceRef.SetReferencedConcept(foundChildSource, abstractChildMapSourceReferenceAttributeName, trans)
 					if err != nil {
 						return errors.Wrap(err, "crlmaps.instantiateChildren failed")
 					}
