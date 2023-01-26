@@ -9,5 +9,5 @@ type Observer interface {
 type Subject interface {
 	Register(observer Observer) error
 	Deregister(observer Observer) error
-	NotifyAll(notification *ChangeNotification, heldLocks *Transaction) error
+	notifyAll(notification *ChangeNotification, heldLocks *Transaction) error
 }

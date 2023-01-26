@@ -134,13 +134,13 @@ func (demPtr *diagramElementManager) Update(changeNotification *core.ChangeNotif
 	}
 	if crldiagramdomain.IsDiagramNode(diagramElement, hl) {
 		switch changeNotification.GetNatureOfChange() {
-		case core.ForwardedChange:
+		case core.OwningConceptChanged:
 			additionalParameters := getNodeAdditionalParameters(diagramElement, hl)
 			conceptState, err := core.NewConceptState(diagramElement)
 			if err != nil {
 				return errors.Wrap(err, "DiagramView.go updateDiagrmElementView failed")
 			}
-			SendNotification("UpdateDiagramNode", diagramElement.GetConceptID(hl), conceptState, additionalParameters)
+			SendNotification("AddDiagramNode", diagramElement.GetConceptID(hl), conceptState, additionalParameters)
 		case core.ConceptChanged:
 			currentConcept := changeNotification.GetAfterConceptState()
 			priorConcept := changeNotification.GetBeforeConceptState()
@@ -158,14 +158,27 @@ func (demPtr *diagramElementManager) Update(changeNotification *core.ChangeNotif
 		}
 		return nil
 	} else if crldiagramdomain.IsDiagramLink(diagramElement, hl) {
+		// Make sure it actually exists (part of creation protocol)
+		additionalParameters := getLinkAdditionalParameters(diagramElement, hl)
+		reportingElementState := changeNotification.GetReportingElementState()
+		booleanResponse, err := SendNotification("DoesLinkExist", reportingElementState.ConceptID, reportingElementState, additionalParameters)
+		if err != nil {
+			return errors.Wrap(err, "DiagramElemantManager.Update failed on DoesLinkExist call")
+		}
+		if !booleanResponse.BooleanResult {
+			_, err := SendNotification("AddDiagramLink", reportingElementState.ConceptID, reportingElementState, additionalParameters)
+			if err != nil {
+				return errors.Wrap(err, "DiagramElementManager.Update failed on AddDiagramLink call")
+			}
+		}
 		switch changeNotification.GetNatureOfChange() {
-		case core.ForwardedChange:
+		case core.OwningConceptChanged:
 			additionalParameters := getLinkAdditionalParameters(diagramElement, hl)
 			conceptState, err := core.NewConceptState(diagramElement)
 			if err != nil {
 				return errors.Wrap(err, "DiagramView.go updateDiagrmElementView failed")
 			}
-			SendNotification("UpdateDiagramLink", diagramElement.GetConceptID(hl), conceptState, additionalParameters)
+			SendNotification("AddDiagramLink", diagramElement.GetConceptID(hl), conceptState, additionalParameters)
 		case core.ConceptChanged:
 			currentConcept := changeNotification.GetAfterConceptState()
 			priorConcept := changeNotification.GetBeforeConceptState()

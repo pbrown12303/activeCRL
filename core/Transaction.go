@@ -33,8 +33,7 @@ func (transPtr *Transaction) callFunctions(functionID string, targetElement Elem
 			}
 		}
 		if TraceLocks || TraceChange {
-			omitCall := (OmitHousekeepingCalls && functionID == "http://activeCrl.com/core/coreHousekeeping") ||
-				(OmitManageTreeNodesCalls && functionID == "http://activeCrl.com/crlEditor/EditorDomain/TreeViews/TreeNodeManager") ||
+			omitCall := (OmitManageTreeNodesCalls && functionID == "http://activeCrl.com/crlEditor/EditorDomain/TreeViews/TreeNodeManager") ||
 				(OmitDiagramRelatedCalls && isDiagramRelatedFunction(functionID))
 			if !omitCall {
 				functionCallGraphs = append(functionCallGraphs, NewFunctionCallGraph(functionID, targetElement, notification, transPtr))

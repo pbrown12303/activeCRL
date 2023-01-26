@@ -70,6 +70,7 @@ var _ = BeforeSuite(func() {
 	page, err = agoutiDriver.NewPage(agouti.Browser("chrome"))
 	Expect(err).NotTo(HaveOccurred())
 
+	Expect(page.Size(1500, 1000)).To(Succeed())
 	Expect(page.Navigate("http://localhost:8082/index")).To(Succeed())
 	Expect(page).To(HaveURL("http://localhost:8082/index/"))
 	Eventually(func() bool {

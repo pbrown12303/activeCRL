@@ -219,13 +219,11 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *Transaction) error
 			return errors.Wrap(err, "refinement.SetAbstractConceptID failed")
 		}
 		rPtr.incrementVersion(hl)
-		var beforeReferencedState *ConceptState
 		var oldAbstractConcept Element
 		if rPtr.AbstractConceptID != "" {
 			oldAbstractConcept = rPtr.uOfD.GetElement(rPtr.AbstractConceptID)
 			if oldAbstractConcept != nil {
 				oldAbstractConcept.removeListener(rPtr.ConceptID, hl)
-				beforeReferencedState, err = NewConceptState(oldAbstractConcept)
 				if err != nil {
 					return errors.Wrap(err, "refinement.SetAbstractConceptID failed")
 				}
@@ -235,12 +233,10 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *Transaction) error
 			}
 		}
 		var newAbstractConcept Element
-		var afterReferencedState *ConceptState
 		if acID != "" {
 			newAbstractConcept = rPtr.uOfD.GetElement(acID)
 			if newAbstractConcept != nil {
 				newAbstractConcept.addListener(rPtr.ConceptID, hl)
-				afterReferencedState, err = NewConceptState(newAbstractConcept)
 				if err != nil {
 					return errors.Wrap(err, "refinement.SetAbstractConceptID failed")
 				}
@@ -256,7 +252,7 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *Transaction) error
 		if err2 != nil {
 			return errors.Wrap(err2, "refinement.SetAbstractConceptID failed")
 		}
-		err = rPtr.uOfD.SendPointerChangeNotification(rPtr, AbstractConceptChanged, beforeState, afterState, beforeReferencedState, afterReferencedState, hl)
+		err = rPtr.uOfD.SendPointerChangeNotification(rPtr, AbstractConceptChanged, beforeState, afterState, hl)
 		if err != nil {
 			return errors.Wrap(err, "refinement.SetAbstractConceptID failed")
 		}
@@ -291,25 +287,21 @@ func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *Transaction) error 
 			return errors.Wrap(err, "refinement.SetRefinedConceptID failed")
 		}
 		rPtr.incrementVersion(hl)
-		var beforeReferencedState *ConceptState
 		var oldRefinedConcept Element
 		if rPtr.RefinedConceptID != "" {
 			oldRefinedConcept = rPtr.uOfD.GetElement(rPtr.RefinedConceptID)
 			if oldRefinedConcept != nil {
 				oldRefinedConcept.removeListener(rPtr.ConceptID, hl)
-				beforeReferencedState, err = NewConceptState(oldRefinedConcept)
 				if err != nil {
 					return errors.Wrap(err, "refinement.SetRefinedConceptID failed")
 				}
 			}
 		}
 		var newRefinedConcept Element
-		var afterReferencedState *ConceptState
 		if rcID != "" {
 			newRefinedConcept = rPtr.uOfD.GetElement(rcID)
 			if newRefinedConcept != nil {
 				newRefinedConcept.addListener(rPtr.ConceptID, hl)
-				afterReferencedState, err = NewConceptState(newRefinedConcept)
 				if err != nil {
 					return errors.Wrap(err, "refinement.SetRefinedConceptID failed")
 				}
@@ -325,7 +317,7 @@ func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *Transaction) error 
 		if err2 != nil {
 			return errors.Wrap(err2, "refinement.SetRefinedConceptID failed")
 		}
-		err = rPtr.uOfD.SendPointerChangeNotification(rPtr, RefinedConceptChanged, beforeState, afterState, beforeReferencedState, afterReferencedState, hl)
+		err = rPtr.uOfD.SendPointerChangeNotification(rPtr, RefinedConceptChanged, beforeState, afterState, hl)
 		if err != nil {
 			return errors.Wrap(err, "refinement.SetRefinedConceptID failed")
 		}

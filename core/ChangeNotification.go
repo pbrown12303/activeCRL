@@ -29,7 +29,8 @@ const (
 	ReferencedConceptChanged = NatureOfChange(5)
 	AbstractConceptChanged   = NatureOfChange(6)
 	RefinedConceptChanged    = NatureOfChange(7)
-	ForwardedChange          = NatureOfChange(8)
+	OwnedConceptChanged      = NatureOfChange(8)
+	IndicatedConceptChanged  = NatureOfChange(9)
 )
 
 func (noc NatureOfChange) String() string {
@@ -48,8 +49,10 @@ func (noc NatureOfChange) String() string {
 		return "AbstractConceptChanged"
 	case RefinedConceptChanged:
 		return "RefinedConceptChanged"
-	case ForwardedChange:
-		return "ForwardedChange"
+	case OwnedConceptChanged:
+		return "OwnedConceptChanged"
+	case IndicatedConceptChanged:
+		return "IndicatedConceptChanged"
 	}
 	return "Undefined"
 }
@@ -105,8 +108,6 @@ type ChangeNotification struct {
 	reportingElementState *ConceptState
 	beforeConceptState    *ConceptState
 	afterConceptState     *ConceptState
-	beforeReferencedState *ConceptState
-	afterReferencedState  *ConceptState
 	underlyingChange      *ChangeNotification
 	uOfD                  *UniverseOfDiscourse
 }
@@ -116,19 +117,9 @@ func (cnPtr *ChangeNotification) GetAfterConceptState() *ConceptState {
 	return cnPtr.afterConceptState
 }
 
-// GetAfterReferencedState returns the state of the referenced Element after the change
-func (cnPtr *ChangeNotification) GetAfterReferencedState() *ConceptState {
-	return cnPtr.afterReferencedState
-}
-
 // GetBeforeConceptState returns the state of the Element before the change
 func (cnPtr *ChangeNotification) GetBeforeConceptState() *ConceptState {
 	return cnPtr.beforeConceptState
-}
-
-// GetBeforeReferencedState returns the state of the referenced Element before the change
-func (cnPtr *ChangeNotification) GetBeforeReferencedState() *ConceptState {
-	return cnPtr.beforeReferencedState
 }
 
 // GetChangedConceptID returns the ID of the Element impacted by the change

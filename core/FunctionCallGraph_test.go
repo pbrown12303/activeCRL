@@ -7,25 +7,28 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+var df1URI = "http://dummy.function.uri,df1"
+
+var df1Called = false
+var df1CalledElement Element = nil
+
+func dummyChangeFunction(el Element, cn *ChangeNotification, tran *Transaction) error {
+	df1Called = true
+	df1CalledElement = el
+	return nil
+}
+
 var _ = Describe("Verify function call graph generation", func() {
 	var uOfD *UniverseOfDiscourse
 	var hl *Transaction
 	var df1 Element
-	var df2 Element
-	var df3 Element
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
 		hl = uOfD.NewTransaction()
 		uOfD.AddFunction(df1URI, dummyChangeFunction)
-		uOfD.AddFunction(df2URI, dummyChangeFunction)
-		uOfD.AddFunction(df3URI, dummyChangeFunction)
 		df1, _ = uOfD.NewElement(hl)
 		df1.SetURI(df1URI, hl)
-		df2, _ = uOfD.NewElement(hl)
-		df2.SetURI(df2URI, hl)
-		df3, _ = uOfD.NewElement(hl)
-		df3.SetURI(df3URI, hl)
 	})
 
 	AfterEach(func() {
@@ -34,15 +37,15 @@ var _ = Describe("Verify function call graph generation", func() {
 
 	Describe("Test FunctionCallGraph for Element ConceptChanged generation", func() {
 		Specify("SetDefinition should generate a FunctionCallGraph for ConceptChanged", func() {
-			el, _ := uOfD.NewElement(hl)
 			// Initiate the graph capture
 			TraceChange = true
 			definition := "Definition"
-			el.SetDefinition(definition, hl)
-			Expect(len(functionCallGraphs) > 0).To(BeTrue())
+			df1.SetDefinition(definition, hl)
+			Expect(df1Called).To(BeTrue())
+			Expect(df1CalledElement == df1).To(BeTrue())
 			fcgZero := functionCallGraphs[0]
-			Expect(fcgZero.executingElement).To(Equal(el))
-			Expect(fcgZero.functionName).To(Equal("http://activeCrl.com/core/coreHousekeeping"))
+			Expect(fcgZero.executingElement).To(Equal(df1))
+			Expect(fcgZero.functionName).To(Equal(df1URI))
 			graphString := fcgZero.GetGraph().String()
 			Expect(strings.Contains(graphString, "error")).To(BeFalse())
 			TraceChange = false

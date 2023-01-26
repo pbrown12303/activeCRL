@@ -15,12 +15,6 @@ var OmitDiagramRelatedCalls bool
 // TraceLocks is a boolean that, when true, turns on the tracing of locks
 var TraceLocks = false
 
-// TraceNotifications determines whether individual notifications will be traced. Its primary purpose
-// is to track down cycles in notifications. When true, every time a notification is created a graph of
-// the notification and its antecedents will be created and added to the notificationGraphs. In addition,
-// if enableNotificationPrint is true, every time a notification is created it and its antecedents are
-// printed
-var TraceNotifications bool
 var notificationGraphs []*NotificationGraph
 
 // EnableNotificationPrint turns on the printing of notifications during tracing.

@@ -153,7 +153,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 	}
 	hl := BrowserGUISingleton.GetUofD().NewTransaction()
 	defer hl.ReleaseLocks()
-	if CrlLogClientRequests {
+	if CrlLogClientRequests || core.TraceChange {
 		log.Printf("Received request: %#v", request)
 	}
 	switch request.Action {

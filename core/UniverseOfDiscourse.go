@@ -39,15 +39,7 @@ func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	uOfD.ownedIDsMap = NewOneToNStringMap()
 	uOfD.listenersMap = NewOneToNStringMap()
 	uOfD.abstractionsMap = NewOneToNStringMap()
-	// uOfDID, _ := uOfD.generateConceptID(UniverseOfDiscourseURI)
-	// uOfD.initializeElement(uOfDID, UniverseOfDiscourseURI)
-	// uOfD.Label = "UniverseOfDiscourse"
-	// uOfD.uOfD = &uOfD
 	hl := uOfD.NewTransaction()
-	// uOfD.IsCore = true
-	// uOfD.addElement(&uOfD, false, hl)
-	uOfD.AddFunction(coreHousekeepingURI, coreHousekeeping)
-	// hl.ReleaseLocksAndWait()
 	buildCoreDomain(&uOfD, hl)
 	hl.ReleaseLocks()
 	return &uOfD
@@ -281,13 +273,12 @@ func (uOfDPtr *UniverseOfDiscourse) findFunctions(element Element, notification 
 	if element == nil {
 		return functionIdentifiers
 	}
-	// Always add coreHouskeeping
-	functionIdentifiers = append(functionIdentifiers, coreHousekeepingURI)
-	// Now find functions associated with abstractions
-	abstractions := make(map[string]Element)
-	element.FindAbstractions(abstractions, hl)
-	for _, abstraction := range abstractions {
-		uri := abstraction.GetURI(hl)
+	// Now find functions associated with self and abstractions
+	selfAndAbstractions := make(map[string]Element)
+	selfAndAbstractions[element.getConceptIDNoLock()] = element
+	element.FindAbstractions(selfAndAbstractions, hl)
+	for _, candidate := range selfAndAbstractions {
+		uri := candidate.GetURI(hl)
 		if uri != "" {
 			functions := uOfDPtr.computeFunctions[uri]
 			if functions != nil {
@@ -339,7 +330,7 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, deletedElements ma
 	if err != nil {
 		return errors.Wrap(err, "UniverseOfDiscourse.deleteElement failed")
 	}
-	err = el.NotifyAll(conceptRemovedNotification, hl)
+	err = el.notifyAll(conceptRemovedNotification, hl)
 	if err != nil {
 		return errors.Wrap(err, "UniverseOfDiscourse.deleteElement failed")
 	}
@@ -730,7 +721,7 @@ func (uOfDPtr *UniverseOfDiscourse) SendConceptChangeNotification(reportingEleme
 	if err != nil {
 		return errors.Wrap(err, "UniverseOfDiscourse.SendConceptChangeNotification failed")
 	}
-	err = reportingElement.NotifyAll(notification, hl)
+	err = reportingElement.notifyAll(notification, hl)
 	if err != nil {
 		return errors.Wrap(err, "UniverseOfDiscourse.SendConceptChangeNotification failed")
 	}
@@ -738,7 +729,7 @@ func (uOfDPtr *UniverseOfDiscourse) SendConceptChangeNotification(reportingEleme
 }
 
 // SendPointerChangeNotification creates a PointerChangeNotification and sends it to the relevant parties
-func (uOfDPtr *UniverseOfDiscourse) SendPointerChangeNotification(reportingElement Element, natureOfChange NatureOfChange, beforeConceptState *ConceptState, afterConceptState *ConceptState, beforeReferencedState *ConceptState, afterReferencedState *ConceptState, hl *Transaction) error {
+func (uOfDPtr *UniverseOfDiscourse) SendPointerChangeNotification(reportingElement Element, natureOfChange NatureOfChange, beforeConceptState *ConceptState, afterConceptState *ConceptState, hl *Transaction) error {
 	notification := &ChangeNotification{}
 	reportingConceptState, err := NewConceptState(reportingElement)
 	if err != nil {
@@ -747,55 +738,9 @@ func (uOfDPtr *UniverseOfDiscourse) SendPointerChangeNotification(reportingEleme
 	notification.reportingElementState = reportingConceptState
 	notification.beforeConceptState = beforeConceptState
 	notification.afterConceptState = afterConceptState
-	notification.beforeReferencedState = beforeReferencedState
-	notification.afterReferencedState = afterReferencedState
 	notification.natureOfChange = natureOfChange
 	notification.uOfD = uOfDPtr
-	err = uOfDPtr.callAssociatedFunctions(reportingElement, notification, hl)
-	if err != nil {
-		return errors.Wrap(err, "element.SetOwningConceptID failed")
-	}
-	// TODO: Re-evaluate why notifications are being sent to the concepts that are being (or were being) referenced. What purpose does this serve?
-	// Possible partial answer: refined elements might want to know when their abstractions change
-	var beforeReferencedConcept Element
-	if beforeReferencedState != nil {
-		beforeReferencedConcept = uOfDPtr.GetElement(beforeReferencedState.ConceptID)
-		if beforeReferencedConcept == nil {
-			return errors.New("UniverseOfDiscourse.SendPointerChangeNotification called with a beforeReferencedState, but the beforeReferencedConcept was not found")
-		}
-		err = uOfDPtr.callAssociatedFunctions(beforeReferencedConcept, notification, hl)
-		if err != nil {
-			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
-		}
-		err = beforeReferencedConcept.NotifyAll(notification, hl)
-		if err != nil {
-			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
-		}
-	}
-	var afterReferencedConcept Element
-	if afterReferencedState != nil {
-		afterReferencedConcept = uOfDPtr.GetElement(afterReferencedState.ConceptID)
-		if afterReferencedConcept == nil {
-			return errors.New("UniverseOfDiscourse.SendPointerChangeNotification called with a afterReferencedState, but the afterReferencedConcept was not found")
-		}
-		err = uOfDPtr.callAssociatedFunctions(afterReferencedConcept, notification, hl)
-		if err != nil {
-			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
-		}
-		err = afterReferencedConcept.NotifyAll(notification, hl)
-		if err != nil {
-			return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
-		}
-	}
-	// TODO possibly add call to callAssociatedFunctions here
-	err = reportingElement.NotifyAll(notification, hl)
-	if err != nil {
-		return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
-	}
-	err = uOfDPtr.NotifyAll(notification, hl)
-	if err != nil {
-		return errors.Wrap(err, "UniverseOfDiscourse.SendPointerChangeNotification failed")
-	}
+	reportingElement.propagateChange(notification, hl)
 	return nil
 }
 
@@ -1052,8 +997,7 @@ func (uOfDPtr *UniverseOfDiscourse) callAssociatedFunctions(el Element, notifica
 	functionIdentifiers := uOfDPtr.findFunctions(el, notification, hl)
 	for _, functionIdentifier := range functionIdentifiers {
 		if TraceLocks || TraceChange {
-			omitTrace := (OmitHousekeepingCalls && functionIdentifier == "http://activeCrl.com/core/coreHousekeeping") ||
-				(OmitManageTreeNodesCalls && functionIdentifier == "http://activeCrl.com/crlEditor/Editor/TreeViews/ManageTreeNodes") ||
+			omitTrace := (OmitManageTreeNodesCalls && functionIdentifier == "http://activeCrl.com/crlEditor/Editor/TreeViews/ManageTreeNodes") ||
 				(OmitDiagramRelatedCalls && isDiagramRelatedFunction(functionIdentifier))
 			if !omitTrace {
 				log.Printf("Calling function with URI: %s notification: %s target: %p", functionIdentifier, notification.GetNatureOfChange().String(), el)
@@ -1184,7 +1128,6 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 		// For each original child, determine whether there is already a replicate child that
 		// has the original child as one of its abstractions. This is replicateChild
 		it2 := uOfDPtr.GetConceptsOwnedConceptIDs(replicateID).Iterator()
-		defer it2.Stop()
 		for id := range it2.C {
 			currentChild := uOfDPtr.GetElement(id.(string))
 			switch currentChild.(type) {
@@ -1199,6 +1142,7 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 				}
 			}
 		}
+		it2.Stop()
 		// If the replicate child is nil at this point, there is no existing replicate child that corresponds
 		// to the original child - create one.
 		if replicateChild == nil {

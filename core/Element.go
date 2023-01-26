@@ -875,14 +875,14 @@ func (ePtr *element) marshalElementFields(buffer *bytes.Buffer) error {
 	return nil
 }
 
-// NotifyAll passes the notification to all registered Observers
-func (ePtr *element) NotifyAll(notification *ChangeNotification, hl *Transaction) error {
+// notifyAll passes the notification to all registered Observers
+func (ePtr *element) notifyAll(notification *ChangeNotification, hl *Transaction) error {
 	it := ePtr.observers.Iterator()
 	defer it.Stop()
 	for observer := range it.C {
 		err := observer.(Observer).Update(notification, hl)
 		if err != nil {
-			return errors.Wrap(err, "element.NotifyAll failed")
+			return errors.Wrap(err, "element.notifyAll failed")
 		}
 	}
 	return nil
@@ -891,45 +891,123 @@ func (ePtr *element) NotifyAll(notification *ChangeNotification, hl *Transaction
 func (ePtr *element) notifyListeners(notification *ChangeNotification, hl *Transaction) error {
 	hl.ReadLockElement(ePtr)
 	if ePtr.uOfD != nil {
+		indicatedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(ePtr, IndicatedConceptChanged, notification, hl)
+		if err != nil {
+			return errors.Wrap(err, "element.notifyListeners failed")
+		}
 		it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
 		defer it.Stop()
 		for id := range it.C {
 			listener := ePtr.uOfD.GetElement(id.(string))
-			if listener.GetConceptID(hl) == ePtr.OwningConceptID && notification.GetReportingElementType() == "core.Reference" {
-				forwardingChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(ePtr, ForwardedChange, notification, hl)
+			if listener != nil {
+				err = ePtr.uOfD.callAssociatedFunctions(listener, indicatedConceptChangeNotification, hl)
 				if err != nil {
 					return errors.Wrap(err, "element.notifyListeners failed")
 				}
-				err = ePtr.uOfD.callAssociatedFunctions(listener, forwardingChangeNotification, hl)
+				err = listener.notifyOwner(indicatedConceptChangeNotification, hl)
 				if err != nil {
 					return errors.Wrap(err, "element.notifyListeners failed")
 				}
-				continue
-			}
-			switch typedElement := listener.(type) {
-			case Reference:
-				if !(notification.GetNatureOfChange() == ReferencedConceptChanged && notification.GetReportingElementID() == typedElement.GetConceptID(hl)) {
-					err := ePtr.uOfD.callAssociatedFunctions(listener, notification, hl)
-					if err != nil {
-						return errors.Wrap(err, "element.notifyListeners failed")
-					}
-				}
-			case Refinement:
-				if !((notification.GetNatureOfChange() == AbstractConceptChanged || notification.GetNatureOfChange() == RefinedConceptChanged) && notification.GetReportingElementID() == listener.(Refinement).GetConceptID(hl)) {
-					err := ePtr.uOfD.callAssociatedFunctions(listener, notification, hl)
-					if err != nil {
-						return errors.Wrap(err, "element.notifyListeners failed")
-					}
+				err = listener.notifyAll(indicatedConceptChangeNotification, hl)
+				if err != nil {
+					return errors.Wrap(err, "element.notifyListeners failed")
 				}
 			}
 		}
-		forwardingChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(ePtr, ForwardedChange, notification, hl)
-		if err != nil {
-			return errors.Wrap(err, "element.notifyListeners failed")
+	}
+	return nil
+}
+
+// notifyOwner informs the owner that the concept has changed state
+func (ePtr *element) notifyOwner(stateChangeNotification *ChangeNotification, trans *Transaction) error {
+	trans.ReadLockElement(ePtr)
+	switch stateChangeNotification.natureOfChange {
+	case OwningConceptChanged:
+		oldOwnerId := stateChangeNotification.beforeConceptState.OwningConceptID
+		newOwnerId := stateChangeNotification.afterConceptState.OwningConceptID
+		if oldOwnerId != "" {
+			oldOwner := ePtr.uOfD.GetElement(oldOwnerId)
+			if oldOwner != nil {
+				ownedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(oldOwner, OwnedConceptChanged, stateChangeNotification, trans)
+				if err != nil {
+					return errors.Wrap(err, "element.notifyOwner failed")
+				}
+				err = ePtr.uOfD.callAssociatedFunctions(oldOwner, ownedConceptChangeNotification, trans)
+				if err != nil {
+					return errors.Wrap(err, "element.notifyOwner failed")
+				}
+				err = oldOwner.notifyAll(ownedConceptChangeNotification, trans)
+				if err != nil {
+					return errors.Wrap(err, "element.notifyOwner failed")
+				}
+			}
 		}
-		err = ePtr.NotifyAll(forwardingChangeNotification, hl)
+		if newOwnerId != "" {
+			newOwner := ePtr.uOfD.GetElement(newOwnerId)
+			if newOwner != nil {
+				ownedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(newOwner, OwnedConceptChanged, stateChangeNotification, trans)
+				if err != nil {
+					return errors.Wrap(err, "element.notifyOwner failed")
+				}
+				err = ePtr.uOfD.callAssociatedFunctions(newOwner, ownedConceptChangeNotification, trans)
+				if err != nil {
+					return errors.Wrap(err, "element.notifyOwner failed")
+				}
+				err = newOwner.notifyAll(ownedConceptChangeNotification, trans)
+				if err != nil {
+					return errors.Wrap(err, "element.notifyOwner failed")
+				}
+			}
+		}
+	case ConceptChanged, ReferencedConceptChanged, AbstractConceptChanged, RefinedConceptChanged:
+		owner := ePtr.GetOwningConcept(trans)
+		if owner != nil {
+			ownedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(owner, OwnedConceptChanged, stateChangeNotification, trans)
+			if err != nil {
+				return errors.Wrap(err, "element.notifyOwner failed")
+			}
+			err = ePtr.uOfD.callAssociatedFunctions(owner, ownedConceptChangeNotification, trans)
+			if err != nil {
+				return errors.Wrap(err, "element.notifyOwner failed")
+			}
+			err = owner.notifyAll(ownedConceptChangeNotification, trans)
+			if err != nil {
+				return errors.Wrap(err, "element.notifyOwner failed")
+			}
+		}
+	}
+	return nil
+}
+
+// propagateChange() distributes the change notification to relevant parties
+func (ePtr *element) propagateChange(stateChangeNotification *ChangeNotification, trans *Transaction) error {
+	var err error = nil
+	switch stateChangeNotification.natureOfChange {
+	case ConceptChanged, OwningConceptChanged, ReferencedConceptChanged, AbstractConceptChanged, RefinedConceptChanged:
+		err = stateChangeNotification.uOfD.callAssociatedFunctions(ePtr, stateChangeNotification, trans)
 		if err != nil {
-			return errors.Wrap(err, "element.notifyListeners failed")
+			return errors.Wrap(err, "element.propagateChange failed")
+		}
+		err = ePtr.notifyListeners(stateChangeNotification, trans)
+		if err != nil {
+			return errors.Wrap(err, "element.propagateChange failed")
+		}
+		err = ePtr.notifyOwner(stateChangeNotification, trans)
+		if err != nil {
+			return errors.Wrap(err, "element.propagateChange failed")
+		}
+		err = ePtr.notifyAll(stateChangeNotification, trans)
+		if err != nil {
+			return errors.Wrap(err, "element.propagateChange failed")
+		}
+		ePtr.uOfD.NotifyAll(stateChangeNotification, trans)
+		if err != nil {
+			return errors.Wrap(err, "element.propagateChange failed")
+		}
+	case ConceptAdded, ConceptRemoved:
+		ePtr.uOfD.NotifyAll(stateChangeNotification, trans)
+		if err != nil {
+			return errors.Wrap(err, "element.propagateChange failed")
 		}
 	}
 	return nil
@@ -1199,19 +1277,15 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *Transaction) error {
 		if err != nil {
 			return errors.Wrap(err, "element.SetOwningConceptID failed")
 		}
-		var ownerBeforeState *ConceptState
 		if oldOwner != nil {
 			oldOwner.removeOwnedConcept(ePtr.ConceptID, hl)
-			ownerBeforeState, err = NewConceptState(oldOwner)
 			if err != nil {
 				return errors.Wrap(err, "element.SetOwningConceptID failed")
 			}
 		}
 		ePtr.incrementVersion(hl)
-		var ownerAfterState *ConceptState
 		if newOwner != nil {
 			newOwner.addOwnedConcept(ePtr.ConceptID, hl)
-			ownerAfterState, err = NewConceptState(newOwner)
 			if err != nil {
 				return errors.Wrap(err, "element.SetOwningConceptID failed")
 			}
@@ -1221,7 +1295,7 @@ func (ePtr *element) SetOwningConceptID(ocID string, hl *Transaction) error {
 		if err2 != nil {
 			return errors.Wrap(err2, "element.SetOwningConceptID failed")
 		}
-		err = ePtr.uOfD.SendPointerChangeNotification(ePtr, OwningConceptChanged, beforeState, afterState, ownerBeforeState, ownerAfterState, hl)
+		err = ePtr.uOfD.SendPointerChangeNotification(ePtr, OwningConceptChanged, beforeState, afterState, hl)
 		if err != nil {
 			return errors.Wrap(err, "element.SetOwningConceptID failed")
 		}
@@ -1412,6 +1486,8 @@ type Element interface {
 	IsReadOnly(*Transaction) bool
 	MarshalJSON() ([]byte, error)
 	notifyListeners(*ChangeNotification, *Transaction) error
+	notifyOwner(*ChangeNotification, *Transaction) error
+	propagateChange(*ChangeNotification, *Transaction) error
 	removeListener(string, *Transaction)
 	removeOwnedConcept(string, *Transaction) error
 	SetDefinition(string, *Transaction) error

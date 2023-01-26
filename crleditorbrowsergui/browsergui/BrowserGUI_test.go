@@ -789,12 +789,15 @@ var _ = Describe("Test CrlEditor", func() {
 					PerformUndoRedoTest(1)
 				})
 				Describe("Reference link creation should work", func() {
-					FSpecify("for a node source and target", func() {
+					Specify("for a node source and target", func() {
 						e1, e1View := CreateElement(diagram, 100, 100)
 						e2, e2View := CreateElement(diagram, 100, 200)
-						newReference, _ := CreateReferenceLink(diagram, e2View, e1View)
+						newReference, newReferenceView := CreateReferenceLink(diagram, e2View, e1View)
 						Expect(newReference.GetOwningConcept(hl)).To(Equal(e2))
 						Expect(newReference.GetReferencedConcept(hl)).To(Equal(e1))
+						Expect(newReferenceView).ToNot(BeNil())
+						cellViewId := GetCellViewIDFromViewElementID(diagram, newReferenceView.GetConceptID((hl)))
+						Expect(cellViewId).ToNot(BeNil())
 						PerformUndoRedoTest(3)
 					})
 					Specify("for a link source and node target", func() {

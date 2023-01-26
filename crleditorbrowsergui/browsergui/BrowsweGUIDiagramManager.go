@@ -658,31 +658,10 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 		if err != nil {
 			return "", errors.Wrap(err, "diagramManager.ReferenceLinkChanged failed")
 		}
-
-		// Debug
-		core.TraceChange = true
-		core.OmitHousekeepingCalls = false
-		core.OmitManageTreeNodesCalls = true
-		foundSource := crldiagramdomain.GetLinkSource(diagramLink, hl)
-		if foundSource != nil {
-			log.Print("Source found")
-		}
-
 		crldiagramdomain.SetReferencedModelElement(diagramLink, newReference, hl)
-
-		// Debug
-		core.TraceChange = false
-
 		crldiagramdomain.SetLinkSource(diagramLink, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramLink, diagramTarget, hl)
 		modelElement = newReference
-
-		// Debug
-		core.TraceChange = false
-
-		if err != nil {
-			return "", errors.Wrap(err, "diagramManager.ReferenceLinkChanged failed")
-		}
 		dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramLink = uOfD.GetElement(linkID)
@@ -741,15 +720,15 @@ func (dmPtr *diagramManager) RefinementLinkChanged(linkID string, sourceID strin
 		if err != nil {
 			return "", err
 		}
-		crldiagramdomain.SetReferencedModelElement(diagramLink, newRefinement, hl)
-		crldiagramdomain.SetLinkSource(diagramLink, diagramSource, hl)
-		crldiagramdomain.SetLinkTarget(diagramLink, diagramTarget, hl)
 		diagramLink.SetOwningConcept(diagram, hl)
-		modelElement = newRefinement
 		err = diagramLink.Register(dmPtr.elementManager)
 		if err != nil {
 			return "", errors.Wrap(err, "diagramManager.ReferenceLinkChanged failed")
 		}
+		crldiagramdomain.SetReferencedModelElement(diagramLink, newRefinement, hl)
+		crldiagramdomain.SetLinkSource(diagramLink, diagramSource, hl)
+		crldiagramdomain.SetLinkTarget(diagramLink, diagramTarget, hl)
+		modelElement = newRefinement
 		dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramLink = uOfD.GetElement(linkID)
@@ -1119,6 +1098,7 @@ func (dmPtr *diagramManager) Update(notification *core.ChangeNotification, hl *c
 			additionalParameters := map[string]string{"OwnerID": beforeStateOwnerID}
 			SendNotification("DeleteDiagramElement", beforeState.ConceptID, beforeState, additionalParameters)
 		} else if afterStateOwnerID != "" && beforeStateOwnerID == "" {
+			// TODO verify this code is never called and delete - this work is now done by DiagramElementManager with OwningConceptChanged notification
 			// we have to add the diagram element view
 			newElement := uOfD.GetElement(afterState.ConceptID)
 			newElement.Register(dmPtr.elementManager)
@@ -1132,9 +1112,9 @@ func (dmPtr *diagramManager) Update(notification *core.ChangeNotification, hl *c
 				return err
 			}
 		}
-	case core.ConceptChanged:
-		beforeState := notification.GetBeforeConceptState()
-		afterState := notification.GetAfterConceptState()
+	case core.OwnedConceptChanged:
+		beforeState := notification.GetUnderlyingChange().GetBeforeConceptState()
+		afterState := notification.GetUnderlyingChange().GetAfterConceptState()
 		afterElement := uOfD.GetElement(afterState.ConceptID)
 		if beforeState != nil && afterState != nil {
 			// If it is a link and either source or link target changed
