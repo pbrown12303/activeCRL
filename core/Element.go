@@ -130,10 +130,10 @@ func (ePtr *element) GetDefinition(hl *Transaction) string {
 func (ePtr *element) GetFirstOwnedConceptRefinedFrom(abstraction Element, hl *Transaction) Element {
 	hl.ReadLockElement(ePtr)
 	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		if element.IsRefinementOf(abstraction, hl) {
+			it.Stop()
 			return element
 		}
 	}
@@ -157,12 +157,12 @@ func (ePtr *element) GetFirstOwnedConceptRefinedFromURI(abstractionURI string, h
 func (ePtr *element) GetFirstOwnedLiteralRefinementOf(abstraction Element, hl *Transaction) Literal {
 	hl.ReadLockElement(ePtr)
 	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch typedElement := element.(type) {
 		case Literal:
 			if element.IsRefinementOf(abstraction, hl) {
+				it.Stop()
 				return typedElement
 			}
 		}
@@ -188,12 +188,12 @@ func (ePtr *element) GetFirstOwnedReferenceRefinedFrom(abstraction Element, hl *
 	hl.ReadLockElement(ePtr)
 	ownedIDs := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID)
 	it := ownedIDs.Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch typedElement := element.(type) {
 		case Reference:
 			if element.(Reference).IsRefinementOf(abstraction, hl) {
+				it.Stop()
 				return typedElement
 			}
 		}
@@ -222,12 +222,12 @@ func (ePtr *element) GetFirstOwnedReferenceRefinedFromURI(abstractionURI string,
 func (ePtr *element) GetFirstOwnedRefinementRefinedFrom(abstraction Element, hl *Transaction) Refinement {
 	hl.ReadLockElement(ePtr)
 	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch typedElement := element.(type) {
 		case Refinement:
 			if element.IsRefinementOf(abstraction, hl) {
+				it.Stop()
 				return typedElement
 			}
 		}
@@ -251,10 +251,10 @@ func (ePtr *element) GetFirstOwnedRefinementRefinedFromURI(abstractionURI string
 func (ePtr *element) GetFirstOwnedConceptWithURI(uri string, hl *Transaction) Element {
 	hl.ReadLockElement(ePtr)
 	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		if element.GetURI(hl) == uri {
+			it.Stop()
 			return element
 		}
 	}
@@ -264,12 +264,12 @@ func (ePtr *element) GetFirstOwnedConceptWithURI(uri string, hl *Transaction) El
 func (ePtr *element) GetFirstOwnedLiteralRefinedFrom(abstraction Element, hl *Transaction) Literal {
 	hl.ReadLockElement(ePtr)
 	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch typedElement := element.(type) {
 		case Literal:
 			if element.IsRefinementOf(abstraction, hl) {
+				it.Stop()
 				return typedElement
 			}
 		}
@@ -289,12 +289,12 @@ func (ePtr *element) GetFirstOwnedLiteralRefinedFromURI(uri string, hl *Transact
 func (ePtr *element) GetFirstOwnedLiteralWithURI(uri string, hl *Transaction) Literal {
 	hl.ReadLockElement(ePtr)
 	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch typedElement := element.(type) {
 		case *literal:
 			if element.GetURI(hl) == uri {
+				it.Stop()
 				return typedElement
 			}
 		}
@@ -305,12 +305,12 @@ func (ePtr *element) GetFirstOwnedLiteralWithURI(uri string, hl *Transaction) Li
 func (ePtr *element) GetFirstOwnedReferenceWithURI(uri string, hl *Transaction) Reference {
 	hl.ReadLockElement(ePtr)
 	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch typedElement := element.(type) {
 		case *reference:
 			if element.GetURI(hl) == uri {
+				it.Stop()
 				return typedElement
 			}
 		}
@@ -321,12 +321,12 @@ func (ePtr *element) GetFirstOwnedReferenceWithURI(uri string, hl *Transaction) 
 func (ePtr *element) GetFirstOwnedRefinementWithURI(uri string, hl *Transaction) Refinement {
 	hl.ReadLockElement(ePtr)
 	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch typedElement := element.(type) {
 		case *refinement:
 			if element.GetURI(hl) == uri {
+				it.Stop()
 				return typedElement
 			}
 		}
@@ -343,7 +343,6 @@ func (ePtr *element) Deregister(observer Observer) error {
 // FindAbstractions adds all found abstractions to supplied map
 func (ePtr *element) FindAbstractions(abstractions map[string]Element, hl *Transaction) {
 	it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		listener := ePtr.uOfD.GetElement(id.(string))
 		switch typedElement := listener.(type) {
@@ -364,7 +363,6 @@ func (ePtr *element) FindImmediateAbstractions(abstractions map[string]Element, 
 		return
 	}
 	it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		listener := ePtr.uOfD.GetElement(id.(string))
 		switch typedElement := listener.(type) {
@@ -417,7 +415,6 @@ func (ePtr *element) GetOwnedConcepts(hl *Transaction) map[string]Element {
 		return ownedConcepts
 	}
 	it := ePtr.GetOwnedConceptIDs(hl).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		if element != nil {
@@ -433,7 +430,6 @@ func (ePtr *element) GetOwnedConceptsRefinedFrom(abstraction Element, hl *Transa
 	hl.ReadLockElement(ePtr)
 	matches := map[string]Element{}
 	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		if element.IsRefinementOf(abstraction, hl) {
@@ -451,7 +447,6 @@ func (ePtr *element) GetOwnedConceptsRefinedFromURI(abstractionURI string, hl *T
 	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
 	if abstraction != nil {
 		it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-		defer it.Stop()
 		for id := range it.C {
 			element := ePtr.uOfD.GetElement(id.(string))
 			if element.IsRefinementOf(abstraction, hl) {
@@ -472,7 +467,6 @@ func (ePtr *element) GetOwnedDescendantsRefinedFrom(abstraction Element, hl *Tra
 		descendantIDs := mapset.NewSet()
 		ePtr.uOfD.GetConceptsOwnedConceptIDsRecursively(ePtr.ConceptID, descendantIDs, hl)
 		it := descendantIDs.Iterator()
-		defer it.Stop()
 		for id := range it.C {
 			element := ePtr.uOfD.GetElement(id.(string))
 			if element.IsRefinementOf(abstraction, hl) {
@@ -494,7 +488,6 @@ func (ePtr *element) GetOwnedDescendantsRefinedFromURI(abstractionURI string, hl
 		descendantIDs := mapset.NewSet()
 		ePtr.uOfD.GetConceptsOwnedConceptIDsRecursively(ePtr.ConceptID, descendantIDs, hl)
 		it := descendantIDs.Iterator()
-		defer it.Stop()
 		for id := range it.C {
 			element := ePtr.uOfD.GetElement(id.(string))
 			if element.IsRefinementOf(abstraction, hl) {
@@ -511,7 +504,6 @@ func (ePtr *element) GetOwnedLiteralsRefinedFrom(abstraction Element, hl *Transa
 	hl.ReadLockElement(ePtr)
 	matches := map[string]Literal{}
 	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch typedElement := element.(type) {
@@ -532,7 +524,6 @@ func (ePtr *element) GetOwnedLiteralsRefinedFromURI(abstractionURI string, hl *T
 	abstraction := ePtr.uOfD.GetElementWithURI(abstractionURI)
 	if abstraction != nil {
 		it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-		defer it.Stop()
 		for id := range it.C {
 			element := ePtr.uOfD.GetElement(id.(string))
 			switch typedElement := element.(type) {
@@ -552,7 +543,6 @@ func (ePtr *element) GetOwnedReferencesRefinedFrom(abstraction Element, hl *Tran
 	hl.ReadLockElement(ePtr)
 	matches := map[string]Reference{}
 	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		element := ePtr.uOfD.GetElement(id.(string))
 		switch typedElement := element.(type) {
@@ -875,42 +865,44 @@ func (ePtr *element) marshalElementFields(buffer *bytes.Buffer) error {
 	return nil
 }
 
-// notifyAll passes the notification to all registered Observers
-func (ePtr *element) notifyAll(notification *ChangeNotification, hl *Transaction) error {
-	it := ePtr.observers.Iterator()
-	defer it.Stop()
-	for observer := range it.C {
+// notifyObservers passes the notification to all registered Observers
+func (ePtr *element) notifyObservers(notification *ChangeNotification, hl *Transaction) error {
+	// it := ePtr.observers.Iterator()
+	// defer it.Stop()
+	for _, observer := range ePtr.observers.ToSlice() {
 		err := observer.(Observer).Update(notification, hl)
 		if err != nil {
-			return errors.Wrap(err, "element.notifyAll failed")
+			return errors.Wrap(err, "element.notifyObservers failed")
 		}
 	}
 	return nil
 }
 
-func (ePtr *element) notifyListeners(notification *ChangeNotification, hl *Transaction) error {
+func (ePtr *element) notifyPointerOwners(notification *ChangeNotification, hl *Transaction) error {
 	hl.ReadLockElement(ePtr)
 	if ePtr.uOfD != nil {
 		indicatedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(ePtr, IndicatedConceptChanged, notification, hl)
 		if err != nil {
-			return errors.Wrap(err, "element.notifyListeners failed")
+			return errors.Wrap(err, "element.notifyPointerOwners failed")
 		}
 		it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
-		defer it.Stop()
 		for id := range it.C {
 			listener := ePtr.uOfD.GetElement(id.(string))
 			if listener != nil {
 				err = ePtr.uOfD.callAssociatedFunctions(listener, indicatedConceptChangeNotification, hl)
 				if err != nil {
-					return errors.Wrap(err, "element.notifyListeners failed")
+					it.Stop()
+					return errors.Wrap(err, "element.notifyPointerOwners failed")
 				}
 				err = listener.notifyOwner(indicatedConceptChangeNotification, hl)
 				if err != nil {
-					return errors.Wrap(err, "element.notifyListeners failed")
+					it.Stop()
+					return errors.Wrap(err, "element.notifyPointerOwners failed")
 				}
-				err = listener.notifyAll(indicatedConceptChangeNotification, hl)
+				err = listener.notifyObservers(indicatedConceptChangeNotification, hl)
 				if err != nil {
-					return errors.Wrap(err, "element.notifyListeners failed")
+					it.Stop()
+					return errors.Wrap(err, "element.notifyPointerOwners failed")
 				}
 			}
 		}
@@ -936,7 +928,7 @@ func (ePtr *element) notifyOwner(stateChangeNotification *ChangeNotification, tr
 				if err != nil {
 					return errors.Wrap(err, "element.notifyOwner failed")
 				}
-				err = oldOwner.notifyAll(ownedConceptChangeNotification, trans)
+				err = oldOwner.notifyObservers(ownedConceptChangeNotification, trans)
 				if err != nil {
 					return errors.Wrap(err, "element.notifyOwner failed")
 				}
@@ -953,13 +945,13 @@ func (ePtr *element) notifyOwner(stateChangeNotification *ChangeNotification, tr
 				if err != nil {
 					return errors.Wrap(err, "element.notifyOwner failed")
 				}
-				err = newOwner.notifyAll(ownedConceptChangeNotification, trans)
+				err = newOwner.notifyObservers(ownedConceptChangeNotification, trans)
 				if err != nil {
 					return errors.Wrap(err, "element.notifyOwner failed")
 				}
 			}
 		}
-	case ConceptChanged, ReferencedConceptChanged, AbstractConceptChanged, RefinedConceptChanged:
+	case ConceptChanged, ReferencedConceptChanged, AbstractConceptChanged, RefinedConceptChanged, IndicatedConceptChanged:
 		owner := ePtr.GetOwningConcept(trans)
 		if owner != nil {
 			ownedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(owner, OwnedConceptChanged, stateChangeNotification, trans)
@@ -970,7 +962,7 @@ func (ePtr *element) notifyOwner(stateChangeNotification *ChangeNotification, tr
 			if err != nil {
 				return errors.Wrap(err, "element.notifyOwner failed")
 			}
-			err = owner.notifyAll(ownedConceptChangeNotification, trans)
+			err = owner.notifyObservers(ownedConceptChangeNotification, trans)
 			if err != nil {
 				return errors.Wrap(err, "element.notifyOwner failed")
 			}
@@ -988,7 +980,7 @@ func (ePtr *element) propagateChange(stateChangeNotification *ChangeNotification
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}
-		err = ePtr.notifyListeners(stateChangeNotification, trans)
+		err = ePtr.notifyPointerOwners(stateChangeNotification, trans)
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}
@@ -996,16 +988,16 @@ func (ePtr *element) propagateChange(stateChangeNotification *ChangeNotification
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}
-		err = ePtr.notifyAll(stateChangeNotification, trans)
+		err = ePtr.notifyObservers(stateChangeNotification, trans)
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}
-		ePtr.uOfD.NotifyAll(stateChangeNotification, trans)
+		ePtr.uOfD.NotifyUofDObservers(stateChangeNotification, trans)
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}
 	case ConceptAdded, ConceptRemoved:
-		ePtr.uOfD.NotifyAll(stateChangeNotification, trans)
+		ePtr.uOfD.NotifyUofDObservers(stateChangeNotification, trans)
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}
@@ -1187,11 +1179,11 @@ func (ePtr *element) SetIsCoreRecursively(hl *Transaction) error {
 		return errors.Wrap(err, "Element.SetIsCoreRecursively failed")
 	}
 	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		el := ePtr.uOfD.GetElement(id.(string))
 		err = el.SetIsCoreRecursively(hl)
 		if err != nil {
+			it.Stop()
 			return errors.Wrap(err, "Element.SetIsCoreRecursively failed")
 		}
 	}
@@ -1348,11 +1340,11 @@ func (ePtr *element) SetReadOnlyRecursively(value bool, hl *Transaction) error {
 		return errors.Wrap(err, "Element.SetReadOnlyRecursively failed")
 	}
 	it := ePtr.uOfD.ownedIDsMap.GetMappedValues(ePtr.ConceptID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		el := ePtr.uOfD.GetElement(id.(string))
 		err = el.SetReadOnlyRecursively(value, hl)
 		if err != nil {
+			it.Stop()
 			return errors.Wrap(err, "Element.SetReadOnlyRecursively failed")
 		}
 	}
@@ -1485,7 +1477,7 @@ type Element interface {
 	IsOwnedConcept(Element, *Transaction) bool
 	IsReadOnly(*Transaction) bool
 	MarshalJSON() ([]byte, error)
-	notifyListeners(*ChangeNotification, *Transaction) error
+	notifyPointerOwners(*ChangeNotification, *Transaction) error
 	notifyOwner(*ChangeNotification, *Transaction) error
 	propagateChange(*ChangeNotification, *Transaction) error
 	removeListener(string, *Transaction)

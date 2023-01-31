@@ -203,7 +203,6 @@ func AppendStringListMember(list core.Element, value string, hl *core.Transactio
 func ClearStringList(list core.Element, hl *core.Transaction) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		memberLiteral := uOfD.GetLiteral(id.(string))
 		if memberLiteral != nil && memberLiteral.IsRefinementOfURI(CrlStringListMemberLiteralURI, hl) {
@@ -234,12 +233,12 @@ func GetFirstMemberLiteral(list core.Element, hl *core.Transaction) (core.Litera
 func GetFirstLiteralForString(list core.Element, value string, hl *core.Transaction) (core.Literal, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		memberLiteral := uOfD.GetLiteral(id.(string))
 		if memberLiteral != nil &&
 			memberLiteral.IsRefinementOfURI(CrlStringListMemberLiteralURI, hl) &&
 			memberLiteral.GetLiteralValue(hl) == value {
+			it.Stop()
 			return memberLiteral, nil
 		}
 	}
@@ -265,7 +264,7 @@ func GetLastMemberLiteral(list core.Element, hl *core.Transaction) (core.Literal
 
 // getStringListReferenceToFirstMemberLiteral returns the reference to the first member literal. It returns an error if list is not a StringList
 func getStringListReferenceToFirstMemberLiteral(list core.Element, hl *core.Transaction) (core.Reference, error) {
-	if IsStringList(list, hl) == false {
+	if !IsStringList(list, hl) {
 		return nil, errors.New("Argument is not a CrlDataStructures.StringList")
 	}
 	refToLiteral := list.GetFirstOwnedReferenceRefinedFromURI(CrlStringListReferenceToFirstMemberLiteralURI, hl)
@@ -277,7 +276,7 @@ func getStringListReferenceToFirstMemberLiteral(list core.Element, hl *core.Tran
 
 // getStringListReferenceToLastMemberLiteral returns the reference to the last member literal. It returns an error if list is not a StringList
 func getStringListReferenceToLastMemberLiteral(list core.Element, hl *core.Transaction) (core.Reference, error) {
-	if IsStringList(list, hl) == false {
+	if !IsStringList(list, hl) {
 		return nil, errors.New("Argument is not a CrlDataStructures.StringList")
 	}
 	return list.GetFirstOwnedReferenceRefinedFromURI(CrlStringListReferenceToLastMemberLiteralURI, hl), nil
@@ -357,10 +356,10 @@ func IsStringList(list core.Element, hl *core.Transaction) bool {
 func IsStringListMember(list core.Element, value string, hl *core.Transaction) bool {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		memberLiteral := uOfD.GetLiteral(id.(string))
 		if memberLiteral != nil && memberLiteral.IsRefinementOfURI(CrlStringListMemberLiteralURI, hl) && memberLiteral.GetLiteralValue(hl) == value {
+			it.Stop()
 			return true
 		}
 	}
@@ -435,7 +434,6 @@ func PrependStringListMember(list core.Element, value string, hl *core.Transacti
 func RemoveStringListMember(list core.Element, value string, hl *core.Transaction) error {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		memberLiteral := uOfD.GetLiteral(id.(string))
 		if memberLiteral != nil && memberLiteral.IsRefinementOfURI(CrlStringListMemberLiteralURI, hl) && memberLiteral.GetLiteralValue(hl) == value {
@@ -456,6 +454,7 @@ func RemoveStringListMember(list core.Element, value string, hl *core.Transactio
 			}
 			// Now delete the member literal
 			uOfD.DeleteElement(memberLiteral, hl)
+			it.Stop()
 			return nil
 		}
 	}

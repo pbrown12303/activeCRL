@@ -68,7 +68,7 @@ func AddListMemberAfter(list core.Element, priorMemberReference core.Reference, 
 		}
 	}
 	listType, _ := GetListType(list, hl)
-	if newMember.IsRefinementOf(listType, hl) == false {
+	if !newMember.IsRefinementOf(listType, hl) {
 		return nil, errors.New("In AddListMemberAfter, newMember is of wrong type")
 	}
 	var newPostMemberReference core.Reference
@@ -125,7 +125,7 @@ func AddListMemberBefore(list core.Element, postMemberReference core.Reference, 
 		return nil, errors.New("In AddListMemberBefore, Supplied postMemberReference does not belong to this list")
 	}
 	listType, _ := GetListType(list, hl)
-	if newMember.IsRefinementOf(listType, hl) == false {
+	if !newMember.IsRefinementOf(listType, hl) {
 		return nil, errors.New("In AddListMemberBefore, NewMember is of wrong type")
 	}
 	var newPriorMemberReference core.Reference
@@ -169,7 +169,7 @@ func AppendListMember(list core.Element, newMember core.Element, hl *core.Transa
 		return nil, errors.New("In AddListMemberBefore, Supplied Element is nil: nil members are not allowed in CRL Lists")
 	}
 	listType, _ := GetListType(list, hl)
-	if newMember.IsRefinementOf(listType, hl) == false {
+	if !newMember.IsRefinementOf(listType, hl) {
 		return nil, errors.New("In AddListMemberBefore, NewMember is of wrong type")
 	}
 	oldLastMemberReference, err := GetLastMemberReference(list, hl)
@@ -226,7 +226,6 @@ func AppendListMember(list core.Element, newMember core.Element, hl *core.Transa
 func ClearList(list core.Element, hl *core.Transaction) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil && memberReference.IsRefinementOfURI(CrlListMemberReferenceURI, hl) {
@@ -257,13 +256,13 @@ func GetFirstMemberReference(list core.Element, hl *core.Transaction) (core.Refe
 func GetFirstReferenceForMember(list core.Element, member core.Element, hl *core.Transaction) (core.Reference, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil &&
 			memberReference.IsRefinementOfURI(CrlListMemberReferenceURI, hl) &&
 			memberReference.GetReferencedConcept(hl) == member {
-			return memberReference.(core.Reference), nil
+			it.Stop()
+			return memberReference, nil
 		}
 	}
 	return nil, nil
@@ -288,7 +287,7 @@ func GetLastMemberReference(list core.Element, hl *core.Transaction) (core.Refer
 
 // getListReferenceToFirstMemberReference returns the reference to the first member reference. It returns an error if list is not a List
 func getListReferenceToFirstMemberReference(list core.Element, hl *core.Transaction) (core.Reference, error) {
-	if IsList(list, hl) == false {
+	if !IsList(list, hl) {
 		return nil, errors.New("Argument is not a CrlDataStructures.List")
 	}
 	refToRef := list.GetFirstOwnedReferenceRefinedFromURI(CrlListReferenceToFirstMemberReferenceURI, hl)
@@ -300,7 +299,7 @@ func getListReferenceToFirstMemberReference(list core.Element, hl *core.Transact
 
 // getListReferenceToLastMemberReference returns the reference to the last member reference. It returns an error if list is not a List
 func getListReferenceToLastMemberReference(list core.Element, hl *core.Transaction) (core.Reference, error) {
-	if IsList(list, hl) == false {
+	if !IsList(list, hl) {
 		return nil, errors.New("Argument is not a CrlDataStructures.List")
 	}
 	return list.GetFirstOwnedReferenceRefinedFromURI(CrlListReferenceToLastMemberReferenceURI, hl), nil
@@ -308,7 +307,7 @@ func getListReferenceToLastMemberReference(list core.Element, hl *core.Transacti
 
 // GetListType returns the element that should be an abstraction of every member. It returns an error if the argument is not a list
 func GetListType(list core.Element, hl *core.Transaction) (core.Element, error) {
-	if list.IsRefinementOfURI(CrlListURI, hl) == false {
+	if !list.IsRefinementOfURI(CrlListURI, hl) {
 		return nil, errors.New("Argument is not a list")
 	}
 	typeReference := list.GetFirstOwnedReferenceRefinedFromURI(CrlListTypeReferenceURI, hl)
@@ -389,10 +388,10 @@ func IsList(list core.Element, hl *core.Transaction) bool {
 func IsListMember(list core.Element, el core.Element, hl *core.Transaction) bool {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil && memberReference.IsRefinementOfURI(CrlListMemberReferenceURI, hl) && memberReference.GetReferencedConcept(hl) == el {
+			it.Stop()
 			return true
 		}
 	}
@@ -414,7 +413,7 @@ func PrependListMember(list core.Element, newMember core.Element, hl *core.Trans
 		return nil, errors.New("In PrependListMember, Supplied Element is nil: nil members are not allowed in CRL Lists")
 	}
 	listType, _ := GetListType(list, hl)
-	if newMember.IsRefinementOf(listType, hl) == false {
+	if !newMember.IsRefinementOf(listType, hl) {
 		return nil, errors.New("In PrependListMember, NewMember is of wrong type")
 	}
 	oldFirstMemberReference, err := GetFirstMemberReference(list, hl)
@@ -471,7 +470,6 @@ func PrependListMember(list core.Element, newMember core.Element, hl *core.Trans
 func RemoveListMember(list core.Element, el core.Element, hl *core.Transaction) error {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil && memberReference.IsRefinementOfURI(CrlListMemberReferenceURI, hl) && memberReference.GetReferencedConcept(hl) == el {
@@ -492,6 +490,7 @@ func RemoveListMember(list core.Element, el core.Element, hl *core.Transaction) 
 			}
 			// Now delete the member reference
 			uOfD.DeleteElement(memberReference, hl)
+			it.Stop()
 			return nil
 		}
 	}
@@ -502,7 +501,7 @@ func RemoveListMember(list core.Element, el core.Element, hl *core.Transaction) 
 // does not already have a list type assigned, i.e. you can't change the type of a list once it has been set.
 // It returns an error if the argument is not a list or if the list already has a type assigned
 func SetListType(list core.Element, listType core.Element, hl *core.Transaction) error {
-	if list.IsRefinementOfURI(CrlListURI, hl) == false {
+	if !list.IsRefinementOfURI(CrlListURI, hl) {
 		return errors.New("Argument is not a list")
 	}
 	typeReference := list.GetFirstOwnedReferenceRefinedFromURI(CrlListTypeReferenceURI, hl)

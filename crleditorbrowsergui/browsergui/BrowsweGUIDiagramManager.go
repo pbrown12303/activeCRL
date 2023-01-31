@@ -872,7 +872,6 @@ func (dmPtr *diagramManager) showOwnedConcepts(elementID string, hl *core.Transa
 		return errors.New("diagramManager.showOwnedConcepts modelConcept not found for elementID " + elementID)
 	}
 	it := modelConcept.GetOwnedConceptIDs(hl).Iterator()
-	defer it.Stop()
 	var offset float64
 	for id := range it.C {
 		child := dmPtr.browserGUI.GetUofD().GetElement(id.(string))
@@ -1076,6 +1075,17 @@ func (dmPtr *diagramManager) Update(notification *core.ChangeNotification, hl *c
 		log.Printf("    diagramManager: Update called with notification: %s ", notification.GetNatureOfChange().String())
 	}
 	switch notification.GetNatureOfChange() {
+	case core.ConceptChanged:
+		beforeState := notification.GetBeforeConceptState()
+		afterState := notification.GetAfterConceptState()
+		oldLabel := beforeState.Label
+		newLabel := afterState.Label
+		if oldLabel != newLabel {
+			_, err := SendNotification("DiagramLabelChanged", afterState.ConceptID, afterState, nil)
+			if err != nil {
+				return errors.Wrap(err, "DiagramManager.Update failed on DiagramLabelChanged call")
+			}
+		}
 	case core.ConceptRemoved:
 		if notification.GetBeforeConceptState() != nil {
 			err := dmPtr.browserGUI.editor.CloseDiagramView(notification.GetBeforeConceptState().ConceptID, hl)
@@ -1085,39 +1095,14 @@ func (dmPtr *diagramManager) Update(notification *core.ChangeNotification, hl *c
 		} else {
 			return errors.New("diagramManager.Update called with ConceptRemoved but beforeConceptState being nil")
 		}
-	case core.OwningConceptChanged:
-		beforeState := notification.GetBeforeConceptState()
-		afterState := notification.GetAfterConceptState()
-		if beforeState == nil || afterState == nil {
-			return errors.New("diagramManager.Update failed: missing before or after state in OwningConceptChanged case")
-		}
-		beforeStateOwnerID := beforeState.OwningConceptID
-		afterStateOwnerID := afterState.OwningConceptID
-		if afterStateOwnerID == "" && beforeStateOwnerID != "" {
-			// If the diagram was the owner but is no longer the owner, then remove the diagram element view
-			additionalParameters := map[string]string{"OwnerID": beforeStateOwnerID}
-			SendNotification("DeleteDiagramElement", beforeState.ConceptID, beforeState, additionalParameters)
-		} else if afterStateOwnerID != "" && beforeStateOwnerID == "" {
-			// TODO verify this code is never called and delete - this work is now done by DiagramElementManager with OwningConceptChanged notification
-			// we have to add the diagram element view
-			newElement := uOfD.GetElement(afterState.ConceptID)
-			newElement.Register(dmPtr.elementManager)
-			if crldiagramdomain.IsDiagramNode(newElement, hl) {
-				additionalParameters := getNodeAdditionalParameters(newElement, hl)
-				_, err := SendNotification("AddDiagramNode", newElement.GetConceptID(hl), afterState, additionalParameters)
-				return err
-			} else if crldiagramdomain.IsDiagramLink(newElement, hl) {
-				additionalParameters := getLinkAdditionalParameters(newElement, hl)
-				_, err := SendNotification("AddDiagramLink", newElement.GetConceptID(hl), afterState, additionalParameters)
-				return err
-			}
-		}
 	case core.OwnedConceptChanged:
-		beforeState := notification.GetUnderlyingChange().GetBeforeConceptState()
-		afterState := notification.GetUnderlyingChange().GetAfterConceptState()
-		afterElement := uOfD.GetElement(afterState.ConceptID)
+		underlyingChange := notification.GetUnderlyingChange()
+		beforeState := underlyingChange.GetBeforeConceptState()
+		afterState := underlyingChange.GetAfterConceptState()
 		if beforeState != nil && afterState != nil {
 			// If it is a link and either source or link target changed
+			// Make sure the diagram link actually exists in the displayed diagram
+			afterElement := uOfD.GetElement(afterState.ConceptID)
 			if crldiagramdomain.IsDiagramLink(afterElement, hl) {
 				additionalParameters := getLinkAdditionalParameters(afterElement, hl)
 				booleanResponse, err := SendNotification("DoesLinkExist", afterState.ConceptID, afterState, additionalParameters)
@@ -1131,9 +1116,31 @@ func (dmPtr *diagramManager) Update(notification *core.ChangeNotification, hl *c
 					}
 				}
 			}
-			if beforeState.Label != afterState.Label {
-				_, err := SendNotification("DiagramLabelChanged", afterState.ConceptID, afterState, map[string]string{})
-				return err
+		}
+		switch underlyingChange.GetNatureOfChange() {
+		case core.OwningConceptChanged:
+			if beforeState == nil || afterState == nil {
+				return errors.New("diagramManager.Update failed: missing before or after state in OwningConceptChanged case")
+			}
+			beforeStateOwnerID := beforeState.OwningConceptID
+			afterStateOwnerID := afterState.OwningConceptID
+			if afterStateOwnerID == "" && beforeStateOwnerID != "" {
+				// If the diagram was the owner but is no longer the owner, then remove the diagram element view
+				additionalParameters := map[string]string{"OwnerID": beforeStateOwnerID}
+				SendNotification("DeleteDiagramElement", beforeState.ConceptID, beforeState, additionalParameters)
+			} else if afterStateOwnerID != "" && beforeStateOwnerID == "" {
+				// we have to add the diagram element view
+				newElement := uOfD.GetElement(afterState.ConceptID)
+				newElement.Register(dmPtr.elementManager)
+				if crldiagramdomain.IsDiagramNode(newElement, hl) {
+					additionalParameters := getNodeAdditionalParameters(newElement, hl)
+					_, err := SendNotification("AddDiagramNode", newElement.GetConceptID(hl), afterState, additionalParameters)
+					return err
+				} else if crldiagramdomain.IsDiagramLink(newElement, hl) {
+					additionalParameters := getLinkAdditionalParameters(newElement, hl)
+					_, err := SendNotification("AddDiagramLink", newElement.GetConceptID(hl), afterState, additionalParameters)
+					return err
+				}
 			}
 		}
 	}

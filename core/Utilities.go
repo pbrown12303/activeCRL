@@ -101,6 +101,7 @@ func RecursivelyEquivalent(e1 Element, hl1 *Transaction, e2 Element, hl2 *Transa
 		child1 := e1.GetUniverseOfDiscourse(hl1).GetElement(childID)
 		child2 := e2.GetUniverseOfDiscourse(hl2).GetElement(childID)
 		if child1 == nil || child2 == nil || !RecursivelyEquivalent(child1, hl1, child2, hl2, print) {
+			it.Stop()
 			return false
 		}
 	}
@@ -150,7 +151,6 @@ func printElement(el Element, prefix string, hl *Transaction) {
 	log.Printf("%s%s", prefix, string(serializedElement))
 	ownedIDs := el.GetUniverseOfDiscourse(hl).ownedIDsMap.GetMappedValues(el.GetConceptID(hl))
 	it := ownedIDs.Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		ownedElement := el.GetUniverseOfDiscourse(hl).GetElement(id.(string))
 		printElement(ownedElement, prefix+"  ", hl)

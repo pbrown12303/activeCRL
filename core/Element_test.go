@@ -2,7 +2,7 @@ package core
 
 import (
 	mapset "github.com/deckarep/golang-set"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2/dsl/core"
 	. "github.com/onsi/gomega"
 )
 
@@ -110,11 +110,11 @@ var _ = Describe("Element internals test", func() {
 				It("should be present in GetOwnedConcepts", func() {
 					found := false
 					it := uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator()
-					defer it.Stop()
 					for id := range it.C {
 						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(hl) == ownedConcept.GetConceptID(hl) {
 							found = true
+							it.Stop()
 						}
 					}
 					Expect(found).To(BeTrue())
@@ -135,11 +135,11 @@ var _ = Describe("Element internals test", func() {
 				It("should not be present in the OwnedConcepts", func() {
 					found := false
 					it := uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator()
-					defer it.Stop()
 					for id := range it.C {
 						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(hl) == ownedConcept.GetConceptID(hl) {
 							found = true
+							it.Stop()
 						}
 					}
 					Expect(found).To(BeFalse())
@@ -174,11 +174,11 @@ var _ = Describe("Element internals test", func() {
 				It("should be present in listeners", func() {
 					found := false
 					it := uOfD.getListenerIDs(el.GetConceptID(hl)).Iterator()
-					defer it.Stop()
 					for id := range it.C {
 						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(hl) == referencingConcept.GetConceptID(hl) {
 							found = true
+							it.Stop()
 						}
 					}
 					Expect(found).To(BeTrue())
@@ -196,11 +196,11 @@ var _ = Describe("Element internals test", func() {
 				It("should not be present in the listeningConcepts", func() {
 					found := false
 					it := uOfD.getListenerIDs(el.GetConceptID(hl)).Iterator()
-					defer it.Stop()
 					for id := range it.C {
 						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(hl) == referencingConcept.GetConceptID(hl) {
 							found = true
+							it.Stop()
 						}
 					}
 					Expect(found).To(BeFalse())

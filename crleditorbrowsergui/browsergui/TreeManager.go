@@ -20,18 +20,20 @@ type treeManager struct {
 func (tmPtr *treeManager) addChildren(el core.Element, hl *core.Transaction) error {
 	uOfD := tmPtr.browserGUI.GetUofD()
 	it := uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		child := uOfD.GetElement(id.(string))
 		if child == nil {
+			it.Stop()
 			return errors.New("In TreeManager.addChildren, no child found for id: " + id.(string))
 		}
 		err := tmPtr.addNode(child, hl)
 		if err != nil {
+			it.Stop()
 			return errors.Wrap(err, "TreeManager.addChildren failed")
 		}
 		err = tmPtr.addChildren(child, hl)
 		if err != nil {
+			it.Stop()
 			return errors.Wrap(err, "TreeManager.addChildren failed")
 		}
 	}
@@ -69,14 +71,15 @@ func (tmPtr *treeManager) addNodeRecursively(el core.Element, hl *core.Transacti
 	}
 	uOfD := tmPtr.browserGUI.GetUofD()
 	it := uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(hl)).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		child := uOfD.GetElement(id.(string))
 		if child == nil {
+			it.Stop()
 			return errors.New("In TreeManager.addNodeRecursively, child not found for id: " + id.(string))
 		}
 		err = tmPtr.addNodeRecursively(child, hl)
 		if err != nil {
+			it.Stop()
 			return errors.Wrap(err, "TreeManager.addNodeRecursively failed")
 		}
 	}

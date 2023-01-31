@@ -18,7 +18,7 @@ var CrlSetTypeReferenceURI = CrlSetURI + "/SetTypeReference"
 // NewSet creates an instance of a set
 func NewSet(uOfD *core.UniverseOfDiscourse, setType core.Element, hl *core.Transaction) (core.Element, error) {
 	if setType == nil {
-		return nil, errors.New("No type specified for set")
+		return nil, errors.New("no type specified for set")
 	}
 	newSet, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlSetURI, hl)
 	typeReference := newSet.GetFirstOwnedReferenceRefinedFromURI(CrlSetTypeReferenceURI, hl)
@@ -33,7 +33,7 @@ func AddSetMember(set core.Element, newMember core.Element, hl *core.Transaction
 		return errors.New("newMember is already a member of the set")
 	}
 	setType, _ := GetSetType(set, hl)
-	if newMember.IsRefinementOf(setType, hl) == false {
+	if !newMember.IsRefinementOf(setType, hl) {
 		return errors.New("NewMember is of wrong type")
 	}
 	newMemberReference, _ := uOfD.CreateReplicateReferenceAsRefinementFromURI(CrlSetMemberReferenceURI, hl)
@@ -46,7 +46,6 @@ func AddSetMember(set core.Element, newMember core.Element, hl *core.Transaction
 func ClearSet(set core.Element, hl *core.Transaction) {
 	uOfD := set.GetUniverseOfDiscourse(hl)
 	it := set.GetOwnedConceptIDs(hl).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil && memberReference.IsRefinementOfURI(CrlSetMemberReferenceURI, hl) {
@@ -57,8 +56,8 @@ func ClearSet(set core.Element, hl *core.Transaction) {
 
 // GetSetType returns the element that should be an abstraction of every member. It returns an error if the argument is not a set
 func GetSetType(set core.Element, hl *core.Transaction) (core.Element, error) {
-	if set.IsRefinementOfURI(CrlSetURI, hl) == false {
-		return nil, errors.New("Argument is not a set")
+	if !set.IsRefinementOfURI(CrlSetURI, hl) {
+		return nil, errors.New("argument is not a set")
 	}
 	typeReference := set.GetFirstOwnedReferenceRefinedFromURI(CrlSetTypeReferenceURI, hl)
 	return typeReference.GetReferencedConcept(hl), nil
@@ -68,10 +67,10 @@ func GetSetType(set core.Element, hl *core.Transaction) (core.Element, error) {
 func IsSetMember(set core.Element, el core.Element, hl *core.Transaction) bool {
 	uOfD := set.GetUniverseOfDiscourse(hl)
 	it := set.GetOwnedConceptIDs(hl).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil && memberReference.IsRefinementOfURI(CrlSetMemberReferenceURI, hl) && memberReference.GetReferencedConcept(hl) == el {
+			it.Stop()
 			return true
 		}
 	}
@@ -82,11 +81,11 @@ func IsSetMember(set core.Element, el core.Element, hl *core.Transaction) bool {
 func RemoveSetMember(set core.Element, el core.Element, hl *core.Transaction) error {
 	uOfD := set.GetUniverseOfDiscourse(hl)
 	it := set.GetOwnedConceptIDs(hl).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		memberReference := uOfD.GetReference(id.(string))
 		if memberReference != nil && memberReference.IsRefinementOfURI(CrlSetMemberReferenceURI, hl) && memberReference.GetReferencedConcept(hl) == el {
 			uOfD.DeleteElement(memberReference, hl)
+			it.Stop()
 			return nil
 		}
 	}

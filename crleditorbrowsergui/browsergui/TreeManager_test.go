@@ -1,7 +1,7 @@
 package browsergui_test
 
 //	"fmt"
-// . "github.com/onsi/ginkgo"
+// . "github.com/onsi/ginkgo/v2/dsl/core"
 // . "github.com/onsi/gomega"
 //	"github.com/sclevine/agouti"
 //	"github.com/pbrown12303/activeCRL/activeCRL/crlEditor/editor"

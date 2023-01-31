@@ -8,7 +8,7 @@ import (
 
 	// "time"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2/dsl/core"
 	. "github.com/onsi/gomega"
 	"github.com/sclevine/agouti"
 	. "github.com/sclevine/agouti/matchers"

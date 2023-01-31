@@ -673,6 +673,14 @@ func IsModelReference(el core.Element, trans *core.Transaction) bool {
 	return el.IsRefinementOfURI(CrlDiagramElementModelReferenceURI, trans)
 }
 
+// IsDisplayLabel returns true if the supplied Literal is the DisplayLabel
+func IsDisplayLabel(el core.Element, trans *core.Transaction) bool {
+	if el == nil {
+		return false
+	}
+	return el.IsRefinementOfURI(CrlDiagramNodeDisplayLabelURI, trans)
+}
+
 // NewDiagram creates a new diagram
 func NewDiagram(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Element, error) {
 	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramURI, trans)
@@ -746,7 +754,6 @@ func SetDisplayLabel(diagramElement core.Element, value string, trans *core.Tran
 	} else {
 		literal.SetLiteralValue(value, trans)
 	}
-	literal.SetLiteralValue(value, trans)
 	updateNodeSize(diagramElement, trans)
 }
 
@@ -1391,13 +1398,15 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 	modelElement := GetReferencedModelElement(diagramElement, trans)
 	switch notification.GetNatureOfChange() {
 	case core.OwnedConceptChanged:
-		if underlyingChange.GetReportingElementID() == diagramElementModelReference.GetConceptID(trans) {
-			// The underlying change is from the model reference
-			// modelReferenceNotification := notification.GetUnderlyingChange()
-			switch underlyingChange.GetNatureOfChange() {
-			case core.ConceptChanged:
+		switch underlyingChange.GetNatureOfChange() {
+		case core.ConceptChanged:
+			if underlyingChange.GetReportingElementID() == diagramElementModelReference.GetConceptID(trans) {
+				// The underlying change is from the model reference
 				updateDiagramElementForModelElementChange(diagramElement, modelElement, trans)
-			case core.ReferencedConceptChanged:
+			}
+		case core.ReferencedConceptChanged:
+			if underlyingChange.GetReportingElementID() == diagramElementModelReference.GetConceptID(trans) {
+				// The underlying change is from the model reference
 				if IsDiagramNode(diagramElement, trans) {
 					currentModelElement := underlyingChange.GetAfterConceptState()
 					previousModelElement := underlyingChange.GetBeforeConceptState()
@@ -1508,8 +1517,15 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 							}
 						}
 					}
-
 				}
+			}
+		case core.IndicatedConceptChanged:
+			indicatedElementChange := underlyingChange.GetUnderlyingChange()
+			indicatedBeforeState := indicatedElementChange.GetBeforeConceptState()
+			indicatedAfterState := indicatedElementChange.GetAfterConceptState()
+			if indicatedBeforeState.Label != indicatedAfterState.Label {
+				SetDisplayLabel(diagramElement, indicatedAfterState.Label, trans)
+				diagramElement.SetLabel(indicatedAfterState.Label, trans)
 			}
 		}
 	case core.ReferencedConceptChanged:

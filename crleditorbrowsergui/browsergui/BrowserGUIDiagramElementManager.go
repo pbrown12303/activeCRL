@@ -155,6 +155,24 @@ func (demPtr *diagramElementManager) Update(changeNotification *core.ChangeNotif
 				}
 				SendNotification("UpdateDiagramNode", diagramElement.GetConceptID(hl), conceptState, additionalParameters)
 			}
+			// case core.OwnedConceptChanged:
+			// 	underlyingChange := changeNotification.GetUnderlyingChange()
+			// 	underlyingReportingElement := uOfD.GetElement(underlyingChange.GetReportingElementID())
+			// 	if crldiagramdomain.IsDisplayLabel(underlyingReportingElement, hl) {
+			// 		underlyingBeforeState := underlyingChange.GetBeforeConceptState()
+			// 		underlyingAfterState := underlyingChange.GetAfterConceptState()
+			// 		beforeDisplayLabel := underlyingBeforeState.LiteralValue
+			// 		afterDisplayLabel := underlyingAfterState.LiteralValue
+			// 		if beforeDisplayLabel != afterDisplayLabel {
+			// 			diagramElement.SetLabel(afterDisplayLabel, hl)
+			// 			additionalParameters := getNodeAdditionalParameters(diagramElement, hl)
+			// 			conceptState, err := core.NewConceptState(diagramElement)
+			// 			if err != nil {
+			// 				return errors.Wrap(err, "DiagramView.go updateDiagrmElementView failed")
+			// 			}
+			// 			SendNotification("UpdateDiagramNode", diagramElement.GetConceptID(hl), conceptState, additionalParameters)
+			// 		}
+			// 	}
 		}
 		return nil
 	} else if crldiagramdomain.IsDiagramLink(diagramElement, hl) {

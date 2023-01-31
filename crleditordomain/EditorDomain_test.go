@@ -1,7 +1,7 @@
 package crleditordomain
 
 import (
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2/dsl/core"
 	. "github.com/onsi/gomega"
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldatastructuresdomain"

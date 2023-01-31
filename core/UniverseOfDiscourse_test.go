@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2/dsl/core"
 	. "github.com/onsi/gomega"
 	uuid "github.com/satori/go.uuid"
 )
@@ -202,7 +202,6 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			child3Suffix := ""
 			child3PrefixFound := false
 			it := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Iterator()
-			defer it.Stop()
 			for id := range it.C {
 				replicateChild := uOfD.GetElement(id.(string))
 				if replicateChild.IsRefinementOf(oChild1, hl) {
@@ -281,7 +280,6 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			var foundChild2Replicate = false
 			var foundChild3Replicate = false
 			it := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Iterator()
-			defer it.Stop()
 			for id := range it.C {
 				replicateChild := uOfD.GetElement(id.(string))
 				if replicateChild.IsRefinementOf(oChild1, hl) {
@@ -353,7 +351,6 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			var foundChild2Replicate = false
 			var foundChild3Replicate = false
 			it := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Iterator()
-			defer it.Stop()
 			for id := range it.C {
 				replicateChild := uOfD.GetElement(id.(string))
 				if replicateChild.IsRefinementOf(oChild1, hl) {
@@ -425,7 +422,6 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			var foundChild2Replicate = false
 			var foundChild3Replicate = false
 			it := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Iterator()
-			defer it.Stop()
 			for id := range it.C {
 				replicateChild := uOfD.GetElement(id.(string))
 				if replicateChild.IsRefinementOf(oChild1, hl) {

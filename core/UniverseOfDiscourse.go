@@ -310,7 +310,6 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, deletedElements ma
 		el.SetOwningConceptID("", hl)
 	}
 	it := uOfDPtr.listenersMap.GetMappedValues(uuid).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		listener := uOfDPtr.GetElement(id.(string))
 		switch typedListener := listener.(type) {
@@ -326,11 +325,11 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, deletedElements ma
 	}
 	// Spread the news
 	conceptRemovedNotification := uOfDPtr.newUofDConceptRemovedNotification(beforeState, hl)
-	err = uOfDPtr.NotifyAll(conceptRemovedNotification, hl)
+	err = uOfDPtr.NotifyUofDObservers(conceptRemovedNotification, hl)
 	if err != nil {
 		return errors.Wrap(err, "UniverseOfDiscourse.deleteElement failed")
 	}
-	err = el.notifyAll(conceptRemovedNotification, hl)
+	err = el.notifyObservers(conceptRemovedNotification, hl)
 	if err != nil {
 		return errors.Wrap(err, "UniverseOfDiscourse.deleteElement failed")
 	}
@@ -371,21 +370,22 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElement(element Element, hl *Transacti
 // DeleteElements removes the elements from the uOfD. Pointers to the elements from elements not being deleted are set to nil.
 func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, hl *Transaction) error {
 	it := elements.Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		el := uOfDPtr.GetElement(id.(string))
 		if el.GetIsCore(hl) {
+			it.Stop()
 			return errors.New("UniverseOfDiscourse.DeleteElements called on a CRL core concept")
 		}
 		if el.GetUniverseOfDiscourse(hl) != uOfDPtr {
+			it.Stop()
 			return errors.New("UniverseOfDiscourse.DeleteElements called on an Element in a different UofD")
 		}
 		if el.IsReadOnly(hl) {
+			it.Stop()
 			return errors.New("UniverseOfDiscourse.DeleteElements called on read-only Element")
 		}
 	}
 	it2 := elements.Iterator()
-	defer it2.Stop()
 	for id := range it2.C {
 		el := uOfDPtr.GetElement(id.(string))
 		if el != nil {
@@ -406,7 +406,10 @@ func (uOfDPtr *UniverseOfDiscourse) Deregister(observer Observer) error {
 func (uOfDPtr *UniverseOfDiscourse) generateConceptID(uri ...string) (string, error) {
 	var conceptID string
 	if len(uri) == 0 || (len(uri) == 1 && uri[0] == "") {
-		newUUID := uuid.NewV4()
+		newUUID, err := uuid.NewV4()
+		if err != nil {
+			return "", errors.Wrap(err, "failure in UniverseOfDiscourse.generateConceptID")
+		}
 		conceptID = newUUID.String()
 	} else {
 		if len(uri) == 1 {
@@ -495,7 +498,6 @@ func (uOfDPtr *UniverseOfDiscourse) GetConceptsOwnedConceptIDs(id string) mapset
 // GetConceptsOwnedConceptIDsRecursively returns the IDs of owned concepts
 func (uOfDPtr *UniverseOfDiscourse) GetConceptsOwnedConceptIDsRecursively(rootID string, descendants mapset.Set, hl *Transaction) {
 	it := uOfDPtr.ownedIDsMap.GetMappedValues(rootID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		descendants.Add(id.(string))
 		uOfDPtr.GetConceptsOwnedConceptIDsRecursively(id.(string), descendants, hl)
@@ -680,11 +682,11 @@ func (uOfDPtr *UniverseOfDiscourse) marshalConceptRecursively(el Element, hl *Tr
 	result = append(result, []byte(",")...)
 	elID := el.GetConceptID(hl)
 	it := uOfDPtr.GetConceptsOwnedConceptIDs(elID).Iterator()
-	defer it.Stop()
 	for id := range it.C {
 		child := uOfDPtr.GetElement(id.(string))
 		marshaledChild, err := uOfDPtr.marshalConceptRecursively(child, hl)
 		if err != nil {
+			it.Stop()
 			return result, err
 		}
 		result = append(result, marshaledChild...)
@@ -713,15 +715,7 @@ func (uOfDPtr *UniverseOfDiscourse) SendConceptChangeNotification(reportingEleme
 	notification.afterConceptState = afterState
 	notification.natureOfChange = ConceptChanged
 	notification.uOfD = uOfDPtr
-	err = uOfDPtr.callAssociatedFunctions(reportingElement, notification, hl)
-	if err != nil {
-		return errors.Wrap(err, "UniverseOfDiscourse.SendConceptChangeNotification failed")
-	}
-	err = uOfDPtr.NotifyAll(notification, hl)
-	if err != nil {
-		return errors.Wrap(err, "UniverseOfDiscourse.SendConceptChangeNotification failed")
-	}
-	err = reportingElement.notifyAll(notification, hl)
+	err = reportingElement.propagateChange(notification, hl)
 	if err != nil {
 		return errors.Wrap(err, "UniverseOfDiscourse.SendConceptChangeNotification failed")
 	}
@@ -964,14 +958,14 @@ func (uOfDPtr *UniverseOfDiscourse) NewRefinement(hl *Transaction, uri ...string
 // 	return &notification
 // }
 
-// NotifyAll passes the notification to all registered Observers
-func (uOfDPtr *UniverseOfDiscourse) NotifyAll(notification *ChangeNotification, hl *Transaction) error {
+// NotifyUofDObservers passes the notification to all registered Observers
+func (uOfDPtr *UniverseOfDiscourse) NotifyUofDObservers(notification *ChangeNotification, hl *Transaction) error {
 	it := uOfDPtr.observers.Iterator()
-	defer it.Stop()
 	for observer := range it.C {
 		err := observer.(Observer).Update(notification, hl)
 		if err != nil {
-			return errors.Wrap(err, "element.NotifyAll failed")
+			it.Stop()
+			return errors.Wrap(err, "element.NotifyUofDObservers failed")
 		}
 	}
 	return nil
@@ -1115,7 +1109,6 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 	originalID := original.GetConceptID(hl)
 	replicateID := replicate.GetConceptID(hl)
 	it := uOfDPtr.GetConceptsOwnedConceptIDs(originalID).Iterator()
-	defer it.Stop()
 	newChildCount := 0
 	for id := range it.C {
 		newChildURI := ""
@@ -1142,7 +1135,6 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 				}
 			}
 		}
-		it2.Stop()
 		// If the replicate child is nil at this point, there is no existing replicate child that corresponds
 		// to the original child - create one.
 		if replicateChild == nil {
@@ -1170,7 +1162,6 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 				if err != nil {
 					return err
 				}
-				// }
 			}
 		}
 	}
@@ -1213,7 +1204,7 @@ func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourse(el Element, hl *Trans
 		conceptAddedNotification := uOfDPtr.newUofDConceptAddedNotification(elementState, hl)
 		el.setUniverseOfDiscourse(uOfDPtr, hl)
 		uOfDPtr.addElement(el, false, hl)
-		uOfDPtr.NotifyAll(conceptAddedNotification, hl)
+		uOfDPtr.NotifyUofDObservers(conceptAddedNotification, hl)
 	}
 	return nil
 }
