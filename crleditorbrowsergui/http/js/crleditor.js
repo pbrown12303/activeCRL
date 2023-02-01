@@ -1282,6 +1282,18 @@ function crlGetJointCellIDFromConceptID(conceptID) {
     return "JointElement" + conceptID
 }
 
+function crlIgnoreSpecialCharacters(inputString) {
+    return inputString
+    .replace(/[\\]/g, '')
+    .replace(/[\/]/g, '')
+    .replace(/[\b]/g, '')
+    .replace(/[\f]/g, '')
+    .replace(/[\n]/g, '')
+    .replace(/[\r]/g, '')
+    .replace(/[\t]/g, '')
+    .replace(/[\"]/g, ''); 
+}
+
 function crlInitializeClient() {
     crlInitializeWebSocket();
     // console.log("Requesting InitializeClient");
@@ -2323,11 +2335,14 @@ function crlSendDebugSettings(enableNotificationTracing, omitHousekeepingCalls, 
 
 function crlSendDefinitionChanged(evt, obj) {
     var xhr = crlCreateEmptyRequest();
+    // This game is required to eliminate special characters
+    var newValue = crlIgnoreSpecialCharacters(evt.currentTarget.value);
+    evt.currentTarget.value = newValue;
     var data = JSON.stringify({
         "Action": "DefinitionChanged",
         "RequestConceptID": crlSelectedConceptID,
         "AdditionalParameters":
-            { "NewValue": evt.currentTarget.value }
+            { "NewValue": newValue }
     });
     crlSendRequest(xhr, data);
 }
@@ -2447,22 +2462,28 @@ function crlSendDiagramElementFormatChanged(diagramElementID, lineColor, bgColor
 
 function crlSendLabelChanged(evt, obj) {
     var xhr = crlCreateEmptyRequest();
+    // This game is required to eliminate special characters
+    var newValue = crlIgnoreSpecialCharacters(evt.currentTarget.value);
+    evt.currentTarget.value = newValue;
     var data = JSON.stringify({
         "Action": "LabelChanged",
         "RequestConceptID": crlSelectedConceptID,
         "AdditionalParameters":
-            { "NewValue": evt.currentTarget.value }
+            { "NewValue": newValue }
     });
     crlSendRequest(xhr, data)
 }
 
 function crlSendLiteralValueChanged(evt, obj) {
     var xhr = crlCreateEmptyRequest();
+    // This game is required to eliminate special characters
+    var newValue = crlIgnoreSpecialCharacters(evt.currentTarget.value);
+    evt.currentTarget.value = newValue;
     var data = JSON.stringify({
         "Action": "LiteralValueChanged",
         "RequestConceptID": crlSelectedConceptID,
         "AdditionalParameters":
-            { "NewValue": evt.currentTarget.value }
+            { "NewValue": newValue }
     });
     crlSendRequest(xhr, data)
 }
