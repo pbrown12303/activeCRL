@@ -788,6 +788,7 @@ func (uOfDPtr *UniverseOfDiscourse) NewTransaction() *Transaction {
 	var hl Transaction
 	hl.readLocks = make(map[string]Element)
 	hl.writeLocks = make(map[string]Element)
+	hl.inProgressCalls = make(map[string]bool)
 	hl.uOfD = uOfDPtr
 	return &hl
 }

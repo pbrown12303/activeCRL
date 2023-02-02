@@ -12,14 +12,15 @@ import (
 )
 
 // Transaction maintains a record of which elements are currently read and write locked and provides facilities
-// for locking additional elements.
+// for locking additional elements. It also manages function calls. Part of the management is the
+// suppression of circular function calls.
 type Transaction struct {
 	sync.Mutex
-	// functionCallManager *functionCallManager
 	readLocks  map[string]Element
 	uOfD       *UniverseOfDiscourse
 	writeLocks map[string]Element
-	// functionCallQueue *pendingFunctionCallQueue
+	// The key to inProgressCalls is the catenation of the functionID and the target element ID
+	inProgressCalls map[string]bool
 }
 
 // callFunction calls the referenced function on the target element
@@ -39,9 +40,15 @@ func (transPtr *Transaction) callFunctions(functionID string, targetElement Elem
 				functionCallGraphs = append(functionCallGraphs, NewFunctionCallGraph(functionID, targetElement, notification, transPtr))
 			}
 		}
-		err := function(targetElement, notification, transPtr)
-		if err != nil {
-			return errors.Wrap(err, "Transaction.callFunctions failed")
+		inProgressKey := functionID + targetElement.GetConceptID(transPtr)
+		if !transPtr.inProgressCalls[inProgressKey] {
+			transPtr.inProgressCalls[inProgressKey] = true
+			err := function(targetElement, notification, transPtr)
+			if err != nil {
+				delete(transPtr.inProgressCalls, inProgressKey)
+				return errors.Wrap(err, "Transaction.callFunctions failed")
+			}
+			delete(transPtr.inProgressCalls, inProgressKey)
 		}
 	}
 	return nil
@@ -51,15 +58,6 @@ func (transPtr *Transaction) callFunctions(functionID string, targetElement Elem
 func (transPtr *Transaction) GetUniverseOfDiscourse() *UniverseOfDiscourse {
 	return transPtr.uOfD
 }
-
-// // IsLocked checks to see whether this HeldLocks structure already has a record of the Element being locked
-// // and returns the result.
-// func (transPtr *HeldLocks) IsLocked(el Element) bool {
-// 	transPtr.Lock()
-// 	defer transPtr.Unlock()
-// 	id := el.getConceptIDNoLock()
-// 	return transPtr.writeLocks[id] != nil
-// }
 
 // ReadLockElement checks to see whether this HeldLocks structure already has a record of the Element being
 // locked, either read or write. If it does, it simply returns. If not, it attempts to acquire the read on the Element and makes
