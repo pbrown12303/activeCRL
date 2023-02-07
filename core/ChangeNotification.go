@@ -21,6 +21,10 @@ type NatureOfChange int
 // ReferencedConceptChanged indicates that a different Element is being referenced
 // AbstractConceptChanged indicates that a different Element is now the abstract concept
 // RefinedConceptChanged indicates that a different Element is now the refined concept
+// ConceptAdded and ConceptRemoved are notifications with respect to the UniverseOfDiscourse
+// OwnedConceptChanged indicates that a notification has been received that one of the Owned Concepts has changed
+// IndicatedConceptChanged indicates that the object being referenced has changed
+// Tickle does not indicate a change: it is intended to trigger any functions associated with the Element being tickled
 const (
 	ConceptAdded             = NatureOfChange(1)
 	ConceptChanged           = NatureOfChange(2)
@@ -31,6 +35,7 @@ const (
 	RefinedConceptChanged    = NatureOfChange(7)
 	OwnedConceptChanged      = NatureOfChange(8)
 	IndicatedConceptChanged  = NatureOfChange(9)
+	Tickle                   = NatureOfChange(10)
 )
 
 func (noc NatureOfChange) String() string {
@@ -53,6 +58,8 @@ func (noc NatureOfChange) String() string {
 		return "OwnedConceptChanged"
 	case IndicatedConceptChanged:
 		return "IndicatedConceptChanged"
+	case Tickle:
+		return "Tickle"
 	}
 	return "Undefined"
 }

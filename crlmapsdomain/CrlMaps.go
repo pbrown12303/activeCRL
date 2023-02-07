@@ -196,6 +196,7 @@ func BuildCrlMapsDomain(uOfD *core.UniverseOfDiscourse, trans *core.Transaction)
 // executeOneToOneMap performs the mapping function
 func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotification, trans *core.Transaction) error {
 	uOfD := trans.GetUniverseOfDiscourse()
+	var err error = nil
 	trans.WriteLockElement(mapInstance)
 
 	// As an initial assumption, it probably doesn't matter what kind of notification has been received.
@@ -258,44 +259,36 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	targetRef := mapInstance.GetFirstOwnedReferenceRefinedFrom(definingTargetRef, trans)
 	// If the target ref does not exist, create it
 	if targetRef == nil {
-		targetRef, _ = uOfD.NewReference(trans)
-		targetRef.SetOwningConcept(mapInstance, trans)
-		targetRefRefinement, _ := uOfD.NewRefinement(trans)
-		targetRefRefinement.SetOwningConcept(targetRef, trans)
-		targetRefRefinement.SetAbstractConcept(definingTargetRef, trans)
-		targetRefRefinement.SetRefinedConcept(targetRef, trans)
+		targetRef, err = uOfD.CreateReplicateReferenceAsRefinement(definingTargetRef, trans)
+		if err != nil {
+			return errors.Wrap(err, "executeOneToOneMap failed")
+		}
 	}
 
 	// Now the target
 	target := targetRef.GetReferencedConcept(trans)
-	switch targetRef.GetReferencedAttributeName(trans) {
+	targetRefAttributeName := targetRef.GetReferencedAttributeName(trans)
+	switch targetRefAttributeName {
 	case core.NoAttribute:
-		if target == nil {
-			// create it
-			switch definingTarget.(type) {
-			case core.Literal:
-				target, _ = uOfD.NewLiteral(trans)
-			case core.Reference:
-				target, _ = uOfD.NewReference(trans)
-			case core.Refinement:
-				target, _ = uOfD.NewRefinement(trans)
-			case core.Element:
-				target, _ = uOfD.NewElement(trans)
-			}
-			targetRefinement, _ := uOfD.NewRefinement(trans)
-			targetRefinement.SetOwningConcept(target, trans)
-			targetRefinement.SetAbstractConcept(definingTarget, trans)
-			targetRefinement.SetRefinedConcept(target, trans)
-			target.SetLabel("Refinement of "+definingTarget.GetLabel(trans)+"From"+source.GetLabel(trans), trans)
-			targetRef.SetReferencedConcept(target, core.NoAttribute, trans)
-		}
-		if mapInstance.GetOwningConcept(trans) != nil {
+		// We're pointing to an element. We need to create one if necessary
+		if target == nil && mapInstance.GetOwningConcept(trans) != nil {
 			if isRootMap(mapInstance, trans) {
-				err := target.SetOwningConcept(mapInstance.GetOwningConcept(trans), trans)
+				targetOwner := mapInstance.GetOwningConcept(trans)
+				target, err = uOfD.NewOwnedElement(targetOwner, "Instance of Target Domain", trans)
 				if err != nil {
 					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 				}
+				_, err = uOfD.NewCompleteRefinement(definingTarget, target, "Refinement of "+definingTarget.GetLabel(trans), trans)
+				if err != nil {
+					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+				}
+				SetTarget(mapInstance, target, core.NoAttribute, trans)
 			} else {
+				target, err = uOfD.CreateReplicateAsRefinement(definingTarget, trans)
+				if err != nil {
+					return errors.Wrap(err, "executeOneToOneMap failed")
+				}
+				SetTarget(mapInstance, target, core.NoAttribute, trans)
 				candidateTargetOwner := GetTarget(mapInstance.GetOwningConcept(trans), trans)
 				if candidateTargetOwner != nil && target.GetOwningConceptID(trans) != candidateTargetOwner.GetConceptID(trans) {
 					abstractTargetOwner := definingTarget.GetOwningConcept(trans)
@@ -309,125 +302,96 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 			}
 		}
 	case core.OwningConceptID, core.LiteralValue, core.ReferencedConceptID, core.AbstractConceptID, core.RefinedConceptID, core.Label, core.Definition:
-		// target = getParentMapTarget(mapInstance, trans)
 		target = getAttributeTarget(mapInstance, trans)
-	}
-	if !target.IsRefinementOf(definingTarget, trans) {
-		return errors.New("In crlmaps.executeOneToOneMap, the found target is not refinement of abstraction target")
-	}
-
-	// Make value assignments as required
-	// If the sourceRef is an attribute value reference, get the source value
-	sourceAttributeName := sourceRef.GetReferencedAttributeName(trans)
-	if sourceAttributeName != core.NoAttribute {
-		var sourceAttributeValue string
-		var sourceAttributeValueConcept core.Element
-		switch sourceAttributeName {
-		case core.ReferencedConceptID:
-			switch sourceElement := source.(type) {
-			case core.Reference:
-				sourceAttributeValue = sourceElement.GetReferencedConceptID(trans)
-				sourceAttributeValueConcept = uOfD.GetElement(sourceAttributeValue)
-			}
-		case core.AbstractConceptID:
-			switch sourceElement := source.(type) {
-			case core.Refinement:
-				sourceAttributeValue = sourceElement.GetAbstractConceptID(trans)
-				sourceAttributeValueConcept = uOfD.GetElement(sourceAttributeValue)
-			}
-		case core.RefinedConceptID:
-			switch sourceElement := source.(type) {
-			case core.Refinement:
-				sourceAttributeValue = sourceElement.GetRefinedConceptID(trans)
-				sourceAttributeValueConcept = uOfD.GetElement(sourceAttributeValue)
-			}
-		case core.OwningConceptID:
-			sourceAttributeValue = source.GetOwningConceptID(trans)
-			sourceAttributeValueConcept = uOfD.GetElement(sourceAttributeValue)
-		case core.LiteralValue:
-			sourceAttributeValue = source.(core.Literal).GetLiteralValue(trans)
-		}
-
-		// The found target is going to be the target of the parent map
-		parentMap := mapInstance.GetOwningConcept(trans)
-		if parentMap == nil {
-			return errors.New("In crlmaps.executeOneToOneMap, parentMap was nil")
-		}
-		foundTarget := GetTarget(parentMap, trans)
-		if foundTarget == nil {
-			// mapping may not have been completed yet
-			return nil
-		}
-
-		var foundTargetAttributeValue string
-		switch source.(type) {
-		case core.Literal:
-			foundTargetAttributeValue = sourceAttributeValue
-		default:
-			sourceAttributeValueConcept = uOfD.GetElement(sourceAttributeValue)
-			if sourceAttributeValueConcept == nil {
-				return errors.New("In crlmaps.executeOneToOneMap, the sourceAttributeValueConcept was not found")
-			}
-			sourceMap := SearchForMapForSource(mapInstance, sourceAttributeValueConcept, trans)
-			if sourceMap != nil {
-				pointerTargetConcept := GetTarget(sourceMap, trans)
-				if pointerTargetConcept != nil {
-					foundTargetAttributeValue = pointerTargetConcept.GetConceptID(trans)
+		SetTarget(mapInstance, target, targetRefAttributeName, trans)
+		// Make value assignments as required
+		// If the sourceRef is an attribute value reference, get the source value
+		sourceAttributeName := sourceRef.GetReferencedAttributeName(trans)
+		if sourceAttributeName != core.NoAttribute {
+			var sourceReferentValue string
+			var sourceReferent core.Element
+			switch sourceAttributeName {
+			case core.ReferencedConceptID:
+				switch sourceElement := source.(type) {
+				case core.Reference:
+					sourceReferentValue = sourceElement.GetReferencedConceptID(trans)
+					sourceReferent = uOfD.GetElement(sourceReferentValue)
 				}
+			case core.AbstractConceptID:
+				switch sourceElement := source.(type) {
+				case core.Refinement:
+					sourceReferentValue = sourceElement.GetAbstractConceptID(trans)
+					sourceReferent = uOfD.GetElement(sourceReferentValue)
+				}
+			case core.RefinedConceptID:
+				switch sourceElement := source.(type) {
+				case core.Refinement:
+					sourceReferentValue = sourceElement.GetRefinedConceptID(trans)
+					sourceReferent = uOfD.GetElement(sourceReferentValue)
+				}
+			case core.OwningConceptID:
+				sourceReferentValue = source.GetOwningConceptID(trans)
+				sourceReferent = uOfD.GetElement(sourceReferentValue)
+			case core.LiteralValue, core.Definition, core.Label:
+				sourceReferentValue = source.(core.Literal).GetLiteralValue(trans)
 			}
-		}
 
-		referencedAttributeName := targetRef.GetReferencedAttributeName(trans)
-		targetRef.SetReferencedConcept(foundTarget, referencedAttributeName, trans)
+			// We now know the source referent value. If it is an Element and we are setting a target pointer,
+			// we need to find the corresponding target referent Element
 
-		switch referencedAttributeName {
-		case core.NoAttribute:
-			// Nothing to be done
-		case core.ReferencedConceptID:
-			// This case is valid only if the target is a reference
-			switch targetElement := target.(type) {
-			case core.Reference:
-				err := targetElement.SetReferencedConceptID(foundTargetAttributeValue, core.NoAttribute, trans)
-				if err != nil {
-					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+			var targetReferent core.Element
+			switch targetRefAttributeName {
+			case core.OwningConceptID, core.ReferencedConceptID, core.RefinedConceptID, core.AbstractConceptID:
+				if sourceReferent == nil {
+					return nil
 				}
-			}
-		case core.AbstractConceptID:
-			switch targetElement := target.(type) {
-			case core.Refinement:
-				err := targetElement.SetAbstractConceptID(foundTargetAttributeValue, trans)
-				if err != nil {
-					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+				targetReferentMap := SearchForMapForSource(mapInstance, sourceReferent, trans)
+				if targetReferentMap == nil {
+					return nil
 				}
-			}
-		case core.RefinedConceptID:
-			// If the targetRef is an attribute value reference, set its value
-			// If the target is a reference, set the referenced elementID
-			switch targetElement := target.(type) {
-			case core.Refinement:
-				err := targetElement.SetRefinedConceptID(foundTargetAttributeValue, trans)
-				if err != nil {
-					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+				targetReferent = GetTarget(targetReferentMap, trans)
+				if targetReferent == nil {
+					return nil
 				}
-			}
-		case core.LiteralValue:
-			switch targetElement := target.(type) {
-			case core.Literal:
-				err := targetElement.SetLiteralValue(foundTargetAttributeValue, trans)
-				if err != nil {
-					return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+				// Now actually assign the values
+				switch targetRefAttributeName {
+				case core.OwningConceptID:
+					target.SetOwningConcept(targetReferent, trans)
+				case core.ReferencedConceptID:
+					switch typedTarget := target.(type) {
+					case core.Reference:
+						typedTarget.SetReferencedConcept(targetReferent, core.NoAttribute, trans)
+					}
+				case core.RefinedConceptID:
+					switch typedTarget := target.(type) {
+					case core.Refinement:
+						typedTarget.SetRefinedConcept(targetReferent, trans)
+					}
+				case core.AbstractConceptID:
+					switch typedTarget := target.(type) {
+					case core.Refinement:
+						typedTarget.SetAbstractConcept(targetReferent, trans)
+					}
 				}
-			}
-		case core.OwningConceptID:
-			err := target.SetOwningConceptID(foundTargetAttributeValue, trans)
-			if err != nil {
-				return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+			case core.Label:
+				target.SetLabel(sourceReferentValue, trans)
+			case core.Definition:
+				target.SetDefinition(sourceReferentValue, trans)
+			case core.LiteralValue:
+				switch typedTarget := target.(type) {
+				case core.Literal:
+					typedTarget.SetLiteralValue(sourceReferentValue, trans)
+				}
 			}
 		}
 	}
 
 	// Now take care of map children.
-	err := instantiateMapChildren(definingMap, mapInstance, source, target, uOfD, trans)
+	err = instantiateMapChildren(definingMap, mapInstance, source, target, uOfD, trans)
+	if err != nil {
+		return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
+	}
+	err = tickleMapChildren(mapInstance, trans)
 	if err != nil {
 		return errors.Wrap(err, "crlmaps.executeOneToOneMap failed")
 	}
@@ -751,3 +715,14 @@ func SetTarget(theMap core.Element, newTarget core.Element, attributeName core.A
 // 	}
 // 	return ref.SetReferencedAttributeName(attributeName, trans)
 // }
+
+func tickleMapChildren(parentInstanceMap core.Element, trans *core.Transaction) error {
+	// for each of the abstractMap's children that is a map
+	for _, childMap := range parentInstanceMap.GetOwnedConceptsRefinedFromURI(CrlMapURI, trans) {
+		err := trans.GetUniverseOfDiscourse().SendTickleNotification(parentInstanceMap, childMap, trans)
+		if err != nil {
+			return errors.Wrap(err, "tickleMapChildren failed")
+		}
+	}
+	return nil
+}

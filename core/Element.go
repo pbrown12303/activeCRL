@@ -911,16 +911,16 @@ func (ePtr *element) notifyPointerOwners(notification *ChangeNotification, hl *T
 }
 
 // notifyOwner informs the owner that the concept has changed state
-func (ePtr *element) notifyOwner(stateChangeNotification *ChangeNotification, trans *Transaction) error {
+func (ePtr *element) notifyOwner(notification *ChangeNotification, trans *Transaction) error {
 	trans.ReadLockElement(ePtr)
-	switch stateChangeNotification.natureOfChange {
+	switch notification.natureOfChange {
 	case OwningConceptChanged:
-		oldOwnerId := stateChangeNotification.beforeConceptState.OwningConceptID
-		newOwnerId := stateChangeNotification.afterConceptState.OwningConceptID
+		oldOwnerId := notification.beforeConceptState.OwningConceptID
+		newOwnerId := notification.afterConceptState.OwningConceptID
 		if oldOwnerId != "" {
 			oldOwner := ePtr.uOfD.GetElement(oldOwnerId)
 			if oldOwner != nil {
-				ownedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(oldOwner, OwnedConceptChanged, stateChangeNotification, trans)
+				ownedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(oldOwner, OwnedConceptChanged, notification, trans)
 				if err != nil {
 					return errors.Wrap(err, "element.notifyOwner failed")
 				}
@@ -937,7 +937,7 @@ func (ePtr *element) notifyOwner(stateChangeNotification *ChangeNotification, tr
 		if newOwnerId != "" {
 			newOwner := ePtr.uOfD.GetElement(newOwnerId)
 			if newOwner != nil {
-				ownedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(newOwner, OwnedConceptChanged, stateChangeNotification, trans)
+				ownedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(newOwner, OwnedConceptChanged, notification, trans)
 				if err != nil {
 					return errors.Wrap(err, "element.notifyOwner failed")
 				}
@@ -954,7 +954,7 @@ func (ePtr *element) notifyOwner(stateChangeNotification *ChangeNotification, tr
 	case ConceptChanged, ReferencedConceptChanged, AbstractConceptChanged, RefinedConceptChanged, IndicatedConceptChanged:
 		owner := ePtr.GetOwningConcept(trans)
 		if owner != nil {
-			ownedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(owner, OwnedConceptChanged, stateChangeNotification, trans)
+			ownedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(owner, OwnedConceptChanged, notification, trans)
 			if err != nil {
 				return errors.Wrap(err, "element.notifyOwner failed")
 			}
@@ -972,34 +972,52 @@ func (ePtr *element) notifyOwner(stateChangeNotification *ChangeNotification, tr
 }
 
 // propagateChange() distributes the change notification to relevant parties
-func (ePtr *element) propagateChange(stateChangeNotification *ChangeNotification, trans *Transaction) error {
+func (ePtr *element) propagateChange(notification *ChangeNotification, trans *Transaction) error {
 	var err error = nil
-	switch stateChangeNotification.natureOfChange {
+	switch notification.natureOfChange {
 	case ConceptChanged, OwningConceptChanged, ReferencedConceptChanged, AbstractConceptChanged, RefinedConceptChanged:
-		err = stateChangeNotification.uOfD.callAssociatedFunctions(ePtr, stateChangeNotification, trans)
+		err = notification.uOfD.callAssociatedFunctions(ePtr, notification, trans)
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}
-		err = ePtr.notifyPointerOwners(stateChangeNotification, trans)
+		err = ePtr.notifyPointerOwners(notification, trans)
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}
-		err = ePtr.notifyOwner(stateChangeNotification, trans)
+		err = ePtr.notifyOwner(notification, trans)
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}
-		err = ePtr.notifyObservers(stateChangeNotification, trans)
+		err = ePtr.notifyObservers(notification, trans)
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}
-		ePtr.uOfD.NotifyUofDObservers(stateChangeNotification, trans)
+		ePtr.uOfD.NotifyUofDObservers(notification, trans)
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}
 	case ConceptAdded, ConceptRemoved:
-		ePtr.uOfD.NotifyUofDObservers(stateChangeNotification, trans)
+		ePtr.uOfD.NotifyUofDObservers(notification, trans)
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
+		}
+	}
+	return nil
+}
+
+// tickle sends the notification to the targetElement. Its sole purpose is to trigger any functions
+// that may be associated with that Element.
+func (ePtr *element) tickle(targetElement Element, notification *ChangeNotification, trans *Transaction) error {
+	var err error = nil
+	switch notification.natureOfChange {
+	case Tickle:
+		err = notification.uOfD.callAssociatedFunctions(targetElement, notification, trans)
+		if err != nil {
+			return errors.Wrap(err, "element.tickle failed")
+		}
+		err = ePtr.notifyObservers(notification, trans)
+		if err != nil {
+			return errors.Wrap(err, "element.trigger failed")
 		}
 	}
 	return nil
@@ -1492,6 +1510,7 @@ type Element interface {
 	SetReadOnlyRecursively(bool, *Transaction) error
 	setUniverseOfDiscourse(*UniverseOfDiscourse, *Transaction)
 	SetURI(string, *Transaction) error
+	tickle(targetElement Element, notification *ChangeNotification, hl *Transaction) error
 	TraceableReadLock(*Transaction)
 	TraceableWriteLock(*Transaction)
 	TraceableReadUnlock(*Transaction)

@@ -179,7 +179,7 @@ func (graphPtr *CrlGraph) addReferencedElementEdge(reference Element, referenced
 	}
 	referencedElementID := "\"" + referencedElement.GetConceptID(hl) + "\""
 	if !graphPtr.gvgraph.IsNode(referencedElementID) {
-		return errors.New("CrlGraph.addReferencedElementEdge called with referencedElement node not present")
+		return nil
 	}
 	refEdgeAttrs := make(map[string]string)
 	refEdgeAttrs["arrowhead"] = "open"
