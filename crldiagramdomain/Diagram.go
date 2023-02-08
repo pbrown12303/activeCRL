@@ -1546,12 +1546,16 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 				}
 			}
 		case core.IndicatedConceptChanged:
-			indicatedElementChange := underlyingChange.GetUnderlyingChange()
-			indicatedBeforeState := indicatedElementChange.GetBeforeConceptState()
-			indicatedAfterState := indicatedElementChange.GetAfterConceptState()
-			if indicatedBeforeState.Label != indicatedAfterState.Label {
-				SetDisplayLabel(diagramElement, indicatedAfterState.Label, trans)
-				diagramElement.SetLabel(indicatedAfterState.Label, trans)
+			// If the reporting element of the underlying change is the model element reference, then
+			// see if the label needs to change
+			if underlyingChange.GetReportingElementID() == diagramElementModelReference.GetConceptID(trans) {
+				conceptChange := underlyingChange.GetUnderlyingChange()
+				modelElementBeforeState := conceptChange.GetBeforeConceptState()
+				modelElementAfterState := conceptChange.GetAfterConceptState()
+				if modelElementBeforeState.Label != modelElementAfterState.Label {
+					SetDisplayLabel(diagramElement, modelElementAfterState.Label, trans)
+					diagramElement.SetLabel(modelElementAfterState.Label, trans)
+				}
 			}
 		}
 	case core.ReferencedConceptChanged:
