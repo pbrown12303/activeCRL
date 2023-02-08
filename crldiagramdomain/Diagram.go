@@ -1536,11 +1536,12 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 					}
 				}
 			} else {
-				// If this is a diagram linke and the underlying reporting element is either its source reference or its target reference
+				// If this is a diagram link and the underlying reporting element is either its source reference or its target reference
 				// and the referenced element is now nil, we need to delete the link
 				if IsDiagramLink(diagramElement, trans) &&
 					(GetLinkSourceReference(diagramElement, trans).GetConceptID(trans) == underlyingReportingElementID ||
-						GetLinkTargetReference(diagramElement, trans).GetConceptID(trans) == underlyingReportingElementID) {
+						GetLinkTargetReference(diagramElement, trans).GetConceptID(trans) == underlyingReportingElementID) &&
+					underlyingChange.GetAfterConceptState().ReferencedConceptID == "" {
 					uOfD.DeleteElement(diagramElement, trans)
 				}
 			}
