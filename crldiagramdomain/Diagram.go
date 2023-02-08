@@ -444,6 +444,14 @@ func GetLinkSource(diagramLink core.Element, trans *core.Transaction) core.Eleme
 	return nil
 }
 
+// GetLinkSourceReferemce is a convenience function for getting the source reference of a link
+func GetLinkSourceReference(diagramLink core.Element, trans *core.Transaction) core.Reference {
+	if diagramLink == nil {
+		return nil
+	}
+	return diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, trans)
+}
+
 // GetLinkTarget is a convenience function for getting the target concept of a link
 func GetLinkTarget(diagramLink core.Element, trans *core.Transaction) core.Element {
 	if diagramLink == nil {
@@ -454,6 +462,14 @@ func GetLinkTarget(diagramLink core.Element, trans *core.Transaction) core.Eleme
 		return targetReference.GetReferencedConcept(trans)
 	}
 	return nil
+}
+
+// GetLinkTargetReference is a convenience function for getting the target reference of a link
+func GetLinkTargetReference(diagramLink core.Element, trans *core.Transaction) core.Reference {
+	if diagramLink == nil {
+		return nil
+	}
+	return diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
 }
 
 // GetNodeHeight is a convenience function for getting the Height value of a node's position
@@ -1405,7 +1421,8 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 				updateDiagramElementForModelElementChange(diagramElement, modelElement, trans)
 			}
 		case core.ReferencedConceptChanged:
-			if underlyingChange.GetReportingElementID() == diagramElementModelReference.GetConceptID(trans) {
+			underlyingReportingElementID := underlyingChange.GetReportingElementID()
+			if underlyingReportingElementID == diagramElementModelReference.GetConceptID(trans) {
 				// The underlying change is from the model reference
 				if IsDiagramNode(diagramElement, trans) {
 					currentModelElement := underlyingChange.GetAfterConceptState()
@@ -1517,6 +1534,14 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 							}
 						}
 					}
+				}
+			} else {
+				// If this is a diagram linke and the underlying reporting element is either its source reference or its target reference
+				// and the referenced element is now nil, we need to delete the link
+				if IsDiagramLink(diagramElement, trans) &&
+					(GetLinkSourceReference(diagramElement, trans).GetConceptID(trans) == underlyingReportingElementID ||
+						GetLinkTargetReference(diagramElement, trans).GetConceptID(trans) == underlyingReportingElementID) {
+					uOfD.DeleteElement(diagramElement, trans)
 				}
 			}
 		case core.IndicatedConceptChanged:

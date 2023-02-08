@@ -881,14 +881,14 @@ func (ePtr *element) notifyObservers(notification *ChangeNotification, hl *Trans
 func (ePtr *element) notifyPointerOwners(notification *ChangeNotification, hl *Transaction) error {
 	hl.ReadLockElement(ePtr)
 	if ePtr.uOfD != nil {
-		indicatedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(ePtr, IndicatedConceptChanged, notification, hl)
-		if err != nil {
-			return errors.Wrap(err, "element.notifyPointerOwners failed")
-		}
 		it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
 		for id := range it.C {
 			listener := ePtr.uOfD.GetElement(id.(string))
 			if listener != nil {
+				indicatedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(listener, IndicatedConceptChanged, notification, hl)
+				if err != nil {
+					return errors.Wrap(err, "element.notifyPointerOwners failed")
+				}
 				err = ePtr.uOfD.callAssociatedFunctions(listener, indicatedConceptChangeNotification, hl)
 				if err != nil {
 					it.Stop()
