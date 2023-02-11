@@ -665,22 +665,8 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 		dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramLink = uOfD.GetElement(linkID)
-		modelElement = crldiagramdomain.GetReferencedModelElement(diagramLink, hl)
-		if modelElement != nil {
-			switch typedModelElement := modelElement.(type) {
-			case core.Reference:
-				reference := typedModelElement
-				if diagramLink == nil {
-					return "", errors.New("diagramManager.refinementLinkChanged called with diagramPointer not found in diagram")
-				}
-				if reference.GetOwningConcept(hl) != modelSource {
-					reference.SetOwningConcept(modelSource, hl)
-				}
-				if reference.GetReferencedConcept(hl) != modelTarget {
-					reference.SetReferencedConcept(modelTarget, attributeName, hl)
-				}
-			}
-		}
+		crldiagramdomain.SetLinkSource(diagramLink, diagramSource, hl)
+		crldiagramdomain.SetLinkTarget(diagramLink, diagramTarget, hl)
 	}
 	dmPtr.browserGUI.editor.SelectElement(modelElement, hl)
 

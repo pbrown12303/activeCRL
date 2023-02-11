@@ -277,7 +277,7 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName Attribu
 	if rPtr.ReferencedConceptID != rcID || rPtr.ReferencedAttributeName != attributeName {
 		if rcID != "" {
 			newReferencedConcept = rPtr.uOfD.GetElement(rcID)
-			switch rPtr.GetReferencedAttributeName(hl) {
+			switch attributeName {
 			case ReferencedConceptID:
 				switch newReferencedConcept.(type) {
 				case Reference:

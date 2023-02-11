@@ -1387,12 +1387,17 @@ func BuildCrlDiagramDomain(uOfD *core.UniverseOfDiscourse, trans *core.Transacti
 	return crlDiagramDomain
 }
 
-// updateDiagramElement updates the diagram element based on changes to the modelElement it represents
+// updateDiagramElement updates the diagram element
 func updateDiagramElement(diagramElement core.Element, notification *core.ChangeNotification, trans *core.Transaction) error {
 	uOfD := trans.GetUniverseOfDiscourse()
 	trans.WriteLockElement(diagramElement)
 	// core Elements should always be ignored
 	if diagramElement.GetIsCore(trans) {
+		return nil
+	}
+	diagram := diagramElement.GetOwningConcept(trans)
+	if diagram == nil {
+		// There is nothing to do
 		return nil
 	}
 	// Suppress circular notifications
@@ -1435,102 +1440,115 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 						}
 					}
 				} else if IsDiagramLink(diagramElement, trans) {
-					diagram := diagramElement.GetOwningConcept(trans)
-					if diagram == nil {
-						// There is nothing to do
-						return nil
+					// First see if the underlying model element has been deleted
+					currentModelElement := underlyingChange.GetAfterConceptState()
+					previousModelElement := underlyingChange.GetBeforeConceptState()
+					currentReferencedModelElementID := ""
+					if currentModelElement != nil {
+						currentReferencedModelElementID = currentModelElement.ReferencedConceptID
 					}
-					oldLinkTarget := GetLinkTarget(diagramElement, trans)
-					oldTargetModelElement := GetReferencedModelElement(oldLinkTarget, trans)
-					switch typedModelElement := modelElement.(type) {
-					case core.Reference:
-						if IsDiagramElementPointer(diagramElement, trans) {
-							newTargetModelElement := typedModelElement.GetReferencedConcept(trans)
-							if oldTargetModelElement != newTargetModelElement {
-								if newTargetModelElement == nil {
-									uOfD.DeleteElement(diagramElement, trans)
-								} else {
-									newTargetDiagramElement := GetFirstElementRepresentingConcept(diagram, newTargetModelElement, trans)
-									SetLinkTarget(diagramElement, newTargetDiagramElement, trans)
+					previousReferencedModelElementID := ""
+					if previousModelElement != nil {
+						previousReferencedModelElementID = previousModelElement.ReferencedConceptID
+					}
+					if currentModelElement != nil && previousModelElement != nil {
+						if currentReferencedModelElementID == "" && previousReferencedModelElementID != "" {
+							// If the underlying model element has been deleted then delete the diagram element
+							uOfD.DeleteElement(diagramElement, trans)
+						} else {
+							// Otherwise we update the diagram element
+							previousReferencedModelElement := uOfD.GetElement(previousReferencedModelElementID)
+							switch typedModelElement := modelElement.(type) {
+							case core.Reference:
+								if IsDiagramElementPointer(diagramElement, trans) {
+									currentReferencedModelElement := typedModelElement.GetReferencedConcept(trans)
+									if previousReferencedModelElement != currentReferencedModelElement {
+										if currentReferencedModelElement == nil {
+											uOfD.DeleteElement(diagramElement, trans)
+										} else {
+											newTargetDiagramElement := GetFirstElementRepresentingConcept(diagram, currentReferencedModelElement, trans)
+											SetLinkTarget(diagramElement, newTargetDiagramElement, trans)
+										}
+									}
+								} else if IsDiagramReferenceLink(diagramElement, trans) {
+									updateDiagramElementForModelElementChange(diagramElement, typedModelElement, trans)
+									SetDisplayLabel(diagramElement, typedModelElement.GetLabel(trans), trans)
+									newModelTarget := typedModelElement.GetReferencedConcept(trans)
+									newModelSource := typedModelElement.GetOwningConcept(trans)
+									if newModelSource == nil || newModelTarget == nil {
+										uOfD.DeleteElement(diagramElement, trans)
+										return nil
+									}
+									currentDiagramSource := GetLinkSource(diagramElement, trans)
+									currentModelSource := GetReferencedModelElement(currentDiagramSource, trans)
+									currentDiagramTarget := GetLinkTarget(diagramElement, trans)
+									currentModelTarget := GetReferencedModelElement(currentDiagramTarget, trans)
+									if currentModelSource != newModelSource {
+										newDiagramSource := GetFirstElementRepresentingConcept(diagram, newModelSource, trans)
+										if newDiagramSource == nil {
+											uOfD.DeleteElement(diagramElement, trans)
+											return nil
+										}
+										SetLinkSource(diagramElement, newDiagramSource, trans)
+									}
+									if currentModelTarget != newModelTarget {
+										newDiagramTarget := GetFirstElementRepresentingConcept(diagram, newModelTarget, trans)
+										if newDiagramTarget == nil {
+											uOfD.DeleteElement(diagramElement, trans)
+											return nil
+										}
+										SetLinkTarget(diagramElement, newDiagramTarget, trans)
+									}
 								}
-							}
-						} else if IsDiagramReferenceLink(diagramElement, trans) {
-							updateDiagramElementForModelElementChange(diagramElement, typedModelElement, trans)
-							SetDisplayLabel(diagramElement, typedModelElement.GetLabel(trans), trans)
-							newModelTarget := typedModelElement.GetReferencedConcept(trans)
-							newModelSource := typedModelElement.GetOwningConcept(trans)
-							if newModelSource == nil || newModelTarget == nil {
-								uOfD.DeleteElement(diagramElement, trans)
-								return nil
-							}
-							currentDiagramSource := GetLinkSource(diagramElement, trans)
-							currentModelSource := GetReferencedModelElement(currentDiagramSource, trans)
-							currentDiagramTarget := GetLinkTarget(diagramElement, trans)
-							currentModelTarget := GetReferencedModelElement(currentDiagramTarget, trans)
-							if currentModelSource != newModelSource {
-								newDiagramSource := GetFirstElementRepresentingConcept(diagram, newModelSource, trans)
-								if newDiagramSource == nil {
-									uOfD.DeleteElement(diagramElement, trans)
-									return nil
+							case core.Refinement:
+								refinement := modelElement.(core.Refinement)
+								if IsDiagramPointer(diagramElement, trans) {
+									var newTargetModelElement core.Element
+									if IsDiagramAbstractPointer(diagramElement, trans) {
+										newTargetModelElement = refinement.GetAbstractConcept(trans)
+									} else if IsDiagramRefinedPointer(diagramElement, trans) {
+										newTargetModelElement = refinement.GetRefinedConcept(trans)
+									} else if IsDiagramOwnerPointer(diagramElement, trans) {
+										newTargetModelElement = refinement.GetOwningConcept(trans)
+									}
+									if previousReferencedModelElement != newTargetModelElement {
+										if newTargetModelElement == nil {
+											uOfD.DeleteElement(diagramElement, trans)
+										} else {
+											newTargetDiagramElement := GetFirstElementRepresentingConcept(diagram, newTargetModelElement, trans)
+											SetLinkTarget(diagramElement, newTargetDiagramElement, trans)
+										}
+									}
+								} else if IsDiagramRefinementLink(diagramElement, trans) {
+									updateDiagramElementForModelElementChange(diagramElement, modelElement, trans)
+									SetDisplayLabel(diagramElement, refinement.GetLabel(trans), trans)
+									newModelTarget := refinement.GetAbstractConcept(trans)
+									newModelSource := refinement.GetRefinedConcept(trans)
+									if newModelTarget == nil || newModelSource == nil {
+										uOfD.DeleteElement(diagramElement, trans)
+										return nil
+									}
+									currentDiagramTarget := GetLinkTarget(diagramElement, trans)
+									currentModelTarget := GetReferencedModelElement(currentDiagramTarget, trans)
+									currentDiagramSource := GetLinkSource(diagramElement, trans)
+									currentModelSource := GetReferencedModelElement(currentDiagramSource, trans)
+									if currentModelTarget != newModelTarget {
+										newDiagramTarget := GetFirstElementRepresentingConcept(diagram, newModelTarget, trans)
+										if newDiagramTarget == nil {
+											uOfD.DeleteElement(diagramElement, trans)
+											return nil
+										}
+										SetLinkTarget(diagramElement, newDiagramTarget, trans)
+									}
+									if currentModelSource != newModelSource {
+										newDiagramSource := GetFirstElementRepresentingConcept(diagram, newModelSource, trans)
+										if newDiagramSource == nil {
+											uOfD.DeleteElement(diagramElement, trans)
+											return nil
+										}
+										SetLinkSource(diagramElement, newDiagramSource, trans)
+									}
 								}
-								SetLinkSource(diagramElement, newDiagramSource, trans)
-							}
-							if currentModelTarget != newModelTarget {
-								newDiagramTarget := GetFirstElementRepresentingConcept(diagram, newModelTarget, trans)
-								if newDiagramTarget == nil {
-									uOfD.DeleteElement(diagramElement, trans)
-									return nil
-								}
-								SetLinkTarget(diagramElement, newDiagramTarget, trans)
-							}
-						}
-					case core.Refinement:
-						refinement := modelElement.(core.Refinement)
-						if IsDiagramPointer(diagramElement, trans) {
-							var newTargetModelElement core.Element
-							if IsDiagramAbstractPointer(diagramElement, trans) {
-								newTargetModelElement = refinement.GetAbstractConcept(trans)
-							} else if IsDiagramRefinedPointer(diagramElement, trans) {
-								newTargetModelElement = refinement.GetRefinedConcept(trans)
-							} else if IsDiagramOwnerPointer(diagramElement, trans) {
-								newTargetModelElement = refinement.GetOwningConcept(trans)
-							}
-							if oldTargetModelElement != newTargetModelElement {
-								if newTargetModelElement == nil {
-									uOfD.DeleteElement(diagramElement, trans)
-								} else {
-									newTargetDiagramElement := GetFirstElementRepresentingConcept(diagram, newTargetModelElement, trans)
-									SetLinkTarget(diagramElement, newTargetDiagramElement, trans)
-								}
-							}
-						} else if IsDiagramRefinementLink(diagramElement, trans) {
-							updateDiagramElementForModelElementChange(diagramElement, modelElement, trans)
-							SetDisplayLabel(diagramElement, refinement.GetLabel(trans), trans)
-							newModelTarget := refinement.GetAbstractConcept(trans)
-							newModelSource := refinement.GetRefinedConcept(trans)
-							if newModelTarget == nil || newModelSource == nil {
-								uOfD.DeleteElement(diagramElement, trans)
-								return nil
-							}
-							currentDiagramTarget := GetLinkTarget(diagramElement, trans)
-							currentModelTarget := GetReferencedModelElement(currentDiagramTarget, trans)
-							currentDiagramSource := GetLinkSource(diagramElement, trans)
-							currentModelSource := GetReferencedModelElement(currentDiagramSource, trans)
-							if currentModelTarget != newModelTarget {
-								newDiagramTarget := GetFirstElementRepresentingConcept(diagram, newModelTarget, trans)
-								if newDiagramTarget == nil {
-									uOfD.DeleteElement(diagramElement, trans)
-									return nil
-								}
-								SetLinkTarget(diagramElement, newDiagramTarget, trans)
-							}
-							if currentModelSource != newModelSource {
-								newDiagramSource := GetFirstElementRepresentingConcept(diagram, newModelSource, trans)
-								if newDiagramSource == nil {
-									uOfD.DeleteElement(diagramElement, trans)
-									return nil
-								}
-								SetLinkSource(diagramElement, newDiagramSource, trans)
 							}
 						}
 					}
@@ -1538,11 +1556,71 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 			} else {
 				// If this is a diagram link and the underlying reporting element is either its source reference or its target reference
 				// and the referenced element is now nil, we need to delete the link
-				if IsDiagramLink(diagramElement, trans) &&
-					(GetLinkSourceReference(diagramElement, trans).GetConceptID(trans) == underlyingReportingElementID ||
-						GetLinkTargetReference(diagramElement, trans).GetConceptID(trans) == underlyingReportingElementID) &&
-					underlyingChange.GetAfterConceptState().ReferencedConceptID == "" {
-					uOfD.DeleteElement(diagramElement, trans)
+				if IsDiagramLink(diagramElement, trans) {
+					// If this is a diagram link and the underlying reporting element is either its source reference or its target reference
+					// and the referenced element is now nil, we need to delete the link
+					underlyingReportingElementIsSourceReference := GetLinkSourceReference(diagramElement, trans).GetConceptID(trans) == underlyingReportingElementID
+					underlyingReportingElementIsTargetReference := GetLinkTargetReference(diagramElement, trans).GetConceptID(trans) == underlyingReportingElementID
+					if (underlyingReportingElementIsSourceReference || underlyingReportingElementIsTargetReference) &&
+						underlyingChange.GetAfterConceptState().ReferencedConceptID == "" {
+						uOfD.DeleteElement(diagramElement, trans)
+					} else {
+						switch underlyingChange.GetNatureOfChange() {
+						case core.ReferencedConceptChanged:
+							if underlyingReportingElementIsTargetReference {
+								// If the link's target has changed, we need to update the underlying model element to reflect the change.
+								// Note that if the target is now null, the preceeding clause will have deleted the element
+								targetDiagramElement := uOfD.GetElement(underlyingChange.GetAfterConceptState().ReferencedConceptID)
+								targetModelElement := GetReferencedModelElement(targetDiagramElement, trans)
+								if IsDiagramOwnerPointer(diagramElement, trans) {
+									modelElement.SetOwningConcept(targetModelElement, trans)
+								}
+								switch typedModelElement := modelElement.(type) {
+								case core.Reference:
+									// Setting the referenced concepts requires knowledge of what is being referenced
+									targetAttribute := core.NoAttribute
+									if IsDiagramElementPointer(targetDiagramElement, trans) {
+										targetAttribute = core.ReferencedConceptID
+									} else if IsDiagramOwnerPointer(targetDiagramElement, trans) {
+										targetAttribute = core.OwningConceptID
+									} else if IsDiagramAbstractPointer(targetDiagramElement, trans) {
+										targetAttribute = core.AbstractConceptID
+									} else if IsDiagramRefinedPointer(targetDiagramElement, trans) {
+										targetAttribute = core.RefinedConceptID
+									}
+									err := typedModelElement.SetReferencedConcept(targetModelElement, targetAttribute, trans)
+									if err != nil {
+										return errors.Wrap(err, "updateDiagramElement failed")
+									}
+								case core.Refinement:
+									if IsDiagramAbstractPointer(diagramElement, trans) {
+										err := typedModelElement.SetAbstractConcept(targetModelElement, trans)
+										if err != nil {
+											return errors.Wrap(err, "updateDiagramElement failed")
+										}
+									} else if IsDiagramRefinedPointer(diagramElement, trans) || IsDiagramRefinementLink(diagramElement, trans) {
+										err := typedModelElement.SetRefinedConcept(targetModelElement, trans)
+										if err != nil {
+											return errors.Wrap(err, "updateDiagramElement failed")
+										}
+									}
+								}
+							} else if underlyingReportingElementIsSourceReference {
+								sourceDiagramElement := uOfD.GetElement(underlyingChange.GetAfterConceptState().ReferencedConceptID)
+								sourceModelElement := GetReferencedModelElement(sourceDiagramElement, trans)
+								switch typedModelElement := modelElement.(type) {
+								case core.Reference:
+									if IsDiagramReferenceLink(diagramElement, trans) {
+										typedModelElement.SetOwningConcept(sourceModelElement, trans)
+									}
+								case core.Refinement:
+									if IsDiagramRefinementLink(diagramElement, trans) {
+										typedModelElement.SetAbstractConcept(sourceModelElement, trans)
+									}
+								}
+							}
+						}
+					}
 				}
 			}
 		case core.IndicatedConceptChanged:

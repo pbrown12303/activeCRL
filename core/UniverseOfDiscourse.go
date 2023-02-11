@@ -1242,13 +1242,13 @@ func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourse(el Element, trans *Tr
 			return errors.New("SetUniverseOfDiscourse called on read-only Element")
 		}
 		uOfDPtr.preChange(el, trans)
+		el.setUniverseOfDiscourse(uOfDPtr, trans)
+		uOfDPtr.addElement(el, false, trans)
 		elementState, err := NewConceptState(el)
 		if err != nil {
 			return errors.Wrap(err, "UniverseOfDiscourse.SetUniverseOfDiscourse failed")
 		}
 		conceptAddedNotification := uOfDPtr.newUofDConceptAddedNotification(elementState, trans)
-		el.setUniverseOfDiscourse(uOfDPtr, trans)
-		uOfDPtr.addElement(el, false, trans)
 		uOfDPtr.NotifyUofDObservers(conceptAddedNotification, trans)
 	}
 	return nil

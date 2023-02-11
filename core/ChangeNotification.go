@@ -94,7 +94,13 @@ func NewConceptState(el Element) (*ConceptState, error) {
 	if el == nil {
 		return nil, errors.New("NewConceptState called with nil element")
 	}
-	mJSON, err := el.MarshalJSON()
+	uOfD := el.getUniverseOfDiscourseNoLock()
+	if uOfD == nil {
+		return nil, errors.New("NewConceptState called with no uOfD in element")
+	}
+	// We need the real type of the element, so we have to retrieve the element from the uOfD
+	typedEl := uOfD.GetElement(el.getConceptIDNoLock())
+	mJSON, err := typedEl.MarshalJSON()
 	if err != nil {
 		return nil, errors.Wrap(err, "NewConceptState failed")
 	}
@@ -103,7 +109,7 @@ func NewConceptState(el Element) (*ConceptState, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "NewConceptState failed")
 	}
-	newConceptState.ConceptType = reflect.TypeOf(el).String()
+	newConceptState.ConceptType = reflect.TypeOf(typedEl).String()
 	return &newConceptState, nil
 }
 
