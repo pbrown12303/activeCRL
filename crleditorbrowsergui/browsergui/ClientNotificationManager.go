@@ -1,13 +1,16 @@
 package browsergui
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/pbrown12303/activeCRL/core"
+	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
 )
 
 // Notification is the data structure sent from the editor server to the browser client via websockets
@@ -27,24 +30,28 @@ func NewNotification() *Notification {
 
 // NotificationResponse is the data structure returned by the browser client in response to a PushRequest
 type NotificationResponse struct {
-	Result          int
-	ErrorMessage    string
-	ResultConceptID string
-	BooleanResult   bool
+	Result          int    `json:"Result"`
+	ErrorMessage    string `json:"ErrorMessage"`
+	ResultConceptID string `json:"ResultConceptID"`
+	BooleanValue    string `json:"BooleanValue"`
 }
 
 // ClientNotificationManager manages notification communications from server to client
 type ClientNotificationManager struct {
 	sync.Mutex
-	conn *websocket.Conn
+	conn           *websocket.Conn
+	context        *context.Context
+	wsServer       *http.Server
+	webSocketReady chan bool
 }
 
 func newClientNotificationManager() *ClientNotificationManager {
 	var cnMgr ClientNotificationManager
+	cnMgr.webSocketReady = make(chan bool)
 	return &cnMgr
 }
 
-func (cnMgr *ClientNotificationManager) setConnection(conn *websocket.Conn) {
+func (cnMgr *ClientNotificationManager) setConnection(conn *websocket.Conn, context *context.Context) {
 	cnMgr.Lock()
 	defer cnMgr.Unlock()
 	cnMgr.conn = conn
@@ -68,7 +75,9 @@ func (cnMgr *ClientNotificationManager) SendNotification(
 	}
 	notification.AdditionalParameters = params
 
-	err := cnMgr.conn.WriteJSON(&notification)
+	ctx := context.Background()
+
+	err := wsjson.Write(ctx, cnMgr.conn, &notification)
 	if err != nil {
 		switch err.(type) {
 		case *websocket.CloseError:
@@ -84,8 +93,7 @@ func (cnMgr *ClientNotificationManager) SendNotification(
 		log.Printf("Sent notification: %#v", notification)
 	}
 	var notificationResponse NotificationResponse
-	cnMgr.conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	err = cnMgr.conn.ReadJSON(&notificationResponse)
+	err = wsjson.Read(ctx, cnMgr.conn, &notificationResponse)
 	if err != nil {
 		switch err.(type) {
 		case *websocket.CloseError:
@@ -106,4 +114,43 @@ func (cnMgr *ClientNotificationManager) SendNotification(
 // SendNotification is a shortcut to the BrowserGUISingleton.GetClientNotificationManager().SendNotification() function
 func SendNotification(notificationString string, conceptID string, conceptState *core.ConceptState, additionalParameters map[string]string) (*NotificationResponse, error) {
 	return BrowserGUISingleton.GetClientNotificationManager().SendNotification(notificationString, conceptID, conceptState, additionalParameters)
+}
+
+func (cnMgr *ClientNotificationManager) startWsServer() {
+	// This function must be idempotent
+	if cnMgr.wsServer == nil {
+		wsMux := http.NewServeMux()
+		wsMux.HandleFunc("/index/ws", cnMgr.wsHandler)
+		cnMgr.wsServer = &http.Server{Addr: "127.0.0.1:8081", Handler: wsMux}
+		go cnMgr.wsServer.ListenAndServe()
+	}
+}
+
+// wsHandler is the handler for WebSocket Notifications
+func (cnMgr *ClientNotificationManager) wsHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("wsHandler invoked")
+
+	options := websocket.AcceptOptions{
+		Subprotocols:         []string{},
+		InsecureSkipVerify:   false,
+		OriginPatterns:       []string{"localhost*"},
+		CompressionMode:      0,
+		CompressionThreshold: 0,
+	}
+	wsConnection, err := websocket.Accept(w, r, &options)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	// We keep the socket open so that notifications can be sent to the browser
+	// defer wsConnection.Close(websocket.StatusInternalError, "wsHandler exited")
+
+	wsContext, _ := context.WithTimeout(r.Context(), time.Second*10)
+	// defer cancel()
+
+	BrowserGUISingleton.GetClientNotificationManager().setConnection(wsConnection, &wsContext)
+	cnMgr.webSocketReady <- true
+
+	log.Printf("wsHandler complete")
+
 }
