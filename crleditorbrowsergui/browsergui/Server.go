@@ -14,14 +14,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 )
 
 var server *http.Server
-var wsServer *http.Server
-var webSocketReady = make(chan bool)
 var requestInProgress bool
 
 // Request is the data structure submitted by the client browser as part of an http request
@@ -60,12 +57,6 @@ type page struct {
 var root = "C:/GoWorkspace/src/github.com/pbrown12303/activeCRL/"
 
 var templates = template.Must(template.ParseFiles(root+"crleditorbrowsergui/http/index.html", root+"crleditorbrowsergui/http/graph.html"))
-
-// WebSocket upgrader
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
 
 // Exit is used as a programmatic shutdown of the server. It is primarily intended to support testing scenarios.
 func Exit() error {
@@ -571,38 +562,7 @@ func sendReply(w http.ResponseWriter, code int, message string, resultConceptID 
 
 // StartServer starts the editor server. This will automatically launch a browser as an interface
 func (bgPtr *BrowserGUI) StartServer() {
-	// var err error
-	// InitializeBrowserGUISingleton(editor, userFolderArg)
-	// err = BrowserGUISingleton.editor.LoadUserPreferences(workspaceArg)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// workspacePath := workspaceArg
-	// if workspacePath == "" {
-	// 	workspacePath = BrowserGUISingleton.GetUserPreferences().WorkspacePath
-	// }
-	// if workspacePath == "" {
-	// 	workspacePath, err2 := BrowserGUISingleton.SelectWorkspace()
-	// 	if err2 != nil {
-	// 		log.Fatal(err2)
-	// 	}
-	// 	err = BrowserGUISingleton.SetWorkspacePath(workspacePath)
-	// 	if err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// }
-	// hl := BrowserGUISingleton.GetUofD().NewHeldLocks()
-	// err = BrowserGUISingleton.LoadWorkspace(hl)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// hl.ReleaseLocksAndWait()
-	// BrowserGUISingleton.GetUofD().SetRecordingUndo(true)
 
-	// go BrowserGUISingleton.InitializeClient()
-
-	// WebSocketts server
-	go startWsServer()
 	// RequestServer
 	mux := http.NewServeMux()
 	mux.HandleFunc("/index/graph.html", graphHandler)
@@ -611,31 +571,19 @@ func (bgPtr *BrowserGUI) StartServer() {
 	mux.Handle("/icons/", http.StripPrefix("/icons/", http.FileServer(http.Dir(root+"crleditorbrowsergui/http/images/icons"))))
 	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir(root+"crleditorbrowsergui/http/css"))))
 	mux.HandleFunc("/index/request", rh.handleRequest)
-
+	server = &http.Server{Addr: "127.0.0.1:8080", Handler: mux}
+	go server.ListenAndServe()
+	// WebSocketts server
+	bgPtr.clientNotificationManager.startWsServer()
 	if bgPtr.startBrowser {
-		openBrowser("http://localhost:8082/index")
+		go openBrowser("http://localhost:8080/index")
 	}
-
-	server = &http.Server{Addr: "127.0.0.1:8082", Handler: mux}
-
-	go checkReady()
-
-	server.ListenAndServe()
+	bgPtr.checkReady() // Make sure the websocket on the client is ready
 }
 
-func checkReady() {
-	rh.ready = <-webSocketReady
+func (bgPtr *BrowserGUI) checkReady() {
+	rh.ready = <-bgPtr.clientNotificationManager.webSocketReady
 	BrowserGUISingleton.SetInitialized()
-}
-
-func startWsServer() {
-	// This function must be idempotent
-	if wsServer == nil {
-		wsMux := http.NewServeMux()
-		wsMux.HandleFunc("/index/ws", wsHandler)
-		wsServer = &http.Server{Addr: "127.0.0.1:8081", Handler: wsMux}
-		wsServer.ListenAndServe()
-	}
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *page) {
@@ -643,22 +591,4 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *page) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-}
-
-var wsConnection *websocket.Conn
-
-// wsHandler is the handler for WebSocket Notifications
-func wsHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("wsHandler invoked")
-	var err error
-	// TODO: Fix the upgrader.CheckOrigin() to do something intelligent
-	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-	wsConnection, err = upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	BrowserGUISingleton.GetClientNotificationManager().setConnection(wsConnection)
-	log.Printf("wsHandler complete")
-	webSocketReady <- true
 }

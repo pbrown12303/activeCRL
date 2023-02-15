@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="browsergui" version="4">
+  <OBJECT>
+    <ID name="browsergui" mc="Standard.Package" uid="bfe981ee-b06e-4e8c-885f-47e968cb732f"/>
+    <PID name="BrowserGUI" mc="Standard.Project" uid="60a460cf-6001-40bc-bb7c-f3d7e04fdb10"/>
+    <ATTRIBUTES>
+      <ATT name="IsInstantiable">false</ATT>
+      <ATT name="IsAbstract">false</ATT>
+      <ATT name="IsLeaf">false</ATT>
+      <ATT name="IsRoot">false</ATT>
+      <ATT name="Visibility">Public</ATT>
+      <ATT name="Name"><![CDATA[browsergui]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <COMP relation="OwnedElement">
+        <COMPID name="Server Architecture" mc="Standard.Package" uid="187c1b41-bf34-4808-a20c-d284a8f5034f"/>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>

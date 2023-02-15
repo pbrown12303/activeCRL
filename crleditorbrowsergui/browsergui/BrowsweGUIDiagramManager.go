@@ -1095,7 +1095,7 @@ func (dmPtr *diagramManager) Update(notification *core.ChangeNotification, hl *c
 				if err != nil {
 					return errors.Wrap(err, "DiagramManager.Update failed on DoesLinkExist call")
 				}
-				if !booleanResponse.BooleanResult {
+				if booleanResponse.BooleanValue == "false" {
 					_, err := SendNotification("AddDiagramLink", afterState.ConceptID, afterState, additionalParameters)
 					if err != nil {
 						return errors.Wrap(err, "DiagramManager.Update failed on AddDiagramLink call")

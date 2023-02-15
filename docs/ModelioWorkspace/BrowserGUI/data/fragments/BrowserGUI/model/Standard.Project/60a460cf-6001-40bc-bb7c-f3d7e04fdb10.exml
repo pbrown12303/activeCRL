@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="BrowserGUI" version="4">
+  <OBJECT>
+    <ID name="BrowserGUI" mc="Standard.Project" uid="60a460cf-6001-40bc-bb7c-f3d7e04fdb10"/>
+    <ATTRIBUTES>
+      <ATT name="ProjectContext"></ATT>
+      <ATT name="ProjectDescr"></ATT>
+      <ATT name="Name"><![CDATA[BrowserGUI]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <COMP relation="Model">
+        <COMPID name="browsergui" mc="Standard.Package" uid="bfe981ee-b06e-4e8c-885f-47e968cb732f"/>
+      </COMP>
+      <COMP relation="DiagramRoot">
+        <COMPID name="BrowserGUI" mc="Infrastructure.DiagramSet" uid="49bd14a4-1ab8-4d59-b4a7-bc6a12454ebc"/>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>

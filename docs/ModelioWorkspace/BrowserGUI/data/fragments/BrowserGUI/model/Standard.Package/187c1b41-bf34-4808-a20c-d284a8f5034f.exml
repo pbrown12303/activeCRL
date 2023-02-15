@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="Server Architecture" version="4">
+  <OBJECT>
+    <ID name="Server Architecture" mc="Standard.Package" uid="187c1b41-bf34-4808-a20c-d284a8f5034f"/>
+    <PID name="browsergui" mc="Standard.Package" uid="bfe981ee-b06e-4e8c-885f-47e968cb732f"/>
+    <ATTRIBUTES>
+      <ATT name="IsInstantiable">false</ATT>
+      <ATT name="IsAbstract">false</ATT>
+      <ATT name="IsLeaf">false</ATT>
+      <ATT name="IsRoot">false</ATT>
+      <ATT name="Visibility">Public</ATT>
+      <ATT name="Name"><![CDATA[Server Architecture]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <COMP relation="OwnedElement">
+        <COMPID name="main thread" mc="Standard.Class" uid="8200891a-fb60-4ed1-bfa5-15374d9fe409"/>
+        <COMPID name="Server" mc="Standard.Class" uid="31bdeed1-da22-4ddb-b816-be2ffe9abd10"/>
+        <COMPID name="Browser" mc="Standard.Class" uid="48858832-172f-4846-bb5d-1c7f30c36a07"/>
+        <COMPID name="wsServer" mc="Standard.Class" uid="d1904e2a-4730-4588-90d2-54b5a01e961a"/>
+        <COMPID name="ServerMux" mc="Standard.Class" uid="d5028a2b-0408-4106-8171-a26c87219d59"/>
+      </COMP>
+      <COMP relation="Product">
+        <COMPID name="Server Architecture" mc="Standard.ClassDiagram" uid="d86c3ee9-17e7-40f0-adb7-d483540dcc24"/>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>

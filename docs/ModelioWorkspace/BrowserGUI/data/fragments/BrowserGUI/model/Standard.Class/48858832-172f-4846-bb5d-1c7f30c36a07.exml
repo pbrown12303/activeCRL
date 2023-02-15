@@ -1,0 +1,102 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="Browser" version="4">
+  <OBJECT>
+    <ID name="Browser" mc="Standard.Class" uid="48858832-172f-4846-bb5d-1c7f30c36a07"/>
+    <PID name="Server Architecture" mc="Standard.Package" uid="187c1b41-bf34-4808-a20c-d284a8f5034f"/>
+    <ATTRIBUTES>
+      <ATT name="IsActive">false</ATT>
+      <ATT name="IsMain">false</ATT>
+      <ATT name="IsElementary">false</ATT>
+      <ATT name="IsAbstract">false</ATT>
+      <ATT name="IsLeaf">false</ATT>
+      <ATT name="IsRoot">false</ATT>
+      <ATT name="Visibility">Public</ATT>
+      <ATT name="Name"><![CDATA[Browser]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <COMP relation="OwnedEnd">
+        <REFOBJ>
+          <ID name="wsServer" mc="Standard.AssociationEnd" uid="fb020100-1422-4c18-bd67-91980e4b0fe5"/>
+        </REFOBJ>
+        <OBJECT>
+          <ID name="server" mc="Standard.AssociationEnd" uid="af156eca-73bf-4985-b4e3-0b925e20d6dd"/>
+          <ATTRIBUTES>
+            <ATT name="Aggregation">KindIsAssociation</ATT>
+            <ATT name="IsChangeable">true</ATT>
+            <ATT name="Changeable">AccesNone</ATT>
+            <ATT name="IsDerived">false</ATT>
+            <ATT name="IsOrdered">false</ATT>
+            <ATT name="IsUnique">false</ATT>
+            <ATT name="MultiplicityMin"><![CDATA[0]]></ATT>
+            <ATT name="MultiplicityMax"><![CDATA[1]]></ATT>
+            <ATT name="Visibility">Public</ATT>
+            <ATT name="IsClass">false</ATT>
+            <ATT name="IsAbstract">false</ATT>
+            <ATT name="Name"><![CDATA[server]]></ATT>
+            <ATT name="status">1970354901745664</ATT>
+          </ATTRIBUTES>
+          <DEPENDENCIES>
+            <COMP relation="Opposite">
+              <REFOBJ>
+                <ID name="" mc="Standard.AssociationEnd" uid="15f16df1-431c-4223-9d33-4f3d5e1be473"/>
+              </REFOBJ>
+            </COMP>
+            <COMP relation="Association">
+              <OBJECT>
+                <ID name="8082" mc="Standard.Association" uid="aa2a5cf9-8e0a-4e88-9734-1f1c129e0707"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[8082]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+            </COMP>
+          </DEPENDENCIES>
+        </OBJECT>
+      </COMP>
+      <COMP relation="OwnedInformationFlow">
+        <OBJECT>
+          <ID name="Post" mc="Standard.InformationFlow" uid="5e50ee6d-13a9-4223-ac75-64f29744fe61"/>
+          <ATTRIBUTES>
+            <ATT name="Name"><![CDATA[Post]]></ATT>
+            <ATT name="status">1970354901745664</ATT>
+          </ATTRIBUTES>
+          <DEPENDENCIES>
+            <LINK relation="InformationSource">
+              <ID name="Browser" mc="Standard.Class" uid="48858832-172f-4846-bb5d-1c7f30c36a07"/>
+            </LINK>
+            <LINK relation="InformationTarget">
+              <ID name="Server" mc="Standard.Class" uid="31bdeed1-da22-4ddb-b816-be2ffe9abd10"/>
+            </LINK>
+            <LINK relation="RealizingFeature">
+              <REFOBJ>
+                <ID name="server" mc="Standard.AssociationEnd" uid="af156eca-73bf-4985-b4e3-0b925e20d6dd"/>
+              </REFOBJ>
+            </LINK>
+          </DEPENDENCIES>
+        </OBJECT>
+        <OBJECT>
+          <ID name="ws Reply" mc="Standard.InformationFlow" uid="d88c8ef0-f0d5-4179-aece-328d25870700"/>
+          <ATTRIBUTES>
+            <ATT name="Name"><![CDATA[ws Reply]]></ATT>
+            <ATT name="status">1970354901745664</ATT>
+          </ATTRIBUTES>
+          <DEPENDENCIES>
+            <LINK relation="InformationSource">
+              <ID name="Browser" mc="Standard.Class" uid="48858832-172f-4846-bb5d-1c7f30c36a07"/>
+            </LINK>
+            <LINK relation="InformationTarget">
+              <ID name="wsServer" mc="Standard.Class" uid="d1904e2a-4730-4588-90d2-54b5a01e961a"/>
+            </LINK>
+            <LINK relation="RealizingFeature">
+              <REFOBJ>
+                <ID name="wsServer" mc="Standard.AssociationEnd" uid="fb020100-1422-4c18-bd67-91980e4b0fe5"/>
+              </REFOBJ>
+            </LINK>
+          </DEPENDENCIES>
+        </OBJECT>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>

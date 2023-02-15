@@ -1284,14 +1284,14 @@ function crlGetJointCellIDFromConceptID(conceptID) {
 
 function crlIgnoreSpecialCharacters(inputString) {
     return inputString
-    .replace(/[\\]/g, '')
-    .replace(/[\/]/g, '')
-    .replace(/[\b]/g, '')
-    .replace(/[\f]/g, '')
-    .replace(/[\n]/g, '')
-    .replace(/[\r]/g, '')
-    .replace(/[\t]/g, '')
-    .replace(/[\"]/g, ''); 
+        .replace(/[\\]/g, '')
+        .replace(/[\/]/g, '')
+        .replace(/[\b]/g, '')
+        .replace(/[\f]/g, '')
+        .replace(/[\n]/g, '')
+        .replace(/[\r]/g, '')
+        .replace(/[\t]/g, '')
+        .replace(/[\"]/g, '');
 }
 
 function crlInitializeClient() {
@@ -2033,7 +2033,7 @@ function crlNotificationUpdateTreeNode(data) {
     crlSendNormalResponse()
 }
 
-var crlNotificationUpdateProperties = function(data){
+var crlNotificationUpdateProperties = function (data) {
     crlUpdateProperties(data);
     crlSendNormalResponse()
 }
@@ -2591,14 +2591,19 @@ function crlSendURIChanged(evt, obj) {
         "AdditionalParameters":
             { "NewValue": evt.currentTarget.value }
     });
-    crlSendRequest(xhr, data)
+    crlSendRequest(xhr, data);
 }
 
 function crlSendBooleanResponse(booleanValue) {
     var data = {};
     data["Result"] = 0;
     data["ErrorMessage"] = "none";
-    data["BooleanValue"] = booleanValue;
+    data["ResultConceptID"] = "foo";
+    if (booleanValue) {
+        data["BooleanValue"] = "true";
+    } else {
+        data["BooleanValue"] = "false";
+    };
     crlWebsocketGlobal.send(JSON.stringify(data));
     console.log(data);
 }
