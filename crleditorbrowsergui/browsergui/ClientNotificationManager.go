@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/pbrown12303/activeCRL/core"
 	"nhooyr.io/websocket"
@@ -33,14 +32,14 @@ type NotificationResponse struct {
 	Result          int    `json:"Result"`
 	ErrorMessage    string `json:"ErrorMessage"`
 	ResultConceptID string `json:"ResultConceptID"`
-	BooleanValue    string `json:"BooleanValue"`
+	BooleanValue    bool   `json:"BooleanValue"`
 }
 
 // ClientNotificationManager manages notification communications from server to client
 type ClientNotificationManager struct {
 	sync.Mutex
 	conn           *websocket.Conn
-	context        *context.Context
+	context        context.Context
 	wsServer       *http.Server
 	webSocketReady chan bool
 }
@@ -49,12 +48,6 @@ func newClientNotificationManager() *ClientNotificationManager {
 	var cnMgr ClientNotificationManager
 	cnMgr.webSocketReady = make(chan bool)
 	return &cnMgr
-}
-
-func (cnMgr *ClientNotificationManager) setConnection(conn *websocket.Conn, context *context.Context) {
-	cnMgr.Lock()
-	defer cnMgr.Unlock()
-	cnMgr.conn = conn
 }
 
 // SendNotification sends the supplied Notification to the client and returns the Notification response.
@@ -137,7 +130,8 @@ func (cnMgr *ClientNotificationManager) wsHandler(w http.ResponseWriter, r *http
 		CompressionMode:      0,
 		CompressionThreshold: 0,
 	}
-	wsConnection, err := websocket.Accept(w, r, &options)
+	var err error
+	cnMgr.conn, err = websocket.Accept(w, r, &options)
 	if err != nil {
 		log.Println(err)
 		return
@@ -145,10 +139,8 @@ func (cnMgr *ClientNotificationManager) wsHandler(w http.ResponseWriter, r *http
 	// We keep the socket open so that notifications can be sent to the browser
 	// defer wsConnection.Close(websocket.StatusInternalError, "wsHandler exited")
 
-	wsContext, _ := context.WithTimeout(r.Context(), time.Second*10)
-	// defer cancel()
+	cnMgr.context = r.Context()
 
-	BrowserGUISingleton.GetClientNotificationManager().setConnection(wsConnection, &wsContext)
 	cnMgr.webSocketReady <- true
 
 	log.Printf("wsHandler complete")

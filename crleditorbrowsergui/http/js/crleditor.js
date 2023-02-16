@@ -1665,7 +1665,7 @@ function crlAddPendingDiagramLink(data) {
         }
         if (link == undefined || link == null) {
             link = crlConstructDiagramLink(data, graph, linkID);
-            crlNotificationUpdateDiagramLink(data);
+            crlUpdateDiagramLink(data);
             return link;
         }
     }
@@ -1696,7 +1696,7 @@ function crlNotificationAddDiagramLink(data) {
             link = crlConstructDiagramLink(data, graph, linkID);
             newlyCreatedLink = link;
         }
-        crlNotificationUpdateDiagramLink(data);
+        crlUpdateDiagramLink(data);
     }
     crlProcessPendingLinks();
     crlSendNormalResponse();
@@ -1858,7 +1858,6 @@ function crlNotificationDoesLinkExist(data) {
         var linkTarget = crlFindCellInGraph(graph, targetJointID)
         if (link != null && linkSource != null && linkTarget != null) {
             crlSendBooleanResponse(true);
-            crlSendNormalResponse();
             return;
         }
     }
@@ -1932,6 +1931,12 @@ function crlNotificationShowTreeNode(data) {
 }
 
 var crlNotificationUpdateDiagramLink = function (data) {
+    crlUpdateDiagramLink(data);
+    crlSendNormalResponse();
+}
+
+
+var crlUpdateDiagramLink = function (data) {
     var concept = data.NotificationConceptState;
     var params = data.AdditionalParameters;
     var owningConceptID = concept.OwningConceptID;
@@ -1968,7 +1973,6 @@ var crlNotificationUpdateDiagramLink = function (data) {
             link.set("target", linkTarget);
         }
     }
-    crlSendNormalResponse()
 }
 
 var crlNotificationUpdateDiagramNode = function (data) {
@@ -2599,11 +2603,7 @@ function crlSendBooleanResponse(booleanValue) {
     data["Result"] = 0;
     data["ErrorMessage"] = "none";
     data["ResultConceptID"] = "foo";
-    if (booleanValue) {
-        data["BooleanValue"] = "true";
-    } else {
-        data["BooleanValue"] = "false";
-    };
+    data["BooleanValue"] = booleanValue;
     crlWebsocketGlobal.send(JSON.stringify(data));
     console.log(data);
 }

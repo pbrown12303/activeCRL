@@ -21,7 +21,7 @@ func main() {
 	log.Println("workspace: ", *workspaceArg)
 	log.Println("user folder: ", *userFolderArg)
 	// For debugging
-	browsergui.CrlLogClientRequests = true
+	// browsergui.CrlLogClientRequests = true
 
 	// Common infrastructure
 	editor := crleditor.NewEditor(*userFolderArg)

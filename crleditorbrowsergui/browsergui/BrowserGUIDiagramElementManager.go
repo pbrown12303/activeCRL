@@ -183,7 +183,7 @@ func (demPtr *diagramElementManager) Update(changeNotification *core.ChangeNotif
 		if err != nil {
 			return errors.Wrap(err, "DiagramElemantManager.Update failed on DoesLinkExist call")
 		}
-		if booleanResponse.BooleanValue == "false" {
+		if !booleanResponse.BooleanValue {
 			_, err := SendNotification("AddDiagramLink", reportingElementState.ConceptID, reportingElementState, additionalParameters)
 			if err != nil {
 				return errors.Wrap(err, "DiagramElementManager.Update failed on AddDiagramLink call")
