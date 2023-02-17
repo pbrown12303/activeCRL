@@ -878,7 +878,7 @@ func (dmPtr *diagramManager) showOwnedConcepts(elementID string, hl *core.Transa
 		ownerPointer := crldiagramdomain.GetOwnerPointer(diagram, diagramElement, hl)
 		if ownerPointer == nil {
 			ownerPointer, _ = crldiagramdomain.NewDiagramOwnerPointer(dmPtr.browserGUI.GetUofD(), hl)
-			crldiagramdomain.SetReferencedModelElement(ownerPointer, modelConcept, hl)
+			crldiagramdomain.SetReferencedModelElement(ownerPointer, child, hl)
 			crldiagramdomain.SetLinkSource(ownerPointer, diagramChildConcept, hl)
 			crldiagramdomain.SetLinkTarget(ownerPointer, diagramElement, hl)
 			ownerPointer.SetOwningConcept(diagram, hl)
