@@ -71,8 +71,8 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	Expect(page.Size(1500, 1000)).To(Succeed())
-	Expect(page.Navigate("http://localhost:8082/index")).To(Succeed())
-	Expect(page).To(HaveURL("http://localhost:8082/index/"))
+	Expect(page.Navigate("http://localhost:8080/index")).To(Succeed())
+	Expect(page).To(HaveURL("http://localhost:8080/index/"))
 	Eventually(func() bool {
 		var initializationComplete bool
 		page.RunScript("return crlInitializationComplete;", nil, &initializationComplete)

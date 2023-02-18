@@ -25,6 +25,12 @@ type Transaction struct {
 
 // callFunction calls the referenced function on the target element
 func (transPtr *Transaction) callFunctions(functionID string, targetElement Element, notification *ChangeNotification) error {
+	// First, check to see whether the targetElement is in the process of being deleted. If it is, simply return: we don't
+	// execute functions on deleted elements
+	targetID := targetElement.GetConceptID(transPtr)
+	if notification.uOfD.inProgressDeletions.Contains(targetID) {
+		return nil
+	}
 	for _, function := range transPtr.uOfD.getFunctions(functionID) {
 		if transPtr.uOfD.getExecutedCalls() != nil {
 			functionCallRecord, err := newFunctionCallRecord(functionID, function, targetElement, notification)
@@ -40,7 +46,7 @@ func (transPtr *Transaction) callFunctions(functionID string, targetElement Elem
 				functionCallGraphs = append(functionCallGraphs, NewFunctionCallGraph(functionID, targetElement, notification, transPtr))
 			}
 		}
-		inProgressKey := functionID + targetElement.GetConceptID(transPtr)
+		inProgressKey := functionID + targetID
 		if !transPtr.inProgressCalls[inProgressKey] {
 			transPtr.inProgressCalls[inProgressKey] = true
 			err := function(targetElement, notification, transPtr)

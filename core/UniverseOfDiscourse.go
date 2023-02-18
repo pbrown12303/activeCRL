@@ -17,15 +17,16 @@ import (
 // UniverseOfDiscourse represents the scope of relevant concepts
 type UniverseOfDiscourse struct {
 	// element
-	computeFunctions functions
-	executedCalls    chan *functionCallRecord
-	undoManager      *undoManager
-	uriUUIDMap       *StringStringMap
-	uuidElementMap   *StringElementMap
-	ownedIDsMap      *OneToNStringMap
-	listenersMap     *OneToNStringMap
-	abstractionsMap  *OneToNStringMap
-	observers        mapset.Set
+	computeFunctions    functions
+	executedCalls       chan *functionCallRecord
+	undoManager         *undoManager
+	uriUUIDMap          *StringStringMap
+	uuidElementMap      *StringElementMap
+	inProgressDeletions mapset.Set
+	ownedIDsMap         *OneToNStringMap
+	listenersMap        *OneToNStringMap
+	abstractionsMap     *OneToNStringMap
+	observers           mapset.Set
 }
 
 // NewUniverseOfDiscourse creates and initializes a new UniverseOfDiscourse
@@ -36,6 +37,7 @@ func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	uOfD.undoManager = newUndoManager(&uOfD)
 	uOfD.uriUUIDMap = NewStringStringMap()
 	uOfD.uuidElementMap = NewStringElementMap()
+	uOfD.inProgressDeletions = mapset.NewSet()
 	uOfD.ownedIDsMap = NewOneToNStringMap()
 	uOfD.listenersMap = NewOneToNStringMap()
 	uOfD.abstractionsMap = NewOneToNStringMap()
@@ -316,7 +318,7 @@ func (uOfDPtr *UniverseOfDiscourse) findFunctions(element Element, notification 
 	return functionIdentifiers
 }
 
-func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, deletedElements mapset.Set, trans *Transaction) error {
+func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, trans *Transaction) error {
 	if el == nil {
 		return errors.New("UniverseOfDiscource removeElement failed elcause Element was nil")
 	}
@@ -390,7 +392,6 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, deletedElements ma
 func (uOfDPtr *UniverseOfDiscourse) DeleteElement(element Element, trans *Transaction) error {
 	id := element.GetConceptID(trans)
 	elements := mapset.NewSet(id)
-	uOfDPtr.GetConceptsOwnedConceptIDsRecursively(id, elements, trans)
 	return uOfDPtr.DeleteElements(elements, trans)
 }
 
@@ -411,14 +412,16 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, trans *T
 			it.Stop()
 			return errors.New("UniverseOfDiscourse.DeleteElements called on read-only Element")
 		}
+		uOfDPtr.inProgressDeletions.Add(id)
+		uOfDPtr.GetConceptsOwnedConceptIDsRecursively(id.(string), uOfDPtr.inProgressDeletions, trans)
 	}
-	it2 := elements.Iterator()
+	it2 := uOfDPtr.inProgressDeletions.Iterator()
 	for id := range it2.C {
 		el := uOfDPtr.GetElement(id.(string))
 		if el != nil {
 			trans.WriteLockElement(el)
 			uOfDPtr.preChange(el, trans)
-			uOfDPtr.deleteElement(el, elements, trans)
+			uOfDPtr.deleteElement(el, trans)
 		}
 	}
 	return nil

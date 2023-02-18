@@ -1468,7 +1468,6 @@ type Element interface {
 	getLabelNoLock() string
 	// getListeners(*HeldLocks) (mapset.Set, error)
 	// GetOwnedConcepts(*HeldLocks) mapset.Set
-	// GetOwnedConceptsRecursively(mapset.Set, *HeldLocks)
 	GetOwnedConcepts(hl *Transaction) map[string]Element
 	GetOwnedConceptIDs(hl *Transaction) mapset.Set
 	GetOwnedConceptsRefinedFrom(Element, *Transaction) map[string]Element
