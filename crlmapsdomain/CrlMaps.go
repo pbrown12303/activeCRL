@@ -615,10 +615,14 @@ func instantiateMapChildren(parentDefiningMap core.Element, parentInstanceMap co
 					if err != nil {
 						return errors.Wrap(err, "crlmaps.instantiateMapChildren failed")
 					}
-					err = newMapInstance.SetLabel("Insance of "+definingChildMap.GetLabel(trans), trans)
+					err = newMapInstance.SetLabel("Instance of "+definingChildMap.GetLabel(trans), trans)
 					if err != nil {
 						return errors.Wrap(err, "crlmaps.instantiateMapChildren failed")
 					}
+				}
+				// During a deletion scenario newMapInstance can be null even though one was instantiated above. Not sure why
+				if newMapInstance == nil {
+					return errors.New("in crlmaps.instantiateMapChildred, newMapInstance is nil just after creating it")
 				}
 				newSourceRef := newMapInstance.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, trans)
 				if newSourceRef == nil {

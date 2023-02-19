@@ -22,7 +22,7 @@ type UniverseOfDiscourse struct {
 	undoManager         *undoManager
 	uriUUIDMap          *StringStringMap
 	uuidElementMap      *StringElementMap
-	inProgressDeletions mapset.Set
+	inProgressDeletions *StringElementMap
 	ownedIDsMap         *OneToNStringMap
 	listenersMap        *OneToNStringMap
 	abstractionsMap     *OneToNStringMap
@@ -37,7 +37,7 @@ func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	uOfD.undoManager = newUndoManager(&uOfD)
 	uOfD.uriUUIDMap = NewStringStringMap()
 	uOfD.uuidElementMap = NewStringElementMap()
-	uOfD.inProgressDeletions = mapset.NewSet()
+	uOfD.inProgressDeletions = NewStringElementMap()
 	uOfD.ownedIDsMap = NewOneToNStringMap()
 	uOfD.listenersMap = NewOneToNStringMap()
 	uOfD.abstractionsMap = NewOneToNStringMap()
@@ -400,6 +400,9 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, trans *T
 	it := elements.Iterator()
 	for id := range it.C {
 		el := uOfDPtr.GetElement(id.(string))
+		if el == nil {
+			break
+		}
 		if el.GetIsCore(trans) {
 			it.Stop()
 			return errors.New("UniverseOfDiscourse.DeleteElements called on a CRL core concept")
@@ -412,18 +415,25 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, trans *T
 			it.Stop()
 			return errors.New("UniverseOfDiscourse.DeleteElements called on read-only Element")
 		}
-		uOfDPtr.inProgressDeletions.Add(id)
-		uOfDPtr.GetConceptsOwnedConceptIDsRecursively(id.(string), uOfDPtr.inProgressDeletions, trans)
+		uOfDPtr.inProgressDeletions.SetEntry(id.(string), el)
+		descendants := mapset.NewSet()
+		uOfDPtr.GetConceptsOwnedConceptIDsRecursively(id.(string), descendants, trans)
+		it3 := descendants.Iterator()
+		for descendantId := range it3.C {
+			descendant := uOfDPtr.GetElement(descendantId.(string))
+			if descendant != nil {
+				uOfDPtr.inProgressDeletions.SetEntry(descendantId.(string), descendant)
+			}
+		}
 	}
-	it2 := uOfDPtr.inProgressDeletions.Iterator()
-	for id := range it2.C {
-		el := uOfDPtr.GetElement(id.(string))
+	for _, el := range uOfDPtr.inProgressDeletions.CopyMap() {
 		if el != nil {
 			trans.WriteLockElement(el)
 			uOfDPtr.preChange(el, trans)
 			uOfDPtr.deleteElement(el, trans)
 		}
 	}
+	uOfDPtr.inProgressDeletions.Clear()
 	return nil
 }
 

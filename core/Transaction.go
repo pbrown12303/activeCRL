@@ -28,7 +28,7 @@ func (transPtr *Transaction) callFunctions(functionID string, targetElement Elem
 	// First, check to see whether the targetElement is in the process of being deleted. If it is, simply return: we don't
 	// execute functions on deleted elements
 	targetID := targetElement.GetConceptID(transPtr)
-	if notification.uOfD.inProgressDeletions.Contains(targetID) {
+	if notification.uOfD.inProgressDeletions.GetEntry(targetID) != nil {
 		return nil
 	}
 	for _, function := range transPtr.uOfD.getFunctions(functionID) {
