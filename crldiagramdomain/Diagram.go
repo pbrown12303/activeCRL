@@ -256,7 +256,7 @@ func GetDisplayLabel(diagramElement core.Element, trans *core.Transaction) strin
 	return ""
 }
 
-// GetAbstractionDisplayLabel is a convenience function for getting the DisplayLabel value of a node's position
+// GetAbstractionDisplayLabel is a convenience function for getting the AbstractionDisplayLabel value for a node
 func GetAbstractionDisplayLabel(diagramElement core.Element, trans *core.Transaction) string {
 	if diagramElement == nil {
 		return ""
@@ -742,7 +742,7 @@ func NewDiagramRefinedPointer(uOfD *core.UniverseOfDiscourse, trans *core.Transa
 	return uOfD.CreateReplicateAsRefinementFromURI(CrlDiagramRefinedPointerURI, trans)
 }
 
-// SetAbstractionDisplayLabel is a function on a CrlDiagramNode that sets the display label of the diagram node
+// SetAbstractionDisplayLabel is a function on a CrlDiagramNode that sets the abstraction display label of the diagram node
 func SetAbstractionDisplayLabel(diagramElement core.Element, value string, trans *core.Transaction) {
 	if diagramElement == nil {
 		return
@@ -895,6 +895,7 @@ func SetReferencedModelElement(diagramElement core.Element, el core.Element, tra
 		return
 	}
 	reference.SetReferencedConcept(el, core.NoAttribute, trans)
+	updateDiagramElementForModelElementChange(diagramElement, el, trans)
 }
 
 // BuildCrlDiagramDomain builds the CrlDiagram concept space and adds it to the uOfD
@@ -1627,13 +1628,7 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 			// If the reporting element of the underlying change is the model element reference, then
 			// see if the label needs to change
 			if underlyingChange.GetReportingElementID() == diagramElementModelReference.GetConceptID(trans) {
-				conceptChange := underlyingChange.GetUnderlyingChange()
-				modelElementBeforeState := conceptChange.GetBeforeConceptState()
-				modelElementAfterState := conceptChange.GetAfterConceptState()
-				if modelElementBeforeState.Label != modelElementAfterState.Label {
-					SetDisplayLabel(diagramElement, modelElementAfterState.Label, trans)
-					diagramElement.SetLabel(modelElementAfterState.Label, trans)
-				}
+				updateDiagramElementForModelElementChange(diagramElement, modelElement, trans)
 			}
 		}
 	case core.ReferencedConceptChanged:

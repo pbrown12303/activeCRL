@@ -47,7 +47,8 @@ func (transPtr *Transaction) callFunctions(functionID string, targetElement Elem
 			}
 		}
 		inProgressKey := functionID + targetID
-		if !transPtr.inProgressCalls[inProgressKey] {
+		_, inProgress := transPtr.inProgressCalls[inProgressKey]
+		if !inProgress {
 			transPtr.inProgressCalls[inProgressKey] = true
 			err := function(targetElement, notification, transPtr)
 			if err != nil {

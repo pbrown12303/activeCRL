@@ -248,11 +248,11 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	// Check to see whether the source reference exists and references an element of the correct type
 	sourceRef := mapInstance.GetFirstOwnedReferenceRefinedFrom(definingSourceRef, trans)
 	if sourceRef == nil {
-		return nil
-	}
-	source := sourceRef.GetReferencedConcept(trans)
-	if source == nil || !source.IsRefinementOf(definingSource, trans) {
-		return nil
+		sourceRef, err = uOfD.CreateReplicateReferenceAsRefinement(definingSourceRef, trans)
+		sourceRef.SetOwningConcept(mapInstance, trans)
+		if err != nil {
+			return errors.Wrap(err, "executeOneToOneMap failed")
+		}
 	}
 
 	// Now explore the targetRef
@@ -260,12 +260,17 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	// If the target ref does not exist, create it
 	if targetRef == nil {
 		targetRef, err = uOfD.CreateReplicateReferenceAsRefinement(definingTargetRef, trans)
+		targetRef.SetOwningConcept(mapInstance, trans)
 		if err != nil {
 			return errors.Wrap(err, "executeOneToOneMap failed")
 		}
 	}
 
-	// Now the target
+	// Now the source and target
+	source := sourceRef.GetReferencedConcept(trans)
+	if source == nil || !source.IsRefinementOf(definingSource, trans) {
+		return nil
+	}
 	target := targetRef.GetReferencedConcept(trans)
 	targetRefAttributeName := targetRef.GetReferencedAttributeName(trans)
 	switch targetRefAttributeName {
@@ -582,10 +587,6 @@ func instantiateMapChildren(parentDefiningMap core.Element, parentInstanceMap co
 				// in which the owner of the childMap has not yet been assigned to the correct owner. This is not an error - it is an expected condition
 				// If it is not, we then perform a secondary check to see whether the parent's map source has a child reference that is a refinement
 				// of the abstractChildMapSource.
-
-				// BUG There is a flaw in the following logic. The logic seems to assume that the reference to the owner pointer is a reference to the concept that
-				// owns the pointer, while the reality is that the referenced conecpt is the concept to which the pointer refers. The assumption appears to be
-				// the correct logic, so the reference to the pointer needs to be fixed.
 
 				foundChildSource := parentInstanceMapSource // assume it's going to be the parent map source
 				if !parentInstanceMapSource.IsRefinementOf(definingChildMapSource, trans) {
