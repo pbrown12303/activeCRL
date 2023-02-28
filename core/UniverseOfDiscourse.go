@@ -476,6 +476,11 @@ func (uOfDPtr *UniverseOfDiscourse) GetElement(conceptID string) Element {
 	return uOfDPtr.uuidElementMap.GetEntry(conceptID)
 }
 
+// GetElementLabel returns the label of the Element with the conceptID
+func (uOfDPtr *UniverseOfDiscourse) GetElementLabel(conceptID string) string {
+	return uOfDPtr.uuidElementMap.GetEntry(conceptID).getLabelNoLock()
+}
+
 // GetElements returns the Elements in the uOfD mapped by their ConceptIDs
 func (uOfDPtr *UniverseOfDiscourse) GetElements() map[string]Element {
 	return uOfDPtr.uuidElementMap.CopyMap()
@@ -594,6 +599,18 @@ func (uOfDPtr *UniverseOfDiscourse) GetRootElements(trans *Transaction) map[stri
 		}
 	}
 	return rootElements
+}
+
+// GetRootElementIDs returns all elements that do not have owners
+func (uOfDPtr *UniverseOfDiscourse) GetRootElementIDs() []string {
+	allElements := uOfDPtr.GetElements()
+	var ids []string
+	for id, el := range allElements {
+		if el.getOwningConceptIDNoLock() == "" {
+			ids = append(ids, id)
+		}
+	}
+	return ids
 }
 
 func (uOfDPtr *UniverseOfDiscourse) getURIUUIDMap() *StringStringMap {

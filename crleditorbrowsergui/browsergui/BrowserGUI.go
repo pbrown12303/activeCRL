@@ -38,6 +38,17 @@ type BrowserGUI struct {
 	treeManager               *treeManager
 	propertyManager           *propertyManager
 	workingDomain             core.Element
+	// TODO Remove this when fyne transaction approach is determined
+	inProgressTransaction *core.Transaction
+}
+
+// TODO Remove these methods when fyne transaction approach is determined
+func (bgPtr *BrowserGUI) GetInProgressTransaction() *core.Transaction {
+	return bgPtr.inProgressTransaction
+}
+
+func (bgPtr *BrowserGUI) SetInProgressTransaction(trans *core.Transaction) {
+	bgPtr.inProgressTransaction = trans
 }
 
 // InitializeBrowserGUISingleton initializes the BrowserGUI singleton instance. It should be called once

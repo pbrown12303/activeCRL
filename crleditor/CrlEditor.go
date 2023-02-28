@@ -25,6 +25,8 @@ type UserPreferences struct {
 	DropDiagramRefinementAsLink bool
 }
 
+var CrlEditorSingleton *Editor
+
 // Editor manages one or more CrlEditors
 type Editor struct {
 	currentSelection            core.Element

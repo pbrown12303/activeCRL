@@ -635,6 +635,11 @@ func (ePtr *element) getOwningConceptNoLock() Element {
 	return nil
 }
 
+// getOwningConceptIDNoLock returns the Element representing the concept that owns this one (if any)
+func (ePtr *element) getOwningConceptIDNoLock() string {
+	return ePtr.OwningConceptID
+}
+
 // GetUniverseOfDiscourse returns the UniverseOfDiscourse in which the element instance resides
 func (ePtr *element) GetUniverseOfDiscourse(hl *Transaction) *UniverseOfDiscourse {
 	hl.ReadLockElement(ePtr)
@@ -1483,6 +1488,7 @@ type Element interface {
 	GetOwningConceptID(*Transaction) string
 	GetOwningConcept(*Transaction) Element
 	getOwningConceptNoLock() Element
+	getOwningConceptIDNoLock() string
 	GetUniverseOfDiscourse(*Transaction) *UniverseOfDiscourse
 	getUniverseOfDiscourseNoLock() *UniverseOfDiscourse
 	GetURI(*Transaction) string

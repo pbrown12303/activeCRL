@@ -2,38 +2,59 @@ package fynegui
 
 import (
 	"fmt"
-	"image/color"
 
-	"fyne.io/fyne"
-	"fyne.io/fyne/app"
-	"fyne.io/fyne/canvas"
-	"fyne.io/fyne/layout"
-	"fyne.io/fyne/widget"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/widget"
 
 	"github.com/pbrown12303/activeCRL/core"
+	"github.com/pbrown12303/activeCRL/crleditor"
+	"github.com/pbrown12303/activeCRL/crlfynebindings"
 )
+
+func getUofD() *core.UniverseOfDiscourse {
+	return crleditor.CrlEditorSingleton.GetUofD()
+}
 
 // FyneGUI is the Crl Editor built with Fyne
 type FyneGUI struct {
-	app         fyne.App
-	window      fyne.Window
-	treeManager *FyneTreeManager
+	app             fyne.App
+	window          fyne.Window
+	treeManager     *FyneTreeManager
+	propertyManager *FynePropertyManager
 }
 
 // NewFyneGUI returns an initialized FyneGUI
-func NewFyneGUI() *FyneGUI {
+func NewFyneGUI(crleditor *crleditor.Editor) *FyneGUI {
 	var editor FyneGUI
-	editor.treeManager = NewFyneTreeManager()
 	editor.app = app.New()
+	crlfynebindings.InitBindings()
+	editor.app.Settings().SetTheme(&fyneGuiTheme{})
+	editor.treeManager = NewFyneTreeManager()
+	editor.propertyManager = NewFynePropertyManager()
 	editor.window = editor.app.NewWindow("Crl Editor")
 	editor.window.SetMainMenu(buildCrlFyneEditorMenu(editor.window))
 	editor.window.SetMaster()
 
+	// TODO Binding experiments - clean up after
+	str := binding.NewString()
+	str.Set("Hi!")
+
 	top := widget.NewLabel("top bar")
 	left := editor.treeManager.tree
-	middle := canvas.NewText("content", color.White)
-	content := fyne.NewContainerWithLayout(layout.NewBorderLayout(top, nil, left, nil),
-		top, left, middle)
+
+	// TODO Binding experiment - clean up
+	testWidgets := container.NewVBox(
+		widget.NewLabelWithData(str),
+		widget.NewEntryWithData(str),
+	)
+
+	center := container.NewBorder(nil, editor.propertyManager.properties, nil, nil, testWidgets)
+
+	// center := canvas.NewText("content", color.Black)
+	content := container.NewBorder(top, nil, left, nil, center)
 	editor.window.SetContent(content)
 	return &editor
 }
