@@ -6,8 +6,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/data/binding"
-	"fyne.io/fyne/v2/widget"
 
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crleditor"
@@ -21,9 +19,10 @@ func getUofD() *core.UniverseOfDiscourse {
 // FyneGUI is the Crl Editor built with Fyne
 type FyneGUI struct {
 	app             fyne.App
-	window          fyne.Window
-	treeManager     *FyneTreeManager
+	drawingManager  *FyneDrawingManager
 	propertyManager *FynePropertyManager
+	treeManager     *FyneTreeManager
+	window          fyne.Window
 }
 
 // NewFyneGUI returns an initialized FyneGUI
@@ -34,27 +33,16 @@ func NewFyneGUI(crleditor *crleditor.Editor) *FyneGUI {
 	editor.app.Settings().SetTheme(&fyneGuiTheme{})
 	editor.treeManager = NewFyneTreeManager()
 	editor.propertyManager = NewFynePropertyManager()
+	editor.drawingManager = NewFyneDrawingManager()
 	editor.window = editor.app.NewWindow("Crl Editor")
 	editor.window.SetMainMenu(buildCrlFyneEditorMenu(editor.window))
 	editor.window.SetMaster()
 
-	// TODO Binding experiments - clean up after
-	str := binding.NewString()
-	str.Set("Hi!")
+	leftSide := container.NewVSplit(editor.treeManager.tree, editor.propertyManager.properties)
+	drawingArea := editor.drawingManager.GetDrawingArea()
 
-	top := widget.NewLabel("top bar")
-	left := editor.treeManager.tree
+	content := container.NewHSplit(leftSide, drawingArea)
 
-	// TODO Binding experiment - clean up
-	testWidgets := container.NewVBox(
-		widget.NewLabelWithData(str),
-		widget.NewEntryWithData(str),
-	)
-
-	center := container.NewBorder(nil, editor.propertyManager.properties, nil, nil, testWidgets)
-
-	// center := canvas.NewText("content", color.Black)
-	content := container.NewBorder(top, nil, left, nil, center)
 	editor.window.SetContent(content)
 	return &editor
 }
@@ -108,6 +96,11 @@ func (gui *FyneGUI) ElementDeleted(elID string, hl *core.Transaction) error {
 
 // ElementSelected
 func (gui *FyneGUI) ElementSelected(el core.Element, hl *core.Transaction) error {
+	uid := ""
+	if el != nil {
+		uid = el.GetConceptID(hl)
+	}
+	gui.propertyManager.displayProperties(uid)
 	return nil
 }
 

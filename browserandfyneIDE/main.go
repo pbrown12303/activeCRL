@@ -18,6 +18,7 @@ import (
 	"flag"
 	"log"
 
+	"fyne.io/fyne/v2"
 	"github.com/pbrown12303/activeCRL/crleditor"
 	"github.com/pbrown12303/activeCRL/crleditorbrowsergui/browsergui"
 	"github.com/pbrown12303/activeCRL/crleditorfynegui/fynegui"
@@ -50,6 +51,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	initialSize := fyne.NewSize(1600.0, 900.0)
+	fyneEditor.GetWindow().Resize(initialSize)
 	fyneEditor.GetWindow().ShowAndRun()
 }

@@ -16,7 +16,7 @@ import (
 )
 
 // TODO Remove this after fyne transaction approach is determined
-func getTransaction() *core.Transaction {
+func GetTransaction() *core.Transaction {
 	if browsergui.BrowserGUISingleton != nil && browsergui.BrowserGUISingleton.GetInProgressTransaction() != nil {
 		return browsergui.BrowserGUISingleton.GetInProgressTransaction()
 	}
@@ -85,7 +85,8 @@ func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
 		label.SetText("uOfD")
 	} else {
 		conceptBinding := crlfynebindings.GetConceptStateBinding(uid)
-		labelItem, _ := conceptBinding.GetBoundData().GetItem("Label")
+		structBinding := *conceptBinding.GetBoundData()
+		labelItem, _ := structBinding.GetItem("Label")
 		label.Bind(labelItem.(binding.String))
 	}
 	contents[0].Show()
@@ -94,7 +95,8 @@ func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
 // getIconResource returns the icon image resource to be used in representing the given Element in the tree
 func getIconResource(id string) *fyne.StaticResource {
 	el := crleditor.CrlEditorSingleton.GetUofD().GetElement(id)
-	trans := getTransaction()
+	trans := GetTransaction()
+	defer trans.ReleaseLocks()
 	isDiagram := crldiagramdomain.IsDiagram(el, trans)
 	switch el.(type) {
 	case core.Reference:
