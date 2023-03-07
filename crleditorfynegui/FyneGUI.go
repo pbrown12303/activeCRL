@@ -1,4 +1,4 @@
-package fynegui
+package crleditorfynegui
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crleditor"
-	"github.com/pbrown12303/activeCRL/crlfynebindings"
 )
 
 func getUofD() *core.UniverseOfDiscourse {
@@ -29,7 +28,7 @@ type FyneGUI struct {
 func NewFyneGUI(crleditor *crleditor.Editor) *FyneGUI {
 	var editor FyneGUI
 	editor.app = app.New()
-	crlfynebindings.InitBindings()
+	InitBindings()
 	editor.app.Settings().SetTheme(&fyneGuiTheme{})
 	editor.treeManager = NewFyneTreeManager()
 	editor.propertyManager = NewFynePropertyManager()

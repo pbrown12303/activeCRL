@@ -1,4 +1,4 @@
-package fynegui
+package crleditorfynegui
 
 import (
 	"sort"
@@ -10,15 +10,13 @@ import (
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 	"github.com/pbrown12303/activeCRL/crleditor"
-	"github.com/pbrown12303/activeCRL/crleditorbrowsergui/browsergui"
-	"github.com/pbrown12303/activeCRL/crlfynebindings"
 	"github.com/pbrown12303/activeCRL/images"
 )
 
 // TODO Remove this after fyne transaction approach is determined
 func GetTransaction() *core.Transaction {
-	if browsergui.BrowserGUISingleton != nil && browsergui.BrowserGUISingleton.GetInProgressTransaction() != nil {
-		return browsergui.BrowserGUISingleton.GetInProgressTransaction()
+	if crleditor.CrlEditorSingleton != nil && crleditor.CrlEditorSingleton.GetInProgressTransaction() != nil {
+		return crleditor.CrlEditorSingleton.GetInProgressTransaction()
 	}
 	return crleditor.CrlEditorSingleton.GetUofD().NewTransaction()
 }
@@ -84,7 +82,7 @@ func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
 	if uid == "" {
 		label.SetText("uOfD")
 	} else {
-		conceptBinding := crlfynebindings.GetConceptStateBinding(uid)
+		conceptBinding := GetConceptStateBinding(uid)
 		structBinding := *conceptBinding.GetBoundData()
 		labelItem, _ := structBinding.GetItem("Label")
 		label.Bind(labelItem.(binding.String))

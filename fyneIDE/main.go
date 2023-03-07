@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/pbrown12303/activeCRL/crleditor"
-	"github.com/pbrown12303/activeCRL/crleditorfynegui/fynegui"
+	"github.com/pbrown12303/activeCRL/crleditorfynegui"
 )
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 
 	// Common infrastructure
 	crleditor := crleditor.NewEditor(*userFolderArg)
-	fyneEditor := fynegui.NewFyneGUI(crleditor)
+	fyneEditor := crleditorfynegui.NewFyneGUI(crleditor)
 	err := crleditor.AddEditorGUI(fyneEditor)
 	if err != nil {
 		log.Fatal(err)

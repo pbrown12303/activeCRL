@@ -1,4 +1,4 @@
-package fynegui
+package crleditorfynegui
 
 import (
 	"image/color"

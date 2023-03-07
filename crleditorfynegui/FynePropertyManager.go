@@ -1,4 +1,4 @@
-package fynegui
+package crleditorfynegui
 
 import (
 	"fyne.io/fyne/v2"
@@ -6,7 +6,6 @@ import (
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
-	"github.com/pbrown12303/activeCRL/crlfynebindings"
 )
 
 type FynePropertyManager struct {
@@ -106,6 +105,8 @@ func NewFynePropertyManager() *FynePropertyManager {
 		propertyManager.definitionValue,
 		propertyManager.literalValueLabel,
 		propertyManager.literalValueValue,
+		propertyManager.uriLabel,
+		propertyManager.uriValue,
 		propertyManager.referencedElementLabel,
 		propertyManager.referencedElementValue,
 		propertyManager.referencedElementAttributeNameLabel,
@@ -124,15 +125,13 @@ func NewFynePropertyManager() *FynePropertyManager {
 		propertyManager.isCoreValue,
 		propertyManager.readOnlyLabel,
 		propertyManager.readOnlyValue,
-		propertyManager.uriLabel,
-		propertyManager.uriValue,
 		propertyManager.versionLabel,
 		propertyManager.versionValue)
 	return &propertyManager
 }
 
 func (pMgr *FynePropertyManager) displayProperties(uid string) {
-	conceptBinding := crlfynebindings.GetConceptStateBinding(uid)
+	conceptBinding := GetConceptStateBinding(uid)
 	if uid == "" || conceptBinding == nil {
 		pMgr.typeValue.Unbind()
 		pMgr.idValue.Unbind()

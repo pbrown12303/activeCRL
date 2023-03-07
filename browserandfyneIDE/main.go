@@ -21,7 +21,7 @@ import (
 	"fyne.io/fyne/v2"
 	"github.com/pbrown12303/activeCRL/crleditor"
 	"github.com/pbrown12303/activeCRL/crleditorbrowsergui/browsergui"
-	"github.com/pbrown12303/activeCRL/crleditorfynegui/fynegui"
+	fynegui "github.com/pbrown12303/activeCRL/crleditorfynegui"
 )
 
 func main() {

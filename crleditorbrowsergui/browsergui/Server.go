@@ -16,6 +16,7 @@ import (
 
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
+	"github.com/pbrown12303/activeCRL/crleditor"
 )
 
 var server *http.Server
@@ -145,12 +146,12 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 	hl := BrowserGUISingleton.GetUofD().NewTransaction()
 
 	// TODO this sharing of the transaction is a temporary hack - find a better approach for the Fyne interactions
-	BrowserGUISingleton.SetInProgressTransaction(hl)
+	crleditor.CrlEditorSingleton.SetInProgressTransaction(hl)
 
 	defer hl.ReleaseLocks()
 
 	// TODO this sharing of the transaction is a temporary hack - find a better approach for the Fyne interactions
-	defer BrowserGUISingleton.SetInProgressTransaction(nil)
+	defer crleditor.CrlEditorSingleton.SetInProgressTransaction(nil)
 
 	if CrlLogClientRequests || core.TraceChange {
 		log.Printf("Received request: %#v", request)

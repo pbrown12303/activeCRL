@@ -45,6 +45,16 @@ type Editor struct {
 	userPreferences             *UserPreferences
 	userFolder                  string
 	workspaceManager            *CrlWorkspaceManager
+	inProgressTransaction       *core.Transaction
+}
+
+// TODO Remove these methods when fyne transaction approach is determined
+func (editor *Editor) GetInProgressTransaction() *core.Transaction {
+	return editor.inProgressTransaction
+}
+
+func (editor *Editor) SetInProgressTransaction(trans *core.Transaction) {
+	editor.inProgressTransaction = trans
 }
 
 // NewEditor returns an initialized Editor
@@ -491,7 +501,7 @@ func (editor *Editor) SelectElement(el core.Element, hl *core.Transaction) error
 func (editor *Editor) SelectElementUsingIDString(id string, hl *core.Transaction) error {
 	foundElement := editor.GetUofD().GetElement(id)
 	if foundElement == nil && id != "" {
-		return errors.New("In BrowserGUI.SelectElementUsingIDString, element was not found")
+		return errors.New("In Editor.SelectElementUsingIDString, element was not found")
 	}
 	return editor.SelectElement(foundElement, hl)
 }
