@@ -4,11 +4,13 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/images"
 )
 
-type FyneDrawingManager struct {
-	drawingArea *fyne.Container
+type FyneDiagramManager struct {
+	diagramArea *fyne.Container
+	diagramTabs map[string]*container.TabItem
 	toolbar     *fyne.Container
 	toolButtons map[string]*widget.Button
 	tabArea     *container.DocTabs
@@ -17,20 +19,17 @@ type FyneDrawingManager struct {
 	LiteralTool *widget.Button
 }
 
-func NewFyneDrawingManager() *FyneDrawingManager {
-	var dm FyneDrawingManager
+func NewFyneDiagramManager() *FyneDiagramManager {
+	var dm FyneDiagramManager
 	dm.createToolbar()
+	dm.diagramTabs = make(map[string]*container.TabItem)
 	dm.tabArea = container.NewDocTabs()
-	dm.drawingArea = container.NewBorder(nil, nil, dm.toolbar, nil, dm.tabArea)
+	dm.diagramArea = container.NewBorder(nil, nil, dm.toolbar, nil, dm.tabArea)
 
 	return &dm
 }
 
-func (dm *FyneDrawingManager) GetDrawingArea() *fyne.Container {
-	return dm.drawingArea
-}
-
-func (dm *FyneDrawingManager) createToolbar() {
+func (dm *FyneDiagramManager) createToolbar() {
 	dm.toolbar = container.NewVBox()
 	dm.toolButtons = make(map[string]*widget.Button)
 	// Cursor
@@ -77,4 +76,19 @@ func (dm *FyneDrawingManager) createToolbar() {
 	button = widget.NewButtonWithIcon("", images.ResourceRefinedPointerIconPng, nil)
 	dm.toolButtons["RefinedPointer"] = button
 	dm.toolbar.Add(button)
+}
+
+func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.Transaction) error {
+	diagramID := diagram.GetConceptID(trans)
+	tabItem := dm.diagramTabs[diagramID]
+	if tabItem == nil {
+		tabItem = container.NewTabItem(diagram.GetLabel(trans), container.NewWithoutLayout())
+		dm.diagramTabs[diagramID] = tabItem
+		dm.tabArea.Append(tabItem)
+	}
+	return nil
+}
+
+func (dm *FyneDiagramManager) GetDrawingArea() *fyne.Container {
+	return dm.diagramArea
 }

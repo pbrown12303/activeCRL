@@ -40,7 +40,6 @@ type BrowserGUI struct {
 	workingDomain             core.Element
 }
 
-
 // InitializeBrowserGUISingleton initializes the BrowserGUI singleton instance. It should be called once
 // when the editor web page is created
 func InitializeBrowserGUISingleton(editor *crleditor.Editor, startBrowser bool) {
@@ -143,6 +142,11 @@ func (bgPtr *BrowserGUI) ElementSelected(el core.Element, hl *core.Transaction) 
 		return errors.Wrap(err, "In BrowserGUI.SelectElement, SendNotification failed")
 	}
 	return nil
+}
+
+// DisplayDiagram tells the diagramManager to display the diagram
+func (bgPtr *BrowserGUI) DisplayDiagram(diagram core.Element, trans *core.Transaction) error {
+	return bgPtr.diagramManager.displayDiagram(diagram, trans)
 }
 
 // FileLoaded informs the BrowserGUI that a file has been loaded

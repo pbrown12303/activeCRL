@@ -2,13 +2,17 @@ package crleditorfynegui
 
 import (
 	"fmt"
+	"log"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 
 	"github.com/pbrown12303/activeCRL/core"
+	"github.com/pbrown12303/activeCRL/crldatastructuresdomain"
 	"github.com/pbrown12303/activeCRL/crleditor"
+	"github.com/pbrown12303/activeCRL/crleditordomain"
+	"github.com/pkg/errors"
 )
 
 func getUofD() *core.UniverseOfDiscourse {
@@ -18,32 +22,34 @@ func getUofD() *core.UniverseOfDiscourse {
 // FyneGUI is the Crl Editor built with Fyne
 type FyneGUI struct {
 	app             fyne.App
-	drawingManager  *FyneDrawingManager
+	editor          *crleditor.Editor
+	diagramManager  *FyneDiagramManager
 	propertyManager *FynePropertyManager
 	treeManager     *FyneTreeManager
 	window          fyne.Window
 }
 
 // NewFyneGUI returns an initialized FyneGUI
-func NewFyneGUI(crleditor *crleditor.Editor) *FyneGUI {
-	var editor FyneGUI
-	editor.app = app.New()
+func NewFyneGUI(crlEditor *crleditor.Editor) *FyneGUI {
+	var fyneGUI FyneGUI
+	fyneGUI.editor = crlEditor
+	fyneGUI.app = app.New()
 	InitBindings()
-	editor.app.Settings().SetTheme(&fyneGuiTheme{})
-	editor.treeManager = NewFyneTreeManager()
-	editor.propertyManager = NewFynePropertyManager()
-	editor.drawingManager = NewFyneDrawingManager()
-	editor.window = editor.app.NewWindow("Crl Editor")
-	editor.window.SetMainMenu(buildCrlFyneEditorMenu(editor.window))
-	editor.window.SetMaster()
+	fyneGUI.app.Settings().SetTheme(&fyneGuiTheme{})
+	fyneGUI.treeManager = NewFyneTreeManager()
+	fyneGUI.propertyManager = NewFynePropertyManager()
+	fyneGUI.diagramManager = NewFyneDiagramManager()
+	fyneGUI.window = fyneGUI.app.NewWindow("Crl Editor")
+	fyneGUI.window.SetMainMenu(buildCrlFyneEditorMenu(fyneGUI.window))
+	fyneGUI.window.SetMaster()
 
-	leftSide := container.NewVSplit(editor.treeManager.tree, editor.propertyManager.properties)
-	drawingArea := editor.drawingManager.GetDrawingArea()
+	leftSide := container.NewVSplit(fyneGUI.treeManager.tree, fyneGUI.propertyManager.properties)
+	drawingArea := fyneGUI.diagramManager.GetDrawingArea()
 
 	content := container.NewHSplit(leftSide, drawingArea)
 
-	editor.window.SetContent(content)
-	return &editor
+	fyneGUI.window.SetContent(content)
+	return &fyneGUI
 }
 
 // buildCrlFyneEditorMenu builds the main menu for the Crl Fyne Editor
@@ -78,18 +84,15 @@ func buildCrlFyneEditorMenu(window fyne.Window) *fyne.MainMenu {
 	return mainMenu
 }
 
-// GetWindow returns the main window of the FyneGUI
-func (gui *FyneGUI) GetWindow() fyne.Window {
-	return gui.window
-}
-
 // CloseDiagramView
 func (gui *FyneGUI) CloseDiagramView(diagramID string, hl *core.Transaction) error {
+	// TODO Implement this
 	return nil
 }
 
 // ElementDeleted
 func (gui *FyneGUI) ElementDeleted(elID string, hl *core.Transaction) error {
+	// TODO Implement this
 	return nil
 }
 
@@ -103,14 +106,27 @@ func (gui *FyneGUI) ElementSelected(el core.Element, hl *core.Transaction) error
 	return nil
 }
 
+// DisplayDiagram
+func (gui *FyneGUI) DisplayDiagram(diagram core.Element, trans *core.Transaction) error {
+	gui.diagramManager.displayDiagram(diagram, trans)
+	return nil
+}
+
 // FileLoaded
 func (gui *FyneGUI) FileLoaded(el core.Element, hl *core.Transaction) {
+	// TODO Implement this
 	// noop
 }
 
 // GetNoSaveDomains
 func (gui *FyneGUI) GetNoSaveDomains(noSaveDomains map[string]core.Element, hl *core.Transaction) {
+	// TODO Implement this
 	// noop
+}
+
+// GetWindow returns the main window of the FyneGUI
+func (gui *FyneGUI) GetWindow() fyne.Window {
+	return gui.window
 }
 
 // Initialize
@@ -120,6 +136,26 @@ func (gui *FyneGUI) Initialize(hl *core.Transaction) error {
 
 // InitializeGUI
 func (gui *FyneGUI) InitializeGUI(hl *core.Transaction) error {
+	openDiagrams := gui.editor.GetSettings().GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
+	if openDiagrams == nil {
+		return errors.New("In BrowserGUI.initializeClientState, openDiagrams is nil")
+	}
+	openDiagramLiteral, err2 := crldatastructuresdomain.GetFirstMemberLiteral(openDiagrams, hl)
+	if err2 != nil {
+		return errors.Wrap(err2, "In BrowserGUI.initializeClientState getting first member literal failed")
+	}
+	for openDiagramLiteral != nil {
+		diagram := gui.editor.GetUofD().GetElement(openDiagramLiteral.GetLiteralValue(hl))
+		if diagram == nil {
+			log.Printf("In BrowserGui.initializeClientState: Failed to load diagram with ID: %s", openDiagramLiteral.GetLiteralValue(hl))
+			continue
+		}
+		err2 = gui.diagramManager.displayDiagram(diagram, hl)
+		if err2 != nil {
+			return errors.Wrap(err2, "In BrowserGUI.initializeClientState diagram "+diagram.GetLabel(hl)+" did not display")
+		}
+		openDiagramLiteral, _ = crldatastructuresdomain.GetNextMemberLiteral(openDiagramLiteral, hl)
+	}
 	return nil
 }
 

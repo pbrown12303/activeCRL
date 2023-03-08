@@ -42,6 +42,7 @@ type Editor struct {
 	home                        string
 	settings                    core.Element
 	uOfDManager                 *core.UofDManager
+	diagramManager              *DiagramManager
 	userPreferences             *UserPreferences
 	userFolder                  string
 	workspaceManager            *CrlWorkspaceManager
@@ -73,6 +74,7 @@ func NewEditor(userFolderArg string) *Editor {
 	}
 	editor.uOfDManager = &core.UofDManager{}
 	editor.workspaceManager = NewCrlWorkspaceManager(editor)
+	editor.diagramManager = NewDiagramManager(editor)
 	return editor
 }
 
@@ -247,6 +249,11 @@ func (editor *Editor) GetDefaultRefinementLabel() string {
 	editor.defaultRefinementLabelCount++
 	countString := strconv.Itoa(editor.defaultRefinementLabelCount)
 	return "Refinement" + countString
+}
+
+// GetDiagramManager returns the diagram manager
+func (editor *Editor) GetDiagramManager() *DiagramManager {
+	return editor.diagramManager
 }
 
 // GetDropDiagramReferenceAsLink returns true if dropped references are shown as links
@@ -579,6 +586,7 @@ func (editor *Editor) Undo(hl *core.Transaction) error {
 // EditorGUI is the interface for all CrlEditors, independent of implementation technology
 type EditorGUI interface {
 	CloseDiagramView(diagramID string, hl *core.Transaction) error
+	DisplayDiagram(diagram core.Element, hl *core.Transaction) error
 	ElementDeleted(elID string, hl *core.Transaction) error
 	ElementSelected(el core.Element, hl *core.Transaction) error
 	FileLoaded(el core.Element, hl *core.Transaction)

@@ -18,14 +18,12 @@ import (
 // diagramManager manages the diagram portion of the UI and all interactions with it
 type diagramManager struct {
 	browserGUI     *BrowserGUI
-	diagrams       map[string]core.Element
 	elementManager *diagramElementManager
 }
 
 func newDiagramManager(browserGUI *BrowserGUI) *diagramManager {
 	dm := &diagramManager{}
 	dm.browserGUI = browserGUI
-	dm.diagrams = map[string]core.Element{}
 	dm.elementManager = newDiagramElementManager(dm)
 	return dm
 }
@@ -225,26 +223,6 @@ func (dmPtr *diagramManager) addCopyWithRefinement(request *Request, hl *core.Tr
 	return copy, nil
 }
 
-func (dmPtr *diagramManager) addDiagram(ownerID string, hl *core.Transaction) (core.Element, error) {
-	diagram, err := dmPtr.newDiagram(hl)
-	if err != nil {
-		return nil, errors.Wrap(err, "diagramManager.addDiagram failed")
-	}
-	err = diagram.SetOwningConceptID(ownerID, hl)
-	if err != nil {
-		return nil, errors.Wrap(err, "diagramManager.addDiagram failed")
-	}
-	err = dmPtr.browserGUI.editor.SelectElement(diagram, hl)
-	if err != nil {
-		return nil, errors.Wrap(err, "diagramManager.addDiagram failed")
-	}
-	err = dmPtr.displayDiagram(diagram, hl)
-	if err != nil {
-		return nil, errors.Wrap(err, "diagramManager.addDiagram failed")
-	}
-	return diagram, nil
-}
-
 func (dmPtr *diagramManager) deleteDiagramElementView(elementID string, hl *core.Transaction) error {
 	diagramElement := dmPtr.browserGUI.GetUofD().GetElement(elementID)
 	if diagramElement == nil {
@@ -350,17 +328,6 @@ func (dmPtr *diagramManager) DiagramViewHasBeenClosed(diagramID string, hl *core
 
 // displayDiagram tells the client to display the indicated diagram.
 func (dmPtr *diagramManager) displayDiagram(diagram core.Element, hl *core.Transaction) error {
-	diagramID := diagram.GetConceptID(hl)
-	if !diagram.IsRefinementOfURI(crldiagramdomain.CrlDiagramURI, hl) {
-		return errors.New("In diagramManager.displayDiagram, the supplied diagram is not a refinement of CrlDiagramURI")
-	}
-	// Make sure the diagram is in the list of displayed diagrams
-	if !dmPtr.browserGUI.editor.IsDiagramDisplayed(diagramID, hl) {
-		err3 := dmPtr.browserGUI.editor.AddDiagramToDisplayedList(diagramID, hl)
-		if err3 != nil {
-			return errors.Wrap(err3, "diagramManager.displayDiagram failed")
-		}
-	}
 	// make sure there is a monitor on the diagram so we know when it has been deleted
 	err := diagram.Register(dmPtr)
 	if err != nil {
@@ -471,23 +438,14 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 }
 
 func (dmPtr *diagramManager) initialize() error {
-	dmPtr.diagrams = map[string]core.Element{}
 	return nil
 }
 
 // newDiagram creates a new crldiagram
 func (dmPtr *diagramManager) newDiagram(hl *core.Transaction) (core.Element, error) {
-	// Insert name prompt here
-	name := dmPtr.browserGUI.editor.GetDefaultDiagramLabel()
-	uOfD := BrowserGUISingleton.GetUofD()
-	diagram, err := crldiagramdomain.NewDiagram(uOfD, hl)
+	diagram, err := dmPtr.browserGUI.editor.GetDiagramManager().NewDiagram(hl)
 	if err != nil {
-		return nil, errors.Wrap(err, "diagramManager.newDiagram failed")
-	}
-	diagram.SetLabel(name, hl)
-	dmPtr.diagrams[diagram.GetConceptID(hl)] = diagram
-	if err != nil {
-		return nil, errors.Wrap(err, "diagramManager.newDiagram failed")
+		return nil, errors.Wrap(err, "diagramManager call to NewDiagram failed")
 	}
 	err = diagram.Register(dmPtr)
 	if err != nil {

@@ -175,7 +175,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		sendReply(w, 0, "Processed AddElementChild", el.GetConceptID(hl), el)
 	case "AddDiagramChild":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		diagram, err := BrowserGUISingleton.getDiagramManager().addDiagram(request.RequestConceptID, hl)
+		diagram, err := crleditor.CrlEditorSingleton.GetDiagramManager().AddDiagram(request.RequestConceptID, hl)
 		if err != nil {
 			sendReply(w, 1, "Error processing AddDiagramChild: "+err.Error(), "", nil)
 		} else {
@@ -271,12 +271,8 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		reply(w, "DisplayCallGraph", err)
 	case "DisplayDiagramSelected":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		el := BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID)
-		if el != nil && el.IsRefinementOfURI(crldiagramdomain.CrlDiagramURI, hl) {
-			diagramManager := BrowserGUISingleton.getDiagramManager()
-			diagramManager.displayDiagram(el, hl)
-		}
-		sendReply(w, 0, "Processed DisplayDiagramSelected", request.RequestConceptID, el)
+		err := crleditor.CrlEditorSingleton.GetDiagramManager().DisplayDiagram(request.RequestConceptID, hl)
+		reply(w, "Processed DisplayDiagramSelected", err)
 	case "ElementPointerChanged":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
 		linkID, err := BrowserGUISingleton.getDiagramManager().elementPointerChanged(

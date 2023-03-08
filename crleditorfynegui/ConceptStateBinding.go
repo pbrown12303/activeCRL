@@ -75,24 +75,12 @@ func (vPtr *conceptStateBinding) Update(notification *core.ChangeNotification, t
 		if afterState == nil || afterState.ConceptID != vPtr.elementID {
 			return errors.New("elementTreeNodeView.Update called with invalid notification")
 		}
-
-		// Debugging
-		item, _ := vPtr.boundData.GetItem("Label")
-		v, _ := item.(binding.String).Get()
-		log.Print("Label before assignment: " + v)
-
 		vPtr.rawData = *afterState
 		vPtr.oldLabel = afterState.Label
 		vPtr.oldUri = afterState.URI
 		vPtr.oldDefinition = afterState.Definition
 		vPtr.oldLiteralValue = afterState.LiteralValue
 		vPtr.boundData.Reload()
-
-		// Debugging
-		item, _ = vPtr.boundData.GetItem("Label")
-		v, _ = item.(binding.String).Get()
-		log.Print("Label after assignment: " + v)
-
 	}
 	return nil
 }
