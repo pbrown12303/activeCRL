@@ -15,9 +15,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func getUofD() *core.UniverseOfDiscourse {
-	return crleditor.CrlEditorSingleton.GetUofD()
-}
+var FyneGUISingleton *FyneGUI
 
 // FyneGUI is the Crl Editor built with Fyne
 type FyneGUI struct {
@@ -32,13 +30,14 @@ type FyneGUI struct {
 // NewFyneGUI returns an initialized FyneGUI
 func NewFyneGUI(crlEditor *crleditor.Editor) *FyneGUI {
 	var fyneGUI FyneGUI
+	FyneGUISingleton = &fyneGUI
 	fyneGUI.editor = crlEditor
 	fyneGUI.app = app.New()
 	InitBindings()
 	fyneGUI.app.Settings().SetTheme(&fyneGuiTheme{})
 	fyneGUI.treeManager = NewFyneTreeManager()
 	fyneGUI.propertyManager = NewFynePropertyManager()
-	fyneGUI.diagramManager = NewFyneDiagramManager()
+	fyneGUI.diagramManager = NewFyneDiagramManager(&fyneGUI)
 	fyneGUI.window = fyneGUI.app.NewWindow("Crl Editor")
 	fyneGUI.window.SetMainMenu(buildCrlFyneEditorMenu(fyneGUI.window))
 	fyneGUI.window.SetMaster()
@@ -86,7 +85,7 @@ func buildCrlFyneEditorMenu(window fyne.Window) *fyne.MainMenu {
 
 // CloseDiagramView
 func (gui *FyneGUI) CloseDiagramView(diagramID string, hl *core.Transaction) error {
-	// TODO Implement this
+	gui.diagramManager.closeDiagram(diagramID)
 	return nil
 }
 
@@ -122,6 +121,10 @@ func (gui *FyneGUI) FileLoaded(el core.Element, hl *core.Transaction) {
 func (gui *FyneGUI) GetNoSaveDomains(noSaveDomains map[string]core.Element, hl *core.Transaction) {
 	// TODO Implement this
 	// noop
+}
+
+func (gui *FyneGUI) getUofD() *core.UniverseOfDiscourse {
+	return gui.editor.GetUofD()
 }
 
 // GetWindow returns the main window of the FyneGUI

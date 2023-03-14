@@ -1773,7 +1773,7 @@ function crlNotificationClearTree() {
 
 function crlNotificationCloseDiagramView(data) {
     var diagramID = data.NotificationConceptID;
-    crlCloseDiagramView(diagramID);
+    crlCloseDiagramViewWithoutNotification(diagramID);
     crlSendNormalResponse();
 }
 

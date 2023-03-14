@@ -320,9 +320,7 @@ func (dmPtr *diagramManager) diagramDrop(request *Request, hl *core.Transaction)
 
 // DiagramViewHasBeenClosed notifies the server that the client has closed the diagram view
 func (dmPtr *diagramManager) DiagramViewHasBeenClosed(diagramID string, hl *core.Transaction) error {
-	if dmPtr.browserGUI.editor.IsDiagramDisplayed(diagramID, hl) {
-		dmPtr.browserGUI.editor.RemoveDiagramFromDisplayedList(diagramID, hl)
-	}
+	dmPtr.browserGUI.editor.CloseDiagramView(diagramID, hl)
 	return nil
 }
 

@@ -42,8 +42,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fyneEditor := fynegui.NewFyneGUI(crleditor.CrlEditorSingleton)
-	err = crleditor.CrlEditorSingleton.AddEditorGUI(fyneEditor)
+	fynegui.NewFyneGUI(crleditor.CrlEditorSingleton)
+	err = crleditor.CrlEditorSingleton.AddEditorGUI(fynegui.FyneGUISingleton)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,6 +52,6 @@ func main() {
 		log.Fatal(err)
 	}
 	initialSize := fyne.NewSize(1600.0, 900.0)
-	fyneEditor.GetWindow().Resize(initialSize)
-	fyneEditor.GetWindow().ShowAndRun()
+	fynegui.FyneGUISingleton.GetWindow().Resize(initialSize)
+	fynegui.FyneGUISingleton.GetWindow().ShowAndRun()
 }

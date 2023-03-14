@@ -5,6 +5,7 @@ go 1.15
 require (
 	fyne.io/fyne/v2 v2.3.0
 	fyne.io/systray v1.10.1-0.20230207085535-4a244dbb9d03 // indirect
+	fyne.io/x/fyne v0.0.0-00010101000000-000000000000
 	github.com/TheTitanrain/w32 v0.0.0-20200114052255-2654d97dbd3d // indirect
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/deckarep/golang-set v1.8.0
@@ -25,3 +26,5 @@ require (
 	golang.org/x/net v0.6.0 // indirect
 	nhooyr.io/websocket v1.8.7
 )
+
+replace fyne.io/x/fyne => C:/GoWorkspace/src/github.com/pbrown12303/fyne-x

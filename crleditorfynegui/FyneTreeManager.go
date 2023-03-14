@@ -28,7 +28,7 @@ type ByLabel []string
 func (a ByLabel) Len() int      { return len(a) }
 func (a ByLabel) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByLabel) Less(i, j int) bool {
-	uOfD := getUofD()
+	uOfD := FyneGUISingleton.editor.GetUofD()
 	return uOfD.GetElementLabel(a[i]) < uOfD.GetElementLabel(a[j])
 }
 
@@ -49,12 +49,12 @@ func NewFyneTreeManager() *FyneTreeManager {
 func GetChildUIDs(parentUid string) []string {
 	var ids []string
 	if parentUid == "" {
-		uOfD := getUofD()
+		uOfD := FyneGUISingleton.editor.GetUofD()
 		if uOfD != nil {
 			ids = uOfD.GetRootElementIDs()
 		}
 	} else {
-		iterator := getUofD().GetConceptsOwnedConceptIDs(parentUid).Iterator()
+		iterator := FyneGUISingleton.editor.GetUofD().GetConceptsOwnedConceptIDs(parentUid).Iterator()
 		for member := range iterator.C {
 			ids = append(ids, member.(string))
 		}
@@ -70,14 +70,14 @@ func IsBranch(uid string) bool {
 
 func CreateNode(branch bool) fyne.CanvasObject {
 	icon := widget.NewIcon(images.ResourceElementIconPng)
-	label := widget.NewLabel("this string determines minimum size")
+	label := widget.NewLabel("short")
 	box := container.NewHBox(icon, label)
 	return box
 }
 
 func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
 	contents := node.(*fyne.Container).Objects
-	contents[0].(*widget.Icon).SetResource(getIconResource(uid))
+	contents[0].(*widget.Icon).SetResource(getIconResourceByID(uid))
 	label := contents[1].(*widget.Label)
 	if uid == "" {
 		label.SetText("uOfD")
@@ -90,11 +90,16 @@ func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
 	contents[0].Show()
 }
 
-// getIconResource returns the icon image resource to be used in representing the given Element in the tree
-func getIconResource(id string) *fyne.StaticResource {
+// getIconResourceByID returns the icon image resource to be used in representing the given Element in the tree
+func getIconResourceByID(id string) *fyne.StaticResource {
 	el := crleditor.CrlEditorSingleton.GetUofD().GetElement(id)
 	trans := GetTransaction()
 	defer trans.ReleaseLocks()
+	return getIconResource(el, trans)
+}
+
+// getIconResource returns the icon image resource to be used in representing the given Element in the tree
+func getIconResource(el core.Element, trans *core.Transaction) *fyne.StaticResource {
 	isDiagram := crldiagramdomain.IsDiagram(el, trans)
 	switch el.(type) {
 	case core.Reference:
