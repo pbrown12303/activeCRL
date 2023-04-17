@@ -103,7 +103,7 @@ func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.T
 	diagramID := diagram.GetConceptID(trans)
 	tabItem := dm.diagramTabs[diagramID]
 	if tabItem == nil {
-		tabItem = container.NewTabItem(diagram.GetLabel(trans), diagramwidget.NewDiagram())
+		tabItem = container.NewTabItem(diagram.GetLabel(trans), diagramwidget.NewDiagramWidget(diagramID))
 		dm.diagramTabs[diagramID] = tabItem
 		dm.tabArea.Append(tabItem)
 		diagram.Register(dm.diagramObserver)
@@ -141,8 +141,7 @@ func (dm *FyneDiagramManager) refreshDiagram(diagram core.Element, trans *core.T
 		entryWidget.Refresh() // Display the text
 		nodeContainer := container.NewVBox(hBox, entryWidget)
 		// Now create the node itself
-		diagramNode := diagramwidget.NewDiagramNode(diagramWidget, nodeContainer)
-		diagramWidget.Nodes[nodeID] = diagramNode
+		diagramNode := diagramwidget.NewDiagramNode(diagramWidget, nodeContainer, nodeID)
 		x := crldiagramdomain.GetNodeX(node, trans)
 		y := crldiagramdomain.GetNodeY(node, trans)
 		fynePosition := fyne.NewPos(float32(x), float32(y))
