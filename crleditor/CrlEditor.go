@@ -79,10 +79,10 @@ func NewEditor(userFolderArg string) *Editor {
 }
 
 // AddDiagramToDisplayedList adds the diagramID to the list of displayed diagrams
-func (editor *Editor) AddDiagramToDisplayedList(diagramID string, hl *core.Transaction) error {
-	if !editor.IsDiagramDisplayed(diagramID, hl) {
-		openDiagrams := editor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
-		_, err := crldatastructuresdomain.AppendStringListMember(openDiagrams, diagramID, hl)
+func (editor *Editor) AddDiagramToDisplayedList(diagramID string, trans *core.Transaction) error {
+	if !editor.IsDiagramDisplayed(diagramID, trans) {
+		openDiagrams := editor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, trans)
+		_, err := crldatastructuresdomain.AppendStringListMember(openDiagrams, diagramID, trans)
 		if err != nil {
 			return errors.Wrap(err, "diagramManager.addDiagramToDisplayedList failed")
 		}
@@ -106,9 +106,9 @@ func (editor *Editor) AddEditorGUI(editorGUI EditorGUI) error {
 
 // ClearWorkspace clears all files in the current workspace that correspond to uOfD root elements
 // and then reinitializes all editorGUIs.
-func (editor *Editor) ClearWorkspace(hl *core.Transaction) error {
+func (editor *Editor) ClearWorkspace(trans *core.Transaction) error {
 	workspacePath := editor.userPreferences.WorkspacePath
-	err := editor.workspaceManager.ClearWorkspace(workspacePath, hl)
+	err := editor.workspaceManager.ClearWorkspace(workspacePath, trans)
 	if err != nil {
 		return errors.Wrap(err, "crleditor.Editor.ClearWorkspace failed")
 	}
@@ -121,13 +121,13 @@ func (editor *Editor) ClearWorkspace(hl *core.Transaction) error {
 }
 
 // CloseDiagramView removes the diagram from the list of displayed diagrams and informs all GUIs
-func (editor *Editor) CloseDiagramView(diagramID string, hl *core.Transaction) error {
+func (editor *Editor) CloseDiagramView(diagramID string, trans *core.Transaction) error {
 	// If the diagram is in the list of displayed diagrams, remove it
-	if editor.IsDiagramDisplayed(diagramID, hl) {
-		editor.RemoveDiagramFromDisplayedList(diagramID, hl)
+	if editor.IsDiagramDisplayed(diagramID, trans) {
+		editor.RemoveDiagramFromDisplayedList(diagramID, trans)
 	}
 	for _, gui := range editor.editorGUIs {
-		err := gui.CloseDiagramView(diagramID, hl)
+		err := gui.CloseDiagramView(diagramID, trans)
 		if err != nil {
 			return errors.Wrap(err, "Editor.CloseDiagramView failed")
 		}
@@ -136,16 +136,16 @@ func (editor *Editor) CloseDiagramView(diagramID string, hl *core.Transaction) e
 }
 
 // CloseWorkspace closes the current workspace, saving the root elements
-func (editor *Editor) CloseWorkspace(hl *core.Transaction) error {
+func (editor *Editor) CloseWorkspace(trans *core.Transaction) error {
 	var err error
 	if editor.userPreferences.WorkspacePath != "" {
-		err = editor.workspaceManager.CloseWorkspace(hl)
+		err = editor.workspaceManager.CloseWorkspace(trans)
 		if err != nil {
 			return errors.Wrap(err, "CrlEditor.CloseWorkspace failed")
 		}
 	}
-	// The hl here is from the old UofD. Initialize will create a new one, so we first release the locks on the old one
-	hl.ReleaseLocks()
+	// The trans here is from the old UofD. Initialize will create a new one, so we first release the locks on the old one
+	trans.ReleaseLocks()
 	editor.SetWorkspacePath("")
 	err = editor.Initialize("", false)
 	if err != nil {
@@ -155,33 +155,38 @@ func (editor *Editor) CloseWorkspace(hl *core.Transaction) error {
 }
 
 // createSettings creates the concept space for settings and adds it to the workspace
-func (editor *Editor) createSettings(hl *core.Transaction) error {
-	newSettings, err := editor.GetUofD().CreateReplicateAsRefinementFromURI(crleditordomain.EditorSettingsURI, hl)
+func (editor *Editor) createSettings(trans *core.Transaction) error {
+	newSettings, err := editor.GetUofD().CreateReplicateAsRefinementFromURI(crleditordomain.EditorSettingsURI, trans)
 	if err != nil {
 		return errors.Wrap(err, "Editor.createSettings failed")
 	}
 	editor.settings = newSettings
-	openDiagrams := editor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
+	openDiagrams := editor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, trans)
 	diagram := editor.GetUofD().GetElementWithURI(crldiagramdomain.CrlDiagramURI)
-	crldatastructuresdomain.SetListType(openDiagrams, diagram, hl)
+	crldatastructuresdomain.SetListType(openDiagrams, diagram, trans)
 	return nil
 }
 
 // DeleteElement removes the element from the UniverseOfDiscourse
-func (editor *Editor) DeleteElement(elID string, hl *core.Transaction) error {
+func (editor *Editor) DeleteElement(elID string, trans *core.Transaction) error {
 	el := editor.GetUofD().GetElement(elID)
 	if el != nil {
 		// TODO: Populate cut buffer with full set of deleted elements
 		// editor.cutBuffer = make(map[string]core.Element)
 		// editor.cutBuffer[elID] = el
-		err := editor.GetUofD().DeleteElement(el, hl)
+		if el.IsRefinementOfURI(crldiagramdomain.CrlDiagramURI, trans) {
+			if editor.IsDiagramDisplayed(elID, trans) {
+				editor.CloseDiagramView(elID, trans)
+			}
+		}
+		err := editor.GetUofD().DeleteElement(el, trans)
 		if err != nil {
 			return errors.Wrap(err, "Editor.DeleteElement failed")
 		}
-		editor.SelectElement(nil, hl)
+		editor.SelectElement(nil, trans)
 	}
 	for _, gui := range editor.editorGUIs {
-		err := gui.ElementDeleted(elID, hl)
+		err := gui.ElementDeleted(elID, trans)
 		if err != nil {
 			errors.Wrap(err, "Editor.DeleteElement failed")
 		}
@@ -190,9 +195,9 @@ func (editor *Editor) DeleteElement(elID string, hl *core.Transaction) error {
 }
 
 // FileLoaded is used to inform the CrlEditor that a file has been loaded
-func (editor *Editor) FileLoaded(el core.Element, hl *core.Transaction) {
+func (editor *Editor) FileLoaded(el core.Element, trans *core.Transaction) {
 	for _, editorGUI := range editor.editorGUIs {
-		editorGUI.FileLoaded(el, hl)
+		editorGUI.FileLoaded(el, trans)
 	}
 }
 
@@ -202,11 +207,11 @@ func (editor *Editor) GetCurrentSelection() core.Element {
 }
 
 // GetCurrentSelectionID returns the ConceptID of the currently selected Element
-func (editor *Editor) GetCurrentSelectionID(hl *core.Transaction) string {
+func (editor *Editor) GetCurrentSelectionID(trans *core.Transaction) string {
 	if editor.currentSelection == nil {
 		return ""
 	}
-	return editor.currentSelection.GetConceptID(hl)
+	return editor.currentSelection.GetConceptID(trans)
 }
 
 // GetDefaultDomainLabel increments the default label count and returns a label containing the new count
@@ -257,12 +262,12 @@ func (editor *Editor) GetDiagramManager() *DiagramManager {
 }
 
 // GetDropDiagramReferenceAsLink returns true if dropped references are shown as links
-func (editor *Editor) GetDropDiagramReferenceAsLink(hl *core.Transaction) bool {
+func (editor *Editor) GetDropDiagramReferenceAsLink(trans *core.Transaction) bool {
 	return editor.userPreferences.DropDiagramReferenceAsLink
 }
 
 // GetDropDiagramRefinementAsLink returns true if dropped refinements are shown as links
-func (editor *Editor) GetDropDiagramRefinementAsLink(hl *core.Transaction) bool {
+func (editor *Editor) GetDropDiagramRefinementAsLink(trans *core.Transaction) bool {
 	return editor.userPreferences.DropDiagramRefinementAsLink
 }
 
@@ -272,10 +277,10 @@ func (editor *Editor) GetExitRequested() bool {
 }
 
 // getNoSaveDomains returns a map of the editor domains that should not be saved
-func (editor *Editor) getNoSaveDomains(hl *core.Transaction) map[string]core.Element {
+func (editor *Editor) getNoSaveDomains(trans *core.Transaction) map[string]core.Element {
 	noSaveDomains := make(map[string]core.Element)
 	for _, editor := range editor.editorGUIs {
-		editor.GetNoSaveDomains(noSaveDomains, hl)
+		editor.GetNoSaveDomains(noSaveDomains, trans)
 	}
 	return noSaveDomains
 }
@@ -328,41 +333,41 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 		}
 	}
 	editor.cutBuffer = make(map[string]core.Element)
-	hl := editor.uOfDManager.UofD.NewTransaction()
-	defer hl.ReleaseLocks()
+	trans := editor.uOfDManager.UofD.NewTransaction()
+	defer trans.ReleaseLocks()
 	editor.resetDefaultLabelCounts()
 
-	crldatatypesdomain.BuildCrlDataTypesDomain(editor.GetUofD(), hl)
-	crldatastructuresdomain.BuildCrlDataStructuresDomain(editor.GetUofD(), hl)
-	crldiagramdomain.BuildCrlDiagramDomain(editor.GetUofD(), hl)
-	crleditordomain.BuildEditorDomain(editor.GetUofD(), hl)
-	err := crlmapsdomain.BuildCrlMapsDomain(editor.GetUofD(), hl)
+	crldatatypesdomain.BuildCrlDataTypesDomain(editor.GetUofD(), trans)
+	crldatastructuresdomain.BuildCrlDataStructuresDomain(editor.GetUofD(), trans)
+	crldiagramdomain.BuildCrlDiagramDomain(editor.GetUofD(), trans)
+	crleditordomain.BuildEditorDomain(editor.GetUofD(), trans)
+	err := crlmapsdomain.BuildCrlMapsDomain(editor.GetUofD(), trans)
 	if err != nil {
 		return errors.Wrap(err, "Editor.Initialize failed")
 	}
 
 	for _, editorGUI := range editor.editorGUIs {
-		err = editorGUI.Initialize(hl)
+		err = editorGUI.Initialize(trans)
 		if err != nil {
 			return errors.Wrap(err, "Editor.Initialize failed")
 		}
 	}
 
 	if editor.userPreferences.WorkspacePath != "" {
-		err = editor.workspaceManager.LoadWorkspace(hl)
+		err = editor.workspaceManager.LoadWorkspace(trans)
 	}
 	if err != nil {
 		return errors.Wrap(err, "Editor.Initialize failed")
 	}
 	if editor.settings == nil {
-		err = editor.createSettings(hl)
+		err = editor.createSettings(trans)
 		if err != nil {
 			return errors.Wrap(err, "Editor.Initialize failed")
 		}
 	}
 
 	for _, editorGUI := range editor.editorGUIs {
-		err = editorGUI.InitializeGUI(hl)
+		err = editorGUI.InitializeGUI(trans)
 		if err != nil {
 			return errors.Wrap(err, "Editor.Initialize failed")
 		}
@@ -373,9 +378,9 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 }
 
 // InitializeGUI tells all GUIs to initialize their state
-func (editor *Editor) InitializeGUI(hl *core.Transaction) error {
+func (editor *Editor) InitializeGUI(trans *core.Transaction) error {
 	for _, gui := range editor.editorGUIs {
-		err := gui.InitializeGUI(hl)
+		err := gui.InitializeGUI(trans)
 		if err != nil {
 			return errors.Wrap(err, "Editor.InitializeGUI failed")
 		}
@@ -384,19 +389,19 @@ func (editor *Editor) InitializeGUI(hl *core.Transaction) error {
 }
 
 // IsDiagramDisplayed returns true if the diagram is in the list of displayed diagrams
-func (editor *Editor) IsDiagramDisplayed(diagramID string, hl *core.Transaction) bool {
-	openDiagrams := editor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
-	return crldatastructuresdomain.IsStringListMember(openDiagrams, diagramID, hl)
+func (editor *Editor) IsDiagramDisplayed(diagramID string, trans *core.Transaction) bool {
+	openDiagrams := editor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, trans)
+	return crldatastructuresdomain.IsStringListMember(openDiagrams, diagramID, trans)
 }
 
 // LoadWorkspace tells the editor to load the workspace
-func (editor *Editor) LoadWorkspace(hl *core.Transaction) error {
-	err := editor.workspaceManager.LoadWorkspace(hl)
+func (editor *Editor) LoadWorkspace(trans *core.Transaction) error {
+	err := editor.workspaceManager.LoadWorkspace(trans)
 	if err != nil {
 		return errors.Wrap(err, "Editor.LoadWorkspace failed")
 	}
 	if editor.settings == nil {
-		err = editor.createSettings(hl)
+		err = editor.createSettings(trans)
 		if err != nil {
 			return errors.Wrap(err, "Editor.LoadWorkspace failed")
 		}
@@ -416,7 +421,7 @@ func (editor *Editor) OpenWorkspace() error {
 	return editor.Initialize(path, false)
 }
 
-// func (editor *Editor) openWorkspaceImpl(path string, hl *core.HeldLocks) error {
+// func (editor *Editor) openWorkspaceImpl(path string, trans *core.HeldLocks) error {
 // 	err := editor.Initialize(path, false)
 // 	if err != nil {
 // 		return errors.Wrap(err, "Editor.openWorkspaceImpl failed")
@@ -425,18 +430,18 @@ func (editor *Editor) OpenWorkspace() error {
 // }
 
 // // OpenWorkspaceProgrammatically is intended for use in automated testing scenarios
-// func (editor *Editor) OpenWorkspaceProgrammatically(path string, hl *core.HeldLocks) error {
-// 	defer hl.ReleaseLocksAndWait()
+// func (editor *Editor) OpenWorkspaceProgrammatically(path string, trans *core.HeldLocks) error {
+// 	defer trans.ReleaseLocksAndWait()
 // 	if path == "" {
 // 		return errors.New("OpenWorkspaceProgrammatically called with empty path")
 // 	}
-// 	return editor.openWorkspaceImpl(path, hl)
+// 	return editor.openWorkspaceImpl(path, trans)
 // }
 
 // Redo performs an undo on the editor.editor.GetUofD() and refreshes the interface
-func (editor *Editor) Redo(hl *core.Transaction) error {
-	editor.GetUofD().Redo(hl)
-	err := editor.InitializeGUI(hl)
+func (editor *Editor) Redo(trans *core.Transaction) error {
+	editor.GetUofD().Redo(trans)
+	err := editor.InitializeGUI(trans)
 	if err != nil {
 		return errors.Wrap(err, "Editor.Redo failed")
 	}
@@ -444,10 +449,10 @@ func (editor *Editor) Redo(hl *core.Transaction) error {
 }
 
 // RemoveDiagramFromDisplayedList removes the diagramID from the list of displayed diagrams
-func (editor *Editor) RemoveDiagramFromDisplayedList(diagramID string, hl *core.Transaction) {
-	if editor.IsDiagramDisplayed(diagramID, hl) {
-		openDiagrams := editor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
-		crldatastructuresdomain.RemoveStringListMember(openDiagrams, diagramID, hl)
+func (editor *Editor) RemoveDiagramFromDisplayedList(diagramID string, trans *core.Transaction) {
+	if editor.IsDiagramDisplayed(diagramID, trans) {
+		openDiagrams := editor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, trans)
+		crldatastructuresdomain.RemoveStringListMember(openDiagrams, diagramID, trans)
 	}
 }
 
@@ -483,8 +488,8 @@ func (editor *Editor) SaveUserPreferences() error {
 }
 
 // SaveWorkspace saves the workspace
-func (editor *Editor) SaveWorkspace(hl *core.Transaction) error {
-	err := editor.workspaceManager.SaveWorkspace(hl)
+func (editor *Editor) SaveWorkspace(trans *core.Transaction) error {
+	err := editor.workspaceManager.SaveWorkspace(trans)
 	if err != nil {
 		return errors.Wrap(err, "Editor.SaveWorkspace failed")
 	}
@@ -493,10 +498,10 @@ func (editor *Editor) SaveWorkspace(hl *core.Transaction) error {
 
 // SelectElement selects the indicated Element in the tree, displays the Element in the Properties window, and selects it in the
 // current diagram (if present).
-func (editor *Editor) SelectElement(el core.Element, hl *core.Transaction) error {
+func (editor *Editor) SelectElement(el core.Element, trans *core.Transaction) error {
 	editor.currentSelection = el
 	for _, gui := range editor.editorGUIs {
-		err := gui.ElementSelected(el, hl)
+		err := gui.ElementSelected(el, trans)
 		if err != nil {
 			return errors.Wrap(err, "Editor.SelectElement failed")
 		}
@@ -505,12 +510,12 @@ func (editor *Editor) SelectElement(el core.Element, hl *core.Transaction) error
 }
 
 // SelectElementUsingIDString selects the Element whose ConceptID matches the supplied string
-func (editor *Editor) SelectElementUsingIDString(id string, hl *core.Transaction) error {
+func (editor *Editor) SelectElementUsingIDString(id string, trans *core.Transaction) error {
 	foundElement := editor.GetUofD().GetElement(id)
 	if foundElement == nil && id != "" {
 		return errors.New("In Editor.SelectElementUsingIDString, element was not found")
 	}
-	return editor.SelectElement(foundElement, hl)
+	return editor.SelectElement(foundElement, trans)
 }
 
 // SelectWorkspace opens a dialog for the user to select a workspace
@@ -518,15 +523,15 @@ func (editor *Editor) SelectWorkspace() (string, error) {
 	return dialog.Directory().Title("Select a directory for your workspace").Browse()
 }
 
-func (editor *Editor) setSettings(settings core.Element, hl *core.Transaction) error {
+func (editor *Editor) setSettings(settings core.Element, trans *core.Transaction) error {
 	if settings == nil {
 		return errors.New("Editor.setSettings called with nil settings")
 	}
-	if settings.IsRefinementOfURI(crleditordomain.EditorSettingsURI, hl) == false {
+	if settings.IsRefinementOfURI(crleditordomain.EditorSettingsURI, trans) == false {
 		return errors.New("Editor.setSettings called with nil settings")
 	}
 	if editor.settings != nil {
-		err := editor.GetUofD().DeleteElement(editor.settings, hl)
+		err := editor.GetUofD().DeleteElement(editor.settings, trans)
 		if err != nil {
 			return errors.Wrap(err, "Editor.setSettings failed")
 		}
@@ -536,12 +541,12 @@ func (editor *Editor) setSettings(settings core.Element, hl *core.Transaction) e
 }
 
 // SetDropDiagramReferenceAsLink returns true if dropped references are shown as links
-func (editor *Editor) SetDropDiagramReferenceAsLink(value bool, hl *core.Transaction) {
+func (editor *Editor) SetDropDiagramReferenceAsLink(value bool, trans *core.Transaction) {
 	editor.userPreferences.DropDiagramReferenceAsLink = value
 }
 
 // SetDropDiagramRefinementAsLink returns true if dropped refinements are shown as links
-func (editor *Editor) SetDropDiagramRefinementAsLink(value bool, hl *core.Transaction) {
+func (editor *Editor) SetDropDiagramRefinementAsLink(value bool, trans *core.Transaction) {
 	editor.userPreferences.DropDiagramRefinementAsLink = value
 }
 
@@ -551,18 +556,18 @@ func (editor *Editor) SetExitRequested() {
 }
 
 // SetSelectionDefinition is a convenience method for setting the Definition of the currently selected Element
-func (editor *Editor) SetSelectionDefinition(definition string, hl *core.Transaction) {
-	editor.currentSelection.SetDefinition(definition, hl)
+func (editor *Editor) SetSelectionDefinition(definition string, trans *core.Transaction) {
+	editor.currentSelection.SetDefinition(definition, trans)
 }
 
 // SetSelectionLabel is a convenience method for setting the Label of the currently selected Element
-func (editor *Editor) SetSelectionLabel(name string, hl *core.Transaction) {
-	editor.currentSelection.SetLabel(name, hl)
+func (editor *Editor) SetSelectionLabel(name string, trans *core.Transaction) {
+	editor.currentSelection.SetLabel(name, trans)
 }
 
 // SetSelectionURI is a convenience method for setting the URI of the curretly selected Element
-func (editor *Editor) SetSelectionURI(uri string, hl *core.Transaction) {
-	editor.currentSelection.SetURI(uri, hl)
+func (editor *Editor) SetSelectionURI(uri string, trans *core.Transaction) {
+	editor.currentSelection.SetURI(uri, trans)
 }
 
 // SetWorkspacePath sets the user's preference WorkspacePath value.
@@ -572,10 +577,10 @@ func (editor *Editor) SetWorkspacePath(path string) error {
 }
 
 // Undo performs an undo on the editor.GetUofD() and refreshes the interface
-func (editor *Editor) Undo(hl *core.Transaction) error {
-	editor.GetUofD().Undo(hl)
+func (editor *Editor) Undo(trans *core.Transaction) error {
+	editor.GetUofD().Undo(trans)
 	for _, gui := range editor.editorGUIs {
-		err := gui.InitializeGUI(hl)
+		err := gui.InitializeGUI(trans)
 		if err != nil {
 			return errors.Wrap(err, "Editor.Undo failed")
 		}
@@ -585,12 +590,12 @@ func (editor *Editor) Undo(hl *core.Transaction) error {
 
 // EditorGUI is the interface for all CrlEditors, independent of implementation technology
 type EditorGUI interface {
-	CloseDiagramView(diagramID string, hl *core.Transaction) error
-	DisplayDiagram(diagram core.Element, hl *core.Transaction) error
-	ElementDeleted(elID string, hl *core.Transaction) error
-	ElementSelected(el core.Element, hl *core.Transaction) error
-	FileLoaded(el core.Element, hl *core.Transaction)
-	GetNoSaveDomains(noSaveDomains map[string]core.Element, hl *core.Transaction)
-	Initialize(hl *core.Transaction) error
-	InitializeGUI(hl *core.Transaction) error
+	CloseDiagramView(diagramID string, trans *core.Transaction) error
+	DisplayDiagram(diagram core.Element, trans *core.Transaction) error
+	ElementDeleted(elID string, trans *core.Transaction) error
+	ElementSelected(el core.Element, trans *core.Transaction) error
+	FileLoaded(el core.Element, trans *core.Transaction)
+	GetNoSaveDomains(noSaveDomains map[string]core.Element, trans *core.Transaction)
+	Initialize(trans *core.Transaction) error
+	InitializeGUI(trans *core.Transaction) error
 }

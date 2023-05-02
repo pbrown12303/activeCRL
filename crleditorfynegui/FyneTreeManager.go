@@ -84,8 +84,10 @@ func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
 	} else {
 		conceptBinding := GetConceptStateBinding(uid)
 		structBinding := *conceptBinding.GetBoundData()
-		labelItem, _ := structBinding.GetItem("Label")
-		label.Bind(labelItem.(binding.String))
+		if structBinding != nil {
+			labelItem, _ := structBinding.GetItem("Label")
+			label.Bind(labelItem.(binding.String))
+		}
 	}
 	contents[0].Show()
 }

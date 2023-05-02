@@ -43,6 +43,7 @@ func NewFyneDiagramManager(fyneGUI *FyneGUI) *FyneDiagramManager {
 	dm.diagramArea = container.NewBorder(nil, nil, dm.toolbar, nil, dm.tabArea)
 	dm.diagramObserver = newDiagramObserver(&dm)
 	dm.diagramElementObserver = newDiagramElementObserver(&dm)
+	dm.fyneGUI = fyneGUI
 	return &dm
 }
 
@@ -284,7 +285,7 @@ func (do *diagramObserver) Update(notification *core.ChangeNotification, trans *
 				element := uOfD.GetElement(afterState.ConceptID)
 				do.diagramManager.addElementToDiagram(element, trans, diagramWidget)
 			} else {
-				// the element has been removed
+				diagramWidget.RemoveElement(afterState.ConceptID)
 			}
 
 		}
@@ -303,6 +304,9 @@ func newDiagramElementObserver(dm *FyneDiagramManager) *diagramElementObserver {
 
 // Update is the callback for changes to the core diagram element
 func (deo *diagramElementObserver) Update(notification *core.ChangeNotification, trans *core.Transaction) error {
+	if notification.GetNatureOfChange() == core.ConceptRemoved {
+		return nil
+	}
 	diagramID := notification.GetReportingElementState().OwningConceptID
 	tabItem := deo.diagramManager.diagramTabs[diagramID]
 	if tabItem == nil {

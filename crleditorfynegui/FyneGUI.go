@@ -141,21 +141,21 @@ func (gui *FyneGUI) Initialize(hl *core.Transaction) error {
 func (gui *FyneGUI) InitializeGUI(hl *core.Transaction) error {
 	openDiagrams := gui.editor.GetSettings().GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
 	if openDiagrams == nil {
-		return errors.New("In BrowserGUI.initializeClientState, openDiagrams is nil")
+		return errors.New("In FyneGUI.initializeClientState, openDiagrams is nil")
 	}
 	openDiagramLiteral, err2 := crldatastructuresdomain.GetFirstMemberLiteral(openDiagrams, hl)
 	if err2 != nil {
-		return errors.Wrap(err2, "In BrowserGUI.initializeClientState getting first member literal failed")
+		return errors.Wrap(err2, "In FyneGUI.initializeClientState getting first member literal failed")
 	}
 	for openDiagramLiteral != nil {
 		diagram := gui.editor.GetUofD().GetElement(openDiagramLiteral.GetLiteralValue(hl))
 		if diagram == nil {
-			log.Printf("In BrowserGui.initializeClientState: Failed to load diagram with ID: %s", openDiagramLiteral.GetLiteralValue(hl))
-			continue
-		}
-		err2 = gui.diagramManager.displayDiagram(diagram, hl)
-		if err2 != nil {
-			return errors.Wrap(err2, "In BrowserGUI.initializeClientState diagram "+diagram.GetLabel(hl)+" did not display")
+			log.Printf("In FyneGui.initializeClientState: Failed to load diagram with ID: %s", openDiagramLiteral.GetLiteralValue(hl))
+		} else {
+			err2 = gui.diagramManager.displayDiagram(diagram, hl)
+			if err2 != nil {
+				return errors.Wrap(err2, "In FyneGUI.initializeClientState diagram "+diagram.GetLabel(hl)+" did not display")
+			}
 		}
 		openDiagramLiteral, _ = crldatastructuresdomain.GetNextMemberLiteral(openDiagramLiteral, hl)
 	}

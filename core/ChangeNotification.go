@@ -183,8 +183,13 @@ func (cnPtr *ChangeNotification) GetNatureOfChange() NatureOfChange {
 	return cnPtr.natureOfChange
 }
 
-// GetReportingElementID returns the ID of the element sending the notification
+// GetReportingElementID returns the ID of the element sending the notification. For all notifications except
+// ConceptRemoved, this will be the ConceptID from the notification's reportingElementState. For ConceptRemoved,
+// it is the ConceptID of the beforeConceptState, which is the only populated portion of the notification
 func (cnPtr *ChangeNotification) GetReportingElementID() string {
+	if cnPtr.natureOfChange == ConceptRemoved {
+		return cnPtr.beforeConceptState.ConceptID
+	}
 	return cnPtr.reportingElementState.ConceptID
 }
 

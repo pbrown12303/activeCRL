@@ -478,7 +478,11 @@ func (uOfDPtr *UniverseOfDiscourse) GetElement(conceptID string) Element {
 
 // GetElementLabel returns the label of the Element with the conceptID
 func (uOfDPtr *UniverseOfDiscourse) GetElementLabel(conceptID string) string {
-	return uOfDPtr.uuidElementMap.GetEntry(conceptID).getLabelNoLock()
+	element := uOfDPtr.uuidElementMap.GetEntry(conceptID)
+	if element != nil {
+		return element.getLabelNoLock()
+	}
+	return "<deleted>"
 }
 
 // GetElements returns the Elements in the uOfD mapped by their ConceptIDs
