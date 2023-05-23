@@ -103,7 +103,7 @@ var _ = Describe("Test CrlEditor", func() {
 		// log.Printf("Editor initialized with Workspace path: " + workspacePath)
 		AssertServerRequestProcessingComplete()
 		uOfD = testEditor.GetUofD()
-		hl = uOfD.NewTransaction()
+		hl, _ = testEditor.GetTransaction()
 	})
 
 	AfterEach(func() {
@@ -117,7 +117,7 @@ var _ = Describe("Test CrlEditor", func() {
 			return browsergui.GetRequestInProgress() == false
 		}, time.Second*5).Should(BeTrue())
 		// log.Printf("**************************** ClearWorkspace Request Complete")
-		hl.ReleaseLocks()
+		testEditor.EndTransaction()
 	})
 
 	GetCellViewIDFromViewElementID := func(diagram core.Element, viewElementID string) string {

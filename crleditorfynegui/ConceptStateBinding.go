@@ -108,8 +108,10 @@ func (lcl *labelChangeListener) DataChanged() {
 		lcl.parentBinding.oldLabel = newValue
 		editor := crleditor.CrlEditorSingleton
 		uOfD := editor.GetUofD()
-		trans := GetTransaction()
-		defer trans.ReleaseLocks()
+		trans, isNew := FyneGUISingleton.editor.GetTransaction()
+		if isNew {
+			defer FyneGUISingleton.editor.EndTransaction()
+		}
 		el := uOfD.GetElement(lcl.parentBinding.elementID)
 		if el != nil {
 			el.SetLabel(newValue, trans)
@@ -136,8 +138,10 @@ func (ucl *uriChangeListener) DataChanged() {
 		ucl.parentBinding.oldUri = newValue
 		editor := crleditor.CrlEditorSingleton
 		uOfD := editor.GetUofD()
-		trans := GetTransaction()
-		defer trans.ReleaseLocks()
+		trans, isNew := FyneGUISingleton.editor.GetTransaction()
+		if isNew {
+			defer FyneGUISingleton.editor.EndTransaction()
+		}
 		el := uOfD.GetElement(ucl.parentBinding.elementID)
 		if el != nil {
 			el.SetURI(newValue, trans)
@@ -164,8 +168,10 @@ func (dcl *definitionChangeListener) DataChanged() {
 		dcl.parentBinding.oldDefinition = newValue
 		editor := crleditor.CrlEditorSingleton
 		uOfD := editor.GetUofD()
-		trans := GetTransaction()
-		defer trans.ReleaseLocks()
+		trans, isNew := FyneGUISingleton.editor.GetTransaction()
+		if isNew {
+			defer FyneGUISingleton.editor.EndTransaction()
+		}
 		el := uOfD.GetElement(dcl.parentBinding.elementID)
 		if el != nil {
 			el.SetDefinition(newValue, trans)
@@ -192,8 +198,10 @@ func (litcl *literalChangeListener) DataChanged() {
 		litcl.parentBinding.oldLiteralValue = newValue
 		editor := crleditor.CrlEditorSingleton
 		uOfD := editor.GetUofD()
-		trans := GetTransaction()
-		defer trans.ReleaseLocks()
+		trans, isNew := FyneGUISingleton.editor.GetTransaction()
+		if isNew {
+			defer FyneGUISingleton.editor.EndTransaction()
+		}
 		el := uOfD.GetElement(litcl.parentBinding.elementID)
 		if el != nil {
 			switch typedElement := el.(type) {

@@ -13,14 +13,6 @@ import (
 	"github.com/pbrown12303/activeCRL/images"
 )
 
-// TODO Remove this after fyne transaction approach is determined
-func GetTransaction() *core.Transaction {
-	if crleditor.CrlEditorSingleton != nil && crleditor.CrlEditorSingleton.GetInProgressTransaction() != nil {
-		return crleditor.CrlEditorSingleton.GetInProgressTransaction()
-	}
-	return crleditor.CrlEditorSingleton.GetUofD().NewTransaction()
-}
-
 // ByLabel implements the sort.Interface for []string based on the string
 // being the ID of a core.Element sorted by the Label of the Element
 type ByLabel []string
@@ -95,8 +87,10 @@ func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
 // getIconResourceByID returns the icon image resource to be used in representing the given Element in the tree
 func getIconResourceByID(id string) *fyne.StaticResource {
 	el := crleditor.CrlEditorSingleton.GetUofD().GetElement(id)
-	trans := GetTransaction()
-	defer trans.ReleaseLocks()
+	trans, isNew := FyneGUISingleton.editor.GetTransaction()
+	if isNew {
+		defer FyneGUISingleton.editor.EndTransaction()
+	}
 	return getIconResource(el, trans)
 }
 

@@ -143,15 +143,11 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	hl := BrowserGUISingleton.GetUofD().NewTransaction()
 
-	// TODO this sharing of the transaction is a temporary hack - find a better approach for the Fyne interactions
-	crleditor.CrlEditorSingleton.SetInProgressTransaction(hl)
-
-	defer hl.ReleaseLocks()
-
-	// TODO this sharing of the transaction is a temporary hack - find a better approach for the Fyne interactions
-	defer crleditor.CrlEditorSingleton.SetInProgressTransaction(nil)
+	trans, isNew := crleditor.CrlEditorSingleton.GetTransaction()
+	if isNew {
+		defer crleditor.CrlEditorSingleton.EndTransaction()
+	}
 
 	if CrlLogClientRequests || core.TraceChange {
 		log.Printf("Received request: %#v", request)
@@ -160,7 +156,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 	case "AbstractPointerChanged":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
 		linkID, err := BrowserGUISingleton.getDiagramManager().abstractPointerChanged(
-			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
+			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], trans)
 		if err != nil {
 			sendReply(w, 1, "Error processing AbstractPointerChanged: "+err.Error(), "", nil)
 		} else {
@@ -168,56 +164,56 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		}
 	case "AddElementChild":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		el, _ := BrowserGUISingleton.GetUofD().NewElement(hl)
-		el.SetLabel(BrowserGUISingleton.editor.GetDefaultElementLabel(), hl)
-		el.SetOwningConceptID(request.RequestConceptID, hl)
-		BrowserGUISingleton.editor.SelectElement(el, hl)
-		sendReply(w, 0, "Processed AddElementChild", el.GetConceptID(hl), el)
+		el, _ := BrowserGUISingleton.GetUofD().NewElement(trans)
+		el.SetLabel(BrowserGUISingleton.editor.GetDefaultElementLabel(), trans)
+		el.SetOwningConceptID(request.RequestConceptID, trans)
+		BrowserGUISingleton.editor.SelectElement(el, trans)
+		sendReply(w, 0, "Processed AddElementChild", el.GetConceptID(trans), el)
 	case "AddDiagramChild":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		diagram, err := crleditor.CrlEditorSingleton.GetDiagramManager().AddDiagram(request.RequestConceptID, hl)
+		diagram, err := crleditor.CrlEditorSingleton.GetDiagramManager().AddDiagram(request.RequestConceptID, trans)
 		if err != nil {
 			sendReply(w, 1, "Error processing AddDiagramChild: "+err.Error(), "", nil)
 		} else {
-			sendReply(w, 0, "Processed AddDiagramChild", diagram.GetConceptID(hl), diagram)
+			sendReply(w, 0, "Processed AddDiagramChild", diagram.GetConceptID(trans), diagram)
 		}
 	case "AddLiteralChild":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		el, _ := BrowserGUISingleton.GetUofD().NewLiteral(hl)
-		el.SetLabel(BrowserGUISingleton.editor.GetDefaultLiteralLabel(), hl)
-		el.SetOwningConceptID(request.RequestConceptID, hl)
-		BrowserGUISingleton.editor.SelectElement(el, hl)
-		sendReply(w, 0, "Processed AddLiteralChild", el.GetConceptID(hl), el)
+		el, _ := BrowserGUISingleton.GetUofD().NewLiteral(trans)
+		el.SetLabel(BrowserGUISingleton.editor.GetDefaultLiteralLabel(), trans)
+		el.SetOwningConceptID(request.RequestConceptID, trans)
+		BrowserGUISingleton.editor.SelectElement(el, trans)
+		sendReply(w, 0, "Processed AddLiteralChild", el.GetConceptID(trans), el)
 	case "AddReferenceChild":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		el, _ := BrowserGUISingleton.GetUofD().NewReference(hl)
-		el.SetLabel(BrowserGUISingleton.editor.GetDefaultReferenceLabel(), hl)
-		el.SetOwningConceptID(request.RequestConceptID, hl)
-		BrowserGUISingleton.editor.SelectElement(el, hl)
-		sendReply(w, 0, "Processed AddReferenceChild", el.GetConceptID(hl), el)
+		el, _ := BrowserGUISingleton.GetUofD().NewReference(trans)
+		el.SetLabel(BrowserGUISingleton.editor.GetDefaultReferenceLabel(), trans)
+		el.SetOwningConceptID(request.RequestConceptID, trans)
+		BrowserGUISingleton.editor.SelectElement(el, trans)
+		sendReply(w, 0, "Processed AddReferenceChild", el.GetConceptID(trans), el)
 	case "AddRefinementChild":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		el, _ := BrowserGUISingleton.GetUofD().NewRefinement(hl)
-		el.SetLabel(BrowserGUISingleton.editor.GetDefaultRefinementLabel(), hl)
-		el.SetOwningConceptID(request.RequestConceptID, hl)
-		BrowserGUISingleton.editor.SelectElement(el, hl)
-		sendReply(w, 0, "Processed AddRefinementChild", el.GetConceptID(hl), el)
+		el, _ := BrowserGUISingleton.GetUofD().NewRefinement(trans)
+		el.SetLabel(BrowserGUISingleton.editor.GetDefaultRefinementLabel(), trans)
+		el.SetOwningConceptID(request.RequestConceptID, trans)
+		BrowserGUISingleton.editor.SelectElement(el, trans)
+		sendReply(w, 0, "Processed AddRefinementChild", el.GetConceptID(trans), el)
 	case "ClearWorkspace":
-		err := BrowserGUISingleton.editor.ClearWorkspace(hl)
+		err := BrowserGUISingleton.editor.ClearWorkspace(trans)
 		reply(w, "ClearWorkspace", err)
 	case "CloseWorkspace":
-		err := BrowserGUISingleton.editor.CloseWorkspace(hl)
+		err := BrowserGUISingleton.editor.CloseWorkspace(trans)
 		reply(w, "CloseWorkspace", err)
 	case "DefinitionChanged":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
 		el := BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil {
-			el.SetDefinition(request.AdditionalParameters["NewValue"], hl)
+			el.SetDefinition(request.AdditionalParameters["NewValue"], trans)
 		}
 		sendReply(w, 0, "Processed DefinitionChanged", request.RequestConceptID, el)
 	case "DeleteDiagramElementView":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		err := BrowserGUISingleton.getDiagramManager().deleteDiagramElementView(request.RequestConceptID, hl)
+		err := BrowserGUISingleton.getDiagramManager().deleteDiagramElementView(request.RequestConceptID, trans)
 		if err != nil {
 			sendReply(w, 1, err.Error(), "", nil)
 		} else {
@@ -225,7 +221,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		}
 	case "DiagramClick":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		err := BrowserGUISingleton.getDiagramManager().diagramClick(request, hl)
+		err := BrowserGUISingleton.getDiagramManager().diagramClick(request, trans)
 		if err != nil {
 			sendReply(w, 1, err.Error(), "", nil)
 		} else {
@@ -233,7 +229,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		}
 	case "DiagramDrop":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		err := BrowserGUISingleton.getDiagramManager().diagramDrop(request, hl)
+		err := BrowserGUISingleton.getDiagramManager().diagramDrop(request, trans)
 		if err != nil {
 			sendReply(w, 1, err.Error(), "", nil)
 		} else {
@@ -244,8 +240,8 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		elementID := request.RequestConceptID
 		element := BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID)
 		if element != nil {
-			modelElement := crldiagramdomain.GetReferencedModelElement(element, hl)
-			BrowserGUISingleton.editor.SelectElement(modelElement, hl)
+			modelElement := crldiagramdomain.GetReferencedModelElement(element, trans)
+			BrowserGUISingleton.editor.SelectElement(modelElement, trans)
 		}
 		sendReply(w, 0, "Processed DiagramElementSelected", elementID, BrowserGUISingleton.GetUofD().GetElement(elementID))
 	case "DiagramNodeNewPosition":
@@ -258,20 +254,20 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		if err2 != nil {
 			sendReply(w, 1, err2.Error(), "", nil)
 		} else {
-			BrowserGUISingleton.getDiagramManager().setDiagramNodePosition(request.RequestConceptID, x, y, hl)
+			BrowserGUISingleton.getDiagramManager().setDiagramNodePosition(request.RequestConceptID, x, y, trans)
 			sendReply(w, 0, "Processed DiagramNodeNewPosition", "", nil)
 		}
 	case "DiagramViewHasBeenClosed":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		err := BrowserGUISingleton.getDiagramManager().DiagramViewHasBeenClosed(request.RequestConceptID, hl)
+		err := BrowserGUISingleton.getDiagramManager().DiagramViewHasBeenClosed(request.RequestConceptID, trans)
 		reply(w, "DiagramViewHasBeenClosed", err)
 	case "DisplayCallGraph":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		err := BrowserGUISingleton.DisplayCallGraph(request.AdditionalParameters["GraphIndex"], hl)
+		err := BrowserGUISingleton.DisplayCallGraph(request.AdditionalParameters["GraphIndex"], trans)
 		reply(w, "DisplayCallGraph", err)
 	case "DisplayDiagramSelected":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		err := crleditor.CrlEditorSingleton.GetDiagramManager().DisplayDiagram(request.RequestConceptID, hl)
+		err := crleditor.CrlEditorSingleton.GetDiagramManager().DisplayDiagram(request.RequestConceptID, trans)
 		reply(w, "Processed DisplayDiagramSelected", err)
 	case "ElementPointerChanged":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
@@ -279,7 +275,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			request.RequestConceptID,
 			request.AdditionalParameters["SourceID"],
 			request.AdditionalParameters["TargetID"],
-			request.AdditionalParameters["TargetAttributeName"], hl)
+			request.AdditionalParameters["TargetAttributeName"], trans)
 		if err != nil {
 			sendReply(w, 1, "Error processing ElementPointerChanged: "+err.Error(), "", nil)
 		} else {
@@ -298,7 +294,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		diagramElement := BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID)
 		var err error
 		if diagramElement != nil {
-			err = BrowserGUISingleton.diagramManager.formatChanged(diagramElement, request.AdditionalParameters["LineColor"], request.AdditionalParameters["BGColor"], hl)
+			err = BrowserGUISingleton.diagramManager.formatChanged(diagramElement, request.AdditionalParameters["LineColor"], request.AdditionalParameters["BGColor"], trans)
 		}
 		if err == nil {
 			sendReply(w, 0, "Processed FormatChanged", request.RequestConceptID, diagramElement)
@@ -311,7 +307,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		for !rh.ready {
 			time.Sleep(100 * time.Millisecond)
 		}
-		err := BrowserGUISingleton.InitializeGUI(hl)
+		err := BrowserGUISingleton.InitializeGUI(trans)
 		if err != nil {
 			SendNotification("Error initializing client: "+err.Error(), "", nil, nil)
 		} else {
@@ -323,7 +319,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
 		el := BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil {
-			el.SetLabel(request.AdditionalParameters["NewValue"], hl)
+			el.SetLabel(request.AdditionalParameters["NewValue"], trans)
 		}
 		sendReply(w, 0, "Processed LabelChanged", request.RequestConceptID, el)
 	case "LiteralValueChanged":
@@ -332,16 +328,16 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		if el != nil {
 			switch typedEl := el.(type) {
 			case core.Literal:
-				typedEl.SetLiteralValue(request.AdditionalParameters["NewValue"], hl)
+				typedEl.SetLiteralValue(request.AdditionalParameters["NewValue"], trans)
 			}
 		}
 		sendReply(w, 0, "Processed LiteralValueChanged", request.RequestConceptID, el)
 	case "NewDomainRequest":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		cs, _ := BrowserGUISingleton.GetUofD().NewElement(hl)
-		cs.SetLabel(BrowserGUISingleton.editor.GetDefaultDomainLabel(), hl)
-		BrowserGUISingleton.editor.SelectElement(cs, hl)
-		sendReply(w, 0, "Processed NewDomainRequest", cs.GetConceptID(hl), cs)
+		cs, _ := BrowserGUISingleton.GetUofD().NewElement(trans)
+		cs.SetLabel(BrowserGUISingleton.editor.GetDefaultDomainLabel(), trans)
+		BrowserGUISingleton.editor.SelectElement(cs, trans)
+		sendReply(w, 0, "Processed NewDomainRequest", cs.GetConceptID(trans), cs)
 	case "NullifyReferencedConcept":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
 		diagramElement := BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID)
@@ -349,12 +345,12 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			sendReply(w, 1, "Selected diagram element not found", "", nil)
 			break
 		}
-		modelElement := crldiagramdomain.GetReferencedModelElement(diagramElement, hl)
+		modelElement := crldiagramdomain.GetReferencedModelElement(diagramElement, trans)
 		if modelElement == nil {
 			sendReply(w, 1, "Model element corresponding to selected diagram element not found", "", nil)
 			break
 		}
-		err := BrowserGUISingleton.nullifyReferencedConcept(modelElement.GetConceptID(hl), hl)
+		err := BrowserGUISingleton.nullifyReferencedConcept(modelElement.GetConceptID(trans), trans)
 		reply(w, "NullifyReferencedConcept", err)
 	case "OpenWorkspace":
 		err := BrowserGUISingleton.editor.OpenWorkspace()
@@ -366,19 +362,19 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 	case "OwnerPointerChanged":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
 		linkID, err := BrowserGUISingleton.getDiagramManager().ownerPointerChanged(
-			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
+			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], trans)
 		if err != nil {
 			sendReply(w, 1, "Error processing OwnerPointerChanged: "+err.Error(), "", nil)
 		} else {
 			sendReply(w, 0, "Processed OwnerPointerChanged", linkID, nil)
 		}
 	case "Redo":
-		err := BrowserGUISingleton.editor.Redo(hl)
+		err := BrowserGUISingleton.editor.Redo(trans)
 		reply(w, "Redo", err)
 	case "RefinedPointerChanged":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
 		linkID, err := BrowserGUISingleton.getDiagramManager().refinedPointerChanged(
-			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
+			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], trans)
 		if err != nil {
 			sendReply(w, 1, "Error processing RefinedPointerChanged: "+err.Error(), "", nil)
 		} else {
@@ -390,7 +386,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			request.RequestConceptID,
 			request.AdditionalParameters["SourceID"],
 			request.AdditionalParameters["TargetID"],
-			request.AdditionalParameters["TargetAttributeName"], hl)
+			request.AdditionalParameters["TargetAttributeName"], trans)
 		if err != nil {
 			sendReply(w, 1, "Error processing ReferenceLinkChanged: "+err.Error(), "", nil)
 		} else {
@@ -399,14 +395,14 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 	case "RefinementLinkChanged":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
 		linkID, err := BrowserGUISingleton.getDiagramManager().RefinementLinkChanged(
-			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], hl)
+			request.RequestConceptID, request.AdditionalParameters["SourceID"], request.AdditionalParameters["TargetID"], trans)
 		if err != nil {
 			sendReply(w, 1, "Error processing RefinementLinkChanged: "+err.Error(), "", nil)
 		} else {
 			sendReply(w, 0, "Processed RefinementLinkChanged", linkID, nil)
 		}
 	case "RefreshDiagram":
-		err := BrowserGUISingleton.getDiagramManager().refreshDiagramUsingURI(request.RequestConceptID, hl)
+		err := BrowserGUISingleton.getDiagramManager().refreshDiagramUsingURI(request.RequestConceptID, trans)
 		reply(w, "RefreshDiagram", err)
 	case "ReturnAvailableGraphCount":
 		count := BrowserGUISingleton.GetAvailableGraphCount()
@@ -421,7 +417,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			log.Print(err.Error())
 		}
 	case "SaveWorkspace":
-		err := BrowserGUISingleton.editor.SaveWorkspace(hl)
+		err := BrowserGUISingleton.editor.SaveWorkspace(trans)
 		if err != nil {
 			sendReply(w, 1, "SaveWorkspace failed: "+err.Error(), "", nil)
 		} else {
@@ -433,7 +429,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			sendReply(w, 1, "Selected concept not found", "", nil)
 			break
 		}
-		err := BrowserGUISingleton.ShowConceptInTree(requestedConcept, hl)
+		err := BrowserGUISingleton.ShowConceptInTree(requestedConcept, trans)
 		if err != nil {
 			sendReply(w, 1, "ShowConceptInNavigator failed: "+err.Error(), "", nil)
 		} else {
@@ -445,12 +441,12 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			sendReply(w, 1, "Selected diagram element not found", "", nil)
 			break
 		}
-		modelElement := crldiagramdomain.GetReferencedModelElement(diagramElement, hl)
+		modelElement := crldiagramdomain.GetReferencedModelElement(diagramElement, trans)
 		if modelElement == nil {
 			sendReply(w, 1, "Model element corresponding to selected diagram element not found", "", nil)
 			break
 		}
-		err := BrowserGUISingleton.ShowConceptInTree(modelElement, hl)
+		err := BrowserGUISingleton.ShowConceptInTree(modelElement, trans)
 		if err != nil {
 			sendReply(w, 1, "ShowModelConceptInNavigator failed: "+err.Error(), "", nil)
 		} else {
@@ -462,7 +458,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			sendReply(w, 1, "Selected diagram element not found", "", nil)
 			break
 		}
-		err := BrowserGUISingleton.ShowConceptInTree(diagramElement, hl)
+		err := BrowserGUISingleton.ShowConceptInTree(diagramElement, trans)
 		if err != nil {
 			sendReply(w, 1, "ShowDiagramElementInNavigator failed: "+err.Error(), "", nil)
 		} else {
@@ -474,11 +470,11 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		sendReply(w, 0, "Processed SetTreeDragSelection", request.RequestConceptID, BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID))
 	case "ShowAbstractConcept":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		err := BrowserGUISingleton.getDiagramManager().showAbstractConcept(request.RequestConceptID, hl)
+		err := BrowserGUISingleton.getDiagramManager().showAbstractConcept(request.RequestConceptID, trans)
 		reply(w, "ShowAbstractConcept", err)
 	case "ShowOwnedConcepts":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		err := BrowserGUISingleton.getDiagramManager().showOwnedConcepts(request.RequestConceptID, hl)
+		err := BrowserGUISingleton.getDiagramManager().showOwnedConcepts(request.RequestConceptID, trans)
 		if err != nil {
 			sendReply(w, 1, "ShowOwner failed: "+err.Error(), "", nil)
 		} else {
@@ -486,7 +482,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		}
 	case "ShowOwner":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		err := BrowserGUISingleton.getDiagramManager().showOwner(request.RequestConceptID, hl)
+		err := BrowserGUISingleton.getDiagramManager().showOwner(request.RequestConceptID, trans)
 		if err != nil {
 			sendReply(w, 1, "ShowOwner failed: "+err.Error(), "", nil)
 		} else {
@@ -494,17 +490,17 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		}
 	case "ShowReferencedConcept":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		err := BrowserGUISingleton.getDiagramManager().showReferencedConcept(request.RequestConceptID, hl)
+		err := BrowserGUISingleton.getDiagramManager().showReferencedConcept(request.RequestConceptID, trans)
 		reply(w, "ShowReferencedConcept", err)
 	case "ShowRefinedConcept":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		err := BrowserGUISingleton.getDiagramManager().showRefinedConcept(request.RequestConceptID, hl)
+		err := BrowserGUISingleton.getDiagramManager().showRefinedConcept(request.RequestConceptID, trans)
 		reply(w, "ShowRefinedConcept", err)
 	case "TreeNodeDelete":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
 		elementID := request.RequestConceptID
 		// log.Printf("TreeNodeDelete called for node id: %s for elementID: %s", request.RequestConceptID, elementID)
-		err := BrowserGUISingleton.editor.DeleteElement(elementID, hl)
+		err := BrowserGUISingleton.editor.DeleteElement(elementID, trans)
 		if err == nil {
 			sendReply(w, 0, "Element has been deleted", elementID, nil)
 		} else {
@@ -516,10 +512,10 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		if CrlLogClientNotifications {
 			log.Printf("Selected node id: %s", request.RequestConceptID)
 		}
-		BrowserGUISingleton.editor.SelectElementUsingIDString(elementID, hl)
+		BrowserGUISingleton.editor.SelectElementUsingIDString(elementID, trans)
 		sendReply(w, 0, "Processed TreeNodeSelected", elementID, BrowserGUISingleton.GetUofD().GetElement(elementID))
 	case "Undo":
-		err := BrowserGUISingleton.editor.Undo(hl)
+		err := BrowserGUISingleton.editor.Undo(trans)
 		reply(w, "Undo", err)
 	case "UpdateDebugSettings":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
@@ -527,13 +523,13 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		sendReply(w, 0, "Processed UpdateDebugSettings", "", nil)
 	case "UpdateUserPreferences":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
-		BrowserGUISingleton.UpdateUserPreferences(request, hl)
+		BrowserGUISingleton.UpdateUserPreferences(request, trans)
 		sendReply(w, 0, "Processed UpdateUserPreferences", "", nil)
 	case "URIChanged":
 		BrowserGUISingleton.GetUofD().MarkUndoPoint()
 		el := BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID)
 		if el != nil {
-			el.SetURI(request.AdditionalParameters["NewValue"], hl)
+			el.SetURI(request.AdditionalParameters["NewValue"], trans)
 		}
 		sendReply(w, 0, "Processed URI changed", request.RequestConceptID, el)
 	default:

@@ -145,7 +145,7 @@ func (editor *Editor) CloseWorkspace(trans *core.Transaction) error {
 		}
 	}
 	// The trans here is from the old UofD. Initialize will create a new one, so we first release the locks on the old one
-	trans.ReleaseLocks()
+	editor.EndTransaction()
 	editor.SetWorkspacePath("")
 	err = editor.Initialize("", false)
 	if err != nil {
@@ -192,6 +192,14 @@ func (editor *Editor) DeleteElement(elID string, trans *core.Transaction) error 
 		}
 	}
 	return nil
+}
+
+// EndTransaction releases the transaction locks and clears the in-progress transaction
+func (editor *Editor) EndTransaction() {
+	if editor.inProgressTransaction != nil {
+		editor.inProgressTransaction.ReleaseLocks()
+		editor.inProgressTransaction = nil
+	}
 }
 
 // FileLoaded is used to inform the CrlEditor that a file has been loaded
@@ -290,6 +298,15 @@ func (editor *Editor) GetSettings() core.Element {
 	return editor.settings
 }
 
+// GetTransaction returns the in-progress transaction, if there is one, and otherwise creates a new transaction
+func (editor *Editor) GetTransaction() (*core.Transaction, bool) {
+	if editor.GetInProgressTransaction() != nil {
+		return editor.GetInProgressTransaction(), false
+	}
+	editor.inProgressTransaction = editor.GetUofD().NewTransaction()
+	return editor.inProgressTransaction, true
+}
+
 // GetUofD returns the current UniverseOfDiscourse
 func (editor *Editor) GetUofD() *core.UniverseOfDiscourse {
 	return editor.uOfDManager.UofD
@@ -333,8 +350,10 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 		}
 	}
 	editor.cutBuffer = make(map[string]core.Element)
-	trans := editor.uOfDManager.UofD.NewTransaction()
-	defer trans.ReleaseLocks()
+	trans, isNew := editor.GetTransaction()
+	if isNew {
+		defer editor.EndTransaction()
+	}
 	editor.resetDefaultLabelCounts()
 
 	crldatatypesdomain.BuildCrlDataTypesDomain(editor.GetUofD(), trans)

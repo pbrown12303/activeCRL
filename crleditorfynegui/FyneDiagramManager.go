@@ -2,19 +2,23 @@ package crleditorfynegui
 
 import (
 	"image/color"
+	"log"
 	"reflect"
+	"strconv"
 
 	"fyne.io/x/fyne/widget/diagramwidget"
 
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 	"github.com/pbrown12303/activeCRL/crleditor"
 	"github.com/pbrown12303/activeCRL/images"
+)
+
+const (
+	displayLabel = "DisplayLabel"
 )
 
 // FyneDiagramManager manages the relationship between the fyne DiagramWidgets and the
@@ -45,6 +49,48 @@ func NewFyneDiagramManager(fyneGUI *FyneGUI) *FyneDiagramManager {
 	dm.diagramElementObserver = newDiagramElementObserver(&dm)
 	dm.fyneGUI = fyneGUI
 	return &dm
+}
+
+func (dm *FyneDiagramManager) addElementToDiagram(element core.Element, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramElement {
+	if element.IsRefinementOfURI(crldiagramdomain.CrlDiagramNodeURI, trans) {
+		return dm.addNodeToDiagram(element, trans, diagramWidget)
+	} else if element.IsRefinementOfURI(crldiagramdomain.CrlDiagramLinkURI, trans) {
+		return dm.addLinkToDiagram(element, trans, diagramWidget)
+	}
+	return nil
+}
+
+func (dm *FyneDiagramManager) addLinkToDiagram(link core.Element, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) *FyneCrlDiagramLink {
+	crlDiagramSource := crldiagramdomain.GetLinkSource(link, trans)
+	if crlDiagramSource == nil {
+		// Register for changes so that when sufficient information is present we can add it to the diagram
+		link.Register(dm.diagramElementObserver)
+		return nil
+	}
+	fyneSource := diagramWidget.GetDiagramElement(crlDiagramSource.GetConceptID(trans))
+	fyneSourcePad := fyneSource.GetDefaultConnectionPad()
+	crlDiagramTarget := crldiagramdomain.GetLinkTarget(link, trans)
+	if crlDiagramTarget == nil {
+		// Register for changes so that when sufficient information is present we can add it to the diagram
+		link.Register(dm.diagramElementObserver)
+		return nil
+	}
+	fyneTarget := diagramWidget.GetDiagramElement(crlDiagramTarget.GetConceptID(trans))
+	fyneTargetPad := fyneTarget.GetDefaultConnectionPad()
+	diagramLink := NewFyneCrlDiagramLink(diagramWidget, fyneSourcePad, fyneTargetPad, link, trans)
+	link.Register(dm.diagramElementObserver)
+	return diagramLink
+}
+
+func (dm *FyneDiagramManager) addNodeToDiagram(node core.Element, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramNode {
+	nodeID := node.GetConceptID(trans)
+	diagramNode := diagramWidget.Nodes[nodeID]
+	if diagramNode == nil {
+
+		diagramNode = NewFyneCrlDiagramNode(node, trans, diagramWidget)
+		node.Register(dm.diagramElementObserver)
+	}
+	return diagramNode
 }
 
 func (dm *FyneDiagramManager) closeDiagram(diagramID string) {
@@ -155,91 +201,13 @@ func (dm *FyneDiagramManager) populateDiagram(diagram core.Element, trans *core.
 	return nil
 }
 
-func (dm *FyneDiagramManager) addElementToDiagram(element core.Element, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) {
-	if element.IsRefinementOfURI(crldiagramdomain.CrlDiagramNodeURI, trans) {
-		dm.addNodeToDiagram(element, trans, diagramWidget)
-	} else if element.IsRefinementOfURI(crldiagramdomain.CrlDiagramLinkURI, trans) {
-		dm.addLinkToDiagram(element, trans, diagramWidget)
-	}
-}
-
-func (dm *FyneDiagramManager) addLinkToDiagram(link core.Element, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) {
-	crlDiagramSource := crldiagramdomain.GetLinkSource(link, trans)
-	if crlDiagramSource == nil {
-		// Register for changes so that when sufficient information is present we can add it to the diagram
-		link.Register(dm.diagramElementObserver)
-		return
-	}
-	fyneSource := diagramWidget.GetDiagramElement(crlDiagramSource.GetConceptID(trans))
-	fyneSourcePad := fyneSource.GetDefaultConnectionPad()
-	crlDiagramTarget := crldiagramdomain.GetLinkTarget(link, trans)
-	if crlDiagramTarget == nil {
-		// Register for changes so that when sufficient information is present we can add it to the diagram
-		link.Register(dm.diagramElementObserver)
-		return
-	}
-	fyneTarget := diagramWidget.GetDiagramElement(crlDiagramTarget.GetConceptID(trans))
-	fyneTargetPad := fyneTarget.GetDefaultConnectionPad()
-	diagramLink := diagramwidget.NewDiagramLink(diagramWidget, fyneSourcePad, fyneTargetPad, link.GetConceptID(trans))
-	diagramLink.AddMidpointAnchoredText("displayLabel", crldiagramdomain.GetDisplayLabel(link, trans))
-	grey := color.RGBA{153, 153, 153, 255}
-	if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramReferenceLinkURI, trans) {
-		diagramLink.AddTargetDecoration(createReferenceArrowhead())
-		diagramLink.AddSourceDecoration(createDiamond())
-	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramAbstractPointerURI, trans) {
-		diagramLink.AddSourceDecoration(createRefinementTriangle())
-		diagramLink.LinkColor = grey
-	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramElementPointerURI, trans) {
-		diagramLink.AddTargetDecoration(createReferenceArrowhead())
-		diagramLink.LinkColor = grey
-	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramOwnerPointerURI, trans) {
-		diagramLink.AddTargetDecoration(createDiamond())
-		diagramLink.LinkColor = grey
-	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramRefinedPointerURI, trans) {
-		diagramLink.AddSourceDecoration(createMirrorRefinementTriangle())
-		diagramLink.LinkColor = grey
-	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramRefinementLinkURI, trans) {
-		diagramLink.AddMidpointDecoration(createRefinementTriangle())
-	}
-	link.Register(dm.diagramElementObserver)
-}
-
-func (dm *FyneDiagramManager) addNodeToDiagram(node core.Element, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) {
-	nodeID := node.GetConceptID(trans)
-	diagramNode := diagramWidget.Nodes[nodeID]
-	if diagramNode == nil {
-
-		modelElement := crldiagramdomain.GetReferencedModelElement(node, trans)
-		nodeIcon := widget.NewIcon(getIconResource(modelElement, trans))
-
-		abstractionString := crldiagramdomain.GetAbstractionDisplayLabel(node, trans)
-		abstractionText := canvas.NewText(abstractionString, color.Black)
-		abstractionText.TextSize = diagramWidget.DiagramTheme.Size(theme.SizeNameCaptionText)
-		abstractionText.TextStyle = fyne.TextStyle{Bold: false, Italic: true, Monospace: false, Symbol: false, TabWidth: 4}
-
-		hBox := container.NewHBox(nodeIcon, abstractionText)
-		nodeLabel := crldiagramdomain.GetDisplayLabel(node, trans)
-		entryWidget := widget.NewEntry()
-		entryWidget.SetText(nodeLabel)
-		entryWidget.Wrapping = fyne.TextWrapOff
-		entryWidget.Refresh()
-		nodeContainer := container.NewVBox(hBox, entryWidget)
-
-		diagramNode = diagramwidget.NewDiagramNode(diagramWidget, nodeContainer, nodeID)
-		x := crldiagramdomain.GetNodeX(node, trans)
-		y := crldiagramdomain.GetNodeY(node, trans)
-		fynePosition := fyne.NewPos(float32(x), float32(y))
-		diagramNode.Move(fynePosition)
-		diagramNode.Refresh()
-		node.Register(dm.diagramElementObserver)
-	}
-}
-
 func diagramClosed(tabItem *container.TabItem) {
 	for k, v := range FyneGUISingleton.diagramManager.diagramTabs {
 		if v == tabItem {
-			trans := GetTransaction()
-			defer trans.ReleaseLocks()
+			trans, isNew := FyneGUISingleton.editor.GetTransaction()
+			if isNew {
+				defer FyneGUISingleton.editor.EndTransaction()
+			}
 			delete(FyneGUISingleton.diagramManager.diagramTabs, k)
 			crleditor.CrlEditorSingleton.CloseDiagramView(k, trans)
 			return
@@ -318,9 +286,98 @@ func (deo *diagramElementObserver) Update(notification *core.ChangeNotification,
 	crlDiagramElement := trans.GetUniverseOfDiscourse().GetElement(elementID)
 	fyneDiagramElement := diagramWidget.GetDiagramElement(elementID)
 	if reflect.ValueOf(fyneDiagramElement).IsNil() {
-		deo.diagramManager.addElementToDiagram(crlDiagramElement, trans, diagramWidget)
+		fyneDiagramElement = deo.diagramManager.addElementToDiagram(crlDiagramElement, trans, diagramWidget)
+	}
+	switch typedElement := fyneDiagramElement.(type) {
+	case *FyneCrlDiagramNode:
+		switch notification.GetNatureOfChange() {
+		case core.OwnedConceptChanged:
+			ownedConceptChangedNotification := notification.GetUnderlyingChange()
+			switch ownedConceptChangedNotification.GetNatureOfChange() {
+			case core.ConceptChanged:
+				changedConcept := trans.GetUniverseOfDiscourse().GetElement(ownedConceptChangedNotification.GetChangedConceptID())
+				if changedConcept.IsRefinementOfURI(crldiagramdomain.CrlDiagramElementDisplayLabelURI, trans) {
+					beforeState := ownedConceptChangedNotification.GetBeforeConceptState()
+					afterState := ownedConceptChangedNotification.GetAfterConceptState()
+					if afterState.LiteralValue != beforeState.LiteralValue {
+						typedElement.labelBinding.Set(afterState.LiteralValue)
+						typedElement.entryWidget.Refresh()
+						fyneDiagramElement.Refresh()
+					}
+					return nil
+				}
+				if changedConcept.IsRefinementOfURI(crldiagramdomain.CrlDiagramNodeXURI, trans) {
+					x := float32(crldiagramdomain.GetNodeX(crlDiagramElement, trans))
+					fynePosition := fyneDiagramElement.Position()
+					if x != fynePosition.X {
+						fyneDiagramElement.Move(fyne.NewPos(x, fynePosition.Y))
+
+					}
+					return nil
+				}
+				if changedConcept.IsRefinementOfURI(crldiagramdomain.CrlDiagramNodeYURI, trans) {
+					y := float32(crldiagramdomain.GetNodeY(crlDiagramElement, trans))
+					fynePosition := fyneDiagramElement.Position()
+					if y != fynePosition.Y {
+						fyneDiagramElement.Move(fyne.NewPos(fynePosition.X, y))
+
+					}
+					return nil
+				}
+				if changedConcept.IsRefinementOfURI(crldiagramdomain.CrlDiagramElementLineColorURI, trans) {
+					lineColor := crldiagramdomain.GetLineColor(crlDiagramElement, trans)
+					log.Printf("Line Color: %s", lineColor)
+					goColor := getGoColor(lineColor)
+					fyneDiagramElement.SetForegroundColor(goColor)
+
+				}
+			}
+		}
+	case *FyneCrlDiagramLink:
+		switch notification.GetNatureOfChange() {
+		case core.OwnedConceptChanged:
+			ownedConceptChangedNotification := notification.GetUnderlyingChange()
+			switch ownedConceptChangedNotification.GetNatureOfChange() {
+			case core.ConceptChanged:
+				changedConcept := trans.GetUniverseOfDiscourse().GetElement(ownedConceptChangedNotification.GetChangedConceptID())
+				if changedConcept.IsRefinementOfURI(crldiagramdomain.CrlDiagramElementDisplayLabelURI, trans) {
+					beforeState := ownedConceptChangedNotification.GetBeforeConceptState()
+					afterState := ownedConceptChangedNotification.GetAfterConceptState()
+					if afterState.LiteralValue != beforeState.LiteralValue {
+						typedElement.SetLabel(afterState.LiteralValue)
+						fyneDiagramElement.Refresh()
+					}
+					return nil
+				}
+				if changedConcept.IsRefinementOfURI(crldiagramdomain.CrlDiagramElementLineColorURI, trans) {
+					lineColor := crldiagramdomain.GetLineColor(crlDiagramElement, trans)
+					log.Printf("Line Color: %s", lineColor)
+					goColor := getGoColor(lineColor)
+					fyneDiagramElement.SetForegroundColor(goColor)
+					return nil
+				}
+			}
+		}
+
 	}
 	return nil
+}
+
+func getGoColor(lineColor string) color.RGBA {
+	redString := lineColor[1:3]
+	red, _ := strconv.ParseUint(redString, 16, 8)
+	greenString := lineColor[3:5]
+	green, _ := strconv.ParseUint(greenString, 16, 8)
+	blueString := lineColor[5:7]
+	blue, _ := strconv.ParseUint(blueString, 16, 8)
+	a, _ := strconv.ParseUint("ff", 16, 8)
+	goColor := color.RGBA{
+		uint8(red),
+		uint8(green),
+		uint8(blue),
+		uint8(a),
+	}
+	return goColor
 }
 
 var referenceArrowHeadPoints []fyne.Position = []fyne.Position{
