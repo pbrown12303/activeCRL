@@ -38,6 +38,12 @@ func NewFyneTreeManager() *FyneTreeManager {
 	return &treeManager
 }
 
+func (ftm *FyneTreeManager) ElementSelected(uid string) {
+	// TODO add logic to ensure that the enclosing branches are open.
+	ftm.tree.ScrollTo(uid)
+	ftm.tree.Select(uid)
+}
+
 func GetChildUIDs(parentUid string) []string {
 	var ids []string
 	if parentUid == "" {

@@ -134,18 +134,44 @@ func (pMgr *FynePropertyManager) displayProperties(uid string) {
 	conceptBinding := GetConceptStateBinding(uid)
 	if uid == "" || conceptBinding == nil {
 		pMgr.typeValue.Unbind()
+		pMgr.typeValue.Text = ""
+		pMgr.typeValue.Refresh()
 		pMgr.idValue.Unbind()
+		pMgr.idValue.Text = ""
+		pMgr.idValue.Refresh()
 		pMgr.owningConceptIDValue.Unbind()
+		pMgr.owningConceptIDValue.Text = ""
+		pMgr.owningConceptIDValue.Refresh()
 		pMgr.versionValue.Unbind()
+		pMgr.versionValue.Text = ""
+		pMgr.versionValue.Refresh()
 		pMgr.labelValue.Unbind()
+		pMgr.labelValue.Text = ""
+		pMgr.labelValue.Refresh()
 		pMgr.definitionValue.Unbind()
+		pMgr.definitionValue.Text = ""
+		pMgr.definitionValue.Refresh()
 		pMgr.uriValue.Unbind()
+		pMgr.uriValue.Text = ""
+		pMgr.uriValue.Refresh()
 		pMgr.isCoreValue.Unbind()
+		pMgr.isCoreValue.Text = ""
+		pMgr.isCoreValue.Refresh()
 		pMgr.readOnlyValue.Unbind()
+		pMgr.readOnlyValue.Text = ""
+		pMgr.readOnlyValue.Refresh()
 		pMgr.referencedElementValue.Unbind()
+		pMgr.referencedElementValue.Text = ""
+		pMgr.referencedElementValue.Refresh()
 		pMgr.abstractElementValue.Unbind()
+		pMgr.abstractElementValue.Text = ""
+		pMgr.abstractElementValue.Refresh()
 		pMgr.refinedElementValue.Unbind()
+		pMgr.refinedElementValue.Text = ""
+		pMgr.refinedElementValue.Refresh()
 		pMgr.literalValueValue.Unbind()
+		pMgr.literalValueValue.Text = ""
+		pMgr.literalValueValue.Refresh()
 	} else {
 		structBinding := *conceptBinding.GetBoundData()
 		itemBinding, _ := structBinding.GetItem("ConceptType")

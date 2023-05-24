@@ -152,16 +152,29 @@ func (dm *FyneDiagramManager) createToolbar() {
 	dm.toolbar.Add(button)
 }
 
+func (dm *FyneDiagramManager) diagramElementSelectionChanged(diagramElementID string) {
+	editor := dm.fyneGUI.editor
+	trans, new := editor.GetTransaction()
+	if new {
+		defer trans.ReleaseLocks()
+	}
+	dm.fyneGUI.editor.SelectElementUsingIDString(diagramElementID, trans)
+}
+
 func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.Transaction) error {
 	diagramID := diagram.GetConceptID(trans)
 	tabItem := dm.diagramTabs[diagramID]
 	if tabItem == nil {
-		scrollingContainer := container.NewScroll(diagramwidget.NewDiagramWidget(diagramID))
+		diagramWidget := diagramwidget.NewDiagramWidget(diagramID)
+		scrollingContainer := container.NewScroll(diagramWidget)
 		tabItem = container.NewTabItem(diagram.GetLabel(trans), scrollingContainer)
 		dm.diagramTabs[diagramID] = tabItem
 		dm.tabArea.Append(tabItem)
 		diagram.Register(dm.diagramObserver)
 		dm.populateDiagram(diagram, trans)
+		diagramWidget.PrimaryDiagramElementSelectionChangedCallback = func(id string) {
+			dm.diagramElementSelectionChanged(id)
+		}
 	}
 	return nil
 }

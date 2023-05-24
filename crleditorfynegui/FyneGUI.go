@@ -102,6 +102,7 @@ func (gui *FyneGUI) ElementSelected(el core.Element, hl *core.Transaction) error
 		uid = el.GetConceptID(hl)
 	}
 	gui.propertyManager.displayProperties(uid)
+	gui.treeManager.ElementSelected(uid)
 	return nil
 }
 
