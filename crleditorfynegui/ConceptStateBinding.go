@@ -2,7 +2,6 @@ package crleditorfynegui
 
 import (
 	"errors"
-	"log"
 
 	"fyne.io/fyne/v2/data/binding"
 	"github.com/pbrown12303/activeCRL/core"
@@ -86,7 +85,6 @@ func (vPtr *conceptStateBinding) Update(notification *core.ChangeNotification, t
 }
 
 func (vPtr *conceptStateBinding) DataChanged() {
-	log.Print("DataChanged called")
 }
 
 type labelChangeListener struct {

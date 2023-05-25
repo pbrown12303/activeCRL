@@ -26,22 +26,50 @@ func (a ByLabel) Less(i, j int) bool {
 
 // FyneTreeManager is the manager of the fyne tree in the CrlFyneEditor
 type FyneTreeManager struct {
-	tree *widget.Tree
+	fyneGUI *FyneGUI
+	tree    *widget.Tree
 }
 
 // NewFyneTreeManager returns an initialized FyneTreeManager
-func NewFyneTreeManager() *FyneTreeManager {
+func NewFyneTreeManager(fyneGUI *FyneGUI) *FyneTreeManager {
 	var treeManager FyneTreeManager
+	treeManager.fyneGUI = fyneGUI
 	treeManager.tree = widget.NewTree(GetChildUIDs, IsBranch, CreateNode, UpdateNode)
 	treeManager.tree.ExtendBaseWidget(treeManager.tree)
+	treeManager.tree.OnSelected = func(uid string) { treeManager.onNodeSelected(uid) }
 	treeManager.tree.Show()
 	return &treeManager
 }
 
 func (ftm *FyneTreeManager) ElementSelected(uid string) {
-	// TODO add logic to ensure that the enclosing branches are open.
 	ftm.tree.ScrollTo(uid)
 	ftm.tree.Select(uid)
+	trans, new := ftm.fyneGUI.editor.GetTransaction()
+	if new {
+		defer trans.ReleaseLocks()
+	}
+	ftm.openParentsRecursively(uid, trans)
+}
+
+func (ftm *FyneTreeManager) onNodeSelected(id string) {
+	trans, new := ftm.fyneGUI.editor.GetTransaction()
+	if new {
+		defer trans.ReleaseLocks()
+	}
+	ftm.fyneGUI.editor.SelectElementUsingIDString(id, trans)
+}
+
+func (ftm *FyneTreeManager) openParentsRecursively(childUID string, trans *core.Transaction) {
+	uOfD := trans.GetUniverseOfDiscourse()
+	crlElement := uOfD.GetElement(childUID)
+	if crlElement != nil {
+		parent := crlElement.GetOwningConcept(trans)
+		if parent != nil {
+			parentID := parent.GetConceptID(trans)
+			ftm.tree.OpenBranch(parentID)
+			ftm.openParentsRecursively(parentID, trans)
+		}
+	}
 }
 
 func GetChildUIDs(parentUid string) []string {

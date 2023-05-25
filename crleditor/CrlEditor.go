@@ -518,11 +518,13 @@ func (editor *Editor) SaveWorkspace(trans *core.Transaction) error {
 // SelectElement selects the indicated Element in the tree, displays the Element in the Properties window, and selects it in the
 // current diagram (if present).
 func (editor *Editor) SelectElement(el core.Element, trans *core.Transaction) error {
-	editor.currentSelection = el
-	for _, gui := range editor.editorGUIs {
-		err := gui.ElementSelected(el, trans)
-		if err != nil {
-			return errors.Wrap(err, "Editor.SelectElement failed")
+	if editor.currentSelection != el {
+		editor.currentSelection = el
+		for _, gui := range editor.editorGUIs {
+			err := gui.ElementSelected(el, trans)
+			if err != nil {
+				return errors.Wrap(err, "Editor.SelectElement failed")
+			}
 		}
 	}
 	return nil

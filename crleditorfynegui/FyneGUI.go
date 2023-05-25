@@ -19,12 +19,13 @@ var FyneGUISingleton *FyneGUI
 
 // FyneGUI is the Crl Editor built with Fyne
 type FyneGUI struct {
-	app             fyne.App
-	editor          *crleditor.Editor
-	diagramManager  *FyneDiagramManager
-	propertyManager *FynePropertyManager
-	treeManager     *FyneTreeManager
-	window          fyne.Window
+	app                fyne.App
+	editor             *crleditor.Editor
+	diagramManager     *FyneDiagramManager
+	propertyManager    *FynePropertyManager
+	treeManager        *FyneTreeManager
+	window             fyne.Window
+	currentSelectionID string
 }
 
 // NewFyneGUI returns an initialized FyneGUI
@@ -35,7 +36,7 @@ func NewFyneGUI(crlEditor *crleditor.Editor) *FyneGUI {
 	fyneGUI.app = app.New()
 	InitBindings()
 	fyneGUI.app.Settings().SetTheme(&fyneGuiTheme{})
-	fyneGUI.treeManager = NewFyneTreeManager()
+	fyneGUI.treeManager = NewFyneTreeManager(&fyneGUI)
 	fyneGUI.propertyManager = NewFynePropertyManager()
 	fyneGUI.diagramManager = NewFyneDiagramManager(&fyneGUI)
 	fyneGUI.window = fyneGUI.app.NewWindow("Crl Editor")
@@ -96,13 +97,16 @@ func (gui *FyneGUI) ElementDeleted(elID string, hl *core.Transaction) error {
 }
 
 // ElementSelected
-func (gui *FyneGUI) ElementSelected(el core.Element, hl *core.Transaction) error {
+func (gui *FyneGUI) ElementSelected(el core.Element, trans *core.Transaction) error {
 	uid := ""
 	if el != nil {
-		uid = el.GetConceptID(hl)
+		uid = el.GetConceptID(trans)
 	}
-	gui.propertyManager.displayProperties(uid)
-	gui.treeManager.ElementSelected(uid)
+	if gui.currentSelectionID != uid {
+		gui.propertyManager.displayProperties(uid)
+		gui.treeManager.ElementSelected(uid)
+		gui.diagramManager.ElementSelected(uid, trans)
+	}
 	return nil
 }
 

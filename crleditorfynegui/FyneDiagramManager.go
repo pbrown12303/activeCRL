@@ -1,6 +1,7 @@
 package crleditorfynegui
 
 import (
+	"errors"
 	"image/color"
 	"log"
 	"reflect"
@@ -21,12 +22,18 @@ const (
 	displayLabel = "DisplayLabel"
 )
 
+type diagramTab struct {
+	diagramID string
+	tab       *container.TabItem
+	diagram   *diagramwidget.DiagramWidget
+}
+
 // FyneDiagramManager manages the relationship between the fyne DiagramWidgets and the
 // underlying CRL model. It is a component of the  FyneGUI
 type FyneDiagramManager struct {
 	fyneGUI                *FyneGUI
 	diagramArea            *fyne.Container
-	diagramTabs            map[string]*container.TabItem
+	diagramTabs            map[string]*diagramTab
 	toolbar                *fyne.Container
 	toolButtons            map[string]*widget.Button
 	tabArea                *container.DocTabs
@@ -41,7 +48,7 @@ type FyneDiagramManager struct {
 func NewFyneDiagramManager(fyneGUI *FyneGUI) *FyneDiagramManager {
 	var dm FyneDiagramManager
 	dm.createToolbar()
-	dm.diagramTabs = make(map[string]*container.TabItem)
+	dm.diagramTabs = make(map[string]*diagramTab)
 	dm.tabArea = container.NewDocTabs()
 	dm.tabArea.OnClosed = diagramClosed
 	dm.diagramArea = container.NewBorder(nil, nil, dm.toolbar, nil, dm.tabArea)
@@ -96,7 +103,7 @@ func (dm *FyneDiagramManager) addNodeToDiagram(node core.Element, trans *core.Tr
 func (dm *FyneDiagramManager) closeDiagram(diagramID string) {
 	tabItem := dm.diagramTabs[diagramID]
 	if tabItem != nil {
-		dm.tabArea.Remove(tabItem)
+		dm.tabArea.Remove(tabItem.tab)
 		delete(dm.diagramTabs, diagramID)
 		diagram := dm.fyneGUI.editor.GetUofD().GetElement(diagramID)
 		diagram.Deregister(dm.diagramObserver)
@@ -167,11 +174,18 @@ func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.T
 	if tabItem == nil {
 		diagramWidget := diagramwidget.NewDiagramWidget(diagramID)
 		scrollingContainer := container.NewScroll(diagramWidget)
-		tabItem = container.NewTabItem(diagram.GetLabel(trans), scrollingContainer)
-		dm.diagramTabs[diagramID] = tabItem
-		dm.tabArea.Append(tabItem)
+		newTabItem := &diagramTab{
+			diagramID: diagramID,
+			tab:       container.NewTabItem(diagram.GetLabel(trans), scrollingContainer),
+			diagram:   diagramWidget,
+		}
+		dm.diagramTabs[diagramID] = newTabItem
+		dm.tabArea.Append(newTabItem.tab)
 		diagram.Register(dm.diagramObserver)
 		dm.populateDiagram(diagram, trans)
+		diagramWidget.LinkConnectionChangedCallback = func(link diagramwidget.DiagramLink, end string, oldPad diagramwidget.ConnectionPad, newPad diagramwidget.ConnectionPad) {
+			dm.linkConnectionChanged(link, end, oldPad, newPad)
+		}
 		diagramWidget.PrimaryDiagramElementSelectionChangedCallback = func(id string) {
 			dm.diagramElementSelectionChanged(id)
 		}
@@ -179,14 +193,44 @@ func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.T
 	return nil
 }
 
+func (dm *FyneDiagramManager) ElementSelected(id string, trans *core.Transaction) {
+	for _, tabItem := range dm.diagramTabs {
+		dm.selectElementInDiagram(id, tabItem.diagram, trans)
+	}
+}
+
 func (dm *FyneDiagramManager) getDiagramWidget(diagramID string) *diagramwidget.DiagramWidget {
 	tabItem := dm.diagramTabs[diagramID]
-	diagramWidget := tabItem.Content.(*container.Scroll).Content.(*diagramwidget.DiagramWidget)
+	diagramWidget := tabItem.diagram
 	return diagramWidget
 }
 
 func (dm *FyneDiagramManager) GetDrawingArea() *fyne.Container {
 	return dm.diagramArea
+}
+
+// linkConnectionChanged is the callback for changes in link connections
+func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLink, end string, oldPad diagramwidget.ConnectionPad, newPad diagramwidget.ConnectionPad) error {
+	trans, new := dm.fyneGUI.editor.GetTransaction()
+	if new {
+		defer trans.ReleaseLocks()
+	}
+	uOfD := trans.GetUniverseOfDiscourse()
+	crlLink := uOfD.GetElement(link.GetDiagramElementID())
+	if crlLink == nil {
+		return errors.New("In FyneDiagramManager.linkConnectionChanged CrlLink not found")
+	}
+	crlNewPadOwner := uOfD.GetElement(newPad.GetPadOwner().GetDiagramElementID())
+	if crlNewPadOwner == nil {
+		return errors.New("In FyneDiagramManager.linkConnectionChanged CrlLink not found")
+	}
+	switch end {
+	case "source":
+		crldiagramdomain.SetLinkSource(crlLink, crlNewPadOwner, trans)
+	case "target":
+		crldiagramdomain.SetLinkTarget(crlLink, crlNewPadOwner, trans)
+	}
+	return nil
 }
 
 // populateDiagram adds all elements to the diagram
@@ -214,9 +258,30 @@ func (dm *FyneDiagramManager) populateDiagram(diagram core.Element, trans *core.
 	return nil
 }
 
+func (dm *FyneDiagramManager) selectElementInDiagram(elementID string, diagram *diagramwidget.DiagramWidget, trans *core.Transaction) error {
+	uOfD := trans.GetUniverseOfDiscourse()
+	foundDiagramElementID := ""
+	for key, _ := range diagram.GetDiagramElements() {
+		crlDiagramElement := uOfD.GetElement(key)
+		if crlDiagramElement != nil {
+			crlModelElement := crldiagramdomain.GetReferencedModelElement(crlDiagramElement, trans)
+			if crlModelElement != nil {
+				if crlModelElement.GetConceptID(trans) == elementID {
+					foundDiagramElementID = key
+					break
+				}
+			}
+		}
+	}
+	if foundDiagramElementID != "" {
+		diagram.SelectDiagramElementNoCallback(foundDiagramElementID)
+	}
+	return nil
+}
+
 func diagramClosed(tabItem *container.TabItem) {
 	for k, v := range FyneGUISingleton.diagramManager.diagramTabs {
-		if v == tabItem {
+		if v.tab == tabItem {
 			trans, isNew := FyneGUISingleton.editor.GetTransaction()
 			if isNew {
 				defer FyneGUISingleton.editor.EndTransaction()
@@ -250,7 +315,7 @@ func (do *diagramObserver) Update(notification *core.ChangeNotification, trans *
 		beforeStateLabel := notification.GetBeforeConceptState().Label
 		afterStateLabel := notification.GetAfterConceptState().Label
 		if beforeStateLabel != afterStateLabel {
-			tabItem.Text = afterStateLabel
+			tabItem.tab.Text = afterStateLabel
 			do.diagramManager.tabArea.Refresh()
 		}
 	case core.OwnedConceptChanged:
