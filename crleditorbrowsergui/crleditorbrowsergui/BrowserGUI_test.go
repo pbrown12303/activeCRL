@@ -10,7 +10,7 @@ import (
 
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
-	"github.com/pbrown12303/activeCRL/crleditorbrowsergui"
+	"github.com/pbrown12303/activeCRL/crleditorbrowsergui/crleditorbrowsergui"
 	"github.com/sclevine/agouti"
 
 	//	"testing"

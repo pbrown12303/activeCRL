@@ -128,9 +128,9 @@ func (gui *CrlEditorFyneGUI) GetNoSaveDomains(noSaveDomains map[string]core.Elem
 	// noop
 }
 
-func (gui *CrlEditorFyneGUI) getUofD() *core.UniverseOfDiscourse {
-	return gui.editor.GetUofD()
-}
+// func (gui *CrlEditorFyneGUI) getUofD() *core.UniverseOfDiscourse {
+// 	return gui.editor.GetUofD()
+// }
 
 // GetWindow returns the main window of the FyneGUI
 func (gui *CrlEditorFyneGUI) GetWindow() fyne.Window {

@@ -22,6 +22,50 @@ const (
 	displayLabel = "DisplayLabel"
 )
 
+type ToolbarSelection int
+
+const (
+	CURSOR ToolbarSelection = iota
+	ELEMENT
+	LITERAL
+	REFERENCE
+	REFERENCE_LINK
+	REFINEMENT
+	REFINEMENT_LINK
+	OWNER_POINTER
+	REFERENCED_ELEMENT_POINTER
+	ABSTRACT_ELEMENT_POINTER
+	REFINED_ELEMENT_POINTER
+)
+
+func (selection ToolbarSelection) ToString() string {
+	switch selection {
+	case CURSOR:
+		return "Cursor"
+	case ELEMENT:
+		return "Element"
+	case LITERAL:
+		return "Literal"
+	case REFERENCE:
+		return "Reference"
+	case REFERENCE_LINK:
+		return "Reference Link"
+	case REFINEMENT:
+		return "Refinement"
+	case REFINEMENT_LINK:
+		return "Refinement Link"
+	case OWNER_POINTER:
+		return "Owner Poiner"
+	case REFERENCED_ELEMENT_POINTER:
+		return "Referenced Element Pointer"
+	case ABSTRACT_ELEMENT_POINTER:
+		return "Abstract Element Pointer"
+	case REFINED_ELEMENT_POINTER:
+		return "RefinedElementPointer"
+	}
+	return ""
+}
+
 type diagramTab struct {
 	diagramID string
 	tab       *container.TabItem
@@ -31,17 +75,15 @@ type diagramTab struct {
 // FyneDiagramManager manages the relationship between the fyne DiagramWidgets and the
 // underlying CRL model. It is a component of the  FyneGUI
 type FyneDiagramManager struct {
-	fyneGUI                *CrlEditorFyneGUI
-	diagramArea            *fyne.Container
-	diagramTabs            map[string]*diagramTab
-	toolbar                *fyne.Container
-	toolButtons            map[string]*widget.Button
-	tabArea                *container.DocTabs
-	cursorTool             *widget.Button
-	elementTool            *widget.Button
-	LiteralTool            *widget.Button
-	diagramObserver        *diagramObserver
-	diagramElementObserver *diagramElementObserver
+	fyneGUI                 *CrlEditorFyneGUI
+	diagramArea             *fyne.Container
+	diagramTabs             map[string]*diagramTab
+	toolbar                 *fyne.Container
+	toolButtons             map[ToolbarSelection]*widget.Button
+	tabArea                 *container.DocTabs
+	diagramObserver         *diagramObserver
+	diagramElementObserver  *diagramElementObserver
+	currentToolbarSelection ToolbarSelection
 }
 
 // NewFyneDiagramManager creates a diagram manager and associates it with the FyneGUI
@@ -55,6 +97,7 @@ func NewFyneDiagramManager(fyneGUI *CrlEditorFyneGUI) *FyneDiagramManager {
 	dm.diagramObserver = newDiagramObserver(&dm)
 	dm.diagramElementObserver = newDiagramElementObserver(&dm)
 	dm.fyneGUI = fyneGUI
+	dm.currentToolbarSelection = CURSOR
 	return &dm
 }
 
@@ -112,50 +155,83 @@ func (dm *FyneDiagramManager) closeDiagram(diagramID string) {
 
 func (dm *FyneDiagramManager) createToolbar() {
 	dm.toolbar = container.NewVBox()
-	dm.toolButtons = make(map[string]*widget.Button)
+	dm.toolButtons = make(map[ToolbarSelection]*widget.Button)
 	// Cursor
 	button := widget.NewButtonWithIcon("", images.ResourceCursorIconPng, nil)
-	dm.toolButtons["Cursor"] = button
+	button.OnTapped = func() {
+		dm.currentToolbarSelection = CURSOR
+	}
+	dm.toolButtons[CURSOR] = button
 	dm.toolbar.Add(button)
 	// Element
 	button = widget.NewButtonWithIcon("", images.ResourceElementIconPng, nil)
-	dm.toolButtons["Element"] = button
+	button.OnTapped = func() {
+		dm.currentToolbarSelection = ELEMENT
+	}
+	dm.toolButtons[ELEMENT] = button
 	dm.toolbar.Add(button)
 	// Literal
 	button = widget.NewButtonWithIcon("", images.ResourceLiteralIconPng, nil)
-	dm.toolButtons["Literal"] = button
+	button.OnTapped = func() {
+		dm.currentToolbarSelection = LITERAL
+	}
+	dm.toolButtons[LITERAL] = button
 	dm.toolbar.Add(button)
 	// Reference
 	button = widget.NewButtonWithIcon("", images.ResourceReferenceIconPng, nil)
-	dm.toolButtons["Reference"] = button
+	button.OnTapped = func() {
+		dm.currentToolbarSelection = REFERENCE
+	}
+	dm.toolButtons[REFERENCE] = button
 	dm.toolbar.Add(button)
 	// ReferenceLink
 	button = widget.NewButtonWithIcon("", images.ResourceReferenceLinkIconPng, nil)
-	dm.toolButtons["ReferenceLink"] = button
+	button.OnTapped = func() {
+		dm.currentToolbarSelection = REFERENCE_LINK
+	}
+	dm.toolButtons[REFERENCE_LINK] = button
 	dm.toolbar.Add(button)
 	// Refinement
 	button = widget.NewButtonWithIcon("", images.ResourceRefinementIconPng, nil)
-	dm.toolButtons["Refinement"] = button
+	button.OnTapped = func() {
+		dm.currentToolbarSelection = REFINEMENT
+	}
+	dm.toolButtons[REFINEMENT] = button
 	dm.toolbar.Add(button)
 	// RefinementLink
 	button = widget.NewButtonWithIcon("", images.ResourceRefinementLinkIconPng, nil)
-	dm.toolButtons["RefinementLink"] = button
+	button.OnTapped = func() {
+		dm.currentToolbarSelection = REFINEMENT_LINK
+	}
+	dm.toolButtons[REFINEMENT_LINK] = button
 	dm.toolbar.Add(button)
 	// OwnerPointer
 	button = widget.NewButtonWithIcon("", images.ResourceOwnerPointerIconPng, nil)
-	dm.toolButtons["OwnerPointer"] = button
+	button.OnTapped = func() {
+		dm.currentToolbarSelection = OWNER_POINTER
+	}
+	dm.toolButtons[OWNER_POINTER] = button
 	dm.toolbar.Add(button)
-	// ElementPointer
+	// REferencedElementPointer
 	button = widget.NewButtonWithIcon("", images.ResourceElementPointerIconPng, nil)
-	dm.toolButtons["ElementPointer"] = button
+	button.OnTapped = func() {
+		dm.currentToolbarSelection = REFERENCED_ELEMENT_POINTER
+	}
+	dm.toolButtons[REFERENCED_ELEMENT_POINTER] = button
 	dm.toolbar.Add(button)
 	// AbstractPointer
 	button = widget.NewButtonWithIcon("", images.ResourceAbstractPointerIconPng, nil)
-	dm.toolButtons["AbstractPointer"] = button
+	button.OnTapped = func() {
+		dm.currentToolbarSelection = ABSTRACT_ELEMENT_POINTER
+	}
+	dm.toolButtons[ABSTRACT_ELEMENT_POINTER] = button
 	dm.toolbar.Add(button)
 	// RefinedPointer
 	button = widget.NewButtonWithIcon("", images.ResourceRefinedPointerIconPng, nil)
-	dm.toolButtons["RefinedPointer"] = button
+	button.OnTapped = func() {
+		dm.currentToolbarSelection = REFINED_ELEMENT_POINTER
+	}
+	dm.toolButtons[REFINED_ELEMENT_POINTER] = button
 	dm.toolbar.Add(button)
 }
 
@@ -168,11 +244,55 @@ func (dm *FyneDiagramManager) diagramElementSelectionChanged(diagramElementID st
 	dm.fyneGUI.editor.SelectElementUsingIDString(diagramElementID, trans)
 }
 
+func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWidget, event *fyne.PointEvent) {
+	trans, new := dm.fyneGUI.editor.GetTransaction()
+	if new {
+		defer trans.ReleaseLocks()
+	}
+	uOfD := trans.GetUniverseOfDiscourse()
+	crlDiagram := uOfD.GetElement(fyneDiagram.ID)
+	var el core.Element
+	switch dm.currentToolbarSelection {
+	case CURSOR:
+		fyneDiagram.ClearSelection()
+	case ELEMENT:
+		el, _ = uOfD.NewElement(trans)
+		el.SetLabel(dm.fyneGUI.editor.GetDefaultElementLabel(), trans)
+	case LITERAL:
+		el, _ = uOfD.NewLiteral(trans)
+		el.SetLabel(dm.fyneGUI.editor.GetDefaultLiteralLabel(), trans)
+	case REFERENCE:
+		el, _ = uOfD.NewReference(trans)
+		el.SetLabel(dm.fyneGUI.editor.GetDefaultReferenceLabel(), trans)
+	case REFINEMENT:
+		el, _ = uOfD.NewRefinement(trans)
+		el.SetLabel(dm.fyneGUI.editor.GetDefaultRefinementLabel(), trans)
+	}
+
+	el.SetOwningConceptID(crlDiagram.GetOwningConceptID(trans), trans)
+	dm.fyneGUI.editor.SelectElement(el, trans)
+
+	// Now the view
+	x := event.Position.X
+	y := event.Position.Y
+	var newNode core.Element
+	newNode, _ = crldiagramdomain.NewDiagramNode(uOfD, trans)
+	newNode.Register(dm.diagramElementObserver)
+	crldiagramdomain.SetNodeX(newNode, float64(x), trans)
+	crldiagramdomain.SetNodeY(newNode, float64(y), trans)
+	newNode.SetLabel(el.GetLabel(trans), trans)
+	crldiagramdomain.SetReferencedModelElement(newNode, el, trans)
+	crldiagramdomain.SetDisplayLabel(newNode, el.GetLabel(trans), trans)
+
+	newNode.SetOwningConcept(crlDiagram, trans)
+}
+
 func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.Transaction) error {
 	diagramID := diagram.GetConceptID(trans)
 	tabItem := dm.diagramTabs[diagramID]
 	if tabItem == nil {
 		diagramWidget := diagramwidget.NewDiagramWidget(diagramID)
+		diagramWidget.OnTapped = dm.diagramTapped
 		scrollingContainer := container.NewScroll(diagramWidget)
 		newTabItem := &diagramTab{
 			diagramID: diagramID,
@@ -218,11 +338,11 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 	uOfD := trans.GetUniverseOfDiscourse()
 	crlLink := uOfD.GetElement(link.GetDiagramElementID())
 	if crlLink == nil {
-		return errors.New("In FyneDiagramManager.linkConnectionChanged CrlLink not found")
+		return errors.New("in FyneDiagramManager.linkConnectionChanged CrlLink not found")
 	}
 	crlNewPadOwner := uOfD.GetElement(newPad.GetPadOwner().GetDiagramElementID())
 	if crlNewPadOwner == nil {
-		return errors.New("In FyneDiagramManager.linkConnectionChanged CrlLink not found")
+		return errors.New("in FyneDiagramManager.linkConnectionChanged CrlLink not found")
 	}
 	switch end {
 	case "source":
@@ -261,7 +381,7 @@ func (dm *FyneDiagramManager) populateDiagram(diagram core.Element, trans *core.
 func (dm *FyneDiagramManager) selectElementInDiagram(elementID string, diagram *diagramwidget.DiagramWidget, trans *core.Transaction) error {
 	uOfD := trans.GetUniverseOfDiscourse()
 	foundDiagramElementID := ""
-	for key, _ := range diagram.GetDiagramElements() {
+	for key := range diagram.GetDiagramElements() {
 		crlDiagramElement := uOfD.GetElement(key)
 		if crlDiagramElement != nil {
 			crlModelElement := crldiagramdomain.GetReferencedModelElement(crlDiagramElement, trans)
@@ -363,7 +483,7 @@ func (deo *diagramElementObserver) Update(notification *core.ChangeNotification,
 	elementID := notification.GetReportingElementID()
 	crlDiagramElement := trans.GetUniverseOfDiscourse().GetElement(elementID)
 	fyneDiagramElement := diagramWidget.GetDiagramElement(elementID)
-	if reflect.ValueOf(fyneDiagramElement).IsNil() {
+	if fyneDiagramElement == nil || reflect.ValueOf(fyneDiagramElement).IsNil() {
 		fyneDiagramElement = deo.diagramManager.addElementToDiagram(crlDiagramElement, trans, diagramWidget)
 	}
 	switch typedElement := fyneDiagramElement.(type) {
