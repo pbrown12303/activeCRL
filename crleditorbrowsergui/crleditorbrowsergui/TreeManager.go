@@ -1,4 +1,4 @@
-package browsergui
+package crleditorbrowsergui
 
 import (
 	"log"
@@ -13,7 +13,7 @@ import (
 // treeManager manages the client's tree display of the uOfD
 type treeManager struct {
 	treeID     string
-	browserGUI *BrowserGUI
+	browserGUI *CrlEditorBrowserGUI
 }
 
 // addChildren adds the OwnedConcepts of the supplied Element to the client's tree

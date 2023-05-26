@@ -20,7 +20,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"github.com/pbrown12303/activeCRL/crleditor"
-	"github.com/pbrown12303/activeCRL/crleditorbrowsergui/browsergui"
+	"github.com/pbrown12303/activeCRL/crleditorbrowsergui/crleditorbrowsergui"
 	fynegui "github.com/pbrown12303/activeCRL/crleditorfynegui"
 )
 
@@ -36,8 +36,8 @@ func main() {
 	// Common infrastructure
 	crleditor.CrlEditorSingleton = crleditor.NewEditor(*userFolderArg)
 
-	browsergui.InitializeBrowserGUISingleton(crleditor.CrlEditorSingleton, true)
-	err := crleditor.CrlEditorSingleton.AddEditorGUI(browsergui.BrowserGUISingleton)
+	crleditorbrowsergui.InitializeBrowserGUISingleton(crleditor.CrlEditorSingleton, true)
+	err := crleditor.CrlEditorSingleton.AddEditorGUI(crleditorbrowsergui.BrowserGUISingleton)
 	if err != nil {
 		log.Fatal(err)
 	}

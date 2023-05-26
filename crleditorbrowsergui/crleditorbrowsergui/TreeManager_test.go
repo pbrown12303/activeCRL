@@ -1,4 +1,4 @@
-package browsergui_test
+package crleditorbrowsergui_test
 
 //	"fmt"
 // . "github.com/onsi/ginkgo/v2/dsl/core"

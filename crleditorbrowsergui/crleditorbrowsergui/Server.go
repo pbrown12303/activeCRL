@@ -1,4 +1,4 @@
-package browsergui
+package crleditorbrowsergui
 
 import (
 	"context"
@@ -562,7 +562,7 @@ func sendReply(w http.ResponseWriter, code int, message string, resultConceptID 
 }
 
 // StartServer starts the editor server. This will automatically launch a browser as an interface
-func (bgPtr *BrowserGUI) StartServer() {
+func (bgPtr *CrlEditorBrowserGUI) StartServer() {
 
 	// RequestServer
 	mux := http.NewServeMux()
@@ -582,7 +582,7 @@ func (bgPtr *BrowserGUI) StartServer() {
 	bgPtr.checkReady() // Make sure the websocket on the client is ready
 }
 
-func (bgPtr *BrowserGUI) checkReady() {
+func (bgPtr *CrlEditorBrowserGUI) checkReady() {
 	rh.ready = <-bgPtr.clientNotificationManager.webSocketReady
 	BrowserGUISingleton.SetInitialized()
 }

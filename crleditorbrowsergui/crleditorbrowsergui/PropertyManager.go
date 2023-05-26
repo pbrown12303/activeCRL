@@ -1,4 +1,4 @@
-package browsergui
+package crleditorbrowsergui
 
 import (
 	"log"
@@ -10,7 +10,7 @@ import (
 
 // propertyManager manages the client's display of the selectedElement's properties
 type propertyManager struct {
-	browserGUI *BrowserGUI
+	browserGUI *CrlEditorBrowserGUI
 }
 
 // initialize sets up the uOfD monitoring

@@ -31,7 +31,7 @@ type diagramTab struct {
 // FyneDiagramManager manages the relationship between the fyne DiagramWidgets and the
 // underlying CRL model. It is a component of the  FyneGUI
 type FyneDiagramManager struct {
-	fyneGUI                *FyneGUI
+	fyneGUI                *CrlEditorFyneGUI
 	diagramArea            *fyne.Container
 	diagramTabs            map[string]*diagramTab
 	toolbar                *fyne.Container
@@ -45,7 +45,7 @@ type FyneDiagramManager struct {
 }
 
 // NewFyneDiagramManager creates a diagram manager and associates it with the FyneGUI
-func NewFyneDiagramManager(fyneGUI *FyneGUI) *FyneDiagramManager {
+func NewFyneDiagramManager(fyneGUI *CrlEditorFyneGUI) *FyneDiagramManager {
 	var dm FyneDiagramManager
 	dm.createToolbar()
 	dm.diagramTabs = make(map[string]*diagramTab)

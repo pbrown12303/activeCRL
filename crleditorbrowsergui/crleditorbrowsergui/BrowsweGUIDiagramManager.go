@@ -1,4 +1,4 @@
-package browsergui
+package crleditorbrowsergui
 
 import (
 	"strconv"
@@ -17,11 +17,11 @@ import (
 
 // diagramManager manages the diagram portion of the UI and all interactions with it
 type diagramManager struct {
-	browserGUI     *BrowserGUI
+	browserGUI     *CrlEditorBrowserGUI
 	elementManager *diagramElementManager
 }
 
-func newDiagramManager(browserGUI *BrowserGUI) *diagramManager {
+func newDiagramManager(browserGUI *CrlEditorBrowserGUI) *diagramManager {
 	dm := &diagramManager{}
 	dm.browserGUI = browserGUI
 	dm.elementManager = newDiagramElementManager(dm)

@@ -1,4 +1,4 @@
-package browsergui_test
+package crleditorbrowsergui_test
 
 import (
 	"io/ioutil"
@@ -14,7 +14,7 @@ import (
 	. "github.com/sclevine/agouti/matchers"
 
 	"github.com/pbrown12303/activeCRL/crleditor"
-	"github.com/pbrown12303/activeCRL/crleditorbrowsergui/browsergui"
+	"github.com/pbrown12303/activeCRL/crleditorbrowsergui/crleditorbrowsergui"
 )
 
 var page *agouti.Page
@@ -47,8 +47,8 @@ var _ = BeforeSuite(func() {
 	// Start the testEditor and GUI
 	// Common infrastructure
 	testEditor = crleditor.NewEditor(testUserDir)
-	browsergui.InitializeBrowserGUISingleton(testEditor, false)
-	err = testEditor.AddEditorGUI(browsergui.BrowserGUISingleton)
+	crleditorbrowsergui.InitializeBrowserGUISingleton(testEditor, false)
+	err = testEditor.AddEditorGUI(crleditorbrowsergui.BrowserGUISingleton)
 	if err != nil {
 		log.Fatal(err)
 	}

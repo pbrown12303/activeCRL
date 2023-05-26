@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/pbrown12303/activeCRL/crleditor"
-	"github.com/pbrown12303/activeCRL/crleditorbrowsergui/browsergui"
+	"github.com/pbrown12303/activeCRL/crleditorbrowsergui/crleditorbrowsergui"
 	// "github.com/pbrown12303/activeCRL/crleditorfynegui/fynegui"
 )
 
@@ -25,8 +25,8 @@ func main() {
 
 	// Common infrastructure
 	editor := crleditor.NewEditor(*userFolderArg)
-	browsergui.InitializeBrowserGUISingleton(editor, true)
-	err := editor.AddEditorGUI(browsergui.BrowserGUISingleton)
+	crleditorbrowsergui.InitializeBrowserGUISingleton(editor, true)
+	err := editor.AddEditorGUI(crleditorbrowsergui.BrowserGUISingleton)
 	if err != nil {
 		log.Fatal(err)
 	}

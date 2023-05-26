@@ -26,12 +26,12 @@ func (a ByLabel) Less(i, j int) bool {
 
 // FyneTreeManager is the manager of the fyne tree in the CrlFyneEditor
 type FyneTreeManager struct {
-	fyneGUI *FyneGUI
+	fyneGUI *CrlEditorFyneGUI
 	tree    *widget.Tree
 }
 
 // NewFyneTreeManager returns an initialized FyneTreeManager
-func NewFyneTreeManager(fyneGUI *FyneGUI) *FyneTreeManager {
+func NewFyneTreeManager(fyneGUI *CrlEditorFyneGUI) *FyneTreeManager {
 	var treeManager FyneTreeManager
 	treeManager.fyneGUI = fyneGUI
 	treeManager.tree = widget.NewTree(GetChildUIDs, IsBranch, CreateNode, UpdateNode)

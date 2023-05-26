@@ -1,4 +1,4 @@
-package browsergui
+package crleditorbrowsergui
 
 import (
 	"log"
@@ -18,7 +18,7 @@ import (
 )
 
 // BrowserGUISingleton is the singleton instance of the BrowserGUI
-var BrowserGUISingleton *BrowserGUI
+var BrowserGUISingleton *CrlEditorBrowserGUI
 
 // CrlLogClientNotifications enables logging of client notifications when set to true
 var CrlLogClientNotifications = false
@@ -26,8 +26,8 @@ var CrlLogClientNotifications = false
 // CrlLogClientRequests enables the logging of client requests when set to true
 var CrlLogClientRequests = false
 
-// BrowserGUI is the browser gui for the CrlEditor. It manages the subordinate managers (Property, Tree, Diagram)
-type BrowserGUI struct {
+// CrlEditorBrowserGUI is the browser gui for the CrlEditor. It manages the subordinate managers (Property, Tree, Diagram)
+type CrlEditorBrowserGUI struct {
 	editor                    *crleditor.Editor
 	clientNotificationManager *ClientNotificationManager
 	diagramManager            *diagramManager
@@ -43,7 +43,7 @@ type BrowserGUI struct {
 // InitializeBrowserGUISingleton initializes the BrowserGUI singleton instance. It should be called once
 // when the editor web page is created
 func InitializeBrowserGUISingleton(editor *crleditor.Editor, startBrowser bool) {
-	browserGUI := &BrowserGUI{}
+	browserGUI := &CrlEditorBrowserGUI{}
 	browserGUI.editor = editor
 	browserGUI.initialized = false
 	browserGUI.startBrowser = startBrowser
@@ -51,7 +51,7 @@ func InitializeBrowserGUISingleton(editor *crleditor.Editor, startBrowser bool) 
 }
 
 // CloseDiagramView closes the gui display of the diagram
-func (bgPtr *BrowserGUI) CloseDiagramView(diagramID string, hl *core.Transaction) error {
+func (bgPtr *CrlEditorBrowserGUI) CloseDiagramView(diagramID string, hl *core.Transaction) error {
 	_, err := SendNotification("CloseDiagramView", diagramID, nil, map[string]string{})
 	if err != nil {
 		return errors.Wrap(err, "BrowserGUI.CloseDiagramView failed")
@@ -60,7 +60,7 @@ func (bgPtr *BrowserGUI) CloseDiagramView(diagramID string, hl *core.Transaction
 }
 
 // createPropertyManager creates an instance of the propertyManager
-func (bgPtr *BrowserGUI) createPropertyManager() error {
+func (bgPtr *CrlEditorBrowserGUI) createPropertyManager() error {
 	pm := &propertyManager{}
 	pm.browserGUI = bgPtr
 	bgPtr.propertyManager = pm
@@ -68,7 +68,7 @@ func (bgPtr *BrowserGUI) createPropertyManager() error {
 }
 
 // createTreeManager creates an instance of the TreeManager
-func (bgPtr *BrowserGUI) createTreeManager(treeID string) error {
+func (bgPtr *CrlEditorBrowserGUI) createTreeManager(treeID string) error {
 	tm := &treeManager{}
 	tm.browserGUI = bgPtr
 	tm.treeID = treeID
@@ -77,7 +77,7 @@ func (bgPtr *BrowserGUI) createTreeManager(treeID string) error {
 }
 
 // DisplayCallGraph opens a new tab and displays the selected graph
-func (bgPtr *BrowserGUI) DisplayCallGraph(indexString string, hl *core.Transaction) error {
+func (bgPtr *CrlEditorBrowserGUI) DisplayCallGraph(indexString string, hl *core.Transaction) error {
 	index, err := strconv.ParseInt(indexString, 10, 32)
 	if err != nil {
 		return err
@@ -106,7 +106,7 @@ func (bgPtr *BrowserGUI) DisplayCallGraph(indexString string, hl *core.Transacti
 
 }
 
-func (bgPtr *BrowserGUI) displayCallGraph(functionCallGraph *core.FunctionCallGraph, hl *core.Transaction) error {
+func (bgPtr *CrlEditorBrowserGUI) displayCallGraph(functionCallGraph *core.FunctionCallGraph, hl *core.Transaction) error {
 	graph := functionCallGraph.GetGraph()
 	if graph == nil {
 		return errors.New("In BrowserGUI.displayCallGraph, graph is nil")
@@ -120,13 +120,13 @@ func (bgPtr *BrowserGUI) displayCallGraph(functionCallGraph *core.FunctionCallGr
 }
 
 // ElementDeleted is used to inform the gui that the element has been deleted
-func (bgPtr *BrowserGUI) ElementDeleted(elID string, hl *core.Transaction) error {
+func (bgPtr *CrlEditorBrowserGUI) ElementDeleted(elID string, hl *core.Transaction) error {
 	return nil
 }
 
 // ElementSelected selects the indicated Element in the tree, displays the Element in the Properties window, and selects it in the
 // current diagram (if present).
-func (bgPtr *BrowserGUI) ElementSelected(el core.Element, hl *core.Transaction) error {
+func (bgPtr *CrlEditorBrowserGUI) ElementSelected(el core.Element, hl *core.Transaction) error {
 	elID := ""
 	var conceptState *core.ConceptState
 	var err error
@@ -145,64 +145,64 @@ func (bgPtr *BrowserGUI) ElementSelected(el core.Element, hl *core.Transaction) 
 }
 
 // DisplayDiagram tells the diagramManager to display the diagram
-func (bgPtr *BrowserGUI) DisplayDiagram(diagram core.Element, trans *core.Transaction) error {
+func (bgPtr *CrlEditorBrowserGUI) DisplayDiagram(diagram core.Element, trans *core.Transaction) error {
 	return bgPtr.diagramManager.displayDiagram(diagram, trans)
 }
 
 // FileLoaded informs the BrowserGUI that a file has been loaded
-func (bgPtr *BrowserGUI) FileLoaded(el core.Element, hl *core.Transaction) {
+func (bgPtr *CrlEditorBrowserGUI) FileLoaded(el core.Element, hl *core.Transaction) {
 	bgPtr.treeManager.addNodeRecursively(el, hl)
 }
 
 // GetAdHocTrace returns the value of the AdHocTrace variable used in troubleshooting
-func (bgPtr *BrowserGUI) GetAdHocTrace() bool {
+func (bgPtr *CrlEditorBrowserGUI) GetAdHocTrace() bool {
 	return core.AdHocTrace
 }
 
 // GetAvailableGraphCount returns the number of available call graphs
-func (bgPtr *BrowserGUI) GetAvailableGraphCount() int {
+func (bgPtr *CrlEditorBrowserGUI) GetAvailableGraphCount() int {
 	return len(core.GetFunctionCallGraphs())
 }
 
 // GetClientNotificationManager returns the ClientNotificationManager used to send notifications to the client
-func (bgPtr *BrowserGUI) GetClientNotificationManager() *ClientNotificationManager {
+func (bgPtr *CrlEditorBrowserGUI) GetClientNotificationManager() *ClientNotificationManager {
 	return bgPtr.clientNotificationManager
 }
 
 // getDiagramManager returns the DiagramManager
-func (bgPtr *BrowserGUI) getDiagramManager() *diagramManager {
+func (bgPtr *CrlEditorBrowserGUI) getDiagramManager() *diagramManager {
 	return bgPtr.diagramManager
 }
 
 // GetNoSaveDomains reports gui-specific domains that should not be saved
-func (bgPtr *BrowserGUI) GetNoSaveDomains(noSaveDomains map[string]core.Element, hl *core.Transaction) {
+func (bgPtr *CrlEditorBrowserGUI) GetNoSaveDomains(noSaveDomains map[string]core.Element, hl *core.Transaction) {
 	if bgPtr.workingDomain != nil {
 		noSaveDomains[bgPtr.workingDomain.GetConceptID(hl)] = bgPtr.workingDomain
 	}
 }
 
 // GetNumberOfFunctionCalls returns the number of function calls in the graph
-func (bgPtr *BrowserGUI) GetNumberOfFunctionCalls() int {
+func (bgPtr *CrlEditorBrowserGUI) GetNumberOfFunctionCalls() int {
 	return len(core.GetFunctionCallGraphs())
 }
 
 // GetOmitDiagramRelatedCalls returns the value of core.OmitDiagramRelatedCalls used in troubleshooting
-func (bgPtr *BrowserGUI) GetOmitDiagramRelatedCalls() bool {
+func (bgPtr *CrlEditorBrowserGUI) GetOmitDiagramRelatedCalls() bool {
 	return core.OmitDiagramRelatedCalls
 }
 
 // GetOmitHousekeepingCalls returns the value of core.OmitHousekeepingCalls used in troubleshooting
-func (bgPtr *BrowserGUI) GetOmitHousekeepingCalls() bool {
+func (bgPtr *CrlEditorBrowserGUI) GetOmitHousekeepingCalls() bool {
 	return core.OmitHousekeepingCalls
 }
 
 // GetOmitManageTreeNodesCalls returns the value of core.OmitManageTreeNodesCalls used in troubleshooting
-func (bgPtr *BrowserGUI) GetOmitManageTreeNodesCalls() bool {
+func (bgPtr *CrlEditorBrowserGUI) GetOmitManageTreeNodesCalls() bool {
 	return core.OmitManageTreeNodesCalls
 }
 
 // GetTraceChange returns the value of the core.TraceChange variable used in troubleshooting
-func (bgPtr *BrowserGUI) GetTraceChange() bool {
+func (bgPtr *CrlEditorBrowserGUI) GetTraceChange() bool {
 	return core.TraceChange
 }
 
@@ -226,27 +226,27 @@ func GetIconPath(el core.Element, hl *core.Transaction) string {
 }
 
 // GetTreeDragSelection returns the Element currently being dragged from the tree
-func (bgPtr *BrowserGUI) GetTreeDragSelection() core.Element {
+func (bgPtr *CrlEditorBrowserGUI) GetTreeDragSelection() core.Element {
 	return bgPtr.treeDragSelection
 }
 
 // GetTreeDragSelectionID returns the ConceptID of the Element being dragged from the tree
-func (bgPtr *BrowserGUI) GetTreeDragSelectionID(hl *core.Transaction) string {
+func (bgPtr *CrlEditorBrowserGUI) GetTreeDragSelectionID(hl *core.Transaction) string {
 	return bgPtr.treeDragSelection.GetConceptID(hl)
 }
 
 // getTreeManager returns the TreeManager
-func (bgPtr *BrowserGUI) getTreeManager() *treeManager {
+func (bgPtr *CrlEditorBrowserGUI) getTreeManager() *treeManager {
 	return bgPtr.treeManager
 }
 
 // GetUofD returns the UniverseOfDiscourse being edited by this editor
-func (bgPtr *BrowserGUI) GetUofD() *core.UniverseOfDiscourse {
+func (bgPtr *CrlEditorBrowserGUI) GetUofD() *core.UniverseOfDiscourse {
 	return bgPtr.editor.GetUofD()
 }
 
 // Initialize must be called before any editor operation.
-func (bgPtr *BrowserGUI) Initialize(hl *core.Transaction) error {
+func (bgPtr *CrlEditorBrowserGUI) Initialize(hl *core.Transaction) error {
 	if bgPtr.treeManager == nil {
 		bgPtr.createTreeManager("#uOfD()")
 	}
@@ -275,7 +275,7 @@ func (bgPtr *BrowserGUI) Initialize(hl *core.Transaction) error {
 }
 
 // InitializeGUI sets the client state after a browser refresh.
-func (bgPtr *BrowserGUI) InitializeGUI(hl *core.Transaction) error {
+func (bgPtr *CrlEditorBrowserGUI) InitializeGUI(hl *core.Transaction) error {
 	if !bgPtr.serverRunning {
 		go bgPtr.StartServer()
 		for !bgPtr.IsInitialized() {
@@ -291,7 +291,7 @@ func (bgPtr *BrowserGUI) InitializeGUI(hl *core.Transaction) error {
 }
 
 // initializeClientState sets the client state at any desired time
-func (bgPtr *BrowserGUI) initializeClientState(hl *core.Transaction) error {
+func (bgPtr *CrlEditorBrowserGUI) initializeClientState(hl *core.Transaction) error {
 	err := bgPtr.getTreeManager().initializeTree(hl)
 	if err != nil {
 		return errors.Wrap(err, "BrowserGUI.initializeClientState failed")
@@ -329,11 +329,11 @@ func (bgPtr *BrowserGUI) initializeClientState(hl *core.Transaction) error {
 }
 
 // IsInitialized returns true if the editor's initialization is complete
-func (bgPtr *BrowserGUI) IsInitialized() bool {
+func (bgPtr *CrlEditorBrowserGUI) IsInitialized() bool {
 	return bgPtr.initialized
 }
 
-func (bgPtr *BrowserGUI) nullifyReferencedConcept(refID string, hl *core.Transaction) error {
+func (bgPtr *CrlEditorBrowserGUI) nullifyReferencedConcept(refID string, hl *core.Transaction) error {
 	ref := bgPtr.editor.GetUofD().GetReference(refID)
 	if ref == nil {
 		return errors.New("BrowserGUI.nullifyReferencedConcept called with refID not found in bgPtr.editor.GetUofD()")
@@ -384,17 +384,17 @@ func (bgPtr *BrowserGUI) nullifyReferencedConcept(refID string, hl *core.Transac
 // }
 
 // SendClearDiagrams tells the client to close all displayed diagrams
-func (bgPtr *BrowserGUI) SendClearDiagrams() {
+func (bgPtr *CrlEditorBrowserGUI) SendClearDiagrams() {
 	bgPtr.SendNotification("ClearDiagrams", "", nil, nil)
 }
 
 // SendClientInitializationComplete tells the client that all initialization activities have been performed
-func (bgPtr *BrowserGUI) SendClientInitializationComplete() {
+func (bgPtr *CrlEditorBrowserGUI) SendClientInitializationComplete() {
 	bgPtr.SendNotification("InitializationComplete", "", nil, nil)
 }
 
 // SendDebugSettings sends the trace settings to the client so that they can be edited
-func (bgPtr *BrowserGUI) SendDebugSettings() {
+func (bgPtr *CrlEditorBrowserGUI) SendDebugSettings() {
 	params := make(map[string]string)
 	params["EnableNotificationTracing"] = strconv.FormatBool(bgPtr.GetTraceChange())
 	params["OmitHousekeepingCalls"] = strconv.FormatBool(bgPtr.GetOmitHousekeepingCalls())
@@ -404,7 +404,7 @@ func (bgPtr *BrowserGUI) SendDebugSettings() {
 }
 
 // SendUserPreferences sends the editor settings to the client so that they can be edited
-func (bgPtr *BrowserGUI) SendUserPreferences(hl *core.Transaction) {
+func (bgPtr *CrlEditorBrowserGUI) SendUserPreferences(hl *core.Transaction) {
 	params := make(map[string]string)
 	params["DropReferenceAsLink"] = strconv.FormatBool(bgPtr.editor.GetDropDiagramReferenceAsLink(hl))
 	params["DropRefinementAsLink"] = strconv.FormatBool(bgPtr.editor.GetDropDiagramRefinementAsLink(hl))
@@ -412,29 +412,29 @@ func (bgPtr *BrowserGUI) SendUserPreferences(hl *core.Transaction) {
 }
 
 // SendNotification calls the ClientNotificationManager method of the same name and returns the result.
-func (bgPtr *BrowserGUI) SendNotification(notificationDescription string, id string, elState *core.ConceptState, additionalParameters map[string]string) (*NotificationResponse, error) {
+func (bgPtr *CrlEditorBrowserGUI) SendNotification(notificationDescription string, id string, elState *core.ConceptState, additionalParameters map[string]string) (*NotificationResponse, error) {
 	return bgPtr.GetClientNotificationManager().SendNotification(notificationDescription, id, elState, additionalParameters)
 }
 
 // SendWorkspacePath sends the new workspace path to the client
-func (bgPtr *BrowserGUI) SendWorkspacePath() {
+func (bgPtr *CrlEditorBrowserGUI) SendWorkspacePath() {
 	params := make(map[string]string)
 	params["WorkspacePath"] = bgPtr.editor.GetUserPreferences().WorkspacePath
 	bgPtr.SendNotification("WorkspacePath", "", nil, params)
 }
 
 // SetAdHocTrace sets the value of the core.AdHocTrace variable used in troubleshooting
-func (bgPtr *BrowserGUI) SetAdHocTrace(status bool) {
+func (bgPtr *CrlEditorBrowserGUI) SetAdHocTrace(status bool) {
 	core.AdHocTrace = status
 }
 
 // SetInitialized tells the BrowserGUI that sockets have been initialized
-func (bgPtr *BrowserGUI) SetInitialized() {
+func (bgPtr *CrlEditorBrowserGUI) SetInitialized() {
 	bgPtr.initialized = true
 }
 
 // SetTraceChange sets the value of the core.TraceChange variable used in troubleshooting
-func (bgPtr *BrowserGUI) SetTraceChange(newValue bool, omitHousekeepingCalls bool, omitManageTreeNodesCalls bool, omitDiagramRelatedCalls bool) {
+func (bgPtr *CrlEditorBrowserGUI) SetTraceChange(newValue bool, omitHousekeepingCalls bool, omitManageTreeNodesCalls bool, omitDiagramRelatedCalls bool) {
 	core.TraceChange = newValue
 	core.OmitHousekeepingCalls = omitHousekeepingCalls
 	core.OmitManageTreeNodesCalls = omitManageTreeNodesCalls
@@ -443,12 +443,12 @@ func (bgPtr *BrowserGUI) SetTraceChange(newValue bool, omitHousekeepingCalls boo
 }
 
 // SetTreeDragSelection identifies the Element as the one being dragged from the tree
-func (bgPtr *BrowserGUI) SetTreeDragSelection(elID string) {
+func (bgPtr *CrlEditorBrowserGUI) SetTreeDragSelection(elID string) {
 	bgPtr.treeDragSelection = bgPtr.GetUofD().GetElement(elID)
 }
 
 // ShowConceptInTree shows the concept in the tree
-func (bgPtr *BrowserGUI) ShowConceptInTree(concept core.Element, hl *core.Transaction) error {
+func (bgPtr *CrlEditorBrowserGUI) ShowConceptInTree(concept core.Element, hl *core.Transaction) error {
 	if concept == nil {
 		return errors.New("BrowserGUI.ShowConceptInTree called with nil concept")
 	}
@@ -464,7 +464,7 @@ func (bgPtr *BrowserGUI) ShowConceptInTree(concept core.Element, hl *core.Transa
 }
 
 // UpdateDebugSettings updates the debug-related settings and sends a notification to the client
-func (bgPtr *BrowserGUI) UpdateDebugSettings(request *Request) {
+func (bgPtr *CrlEditorBrowserGUI) UpdateDebugSettings(request *Request) {
 	traceChange, err := strconv.ParseBool(request.AdditionalParameters["EnableNotificationTracing"])
 	if err != nil {
 		log.Print(err.Error())
@@ -490,7 +490,7 @@ func (bgPtr *BrowserGUI) UpdateDebugSettings(request *Request) {
 }
 
 // UpdateUserPreferences updates the values of the editor settings and sends a notification of the change to the client.
-func (bgPtr *BrowserGUI) UpdateUserPreferences(request *Request, hl *core.Transaction) {
+func (bgPtr *CrlEditorBrowserGUI) UpdateUserPreferences(request *Request, hl *core.Transaction) {
 	value, _ := strconv.ParseBool(request.AdditionalParameters["DropReferenceAsLink"])
 	bgPtr.editor.SetDropDiagramReferenceAsLink(value, hl)
 	value, _ = strconv.ParseBool(request.AdditionalParameters["DropRefinementAsLink"])

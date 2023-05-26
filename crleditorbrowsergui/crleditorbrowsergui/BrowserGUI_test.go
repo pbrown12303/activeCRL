@@ -1,4 +1,4 @@
-package browsergui_test
+package crleditorbrowsergui_test
 
 import (
 	//	"fmt"
@@ -10,7 +10,7 @@ import (
 
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
-	"github.com/pbrown12303/activeCRL/crleditorbrowsergui/browsergui"
+	"github.com/pbrown12303/activeCRL/crleditorbrowsergui"
 	"github.com/sclevine/agouti"
 
 	//	"testing"
@@ -25,7 +25,7 @@ var _ = Describe("Test CrlEditor", func() {
 	AssertServerRequestProcessingComplete := func() {
 		EventuallyWithOffset(1, func() bool {
 			// log.Printf("GetRequestInProgress: %t", browsergui.GetRequestInProgress())
-			return browsergui.GetRequestInProgress() == false
+			return crleditorbrowsergui.GetRequestInProgress() == false
 		}, time.Second*10).Should(BeTrue())
 	}
 
@@ -60,7 +60,7 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(page.RunScript("return crlSelectedConceptID;", nil, &newID)).To(Succeed())
 		Expect(newID).ToNot(Equal(""))
 		Eventually(func() bool {
-			conceptSpace := browsergui.BrowserGUISingleton.GetUofD().GetElement(newID)
+			conceptSpace := crleditorbrowsergui.BrowserGUISingleton.GetUofD().GetElement(newID)
 			return conceptSpace != nil
 		}, 3).Should(BeTrue())
 		newCS := uOfD.GetElement(newID)
@@ -87,7 +87,7 @@ var _ = Describe("Test CrlEditor", func() {
 		Expect(newDiagram).ToNot(BeNil())
 		// browsergui.CrlLogClientRequests = true
 		Eventually(func() bool {
-			return browsergui.GetRequestInProgress() == false
+			return crleditorbrowsergui.GetRequestInProgress() == false
 		}).Should(BeTrue())
 		return newDiagramID, newDiagram
 	}
@@ -114,7 +114,7 @@ var _ = Describe("Test CrlEditor", func() {
 		var clearWorkspaceButton = page.FindByID("ClearWorkspaceButton")
 		Expect(clearWorkspaceButton.Click()).To(Succeed())
 		Eventually(func() bool {
-			return browsergui.GetRequestInProgress() == false
+			return crleditorbrowsergui.GetRequestInProgress() == false
 		}, time.Second*5).Should(BeTrue())
 		// log.Printf("**************************** ClearWorkspace Request Complete")
 		testEditor.EndTransaction()
@@ -496,7 +496,7 @@ var _ = Describe("Test CrlEditor", func() {
 
 	Describe("Testing CrlEditor basic functionality", func() {
 		Specify("The editor should be initialized", func() {
-			Expect(browsergui.BrowserGUISingleton.IsInitialized()).To(BeTrue())
+			Expect(crleditorbrowsergui.BrowserGUISingleton.IsInitialized()).To(BeTrue())
 			var initializationComplete interface{}
 			page.RunScript("return crlInitializationComplete;", nil, &initializationComplete)
 			Expect(initializationComplete).To(BeTrue())
@@ -547,10 +547,10 @@ var _ = Describe("Test CrlEditor", func() {
 			uOfD.MarkUndoPoint()
 			beforeUofD := uOfD.Clone(hl)
 			beforeHL := beforeUofD.NewTransaction()
-			browsergui.CrlLogClientRequests = true
+			crleditorbrowsergui.CrlLogClientRequests = true
 			_, diag := CreateDiagram(cs1)
 			Expect(diag).ToNot(BeNil())
-			browsergui.CrlLogClientRequests = false
+			crleditorbrowsergui.CrlLogClientRequests = false
 			afterUofD := uOfD.Clone(hl)
 			afterHL := afterUofD.NewTransaction()
 			Undo()
@@ -602,7 +602,7 @@ var _ = Describe("Test CrlEditor", func() {
 				// be true until after all of the expected client communication has completed.
 				AssertServerRequestProcessingComplete()
 				Eventually(func() bool {
-					return browsergui.BrowserGUISingleton.GetTreeDragSelection() == nil
+					return crleditorbrowsergui.BrowserGUISingleton.GetTreeDragSelection() == nil
 				}, 3).Should(BeTrue())
 				Expect(len(diagram.GetOwnedConceptsRefinedFromURI(crldiagramdomain.CrlDiagramNodeURI, hl))).To(Equal(1))
 				newNode := diagram.GetFirstOwnedConceptRefinedFromURI(crldiagramdomain.CrlDiagramNodeURI, hl)
@@ -631,7 +631,7 @@ var _ = Describe("Test CrlEditor", func() {
 				// be true until after all of the expected client communication has completed.
 				AssertServerRequestProcessingComplete()
 				Eventually(func() bool {
-					return browsergui.BrowserGUISingleton.GetTreeDragSelection() == nil
+					return crleditorbrowsergui.BrowserGUISingleton.GetTreeDragSelection() == nil
 				}, 3).Should(BeTrue())
 				Expect(len(diagram.GetOwnedConceptsRefinedFromURI(crldiagramdomain.CrlDiagramNodeURI, hl))).To(Equal(2))
 				var newNode2 core.Element

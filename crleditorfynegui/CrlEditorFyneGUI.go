@@ -15,10 +15,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-var FyneGUISingleton *FyneGUI
+var FyneGUISingleton *CrlEditorFyneGUI
 
-// FyneGUI is the Crl Editor built with Fyne
-type FyneGUI struct {
+// CrlEditorFyneGUI is the Crl Editor built with Fyne
+type CrlEditorFyneGUI struct {
 	app                fyne.App
 	editor             *crleditor.Editor
 	diagramManager     *FyneDiagramManager
@@ -29,8 +29,8 @@ type FyneGUI struct {
 }
 
 // NewFyneGUI returns an initialized FyneGUI
-func NewFyneGUI(crlEditor *crleditor.Editor) *FyneGUI {
-	var fyneGUI FyneGUI
+func NewFyneGUI(crlEditor *crleditor.Editor) *CrlEditorFyneGUI {
+	var fyneGUI CrlEditorFyneGUI
 	FyneGUISingleton = &fyneGUI
 	fyneGUI.editor = crlEditor
 	fyneGUI.app = app.New()
@@ -85,19 +85,19 @@ func buildCrlFyneEditorMenu(window fyne.Window) *fyne.MainMenu {
 }
 
 // CloseDiagramView
-func (gui *FyneGUI) CloseDiagramView(diagramID string, hl *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) CloseDiagramView(diagramID string, hl *core.Transaction) error {
 	gui.diagramManager.closeDiagram(diagramID)
 	return nil
 }
 
 // ElementDeleted
-func (gui *FyneGUI) ElementDeleted(elID string, hl *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) ElementDeleted(elID string, hl *core.Transaction) error {
 	// TODO Implement this
 	return nil
 }
 
 // ElementSelected
-func (gui *FyneGUI) ElementSelected(el core.Element, trans *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) ElementSelected(el core.Element, trans *core.Transaction) error {
 	uid := ""
 	if el != nil {
 		uid = el.GetConceptID(trans)
@@ -111,39 +111,39 @@ func (gui *FyneGUI) ElementSelected(el core.Element, trans *core.Transaction) er
 }
 
 // DisplayDiagram
-func (gui *FyneGUI) DisplayDiagram(diagram core.Element, trans *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) DisplayDiagram(diagram core.Element, trans *core.Transaction) error {
 	gui.diagramManager.displayDiagram(diagram, trans)
 	return nil
 }
 
 // FileLoaded
-func (gui *FyneGUI) FileLoaded(el core.Element, hl *core.Transaction) {
+func (gui *CrlEditorFyneGUI) FileLoaded(el core.Element, hl *core.Transaction) {
 	// TODO Implement this
 	// noop
 }
 
 // GetNoSaveDomains
-func (gui *FyneGUI) GetNoSaveDomains(noSaveDomains map[string]core.Element, hl *core.Transaction) {
+func (gui *CrlEditorFyneGUI) GetNoSaveDomains(noSaveDomains map[string]core.Element, hl *core.Transaction) {
 	// TODO Implement this
 	// noop
 }
 
-func (gui *FyneGUI) getUofD() *core.UniverseOfDiscourse {
+func (gui *CrlEditorFyneGUI) getUofD() *core.UniverseOfDiscourse {
 	return gui.editor.GetUofD()
 }
 
 // GetWindow returns the main window of the FyneGUI
-func (gui *FyneGUI) GetWindow() fyne.Window {
+func (gui *CrlEditorFyneGUI) GetWindow() fyne.Window {
 	return gui.window
 }
 
 // Initialize
-func (gui *FyneGUI) Initialize(hl *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) Initialize(hl *core.Transaction) error {
 	return nil
 }
 
 // InitializeGUI
-func (gui *FyneGUI) InitializeGUI(hl *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) InitializeGUI(hl *core.Transaction) error {
 	openDiagrams := gui.editor.GetSettings().GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
 	if openDiagrams == nil {
 		return errors.New("In FyneGUI.initializeClientState, openDiagrams is nil")
@@ -168,12 +168,12 @@ func (gui *FyneGUI) InitializeGUI(hl *core.Transaction) error {
 }
 
 // RegisterUofDInitializationFunctions
-func (gui *FyneGUI) RegisterUofDInitializationFunctions(uOfDManager *core.UofDManager) error {
+func (gui *CrlEditorFyneGUI) RegisterUofDInitializationFunctions(uOfDManager *core.UofDManager) error {
 	return nil
 }
 
 // RegisterUofDPostInitializationFunctions
-func (gui *FyneGUI) RegisterUofDPostInitializationFunctions(uOfDManager *core.UofDManager) error {
+func (gui *CrlEditorFyneGUI) RegisterUofDPostInitializationFunctions(uOfDManager *core.UofDManager) error {
 	return nil
 }
 
