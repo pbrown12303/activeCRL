@@ -9,12 +9,9 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pbrown12303/activeCRL/core"
-	"github.com/pbrown12303/activeCRL/crldatastructuresdomain"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 	"github.com/pbrown12303/activeCRL/crleditor"
-
 	// "github.com/pbrown12303/activeCRL/crleditorbrowserguidomain"
-	"github.com/pbrown12303/activeCRL/crleditordomain"
 )
 
 // BrowserGUISingleton is the singleton instance of the BrowserGUI
@@ -304,25 +301,16 @@ func (bgPtr *CrlEditorBrowserGUI) initializeClientState(hl *core.Transaction) er
 	if err != nil {
 		return errors.Wrap(err, "BrowserGUI.initializeClientState failed")
 	}
-	openDiagrams := bgPtr.editor.GetSettings().GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, hl)
-	if openDiagrams == nil {
-		return errors.New("In BrowserGUI.initializeClientState, openDiagrams is nil")
-	}
-	openDiagramLiteral, err2 := crldatastructuresdomain.GetFirstMemberLiteral(openDiagrams, hl)
-	if err2 != nil {
-		return errors.Wrap(err2, "In BrowserGUI.initializeClientState getting first member literal failed")
-	}
-	for openDiagramLiteral != nil {
-		diagram := bgPtr.editor.GetUofD().GetElement(openDiagramLiteral.GetLiteralValue(hl))
+	for _, openDiagramID := range bgPtr.editor.GetSettings().OpenDiagrams {
+		diagram := bgPtr.editor.GetUofD().GetElement(openDiagramID)
 		if diagram == nil {
-			log.Printf("In BrowserGui.initializeClientState: uOfD does not contain diagram with ID: %s", openDiagramLiteral.GetLiteralValue(hl))
+			log.Printf("In BrowserGui.initializeClientState: uOfD does not contain diagram with ID: %s", openDiagramID)
 		} else {
-			err2 = bgPtr.diagramManager.displayDiagram(diagram, hl)
-			if err2 != nil {
-				return errors.Wrap(err2, "In BrowserGUI.initializeClientState diagram "+diagram.GetLabel(hl)+" did not display")
+			err = bgPtr.diagramManager.displayDiagram(diagram, hl)
+			if err != nil {
+				return errors.Wrap(err, "In BrowserGUI.initializeClientState diagram "+diagram.GetLabel(hl)+" did not display")
 			}
 		}
-		openDiagramLiteral, _ = crldatastructuresdomain.GetNextMemberLiteral(openDiagramLiteral, hl)
 	}
 	bgPtr.SendClientInitializationComplete()
 	return nil
@@ -344,44 +332,6 @@ func (bgPtr *CrlEditorBrowserGUI) nullifyReferencedConcept(refID string, hl *cor
 	}
 	return nil
 }
-
-// RegisterUofDInitializationFunctions adds the functions required to initialize the UofD for
-// BrowserEditor purposes
-// func (bgPtr *BrowserGUI) RegisterUofDInitializationFunctions(uOfDMgr *core.UofDManager) error {
-// 	uOfDMgr.AddInitializationFunction(initializeUofDForBrowserGUI)
-// 	return nil
-// }
-
-// RegisterUofDPostInitializationFunctions adds the editor-specific functions to be executed
-// after a bgPtr.editor.GetUofD() initialization
-// func (bgPtr *BrowserGUI) RegisterUofDPostInitializationFunctions(uOfDMgr *core.UofDManager) error {
-// 	uOfDMgr.AddPostInitializationFunction(func(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) error {
-// 		// Create editor working concept space
-// 		BrowserGUISingleton.workingDomain, _ = uOfD.NewElement(hl)
-// 		BrowserGUISingleton.workingDomain.SetLabel("BrowserGUIWorkingCS", hl)
-// 		// err := BrowserGUISingleton.Initialize(hl)
-// 		// if err != nil {
-// 		// 	return errors.Wrap(err, "BrowserGUI post-initialization function failed")
-// 		// }
-// 		// err = BrowserGUISingleton.initializeClientState(hl)
-// 		// if err != nil {
-// 		// 	return errors.Wrap(err, "BrowserGUI post-initialization function failed")
-// 		// }
-// 		registerDiagramViewMonitorFunctions(uOfD)
-// 		// BrowserGUISingleton.initialized = true
-// 		return nil
-// 	})
-// 	return nil
-// }
-
-// func initializeUofDForBrowserGUI(uOfD *core.UniverseOfDiscourse, hl *core.HeldLocks) error {
-// 	_, err := AddBrowserGUIDomain(uOfD, hl)
-// 	if err != nil {
-// 		return errors.Wrap(err, "BrowserGUI PostInitializaton failed")
-// 	}
-// 	hl.ReleaseLocksAndWait()
-// 	return nil
-// }
 
 // SendClearDiagrams tells the client to close all displayed diagrams
 func (bgPtr *CrlEditorBrowserGUI) SendClearDiagrams() {

@@ -47,6 +47,7 @@ var _ = BeforeSuite(func() {
 	// Start the testEditor and GUI
 	// Common infrastructure
 	testEditor = crleditor.NewEditor(testUserDir)
+	crleditor.CrlEditorSingleton = testEditor
 	crleditorbrowsergui.InitializeBrowserGUISingleton(testEditor, false)
 	err = testEditor.AddEditorGUI(crleditorbrowsergui.BrowserGUISingleton)
 	if err != nil {

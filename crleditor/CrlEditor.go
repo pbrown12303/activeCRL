@@ -12,7 +12,6 @@ import (
 	"github.com/pbrown12303/activeCRL/crldatastructuresdomain"
 	"github.com/pbrown12303/activeCRL/crldatatypesdomain"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
-	"github.com/pbrown12303/activeCRL/crleditordomain"
 	"github.com/pbrown12303/activeCRL/crlmapsdomain"
 
 	"github.com/sqweek/dialog"
@@ -25,28 +24,32 @@ type UserPreferences struct {
 	DropDiagramRefinementAsLink bool
 }
 
+type Settings struct {
+	DefaultDomainLabelCount     int
+	DefaultElementLabelCount    int
+	DefaultLiteralLabelCount    int
+	DefaultReferenceLabelCount  int
+	DefaultRefinementLabelCount int
+	DefaultDiagramLabelCount    int
+	OpenDiagrams                []string
+}
+
 var CrlEditorSingleton *Editor
 
 // Editor manages one or more CrlEditors
 type Editor struct {
-	currentSelection            core.Element
-	cutBuffer                   map[string]core.Element
-	defaultDomainLabelCount     int
-	defaultElementLabelCount    int
-	defaultLiteralLabelCount    int
-	defaultReferenceLabelCount  int
-	defaultRefinementLabelCount int
-	defaultDiagramLabelCount    int
-	editorGUIs                  []EditorGUI
-	exitRequested               bool
-	home                        string
-	settings                    core.Element
-	uOfDManager                 *core.UofDManager
-	diagramManager              *DiagramManager
-	userPreferences             *UserPreferences
-	userFolder                  string
-	workspaceManager            *CrlWorkspaceManager
-	inProgressTransaction       *core.Transaction
+	currentSelection      core.Element
+	cutBuffer             map[string]core.Element
+	editorGUIs            []EditorGUI
+	exitRequested         bool
+	home                  string
+	settings              *Settings
+	uOfDManager           *core.UofDManager
+	diagramManager        *DiagramManager
+	userPreferences       *UserPreferences
+	userFolder            string
+	workspaceManager      *CrlWorkspaceManager
+	inProgressTransaction *core.Transaction
 }
 
 // TODO Remove these methods when fyne transaction approach is determined
@@ -67,6 +70,8 @@ func NewEditor(userFolderArg string) *Editor {
 		log.Fatalf("User home directory not found")
 	}
 	editor.userPreferences = &UserPreferences{}
+	editor.settings = &Settings{}
+	editor.settings.OpenDiagrams = []string{}
 	if userFolderArg == "" {
 		editor.userFolder = editor.home
 	} else {
@@ -81,26 +86,20 @@ func NewEditor(userFolderArg string) *Editor {
 // AddDiagramToDisplayedList adds the diagramID to the list of displayed diagrams
 func (editor *Editor) AddDiagramToDisplayedList(diagramID string, trans *core.Transaction) error {
 	if !editor.IsDiagramDisplayed(diagramID, trans) {
-		openDiagrams := editor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, trans)
-		_, err := crldatastructuresdomain.AppendStringListMember(openDiagrams, diagramID, trans)
-		if err != nil {
-			return errors.Wrap(err, "diagramManager.addDiagramToDisplayedList failed")
-		}
+		editor.settings.OpenDiagrams = append(editor.settings.OpenDiagrams, diagramID)
 	}
 	return nil
 }
 
-// AddEditorGUI adds an editor to the list of editorGUIs being managed by the
+// AddEditorGUI adds an editor to the list of editorGUIs being managed by the editor
+// and initializes the GUI
 func (editor *Editor) AddEditorGUI(editorGUI EditorGUI) error {
 	editor.editorGUIs = append(editor.editorGUIs, editorGUI)
-	// err := editorGUI.RegisterUofDInitializationFunctions(editor.uOfDManager)
-	// if err != nil {
-	// 	return errors.Wrap(err, "Editor.AddEditorGUI failed")
-	// }
-	// err := editorGUI.RegisterUofDPostInitializationFunctions(editor.uOfDManager)
-	// if err != nil {
-	// 	return errors.Wrap(err, "Editor.AddEditorGUI failed")
-	// }
+	trans, isNew := editor.GetTransaction()
+	if isNew {
+		defer editor.EndTransaction()
+	}
+	editorGUI.InitializeGUI(trans)
 	return nil
 }
 
@@ -151,19 +150,10 @@ func (editor *Editor) CloseWorkspace(trans *core.Transaction) error {
 	if err != nil {
 		return errors.Wrap(err, "crleditor.Editor.CloseWorkspace failed")
 	}
-	return nil
-}
-
-// createSettings creates the concept space for settings and adds it to the workspace
-func (editor *Editor) createSettings(trans *core.Transaction) error {
-	newSettings, err := editor.GetUofD().CreateReplicateAsRefinementFromURI(crleditordomain.EditorSettingsURI, trans)
+	err = editor.InitializeGUI(trans)
 	if err != nil {
-		return errors.Wrap(err, "Editor.createSettings failed")
+		return errors.Wrap(err, "crleditor.Editor.CloseWorkspace failed")
 	}
-	editor.settings = newSettings
-	openDiagrams := editor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, trans)
-	diagram := editor.GetUofD().GetElementWithURI(crldiagramdomain.CrlDiagramURI)
-	crldatastructuresdomain.SetListType(openDiagrams, diagram, trans)
 	return nil
 }
 
@@ -224,43 +214,43 @@ func (editor *Editor) GetCurrentSelectionID(trans *core.Transaction) string {
 
 // GetDefaultDomainLabel increments the default label count and returns a label containing the new count
 func (editor *Editor) GetDefaultDomainLabel() string {
-	editor.defaultDomainLabelCount++
-	countString := strconv.Itoa(editor.defaultDomainLabelCount)
+	editor.settings.DefaultDomainLabelCount++
+	countString := strconv.Itoa(editor.settings.DefaultDomainLabelCount)
 	return "Domain" + countString
 }
 
 // GetDefaultDiagramLabel increments the default label count and returns a label containing the new count
 func (editor *Editor) GetDefaultDiagramLabel() string {
-	editor.defaultDiagramLabelCount++
-	countString := strconv.Itoa(editor.defaultDiagramLabelCount)
+	editor.settings.DefaultDiagramLabelCount++
+	countString := strconv.Itoa(editor.settings.DefaultDiagramLabelCount)
 	return "Diagram" + countString
 }
 
 // GetDefaultElementLabel increments the default label count and returns a label containing the new count
 func (editor *Editor) GetDefaultElementLabel() string {
-	editor.defaultElementLabelCount++
-	countString := strconv.Itoa(editor.defaultElementLabelCount)
+	editor.settings.DefaultElementLabelCount++
+	countString := strconv.Itoa(editor.settings.DefaultElementLabelCount)
 	return "Element" + countString
 }
 
 // GetDefaultLiteralLabel increments the default label count and returns a label containing the new count
 func (editor *Editor) GetDefaultLiteralLabel() string {
-	editor.defaultLiteralLabelCount++
-	countString := strconv.Itoa(editor.defaultLiteralLabelCount)
+	editor.settings.DefaultLiteralLabelCount++
+	countString := strconv.Itoa(editor.settings.DefaultLiteralLabelCount)
 	return "Literal" + countString
 }
 
 // GetDefaultReferenceLabel increments the default label count and returns a label containing the new count
 func (editor *Editor) GetDefaultReferenceLabel() string {
-	editor.defaultReferenceLabelCount++
-	countString := strconv.Itoa(editor.defaultReferenceLabelCount)
+	editor.settings.DefaultReferenceLabelCount++
+	countString := strconv.Itoa(editor.settings.DefaultReferenceLabelCount)
 	return "Reference" + countString
 }
 
 // GetDefaultRefinementLabel increments the default label count and returns a label containing the new count
 func (editor *Editor) GetDefaultRefinementLabel() string {
-	editor.defaultRefinementLabelCount++
-	countString := strconv.Itoa(editor.defaultRefinementLabelCount)
+	editor.settings.DefaultRefinementLabelCount++
+	countString := strconv.Itoa(editor.settings.DefaultRefinementLabelCount)
 	return "Refinement" + countString
 }
 
@@ -294,7 +284,7 @@ func (editor *Editor) getNoSaveDomains(trans *core.Transaction) map[string]core.
 }
 
 // GetSettings returns the editor settings
-func (editor *Editor) GetSettings() core.Element {
+func (editor *Editor) GetSettings() *Settings {
 	return editor.settings
 }
 
@@ -322,6 +312,11 @@ func (editor *Editor) getUserPreferencesPath() string {
 	return editor.userFolder + "/.crleditoruserpreferences"
 }
 
+// getSettingsPath returns the path to the user preferences
+func (editor *Editor) getSettingsPath() string {
+	return editor.GetWorkspacePath() + "/.settings"
+}
+
 // GetWorkspacePath return the path to the current workspace
 func (editor *Editor) GetWorkspacePath() string {
 	return editor.userPreferences.WorkspacePath
@@ -329,8 +324,20 @@ func (editor *Editor) GetWorkspacePath() string {
 
 // Initialize initializes the uOfD, workspace manager, and all registered editorGUIs
 func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection bool) error {
-	editor.settings = nil
+	editor.settings = &Settings{}
+	editor.settings.OpenDiagrams = []string{}
 	editor.uOfDManager.Initialize()
+	trans, isNew := editor.GetTransaction()
+	if isNew {
+		defer editor.EndTransaction()
+	}
+	crldatatypesdomain.BuildCrlDataTypesDomain(editor.GetUofD(), trans)
+	crldatastructuresdomain.BuildCrlDataStructuresDomain(editor.GetUofD(), trans)
+	crldiagramdomain.BuildCrlDiagramDomain(editor.GetUofD(), trans)
+	err := crlmapsdomain.BuildCrlMapsDomain(editor.GetUofD(), trans)
+	if err != nil {
+		return errors.Wrap(err, "Editor.Initialize failed")
+	}
 	if editor.workspaceManager == nil {
 		editor.workspaceManager = NewCrlWorkspaceManager(editor)
 	}
@@ -350,20 +357,6 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 		}
 	}
 	editor.cutBuffer = make(map[string]core.Element)
-	trans, isNew := editor.GetTransaction()
-	if isNew {
-		defer editor.EndTransaction()
-	}
-	editor.resetDefaultLabelCounts()
-
-	crldatatypesdomain.BuildCrlDataTypesDomain(editor.GetUofD(), trans)
-	crldatastructuresdomain.BuildCrlDataStructuresDomain(editor.GetUofD(), trans)
-	crldiagramdomain.BuildCrlDiagramDomain(editor.GetUofD(), trans)
-	crleditordomain.BuildEditorDomain(editor.GetUofD(), trans)
-	err := crlmapsdomain.BuildCrlMapsDomain(editor.GetUofD(), trans)
-	if err != nil {
-		return errors.Wrap(err, "Editor.Initialize failed")
-	}
 
 	for _, editorGUI := range editor.editorGUIs {
 		err = editorGUI.Initialize(trans)
@@ -377,12 +370,6 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 	}
 	if err != nil {
 		return errors.Wrap(err, "Editor.Initialize failed")
-	}
-	if editor.settings == nil {
-		err = editor.createSettings(trans)
-		if err != nil {
-			return errors.Wrap(err, "Editor.Initialize failed")
-		}
 	}
 
 	for _, editorGUI := range editor.editorGUIs {
@@ -409,8 +396,12 @@ func (editor *Editor) InitializeGUI(trans *core.Transaction) error {
 
 // IsDiagramDisplayed returns true if the diagram is in the list of displayed diagrams
 func (editor *Editor) IsDiagramDisplayed(diagramID string, trans *core.Transaction) bool {
-	openDiagrams := editor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, trans)
-	return crldatastructuresdomain.IsStringListMember(openDiagrams, diagramID, trans)
+	for _, openDiagramID := range editor.settings.OpenDiagrams {
+		if openDiagramID == diagramID {
+			return true
+		}
+	}
+	return false
 }
 
 // LoadWorkspace tells the editor to load the workspace
@@ -418,12 +409,6 @@ func (editor *Editor) LoadWorkspace(trans *core.Transaction) error {
 	err := editor.workspaceManager.LoadWorkspace(trans)
 	if err != nil {
 		return errors.Wrap(err, "Editor.LoadWorkspace failed")
-	}
-	if editor.settings == nil {
-		err = editor.createSettings(trans)
-		if err != nil {
-			return errors.Wrap(err, "Editor.LoadWorkspace failed")
-		}
 	}
 	return nil
 }
@@ -433,29 +418,16 @@ func (editor *Editor) OpenWorkspace() error {
 	if editor.userPreferences.WorkspacePath != "" {
 		return errors.New("Cannot open another workspace in the same editor - close existing workspace first")
 	}
-	path, err2 := editor.SelectWorkspace()
-	if err2 != nil {
-		return err2
+	path, err := editor.SelectWorkspace()
+	if err != nil {
+		return err
+	}
+	err = editor.workspaceManager.LoadSettings()
+	if err != nil {
+		return err
 	}
 	return editor.Initialize(path, false)
 }
-
-// func (editor *Editor) openWorkspaceImpl(path string, trans *core.HeldLocks) error {
-// 	err := editor.Initialize(path, false)
-// 	if err != nil {
-// 		return errors.Wrap(err, "Editor.openWorkspaceImpl failed")
-// 	}
-// 	return nil
-// }
-
-// // OpenWorkspaceProgrammatically is intended for use in automated testing scenarios
-// func (editor *Editor) OpenWorkspaceProgrammatically(path string, trans *core.HeldLocks) error {
-// 	defer trans.ReleaseLocksAndWait()
-// 	if path == "" {
-// 		return errors.New("OpenWorkspaceProgrammatically called with empty path")
-// 	}
-// 	return editor.openWorkspaceImpl(path, trans)
-// }
 
 // Redo performs an undo on the editor.editor.GetUofD() and refreshes the interface
 func (editor *Editor) Redo(trans *core.Transaction) error {
@@ -470,19 +442,39 @@ func (editor *Editor) Redo(trans *core.Transaction) error {
 // RemoveDiagramFromDisplayedList removes the diagramID from the list of displayed diagrams
 func (editor *Editor) RemoveDiagramFromDisplayedList(diagramID string, trans *core.Transaction) {
 	if editor.IsDiagramDisplayed(diagramID, trans) {
-		openDiagrams := editor.settings.GetFirstOwnedConceptRefinedFromURI(crleditordomain.EditorOpenDiagramsURI, trans)
-		crldatastructuresdomain.RemoveStringListMember(openDiagrams, diagramID, trans)
+		for i, openDiagramID := range editor.settings.OpenDiagrams {
+			if openDiagramID == diagramID {
+				newList := make([]string, 0)
+				newList = append(newList, editor.settings.OpenDiagrams[:i]...)
+				editor.settings.OpenDiagrams = append(newList, editor.settings.OpenDiagrams[i+1:]...)
+				return
+			}
+		}
 	}
 }
 
-// ResetDefaultLabelCounts re-initializes the default counters for all new model elements
-func (editor *Editor) resetDefaultLabelCounts() {
-	editor.defaultDomainLabelCount = 0
-	editor.defaultElementLabelCount = 0
-	editor.defaultLiteralLabelCount = 0
-	editor.defaultReferenceLabelCount = 0
-	editor.defaultRefinementLabelCount = 0
-	editor.defaultDiagramLabelCount = 0
+// SaveSettings saves the settings to the workspace
+func (editor *Editor) SaveSettings() error {
+	f, err := os.OpenFile(editor.getSettingsPath(), os.O_RDWR|os.O_CREATE, 0755)
+	if err != nil {
+		return err
+	}
+	serializedSettings, err2 := json.Marshal(editor.settings)
+	if err2 != nil {
+		return err2
+	}
+	_, err = f.Write(serializedSettings)
+	if err != nil {
+		return err
+	}
+	err = f.Truncate(int64(len(serializedSettings)))
+	if err != nil {
+		return err
+	}
+	if err = f.Close(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // SaveUserPreferences saves the current user preferences to the user's home directory
@@ -500,7 +492,10 @@ func (editor *Editor) SaveUserPreferences() error {
 		return err
 	}
 	err = f.Truncate(int64(len(serializedUserPreferences)))
-	if err := f.Close(); err != nil {
+	if err != nil {
+		return err
+	}
+	if err = f.Close(); err != nil {
 		return err
 	}
 	return nil
@@ -511,6 +506,10 @@ func (editor *Editor) SaveWorkspace(trans *core.Transaction) error {
 	err := editor.workspaceManager.SaveWorkspace(trans)
 	if err != nil {
 		return errors.Wrap(err, "Editor.SaveWorkspace failed")
+	}
+	err = editor.SaveSettings()
+	if err != nil {
+		return errors.Wrap(err, "Editor.SaveWorkspace failed to save settings")
 	}
 	return nil
 }
@@ -542,23 +541,6 @@ func (editor *Editor) SelectElementUsingIDString(id string, trans *core.Transact
 // SelectWorkspace opens a dialog for the user to select a workspace
 func (editor *Editor) SelectWorkspace() (string, error) {
 	return dialog.Directory().Title("Select a directory for your workspace").Browse()
-}
-
-func (editor *Editor) setSettings(settings core.Element, trans *core.Transaction) error {
-	if settings == nil {
-		return errors.New("Editor.setSettings called with nil settings")
-	}
-	if settings.IsRefinementOfURI(crleditordomain.EditorSettingsURI, trans) == false {
-		return errors.New("Editor.setSettings called with nil settings")
-	}
-	if editor.settings != nil {
-		err := editor.GetUofD().DeleteElement(editor.settings, trans)
-		if err != nil {
-			return errors.Wrap(err, "Editor.setSettings failed")
-		}
-	}
-	editor.settings = settings
-	return nil
 }
 
 // SetDropDiagramReferenceAsLink returns true if dropped references are shown as links

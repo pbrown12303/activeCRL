@@ -7,13 +7,11 @@ import (
 	"strings"
 
 	"github.com/pbrown12303/activeCRL/core"
-	"github.com/pbrown12303/activeCRL/crleditordomain"
 	"github.com/pkg/errors"
 )
 
 type workspaceFile struct {
 	filename      string
-	path          string
 	File          *os.File
 	LoadedVersion int
 	Info          os.FileInfo
@@ -149,6 +147,26 @@ func (mgr *CrlWorkspaceManager) openFile(fileInfo os.FileInfo, hl *core.Transact
 	return &wf, nil
 }
 
+// LoadSettings loads the settings saved in the workspace
+func (mgr *CrlWorkspaceManager) LoadSettings() error {
+	path := mgr.editor.getSettingsPath()
+	_, err := os.Stat(path)
+	if err != nil {
+		// it is OK to not find the file
+		mgr.editor.settings = &Settings{}
+		return nil
+	}
+	fileSettings, err2 := ioutil.ReadFile(path)
+	if err2 != nil {
+		return err
+	}
+	err = json.Unmarshal(fileSettings, mgr.editor.settings)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // LoadUserPreferences loads the user preferences saved in the user's home directory
 func (mgr *CrlWorkspaceManager) LoadUserPreferences(workspaceArg string) error {
 	path := mgr.editor.getUserPreferencesPath()
@@ -175,7 +193,6 @@ func (mgr *CrlWorkspaceManager) LoadWorkspace(hl *core.Transaction) error {
 	if err != nil {
 		return errors.Wrap(err, "CrlWorkspaceManager.LoadWorkspace failed")
 	}
-
 	for _, f := range files {
 		if strings.HasSuffix(f.Name(), ".acrl") {
 			workspaceFile, err := mgr.openFile(f, hl)
@@ -183,14 +200,9 @@ func (mgr *CrlWorkspaceManager) LoadWorkspace(hl *core.Transaction) error {
 				return errors.Wrap(err, "CrlWorkspaceManager.LoadWorkspace failed")
 			}
 			mgr.workspaceFiles[workspaceFile.Domain.GetConceptID(hl)] = workspaceFile
-			if workspaceFile.Domain.IsRefinementOfURI(crleditordomain.EditorSettingsURI, hl) {
-				err = mgr.editor.setSettings(workspaceFile.Domain, hl)
-				if err != nil {
-					return errors.Wrap(err, "CrlWorkspaceManager.LoadWorkspace failed")
-				}
-			}
 		}
 	}
+	mgr.LoadSettings()
 	return nil
 }
 
@@ -247,7 +259,7 @@ func (mgr *CrlWorkspaceManager) SaveWorkspace(hl *core.Transaction) error {
 	var err error
 	for id, el := range rootElements {
 		noSaveDomains := mgr.editor.getNoSaveDomains(hl)
-		if el.GetIsCore(hl) == false && noSaveDomains[el.GetConceptID(hl)] == nil {
+		if !el.GetIsCore(hl) && noSaveDomains[el.GetConceptID(hl)] == nil {
 			workspaceFile := mgr.workspaceFiles[id]
 			if workspaceFile != nil {
 				err = mgr.saveFile(workspaceFile, hl)

@@ -997,12 +997,16 @@ func (ePtr *element) propagateChange(notification *ChangeNotification, trans *Tr
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}
-		ePtr.uOfD.NotifyUofDObservers(notification, trans)
+		if ePtr.uOfD != nil {
+			ePtr.uOfD.NotifyUofDObservers(notification, trans)
+		}
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}
 	case ConceptAdded, ConceptRemoved:
-		ePtr.uOfD.NotifyUofDObservers(notification, trans)
+		if ePtr.uOfD != nil {
+			ePtr.uOfD.NotifyUofDObservers(notification, trans)
+		}
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}

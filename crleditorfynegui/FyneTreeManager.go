@@ -6,6 +6,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
@@ -26,19 +27,21 @@ func (a ByLabel) Less(i, j int) bool {
 
 // FyneTreeManager is the manager of the fyne tree in the CrlFyneEditor
 type FyneTreeManager struct {
-	fyneGUI *CrlEditorFyneGUI
-	tree    *widget.Tree
+	fyneGUI      *CrlEditorFyneGUI
+	tree         *widget.Tree
+	uofdObserver uOfDObserver
 }
 
 // NewFyneTreeManager returns an initialized FyneTreeManager
 func NewFyneTreeManager(fyneGUI *CrlEditorFyneGUI) *FyneTreeManager {
-	var treeManager FyneTreeManager
+	treeManager := &FyneTreeManager{}
 	treeManager.fyneGUI = fyneGUI
 	treeManager.tree = widget.NewTree(GetChildUIDs, IsBranch, CreateNode, UpdateNode)
 	treeManager.tree.ExtendBaseWidget(treeManager.tree)
 	treeManager.tree.OnSelected = func(uid string) { treeManager.onNodeSelected(uid) }
 	treeManager.tree.Show()
-	return &treeManager
+	treeManager.uofdObserver = *newUofDObserver(treeManager)
+	return treeManager
 }
 
 func (ftm *FyneTreeManager) ElementSelected(uid string) {
@@ -46,15 +49,19 @@ func (ftm *FyneTreeManager) ElementSelected(uid string) {
 	ftm.tree.Select(uid)
 	trans, new := ftm.fyneGUI.editor.GetTransaction()
 	if new {
-		defer trans.ReleaseLocks()
+		defer ftm.fyneGUI.editor.EndTransaction()
 	}
 	ftm.openParentsRecursively(uid, trans)
+}
+
+func (ftm *FyneTreeManager) initialize() {
+	ftm.tree.Refresh()
 }
 
 func (ftm *FyneTreeManager) onNodeSelected(id string) {
 	trans, new := ftm.fyneGUI.editor.GetTransaction()
 	if new {
-		defer trans.ReleaseLocks()
+		defer ftm.fyneGUI.editor.EndTransaction()
 	}
 	ftm.fyneGUI.editor.SelectElementUsingIDString(id, trans)
 }
@@ -95,27 +102,24 @@ func IsBranch(uid string) bool {
 }
 
 func CreateNode(branch bool) fyne.CanvasObject {
-	icon := widget.NewIcon(images.ResourceElementIconPng)
-	label := widget.NewLabel("short")
-	box := container.NewHBox(icon, label)
-	return box
+	return newTreeNode()
 }
 
 func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
-	contents := node.(*fyne.Container).Objects
-	contents[0].(*widget.Icon).SetResource(getIconResourceByID(uid))
-	label := contents[1].(*widget.Label)
+	tn := node.(*treeNode)
+	tn.id = uid
+	tn.icon.SetResource(getIconResourceByID(uid))
 	if uid == "" {
-		label.SetText("uOfD")
+		tn.label.SetText("uOfD")
 	} else {
 		conceptBinding := GetConceptStateBinding(uid)
 		structBinding := *conceptBinding.GetBoundData()
 		if structBinding != nil {
 			labelItem, _ := structBinding.GetItem("Label")
-			label.Bind(labelItem.(binding.String))
+			tn.label.Bind(labelItem.(binding.String))
 		}
 	}
-	contents[0].Show()
+	tn.Show()
 }
 
 // getIconResourceByID returns the icon image resource to be used in representing the given Element in the tree
@@ -143,6 +147,179 @@ func getIconResource(el core.Element, trans *core.Transaction) *fyne.StaticResou
 			return images.ResourceDiagramIconPng
 		}
 		return images.ResourceElementIconPng
+	}
+	return nil
+}
+
+var _ desktop.Mouseable = (*treeNode)(nil)
+
+type treeNode struct {
+	widget.BaseWidget
+	id    string
+	icon  *widget.Icon
+	label *widget.Label
+	box   *fyne.Container
+}
+
+func newTreeNode() *treeNode {
+	tn := &treeNode{}
+	tn.BaseWidget.ExtendBaseWidget(tn)
+	tn.icon = widget.NewIcon(images.ResourceElementIconPng)
+	tn.label = widget.NewLabel("short")
+	tn.box = container.NewHBox(tn.icon, tn.label)
+	return tn
+}
+
+func (tn *treeNode) CreateRenderer() fyne.WidgetRenderer {
+	return newTreeNodeRenderer(tn)
+}
+
+func (tn *treeNode) MouseDown(event *desktop.MouseEvent) {
+	switch event.Button {
+	case desktop.LeftMouseButton:
+		FyneGUISingleton.treeManager.tree.Select(tn.id)
+	case desktop.RightMouseButton:
+		addElement := fyne.NewMenuItem("Add Child Element", func() {
+			trans, isNew := FyneGUISingleton.editor.GetTransaction()
+			if isNew {
+				defer FyneGUISingleton.editor.EndTransaction()
+			}
+			uOfD := trans.GetUniverseOfDiscourse()
+			newElement, _ := uOfD.NewElement(trans)
+			newElement.SetLabel(FyneGUISingleton.editor.GetDefaultElementLabel(), trans)
+			newElement.SetOwningConceptID(tn.id, trans)
+			FyneGUISingleton.editor.SelectElement(newElement, trans)
+		})
+		addDiagram := fyne.NewMenuItem("Add Child Diagram", func() {
+			trans, isNew := FyneGUISingleton.editor.GetTransaction()
+			if isNew {
+				defer FyneGUISingleton.editor.EndTransaction()
+			}
+			uOfD := trans.GetUniverseOfDiscourse()
+			newElement, _ := uOfD.CreateReplicateAsRefinementFromURI(crldiagramdomain.CrlDiagramURI, trans)
+			newElement.SetLabel(FyneGUISingleton.editor.GetDefaultDiagramLabel(), trans)
+			newElement.SetOwningConceptID(tn.id, trans)
+			FyneGUISingleton.editor.SelectElement(newElement, trans)
+		})
+		addLiteral := fyne.NewMenuItem("Add Child Literal", func() {
+			trans, isNew := FyneGUISingleton.editor.GetTransaction()
+			if isNew {
+				defer FyneGUISingleton.editor.EndTransaction()
+			}
+			uOfD := trans.GetUniverseOfDiscourse()
+			newLiteral, _ := uOfD.NewLiteral(trans)
+			newLiteral.SetLabel(FyneGUISingleton.editor.GetDefaultLiteralLabel(), trans)
+			newLiteral.SetOwningConceptID(tn.id, trans)
+			FyneGUISingleton.editor.SelectElement(newLiteral, trans)
+		})
+		addReference := fyne.NewMenuItem("Add Child Reference", func() {
+			trans, isNew := FyneGUISingleton.editor.GetTransaction()
+			if isNew {
+				defer FyneGUISingleton.editor.EndTransaction()
+			}
+			uOfD := trans.GetUniverseOfDiscourse()
+			newReference, _ := uOfD.NewReference(trans)
+			newReference.SetLabel(FyneGUISingleton.editor.GetDefaultReferenceLabel(), trans)
+			newReference.SetOwningConceptID(tn.id, trans)
+			FyneGUISingleton.editor.SelectElement(newReference, trans)
+		})
+		addRefinement := fyne.NewMenuItem("Add Child Refinement", func() {
+			trans, isNew := FyneGUISingleton.editor.GetTransaction()
+			if isNew {
+				defer FyneGUISingleton.editor.EndTransaction()
+			}
+			uOfD := trans.GetUniverseOfDiscourse()
+			newRefinement, _ := uOfD.NewRefinement(trans)
+			newRefinement.SetLabel(FyneGUISingleton.editor.GetDefaultRefinementLabel(), trans)
+			newRefinement.SetOwningConceptID(tn.id, trans)
+			FyneGUISingleton.editor.SelectElement(newRefinement, trans)
+		})
+		childMenu := fyne.NewMenu("Add Child", addDiagram, addElement, addLiteral, addReference, addRefinement)
+		childMenuItem := fyne.NewMenuItem("Add Child", func() {
+			popup := widget.NewPopUpMenu(childMenu, FyneGUISingleton.window.Canvas())
+			popup.ShowAtPosition(event.AbsolutePosition)
+		})
+		deleteElementItem := fyne.NewMenuItem("Delete", func() {
+			trans, isNew := FyneGUISingleton.editor.GetTransaction()
+			if isNew {
+				defer FyneGUISingleton.editor.EndTransaction()
+			}
+			FyneGUISingleton.editor.DeleteElement(tn.id, trans)
+			FyneGUISingleton.editor.SelectElement(nil, trans)
+		})
+		topMenuItems := []*fyne.MenuItem{}
+		topMenuItems = append(topMenuItems, childMenuItem)
+		trans, isNew := FyneGUISingleton.editor.GetTransaction()
+		if isNew {
+			defer FyneGUISingleton.editor.EndTransaction()
+		}
+		nodeElement := trans.GetUniverseOfDiscourse().GetElement(tn.id)
+		if crldiagramdomain.IsDiagram(nodeElement, trans) && !FyneGUISingleton.editor.IsDiagramDisplayed(tn.id, trans) {
+			showDiagramItem := fyne.NewMenuItem("Show Diagram", func() {
+				FyneGUISingleton.editor.GetDiagramManager().DisplayDiagram(tn.id, trans)
+			})
+			topMenuItems = append(topMenuItems, showDiagramItem)
+		}
+		topMenuItems = append(topMenuItems, deleteElementItem)
+		topMenu := fyne.NewMenu("Top Menu", topMenuItems...)
+		popup := widget.NewPopUpMenu(topMenu, FyneGUISingleton.window.Canvas())
+		popup.ShowAtPosition(event.AbsolutePosition)
+	}
+}
+
+func (tn *treeNode) MouseUp(event *desktop.MouseEvent) {
+
+}
+
+type treeNodeRenderer struct {
+	tn *treeNode
+}
+
+func newTreeNodeRenderer(tn *treeNode) *treeNodeRenderer {
+	tnr := &treeNodeRenderer{}
+	tnr.tn = tn
+	return tnr
+
+}
+
+func (tnr *treeNodeRenderer) Destroy() {
+
+}
+
+func (tnr *treeNodeRenderer) Layout(size fyne.Size) {
+
+}
+
+func (tnr *treeNodeRenderer) MinSize() fyne.Size {
+	return tnr.tn.box.MinSize()
+}
+
+func (tnr *treeNodeRenderer) Objects() []fyne.CanvasObject {
+	obj := []fyne.CanvasObject{}
+	obj = append(obj, tnr.tn.box)
+	return obj
+}
+
+func (tnr *treeNodeRenderer) Refresh() {
+
+}
+
+type uOfDObserver struct {
+	ftm *FyneTreeManager
+}
+
+func newUofDObserver(ftm *FyneTreeManager) *uOfDObserver {
+	uo := &uOfDObserver{}
+	uo.ftm = ftm
+	ftm.fyneGUI.editor.GetUofD().Register(uo)
+	return uo
+}
+
+// Update is the callback for changes to the core diagram
+func (uo *uOfDObserver) Update(notification *core.ChangeNotification, trans *core.Transaction) error {
+	switch notification.GetNatureOfChange() {
+	case core.ConceptRemoved:
+		uo.ftm.tree.Refresh()
 	}
 	return nil
 }
