@@ -353,7 +353,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		err := BrowserGUISingleton.nullifyReferencedConcept(modelElement.GetConceptID(trans), trans)
 		reply(w, "NullifyReferencedConcept", err)
 	case "OpenWorkspace":
-		err := BrowserGUISingleton.editor.OpenWorkspace()
+		err := BrowserGUISingleton.editor.OpenWorkspace(trans)
 		if err != nil {
 			sendReply(w, 1, "Error processing OpenWorkspace: "+err.Error(), "", nil)
 		} else {

@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/pbrown12303/activeCRL/core"
+	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 	"github.com/pbrown12303/activeCRL/crleditor"
 	"github.com/pkg/errors"
 )
@@ -52,107 +53,207 @@ type CrlEditorFyneGUI struct {
 
 // NewFyneGUI returns an initialized FyneGUI
 func NewFyneGUI(crlEditor *crleditor.Editor) *CrlEditorFyneGUI {
-	fyneGUI := &CrlEditorFyneGUI{}
-	fyneGUI.app = app.New()
-	initializeFyneGUI(fyneGUI, crlEditor)
-	return fyneGUI
+	gui := &CrlEditorFyneGUI{}
+	gui.app = app.New()
+	initializeFyneGUI(gui, crlEditor)
+	return gui
 }
 
-func initializeFyneGUI(fyneGUI *CrlEditorFyneGUI, crlEditor *crleditor.Editor) {
-	FyneGUISingleton = fyneGUI
-	fyneGUI.editor = crlEditor
+func initializeFyneGUI(gui *CrlEditorFyneGUI, crlEditor *crleditor.Editor) {
+	FyneGUISingleton = gui
+	gui.editor = crlEditor
 	InitBindings()
-	fyneGUI.app.Settings().SetTheme(&fyneGuiTheme{})
-	fyneGUI.treeManager = NewFyneTreeManager(fyneGUI)
-	fyneGUI.propertyManager = NewFynePropertyManager()
-	fyneGUI.diagramManager = NewFyneDiagramManager(fyneGUI)
-	fyneGUI.window = fyneGUI.app.NewWindow("Crl Editor    Workspace: " + crlEditor.GetWorkspacePath())
-	fyneGUI.buildCrlFyneEditorMenus()
-	fyneGUI.window.SetMainMenu(fyneGUI.mainMenu)
-	fyneGUI.window.SetMaster()
+	gui.app.Settings().SetTheme(&fyneGuiTheme{})
+	gui.treeManager = NewFyneTreeManager(gui)
+	gui.propertyManager = NewFynePropertyManager()
+	gui.diagramManager = NewFyneDiagramManager(gui)
+	gui.window = gui.app.NewWindow("Crl Editor    Workspace: " + crlEditor.GetWorkspacePath())
+	gui.buildCrlFyneEditorMenus()
+	gui.window.SetMainMenu(gui.mainMenu)
+	gui.window.SetMaster()
 
-	leftSide := container.NewVSplit(fyneGUI.treeManager.tree, fyneGUI.propertyManager.properties)
-	drawingArea := fyneGUI.diagramManager.GetDrawingArea()
+	leftSide := container.NewVSplit(gui.treeManager.tree, gui.propertyManager.properties)
+	drawingArea := gui.diagramManager.GetDrawingArea()
 
 	content := container.NewHSplit(leftSide, drawingArea)
 
-	fyneGUI.window.SetContent(content)
+	gui.window.SetContent(content)
+}
+
+func (gui *CrlEditorFyneGUI) addDiagram(parentID string) core.Element {
+	trans, isNew := gui.editor.GetTransaction()
+	if isNew {
+		defer gui.editor.EndTransaction()
+	}
+	gui.markUndoPoint()
+	uOfD := trans.GetUniverseOfDiscourse()
+	newElement, _ := uOfD.CreateReplicateAsRefinementFromURI(crldiagramdomain.CrlDiagramURI, trans)
+	newElement.SetLabel(gui.editor.GetDefaultDiagramLabel(), trans)
+	newElement.SetOwningConceptID(parentID, trans)
+	gui.editor.SelectElement(newElement, trans)
+	gui.DisplayDiagram(newElement, trans)
+	return newElement
+}
+
+func (gui *CrlEditorFyneGUI) addElement(parentID string, label string) core.Element {
+	trans, isNew := gui.editor.GetTransaction()
+	if isNew {
+		defer gui.editor.EndTransaction()
+	}
+	gui.markUndoPoint()
+	uOfD := trans.GetUniverseOfDiscourse()
+	newElement, _ := uOfD.NewElement(trans)
+	if label == "" {
+		label = gui.editor.GetDefaultElementLabel()
+	}
+	newElement.SetLabel(label, trans)
+	newElement.SetOwningConceptID(parentID, trans)
+	gui.editor.SelectElement(newElement, trans)
+	return newElement
+}
+
+func (gui *CrlEditorFyneGUI) addLiteral(parentID string, label string) core.Literal {
+	trans, isNew := gui.editor.GetTransaction()
+	if isNew {
+		defer gui.editor.EndTransaction()
+	}
+	gui.markUndoPoint()
+	uOfD := trans.GetUniverseOfDiscourse()
+	newLiteral, _ := uOfD.NewLiteral(trans)
+	if label == "" {
+		label = gui.editor.GetDefaultLiteralLabel()
+	}
+	newLiteral.SetLabel(label, trans)
+	newLiteral.SetOwningConceptID(parentID, trans)
+	gui.editor.SelectElement(newLiteral, trans)
+	return newLiteral
+}
+
+func (gui *CrlEditorFyneGUI) addReference(parentID string, label string) core.Reference {
+	trans, isNew := gui.editor.GetTransaction()
+	if isNew {
+		defer gui.editor.EndTransaction()
+	}
+	gui.markUndoPoint()
+	uOfD := trans.GetUniverseOfDiscourse()
+	newReference, _ := uOfD.NewReference(trans)
+	if label == "" {
+		label = gui.editor.GetDefaultReferenceLabel()
+	}
+	newReference.SetLabel(label, trans)
+	newReference.SetOwningConceptID(parentID, trans)
+	gui.editor.SelectElement(newReference, trans)
+	return newReference
+}
+
+func (gui *CrlEditorFyneGUI) addRefinement(parentID string, label string) core.Refinement {
+	trans, isNew := gui.editor.GetTransaction()
+	if isNew {
+		defer gui.editor.EndTransaction()
+	}
+	gui.markUndoPoint()
+	uOfD := trans.GetUniverseOfDiscourse()
+	newRefinement, _ := uOfD.NewRefinement(trans)
+	if label == "" {
+		label = gui.editor.GetDefaultRefinementLabel()
+	}
+	newRefinement.SetLabel(label, trans)
+	newRefinement.SetOwningConceptID(parentID, trans)
+	gui.editor.SelectElement(newRefinement, trans)
+	return newRefinement
 }
 
 // buildCrlFyneEditorMenu builds the main menu for the Crl Fyne Editor
-func (fyneGUI *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
+func (gui *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
 	// File Menu Items
-	fyneGUI.newDomainItem = fyne.NewMenuItem("New Domain", func() {
-		trans, isNew := fyneGUI.editor.GetTransaction()
-		if isNew {
-			defer fyneGUI.editor.EndTransaction()
-		}
-		uOfD := fyneGUI.editor.GetUofD()
-		uOfD.MarkUndoPoint()
-		cs, _ := uOfD.NewElement(trans)
-		cs.SetLabel(fyneGUI.editor.GetDefaultDomainLabel(), trans)
-		fyneGUI.editor.SelectElement(cs, trans)
+	gui.newDomainItem = fyne.NewMenuItem("New Domain", func() {
+		gui.addElement("", gui.editor.GetDefaultDomainLabel())
 	})
-	fyneGUI.selectConceptWithIDItem = fyne.NewMenuItem("Select Concept With ID", nil)
-	fyneGUI.saveWorkspaceItem = fyne.NewMenuItem("Save Workspace", func() {
+	gui.selectConceptWithIDItem = fyne.NewMenuItem("Select Concept With ID", nil)
+	gui.saveWorkspaceItem = fyne.NewMenuItem("Save Workspace", func() {
 		trans, isNew := crleditor.CrlEditorSingleton.GetTransaction()
 		if isNew {
-			defer fyneGUI.editor.EndTransaction()
+			defer gui.editor.EndTransaction()
 		}
 		crleditor.CrlEditorSingleton.SaveWorkspace(trans)
 	})
-	fyneGUI.closeWorkspaceItem = fyne.NewMenuItem("Close Workspace", func() {
+	gui.closeWorkspaceItem = fyne.NewMenuItem("Close Workspace", func() {
 		trans, isNew := crleditor.CrlEditorSingleton.GetTransaction()
 		if isNew {
-			defer fyneGUI.editor.EndTransaction()
+			defer gui.editor.EndTransaction()
 		}
 		crleditor.CrlEditorSingleton.CloseWorkspace(trans)
 	})
-	fyneGUI.clearWorkspaceItem = fyne.NewMenuItem("Clear Workspace", func() {
+	gui.clearWorkspaceItem = fyne.NewMenuItem("Clear Workspace", func() {
 		trans, isNew := crleditor.CrlEditorSingleton.GetTransaction()
 		if isNew {
-			defer fyneGUI.editor.EndTransaction()
+			defer gui.editor.EndTransaction()
 		}
 		crleditor.CrlEditorSingleton.ClearWorkspace(trans)
 	})
-	fyneGUI.openWorkspaceItem = fyne.NewMenuItem("Open Workspace", func() {
-		err := crleditor.CrlEditorSingleton.OpenWorkspace()
+	gui.openWorkspaceItem = fyne.NewMenuItem("Open Workspace", func() {
+		trans, isNew := crleditor.CrlEditorSingleton.GetTransaction()
+		if isNew {
+			defer gui.editor.EndTransaction()
+		}
+		err := crleditor.CrlEditorSingleton.OpenWorkspace(trans)
 		if err != nil {
 			errorMsg := widget.NewLabel(err.Error())
-			popup := widget.NewPopUp(errorMsg, fyneGUI.window.Canvas())
+			popup := widget.NewPopUp(errorMsg, gui.window.Canvas())
 			popup.Show()
 		}
 	})
-	fyneGUI.userPreferencesItem = fyne.NewMenuItem("UserPreferences", func() { fmt.Println("User Preferences") })
+	gui.userPreferencesItem = fyne.NewMenuItem("UserPreferences", func() { fmt.Println("User Preferences") })
 
 	// Edit Menu Items
-	fyneGUI.undoItem = fyne.NewMenuItem("Undo", nil)
-	fyneGUI.redoItem = fyne.NewMenuItem("Redo", nil)
+	gui.undoItem = fyne.NewMenuItem("Undo", func() {
+		FyneGUISingleton.undo()
+	})
+	gui.redoItem = fyne.NewMenuItem("Redo", func() {
+		FyneGUISingleton.redo()
+	})
 
 	// Debug Menu Items
-	fyneGUI.debugSettingsItem = fyne.NewMenuItem("Debug Settings", nil)
-	fyneGUI.displayCallGraphsItem = fyne.NewMenuItem("Display Call Graphs", nil)
+	gui.debugSettingsItem = fyne.NewMenuItem("Debug Settings", nil)
+	gui.displayCallGraphsItem = fyne.NewMenuItem("Display Call Graphs", nil)
 
 	// Help Menu Items
-	fyneGUI.helpItem = fyne.NewMenuItem("Help", func() { fmt.Println("Help Menu") })
+	gui.helpItem = fyne.NewMenuItem("Help", func() { fmt.Println("Help Menu") })
 
 	// Main Menu
-	fyneGUI.fileMenu = fyne.NewMenu("File", fyneGUI.newDomainItem, fyne.NewMenuItemSeparator(), fyneGUI.saveWorkspaceItem, fyneGUI.closeWorkspaceItem, fyneGUI.clearWorkspaceItem, fyneGUI.openWorkspaceItem, fyne.NewMenuItemSeparator(), fyneGUI.userPreferencesItem)
-	fyneGUI.editMenu = fyne.NewMenu("Edit", fyneGUI.selectConceptWithIDItem, fyneGUI.undoItem, fyneGUI.redoItem)
-	fyneGUI.debugMenu = fyne.NewMenu("Debug", fyneGUI.debugSettingsItem, fyneGUI.displayCallGraphsItem)
-	fyneGUI.helpMenu = fyne.NewMenu("Help", fyneGUI.helpItem)
+	gui.fileMenu = fyne.NewMenu("File", gui.newDomainItem, fyne.NewMenuItemSeparator(), gui.saveWorkspaceItem, gui.closeWorkspaceItem, gui.clearWorkspaceItem, gui.openWorkspaceItem, fyne.NewMenuItemSeparator(), gui.userPreferencesItem)
+	gui.editMenu = fyne.NewMenu("Edit", gui.selectConceptWithIDItem, gui.undoItem, gui.redoItem)
+	gui.debugMenu = fyne.NewMenu("Debug", gui.debugSettingsItem, gui.displayCallGraphsItem)
+	gui.helpMenu = fyne.NewMenu("Help", gui.helpItem)
 
-	fyneGUI.mainMenu = fyne.NewMainMenu(fyneGUI.fileMenu, fyneGUI.editMenu, fyneGUI.debugMenu, fyneGUI.helpMenu)
+	gui.mainMenu = fyne.NewMainMenu(gui.fileMenu, gui.editMenu, gui.debugMenu, gui.helpMenu)
 }
 
 // CloseDiagramView
-func (gui *CrlEditorFyneGUI) CloseDiagramView(diagramID string, hl *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) CloseDiagramView(diagramID string, trans *core.Transaction) error {
 	gui.diagramManager.closeDiagram(diagramID)
 	return nil
 }
 
+func (gui *CrlEditorFyneGUI) deleteElement(elementID string) {
+	trans, isNew := gui.editor.GetTransaction()
+	if isNew {
+		defer gui.editor.EndTransaction()
+	}
+	gui.editor.DeleteElement(elementID, trans)
+	gui.editor.SelectElement(nil, trans)
+}
+
+func (gui *CrlEditorFyneGUI) displayDiagram(diagramID string) {
+	trans, isNew := gui.editor.GetTransaction()
+	if isNew {
+		defer gui.editor.EndTransaction()
+	}
+	gui.editor.GetDiagramManager().DisplayDiagram(diagramID, trans)
+}
+
 // ElementDeleted
-func (gui *CrlEditorFyneGUI) ElementDeleted(elID string, hl *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) ElementDeleted(elID string, trans *core.Transaction) error {
 	// TODO Implement this
 	return nil
 }
@@ -167,6 +268,7 @@ func (gui *CrlEditorFyneGUI) ElementSelected(el core.Element, trans *core.Transa
 		gui.propertyManager.displayProperties(uid)
 		gui.treeManager.ElementSelected(uid)
 		gui.diagramManager.ElementSelected(uid, trans)
+		gui.currentSelectionID = uid
 	}
 	return nil
 }
@@ -178,13 +280,13 @@ func (gui *CrlEditorFyneGUI) DisplayDiagram(diagram core.Element, trans *core.Tr
 }
 
 // FileLoaded
-func (gui *CrlEditorFyneGUI) FileLoaded(el core.Element, hl *core.Transaction) {
+func (gui *CrlEditorFyneGUI) FileLoaded(el core.Element, trans *core.Transaction) {
 	// TODO Implement this
 	// noop
 }
 
 // GetNoSaveDomains
-func (gui *CrlEditorFyneGUI) GetNoSaveDomains(noSaveDomains map[string]core.Element, hl *core.Transaction) {
+func (gui *CrlEditorFyneGUI) GetNoSaveDomains(noSaveDomains map[string]core.Element, trans *core.Transaction) {
 	// TODO Implement this
 	// noop
 }
@@ -199,12 +301,12 @@ func (gui *CrlEditorFyneGUI) GetWindow() fyne.Window {
 }
 
 // Initialize
-func (gui *CrlEditorFyneGUI) Initialize(hl *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) Initialize(trans *core.Transaction) error {
 	return nil
 }
 
 // InitializeGUI
-func (gui *CrlEditorFyneGUI) InitializeGUI(hl *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) InitializeGUI(trans *core.Transaction) error {
 	gui.GetWindow().SetTitle("Crl Editor         Workspace: " + gui.editor.GetWorkspacePath())
 	gui.treeManager.initialize()
 	gui.diagramManager.initialize()
@@ -213,17 +315,35 @@ func (gui *CrlEditorFyneGUI) InitializeGUI(hl *core.Transaction) error {
 		if diagram == nil {
 			log.Printf("In FyneGui.initializeClientState: Failed to load diagram with ID: %s", openDiagramID)
 		} else {
-			err := gui.diagramManager.displayDiagram(diagram, hl)
+			err := gui.diagramManager.displayDiagram(diagram, trans)
 			if err != nil {
-				return errors.Wrap(err, "In FyneGUI.initializeClientState diagram "+diagram.GetLabel(hl)+" did not display")
+				return errors.Wrap(err, "In FyneGUI.initializeClientState diagram "+diagram.GetLabel(trans)+" did not display")
 			}
 		}
 	}
+	gui.diagramManager.SelectDiagram(gui.editor.GetSettings().CurrentDiagram)
+	selectedElement := gui.editor.GetUofD().GetElement(gui.editor.GetSettings().Selection)
+	gui.ElementSelected(selectedElement, trans)
 	return nil
 }
 
-// func shortcutFocused(s fyne.Shortcut, w fyne.Window) {
-// 	if focused, ok := w.Canvas().Focused().(fyne.Shortcutable); ok {
-// 		focused.TypedShortcut(s)
-// 	}
-// }
+func (gui *CrlEditorFyneGUI) markUndoPoint() {
+	uOfD := gui.editor.GetUofD()
+	uOfD.MarkUndoPoint()
+}
+
+func (gui *CrlEditorFyneGUI) redo() {
+	trans, isNew := gui.editor.GetTransaction()
+	if isNew {
+		defer gui.editor.EndTransaction()
+	}
+	gui.editor.Redo(trans)
+}
+
+func (gui *CrlEditorFyneGUI) undo() {
+	trans, isNew := gui.editor.GetTransaction()
+	if isNew {
+		defer gui.editor.EndTransaction()
+	}
+	gui.editor.Undo(trans)
+}

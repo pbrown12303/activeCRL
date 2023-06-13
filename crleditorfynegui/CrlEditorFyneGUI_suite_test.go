@@ -20,8 +20,13 @@ var testRootDir string
 var testUserDir string
 var testWorkspaceDir string
 var testT *testing.T
+var RequestFocus func()
 
 var _ = BeforeSuite(func() {
+	RequestFocus = func() {
+		FyneGUISingleton.GetWindow().RequestFocus()
+	}
+
 	var err error
 	// Get the tempDir
 	tempDirPath := os.TempDir()
@@ -43,16 +48,16 @@ var _ = BeforeSuite(func() {
 
 	// Common infrastructure
 	crleditor.CrlEditorSingleton = crleditor.NewEditor(testWorkspaceDir)
+	err = crleditor.CrlEditorSingleton.Initialize(testWorkspaceDir, true)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	fyneGUI := &CrlEditorFyneGUI{}
 	fyneGUI.app = test.NewApp()
 	initializeFyneGUI(fyneGUI, crleditor.CrlEditorSingleton)
 
 	err = crleditor.CrlEditorSingleton.AddEditorGUI(FyneGUISingleton)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = crleditor.CrlEditorSingleton.Initialize(testWorkspaceDir, true)
 	if err != nil {
 		log.Fatal(err)
 	}

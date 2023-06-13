@@ -598,7 +598,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetRootElements(trans *Transaction) map[stri
 	allElements := uOfDPtr.GetElements()
 	rootElements := make(map[string]Element)
 	for id, el := range allElements {
-		if el.GetOwningConceptID(trans) == "" {
+		if el.GetOwningConceptID(trans) == "" && el.GetURI(trans) != TransientURI {
 			rootElements[id] = el
 		}
 	}
@@ -610,7 +610,7 @@ func (uOfDPtr *UniverseOfDiscourse) GetRootElementIDs() []string {
 	allElements := uOfDPtr.GetElements()
 	var ids []string
 	for id, el := range allElements {
-		if el.getOwningConceptIDNoLock() == "" {
+		if el.getOwningConceptIDNoLock() == "" && el.getURINoLock() != TransientURI {
 			ids = append(ids, id)
 		}
 	}

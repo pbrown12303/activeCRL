@@ -310,13 +310,13 @@ func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.T
 		diagramWidget := diagramwidget.NewDiagramWidget(diagramID)
 		diagramWidget.OnTappedCallback = dm.diagramTapped
 		scrollingContainer := container.NewScroll(diagramWidget)
-		newTabItem := &diagramTab{
+		tabItem = &diagramTab{
 			diagramID: diagramID,
 			tab:       container.NewTabItem(diagram.GetLabel(trans), scrollingContainer),
 			diagram:   diagramWidget,
 		}
-		dm.diagramTabs[diagramID] = newTabItem
-		dm.tabArea.Append(newTabItem.tab)
+		dm.diagramTabs[diagramID] = tabItem
+		dm.tabArea.Append(tabItem.tab)
 		diagram.Register(dm.diagramObserver)
 		dm.populateDiagram(diagram, trans)
 		diagramWidget.LinkConnectionChangedCallback = func(link diagramwidget.DiagramLink, end string, oldPad diagramwidget.ConnectionPad, newPad diagramwidget.ConnectionPad) {
@@ -329,7 +329,13 @@ func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.T
 			return dm.isConnectionAllowed(link, linkEnd, pad)
 		}
 	}
+	dm.tabArea.Select(tabItem.tab)
 	return nil
+}
+
+func (dm *FyneDiagramManager) SelectDiagram(diagramID string) {
+	tabItem := dm.diagramTabs[diagramID]
+	dm.tabArea.Select(tabItem.tab)
 }
 
 func (dm *FyneDiagramManager) ElementSelected(id string, trans *core.Transaction) {

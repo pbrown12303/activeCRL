@@ -71,7 +71,9 @@ func (fcdn *FyneCrlDiagramNode) labelChanged() {
 	if isNew {
 		defer FyneGUISingleton.editor.EndTransaction()
 	}
-	fcdn.modelElement.SetLabel(newValue, trans)
+	if fcdn.modelElement != nil {
+		fcdn.modelElement.SetLabel(newValue, trans)
+	}
 }
 
 func (fcdn *FyneCrlDiagramNode) nodeMoved() {

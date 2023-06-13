@@ -45,6 +45,10 @@ func NewFyneTreeManager(fyneGUI *CrlEditorFyneGUI) *FyneTreeManager {
 }
 
 func (ftm *FyneTreeManager) ElementSelected(uid string) {
+	if uid == "" {
+		ftm.tree.UnselectAll()
+		return
+	}
 	ftm.tree.ScrollTo(uid)
 	ftm.tree.Select(uid)
 	trans, new := ftm.fyneGUI.editor.GetTransaction()
@@ -180,59 +184,19 @@ func (tn *treeNode) MouseDown(event *desktop.MouseEvent) {
 		FyneGUISingleton.treeManager.tree.Select(tn.id)
 	case desktop.RightMouseButton:
 		addElement := fyne.NewMenuItem("Add Child Element", func() {
-			trans, isNew := FyneGUISingleton.editor.GetTransaction()
-			if isNew {
-				defer FyneGUISingleton.editor.EndTransaction()
-			}
-			uOfD := trans.GetUniverseOfDiscourse()
-			newElement, _ := uOfD.NewElement(trans)
-			newElement.SetLabel(FyneGUISingleton.editor.GetDefaultElementLabel(), trans)
-			newElement.SetOwningConceptID(tn.id, trans)
-			FyneGUISingleton.editor.SelectElement(newElement, trans)
+			FyneGUISingleton.addElement(tn.id, "")
 		})
 		addDiagram := fyne.NewMenuItem("Add Child Diagram", func() {
-			trans, isNew := FyneGUISingleton.editor.GetTransaction()
-			if isNew {
-				defer FyneGUISingleton.editor.EndTransaction()
-			}
-			uOfD := trans.GetUniverseOfDiscourse()
-			newElement, _ := uOfD.CreateReplicateAsRefinementFromURI(crldiagramdomain.CrlDiagramURI, trans)
-			newElement.SetLabel(FyneGUISingleton.editor.GetDefaultDiagramLabel(), trans)
-			newElement.SetOwningConceptID(tn.id, trans)
-			FyneGUISingleton.editor.SelectElement(newElement, trans)
+			FyneGUISingleton.addDiagram(tn.id)
 		})
 		addLiteral := fyne.NewMenuItem("Add Child Literal", func() {
-			trans, isNew := FyneGUISingleton.editor.GetTransaction()
-			if isNew {
-				defer FyneGUISingleton.editor.EndTransaction()
-			}
-			uOfD := trans.GetUniverseOfDiscourse()
-			newLiteral, _ := uOfD.NewLiteral(trans)
-			newLiteral.SetLabel(FyneGUISingleton.editor.GetDefaultLiteralLabel(), trans)
-			newLiteral.SetOwningConceptID(tn.id, trans)
-			FyneGUISingleton.editor.SelectElement(newLiteral, trans)
+			FyneGUISingleton.addLiteral(tn.id, "")
 		})
 		addReference := fyne.NewMenuItem("Add Child Reference", func() {
-			trans, isNew := FyneGUISingleton.editor.GetTransaction()
-			if isNew {
-				defer FyneGUISingleton.editor.EndTransaction()
-			}
-			uOfD := trans.GetUniverseOfDiscourse()
-			newReference, _ := uOfD.NewReference(trans)
-			newReference.SetLabel(FyneGUISingleton.editor.GetDefaultReferenceLabel(), trans)
-			newReference.SetOwningConceptID(tn.id, trans)
-			FyneGUISingleton.editor.SelectElement(newReference, trans)
+			FyneGUISingleton.addReference(tn.id, "")
 		})
 		addRefinement := fyne.NewMenuItem("Add Child Refinement", func() {
-			trans, isNew := FyneGUISingleton.editor.GetTransaction()
-			if isNew {
-				defer FyneGUISingleton.editor.EndTransaction()
-			}
-			uOfD := trans.GetUniverseOfDiscourse()
-			newRefinement, _ := uOfD.NewRefinement(trans)
-			newRefinement.SetLabel(FyneGUISingleton.editor.GetDefaultRefinementLabel(), trans)
-			newRefinement.SetOwningConceptID(tn.id, trans)
-			FyneGUISingleton.editor.SelectElement(newRefinement, trans)
+			FyneGUISingleton.addRefinement(tn.id, "")
 		})
 		childMenu := fyne.NewMenu("Add Child", addDiagram, addElement, addLiteral, addReference, addRefinement)
 		childMenuItem := fyne.NewMenuItem("Add Child", func() {
@@ -240,12 +204,7 @@ func (tn *treeNode) MouseDown(event *desktop.MouseEvent) {
 			popup.ShowAtPosition(event.AbsolutePosition)
 		})
 		deleteElementItem := fyne.NewMenuItem("Delete", func() {
-			trans, isNew := FyneGUISingleton.editor.GetTransaction()
-			if isNew {
-				defer FyneGUISingleton.editor.EndTransaction()
-			}
-			FyneGUISingleton.editor.DeleteElement(tn.id, trans)
-			FyneGUISingleton.editor.SelectElement(nil, trans)
+			FyneGUISingleton.deleteElement(tn.id)
 		})
 		topMenuItems := []*fyne.MenuItem{}
 		topMenuItems = append(topMenuItems, childMenuItem)
@@ -254,9 +213,9 @@ func (tn *treeNode) MouseDown(event *desktop.MouseEvent) {
 			defer FyneGUISingleton.editor.EndTransaction()
 		}
 		nodeElement := trans.GetUniverseOfDiscourse().GetElement(tn.id)
-		if crldiagramdomain.IsDiagram(nodeElement, trans) && !FyneGUISingleton.editor.IsDiagramDisplayed(tn.id, trans) {
+		if crldiagramdomain.IsDiagram(nodeElement, trans) {
 			showDiagramItem := fyne.NewMenuItem("Show Diagram", func() {
-				FyneGUISingleton.editor.GetDiagramManager().DisplayDiagram(tn.id, trans)
+				FyneGUISingleton.displayDiagram(tn.id)
 			})
 			topMenuItems = append(topMenuItems, showDiagramItem)
 		}
@@ -279,15 +238,12 @@ func newTreeNodeRenderer(tn *treeNode) *treeNodeRenderer {
 	tnr := &treeNodeRenderer{}
 	tnr.tn = tn
 	return tnr
-
 }
 
 func (tnr *treeNodeRenderer) Destroy() {
-
 }
 
 func (tnr *treeNodeRenderer) Layout(size fyne.Size) {
-
 }
 
 func (tnr *treeNodeRenderer) MinSize() fyne.Size {

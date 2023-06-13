@@ -39,9 +39,9 @@ func (mgr *CrlWorkspaceManager) Initialize() {
 
 // ClearWorkspace deletes all of the files in the workspace that correspond to uOfD root elements
 // and removes the corresponding entry in workspaceFiles
-func (mgr *CrlWorkspaceManager) ClearWorkspace(workspacePath string, hl *core.Transaction) error {
+func (mgr *CrlWorkspaceManager) ClearWorkspace(workspacePath string, trans *core.Transaction) error {
 	var err error
-	rootElements := mgr.editor.uOfDManager.UofD.GetRootElements(hl)
+	rootElements := mgr.editor.uOfDManager.UofD.GetRootElements(trans)
 	for id, wf := range mgr.workspaceFiles {
 		if rootElements[id] == nil {
 			err = mgr.deleteFile(wf)
@@ -55,8 +55,8 @@ func (mgr *CrlWorkspaceManager) ClearWorkspace(workspacePath string, hl *core.Tr
 }
 
 // CloseWorkspace saves and closes all workspace files
-func (mgr *CrlWorkspaceManager) CloseWorkspace(hl *core.Transaction) error {
-	err := mgr.SaveWorkspace(hl)
+func (mgr *CrlWorkspaceManager) CloseWorkspace(trans *core.Transaction) error {
+	err := mgr.SaveWorkspace(trans)
 	if err != nil {
 		return errors.Wrap(err, "CrlWorkspaceManager.CloseWorkspace failed")
 	}
@@ -82,8 +82,8 @@ func (mgr *CrlWorkspaceManager) deleteFile(wf *workspaceFile) error {
 	return nil
 }
 
-func (mgr *CrlWorkspaceManager) generateFilename(el core.Element, hl *core.Transaction) string {
-	return mgr.editor.userPreferences.WorkspacePath + "/" + el.GetLabel(hl) + "--" + el.GetConceptID(hl) + ".acrl"
+func (mgr *CrlWorkspaceManager) generateFilename(el core.Element, trans *core.Transaction) string {
+	return mgr.editor.userPreferences.WorkspacePath + "/" + el.GetLabel(trans) + "--" + el.GetConceptID(trans) + ".acrl"
 }
 
 // GetUofD returns the current UniverseOfDiscourse
@@ -92,11 +92,11 @@ func (mgr *CrlWorkspaceManager) GetUofD() *core.UniverseOfDiscourse {
 }
 
 // newFile creates a file with the name being the ConceptID of the supplied Element and returns the workspaceFile struct
-func (mgr *CrlWorkspaceManager) newFile(el core.Element, hl *core.Transaction) (*workspaceFile, error) {
+func (mgr *CrlWorkspaceManager) newFile(el core.Element, trans *core.Transaction) (*workspaceFile, error) {
 	if mgr.editor.userPreferences.WorkspacePath == "" {
 		return nil, errors.New("CrlBrowserEditor.NewFile called with no settings.WorkspacePath defined")
 	}
-	filename := mgr.generateFilename(el, hl)
+	filename := mgr.generateFilename(el, trans)
 	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
@@ -109,13 +109,13 @@ func (mgr *CrlWorkspaceManager) newFile(el core.Element, hl *core.Transaction) (
 	wf.filename = filename
 	wf.Domain = el
 	wf.File = file
-	wf.LoadedVersion = el.GetVersion(hl)
+	wf.LoadedVersion = el.GetVersion(trans)
 	wf.Info = fileInfo
 	return &wf, nil
 }
 
 // openFile opens the file and returns a workspaceFile struct
-func (mgr *CrlWorkspaceManager) openFile(fileInfo os.FileInfo, hl *core.Transaction) (*workspaceFile, error) {
+func (mgr *CrlWorkspaceManager) openFile(fileInfo os.FileInfo, trans *core.Transaction) (*workspaceFile, error) {
 	writable := (fileInfo.Mode().Perm() & 0200) > 0
 	mode := os.O_RDONLY
 	if writable {
@@ -131,24 +131,24 @@ func (mgr *CrlWorkspaceManager) openFile(fileInfo os.FileInfo, hl *core.Transact
 	if err != nil {
 		return nil, err
 	}
-	element, err2 := mgr.GetUofD().RecoverDomain(fileContent, hl)
+	element, err2 := mgr.GetUofD().RecoverDomain(fileContent, trans)
 	if err2 != nil {
 		return nil, err2
 	}
 	if !writable {
-		element.SetReadOnlyRecursively(true, hl)
+		element.SetReadOnlyRecursively(true, trans)
 	}
 	var wf workspaceFile
 	wf.filename = filename
 	wf.Domain = element
 	wf.Info = fileInfo
-	wf.LoadedVersion = element.GetVersion(hl)
+	wf.LoadedVersion = element.GetVersion(trans)
 	wf.File = file
 	return &wf, nil
 }
 
 // LoadSettings loads the settings saved in the workspace
-func (mgr *CrlWorkspaceManager) LoadSettings() error {
+func (mgr *CrlWorkspaceManager) LoadSettings(trans *core.Transaction) error {
 	path := mgr.editor.getSettingsPath()
 	_, err := os.Stat(path)
 	if err != nil {
@@ -161,6 +161,8 @@ func (mgr *CrlWorkspaceManager) LoadSettings() error {
 		return err
 	}
 	err = json.Unmarshal(fileSettings, mgr.editor.settings)
+	jsonOpenDiagrams, _ := json.Marshal(mgr.editor.settings.OpenDiagrams)
+	mgr.editor.transientDisplayedDiagrams.SetLiteralValue(string(jsonOpenDiagrams), trans)
 	if err != nil {
 		return err
 	}
@@ -188,31 +190,33 @@ func (mgr *CrlWorkspaceManager) LoadUserPreferences(workspaceArg string) error {
 }
 
 // LoadWorkspace loads the workspace currently designated by the userPreferences.WorkspacePath. If the path is empty, it is a no-op.
-func (mgr *CrlWorkspaceManager) LoadWorkspace(hl *core.Transaction) error {
+func (mgr *CrlWorkspaceManager) LoadWorkspace(trans *core.Transaction) error {
 	files, err := ioutil.ReadDir(mgr.editor.userPreferences.WorkspacePath)
 	if err != nil {
 		return errors.Wrap(err, "CrlWorkspaceManager.LoadWorkspace failed")
 	}
 	for _, f := range files {
 		if strings.HasSuffix(f.Name(), ".acrl") {
-			workspaceFile, err := mgr.openFile(f, hl)
+			workspaceFile, err := mgr.openFile(f, trans)
 			if err != nil {
-				return errors.Wrap(err, "CrlWorkspaceManager.LoadWorkspace failed")
+				return errors.Wrap(err, "CrlWorkspaceManager.LoadWorkspace failed loading "+f.Name())
 			}
-			mgr.workspaceFiles[workspaceFile.Domain.GetConceptID(hl)] = workspaceFile
+			mgr.workspaceFiles[workspaceFile.Domain.GetConceptID(trans)] = workspaceFile
 		}
 	}
-	mgr.LoadSettings()
+	mgr.LoadSettings(trans)
+	mgr.editor.SelectElementUsingIDString(mgr.editor.settings.Selection, trans)
+	mgr.editor.diagramManager.DisplayDiagram(mgr.editor.settings.CurrentDiagram, trans)
 	return nil
 }
 
 // saveFile saves the file and updates the fileInfo
-func (mgr *CrlWorkspaceManager) saveFile(wf *workspaceFile, hl *core.Transaction) error {
-	hl.ReadLockElement(wf.Domain)
+func (mgr *CrlWorkspaceManager) saveFile(wf *workspaceFile, trans *core.Transaction) error {
+	trans.ReadLockElement(wf.Domain)
 	if wf.File == nil {
 		return errors.New("CrlBrowserEditor.SaveFile called with nil file")
 	}
-	byteArray, err := mgr.GetUofD().MarshalDomain(wf.Domain, hl)
+	byteArray, err := mgr.GetUofD().MarshalDomain(wf.Domain, trans)
 	if err != nil {
 		return errors.Wrap(err, "CrlBrowserEditor.saveFile failed")
 	}
@@ -230,7 +234,7 @@ func (mgr *CrlWorkspaceManager) saveFile(wf *workspaceFile, hl *core.Transaction
 		return errors.Wrap(err, "CrlBrowserEditor.saveFile failed")
 	}
 	oldFilename := wf.filename
-	newFilename := mgr.generateFilename(wf.Domain, hl)
+	newFilename := mgr.generateFilename(wf.Domain, trans)
 	if oldFilename != newFilename {
 		err = wf.File.Close()
 		if err != nil {
@@ -254,25 +258,25 @@ func (mgr *CrlWorkspaceManager) saveFile(wf *workspaceFile, hl *core.Transaction
 }
 
 // SaveWorkspace saves all top-level concepts whose versions are different than the last retrieved version.
-func (mgr *CrlWorkspaceManager) SaveWorkspace(hl *core.Transaction) error {
-	rootElements := mgr.editor.uOfDManager.UofD.GetRootElements(hl)
+func (mgr *CrlWorkspaceManager) SaveWorkspace(trans *core.Transaction) error {
+	rootElements := mgr.editor.uOfDManager.UofD.GetRootElements(trans)
 	var err error
 	for id, el := range rootElements {
-		noSaveDomains := mgr.editor.getNoSaveDomains(hl)
-		if !el.GetIsCore(hl) && noSaveDomains[el.GetConceptID(hl)] == nil {
+		noSaveDomains := mgr.editor.getNoSaveDomains(trans)
+		if !el.GetIsCore(trans) && noSaveDomains[el.GetConceptID(trans)] == nil {
 			workspaceFile := mgr.workspaceFiles[id]
 			if workspaceFile != nil {
-				err = mgr.saveFile(workspaceFile, hl)
+				err = mgr.saveFile(workspaceFile, trans)
 				if err != nil {
 					return errors.Wrap(err, "CrlWorkspaceManager.SaveWorkspace failed")
 				}
 			} else {
-				workspaceFile, err = mgr.newFile(el, hl)
+				workspaceFile, err = mgr.newFile(el, trans)
 				if err != nil {
 					return errors.Wrap(err, "CrlWorkspaceManager.SaveWorkspace failed")
 				}
 				mgr.workspaceFiles[id] = workspaceFile
-				err = mgr.saveFile(workspaceFile, hl)
+				err = mgr.saveFile(workspaceFile, trans)
 				if err != nil {
 					return errors.Wrap(err, "CrlWorkspaceManager.SaveWorkspace failed")
 				}

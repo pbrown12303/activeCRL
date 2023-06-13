@@ -1,5 +1,19 @@
 package main
 
+//go:generate fyne bundle --package images -o ../images/icons.go --prefix Resource ../crleditorbrowsergui/http/images/icons/AbstractPointerIcon.png
+//go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../crleditorbrowsergui/http/images/icons/CursorIcon.png
+//go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../crleditorbrowsergui/http/images/icons/DiagramIcon.png
+//go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../crleditorbrowsergui/http/images/icons/ElementIcon.png
+//go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../crleditorbrowsergui/http/images/icons/ElementPointerIcon.png
+//go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../crleditorbrowsergui/http/images/icons/LiteralIcon.png
+//go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../crleditorbrowsergui/http/images/icons/OwnerPointerIcon.png
+//go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../crleditorbrowsergui/http/images/icons/PointerIcon.png
+//go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../crleditorbrowsergui/http/images/icons/ReferenceIcon.png
+//go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../crleditorbrowsergui/http/images/icons/ReferenceLinkIcon.png
+//go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../crleditorbrowsergui/http/images/icons/RefinedPointerIcon.png
+//go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../crleditorbrowsergui/http/images/icons/RefinementIcon.png
+//go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../crleditorbrowsergui/http/images/icons/RefinementLinkIcon.png
+
 import (
 	"flag"
 	"log"

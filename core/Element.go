@@ -657,6 +657,11 @@ func (ePtr *element) GetURI(hl *Transaction) string {
 	return ePtr.URI
 }
 
+// getURINoLock returns the URI string associated with the element if there is one
+func (ePtr *element) getURINoLock() string {
+	return ePtr.URI
+}
+
 // GetVersion returns the version of the element
 func (ePtr *element) GetVersion(hl *Transaction) int {
 	hl.ReadLockElement(ePtr)
@@ -1496,6 +1501,7 @@ type Element interface {
 	GetUniverseOfDiscourse(*Transaction) *UniverseOfDiscourse
 	getUniverseOfDiscourseNoLock() *UniverseOfDiscourse
 	GetURI(*Transaction) string
+	getURINoLock() string
 	GetVersion(*Transaction) int
 	isEditable(*Transaction) bool
 	IsRefinementOf(Element, *Transaction) bool

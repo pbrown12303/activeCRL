@@ -27,6 +27,13 @@ var RefinementURI = CorePrefix + "Refinement"
 // UniverseOfDiscourseURI is the URI for the UniverseOfDiscourse core concept
 var UniverseOfDiscourseURI = CorePrefix + "UniverseOfDiscourse"
 
+// TransientURI is the URI for transient information that needs to have undo/redo
+// It is never saved and does not appear in the UniverseOfDiscourse.GetRootElements() set
+var TransientURI = CorePrefix + "Transient"
+
+// Transient is the instantiated Transient element
+var Transient Element
+
 // AdHocTrace is a global variable used in troubleshooting. Generally debugging logic is wrapped in a
 // conditional expression contingent on the value of this variable
 var AdHocTrace = false
@@ -64,5 +71,8 @@ func buildCoreDomain(uOfD *UniverseOfDiscourse, hl *Transaction) Element {
 	refinement.SetLabel("Refinement", hl)
 
 	coreElement.SetIsCoreRecursively(hl)
+
+	Transient, _ = uOfD.NewElement(hl, TransientURI)
+
 	return coreElement
 }

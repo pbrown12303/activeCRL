@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"reflect"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -31,25 +32,30 @@ type Settings struct {
 	DefaultReferenceLabelCount  int
 	DefaultRefinementLabelCount int
 	DefaultDiagramLabelCount    int
+	Selection                   string
 	OpenDiagrams                []string
+	CurrentDiagram              string
 }
 
 var CrlEditorSingleton *Editor
 
 // Editor manages one or more CrlEditors
 type Editor struct {
-	currentSelection      core.Element
-	cutBuffer             map[string]core.Element
-	editorGUIs            []EditorGUI
-	exitRequested         bool
-	home                  string
-	settings              *Settings
-	uOfDManager           *core.UofDManager
-	diagramManager        *DiagramManager
-	userPreferences       *UserPreferences
-	userFolder            string
-	workspaceManager      *CrlWorkspaceManager
-	inProgressTransaction *core.Transaction
+	currentSelection           core.Element
+	cutBuffer                  map[string]core.Element
+	editorGUIs                 []EditorGUI
+	exitRequested              bool
+	home                       string
+	settings                   *Settings
+	uOfDManager                *core.UofDManager
+	diagramManager             *DiagramManager
+	userPreferences            *UserPreferences
+	userFolder                 string
+	workspaceManager           *CrlWorkspaceManager
+	inProgressTransaction      *core.Transaction
+	transientSelection         core.Literal
+	transientDisplayedDiagrams core.Literal
+	transientCurrentDiagram    core.Literal
 }
 
 // TODO Remove these methods when fyne transaction approach is determined
@@ -83,8 +89,8 @@ func NewEditor(userFolderArg string) *Editor {
 	return editor
 }
 
-// AddDiagramToDisplayedList adds the diagramID to the list of displayed diagrams
-func (editor *Editor) AddDiagramToDisplayedList(diagramID string, trans *core.Transaction) error {
+// addDiagramToDisplayedList adds the diagramID to the list of displayed diagrams
+func (editor *Editor) addDiagramToDisplayedList(diagramID string, trans *core.Transaction) error {
 	if !editor.IsDiagramDisplayed(diagramID, trans) {
 		editor.settings.OpenDiagrams = append(editor.settings.OpenDiagrams, diagramID)
 	}
@@ -206,7 +212,7 @@ func (editor *Editor) GetCurrentSelection() core.Element {
 
 // GetCurrentSelectionID returns the ConceptID of the currently selected Element
 func (editor *Editor) GetCurrentSelectionID(trans *core.Transaction) string {
-	if editor.currentSelection == nil {
+	if editor.currentSelection == nil || reflect.ValueOf(editor.currentSelection).IsNil() {
 		return ""
 	}
 	return editor.currentSelection.GetConceptID(trans)
@@ -338,6 +344,10 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 	if err != nil {
 		return errors.Wrap(err, "Editor.Initialize failed")
 	}
+	uOfD := trans.GetUniverseOfDiscourse()
+	editor.transientCurrentDiagram, _ = uOfD.NewOwnedLiteral(core.Transient, "TransientCurrentDiagram", trans)
+	editor.transientDisplayedDiagrams, _ = uOfD.NewOwnedLiteral(core.Transient, "TransientDisplayedDiagrams", trans)
+	editor.transientSelection, _ = uOfD.NewOwnedLiteral(core.Transient, "TransientSelection", trans)
 	if editor.workspaceManager == nil {
 		editor.workspaceManager = NewCrlWorkspaceManager(editor)
 	}
@@ -414,7 +424,7 @@ func (editor *Editor) LoadWorkspace(trans *core.Transaction) error {
 }
 
 // OpenWorkspace sets the path to the folder to be used as a workspace. It is the implementation of a request from the client.
-func (editor *Editor) OpenWorkspace() error {
+func (editor *Editor) OpenWorkspace(trans *core.Transaction) error {
 	if editor.userPreferences.WorkspacePath != "" {
 		return errors.New("Cannot open another workspace in the same editor - close existing workspace first")
 	}
@@ -422,7 +432,7 @@ func (editor *Editor) OpenWorkspace() error {
 	if err != nil {
 		return err
 	}
-	err = editor.workspaceManager.LoadSettings()
+	err = editor.workspaceManager.LoadSettings(trans)
 	if err != nil {
 		return err
 	}
@@ -432,6 +442,12 @@ func (editor *Editor) OpenWorkspace() error {
 // Redo performs an undo on the editor.editor.GetUofD() and refreshes the interface
 func (editor *Editor) Redo(trans *core.Transaction) error {
 	editor.GetUofD().Redo(trans)
+	editor.SelectElementUsingIDString(editor.transientSelection.GetLiteralValue(trans), trans)
+	editor.settings.Selection = editor.transientSelection.GetLiteralValue(trans)
+	var recoveredOpenDiagrams []string
+	json.Unmarshal([]byte(editor.transientDisplayedDiagrams.GetLiteralValue(trans)), &recoveredOpenDiagrams)
+	editor.settings.OpenDiagrams = recoveredOpenDiagrams
+	editor.settings.CurrentDiagram = editor.transientCurrentDiagram.GetLiteralValue(trans)
 	err := editor.InitializeGUI(trans)
 	if err != nil {
 		return errors.Wrap(err, "Editor.Redo failed")
@@ -525,6 +541,12 @@ func (editor *Editor) SelectElement(el core.Element, trans *core.Transaction) er
 				return errors.Wrap(err, "Editor.SelectElement failed")
 			}
 		}
+		elId := ""
+		if el != nil {
+			elId = el.GetConceptID(trans)
+		}
+		editor.transientSelection.SetLiteralValue(elId, trans)
+		editor.settings.Selection = elId
 	}
 	return nil
 }
@@ -582,6 +604,12 @@ func (editor *Editor) SetWorkspacePath(path string) error {
 // Undo performs an undo on the editor.GetUofD() and refreshes the interface
 func (editor *Editor) Undo(trans *core.Transaction) error {
 	editor.GetUofD().Undo(trans)
+	editor.SelectElementUsingIDString(editor.transientSelection.GetLiteralValue(trans), trans)
+	editor.settings.Selection = editor.transientSelection.GetLiteralValue(trans)
+	var recoveredOpenDiagrams []string
+	json.Unmarshal([]byte(editor.transientDisplayedDiagrams.GetLiteralValue(trans)), &recoveredOpenDiagrams)
+	editor.settings.OpenDiagrams = recoveredOpenDiagrams
+	editor.settings.CurrentDiagram = editor.transientCurrentDiagram.GetLiteralValue(trans)
 	for _, gui := range editor.editorGUIs {
 		err := gui.InitializeGUI(trans)
 		if err != nil {
