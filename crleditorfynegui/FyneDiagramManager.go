@@ -11,6 +11,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
@@ -75,16 +76,15 @@ type diagramTab struct {
 // FyneDiagramManager manages the relationship between the fyne DiagramWidgets and the
 // underlying CRL model. It is a component of the  FyneGUI
 type FyneDiagramManager struct {
-	fyneGUI                         *CrlEditorFyneGUI
-	diagramArea                     *fyne.Container
-	diagramTabs                     map[string]*diagramTab
-	toolbar                         *fyne.Container
-	toolButtons                     map[ToolbarSelection]*widget.Button
-	tabArea                         *container.DocTabs
-	diagramObserver                 *diagramObserver
-	diagramElementObserver          *diagramElementObserver
-	currentToolbarSelection         ToolbarSelection
-	inProgressCreateLinkTransaction *core.Transaction
+	fyneGUI                 *CrlEditorFyneGUI
+	diagramArea             *fyne.Container
+	diagramTabs             map[string]*diagramTab
+	toolbar                 *fyne.Container
+	toolButtons             map[ToolbarSelection]*widget.Button
+	tabArea                 *container.DocTabs
+	diagramObserver         *diagramObserver
+	diagramElementObserver  *diagramElementObserver
+	currentToolbarSelection ToolbarSelection
 }
 
 // NewFyneDiagramManager creates a diagram manager and associates it with the FyneGUI
@@ -255,6 +255,20 @@ func (dm *FyneDiagramManager) diagramElementSelectionChanged(diagramElementID st
 	dm.fyneGUI.editor.SelectElementUsingIDString(diagramElementID, trans)
 }
 
+func (dm *FyneDiagramManager) diagramMouseMoved(event *desktop.MouseEvent) {
+	if dm.fyneGUI.dragDropTransaction != nil {
+		dm.fyneGUI.dragDropTransaction.diagramID = dm.GetSelectedDiagram().ID
+		dm.fyneGUI.dragDropTransaction.currentDiagramMousePosition = event.Position
+	}
+}
+
+func (dm *FyneDiagramManager) diagramMouseOut() {
+	if dm.fyneGUI.dragDropTransaction != nil {
+		dm.fyneGUI.dragDropTransaction.diagramID = ""
+		dm.fyneGUI.dragDropTransaction.currentDiagramMousePosition = fyne.NewPos(-1, -1)
+	}
+}
+
 func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWidget, event *fyne.PointEvent) {
 	trans, new := dm.fyneGUI.editor.GetTransaction()
 	if new {
@@ -267,20 +281,25 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 	case CURSOR:
 		fyneDiagram.ClearSelection()
 	case ELEMENT:
+		uOfD.MarkUndoPoint()
 		el, _ = uOfD.NewElement(trans)
 		el.SetLabel(dm.fyneGUI.editor.GetDefaultElementLabel(), trans)
 	case LITERAL:
+		uOfD.MarkUndoPoint()
 		el, _ = uOfD.NewLiteral(trans)
 		el.SetLabel(dm.fyneGUI.editor.GetDefaultLiteralLabel(), trans)
 	case REFERENCE:
+		uOfD.MarkUndoPoint()
 		el, _ = uOfD.NewReference(trans)
 		el.SetLabel(dm.fyneGUI.editor.GetDefaultReferenceLabel(), trans)
 	case REFINEMENT:
+		uOfD.MarkUndoPoint()
 		el, _ = uOfD.NewRefinement(trans)
 		el.SetLabel(dm.fyneGUI.editor.GetDefaultRefinementLabel(), trans)
 	}
 
 	if el != nil {
+		elID := el.GetConceptID(trans)
 		el.SetOwningConceptID(crlDiagram.GetOwningConceptID(trans), trans)
 		dm.fyneGUI.editor.SelectElement(el, trans)
 
@@ -296,11 +315,12 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 		crldiagramdomain.SetReferencedModelElement(newNode, el, trans)
 		crldiagramdomain.SetDisplayLabel(newNode, el.GetLabel(trans), trans)
 		newNode.SetOwningConcept(crlDiagram, trans)
+		dm.selectElementInDiagram(elID, fyneDiagram, trans)
+		dm.ElementSelected(elID, trans)
+	} else {
+		dm.ElementSelected("", trans)
 	}
-
-	dm.ElementSelected("", trans)
 	dm.currentToolbarSelection = CURSOR
-
 }
 
 func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.Transaction) error {
@@ -309,6 +329,7 @@ func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.T
 	if tabItem == nil {
 		diagramWidget := diagramwidget.NewDiagramWidget(diagramID)
 		diagramWidget.OnTappedCallback = dm.diagramTapped
+		diagramWidget.MouseMovedCallback = dm.diagramMouseMoved
 		scrollingContainer := container.NewScroll(diagramWidget)
 		tabItem = &diagramTab{
 			diagramID: diagramID,
@@ -331,11 +352,6 @@ func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.T
 	}
 	dm.tabArea.Select(tabItem.tab)
 	return nil
-}
-
-func (dm *FyneDiagramManager) SelectDiagram(diagramID string) {
-	tabItem := dm.diagramTabs[diagramID]
-	dm.tabArea.Select(tabItem.tab)
 }
 
 func (dm *FyneDiagramManager) ElementSelected(id string, trans *core.Transaction) {
@@ -384,6 +400,7 @@ func (dm *FyneDiagramManager) isConnectionAllowed(fyneLink diagramwidget.Diagram
 	link := uOfD.GetElement(fyneLink.GetDiagramElementID())
 	padOwner := uOfD.GetElement(pad.GetPadOwner().GetDiagramElementID())
 	if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramReferenceLinkURI, trans) {
+		return true
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramAbstractPointerURI, trans) {
 		padOwnerModelElement := crldiagramdomain.GetReferencedModelElement(padOwner, trans)
 		if padOwnerModelElement == nil {
@@ -400,6 +417,7 @@ func (dm *FyneDiagramManager) isConnectionAllowed(fyneLink diagramwidget.Diagram
 			return true
 		}
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramElementPointerURI, trans) {
+		// TODO add logic here
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramOwnerPointerURI, trans) {
 		switch linkEnd {
 		case diagramwidget.SOURCE:
@@ -411,7 +429,9 @@ func (dm *FyneDiagramManager) isConnectionAllowed(fyneLink diagramwidget.Diagram
 			}
 		}
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramRefinedPointerURI, trans) {
+		// TODO add logic here
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramRefinementLinkURI, trans) {
+		// TODO add logic here
 	}
 	return false
 }
@@ -438,6 +458,9 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 			crldiagramdomain.SetLinkSource(crlLink, crlNewPadOwner, trans)
 			switch typedLink.linkType {
 			case REFERENCE_LINK:
+				linkModelElement := crldiagramdomain.GetReferencedModelElement(crlLink, trans)
+				sourceModelElement := crldiagramdomain.GetReferencedModelElement(crlNewPadOwner, trans)
+				linkModelElement.SetOwningConcept(sourceModelElement, trans)
 			case REFINEMENT_LINK:
 			case ABSTRACT_ELEMENT_POINTER:
 			case OWNER_POINTER:
@@ -459,6 +482,9 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 			crldiagramdomain.SetLinkTarget(crlLink, crlNewPadOwner, trans)
 			switch typedLink.linkType {
 			case REFERENCE_LINK:
+				linkModelElement := crldiagramdomain.GetReferencedModelElement(crlLink, trans)
+				targetModelElement := crldiagramdomain.GetReferencedModelElement(crlNewPadOwner, trans)
+				linkModelElement.(core.Reference).SetReferencedConcept(targetModelElement, core.NoAttribute, trans)
 			case REFINEMENT_LINK:
 			case ABSTRACT_ELEMENT_POINTER:
 			case OWNER_POINTER:
@@ -500,6 +526,13 @@ func (dm *FyneDiagramManager) populateDiagram(diagram core.Element, trans *core.
 	return nil
 }
 
+func (dm *FyneDiagramManager) SelectDiagram(diagramID string) {
+	tabItem := dm.diagramTabs[diagramID]
+	if tabItem != nil {
+		dm.tabArea.Select(tabItem.tab)
+	}
+}
+
 func (dm *FyneDiagramManager) selectElementInDiagram(elementID string, diagram *diagramwidget.DiagramWidget, trans *core.Transaction) error {
 	uOfD := trans.GetUniverseOfDiscourse()
 	diagram.ClearSelectionNoCallback()
@@ -533,28 +566,36 @@ func (dm *FyneDiagramManager) startCreateLinkTransaction() {
 	case REFINEMENT_LINK, REFERENCE_LINK, ABSTRACT_ELEMENT_POINTER, OWNER_POINTER, REFERENCED_ELEMENT_POINTER, REFINED_ELEMENT_POINTER:
 		trans, new := dm.fyneGUI.editor.GetTransaction()
 		if new {
-			dm.inProgressCreateLinkTransaction = trans
+			defer dm.fyneGUI.editor.EndTransaction()
 		}
 		uOfD := trans.GetUniverseOfDiscourse()
 		var crlLink core.Element
 		var fyneLink diagramwidget.DiagramLink
 		switch dm.currentToolbarSelection {
 		case REFINEMENT_LINK:
+			uOfD.MarkUndoPoint()
 			crlLink, _ = crldiagramdomain.NewDiagramRefinementLink(uOfD, trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
 		case REFERENCE_LINK:
+			uOfD.MarkUndoPoint()
 			crlLink, _ = crldiagramdomain.NewDiagramReferenceLink(uOfD, trans)
+			crlModelReference, _ := uOfD.NewReference(trans)
+			crldiagramdomain.SetReferencedModelElement(crlLink, crlModelReference, trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
 		case ABSTRACT_ELEMENT_POINTER:
+			uOfD.MarkUndoPoint()
 			crlLink, _ = crldiagramdomain.NewDiagramAbstractPointer(uOfD, trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
 		case OWNER_POINTER:
+			uOfD.MarkUndoPoint()
 			crlLink, _ = crldiagramdomain.NewDiagramOwnerPointer(uOfD, trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
 		case REFERENCED_ELEMENT_POINTER:
+			uOfD.MarkUndoPoint()
 			crlLink, _ = crldiagramdomain.NewDiagramElementPointer(uOfD, trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
 		case REFINED_ELEMENT_POINTER:
+			uOfD.MarkUndoPoint()
 			crlLink, _ = crldiagramdomain.NewDiagramRefinedPointer(uOfD, trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
 		}

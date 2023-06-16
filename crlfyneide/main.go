@@ -29,8 +29,6 @@ func main() {
 	flag.Parse()
 	log.Println("workspace: ", *workspaceArg)
 	log.Println("user folder: ", *userFolderArg)
-	// For debugging
-	// browsergui.CrlLogClientRequests = true
 
 	// Common infrastructure
 	crleditor.CrlEditorSingleton = crleditor.NewEditor(*userFolderArg)
@@ -38,6 +36,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Fyne GUI
 	fyneEditor := crleditorfynegui.NewFyneGUI(crleditor.CrlEditorSingleton)
 	err = crleditor.CrlEditorSingleton.AddEditorGUI(fyneEditor)
 	if err != nil {

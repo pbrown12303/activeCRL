@@ -44,11 +44,12 @@ type CrlEditorFyneGUI struct {
 	// Help Menu Items
 	helpItem *fyne.MenuItem
 	// Main Menu Items
-	mainMenu  *fyne.MainMenu
-	fileMenu  *fyne.Menu
-	editMenu  *fyne.Menu
-	debugMenu *fyne.Menu
-	helpMenu  *fyne.Menu
+	mainMenu            *fyne.MainMenu
+	fileMenu            *fyne.Menu
+	editMenu            *fyne.Menu
+	debugMenu           *fyne.Menu
+	helpMenu            *fyne.Menu
+	dragDropTransaction *dragDropTransaction
 }
 
 // NewFyneGUI returns an initialized FyneGUI
@@ -346,4 +347,10 @@ func (gui *CrlEditorFyneGUI) undo() {
 		defer gui.editor.EndTransaction()
 	}
 	gui.editor.Undo(trans)
+}
+
+type dragDropTransaction struct {
+	id                          string
+	diagramID                   string
+	currentDiagramMousePosition fyne.Position
 }

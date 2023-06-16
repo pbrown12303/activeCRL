@@ -30,6 +30,7 @@ type FyneTreeManager struct {
 	fyneGUI      *CrlEditorFyneGUI
 	tree         *widget.Tree
 	uofdObserver uOfDObserver
+	treeNodes    map[string]*treeNode
 }
 
 // NewFyneTreeManager returns an initialized FyneTreeManager
@@ -41,6 +42,7 @@ func NewFyneTreeManager(fyneGUI *CrlEditorFyneGUI) *FyneTreeManager {
 	treeManager.tree.OnSelected = func(uid string) { treeManager.onNodeSelected(uid) }
 	treeManager.tree.Show()
 	treeManager.uofdObserver = *newUofDObserver(treeManager)
+	treeManager.treeNodes = make(map[string]*treeNode)
 	return treeManager
 }
 
@@ -123,6 +125,7 @@ func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
 			tn.label.Bind(labelItem.(binding.String))
 		}
 	}
+	FyneGUISingleton.treeManager.treeNodes[uid] = tn
 	tn.Show()
 }
 
@@ -156,6 +159,7 @@ func getIconResource(el core.Element, trans *core.Transaction) *fyne.StaticResou
 }
 
 var _ desktop.Mouseable = (*treeNode)(nil)
+var _ fyne.Draggable = (*treeNode)(nil)
 
 type treeNode struct {
 	widget.BaseWidget
@@ -176,6 +180,29 @@ func newTreeNode() *treeNode {
 
 func (tn *treeNode) CreateRenderer() fyne.WidgetRenderer {
 	return newTreeNodeRenderer(tn)
+}
+
+func (tn *treeNode) DragEnd() {
+	if FyneGUISingleton.dragDropTransaction != nil {
+		ddt := FyneGUISingleton.dragDropTransaction
+		if FyneGUISingleton.dragDropTransaction.currentDiagramMousePosition != fyne.NewPos(-1, -1) {
+			trans, isNew := FyneGUISingleton.editor.GetTransaction()
+			if isNew {
+				defer FyneGUISingleton.editor.EndTransaction()
+			}
+			trans.GetUniverseOfDiscourse().MarkUndoPoint()
+			view, _ := FyneGUISingleton.editor.GetDiagramManager().AddConceptView(ddt.diagramID, ddt.id, float64(ddt.currentDiagramMousePosition.X), float64(ddt.currentDiagramMousePosition.Y), trans)
+			fyneDiagram := FyneGUISingleton.diagramManager.GetSelectedDiagram()
+			fyneDiagram.SelectDiagramElementNoCallback(view.GetConceptID(trans))
+		}
+		FyneGUISingleton.dragDropTransaction = nil
+	}
+}
+
+func (tn *treeNode) Dragged(event *fyne.DragEvent) {
+	if FyneGUISingleton.dragDropTransaction == nil {
+		FyneGUISingleton.dragDropTransaction = &dragDropTransaction{id: tn.id}
+	}
 }
 
 func (tn *treeNode) MouseDown(event *desktop.MouseEvent) {
