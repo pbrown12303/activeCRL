@@ -16,8 +16,11 @@ import (
 
 var _ fyne.Widget = (*FyneCrlDiagramNode)(nil)
 var _ diagramwidget.DiagramElement = (*FyneCrlDiagramNode)(nil)
+var _ diagramwidget.DiagramNode = (*FyneCrlDiagramNode)(nil)
 var _ fyne.Tappable = (*FyneCrlDiagramNode)(nil)
 
+// FyneCrlDiagramNode is an extension to diagramwidget.DiagramNode that serves as a binding
+// between the diagramwidget nodes and the crldiagramdomain diagram noddes
 type FyneCrlDiagramNode struct {
 	diagramwidget.BaseDiagramNode
 	diagramElement  core.Element
@@ -28,6 +31,7 @@ type FyneCrlDiagramNode struct {
 	// abstractionTextBinding binding.String
 }
 
+// NewFyneCrlDiagramNode creates a fyne node that corresponds to the supplied crldiagram node
 func NewFyneCrlDiagramNode(node core.Element, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramNode {
 	newNode := &FyneCrlDiagramNode{}
 	nodeID := node.GetConceptID(trans)
@@ -92,6 +96,10 @@ func (fcdn *FyneCrlDiagramNode) nodeMoved() {
 	}
 }
 
+var _ diagramwidget.DiagramLink = (*FyneCrlDiagramLink)(nil)
+
+// FyneCrlDiagramLink is an extension to the diagramwidget.DiagramLink that serves as a binding between
+// the fyne link and the crldiagramdomain link
 type FyneCrlDiagramLink struct {
 	diagramwidget.BaseDiagramLink
 	diagramElement    core.Element
@@ -100,6 +108,7 @@ type FyneCrlDiagramLink struct {
 	linkType          ToolbarSelection
 }
 
+// NewFyneCrlDiagramLink creates a fyne link that corresponds to the supplied crldiagramdomain link
 func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, link core.Element, trans *core.Transaction) *FyneCrlDiagramLink {
 	diagramLink := &FyneCrlDiagramLink{}
 	diagramLink.diagramElement = link

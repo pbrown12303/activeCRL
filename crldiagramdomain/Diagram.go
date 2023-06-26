@@ -1594,12 +1594,12 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 										return errors.Wrap(err, "updateDiagramElement failed")
 									}
 								case core.Refinement:
-									if IsDiagramAbstractPointer(diagramElement, trans) {
+									if underlyingReportingElementIsTargetReference {
 										err := typedModelElement.SetAbstractConcept(targetModelElement, trans)
 										if err != nil {
 											return errors.Wrap(err, "updateDiagramElement failed")
 										}
-									} else if IsDiagramRefinedPointer(diagramElement, trans) || IsDiagramRefinementLink(diagramElement, trans) {
+									} else if underlyingReportingElementIsSourceReference {
 										err := typedModelElement.SetRefinedConcept(targetModelElement, trans)
 										if err != nil {
 											return errors.Wrap(err, "updateDiagramElement failed")
@@ -1616,7 +1616,7 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 									}
 								case core.Refinement:
 									if IsDiagramRefinementLink(diagramElement, trans) {
-										typedModelElement.SetAbstractConcept(sourceModelElement, trans)
+										typedModelElement.SetRefinedConcept(sourceModelElement, trans)
 									}
 								}
 							}
