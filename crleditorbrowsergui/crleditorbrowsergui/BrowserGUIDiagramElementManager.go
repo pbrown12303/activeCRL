@@ -64,7 +64,7 @@ func getLinkAdditionalParameters(link core.Element, hl *core.Transaction) map[st
 	}
 	additionalParameters := map[string]string{
 		"DisplayLabel": crldiagramdomain.GetDisplayLabel(link, hl),
-		"Icon":         GetIconPath(crldiagramdomain.GetReferencedModelElement(link, hl), hl),
+		"Icon":         GetIconPath(crldiagramdomain.GetReferencedModelConcept(link, hl), hl),
 		"OwnerID":      link.GetOwningConceptID(hl),
 		"Abstractions": crldiagramdomain.GetAbstractionDisplayLabel(link, hl),
 		"LinkType":     linkType,
@@ -76,7 +76,7 @@ func getLinkAdditionalParameters(link core.Element, hl *core.Transaction) map[st
 
 func getNodeAdditionalParameters(node core.Element, hl *core.Transaction) map[string]string {
 	var represents string
-	referencedModelElement := crldiagramdomain.GetReferencedModelElement(node, hl)
+	referencedModelElement := crldiagramdomain.GetReferencedModelConcept(node, hl)
 	if referencedModelElement != nil {
 		switch referencedModelElement.(type) {
 		case core.Literal:

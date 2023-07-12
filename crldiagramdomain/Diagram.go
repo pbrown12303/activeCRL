@@ -5,7 +5,7 @@
 //		CrlDiagram: the diagram itself
 //		CrlDiagramNode: a node in the diagram
 //		CrlDiagramLink: a link in the diagram
-//	 CrlDiagramPointer: a pointer shown as a link in the diagram
+//	    CrlDiagramPointer: a pointer shown as a link in the diagram
 //
 // These classes are intended to hold all of the information about the diagram that is not specific to the rendering engine.
 //
@@ -299,7 +299,7 @@ func GetFirstElementRepresentingConcept(diagram core.Element, concept core.Eleme
 		return nil
 	}
 	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, trans) {
-		if GetReferencedModelElement(el, trans) == concept && !el.IsRefinementOfURI(CrlDiagramPointerURI, trans) {
+		if GetReferencedModelConcept(el, trans) == concept && !el.IsRefinementOfURI(CrlDiagramPointerURI, trans) {
 			return el
 		}
 	}
@@ -313,7 +313,7 @@ func GetFirstElementRepresentingConceptID(diagram core.Element, conceptID string
 		return nil
 	}
 	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, trans) {
-		if GetReferencedModelElement(el, trans).GetConceptID(trans) == conceptID && !el.IsRefinementOfURI(CrlDiagramPointerURI, trans) {
+		if GetReferencedModelConcept(el, trans).GetConceptID(trans) == conceptID && !el.IsRefinementOfURI(CrlDiagramPointerURI, trans) {
 			return el
 		}
 	}
@@ -327,7 +327,7 @@ func GetFirstElementRepresentingConceptOwnerPointer(diagram core.Element, concep
 		return nil
 	}
 	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
-		if GetReferencedModelElement(el, trans) == concept {
+		if GetReferencedModelConcept(el, trans) == concept {
 			return el
 		}
 	}
@@ -341,7 +341,7 @@ func GetFirstElementRepresentingConceptIDOwnerPointer(diagram core.Element, conc
 		return nil
 	}
 	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
-		if GetReferencedModelElement(el, trans).GetConceptID(trans) == conceptID {
+		if GetReferencedModelConcept(el, trans).GetConceptID(trans) == conceptID {
 			return el
 		}
 	}
@@ -355,7 +355,7 @@ func GetFirstElementRepresentingConceptElementPointer(diagram core.Element, conc
 		return nil
 	}
 	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
-		if GetReferencedModelElement(el, trans) == concept {
+		if GetReferencedModelConcept(el, trans) == concept {
 			return el
 		}
 	}
@@ -369,7 +369,7 @@ func GetFirstElementRepresentingConceptIDElementPointer(diagram core.Element, co
 		return nil
 	}
 	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
-		if GetReferencedModelElement(el, trans).GetConceptID(trans) == conceptID {
+		if GetReferencedModelConcept(el, trans).GetConceptID(trans) == conceptID {
 			return el
 		}
 	}
@@ -383,7 +383,7 @@ func GetFirstElementRepresentingConceptAbstractPointer(diagram core.Element, con
 		return nil
 	}
 	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramAbstractPointerURI, trans) {
-		if GetReferencedModelElement(el, trans) == concept {
+		if GetReferencedModelConcept(el, trans) == concept {
 			return el
 		}
 	}
@@ -397,7 +397,7 @@ func GetFirstElementRepresentingConceptIDAbstractPointer(diagram core.Element, c
 		return nil
 	}
 	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramAbstractPointerURI, trans) {
-		if GetReferencedModelElement(el, trans).GetConceptID(trans) == conceptID {
+		if GetReferencedModelConcept(el, trans).GetConceptID(trans) == conceptID {
 			return el
 		}
 	}
@@ -411,7 +411,7 @@ func GetFirstElementRepresentingConceptRefinedPointer(diagram core.Element, conc
 		return nil
 	}
 	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramRefinedPointerURI, trans) {
-		if GetReferencedModelElement(el, trans) == concept {
+		if GetReferencedModelConcept(el, trans) == concept {
 			return el
 		}
 	}
@@ -425,7 +425,7 @@ func GetFirstElementRepresentingConceptIDRefinedPointer(diagram core.Element, co
 		return nil
 	}
 	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramRefinedPointerURI, trans) {
-		if GetReferencedModelElement(el, trans).GetConceptID(trans) == conceptID {
+		if GetReferencedModelConcept(el, trans).GetConceptID(trans) == conceptID {
 			return el
 		}
 	}
@@ -559,7 +559,7 @@ func GetOwnerPointer(diagram core.Element, concept core.Element, trans *core.Tra
 		return nil
 	}
 	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
-		if GetReferencedModelElement(el, trans) == concept {
+		if GetReferencedModelConcept(el, trans) == concept {
 			return el
 		}
 	}
@@ -573,16 +573,16 @@ func GetElementPointer(diagram core.Element, concept core.Element, trans *core.T
 		return nil
 	}
 	for _, el := range diagram.GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
-		if GetReferencedModelElement(el, trans) == concept {
+		if GetReferencedModelConcept(el, trans) == concept {
 			return el
 		}
 	}
 	return nil
 }
 
-// GetReferencedModelElement is a function on a CrlDiagramNode that returns the model element represented by the
+// GetReferencedModelConcept is a function on a CrlDiagramNode that returns the model element represented by the
 // diagram node
-func GetReferencedModelElement(diagramElement core.Element, trans *core.Transaction) core.Element {
+func GetReferencedModelConcept(diagramElement core.Element, trans *core.Transaction) core.Element {
 	if diagramElement == nil {
 		return nil
 	}
@@ -818,6 +818,16 @@ func SetLinkTarget(diagramLink core.Element, target core.Element, trans *core.Tr
 	if diagramLink == nil {
 		return
 	}
+	// attributeName := core.NoAttribute
+	// if target.IsRefinementOfURI(CrlDiagramAbstractPointerURI, trans) {
+	// 	attributeName = core.AbstractConceptID
+	// } else if target.IsRefinementOfURI(CrlDiagramOwnerPointerURI, trans) {
+	// 	attributeName = core.OwningConceptID
+	// } else if target.IsRefinementOfURI(CrlDiagramRefinedPointerURI, trans) {
+	// 	attributeName = core.RefinedConceptID
+	// } else if target.IsRefinementOfURI(CrlDiagramElementPointerURI, trans) {
+	// 	attributeName = core.ReferencedConceptID
+	// }
 	targetReference := diagramLink.GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
 	if targetReference != nil {
 		targetReference.SetReferencedConcept(target, core.NoAttribute, trans)
@@ -884,9 +894,9 @@ func SetNodeDisplayLabelYOffset(diagramNode core.Element, value float64, trans *
 	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), trans)
 }
 
-// SetReferencedModelElement is a function on a CrlDiagramNode that sets the model element represented by the
+// SetReferencedModelConcept is a function on a CrlDiagramNode that sets the model element represented by the
 // diagram node
-func SetReferencedModelElement(diagramElement core.Element, el core.Element, trans *core.Transaction) {
+func SetReferencedModelConcept(diagramElement core.Element, el core.Element, trans *core.Transaction) {
 	if diagramElement == nil {
 		return
 	}
@@ -1417,7 +1427,7 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 		// Without a model reference, there is nothing to do. This scenario can occur during diagramElement deletion.
 		return nil
 	}
-	modelElement := GetReferencedModelElement(diagramElement, trans)
+	modelElement := GetReferencedModelConcept(diagramElement, trans)
 	switch notification.GetNatureOfChange() {
 	case core.OwnedConceptChanged:
 		switch underlyingChange.GetNatureOfChange() {
@@ -1481,9 +1491,9 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 										return nil
 									}
 									currentDiagramSource := GetLinkSource(diagramElement, trans)
-									currentModelSource := GetReferencedModelElement(currentDiagramSource, trans)
+									currentModelSource := GetReferencedModelConcept(currentDiagramSource, trans)
 									currentDiagramTarget := GetLinkTarget(diagramElement, trans)
-									currentModelTarget := GetReferencedModelElement(currentDiagramTarget, trans)
+									currentModelTarget := GetReferencedModelConcept(currentDiagramTarget, trans)
 									if currentModelSource != newModelSource {
 										newDiagramSource := GetFirstElementRepresentingConcept(diagram, newModelSource, trans)
 										if newDiagramSource == nil {
@@ -1530,9 +1540,9 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 										return nil
 									}
 									currentDiagramTarget := GetLinkTarget(diagramElement, trans)
-									currentModelTarget := GetReferencedModelElement(currentDiagramTarget, trans)
+									currentModelTarget := GetReferencedModelConcept(currentDiagramTarget, trans)
 									currentDiagramSource := GetLinkSource(diagramElement, trans)
-									currentModelSource := GetReferencedModelElement(currentDiagramSource, trans)
+									currentModelSource := GetReferencedModelConcept(currentDiagramSource, trans)
 									if currentModelTarget != newModelTarget {
 										newDiagramTarget := GetFirstElementRepresentingConcept(diagram, newModelTarget, trans)
 										if newDiagramTarget == nil {
@@ -1572,7 +1582,7 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 								// If the link's target has changed, we need to update the underlying model element to reflect the change.
 								// Note that if the target is now null, the preceeding clause will have deleted the element
 								targetDiagramElement := uOfD.GetElement(underlyingChange.GetAfterConceptState().ReferencedConceptID)
-								targetModelElement := GetReferencedModelElement(targetDiagramElement, trans)
+								targetModelElement := GetReferencedModelConcept(targetDiagramElement, trans)
 								if IsDiagramOwnerPointer(diagramElement, trans) {
 									modelElement.SetOwningConcept(targetModelElement, trans)
 								}
@@ -1608,7 +1618,7 @@ func updateDiagramElement(diagramElement core.Element, notification *core.Change
 								}
 							} else if underlyingReportingElementIsSourceReference {
 								sourceDiagramElement := uOfD.GetElement(underlyingChange.GetAfterConceptState().ReferencedConceptID)
-								sourceModelElement := GetReferencedModelElement(sourceDiagramElement, trans)
+								sourceModelElement := GetReferencedModelConcept(sourceDiagramElement, trans)
 								switch typedModelElement := modelElement.(type) {
 								case core.Reference:
 									if IsDiagramReferenceLink(diagramElement, trans) {
@@ -1652,7 +1662,7 @@ func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.C
 	trans.WriteLockElement(diagramPointer)
 	reportingElement := uOfD.GetElement(notification.GetReportingElementID())
 	diagram := diagramPointer.GetOwningConcept(trans)
-	modelElement := GetReferencedModelElement(diagramPointer, trans)
+	modelElement := GetReferencedModelConcept(diagramPointer, trans)
 	switch notification.GetNatureOfChange() {
 	case core.OwnedConceptChanged:
 		if reportingElement == modelElement {
@@ -1664,7 +1674,7 @@ func updateDiagramOwnerPointer(diagramPointer core.Element, notification *core.C
 					var oldModelOwner core.Element
 					diagramTarget := GetLinkTarget(diagramPointer, trans)
 					if diagramTarget != nil {
-						oldModelOwner = GetReferencedModelElement(diagramTarget, trans)
+						oldModelOwner = GetReferencedModelConcept(diagramTarget, trans)
 					}
 					if modelOwner != oldModelOwner {
 						// Need to determine whether there is a view of the new owner in the diagram

@@ -80,24 +80,24 @@ type reference struct {
 	ReferencedConceptVersion int
 }
 
-func (rPtr *reference) clone(hl *Transaction) Reference {
-	hl.ReadLockElement(rPtr)
+func (rPtr *reference) clone(trans *Transaction) Reference {
+	trans.ReadLockElement(rPtr)
 	var ref reference
 	ref.initializeReference("", "")
-	ref.cloneAttributes(rPtr, hl)
+	ref.cloneAttributes(rPtr, trans)
 	return &ref
 }
 
-func (rPtr *reference) cloneAttributes(source *reference, hl *Transaction) {
-	rPtr.element.cloneAttributes(&source.element, hl)
+func (rPtr *reference) cloneAttributes(source *reference, trans *Transaction) {
+	rPtr.element.cloneAttributes(&source.element, trans)
 	rPtr.ReferencedConceptID = source.ReferencedConceptID
 	rPtr.ReferencedConceptVersion = source.ReferencedConceptVersion
 }
 
 // GetReferencedConcept returns the element representing  the concept being referenced
 // Note that this is a cached value
-func (rPtr *reference) GetReferencedConcept(hl *Transaction) Element {
-	hl.ReadLockElement(rPtr)
+func (rPtr *reference) GetReferencedConcept(trans *Transaction) Element {
+	trans.ReadLockElement(rPtr)
 	return rPtr.getReferencedConceptNoLock()
 }
 
@@ -106,41 +106,41 @@ func (rPtr *reference) getReferencedConceptNoLock() Element {
 }
 
 // GetReferencedConceptID returns the identifier of the concept being referenced
-func (rPtr *reference) GetReferencedConceptID(hl *Transaction) string {
-	hl.ReadLockElement(rPtr)
+func (rPtr *reference) GetReferencedConceptID(trans *Transaction) string {
+	trans.ReadLockElement(rPtr)
 	return rPtr.ReferencedConceptID
 }
 
 // GetReferencedAttributeName returns an indicator of which attribute is being referenced (if any)
-func (rPtr *reference) GetReferencedAttributeName(hl *Transaction) AttributeName {
-	hl.ReadLockElement(rPtr)
+func (rPtr *reference) GetReferencedAttributeName(trans *Transaction) AttributeName {
+	trans.ReadLockElement(rPtr)
 	return rPtr.ReferencedAttributeName
 }
 
 // GetReferencedAttributeValue returns the string value of the referenced attribute (if any)
-func (rPtr *reference) GetReferencedAttributeValue(hl *Transaction) string {
-	hl.ReadLockElement(rPtr)
+func (rPtr *reference) GetReferencedAttributeValue(trans *Transaction) string {
+	trans.ReadLockElement(rPtr)
 	if rPtr.ReferencedConceptID != "" {
-		referencedConcept := rPtr.GetReferencedConcept(hl)
+		referencedConcept := rPtr.GetReferencedConcept(trans)
 		if referencedConcept != nil {
 			if rPtr.ReferencedAttributeName == OwningConceptID {
-				return referencedConcept.GetOwningConceptID(hl)
+				return referencedConcept.GetOwningConceptID(trans)
 			}
 			switch typedReferencedConcept := referencedConcept.(type) {
 			case Reference:
 				if rPtr.ReferencedAttributeName == ReferencedConceptID {
-					return typedReferencedConcept.GetReferencedConceptID(hl)
+					return typedReferencedConcept.GetReferencedConceptID(trans)
 				}
 			case Refinement:
 				if rPtr.ReferencedAttributeName == AbstractConceptID {
-					return typedReferencedConcept.GetAbstractConceptID(hl)
+					return typedReferencedConcept.GetAbstractConceptID(trans)
 				}
 				if rPtr.ReferencedAttributeName == RefinedConceptID {
-					return typedReferencedConcept.GetRefinedConceptID(hl)
+					return typedReferencedConcept.GetRefinedConceptID(trans)
 				}
 			case Literal:
 				if rPtr.ReferencedAttributeName == LiteralValue {
-					return typedReferencedConcept.GetLiteralValue(hl)
+					return typedReferencedConcept.GetLiteralValue(trans)
 				}
 			}
 		}
@@ -149,8 +149,8 @@ func (rPtr *reference) GetReferencedAttributeValue(hl *Transaction) string {
 }
 
 // GetReferencedConceptVersion returns the last known version of the referenced concept
-func (rPtr *reference) GetReferencedConceptVersion(hl *Transaction) int {
-	hl.ReadLockElement(rPtr)
+func (rPtr *reference) GetReferencedConceptVersion(trans *Transaction) int {
+	trans.ReadLockElement(rPtr)
 	return rPtr.ReferencedConceptVersion
 }
 
@@ -207,8 +207,8 @@ func (rPtr *reference) marshalReferenceFields(buffer *bytes.Buffer) error {
 // recoverReferenceFields() is used when de-serializing an element. The activities in restoring the
 // element are not considered changes so the version counter is not incremented and the monitors of this
 // element are not notified of chaanges.
-func (rPtr *reference) recoverReferenceFields(unmarshaledData *map[string]json.RawMessage, hl *Transaction) error {
-	err := rPtr.recoverElementFields(unmarshaledData, hl)
+func (rPtr *reference) recoverReferenceFields(unmarshaledData *map[string]json.RawMessage, trans *Transaction) error {
+	err := rPtr.recoverElementFields(unmarshaledData, trans)
 	if err != nil {
 		return err
 	}
@@ -251,25 +251,25 @@ func (rPtr *reference) recoverReferenceFields(unmarshaledData *map[string]json.R
 
 // SetReferencedConcept sets the referenced concept by calling SetReferencedConceptID using the ID of the
 // supplied Element
-func (rPtr *reference) SetReferencedConcept(el Element, attributeName AttributeName, hl *Transaction) error {
+func (rPtr *reference) SetReferencedConcept(el Element, attributeName AttributeName, trans *Transaction) error {
 	if rPtr.uOfD == nil {
 		return errors.New("reference.SetReferencedConcept failed because the element uOfD is nil")
 	}
-	hl.WriteLockElement(rPtr)
+	trans.WriteLockElement(rPtr)
 	id := ""
 	if el != nil {
 		id = el.getConceptIDNoLock()
 	}
-	return rPtr.SetReferencedConceptID(id, attributeName, hl)
+	return rPtr.SetReferencedConceptID(id, attributeName, trans)
 }
 
 // SetReferencedConceptID sets the referenced concept using the supplied ID.
-func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName AttributeName, hl *Transaction) error {
+func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName AttributeName, trans *Transaction) error {
 	if rPtr.uOfD == nil {
 		return errors.New("reference.SetReferencedConceptID failed because the element uOfD is nil")
 	}
-	hl.WriteLockElement(rPtr)
-	if !rPtr.isEditable(hl) {
+	trans.WriteLockElement(rPtr)
+	if !rPtr.isEditable(trans) {
 		return errors.New("reference.SetReferencedConceptID failed because the reference is not editable")
 	}
 	var newReferencedConcept Element
@@ -292,19 +292,19 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName Attribu
 				}
 			}
 			if newReferencedConcept != nil {
-				newReferencedConcept.addListener(rPtr.ConceptID, hl)
+				newReferencedConcept.addListener(rPtr.ConceptID, trans)
 			}
 		}
 		beforeState, err := NewConceptState(rPtr)
 		if err != nil {
 			return errors.Wrap(err, "reference.SetReferencedConceptID failed")
 		}
-		rPtr.uOfD.preChange(rPtr, hl)
-		rPtr.incrementVersion(hl)
+		rPtr.uOfD.preChange(rPtr, trans)
+		rPtr.incrementVersion(trans)
 		if rPtr.ReferencedConceptID != "" {
 			oldReferencedConcept = rPtr.uOfD.GetElement(rPtr.ReferencedConceptID)
 			if oldReferencedConcept != nil {
-				oldReferencedConcept.removeListener(rPtr.ConceptID, hl)
+				oldReferencedConcept.removeListener(rPtr.ConceptID, trans)
 				if err != nil {
 					return errors.Wrap(err, "reference.SetReferencedConceptID failed")
 				}
@@ -312,7 +312,7 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName Attribu
 		}
 		if rcID != "" {
 			if newReferencedConcept != nil {
-				newReferencedConcept.addListener(rPtr.ConceptID, hl)
+				newReferencedConcept.addListener(rPtr.ConceptID, trans)
 			}
 		}
 		rPtr.ReferencedConceptID = rcID
@@ -320,7 +320,7 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName Attribu
 		if newReferencedConcept == nil {
 			rPtr.ReferencedConceptVersion = 0
 		} else {
-			rPtr.ReferencedConceptVersion = newReferencedConcept.GetVersion(hl)
+			rPtr.ReferencedConceptVersion = newReferencedConcept.GetVersion(trans)
 			if err != nil {
 				return errors.Wrap(err, "reference.SetReferencedConceptID failed")
 			}
@@ -329,7 +329,7 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName Attribu
 		if err2 != nil {
 			return errors.Wrap(err2, "reference.SetReferencedConceptID failed")
 		}
-		err = rPtr.uOfD.SendPointerChangeNotification(rPtr, ReferencedConceptChanged, beforeState, afterState, hl)
+		err = rPtr.uOfD.SendPointerChangeNotification(rPtr, ReferencedConceptChanged, beforeState, afterState, trans)
 		if err != nil {
 			return errors.Wrap(err, "reference.SetReferencedConceptID failed")
 		}
@@ -337,54 +337,37 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName Attribu
 	return nil
 }
 
-// // SetReferencedConceptAttribute sets the value indicating whether a specific attribute of the referenced concept is being
-// // referenced
-// func (rPtr *reference) SetReferencedAttributeName(attributeName AttributeName, hl *HeldLocks) error {
-// 	hl.WriteLockElement(rPtr)
-// 	if rPtr.isEditable(hl) == false {
-// 		return errors.New("reference.SetReferencedAttributeName failed because reference is not editable")
-// 	}
-// 	if rPtr.ReferencedAttributeName != attributeName {
-// 		var referencedConcept Element
-// 		if rPtr.ReferencedConceptID != "" {
-// 			referencedConcept = rPtr.uOfD.GetElement(rPtr.ReferencedConceptID)
-// 			if referencedConcept != nil {
-// 			}
-// 			switch rPtr.GetReferencedAttributeName(hl) {
-// 			case ReferencedConceptID:
-// 				switch referencedConcept.(type) {
-// 				case Reference:
-// 				default:
-// 					return errors.New("In reference.SetReferencedConceptID, the ReferencedAttributeName was ReferencedConceptID, but the referenced concept is not a Reference")
-// 				}
-// 			case AbstractConceptID, RefinedConceptID:
-// 				switch referencedConcept.(type) {
-// 				case Refinement:
-// 				default:
-// 					return errors.New("In reference.SetReferencedConceptID, the ReferencedAttributeName was AbstractConceptID or RefinedConceptID, but the referenced concept is not a Refinement")
-// 				}
-// 			}
-// 		}
-// 		rPtr.uOfD.preChange(rPtr, hl)
-// 		beforeState, err := NewConceptState(rPtr)
-// 		if err != nil {
-// 			return errors.Wrap(err, "reference.SetReferencedAttributeName failed")
-// 		}
-// 		rPtr.incrementVersion(hl)
-// 		rPtr.ReferencedAttributeName = attributeName
-// 		afterState, err2 := NewConceptState(rPtr)
-// 		if err2 != nil {
-// 			return errors.Wrap(err2, "reference.SetReferencedAttributeName failed")
-// 		}
-// 		err = rPtr.uOfD.SendConceptChangeNotification(rPtr, beforeState, afterState, hl)
-// 		if err != nil {
-// 			return errors.Wrap(err, "reference.SetReferencedAttributeName failed")
-// 		}
-// 	}
-// 	return nil
-// }
+// setReferencedConceptVersion sets the referenced concept version when the reference is notified that
+// it has changed
+func (rPtr *reference) setReferencedConceptVersion(rcID string, version int, trans *Transaction) error {
+	if rPtr.uOfD == nil {
+		return errors.New("reference.SetReferencedConceptID failed because the element uOfD is nil")
+	}
+	trans.WriteLockElement(rPtr)
+	if !rPtr.isEditable(trans) {
+		return errors.New("reference.SetReferencedConceptID failed because the reference is not editable")
+	}
+	if rcID == rPtr.ReferencedConceptID {
+		beforeState, err := NewConceptState(rPtr)
+		if err != nil {
+			return errors.Wrap(err, "reference.setReferencedConceptVersion failed")
+		}
+		rPtr.uOfD.preChange(rPtr, trans)
+		rPtr.incrementVersion(trans)
+		rPtr.ReferencedConceptVersion = version
+		afterState, err2 := NewConceptState(rPtr)
+		if err2 != nil {
+			return errors.Wrap(err2, "reference.setReferencedConceptVersion failed")
+		}
+		err = rPtr.uOfD.SendConceptChangeNotification(rPtr, beforeState, afterState, trans)
+		if err != nil {
+			return errors.Wrap(err, "reference.setReferencedConceptVersion failed")
+		}
+	}
+	return nil
+}
 
-// Reference represents a concept that is a pointer to another concept
+// Reference represents a concept that is a pointer to another concept.
 type Reference interface {
 	Element
 	GetReferencedConcept(*Transaction) Element
@@ -394,6 +377,6 @@ type Reference interface {
 	GetReferencedConceptVersion(*Transaction) int
 	getReferencedConceptNoLock() Element
 	SetReferencedConcept(Element, AttributeName, *Transaction) error
-	// SetReferencedAttributeName(attributeName AttributeName, hl *HeldLocks) error
 	SetReferencedConceptID(string, AttributeName, *Transaction) error
+	setReferencedConceptVersion(string, int, *Transaction) error
 }

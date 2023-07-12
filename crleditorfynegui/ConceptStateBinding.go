@@ -68,19 +68,19 @@ func (vPtr *conceptStateBinding) GetBoundData() *binding.Struct {
 
 func (vPtr *conceptStateBinding) Update(notification *core.ChangeNotification, trans *core.Transaction) error {
 	// get the data from the notification
-	switch notification.GetNatureOfChange() {
-	case core.ConceptChanged:
-		afterState := notification.GetAfterConceptState()
-		if afterState == nil || afterState.ConceptID != vPtr.elementID {
-			return errors.New("elementTreeNodeView.Update called with invalid notification")
-		}
-		vPtr.rawData = *afterState
-		vPtr.oldLabel = afterState.Label
-		vPtr.oldUri = afterState.URI
-		vPtr.oldDefinition = afterState.Definition
-		vPtr.oldLiteralValue = afterState.LiteralValue
-		vPtr.boundData.Reload()
+	afterState := notification.GetAfterConceptState()
+	if afterState == nil {
+		return nil
 	}
+	if afterState.ConceptID != vPtr.elementID {
+		return errors.New("elementTreeNodeView.Update called with invalid notification")
+	}
+	vPtr.rawData = *afterState
+	vPtr.oldLabel = afterState.Label
+	vPtr.oldUri = afterState.URI
+	vPtr.oldDefinition = afterState.Definition
+	vPtr.oldLiteralValue = afterState.LiteralValue
+	vPtr.boundData.Reload()
 	return nil
 }
 

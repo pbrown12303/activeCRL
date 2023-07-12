@@ -240,7 +240,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 		elementID := request.RequestConceptID
 		element := BrowserGUISingleton.GetUofD().GetElement(request.RequestConceptID)
 		if element != nil {
-			modelElement := crldiagramdomain.GetReferencedModelElement(element, trans)
+			modelElement := crldiagramdomain.GetReferencedModelConcept(element, trans)
 			BrowserGUISingleton.editor.SelectElement(modelElement, trans)
 		}
 		sendReply(w, 0, "Processed DiagramElementSelected", elementID, BrowserGUISingleton.GetUofD().GetElement(elementID))
@@ -345,7 +345,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			sendReply(w, 1, "Selected diagram element not found", "", nil)
 			break
 		}
-		modelElement := crldiagramdomain.GetReferencedModelElement(diagramElement, trans)
+		modelElement := crldiagramdomain.GetReferencedModelConcept(diagramElement, trans)
 		if modelElement == nil {
 			sendReply(w, 1, "Model element corresponding to selected diagram element not found", "", nil)
 			break
@@ -441,7 +441,7 @@ func (rh *requestHandler) handleRequest(w http.ResponseWriter, r *http.Request) 
 			sendReply(w, 1, "Selected diagram element not found", "", nil)
 			break
 		}
-		modelElement := crldiagramdomain.GetReferencedModelElement(diagramElement, trans)
+		modelElement := crldiagramdomain.GetReferencedModelConcept(diagramElement, trans)
 		if modelElement == nil {
 			sendReply(w, 1, "Model element corresponding to selected diagram element not found", "", nil)
 			break

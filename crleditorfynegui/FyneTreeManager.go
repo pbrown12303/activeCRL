@@ -22,7 +22,9 @@ func (a ByLabel) Len() int      { return len(a) }
 func (a ByLabel) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByLabel) Less(i, j int) bool {
 	uOfD := FyneGUISingleton.editor.GetUofD()
-	return uOfD.GetElementLabel(a[i]) < uOfD.GetElementLabel(a[j])
+	iLabel := uOfD.GetElementLabel(a[i])
+	jLabel := uOfD.GetElementLabel(a[j])
+	return iLabel+a[i] < jLabel+a[j]
 }
 
 // FyneTreeManager is the manager of the fyne tree in the CrlFyneEditor
@@ -58,6 +60,19 @@ func (ftm *FyneTreeManager) ElementSelected(uid string) {
 		defer ftm.fyneGUI.editor.EndTransaction()
 	}
 	ftm.openParentsRecursively(uid, trans)
+}
+
+func (ftm *FyneTreeManager) ShowElementInTree(element core.Element) {
+	if element != nil {
+		trans, new := ftm.fyneGUI.editor.GetTransaction()
+		if new {
+			defer ftm.fyneGUI.editor.EndTransaction()
+		}
+		uid := element.GetConceptID(trans)
+		ftm.tree.ScrollTo(uid)
+		ftm.tree.Select(uid)
+		ftm.openParentsRecursively(uid, trans)
+	}
 }
 
 func (ftm *FyneTreeManager) initialize() {
@@ -185,7 +200,7 @@ func (tn *treeNode) CreateRenderer() fyne.WidgetRenderer {
 func (tn *treeNode) DragEnd() {
 	if FyneGUISingleton.dragDropTransaction != nil {
 		ddt := FyneGUISingleton.dragDropTransaction
-		if FyneGUISingleton.dragDropTransaction.currentDiagramMousePosition != fyne.NewPos(-1, -1) {
+		if ddt.diagramID != "" && FyneGUISingleton.dragDropTransaction.currentDiagramMousePosition != fyne.NewPos(-1, -1) {
 			trans, isNew := FyneGUISingleton.editor.GetTransaction()
 			if isNew {
 				defer FyneGUISingleton.editor.EndTransaction()
@@ -207,9 +222,9 @@ func (tn *treeNode) Dragged(event *fyne.DragEvent) {
 
 func (tn *treeNode) MouseDown(event *desktop.MouseEvent) {
 	switch event.Button {
-	case desktop.LeftMouseButton:
+	case desktop.MouseButtonPrimary:
 		FyneGUISingleton.treeManager.tree.Select(tn.id)
-	case desktop.RightMouseButton:
+	case desktop.MouseButtonSecondary:
 		addElement := fyne.NewMenuItem("Add Child Element", func() {
 			FyneGUISingleton.addElement(tn.id, "")
 		})

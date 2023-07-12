@@ -108,7 +108,7 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.addConceptView failed")
 	}
-	crldiagramdomain.SetReferencedModelElement(newElement, el, trans)
+	crldiagramdomain.SetReferencedModelConcept(newElement, el, trans)
 	crldiagramdomain.SetDisplayLabel(newElement, el.GetLabel(trans), trans)
 
 	err = newElement.SetOwningConceptID(diagram.GetConceptID(trans), trans)

@@ -137,7 +137,7 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 			newNodeID := fyneNode.GetDiagramElementID()
 			crlNode := uOfD.GetElement(newNodeID)
 			Expect(crlNode).ToNot(BeNil())
-			crlModelElement := crldiagramdomain.GetReferencedModelElement(crlNode, trans)
+			crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlNode, trans)
 			Expect(crlModelElement.GetConceptID(trans)).To(Equal(coreDomainID))
 			PerformUndoRedoTest(1)
 		})
@@ -460,7 +460,7 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 				})
 			})
 			Describe("ElementPointer creation should work", func() {
-				Specify("for a node source and node target", func() {
+				FSpecify("for a node source and node target", func() {
 					target, crlTargetView, targetView := createElementAt(selectedDiagram, 100, 100, trans)
 					source, crlSourceView, sourceView := createReferenceAt(selectedDiagram, 100, 200, trans)
 					reference, crlEpView, _ := createReferencedElementPointer(selectedDiagram, sourceView, targetView, trans)
@@ -471,6 +471,10 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					Expect(source.GetReferencedAttributeName(trans)).To(Equal(core.NoAttribute))
 					Expect(crldiagramdomain.GetLinkSource(crlEpView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
 					Expect(crldiagramdomain.GetLinkTarget(crlEpView, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
+					modelReference := crldiagramdomain.GetReferencedModelConcept(crlEpView, trans)
+					Expect(modelReference).ToNot(BeNil())
+					Expect(modelReference.IsRefinementOfURI(core.ReferenceURI, trans)).To(BeTrue())
+					Expect(modelReference.(core.Reference).GetReferencedConceptID(trans)).To(Equal(target.GetConceptID(trans)))
 					PerformUndoRedoTest(3)
 				})
 				Specify("for a node source and reference link target", func() {
@@ -632,7 +636,7 @@ func createElementAt(diagram *diagramwidget.DiagramWidget, x float32, y float32,
 	Expect(crlDiagramElement).ToNot(BeNil())
 	Expect(crlDiagramElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetConceptID(trans)))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelElement(crlDiagramElement, trans)
+	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
 	Expect(crlModelElement).ToNot(BeNil())
 	Expect(crlModelElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetOwningConceptID(trans)))
 	return crlModelElement, crlDiagramElement, fyneNode
@@ -651,7 +655,7 @@ func createLiteralAt(diagram *diagramwidget.DiagramWidget, x float32, y float32,
 	Expect(crlDiagramElement).ToNot(BeNil())
 	Expect(crlDiagramElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetConceptID(trans)))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelElement(crlDiagramElement, trans)
+	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
 	Expect(crlModelElement).ToNot(BeNil())
 	Expect(crlModelElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetOwningConceptID(trans)))
 	Expect(crlModelElement.IsRefinementOfURI(core.LiteralURI, trans)).To(BeTrue())
@@ -671,7 +675,7 @@ func createReferenceAt(diagram *diagramwidget.DiagramWidget, x float32, y float3
 	Expect(crlDiagramElement).ToNot(BeNil())
 	Expect(crlDiagramElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetConceptID(trans)))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelElement(crlDiagramElement, trans)
+	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
 	Expect(crlModelElement).ToNot(BeNil())
 	Expect(crlModelElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetOwningConceptID(trans)))
 	Expect(crlModelElement.IsRefinementOfURI(core.ReferenceURI, trans)).To(BeTrue())
@@ -691,7 +695,7 @@ func createRefinementAt(diagram *diagramwidget.DiagramWidget, x float32, y float
 	Expect(crlDiagramElement).ToNot(BeNil())
 	Expect(crlDiagramElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetConceptID(trans)))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelElement(crlDiagramElement, trans)
+	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
 	Expect(crlModelElement).ToNot(BeNil())
 	Expect(crlModelElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetOwningConceptID(trans)))
 	Expect(crlModelElement.IsRefinementOfURI(core.RefinementURI, trans)).To(BeTrue())
@@ -712,9 +716,9 @@ func createReferenceLink(diagram *diagramwidget.DiagramWidget, sourceView diagra
 	Expect(crldiagramdomain.GetLinkSource(crlDiagramElement, trans)).To(Equal(crlSource))
 	Expect(crldiagramdomain.GetLinkTarget(crlDiagramElement, trans)).To(Equal(crlTarget))
 	// Get the model element
-	crlModelReference := crldiagramdomain.GetReferencedModelElement(crlDiagramElement, trans)
-	crlSourceModelElement := crldiagramdomain.GetReferencedModelElement(crlSource, trans)
-	crlTargetModelElement := crldiagramdomain.GetReferencedModelElement(crlTarget, trans)
+	crlModelReference := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
+	crlSourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlSource, trans)
+	crlTargetModelElement := crldiagramdomain.GetReferencedModelConcept(crlTarget, trans)
 	Expect(crlModelReference).ToNot(BeNil())
 	Expect(crlModelReference.GetOwningConceptID(trans)).To(Equal(crlSourceModelElement.GetConceptID(trans)))
 	Expect(crlModelReference.IsRefinementOfURI(core.ReferenceURI, trans)).To(BeTrue())
@@ -737,9 +741,9 @@ func createRefinementLink(diagram *diagramwidget.DiagramWidget, sourceView diagr
 	Expect(crldiagramdomain.GetLinkSource(crlDiagramElement, trans)).To(Equal(crlSource))
 	Expect(crldiagramdomain.GetLinkTarget(crlDiagramElement, trans)).To(Equal(crlTarget))
 	// Get the model element
-	crlModelRefinement := crldiagramdomain.GetReferencedModelElement(crlDiagramElement, trans)
-	crlSourceModelElement := crldiagramdomain.GetReferencedModelElement(crlSource, trans)
-	crlTargetModelElement := crldiagramdomain.GetReferencedModelElement(crlTarget, trans)
+	crlModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
+	crlSourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlSource, trans)
+	crlTargetModelElement := crldiagramdomain.GetReferencedModelConcept(crlTarget, trans)
 	Expect(crlModelRefinement).ToNot(BeNil())
 	Expect(crlModelRefinement.GetOwningConceptID(trans)).To(Equal(crlSourceModelElement.GetConceptID(trans)))
 	Expect(crlModelRefinement.IsRefinementOfURI(core.RefinementURI, trans)).To(BeTrue())
@@ -764,9 +768,9 @@ func createOwnerPointer(diagram *diagramwidget.DiagramWidget, sourceView diagram
 	Expect(crldiagramdomain.GetLinkSource(crlDiagramElement, trans)).To(Equal(crlSource))
 	Expect(crldiagramdomain.GetLinkTarget(crlDiagramElement, trans)).To(Equal(crlTarget))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelElement(crlDiagramElement, trans)
-	crlSourceModelElement := crldiagramdomain.GetReferencedModelElement(crlSource, trans)
-	crlTargetModelElement := crldiagramdomain.GetReferencedModelElement(crlTarget, trans)
+	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
+	crlSourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlSource, trans)
+	crlTargetModelElement := crldiagramdomain.GetReferencedModelConcept(crlTarget, trans)
 	Expect(crlModelElement).ToNot(BeNil())
 	Expect(crlModelElement.GetConceptID(trans)).To(Equal(crlSourceModelElement.GetConceptID(trans)))
 	Expect(crlModelElement.GetOwningConceptID(trans)).To(Equal(crlTargetModelElement.GetConceptID(trans)))
@@ -789,9 +793,9 @@ func createReferencedElementPointer(diagram *diagramwidget.DiagramWidget, source
 	Expect(crldiagramdomain.GetLinkSource(crlDiagramElement, trans)).To(Equal(crlSource))
 	Expect(crldiagramdomain.GetLinkTarget(crlDiagramElement, trans)).To(Equal(crlTarget))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelElement(crlDiagramElement, trans)
-	crlSourceModelElement := crldiagramdomain.GetReferencedModelElement(crlSource, trans)
-	crlTargetModelElement := crldiagramdomain.GetReferencedModelElement(crlTarget, trans)
+	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
+	crlSourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlSource, trans)
+	crlTargetModelElement := crldiagramdomain.GetReferencedModelConcept(crlTarget, trans)
 	Expect(crlModelElement).ToNot(BeNil())
 	Expect(crlModelElement.IsRefinementOfURI(core.ReferenceURI, trans)).To(BeTrue())
 	Expect(crlModelElement.GetConceptID(trans)).To(Equal(crlSourceModelElement.GetConceptID(trans)))
@@ -815,9 +819,9 @@ func createAbstractPointer(diagram *diagramwidget.DiagramWidget, sourceView diag
 	Expect(crldiagramdomain.GetLinkSource(crlDiagramElement, trans)).To(Equal(crlSource))
 	Expect(crldiagramdomain.GetLinkTarget(crlDiagramElement, trans)).To(Equal(crlTarget))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelElement(crlDiagramElement, trans)
-	crlSourceModelElement := crldiagramdomain.GetReferencedModelElement(crlSource, trans)
-	crlTargetModelElement := crldiagramdomain.GetReferencedModelElement(crlTarget, trans)
+	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
+	crlSourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlSource, trans)
+	crlTargetModelElement := crldiagramdomain.GetReferencedModelConcept(crlTarget, trans)
 	Expect(crlModelElement).ToNot(BeNil())
 	Expect(crlModelElement.IsRefinementOfURI(core.RefinementURI, trans)).To(BeTrue())
 	Expect(crlModelElement.GetConceptID(trans)).To(Equal(crlSourceModelElement.GetConceptID(trans)))
@@ -841,9 +845,9 @@ func createRefinedPointer(diagram *diagramwidget.DiagramWidget, sourceView diagr
 	Expect(crldiagramdomain.GetLinkSource(crlDiagramElement, trans)).To(Equal(crlSource))
 	Expect(crldiagramdomain.GetLinkTarget(crlDiagramElement, trans)).To(Equal(crlTarget))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelElement(crlDiagramElement, trans)
-	crlSourceModelElement := crldiagramdomain.GetReferencedModelElement(crlSource, trans)
-	crlTargetModelElement := crldiagramdomain.GetReferencedModelElement(crlTarget, trans)
+	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
+	crlSourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlSource, trans)
+	crlTargetModelElement := crldiagramdomain.GetReferencedModelConcept(crlTarget, trans)
 	Expect(crlModelElement).ToNot(BeNil())
 	Expect(crlModelElement.IsRefinementOfURI(core.RefinementURI, trans)).To(BeTrue())
 	Expect(crlModelElement.GetConceptID(trans)).To(Equal(crlSourceModelElement.GetConceptID(trans)))

@@ -184,7 +184,7 @@ var _ = Describe("Test CrlEditor", func() {
 		// Check to see that the diagram view of the element has been created correctly
 		conceptView := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, newConcept, trans)
 		Expect(conceptView).ToNot(BeNil())
-		Expect(crldiagramdomain.GetReferencedModelElement(conceptView, trans)).To(Equal(newConcept))
+		Expect(crldiagramdomain.GetReferencedModelConcept(conceptView, trans)).To(Equal(newConcept))
 		return newConcept, conceptView
 	}
 	CreateLiteral := func(diagram core.Element, x int, y int) (core.Literal, core.Element) {
@@ -218,7 +218,7 @@ var _ = Describe("Test CrlEditor", func() {
 		// Check to see that the diagram view of the element has been created correctly
 		conceptView := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, newConcept, trans)
 		Expect(conceptView).ToNot(BeNil())
-		Expect(crldiagramdomain.GetReferencedModelElement(conceptView, trans)).To(Equal(newConcept))
+		Expect(crldiagramdomain.GetReferencedModelConcept(conceptView, trans)).To(Equal(newConcept))
 		return newConcept.(core.Literal), conceptView
 	}
 	CreateReferenceNode := func(diagram core.Element, x int, y int) (core.Reference, core.Element) {
@@ -252,7 +252,7 @@ var _ = Describe("Test CrlEditor", func() {
 		// Check to see that the diagram view of the element has been created correctly
 		conceptView := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, newConcept, trans)
 		Expect(conceptView).ToNot(BeNil())
-		Expect(crldiagramdomain.GetReferencedModelElement(conceptView, trans)).To(Equal(newConcept))
+		Expect(crldiagramdomain.GetReferencedModelConcept(conceptView, trans)).To(Equal(newConcept))
 		return newConcept.(core.Reference), conceptView
 	}
 	CreateReferenceLink := func(diagram core.Element, sourceView core.Element, targetView core.Element) (core.Reference, core.Element) {
@@ -285,7 +285,7 @@ var _ = Describe("Test CrlEditor", func() {
 		}
 		Expect(correctType).To(BeTrue())
 		newReference := newElement.(core.Reference)
-		source := crldiagramdomain.GetReferencedModelElement(sourceView, trans)
+		source := crldiagramdomain.GetReferencedModelConcept(sourceView, trans)
 		Expect(newReference.GetOwningConceptID(trans)).To(Equal(source.GetConceptID(trans)))
 		newReferenceView := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, newReference, trans)
 		return newReference, newReferenceView
@@ -321,7 +321,7 @@ var _ = Describe("Test CrlEditor", func() {
 		// Check to see that the diagram view of the element has been created correctly
 		conceptView := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, newConcept, trans)
 		Expect(conceptView).ToNot(BeNil())
-		Expect(crldiagramdomain.GetReferencedModelElement(conceptView, trans)).To(Equal(newConcept))
+		Expect(crldiagramdomain.GetReferencedModelConcept(conceptView, trans)).To(Equal(newConcept))
 		Expect(newConcept.GetOwningConceptID(trans)).To(Equal(diagram.GetOwningConceptID(trans)))
 		return newConcept.(core.Refinement), conceptView
 	}
@@ -382,7 +382,7 @@ var _ = Describe("Test CrlEditor", func() {
 			page.RunScript("return crlCurrentToolbarButton == crlCursorToolbarButtonID;", nil, &correctToolbarSelection)
 			return correctToolbarSelection
 		}, 3).Should(BeTrue())
-		source := crldiagramdomain.GetReferencedModelElement(sourceView, trans)
+		source := crldiagramdomain.GetReferencedModelConcept(sourceView, trans)
 		ownerPointerView := crldiagramdomain.GetFirstElementRepresentingConceptOwnerPointer(diagram, source, trans)
 		return source, ownerPointerView
 	}
@@ -417,7 +417,7 @@ var _ = Describe("Test CrlEditor", func() {
 		// core.EnableNotificationPrint = false
 		// browsergui.CrlLogClientRequests = false
 		// browsergui.CrlLogClientNotifications = false
-		referenceID := crldiagramdomain.GetReferencedModelElement(sourceView, trans).GetConceptID(trans)
+		referenceID := crldiagramdomain.GetReferencedModelConcept(sourceView, trans).GetConceptID(trans)
 		reference := uOfD.GetReference(referenceID)
 		elementPointerView := crldiagramdomain.GetFirstElementRepresentingConceptElementPointer(diagram, reference, trans)
 		// core.TraceLocks = false
@@ -445,7 +445,7 @@ var _ = Describe("Test CrlEditor", func() {
 			page.RunScript("return crlCurrentToolbarButton == crlCursorToolbarButtonID;", nil, &correctToolbarSelection)
 			return correctToolbarSelection
 		}, 3).Should(BeTrue())
-		refinementID := crldiagramdomain.GetReferencedModelElement(sourceView, trans).GetConceptID(trans)
+		refinementID := crldiagramdomain.GetReferencedModelConcept(sourceView, trans).GetConceptID(trans)
 		refinement := uOfD.GetRefinement(refinementID)
 		elementPointerView := crldiagramdomain.GetFirstElementRepresentingConceptAbstractPointer(diagram, refinement, trans)
 		return refinement, elementPointerView
@@ -472,7 +472,7 @@ var _ = Describe("Test CrlEditor", func() {
 			page.RunScript("return crlCurrentToolbarButton == crlCursorToolbarButtonID;", nil, &correctToolbarSelection)
 			return correctToolbarSelection
 		}, 3).Should(BeTrue())
-		refinementID := crldiagramdomain.GetReferencedModelElement(sourceView, trans).GetConceptID(trans)
+		refinementID := crldiagramdomain.GetReferencedModelConcept(sourceView, trans).GetConceptID(trans)
 		refinement := uOfD.GetRefinement(refinementID)
 		elementPointerView := crldiagramdomain.GetFirstElementRepresentingConceptRefinedPointer(diagram, refinement, trans)
 		return refinement, elementPointerView

@@ -3,7 +3,7 @@ module github.com/pbrown12303/activeCRL
 go 1.14
 
 require (
-	fyne.io/fyne/v2 v2.3.3
+	fyne.io/fyne/v2 v2.3.5
 	fyne.io/x/fyne v0.0.0-20230411205836-1ca0ead20763
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/deckarep/golang-set v1.8.0
@@ -14,7 +14,7 @@ require (
 	github.com/satori/go.uuid v1.2.1-0.20181028125025-b2ce2384e17b
 	github.com/sclevine/agouti v3.0.0+incompatible
 	github.com/sqweek/dialog v0.0.0-20220809060634-e981b270ebbf
-	golang.org/x/image v0.0.0-20220601225756-64ec528b34cd
+	golang.org/x/image v0.3.0
 	nhooyr.io/websocket v1.8.7
 )
 

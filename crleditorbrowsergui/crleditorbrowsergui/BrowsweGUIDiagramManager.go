@@ -34,7 +34,7 @@ func (dmPtr *diagramManager) abstractPointerChanged(linkID string, sourceID stri
 	if diagramSource == nil {
 		return "", errors.New("diagramManager.abstractPointerChanged called with sourceID not found in diagram")
 	}
-	modelSource := crldiagramdomain.GetReferencedModelElement(diagramSource, hl)
+	modelSource := crldiagramdomain.GetReferencedModelConcept(diagramSource, hl)
 	if modelSource == nil {
 		return "", errors.New("diagramManager.elementPoiabstractPointerChangednterChanged called with model source not found")
 	}
@@ -49,7 +49,7 @@ func (dmPtr *diagramManager) abstractPointerChanged(linkID string, sourceID stri
 	if diagramTarget == nil {
 		return "", errors.New("diagramManager.abstractPointerChanged called with targetID not found in diagram")
 	}
-	modelTarget := crldiagramdomain.GetReferencedModelElement(diagramTarget, hl)
+	modelTarget := crldiagramdomain.GetReferencedModelConcept(diagramTarget, hl)
 	if modelTarget == nil {
 		return "", errors.New("diagramManager.abstractPointerChanged called with model target not found")
 	}
@@ -61,7 +61,7 @@ func (dmPtr *diagramManager) abstractPointerChanged(linkID string, sourceID stri
 		if err != nil {
 			return "", err
 		}
-		crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
+		crldiagramdomain.SetReferencedModelConcept(diagramPointer, modelSource, hl)
 		crldiagramdomain.SetLinkSource(diagramPointer, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		modelRefinement.SetAbstractConcept(modelTarget, hl)
@@ -78,8 +78,8 @@ func (dmPtr *diagramManager) abstractPointerChanged(linkID string, sourceID stri
 		if diagramTarget != crldiagramdomain.GetLinkTarget(diagramPointer, hl) {
 			crldiagramdomain.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		}
-		if modelSource != crldiagramdomain.GetReferencedModelElement(diagramPointer, hl) {
-			crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
+		if modelSource != crldiagramdomain.GetReferencedModelConcept(diagramPointer, hl) {
+			crldiagramdomain.SetReferencedModelConcept(diagramPointer, modelSource, hl)
 		}
 		if modelTarget != modelRefinement.GetAbstractConcept(hl) {
 			modelRefinement.SetAbstractConcept(modelTarget, hl)
@@ -174,7 +174,7 @@ func (dmPtr *diagramManager) addConceptViewImpl(uOfD *core.UniverseOfDiscourse, 
 	if err != nil {
 		return nil, errors.Wrap(err, "diagramManager.addConceptView failed")
 	}
-	crldiagramdomain.SetReferencedModelElement(newElement, el, hl)
+	crldiagramdomain.SetReferencedModelConcept(newElement, el, hl)
 	crldiagramdomain.SetDisplayLabel(newElement, el.GetLabel(hl), hl)
 
 	err = newElement.SetOwningConceptID(diagram.GetConceptID(hl), hl)
@@ -288,7 +288,7 @@ func (dmPtr *diagramManager) diagramClick(request *Request, hl *core.Transaction
 	crldiagramdomain.SetNodeX(newNode, x, hl)
 	crldiagramdomain.SetNodeY(newNode, y, hl)
 	newNode.SetLabel(el.GetLabel(hl), hl)
-	crldiagramdomain.SetReferencedModelElement(newNode, el, hl)
+	crldiagramdomain.SetReferencedModelConcept(newNode, el, hl)
 	crldiagramdomain.SetDisplayLabel(newNode, el.GetLabel(hl), hl)
 
 	newNode.SetOwningConceptID(diagramID, hl)
@@ -361,7 +361,7 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 	if diagramSource == nil {
 		return "", errors.New("diagramManager.elementPointerChanged called with sourceID not found in diagram")
 	}
-	modelSource := crldiagramdomain.GetReferencedModelElement(diagramSource, hl)
+	modelSource := crldiagramdomain.GetReferencedModelConcept(diagramSource, hl)
 	if modelSource == nil {
 		return "", errors.New("diagramManager.elementPointerChanged called with model source not found")
 	}
@@ -376,7 +376,7 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 	if diagramTarget == nil {
 		return "", errors.New("diagramManager.elementPointerChanged called with targetID not found in diagram")
 	}
-	modelTarget := crldiagramdomain.GetReferencedModelElement(diagramTarget, hl)
+	modelTarget := crldiagramdomain.GetReferencedModelConcept(diagramTarget, hl)
 	if modelTarget == nil {
 		return "", errors.New("diagramManager.elementPointerChanged called with model target not found")
 	}
@@ -399,7 +399,7 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 		if err != nil {
 			return "", err
 		}
-		crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
+		crldiagramdomain.SetReferencedModelConcept(diagramPointer, modelSource, hl)
 		crldiagramdomain.SetLinkSource(diagramPointer, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		modelReference.SetReferencedConcept(modelTarget, attributeName, hl)
@@ -416,8 +416,8 @@ func (dmPtr *diagramManager) elementPointerChanged(linkID string, sourceID strin
 		if diagramTarget != crldiagramdomain.GetLinkTarget(diagramPointer, hl) {
 			crldiagramdomain.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		}
-		if modelSource != crldiagramdomain.GetReferencedModelElement(diagramPointer, hl) {
-			crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
+		if modelSource != crldiagramdomain.GetReferencedModelConcept(diagramPointer, hl) {
+			crldiagramdomain.SetReferencedModelConcept(diagramPointer, modelSource, hl)
 		}
 		if attributeName == core.NoAttribute {
 			if modelTarget != modelReference.GetReferencedConcept(hl) {
@@ -458,7 +458,7 @@ func (dmPtr *diagramManager) ownerPointerChanged(linkID string, sourceID string,
 	if diagramSource == nil {
 		return "", errors.New("diagramManager.ownerPointerChanged called with sourceID not found in diagram")
 	}
-	modelSource := crldiagramdomain.GetReferencedModelElement(diagramSource, hl)
+	modelSource := crldiagramdomain.GetReferencedModelConcept(diagramSource, hl)
 	if modelSource == nil {
 		return "", errors.New("diagramManager.ownerPointerChanged called with model source not found")
 	}
@@ -466,7 +466,7 @@ func (dmPtr *diagramManager) ownerPointerChanged(linkID string, sourceID string,
 	if diagramTarget == nil {
 		return "", errors.New("diagramManager.ownerPointerChanged called with targetID not found in diagram")
 	}
-	modelTarget := crldiagramdomain.GetReferencedModelElement(diagramTarget, hl)
+	modelTarget := crldiagramdomain.GetReferencedModelConcept(diagramTarget, hl)
 	if modelTarget == nil {
 		return "", errors.New("diagramManager.ownerPointerChanged called with model target not found")
 	}
@@ -478,7 +478,7 @@ func (dmPtr *diagramManager) ownerPointerChanged(linkID string, sourceID string,
 		if err != nil {
 			return "", err
 		}
-		crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
+		crldiagramdomain.SetReferencedModelConcept(diagramPointer, modelSource, hl)
 		crldiagramdomain.SetLinkSource(diagramPointer, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		modelSource.SetOwningConcept(modelTarget, hl)
@@ -495,8 +495,8 @@ func (dmPtr *diagramManager) ownerPointerChanged(linkID string, sourceID string,
 		if diagramTarget != crldiagramdomain.GetLinkTarget(diagramPointer, hl) {
 			crldiagramdomain.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		}
-		if modelSource != crldiagramdomain.GetReferencedModelElement(diagramPointer, hl) {
-			crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
+		if modelSource != crldiagramdomain.GetReferencedModelConcept(diagramPointer, hl) {
+			crldiagramdomain.SetReferencedModelConcept(diagramPointer, modelSource, hl)
 		}
 		if modelTarget != modelSource.GetOwningConcept(hl) {
 			modelSource.SetOwningConcept(modelTarget, hl)
@@ -512,7 +512,7 @@ func (dmPtr *diagramManager) refinedPointerChanged(linkID string, sourceID strin
 	if diagramSource == nil {
 		return "", errors.New("diagramManager.refinedPointerChanged called with sourceID not found in diagram")
 	}
-	modelSource := crldiagramdomain.GetReferencedModelElement(diagramSource, hl)
+	modelSource := crldiagramdomain.GetReferencedModelConcept(diagramSource, hl)
 	if modelSource == nil {
 		return "", errors.New("diagramManager.elementPoirefinedPointerChangednterChanged called with model source not found")
 	}
@@ -527,7 +527,7 @@ func (dmPtr *diagramManager) refinedPointerChanged(linkID string, sourceID strin
 	if diagramTarget == nil {
 		return "", errors.New("diagramManager.refinedPointerChanged called with targetID not found in diagram")
 	}
-	modelTarget := crldiagramdomain.GetReferencedModelElement(diagramTarget, hl)
+	modelTarget := crldiagramdomain.GetReferencedModelConcept(diagramTarget, hl)
 	if modelTarget == nil {
 		return "", errors.New("diagramManager.refinedPointerChanged called with model target not found")
 	}
@@ -539,7 +539,7 @@ func (dmPtr *diagramManager) refinedPointerChanged(linkID string, sourceID strin
 		if err != nil {
 			return "", err
 		}
-		crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
+		crldiagramdomain.SetReferencedModelConcept(diagramPointer, modelSource, hl)
 		crldiagramdomain.SetLinkSource(diagramPointer, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		modelRefinement.SetRefinedConcept(modelTarget, hl)
@@ -556,8 +556,8 @@ func (dmPtr *diagramManager) refinedPointerChanged(linkID string, sourceID strin
 		if diagramTarget != crldiagramdomain.GetLinkTarget(diagramPointer, hl) {
 			crldiagramdomain.SetLinkTarget(diagramPointer, diagramTarget, hl)
 		}
-		if modelSource != crldiagramdomain.GetReferencedModelElement(diagramPointer, hl) {
-			crldiagramdomain.SetReferencedModelElement(diagramPointer, modelSource, hl)
+		if modelSource != crldiagramdomain.GetReferencedModelConcept(diagramPointer, hl) {
+			crldiagramdomain.SetReferencedModelConcept(diagramPointer, modelSource, hl)
 		}
 		if modelTarget != modelRefinement.GetRefinedConcept(hl) {
 			modelRefinement.SetRefinedConcept(modelTarget, hl)
@@ -573,7 +573,7 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 	if diagramSource == nil {
 		return "", errors.New("diagramManager.refinementLinkChanged called with sourceID not found in diagram")
 	}
-	modelSource := crldiagramdomain.GetReferencedModelElement(diagramSource, hl)
+	modelSource := crldiagramdomain.GetReferencedModelConcept(diagramSource, hl)
 	if modelSource == nil {
 		return "", errors.New("diagramManager.refinementLinkChanged called with model source not found")
 	}
@@ -581,7 +581,7 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 	if diagramTarget == nil {
 		return "", errors.New("diagramManager.refinementLinkChanged called with targetID not found in diagram")
 	}
-	modelTarget := crldiagramdomain.GetReferencedModelElement(diagramTarget, hl)
+	modelTarget := crldiagramdomain.GetReferencedModelConcept(diagramTarget, hl)
 	if modelTarget == nil {
 		return "", errors.New("diagramManager.refinementLinkChanged called with model target not found")
 	}
@@ -614,7 +614,7 @@ func (dmPtr *diagramManager) ReferenceLinkChanged(linkID string, sourceID string
 		if err != nil {
 			return "", errors.Wrap(err, "diagramManager.ReferenceLinkChanged failed")
 		}
-		crldiagramdomain.SetReferencedModelElement(diagramLink, newReference, hl)
+		crldiagramdomain.SetReferencedModelConcept(diagramLink, newReference, hl)
 		crldiagramdomain.SetLinkSource(diagramLink, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramLink, diagramTarget, hl)
 		modelElement = newReference
@@ -635,7 +635,7 @@ func (dmPtr *diagramManager) RefinementLinkChanged(linkID string, sourceID strin
 	if diagramSource == nil {
 		return "", errors.New("diagramManager.refinementLinkChanged called with sourceID not found in diagram")
 	}
-	modelSource := crldiagramdomain.GetReferencedModelElement(diagramSource, hl)
+	modelSource := crldiagramdomain.GetReferencedModelConcept(diagramSource, hl)
 	if modelSource == nil {
 		return "", errors.New("diagramManager.refinementLinkChanged called with model source not found")
 	}
@@ -643,7 +643,7 @@ func (dmPtr *diagramManager) RefinementLinkChanged(linkID string, sourceID strin
 	if diagramTarget == nil {
 		return "", errors.New("diagramManager.refinementLinkChanged called with targetID not found in diagram")
 	}
-	modelTarget := crldiagramdomain.GetReferencedModelElement(diagramTarget, hl)
+	modelTarget := crldiagramdomain.GetReferencedModelConcept(diagramTarget, hl)
 	if modelTarget == nil {
 		return "", errors.New("diagramManager.refinementLinkChanged called with model target not found")
 	}
@@ -667,14 +667,14 @@ func (dmPtr *diagramManager) RefinementLinkChanged(linkID string, sourceID strin
 		if err != nil {
 			return "", errors.Wrap(err, "diagramManager.ReferenceLinkChanged failed")
 		}
-		crldiagramdomain.SetReferencedModelElement(diagramLink, newRefinement, hl)
+		crldiagramdomain.SetReferencedModelConcept(diagramLink, newRefinement, hl)
 		crldiagramdomain.SetLinkSource(diagramLink, diagramSource, hl)
 		crldiagramdomain.SetLinkTarget(diagramLink, diagramTarget, hl)
 		modelElement = newRefinement
 		dmPtr.browserGUI.SendNotification("ClearToolbarSelection", "", nil, map[string]string{})
 	} else {
 		diagramLink = uOfD.GetElement(linkID)
-		modelElement = crldiagramdomain.GetReferencedModelElement(diagramLink, hl)
+		modelElement = crldiagramdomain.GetReferencedModelConcept(diagramLink, hl)
 		if modelElement != nil {
 			switch typedModelElement := modelElement.(type) {
 			case core.Refinement:
@@ -763,7 +763,7 @@ func (dmPtr *diagramManager) showAbstractConcept(elementID string, hl *core.Tran
 	if diagram == nil {
 		return errors.New("diagramManager.showAbstractConcept diagram not found for elementID " + elementID)
 	}
-	modelConcept := crldiagramdomain.GetReferencedModelElement(diagramElement, hl)
+	modelConcept := crldiagramdomain.GetReferencedModelConcept(diagramElement, hl)
 	if modelConcept == nil {
 		return errors.New("diagramManager.showAbstractConcept modelConcept not found for elementID " + elementID)
 	}
@@ -781,7 +781,7 @@ func (dmPtr *diagramManager) showAbstractConcept(elementID string, hl *core.Tran
 	diagramAbstractConcept := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, modelAbstractConcept, hl)
 	if diagramAbstractConcept == nil {
 		diagramAbstractConcept, _ = crldiagramdomain.NewDiagramNode(dmPtr.browserGUI.GetUofD(), hl)
-		crldiagramdomain.SetReferencedModelElement(diagramAbstractConcept, modelAbstractConcept, hl)
+		crldiagramdomain.SetReferencedModelConcept(diagramAbstractConcept, modelAbstractConcept, hl)
 		crldiagramdomain.SetDisplayLabel(diagramAbstractConcept, modelAbstractConcept.GetLabel(hl), hl)
 		diagramElementX := crldiagramdomain.GetNodeX(diagramElement, hl)
 		diagramElementY := crldiagramdomain.GetNodeY(diagramElement, hl)
@@ -792,7 +792,7 @@ func (dmPtr *diagramManager) showAbstractConcept(elementID string, hl *core.Tran
 	elementPointer := crldiagramdomain.GetElementPointer(diagram, diagramElement, hl)
 	if elementPointer == nil {
 		elementPointer, _ = crldiagramdomain.NewDiagramAbstractPointer(dmPtr.browserGUI.GetUofD(), hl)
-		crldiagramdomain.SetReferencedModelElement(elementPointer, modelConcept, hl)
+		crldiagramdomain.SetReferencedModelConcept(elementPointer, modelConcept, hl)
 		crldiagramdomain.SetLinkSource(elementPointer, diagramElement, hl)
 		crldiagramdomain.SetLinkTarget(elementPointer, diagramAbstractConcept, hl)
 		elementPointer.SetOwningConcept(diagram, hl)
@@ -809,7 +809,7 @@ func (dmPtr *diagramManager) showOwnedConcepts(elementID string, hl *core.Transa
 	if diagram == nil {
 		return errors.New("diagramManager.showOwnedConcepts diagram not found for elementID " + elementID)
 	}
-	modelConcept := crldiagramdomain.GetReferencedModelElement(diagramElement, hl)
+	modelConcept := crldiagramdomain.GetReferencedModelConcept(diagramElement, hl)
 	if modelConcept == nil {
 		return errors.New("diagramManager.showOwnedConcepts modelConcept not found for elementID " + elementID)
 	}
@@ -823,7 +823,7 @@ func (dmPtr *diagramManager) showOwnedConcepts(elementID string, hl *core.Transa
 		diagramChildConcept := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, child, hl)
 		if diagramChildConcept == nil {
 			diagramChildConcept, _ = crldiagramdomain.NewDiagramNode(dmPtr.browserGUI.GetUofD(), hl)
-			crldiagramdomain.SetReferencedModelElement(diagramChildConcept, child, hl)
+			crldiagramdomain.SetReferencedModelConcept(diagramChildConcept, child, hl)
 			crldiagramdomain.SetDisplayLabel(diagramChildConcept, child.GetLabel(hl), hl)
 			diagramElementX := crldiagramdomain.GetNodeX(diagramElement, hl)
 			diagramElementY := crldiagramdomain.GetNodeY(diagramElement, hl)
@@ -834,7 +834,7 @@ func (dmPtr *diagramManager) showOwnedConcepts(elementID string, hl *core.Transa
 		ownerPointer := crldiagramdomain.GetOwnerPointer(diagram, diagramElement, hl)
 		if ownerPointer == nil {
 			ownerPointer, _ = crldiagramdomain.NewDiagramOwnerPointer(dmPtr.browserGUI.GetUofD(), hl)
-			crldiagramdomain.SetReferencedModelElement(ownerPointer, child, hl)
+			crldiagramdomain.SetReferencedModelConcept(ownerPointer, child, hl)
 			crldiagramdomain.SetLinkSource(ownerPointer, diagramChildConcept, hl)
 			crldiagramdomain.SetLinkTarget(ownerPointer, diagramElement, hl)
 			ownerPointer.SetOwningConcept(diagram, hl)
@@ -853,7 +853,7 @@ func (dmPtr *diagramManager) showOwner(elementID string, hl *core.Transaction) e
 	if diagram == nil {
 		return errors.New("diagramManager.showOwner diagram not found for elementID " + elementID)
 	}
-	modelConcept := crldiagramdomain.GetReferencedModelElement(diagramElement, hl)
+	modelConcept := crldiagramdomain.GetReferencedModelConcept(diagramElement, hl)
 	if modelConcept == nil {
 		return errors.New("diagramManager.showOwner modelConcept not found for elementID " + elementID)
 	}
@@ -864,7 +864,7 @@ func (dmPtr *diagramManager) showOwner(elementID string, hl *core.Transaction) e
 	diagramConceptOwner := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, modelConceptOwner, hl)
 	if diagramConceptOwner == nil {
 		diagramConceptOwner, _ = crldiagramdomain.NewDiagramNode(dmPtr.browserGUI.GetUofD(), hl)
-		crldiagramdomain.SetReferencedModelElement(diagramConceptOwner, modelConceptOwner, hl)
+		crldiagramdomain.SetReferencedModelConcept(diagramConceptOwner, modelConceptOwner, hl)
 		crldiagramdomain.SetDisplayLabel(diagramConceptOwner, modelConceptOwner.GetLabel(hl), hl)
 		diagramElementX := crldiagramdomain.GetNodeX(diagramElement, hl)
 		diagramElementY := crldiagramdomain.GetNodeY(diagramElement, hl)
@@ -875,7 +875,7 @@ func (dmPtr *diagramManager) showOwner(elementID string, hl *core.Transaction) e
 	ownerPointer := crldiagramdomain.GetOwnerPointer(diagram, diagramElement, hl)
 	if ownerPointer == nil {
 		ownerPointer, _ = crldiagramdomain.NewDiagramOwnerPointer(dmPtr.browserGUI.GetUofD(), hl)
-		crldiagramdomain.SetReferencedModelElement(ownerPointer, modelConcept, hl)
+		crldiagramdomain.SetReferencedModelConcept(ownerPointer, modelConcept, hl)
 		crldiagramdomain.SetLinkSource(ownerPointer, diagramElement, hl)
 		crldiagramdomain.SetLinkTarget(ownerPointer, diagramConceptOwner, hl)
 		ownerPointer.SetOwningConcept(diagram, hl)
@@ -892,7 +892,7 @@ func (dmPtr *diagramManager) showReferencedConcept(elementID string, hl *core.Tr
 	if diagram == nil {
 		return errors.New("diagramManager.showReferencedConcept diagram not found for elementID " + elementID)
 	}
-	modelConcept := crldiagramdomain.GetReferencedModelElement(diagramElement, hl)
+	modelConcept := crldiagramdomain.GetReferencedModelConcept(diagramElement, hl)
 	if modelConcept == nil {
 		return errors.New("diagramManager.showReferencedConcept modelConcept not found for elementID " + elementID)
 	}
@@ -913,7 +913,7 @@ func (dmPtr *diagramManager) showReferencedConcept(elementID string, hl *core.Tr
 		diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConcept(diagram, modelReferencedConcept, hl)
 		if diagramReferencedConcept == nil {
 			diagramReferencedConcept, _ = crldiagramdomain.NewDiagramNode(dmPtr.browserGUI.GetUofD(), hl)
-			crldiagramdomain.SetReferencedModelElement(diagramReferencedConcept, modelReferencedConcept, hl)
+			crldiagramdomain.SetReferencedModelConcept(diagramReferencedConcept, modelReferencedConcept, hl)
 			crldiagramdomain.SetDisplayLabel(diagramReferencedConcept, modelReferencedConcept.GetLabel(hl), hl)
 			diagramElementX := crldiagramdomain.GetNodeX(diagramElement, hl)
 			diagramElementY := crldiagramdomain.GetNodeY(diagramElement, hl)
@@ -954,7 +954,7 @@ func (dmPtr *diagramManager) showReferencedConcept(elementID string, hl *core.Tr
 	elementPointer := crldiagramdomain.GetElementPointer(diagram, diagramElement, hl)
 	if elementPointer == nil {
 		elementPointer, _ = crldiagramdomain.NewDiagramElementPointer(dmPtr.browserGUI.GetUofD(), hl)
-		crldiagramdomain.SetReferencedModelElement(elementPointer, modelConcept, hl)
+		crldiagramdomain.SetReferencedModelConcept(elementPointer, modelConcept, hl)
 		crldiagramdomain.SetLinkSource(elementPointer, diagramElement, hl)
 		crldiagramdomain.SetLinkTarget(elementPointer, diagramReferencedConcept, hl)
 		elementPointer.SetOwningConcept(diagram, hl)
@@ -971,7 +971,7 @@ func (dmPtr *diagramManager) showRefinedConcept(elementID string, hl *core.Trans
 	if diagram == nil {
 		return errors.New("diagramManager.showRefinedConcept diagram not found for elementID " + elementID)
 	}
-	modelConcept := crldiagramdomain.GetReferencedModelElement(diagramElement, hl)
+	modelConcept := crldiagramdomain.GetReferencedModelConcept(diagramElement, hl)
 	if modelConcept == nil {
 		return errors.New("diagramManager.showRefinedConcept modelConcept not found for elementID " + elementID)
 	}
@@ -989,7 +989,7 @@ func (dmPtr *diagramManager) showRefinedConcept(elementID string, hl *core.Trans
 	diagramRefinedConcept := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, modelRefinedConcept, hl)
 	if diagramRefinedConcept == nil {
 		diagramRefinedConcept, _ = crldiagramdomain.NewDiagramNode(dmPtr.browserGUI.GetUofD(), hl)
-		crldiagramdomain.SetReferencedModelElement(diagramRefinedConcept, modelRefinedConcept, hl)
+		crldiagramdomain.SetReferencedModelConcept(diagramRefinedConcept, modelRefinedConcept, hl)
 		crldiagramdomain.SetDisplayLabel(diagramRefinedConcept, modelRefinedConcept.GetLabel(hl), hl)
 		diagramElementX := crldiagramdomain.GetNodeX(diagramElement, hl)
 		diagramElementY := crldiagramdomain.GetNodeY(diagramElement, hl)
@@ -1000,7 +1000,7 @@ func (dmPtr *diagramManager) showRefinedConcept(elementID string, hl *core.Trans
 	elementPointer := crldiagramdomain.GetElementPointer(diagram, diagramElement, hl)
 	if elementPointer == nil {
 		elementPointer, _ = crldiagramdomain.NewDiagramRefinedPointer(dmPtr.browserGUI.GetUofD(), hl)
-		crldiagramdomain.SetReferencedModelElement(elementPointer, modelConcept, hl)
+		crldiagramdomain.SetReferencedModelConcept(elementPointer, modelConcept, hl)
 		crldiagramdomain.SetLinkSource(elementPointer, diagramElement, hl)
 		crldiagramdomain.SetLinkTarget(elementPointer, diagramRefinedConcept, hl)
 		elementPointer.SetOwningConcept(diagram, hl)

@@ -19,16 +19,16 @@ type refinement struct {
 	RefinedConceptVersion  int
 }
 
-func (rPtr *refinement) clone(hl *Transaction) Refinement {
-	hl.ReadLockElement(rPtr)
+func (rPtr *refinement) clone(trans *Transaction) Refinement {
+	trans.ReadLockElement(rPtr)
 	var ref refinement
 	ref.initializeRefinement("", "")
-	ref.cloneAttributes(rPtr, hl)
+	ref.cloneAttributes(rPtr, trans)
 	return &ref
 }
 
-func (rPtr *refinement) cloneAttributes(source *refinement, hl *Transaction) {
-	rPtr.element.cloneAttributes(&source.element, hl)
+func (rPtr *refinement) cloneAttributes(source *refinement, trans *Transaction) {
+	rPtr.element.cloneAttributes(&source.element, trans)
 	rPtr.AbstractConceptID = source.AbstractConceptID
 	//	rPtr.abstractConcept = newCachedPointer(rPtr.getConceptIDNoLock(), false)
 	rPtr.AbstractConceptVersion = source.AbstractConceptVersion
@@ -37,8 +37,8 @@ func (rPtr *refinement) cloneAttributes(source *refinement, hl *Transaction) {
 	rPtr.RefinedConceptVersion = source.RefinedConceptVersion
 }
 
-func (rPtr *refinement) GetAbstractConcept(hl *Transaction) Element {
-	hl.ReadLockElement(rPtr)
+func (rPtr *refinement) GetAbstractConcept(trans *Transaction) Element {
+	trans.ReadLockElement(rPtr)
 	return rPtr.uOfD.GetElement(rPtr.AbstractConceptID)
 }
 
@@ -46,8 +46,8 @@ func (rPtr *refinement) getAbstractConceptNoLock() Element {
 	return rPtr.uOfD.GetElement(rPtr.AbstractConceptID)
 }
 
-func (rPtr *refinement) GetAbstractConceptID(hl *Transaction) string {
-	hl.ReadLockElement(rPtr)
+func (rPtr *refinement) GetAbstractConceptID(trans *Transaction) string {
+	trans.ReadLockElement(rPtr)
 	return rPtr.AbstractConceptID
 }
 
@@ -55,13 +55,13 @@ func (rPtr *refinement) getAbstractConceptIDNoLock() string {
 	return rPtr.AbstractConceptID
 }
 
-func (rPtr *refinement) GetAbstractConceptVersion(hl *Transaction) int {
-	hl.ReadLockElement(rPtr)
+func (rPtr *refinement) GetAbstractConceptVersion(trans *Transaction) int {
+	trans.ReadLockElement(rPtr)
 	return rPtr.AbstractConceptVersion
 }
 
-func (rPtr *refinement) GetRefinedConcept(hl *Transaction) Element {
-	hl.ReadLockElement(rPtr)
+func (rPtr *refinement) GetRefinedConcept(trans *Transaction) Element {
+	trans.ReadLockElement(rPtr)
 	return rPtr.uOfD.GetElement(rPtr.RefinedConceptID)
 }
 
@@ -69,8 +69,8 @@ func (rPtr *refinement) getRefinedConceptNoLock() Element {
 	return rPtr.uOfD.GetElement(rPtr.RefinedConceptID)
 }
 
-func (rPtr *refinement) GetRefinedConceptID(hl *Transaction) string {
-	hl.ReadLockElement(rPtr)
+func (rPtr *refinement) GetRefinedConceptID(trans *Transaction) string {
+	trans.ReadLockElement(rPtr)
 	return rPtr.RefinedConceptID
 }
 
@@ -78,8 +78,8 @@ func (rPtr *refinement) getRefinedConceptIDNoLock() string {
 	return rPtr.RefinedConceptID
 }
 
-func (rPtr *refinement) GetRefinedConceptVersion(hl *Transaction) int {
-	hl.ReadLockElement(rPtr)
+func (rPtr *refinement) GetRefinedConceptVersion(trans *Transaction) int {
+	trans.ReadLockElement(rPtr)
 	return rPtr.RefinedConceptVersion
 }
 
@@ -143,8 +143,8 @@ func (rPtr *refinement) marshalRefinementFields(buffer *bytes.Buffer) error {
 // recoverRefinementFields() is used when de-serializing an element. The activities in restoring the
 // element are not considered changes so the version counter is not incremented and the monitors of this
 // element are not notified of chaanges.
-func (rPtr *refinement) recoverRefinementFields(unmarshaledData *map[string]json.RawMessage, hl *Transaction) error {
-	err := rPtr.recoverElementFields(unmarshaledData, hl)
+func (rPtr *refinement) recoverRefinementFields(unmarshaledData *map[string]json.RawMessage, trans *Transaction) error {
+	err := rPtr.recoverElementFields(unmarshaledData, trans)
 	if err != nil {
 		return err
 	}
@@ -192,38 +192,38 @@ func (rPtr *refinement) recoverRefinementFields(unmarshaledData *map[string]json
 }
 
 // SetAbstractConcept sets the abstract concept using the ID of the supplied Element
-func (rPtr *refinement) SetAbstractConcept(el Element, hl *Transaction) error {
+func (rPtr *refinement) SetAbstractConcept(el Element, trans *Transaction) error {
 	if rPtr.uOfD == nil {
 		return errors.New("refinement.SetAbstractConcept failed because the element uOfD is nil")
 	}
-	hl.WriteLockElement(rPtr)
+	trans.WriteLockElement(rPtr)
 	id := ""
 	if el != nil {
 		id = el.getConceptIDNoLock()
 	}
-	return rPtr.SetAbstractConceptID(id, hl)
+	return rPtr.SetAbstractConceptID(id, trans)
 }
 
-func (rPtr *refinement) SetAbstractConceptID(acID string, hl *Transaction) error {
+func (rPtr *refinement) SetAbstractConceptID(acID string, trans *Transaction) error {
 	if rPtr.uOfD == nil {
 		return errors.New("refinement.SetAbstractConceptID failed because the element uOfD is nil")
 	}
-	hl.WriteLockElement(rPtr)
-	if !rPtr.isEditable(hl) {
+	trans.WriteLockElement(rPtr)
+	if !rPtr.isEditable(trans) {
 		return errors.New("refinement.SetAbstractConceptID failed because the refinement is not editable")
 	}
 	if rPtr.AbstractConceptID != acID {
-		rPtr.uOfD.preChange(rPtr, hl)
+		rPtr.uOfD.preChange(rPtr, trans)
 		beforeState, err := NewConceptState(rPtr)
 		if err != nil {
 			return errors.Wrap(err, "refinement.SetAbstractConceptID failed")
 		}
-		rPtr.incrementVersion(hl)
+		rPtr.incrementVersion(trans)
 		var oldAbstractConcept Element
 		if rPtr.AbstractConceptID != "" {
 			oldAbstractConcept = rPtr.uOfD.GetElement(rPtr.AbstractConceptID)
 			if oldAbstractConcept != nil {
-				oldAbstractConcept.removeListener(rPtr.ConceptID, hl)
+				oldAbstractConcept.removeListener(rPtr.ConceptID, trans)
 				if err != nil {
 					return errors.Wrap(err, "refinement.SetAbstractConceptID failed")
 				}
@@ -236,7 +236,7 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *Transaction) error
 		if acID != "" {
 			newAbstractConcept = rPtr.uOfD.GetElement(acID)
 			if newAbstractConcept != nil {
-				newAbstractConcept.addListener(rPtr.ConceptID, hl)
+				newAbstractConcept.addListener(rPtr.ConceptID, trans)
 				if err != nil {
 					return errors.Wrap(err, "refinement.SetAbstractConceptID failed")
 				}
@@ -244,7 +244,7 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *Transaction) error
 		}
 		rPtr.AbstractConceptID = acID
 		if newAbstractConcept != nil {
-			rPtr.AbstractConceptVersion = newAbstractConcept.GetVersion(hl)
+			rPtr.AbstractConceptVersion = newAbstractConcept.GetVersion(trans)
 		} else {
 			rPtr.AbstractConceptVersion = 0
 		}
@@ -252,7 +252,7 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *Transaction) error
 		if err2 != nil {
 			return errors.Wrap(err2, "refinement.SetAbstractConceptID failed")
 		}
-		err = rPtr.uOfD.SendPointerChangeNotification(rPtr, AbstractConceptChanged, beforeState, afterState, hl)
+		err = rPtr.uOfD.SendPointerChangeNotification(rPtr, AbstractConceptChanged, beforeState, afterState, trans)
 		if err != nil {
 			return errors.Wrap(err, "refinement.SetAbstractConceptID failed")
 		}
@@ -260,38 +260,68 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, hl *Transaction) error
 	return nil
 }
 
-func (rPtr *refinement) SetRefinedConcept(el Element, hl *Transaction) error {
+// setAbstractConceptVersion sets the abstract concept version when the reference is notified that
+// it has changed
+func (rPtr *refinement) setAbstractConceptVersion(rcID string, version int, trans *Transaction) error {
+	if rPtr.uOfD == nil {
+		return errors.New("refinement.setAbstractConceptVersion failed because the element uOfD is nil")
+	}
+	trans.WriteLockElement(rPtr)
+	if !rPtr.isEditable(trans) {
+		return errors.New("refinement.setAbstractConceptVersion failed because the reference is not editable")
+	}
+	if rcID == rPtr.AbstractConceptID {
+		beforeState, err := NewConceptState(rPtr)
+		if err != nil {
+			return errors.Wrap(err, "refinement.setAbstractConceptVersion failed")
+		}
+		rPtr.uOfD.preChange(rPtr, trans)
+		rPtr.incrementVersion(trans)
+		rPtr.AbstractConceptVersion = version
+		afterState, err2 := NewConceptState(rPtr)
+		if err2 != nil {
+			return errors.Wrap(err2, "refinement.setAbstractConceptVersion failed")
+		}
+		err = rPtr.uOfD.SendConceptChangeNotification(rPtr, beforeState, afterState, trans)
+		if err != nil {
+			return errors.Wrap(err, "refinement.setAbstractConceptVersion failed")
+		}
+	}
+	return nil
+}
+
+func (rPtr *refinement) SetRefinedConcept(el Element, trans *Transaction) error {
 	if rPtr.uOfD == nil {
 		return errors.New("refinement.SetRefinedConcept failed because the element uOfD is nil")
 	}
-	hl.WriteLockElement(rPtr)
+	trans.WriteLockElement(rPtr)
 	id := ""
 	if el != nil {
 		id = el.getConceptIDNoLock()
 	}
-	return rPtr.SetRefinedConceptID(id, hl)
+	return rPtr.SetRefinedConceptID(id, trans)
 }
 
-func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *Transaction) error {
+func (rPtr *refinement) SetRefinedConceptID(rcID string, trans *Transaction) error {
 	if rPtr.uOfD == nil {
 		return errors.New("refinement.SetRefinedConceptID failed because the element uOfD is nil")
 	}
-	hl.WriteLockElement(rPtr)
-	if !rPtr.isEditable(hl) {
+	trans.WriteLockElement(rPtr)
+	if !rPtr.isEditable(trans) {
 		return errors.New("refinement.SetReferencedConceptID failed because the refinement is not editable")
 	}
 	if rPtr.RefinedConceptID != rcID {
-		rPtr.uOfD.preChange(rPtr, hl)
+		rPtr.uOfD.preChange(rPtr, trans)
 		beforeState, err := NewConceptState(rPtr)
 		if err != nil {
 			return errors.Wrap(err, "refinement.SetRefinedConceptID failed")
 		}
-		rPtr.incrementVersion(hl)
+		rPtr.incrementVersion(trans)
 		var oldRefinedConcept Element
 		if rPtr.RefinedConceptID != "" {
 			oldRefinedConcept = rPtr.uOfD.GetElement(rPtr.RefinedConceptID)
 			if oldRefinedConcept != nil {
-				oldRefinedConcept.removeListener(rPtr.ConceptID, hl)
+				oldRefinedConcept.removeListener(rPtr.ConceptID, trans)
 				if err != nil {
 					return errors.Wrap(err, "refinement.SetRefinedConceptID failed")
 				}
@@ -301,7 +331,7 @@ func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *Transaction) error 
 		if rcID != "" {
 			newRefinedConcept = rPtr.uOfD.GetElement(rcID)
 			if newRefinedConcept != nil {
-				newRefinedConcept.addListener(rPtr.ConceptID, hl)
+				newRefinedConcept.addListener(rPtr.ConceptID, trans)
 				if err != nil {
 					return errors.Wrap(err, "refinement.SetRefinedConceptID failed")
 				}
@@ -309,7 +339,7 @@ func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *Transaction) error 
 		}
 		rPtr.RefinedConceptID = rcID
 		if newRefinedConcept != nil {
-			rPtr.RefinedConceptVersion = newRefinedConcept.GetVersion(hl)
+			rPtr.RefinedConceptVersion = newRefinedConcept.GetVersion(trans)
 		} else {
 			rPtr.RefinedConceptVersion = 0
 		}
@@ -317,7 +347,7 @@ func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *Transaction) error 
 		if err2 != nil {
 			return errors.Wrap(err2, "refinement.SetRefinedConceptID failed")
 		}
-		err = rPtr.uOfD.SendPointerChangeNotification(rPtr, RefinedConceptChanged, beforeState, afterState, hl)
+		err = rPtr.uOfD.SendPointerChangeNotification(rPtr, RefinedConceptChanged, beforeState, afterState, trans)
 		if err != nil {
 			return errors.Wrap(err, "refinement.SetRefinedConceptID failed")
 		}
@@ -325,7 +355,37 @@ func (rPtr *refinement) SetRefinedConceptID(rcID string, hl *Transaction) error 
 	return nil
 }
 
-// Refinement is the reification of a refinement association between an abstract Element and a refined Element
+// setRefinedConceptVersion sets the refined concept version when the reference is notified that
+// it has changed
+func (rPtr *refinement) setRefinedConceptVersion(rcID string, version int, trans *Transaction) error {
+	if rPtr.uOfD == nil {
+		return errors.New("refinement.setRefinedConceptVersion failed because the element uOfD is nil")
+	}
+	trans.WriteLockElement(rPtr)
+	if !rPtr.isEditable(trans) {
+		return errors.New("refinement.setRefinedConceptVersion failed because the reference is not editable")
+	}
+	if rcID == rPtr.RefinedConceptID {
+		beforeState, err := NewConceptState(rPtr)
+		if err != nil {
+			return errors.Wrap(err, "refinement.setRefinedConceptVersion failed")
+		}
+		rPtr.uOfD.preChange(rPtr, trans)
+		rPtr.incrementVersion(trans)
+		rPtr.RefinedConceptVersion = version
+		afterState, err2 := NewConceptState(rPtr)
+		if err2 != nil {
+			return errors.Wrap(err2, "refinement.setRefinedConceptVersion failed")
+		}
+		err = rPtr.uOfD.SendConceptChangeNotification(rPtr, beforeState, afterState, trans)
+		if err != nil {
+			return errors.Wrap(err, "refinement.setRefinedConceptVersion failed")
+		}
+	}
+	return nil
+}
+
+// Refinement is the reification of a refinement association between an abstract Element and a refined Element.
 type Refinement interface {
 	Element
 	GetAbstractConceptID(*Transaction) string
@@ -340,6 +400,8 @@ type Refinement interface {
 	GetRefinedConceptVersion(*Transaction) int
 	SetAbstractConcept(Element, *Transaction) error
 	SetAbstractConceptID(string, *Transaction) error
+	setAbstractConceptVersion(string, int, *Transaction) error
 	SetRefinedConcept(Element, *Transaction) error
 	SetRefinedConceptID(string, *Transaction) error
+	setRefinedConceptVersion(string, int, *Transaction) error
 }
