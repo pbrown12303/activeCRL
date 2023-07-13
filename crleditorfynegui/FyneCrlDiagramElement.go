@@ -14,6 +14,16 @@ import (
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 )
 
+type FyneCrlDiagramElement interface {
+	GetDiagramElement() core.Element
+	GetDiagramElementID() string
+	GetModelElement() core.Element
+	GetModelElementID() string
+	GetFyneProperties() diagramwidget.DiagramElementProperties
+	SetFyneProperties(diagramwidget.DiagramElementProperties)
+	Refresh()
+}
+
 var _ fyne.Widget = (*FyneCrlDiagramNode)(nil)
 var _ diagramwidget.DiagramElement = (*FyneCrlDiagramNode)(nil)
 var _ diagramwidget.DiagramNode = (*FyneCrlDiagramNode)(nil)
@@ -61,13 +71,46 @@ func NewFyneCrlDiagramNode(node core.Element, trans *core.Transaction, diagramWi
 
 	diagramwidget.InitializeBaseDiagramNode(newNode, diagramWidget, nodeContainer, nodeID)
 	// Size isn't available until after initialization
-	newNode.abstractionText.TextSize = newNode.GetProperties().CaptionTextSize
+	newNode.abstractionText.TextSize = newNode.GetFyneProperties().CaptionTextSize
 	x := crldiagramdomain.GetNodeX(node, trans)
 	y := crldiagramdomain.GetNodeY(node, trans)
 	fynePosition := fyne.NewPos(float32(x), float32(y))
 	newNode.Move(fynePosition)
 	newNode.Refresh()
 	return newNode
+}
+
+// GetDiagramElement returns the crl diagram element associated with the link
+func (fcdn *FyneCrlDiagramNode) GetDiagramElement() core.Element {
+	return fcdn.diagramElement
+}
+
+// GetDiagramElementID returns the ID of the crl diagram eleent associagted with the link
+func (fcdn *FyneCrlDiagramNode) GetDiagramElementID() string {
+	trans, isNew := FyneGUISingleton.editor.GetTransaction()
+	if isNew {
+		defer FyneGUISingleton.editor.EndTransaction()
+	}
+	return fcdn.diagramElement.GetConceptID(trans)
+}
+
+// GetModelElement returns the crl model element represented by the link
+func (fcdn *FyneCrlDiagramNode) GetModelElement() core.Element {
+	return fcdn.modelElement
+}
+
+// GetModelElementID returns the ID of the crl model eleent represented by the link
+func (fcdn *FyneCrlDiagramNode) GetModelElementID() string {
+	trans, isNew := FyneGUISingleton.editor.GetTransaction()
+	if isNew {
+		defer FyneGUISingleton.editor.EndTransaction()
+	}
+	return fcdn.modelElement.GetConceptID(trans)
+}
+
+// GetFyneProperties returns the fyne DiagramElementProperties of the diagram link
+func (fcdn *FyneCrlDiagramNode) GetFyneProperties() diagramwidget.DiagramElementProperties {
+	return fcdn.GetProperties()
 }
 
 func (fcdn *FyneCrlDiagramNode) labelChanged() {
@@ -83,61 +126,74 @@ func (fcdn *FyneCrlDiagramNode) labelChanged() {
 
 func (fcdn *FyneCrlDiagramNode) MouseDown(event *desktop.MouseEvent) {
 	if event.Button == desktop.MouseButtonSecondary {
-		items := []*fyne.MenuItem{}
-		showModelConceptItem := fyne.NewMenuItem("Show Concept in Navigator", func() {
-			FyneGUISingleton.treeManager.ShowElementInTree(fcdn.modelElement)
-		})
-		items = append(items, showModelConceptItem)
-		showDiagramElementItem := fyne.NewMenuItem("Show Diagram Element in Navigator", func() {
-			FyneGUISingleton.treeManager.ShowElementInTree(fcdn.diagramElement)
-		})
-		items = append(items, showDiagramElementItem)
-		showOwnerItem := fyne.NewMenuItem("Show Owner", func() {
-			FyneGUISingleton.diagramManager.showOwner(fcdn.GetDiagramElementID())
-		})
-		items = append(items, showOwnerItem)
-		showOwnedConceptsItem := fyne.NewMenuItem("Show Owned Conecpts", func() {
-			FyneGUISingleton.diagramManager.showOwnedConcepts(fcdn.GetDiagramElementID())
-		})
-		items = append(items, showOwnedConceptsItem)
-		switch fcdn.modelElement.(type) {
-		case core.Reference:
-			showReferencedConceptItem := fyne.NewMenuItem("Show Referenced Concept", func() {
-				FyneGUISingleton.diagramManager.showReferencedConcept(fcdn.GetDiagramElementID())
-			})
-			nullifyReferencedConceptItem := fyne.NewMenuItem("Nullify Referenced Concept", func() {
-				FyneGUISingleton.diagramManager.nullifyReferencedConcept(fcdn)
-			})
-			items = append(items, showReferencedConceptItem, nullifyReferencedConceptItem)
-		case core.Refinement:
-			showAbstractConceptItem := fyne.NewMenuItem("Show Abstract Concept", func() {
-				FyneGUISingleton.diagramManager.showAbstractConcept(fcdn.GetDiagramElementID())
-			})
-			showRefinedConceptItem := fyne.NewMenuItem("Show Refined Concept", func() {
-				FyneGUISingleton.diagramManager.showRefinedConcept(fcdn.GetDiagramElementID())
-			})
-			items = append(items, showAbstractConceptItem, showRefinedConceptItem)
-		}
-		deleteDiagramElementViewItem := fyne.NewMenuItem("Delete Diagram Element View", func() {
-			FyneGUISingleton.diagramManager.deleteDiagramElementView(fcdn.GetDiagramElementID())
-		})
-		// <a class="show" onclick="crlBringToFront()">Bring To Front</a>
-		editFormatItem := fyne.NewMenuItem("Edit Format", func() {
-			ShowFyneFormatDialog(fcdn.GetProperties(), func(properties diagramwidget.DiagramElementProperties) {
-				fcdn.SetProperties(properties)
-				fcdn.Refresh()
-				// fcdn.GetDiagram().ForceRepaint()
-			})
-		})
-		// <a class="show" onclick="crlEditFormat()">Edit Format</a>
-		// <a class="show" onclick="crlCopyFormat()">Copy Format</a>
-		// <a class="show" onclick="crlPasteFormat()">Paste Format</a>
-		items = append(items, deleteDiagramElementViewItem, editFormatItem)
-		menu := fyne.NewMenu("Diagram Element Popup", items...)
-		popup := widget.NewPopUpMenu(menu, FyneGUISingleton.window.Canvas())
-		popup.Move(event.AbsolutePosition)
-		popup.Show()
+		ShowSecondaryPopup(fcdn, event)
 	}
+}
+
+func ShowSecondaryPopup(fcde FyneCrlDiagramElement, event *desktop.MouseEvent) {
+	items := []*fyne.MenuItem{}
+	showModelConceptItem := fyne.NewMenuItem("Show Concept in Navigator", func() {
+		FyneGUISingleton.treeManager.ShowElementInTree(fcde.GetModelElement())
+	})
+	items = append(items, showModelConceptItem)
+	showDiagramElementItem := fyne.NewMenuItem("Show Diagram Element in Navigator", func() {
+		FyneGUISingleton.treeManager.ShowElementInTree(fcde.GetDiagramElement())
+	})
+	items = append(items, showDiagramElementItem)
+	showOwnerItem := fyne.NewMenuItem("Show Owner", func() {
+		FyneGUISingleton.diagramManager.showOwner(fcde.GetDiagramElementID())
+	})
+	items = append(items, showOwnerItem)
+	showOwnedConceptsItem := fyne.NewMenuItem("Show Owned Conecpts", func() {
+		FyneGUISingleton.diagramManager.showOwnedConcepts(fcde.GetDiagramElementID())
+	})
+	items = append(items, showOwnedConceptsItem)
+	switch fcde.GetModelElement().(type) {
+	case core.Reference:
+		showReferencedConceptItem := fyne.NewMenuItem("Show Referenced Concept", func() {
+			FyneGUISingleton.diagramManager.showReferencedConcept(fcde.GetDiagramElementID())
+		})
+		nullifyReferencedConceptItem := fyne.NewMenuItem("Nullify Referenced Concept", func() {
+			FyneGUISingleton.diagramManager.nullifyReferencedConcept(fcde)
+		})
+		items = append(items, showReferencedConceptItem, nullifyReferencedConceptItem)
+	case core.Refinement:
+		showAbstractConceptItem := fyne.NewMenuItem("Show Abstract Concept", func() {
+			FyneGUISingleton.diagramManager.showAbstractConcept(fcde.GetDiagramElementID())
+		})
+		showRefinedConceptItem := fyne.NewMenuItem("Show Refined Concept", func() {
+			FyneGUISingleton.diagramManager.showRefinedConcept(fcde.GetDiagramElementID())
+		})
+		items = append(items, showAbstractConceptItem, showRefinedConceptItem)
+	}
+	deleteDiagramElementViewItem := fyne.NewMenuItem("Delete Diagram Element View", func() {
+		FyneGUISingleton.diagramManager.deleteDiagramElementView(fcde.GetDiagramElementID())
+	})
+
+	editFormatItem := fyne.NewMenuItem("Edit Format", func() {
+		ShowFyneFormatDialog(fcde.GetFyneProperties(), func(properties diagramwidget.DiagramElementProperties) {
+			fcde.SetFyneProperties(properties)
+			fcde.Refresh()
+
+		})
+	})
+	copyFormatItem := fyne.NewMenuItem("Copy Format", func() {
+		if FyneGUISingleton.propertiesClipboard == nil {
+			FyneGUISingleton.propertiesClipboard = &diagramwidget.DiagramElementProperties{}
+		}
+		*(FyneGUISingleton.propertiesClipboard) = fcde.GetFyneProperties()
+	})
+	pasteFormatItem := fyne.NewMenuItem("Paste Format", func() {
+		if FyneGUISingleton.propertiesClipboard != nil {
+			fcde.SetFyneProperties(*(FyneGUISingleton.propertiesClipboard))
+			fcde.Refresh()
+		}
+	})
+	items = append(items, deleteDiagramElementViewItem, editFormatItem, copyFormatItem, pasteFormatItem)
+	menu := fyne.NewMenu("Diagram Element Popup", items...)
+	popup := widget.NewPopUpMenu(menu, FyneGUISingleton.window.Canvas())
+	popup.Move(event.AbsolutePosition)
+	popup.Show()
 }
 
 // MouseUp responds to mouse up events
@@ -158,6 +214,11 @@ func (fcdn *FyneCrlDiagramNode) nodeMoved() {
 	if newPosition.Y != float32(currentY) {
 		crldiagramdomain.SetNodeY(fcdn.diagramElement, float64(newPosition.Y), trans)
 	}
+}
+
+// SetFyneProperties sets the fyne DiagramElementProperties of the diagram link
+func (fcdn *FyneCrlDiagramNode) SetFyneProperties(properties diagramwidget.DiagramElementProperties) {
+	fcdn.SetProperties(properties)
 }
 
 var _ diagramwidget.DiagramLink = (*FyneCrlDiagramLink)(nil)
@@ -215,6 +276,39 @@ func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, link core
 	return diagramLink
 }
 
+// GetDiagramElement returns the crl diagram element associated with the link
+func (fcdl *FyneCrlDiagramLink) GetDiagramElement() core.Element {
+	return fcdl.diagramElement
+}
+
+// GetDiagramElementID returns the ID of the crl diagram eleent associagted with the link
+func (fcdl *FyneCrlDiagramLink) GetDiagramElementID() string {
+	trans, isNew := FyneGUISingleton.editor.GetTransaction()
+	if isNew {
+		defer FyneGUISingleton.editor.EndTransaction()
+	}
+	return fcdl.diagramElement.GetConceptID(trans)
+}
+
+// GetModelElement returns the crl model element represented by the link
+func (fcdl *FyneCrlDiagramLink) GetModelElement() core.Element {
+	return fcdl.modelElement
+}
+
+// GetModelElementID returns the ID of the crl model eleent represented by the link
+func (fcdl *FyneCrlDiagramLink) GetModelElementID() string {
+	trans, isNew := FyneGUISingleton.editor.GetTransaction()
+	if isNew {
+		defer FyneGUISingleton.editor.EndTransaction()
+	}
+	return fcdl.modelElement.GetConceptID(trans)
+}
+
+// GetFyneProperties returns the fyne DiagramElementProperties of the diagram link
+func (fcdl *FyneCrlDiagramLink) GetFyneProperties() diagramwidget.DiagramElementProperties {
+	return fcdl.GetProperties()
+}
+
 func (fcdl *FyneCrlDiagramLink) labelChanged() {
 	newValue, _ := fcdl.labelAnchoredText.GetDisplayedTextBinding().Get()
 	trans, isNew := FyneGUISingleton.editor.GetTransaction()
@@ -230,4 +324,9 @@ func (fcdl *FyneCrlDiagramLink) labelChanged() {
 
 func (fcdl *FyneCrlDiagramLink) SetLabel(label string) {
 	fcdl.labelAnchoredText.GetDisplayedTextBinding().Set(label)
+}
+
+// SetFyneProperties sets the fyne DiagramElementProperties of the diagram link
+func (fcdl *FyneCrlDiagramLink) SetFyneProperties(properties diagramwidget.DiagramElementProperties) {
+	fcdl.SetProperties(properties)
 }

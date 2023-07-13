@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"fyne.io/x/fyne/widget/diagramwidget"
 
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
@@ -19,13 +20,14 @@ var FyneGUISingleton *CrlEditorFyneGUI
 
 // CrlEditorFyneGUI is the Crl Editor built with Fyne
 type CrlEditorFyneGUI struct {
-	app                fyne.App
-	editor             *crleditor.Editor
-	diagramManager     *FyneDiagramManager
-	propertyManager    *FynePropertyManager
-	treeManager        *FyneTreeManager
-	window             fyne.Window
-	currentSelectionID string
+	app                 fyne.App
+	editor              *crleditor.Editor
+	diagramManager      *FyneDiagramManager
+	propertyManager     *FynePropertyManager
+	treeManager         *FyneTreeManager
+	window              fyne.Window
+	currentSelectionID  string
+	propertiesClipboard *diagramwidget.DiagramElementProperties
 	// The following attributes are kept for testing purposes
 	// File Menu Items
 	newDomainItem           *fyne.MenuItem

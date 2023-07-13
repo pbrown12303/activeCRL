@@ -377,6 +377,7 @@ func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.T
 		diagramWidget.IsConnectionAllowedCallback = func(link diagramwidget.DiagramLink, linkEnd diagramwidget.LinkEnd, pad diagramwidget.ConnectionPad) bool {
 			return dm.isConnectionAllowed(link, linkEnd, pad)
 		}
+		diagramWidget.LinkSegmentMouseDownSecondaryCallback = dm.linkMouseDown
 	}
 	dm.tabArea.Select(tabItem.tab)
 	return nil
@@ -656,14 +657,21 @@ func getAttributeNameBasedOnTargetType(newPadOwner diagramwidget.DiagramElement)
 	return attributeName
 }
 
-func (dm *FyneDiagramManager) nullifyReferencedConcept(fcdn *FyneCrlDiagramNode) error {
+func (dm *FyneDiagramManager) linkMouseDown(link diagramwidget.DiagramLink, event *desktop.MouseEvent) {
+	switch typedLink := link.(type) {
+	case *FyneCrlDiagramLink:
+		ShowSecondaryPopup(typedLink, event)
+	}
+}
+
+func (dm *FyneDiagramManager) nullifyReferencedConcept(fcde FyneCrlDiagramElement) error {
 	trans, isNew := FyneGUISingleton.editor.GetTransaction()
 	if isNew {
 		defer FyneGUISingleton.editor.EndTransaction()
 	}
 	uOfD := trans.GetUniverseOfDiscourse()
 	uOfD.MarkUndoPoint()
-	ref := fcdn.modelElement
+	ref := fcde.GetModelElement()
 	if ref == nil {
 		return errors.New("FyneDiagramManager.nullifyReferencedConcept called with nil model element")
 	}
