@@ -1,6 +1,8 @@
 package crleditorfynegui
 
 import (
+	"log"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
@@ -17,7 +19,7 @@ type FynePropertyManager struct {
 	idLabel                             *widget.Label
 	idValue                             *widget.Label
 	owningConceptIDLabel                *widget.Label
-	owningConceptIDValue                *widget.Label
+	owningConceptIDValue                *shortcutableLabel
 	versionLabel                        *widget.Label
 	versionValue                        *widget.Label
 	labelLabel                          *widget.Label
@@ -61,7 +63,7 @@ func NewFynePropertyManager() *FynePropertyManager {
 	propertyManager.labelLabel = widget.NewLabel("Label")
 	propertyManager.labelValue = widget.NewEntry()
 	propertyManager.owningConceptIDLabel = widget.NewLabel("Owning Concept ID")
-	propertyManager.owningConceptIDValue = widget.NewLabel("")
+	propertyManager.owningConceptIDValue = newFocusableLabel()
 	propertyManager.definitionLabel = widget.NewLabel("Definition")
 	propertyManager.definitionValue = widget.NewEntry()
 	propertyManager.uriLabel = widget.NewLabel("URI")
@@ -222,5 +224,49 @@ func (pMgr *FynePropertyManager) displayProperties(uid string) {
 		itemBinding, _ = structBinding.GetItem("LiteralValue")
 		pMgr.literalValueValue.Bind(itemBinding.(binding.String))
 	}
+}
 
+var _ fyne.Shortcutable = (*shortcutableLabel)(nil)
+var _ fyne.Focusable = (*shortcutableLabel)(nil)
+var _ fyne.Tappable = (*shortcutableLabel)(nil)
+
+type shortcutableLabel struct {
+	widget.Entry
+}
+
+func (sl *shortcutableLabel) FocusGained() {
+	log.Print("Focus Gained")
+}
+
+func (sl *shortcutableLabel) FocusLost() {
+	log.Print("Focus Lost")
+}
+
+func (sl *shortcutableLabel) Tapped(event *fyne.PointEvent) {
+	log.Print("Tapped")
+	FyneGUISingleton.GetWindow().RequestFocus()
+}
+
+func (sl *shortcutableLabel) TypedKey(*fyne.KeyEvent) {
+
+}
+
+func (sl *shortcutableLabel) TypedRune(rune) {
+
+}
+
+func newFocusableLabel() *shortcutableLabel {
+	label := &shortcutableLabel{}
+	label.ExtendBaseWidget(label)
+	label.Disable()
+	return label
+}
+
+func (sl *shortcutableLabel) TypedShortcut(shortcut fyne.Shortcut) {
+	log.Print(shortcut.ShortcutName())
+	switch typedShortcut := shortcut.(type) {
+	case *fyne.ShortcutCopy:
+		typedShortcut.Clipboard = FyneGUISingleton.window.Clipboard()
+		typedShortcut.Clipboard.SetContent(sl.Text)
+	}
 }

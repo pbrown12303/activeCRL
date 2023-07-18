@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	"fyne.io/x/fyne/widget/diagramwidget"
 
@@ -41,8 +42,7 @@ type CrlEditorFyneGUI struct {
 	undoItem *fyne.MenuItem
 	redoItem *fyne.MenuItem
 	// Debug Menu Items
-	debugSettingsItem     *fyne.MenuItem
-	displayCallGraphsItem *fyne.MenuItem
+	debugSettingsItem *fyne.MenuItem
 	// Help Menu Items
 	helpItem *fyne.MenuItem
 	// Main Menu Items
@@ -172,7 +172,17 @@ func (gui *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
 	gui.newDomainItem = fyne.NewMenuItem("New Domain", func() {
 		gui.addElement("", gui.editor.GetDefaultDomainLabel())
 	})
-	gui.selectConceptWithIDItem = fyne.NewMenuItem("Select Concept With ID", nil)
+	gui.selectConceptWithIDItem = fyne.NewMenuItem("Select Concept With ID", func() {
+		entryItem := newPastableEntry()
+		formItem := widget.NewFormItem("Enter ID of desired element", entryItem)
+		dialog.ShowForm("Select Concept", "Select", "Cancel", []*widget.FormItem{formItem}, func(b bool) {
+			trans, isNew := crleditor.CrlEditorSingleton.GetTransaction()
+			if isNew {
+				defer gui.editor.EndTransaction()
+			}
+			gui.editor.SelectElementUsingIDString(entryItem.Text, trans)
+		}, gui.window)
+	})
 	gui.saveWorkspaceItem = fyne.NewMenuItem("Save Workspace", func() {
 		trans, isNew := crleditor.CrlEditorSingleton.GetTransaction()
 		if isNew {
@@ -206,7 +216,46 @@ func (gui *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
 			popup.Show()
 		}
 	})
-	gui.userPreferencesItem = fyne.NewMenuItem("UserPreferences", func() { fmt.Println("User Preferences") })
+	gui.userPreferencesItem = fyne.NewMenuItem("UserPreferences", func() {
+		preferences := crleditor.UserPreferences{}
+		preferences = *gui.editor.GetUserPreferences()
+		referenceRadioGroup := widget.NewRadioGroup([]string{"Node", "Link"}, func(s string) {
+			if s == "Link" {
+				preferences.DropDiagramReferenceAsLink = true
+			} else {
+				preferences.DropDiagramReferenceAsLink = false
+			}
+		})
+		referenceRadioGroup.Horizontal = true
+		if preferences.DropDiagramReferenceAsLink {
+			referenceRadioGroup.Selected = "Link"
+		} else {
+			referenceRadioGroup.Selected = "Node"
+		}
+		referenceChoice := container.NewHBox(widget.NewLabel("Drop Reference as: "), referenceRadioGroup)
+		refinementRadioGroup := widget.NewRadioGroup([]string{"Node", "Link"}, func(s string) {
+			if s == "Link" {
+				preferences.DropDiagramRefinementAsLink = true
+			} else {
+				preferences.DropDiagramRefinementAsLink = false
+			}
+		})
+		refinementRadioGroup.Horizontal = true
+		if preferences.DropDiagramRefinementAsLink {
+			refinementRadioGroup.Selected = "Link"
+		} else {
+			refinementRadioGroup.Selected = "Node"
+		}
+		refinementChoice := container.NewHBox(widget.NewLabel("Drop Refinement as: "), refinementRadioGroup)
+		vBox := container.NewVBox(referenceChoice, refinementChoice)
+		dialog.ShowCustomConfirm("User Preferences", "Save", "Cancel", vBox, func(b bool) {
+			if b {
+				*gui.editor.GetUserPreferences() = preferences
+				gui.editor.SaveUserPreferences()
+			}
+		}, gui.window)
+		fmt.Println("User Preferences")
+	})
 
 	// Edit Menu Items
 	gui.undoItem = fyne.NewMenuItem("Undo", func() {
@@ -217,8 +266,31 @@ func (gui *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
 	})
 
 	// Debug Menu Items
-	gui.debugSettingsItem = fyne.NewMenuItem("Debug Settings", nil)
-	gui.displayCallGraphsItem = fyne.NewMenuItem("Display Call Graphs", nil)
+	gui.debugSettingsItem = fyne.NewMenuItem("Debug Settings", func() {
+		traceChange := core.TraceChange
+		omitManageTreeNodeCalls := core.OmitManageTreeNodesCalls
+		omitDiagramRelatedCalls := core.OmitDiagramRelatedCalls
+		enableTraceChangeItem := widget.NewCheck("Enable Trace Change", func(value bool) {
+			traceChange = value
+		})
+		enableTraceChangeItem.Checked = traceChange
+		omitManageTreeNodeCallsItem := widget.NewCheck("Omit ManageTreeNode calls", func(value bool) {
+			omitManageTreeNodeCalls = value
+		})
+		omitManageTreeNodeCallsItem.Checked = omitManageTreeNodeCalls
+		omitDiagramRelatedCallsItem := widget.NewCheck("Omit Diagram-Related calls", func(value bool) {
+			omitDiagramRelatedCalls = value
+		})
+		omitDiagramRelatedCallsItem.Checked = omitDiagramRelatedCalls
+		vBox := container.NewVBox(enableTraceChangeItem, omitManageTreeNodeCallsItem, omitDiagramRelatedCallsItem)
+		dialog.ShowCustomConfirm("Debug Settings", "Save", "Cancel", vBox, func(b bool) {
+			if b {
+				core.TraceChange = traceChange
+				core.OmitManageTreeNodesCalls = omitManageTreeNodeCalls
+				core.OmitDiagramRelatedCalls = omitDiagramRelatedCalls
+			}
+		}, gui.window)
+	})
 
 	// Help Menu Items
 	gui.helpItem = fyne.NewMenuItem("Help", func() { fmt.Println("Help Menu") })
@@ -226,7 +298,7 @@ func (gui *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
 	// Main Menu
 	gui.fileMenu = fyne.NewMenu("File", gui.newDomainItem, fyne.NewMenuItemSeparator(), gui.saveWorkspaceItem, gui.closeWorkspaceItem, gui.clearWorkspaceItem, gui.openWorkspaceItem, fyne.NewMenuItemSeparator(), gui.userPreferencesItem)
 	gui.editMenu = fyne.NewMenu("Edit", gui.selectConceptWithIDItem, gui.undoItem, gui.redoItem)
-	gui.debugMenu = fyne.NewMenu("Debug", gui.debugSettingsItem, gui.displayCallGraphsItem)
+	gui.debugMenu = fyne.NewMenu("Debug", gui.debugSettingsItem)
 	gui.helpMenu = fyne.NewMenu("Help", gui.helpItem)
 
 	gui.mainMenu = fyne.NewMainMenu(gui.fileMenu, gui.editMenu, gui.debugMenu, gui.helpMenu)
@@ -255,9 +327,8 @@ func (gui *CrlEditorFyneGUI) displayDiagram(diagramID string) {
 	gui.editor.GetDiagramManager().DisplayDiagram(diagramID, trans)
 }
 
-// ElementDeleted
+// ElementDeleted - no additional action required
 func (gui *CrlEditorFyneGUI) ElementDeleted(elID string, trans *core.Transaction) error {
-	// TODO Implement this
 	return nil
 }
 
@@ -282,21 +353,13 @@ func (gui *CrlEditorFyneGUI) DisplayDiagram(diagram core.Element, trans *core.Tr
 	return nil
 }
 
-// FileLoaded
+// FileLoaded - no action required
 func (gui *CrlEditorFyneGUI) FileLoaded(el core.Element, trans *core.Transaction) {
-	// TODO Implement this
-	// noop
 }
 
-// GetNoSaveDomains
+// GetNoSaveDomains - there aren't any for the CRLEditorFyneGUI
 func (gui *CrlEditorFyneGUI) GetNoSaveDomains(noSaveDomains map[string]core.Element, trans *core.Transaction) {
-	// TODO Implement this
-	// noop
 }
-
-// func (gui *CrlEditorFyneGUI) getUofD() *core.UniverseOfDiscourse {
-// 	return gui.editor.GetUofD()
-// }
 
 // GetWindow returns the main window of the FyneGUI
 func (gui *CrlEditorFyneGUI) GetWindow() fyne.Window {
@@ -355,4 +418,31 @@ type dragDropTransaction struct {
 	id                          string
 	diagramID                   string
 	currentDiagramMousePosition fyne.Position
+}
+
+type pastableEntry struct {
+	widget.Entry
+}
+
+func newPastableEntry() *pastableEntry {
+	pe := &pastableEntry{}
+	pe.ExtendBaseWidget(pe)
+	return pe
+}
+
+func (pe *pastableEntry) TypedShortcut(shortcut fyne.Shortcut) {
+	log.Print(shortcut.ShortcutName())
+	switch typedShortcut := shortcut.(type) {
+	case *fyne.ShortcutPaste:
+		typedShortcut.Clipboard = FyneGUISingleton.window.Clipboard()
+		pe.SetText(typedShortcut.Clipboard.Content())
+		// pe.Refresh()
+	}
+}
+
+func (pe *pastableEntry) MinSize() fyne.Size {
+	if pe.Text == "" {
+		return fyne.NewSize(30, 12)
+	}
+	return pe.Entry.MinSize()
 }

@@ -12,6 +12,9 @@ type fyneGuiTheme struct{}
 var _ fyne.Theme = (*fyneGuiTheme)(nil)
 
 func (m fyneGuiTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) color.Color {
+	if name == "inputBackground" {
+		return color.Transparent
+	}
 	return theme.DefaultTheme().Color(name, variant)
 }
 
