@@ -529,9 +529,12 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 			case REFINEMENT_LINK:
 				linkModelElement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				sourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
-				linkModelElement.SetOwningConcept(sourceModelElement, trans)
-				linkModelElement.(core.Refinement).SetRefinedConcept(sourceModelElement, trans)
-				link.Show()
+				switch typedElement := linkModelElement.(type) {
+				case core.Refinement:
+					typedElement.SetOwningConcept(sourceModelElement, trans)
+					typedElement.SetRefinedConcept(sourceModelElement, trans)
+					link.Show()
+				}
 			case ABSTRACT_ELEMENT_POINTER:
 				currentModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				newModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
@@ -541,9 +544,12 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 					}
 					crlLinkTarget := crldiagramdomain.GetLinkTarget(crlLink, trans)
 					targetModelElement := crldiagramdomain.GetReferencedModelConcept(crlLinkTarget, trans)
-					newModelRefinement.(core.Refinement).SetAbstractConcept(targetModelElement, trans)
-					crldiagramdomain.SetReferencedModelConcept(crlLink, newModelRefinement, trans)
-					typedLink.modelElement = newModelRefinement
+					switch typedElement := newModelRefinement.(type) {
+					case core.Refinement:
+						typedElement.SetAbstractConcept(targetModelElement, trans)
+						crldiagramdomain.SetReferencedModelConcept(crlLink, newModelRefinement, trans)
+						typedLink.modelElement = newModelRefinement
+					}
 				}
 			case OWNER_POINTER:
 				currentLinkParent := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
@@ -565,27 +571,39 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 					crldiagramdomain.SetReferencedModelConcept(crlLink, newModelReference, trans)
 					attributeName := core.NoAttribute
 					if currentModelReference != nil {
-						attributeName = currentModelReference.(core.Reference).GetReferencedAttributeName(trans)
-						currentModelReference.(core.Reference).SetReferencedConcept(nil, core.NoAttribute, trans)
+						switch typedElement := currentModelReference.(type) {
+						case core.Reference:
+							attributeName = typedElement.GetReferencedAttributeName(trans)
+							currentModelReference.(core.Reference).SetReferencedConcept(nil, core.NoAttribute, trans)
+						}
 					}
 					crlLinkTarget := crldiagramdomain.GetLinkTarget(crlLink, trans)
 					targetModelElement := crldiagramdomain.GetReferencedModelConcept(crlLinkTarget, trans)
-					newModelReference.(core.Reference).SetReferencedConcept(targetModelElement, attributeName, trans)
-					crldiagramdomain.SetReferencedModelConcept(crlLink, newModelReference, trans)
-					typedLink.modelElement = newModelReference
+					switch typedElement := newModelReference.(type) {
+					case core.Reference:
+						typedElement.SetReferencedConcept(targetModelElement, attributeName, trans)
+						crldiagramdomain.SetReferencedModelConcept(crlLink, newModelReference, trans)
+						typedLink.modelElement = newModelReference
+					}
 				}
 			case REFINED_ELEMENT_POINTER:
 				currentModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				newModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				if currentModelRefinement != newModelRefinement {
 					if currentModelRefinement != nil {
-						currentModelRefinement.(core.Refinement).SetRefinedConcept(nil, trans)
+						switch typedElement := currentModelRefinement.(type) {
+						case core.Refinement:
+							typedElement.SetRefinedConcept(nil, trans)
+						}
 					}
 					crlLinkTarget := crldiagramdomain.GetLinkTarget(crlLink, trans)
 					targetModelElement := crldiagramdomain.GetReferencedModelConcept(crlLinkTarget, trans)
-					newModelRefinement.(core.Refinement).SetRefinedConcept(targetModelElement, trans)
-					crldiagramdomain.SetReferencedModelConcept(crlLink, newModelRefinement, trans)
-					typedLink.modelElement = newModelRefinement
+					switch typedElement := newModelRefinement.(type) {
+					case core.Refinement:
+						typedElement.SetRefinedConcept(targetModelElement, trans)
+						crldiagramdomain.SetReferencedModelConcept(crlLink, newModelRefinement, trans)
+						typedLink.modelElement = newModelRefinement
+					}
 				}
 			}
 		case "target":
@@ -596,17 +614,26 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 				targetModelElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				newPadOwner := newPad.GetPadOwner()
 				attributeName := getAttributeNameBasedOnTargetType(newPadOwner)
-				linkModelElement.(core.Reference).SetReferencedConcept(targetModelElement, attributeName, trans)
+				switch typedElement := linkModelElement.(type) {
+				case core.Reference:
+					typedElement.SetReferencedConcept(targetModelElement, attributeName, trans)
+				}
 			case REFINEMENT_LINK:
 				linkModelElement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				targetModelElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
-				linkModelElement.(core.Refinement).SetAbstractConcept(targetModelElement, trans)
+				switch typedElement := linkModelElement.(type) {
+				case core.Refinement:
+					typedElement.SetAbstractConcept(targetModelElement, trans)
+				}
 			case ABSTRACT_ELEMENT_POINTER:
 				crlModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				currentAbstractElement := crlModelRefinement.(core.Refinement).GetAbstractConcept(trans)
 				newAbstractElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				if currentAbstractElement != newAbstractElement {
-					crlModelRefinement.(core.Refinement).SetAbstractConcept(newAbstractElement, trans)
+					switch typedElement := crlModelRefinement.(type) {
+					case core.Refinement:
+						typedElement.SetAbstractConcept(newAbstractElement, trans)
+					}
 				}
 			case OWNER_POINTER:
 				crlLinkParent := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
@@ -620,14 +647,21 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 				newReferencedElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				if currentReferencedElement != newReferencedElement {
 					attributeName := getAttributeNameBasedOnTargetType(newPad.GetPadOwner())
-					crlModelReference.(core.Reference).SetReferencedConcept(newReferencedElement, attributeName, trans)
+					switch typedElement := crlModelReference.(type) {
+					case core.Reference:
+						typedElement.SetReferencedConcept(newReferencedElement, attributeName, trans)
+					}
 				}
 			case REFINED_ELEMENT_POINTER:
 				crlModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				currentRefinedElement := crlModelRefinement.(core.Refinement).GetRefinedConcept(trans)
 				newRefinedElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				if currentRefinedElement != newRefinedElement {
-					crlModelRefinement.(core.Refinement).SetRefinedConcept(newRefinedElement, trans)
+					switch typedElement := crlModelRefinement.(type) {
+					case core.Refinement:
+						typedElement.SetRefinedConcept(newRefinedElement, trans)
+
+					}
 				}
 			}
 		}

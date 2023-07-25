@@ -27,6 +27,7 @@ type CrlEditorFyneGUI struct {
 	propertyManager     *FynePropertyManager
 	treeManager         *FyneTreeManager
 	window              fyne.Window
+	windowContent       fyne.CanvasObject
 	currentSelectionID  string
 	propertiesClipboard *diagramwidget.DiagramElementProperties
 	// The following attributes are kept for testing purposes
@@ -78,9 +79,9 @@ func initializeFyneGUI(gui *CrlEditorFyneGUI, crlEditor *crleditor.Editor) {
 	leftSide := container.NewVSplit(gui.treeManager.tree, gui.propertyManager.properties)
 	drawingArea := gui.diagramManager.GetDrawingArea()
 
-	content := container.NewHSplit(leftSide, drawingArea)
+	gui.windowContent = container.NewHSplit(leftSide, drawingArea)
 
-	gui.window.SetContent(content)
+	gui.window.SetContent(gui.windowContent)
 }
 
 func (gui *CrlEditorFyneGUI) addDiagram(parentID string) core.Element {

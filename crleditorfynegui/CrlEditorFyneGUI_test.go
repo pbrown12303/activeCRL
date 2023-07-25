@@ -3,6 +3,8 @@ package crleditorfynegui
 import (
 	//	"fmt"
 
+	"time"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/test"
@@ -34,19 +36,23 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 			Expect(FyneGUISingleton).ToNot(BeNil())
 			coreDomain := uOfD.GetElementWithURI(core.CoreDomainURI)
 			Expect(coreDomain).ToNot(BeNil())
-			Expect(test.AssertRendersToImage(testT, "initialScreen.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
+			time.Sleep(100 * time.Millisecond)
+			Expect(test.AssertRendersToMarkup(testT, "initialScreen.xml", FyneGUISingleton.window.Canvas())).To(BeTrue())
 		})
 		Specify("Tree selection and crleditor selection should match", func() {
 			coreDomain := uOfD.GetElementWithURI(core.CoreDomainURI)
 			coreDomainID := coreDomain.GetConceptID(trans)
 			Expect(FyneGUISingleton.editor.SelectElement(coreDomain, trans)).To(Succeed())
-			Expect(test.AssertRendersToImage(testT, "/selectionTests/coreDomainSelectedViaEditor.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
+			time.Sleep(100 * time.Millisecond)
+			Expect(test.AssertRendersToMarkup(testT, "/selectionTests/coreDomainSelectedViaEditor.xml", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			Expect(FyneGUISingleton.editor.GetCurrentSelectionID(trans)).To(Equal(coreDomainID))
 			Expect(FyneGUISingleton.editor.SelectElementUsingIDString("", trans)).To(Succeed())
 			Expect(FyneGUISingleton.editor.GetCurrentSelectionID(trans)).To(Equal(""))
-			Expect(test.AssertRendersToImage(testT, "/selectionTests/noSelection.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
+			time.Sleep(100 * time.Millisecond)
+			Expect(test.AssertRendersToMarkup(testT, "/selectionTests/noSelection.xml", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			FyneGUISingleton.treeManager.tree.Select(coreDomainID)
-			Expect(test.AssertRendersToImage(testT, "/selectionTests/coreDomainSelectedViaTree.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
+			time.Sleep(100 * time.Millisecond)
+			Expect(test.AssertRendersToMarkup(testT, "/selectionTests/coreDomainSelectedViaTree.xml", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			Expect(FyneGUISingleton.editor.GetCurrentSelectionID(trans)).To(Equal(coreDomainID))
 		})
 		Specify("Domain creation should Undo and Redo successfully", func() {
@@ -124,14 +130,16 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 			treeNode := FyneGUISingleton.treeManager.treeNodes[coreDomainID]
 			treeNodePosition := FyneGUISingleton.app.Driver().AbsolutePositionForObject(treeNode)
 			diagramPosition := FyneGUISingleton.app.Driver().AbsolutePositionForObject(fyneDiagram)
-			Expect(test.AssertRendersToImage(testT, "/dragDropTests/PriorToFirstNodeDrop.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
+			time.Sleep(100 * time.Millisecond)
+			Expect(test.AssertRendersToMarkup(testT, "/dragDropTests/PriorToFirstNodeDrop.xml", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			treeNode.Dragged(newDragEvent(diagramPosition.X-treeNodePosition.X+100, diagramPosition.Y-treeNodePosition.Y+100))
 			Expect(FyneGUISingleton.dragDropTransaction).ToNot(BeNil())
 			Expect(FyneGUISingleton.dragDropTransaction.id).ToNot(Equal(""))
 			fyneDiagram.MouseMoved(newLeftMouseEventAt(fyne.NewPos(100, 100), diagramPosition.AddXY(100, 100)))
 			Expect(FyneGUISingleton.dragDropTransaction.currentDiagramMousePosition).To(Equal(fyne.NewPos(100, 100)))
 			treeNode.DragEnd()
-			Expect(test.AssertRendersToImage(testT, "/dragDropTests/FirstNodeDrop.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
+			time.Sleep(100 * time.Millisecond)
+			Expect(test.AssertRendersToMarkup(testT, "/dragDropTests/FirstNodeDrop.xml", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			fyneNode := fyneDiagram.GetPrimarySelection()
 			Expect(fyneNode).ToNot(BeNil())
 			newNodeID := fyneNode.GetDiagramElementID()
@@ -460,7 +468,7 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 				})
 			})
 			Describe("ElementPointer creation should work", func() {
-				FSpecify("for a node source and node target", func() {
+				Specify("for a node source and node target", func() {
 					target, crlTargetView, targetView := createElementAt(selectedDiagram, 100, 100, trans)
 					source, crlSourceView, sourceView := createReferenceAt(selectedDiagram, 100, 200, trans)
 					reference, crlEpView, _ := createReferencedElementPointer(selectedDiagram, sourceView, targetView, trans)
