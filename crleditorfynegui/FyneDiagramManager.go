@@ -127,7 +127,11 @@ func (dm *FyneDiagramManager) addLinkToDiagram(link core.Element, trans *core.Tr
 		link.Register(dm.diagramElementObserver)
 		return nil
 	}
-	fyneTarget := diagramWidget.GetDiagramElement(crlDiagramTarget.GetConceptID(trans))
+	targetConceptID := crlDiagramTarget.GetConceptID(trans)
+	fyneTarget := diagramWidget.GetDiagramElement(targetConceptID)
+	if fyneTarget == nil {
+		return nil
+	}
 	fyneTargetPad := fyneTarget.GetDefaultConnectionPad()
 	diagramLink := NewFyneCrlDiagramLink(diagramWidget, link, trans)
 	diagramLink.SetSourcePad(fyneSourcePad)

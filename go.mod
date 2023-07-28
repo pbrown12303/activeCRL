@@ -19,4 +19,3 @@ require (
 )
 
 replace fyne.io/x/fyne => C:/GoWorkspace/src/github.com/pbrown12303/fyne-x
-replace fyne.io./fyne/v2 v2.3.5 => C:\GoWorkspace\src\github.com\fyne

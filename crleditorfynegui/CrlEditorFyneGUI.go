@@ -3,6 +3,8 @@ package crleditorfynegui
 import (
 	"fmt"
 	"log"
+	"os"
+	"runtime/pprof"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -43,7 +45,9 @@ type CrlEditorFyneGUI struct {
 	undoItem *fyne.MenuItem
 	redoItem *fyne.MenuItem
 	// Debug Menu Items
-	debugSettingsItem *fyne.MenuItem
+	traceSettingsItem *fyne.MenuItem
+	startProfileItem  *fyne.MenuItem
+	stopProfileItem   *fyne.MenuItem
 	// Help Menu Items
 	helpItem *fyne.MenuItem
 	// Main Menu Items
@@ -267,7 +271,7 @@ func (gui *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
 	})
 
 	// Debug Menu Items
-	gui.debugSettingsItem = fyne.NewMenuItem("Debug Settings", func() {
+	gui.traceSettingsItem = fyne.NewMenuItem("Debug Settings", func() {
 		traceChange := core.TraceChange
 		omitManageTreeNodeCalls := core.OmitManageTreeNodesCalls
 		omitDiagramRelatedCalls := core.OmitDiagramRelatedCalls
@@ -283,7 +287,10 @@ func (gui *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
 			omitDiagramRelatedCalls = value
 		})
 		omitDiagramRelatedCallsItem.Checked = omitDiagramRelatedCalls
-		vBox := container.NewVBox(enableTraceChangeItem, omitManageTreeNodeCallsItem, omitDiagramRelatedCallsItem)
+		vBox := container.NewVBox(
+			enableTraceChangeItem,
+			omitManageTreeNodeCallsItem,
+			omitDiagramRelatedCallsItem)
 		dialog.ShowCustomConfirm("Debug Settings", "Save", "Cancel", vBox, func(b bool) {
 			if b {
 				core.TraceChange = traceChange
@@ -292,14 +299,32 @@ func (gui *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
 			}
 		}, gui.window)
 	})
-
+	gui.startProfileItem = fyne.NewMenuItem("Start Profiling", func() {
+		profileNameEntry := widget.NewEntry()
+		fileNameItem := widget.NewFormItem("Enter profile filename: ", profileNameEntry)
+		fileNameForm := widget.NewForm(fileNameItem)
+		dlg := dialog.NewCustomConfirm("Initiate Profiling", "Start", "Cancel", fileNameForm, func(b bool) {
+			if b {
+				f, err := os.Create(profileNameEntry.Text)
+				if err != nil {
+					dialog.ShowInformation("Error", "Invalid Profile Filename: "+profileNameEntry.Text, gui.window)
+				}
+				pprof.StartCPUProfile(f)
+			}
+		}, gui.window)
+		dlg.Resize(fyne.NewSize(400, 100))
+		dlg.Show()
+	})
+	gui.stopProfileItem = fyne.NewMenuItem("Stop Profiling", func() {
+		pprof.StopCPUProfile()
+	})
 	// Help Menu Items
 	gui.helpItem = fyne.NewMenuItem("Help", func() { fmt.Println("Help Menu") })
 
 	// Main Menu
 	gui.fileMenu = fyne.NewMenu("File", gui.newDomainItem, fyne.NewMenuItemSeparator(), gui.saveWorkspaceItem, gui.closeWorkspaceItem, gui.clearWorkspaceItem, gui.openWorkspaceItem, fyne.NewMenuItemSeparator(), gui.userPreferencesItem)
 	gui.editMenu = fyne.NewMenu("Edit", gui.selectConceptWithIDItem, gui.undoItem, gui.redoItem)
-	gui.debugMenu = fyne.NewMenu("Debug", gui.debugSettingsItem)
+	gui.debugMenu = fyne.NewMenu("Debug", gui.traceSettingsItem, gui.startProfileItem, gui.stopProfileItem)
 	gui.helpMenu = fyne.NewMenu("Help", gui.helpItem)
 
 	gui.mainMenu = fyne.NewMainMenu(gui.fileMenu, gui.editMenu, gui.debugMenu, gui.helpMenu)
