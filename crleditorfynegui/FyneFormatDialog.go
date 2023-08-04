@@ -11,11 +11,13 @@ import (
 	"fyne.io/x/fyne/widget/diagramwidget"
 )
 
+// FyneFormatDialog is the screen used to edit DiagramElement properties
 type FyneFormatDialog struct {
 	properties diagramwidget.DiagramElementProperties
 	callback   func(diagramwidget.DiagramElementProperties)
 }
 
+// ShowFyneFormatDialog displays the dialog for editing the DiagramElement properties
 func ShowFyneFormatDialog(properties diagramwidget.DiagramElementProperties, callback func(diagramwidget.DiagramElementProperties)) {
 	fd := &FyneFormatDialog{
 		properties: properties,

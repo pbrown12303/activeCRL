@@ -14,6 +14,7 @@ import (
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 )
 
+// FyneCrlDiagramElement serves as a mapping between the Fyne DiagramElement and the core DiagramElement
 type FyneCrlDiagramElement interface {
 	GetDiagramElement() core.Element
 	GetDiagramElementID() string
@@ -124,12 +125,14 @@ func (fcdn *FyneCrlDiagramNode) labelChanged() {
 	}
 }
 
+// MouseDown shows the secondary popup for right mouse
 func (fcdn *FyneCrlDiagramNode) MouseDown(event *desktop.MouseEvent) {
 	if event.Button == desktop.MouseButtonSecondary {
 		ShowSecondaryPopup(fcdn, event)
 	}
 }
 
+// ShowSecondaryPopup actually displays the secondary popup - it is used for both Nodes and Links
 func ShowSecondaryPopup(fcde FyneCrlDiagramElement, event *desktop.MouseEvent) {
 	items := []*fyne.MenuItem{}
 	showModelConceptItem := fyne.NewMenuItem("Show Concept in Navigator", func() {
@@ -251,26 +254,26 @@ func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, link core
 	if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramReferenceLinkURI, trans) {
 		diagramLink.AddTargetDecoration(createReferenceArrowhead())
 		diagramLink.AddSourceDecoration(createDiamond())
-		diagramLink.linkType = REFERENCE_LINK
+		diagramLink.linkType = ReferenceLinkSelected
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramAbstractPointerURI, trans) {
 		diagramLink.AddSourceDecoration(createRefinementTriangle())
 		diagramLink.SetForegroundColor(grey)
-		diagramLink.linkType = ABSTRACT_ELEMENT_POINTER
+		diagramLink.linkType = AbstractElementPointerSelected
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramElementPointerURI, trans) {
 		diagramLink.AddTargetDecoration(createReferenceArrowhead())
 		diagramLink.SetForegroundColor(grey)
-		diagramLink.linkType = REFERENCED_ELEMENT_POINTER
+		diagramLink.linkType = ReferencedElementPointerSelected
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramOwnerPointerURI, trans) {
 		diagramLink.AddTargetDecoration(createDiamond())
 		diagramLink.SetForegroundColor(grey)
-		diagramLink.linkType = OWNER_POINTER
+		diagramLink.linkType = OwnerPointerSelected
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramRefinedPointerURI, trans) {
 		diagramLink.AddSourceDecoration(createMirrorRefinementTriangle())
 		diagramLink.SetForegroundColor(grey)
-		diagramLink.linkType = REFINED_ELEMENT_POINTER
+		diagramLink.linkType = RefinedElementPointerSelected
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramRefinementLinkURI, trans) {
 		diagramLink.AddMidpointDecoration(createRefinementTriangle())
-		diagramLink.linkType = REFINEMENT_LINK
+		diagramLink.linkType = RefinementLinkSelected
 	}
 	diagramLink.Refresh()
 	return diagramLink
@@ -322,6 +325,7 @@ func (fcdl *FyneCrlDiagramLink) labelChanged() {
 	}
 }
 
+// SetLabel sets the label for the fyne DiagramLink
 func (fcdl *FyneCrlDiagramLink) SetLabel(label string) {
 	fcdl.labelAnchoredText.GetDisplayedTextBinding().Set(label)
 }

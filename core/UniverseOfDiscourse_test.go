@@ -494,7 +494,7 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			uOfD1 := NewUniverseOfDiscourse()
 			hl1 := uOfD1.NewTransaction()
 
-			uOfD1.ownedIDsMap.AddMappedValue("A", "X")
+			uOfD1.ownedIDsMap.addMappedValue("A", "X")
 			uOfD2 := uOfD1.Clone(hl1)
 			hl2 := uOfD2.NewTransaction()
 			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2, true)).To(BeTrue())
@@ -504,7 +504,7 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			uOfD1 := NewUniverseOfDiscourse()
 			hl1 := uOfD1.NewTransaction()
 
-			uOfD1.listenersMap.AddMappedValue("A", "X")
+			uOfD1.listenersMap.addMappedValue("A", "X")
 			uOfD2 := uOfD1.Clone(hl1)
 			hl2 := uOfD2.NewTransaction()
 			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2, true)).To(BeTrue())
@@ -554,11 +554,11 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2)).To(BeFalse())
 		})
 		Specify("UofDs with different ownedIDMap should not be equivalent", func() {
-			uOfD1.ownedIDsMap.AddMappedValue("A", "X")
+			uOfD1.ownedIDsMap.addMappedValue("A", "X")
 			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2)).To(BeFalse())
 		})
 		Specify("UofDs with different listenersMap should not be equivalent", func() {
-			uOfD1.listenersMap.AddMappedValue("A", "X")
+			uOfD1.listenersMap.addMappedValue("A", "X")
 			Expect(uOfD1.IsEquivalent(hl1, uOfD2, hl2)).To(BeFalse())
 		})
 	})

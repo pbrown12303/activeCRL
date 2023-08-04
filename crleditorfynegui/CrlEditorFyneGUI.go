@@ -19,19 +19,21 @@ import (
 	"github.com/pkg/errors"
 )
 
+// FyneGUISingleton is the unique instance of the CrlEditorFyneGUI for the application
 var FyneGUISingleton *CrlEditorFyneGUI
 
 // CrlEditorFyneGUI is the Crl Editor built with Fyne
 type CrlEditorFyneGUI struct {
-	app                 fyne.App
-	editor              *crleditor.Editor
-	diagramManager      *FyneDiagramManager
-	propertyManager     *FynePropertyManager
-	treeManager         *FyneTreeManager
-	window              fyne.Window
-	windowContent       fyne.CanvasObject
-	currentSelectionID  string
-	propertiesClipboard *diagramwidget.DiagramElementProperties
+	app                    fyne.App
+	editor                 *crleditor.Editor
+	diagramManager         *FyneDiagramManager
+	propertyManager        *FynePropertyManager
+	treeManager            *FyneTreeManager
+	window                 fyne.Window
+	windowContent          fyne.CanvasObject
+	conceptStateBindingMap map[string]ConceptStateBinding
+	currentSelectionID     string
+	propertiesClipboard    *diagramwidget.DiagramElementProperties
 	// The following attributes are kept for testing purposes
 	// File Menu Items
 	newDomainItem           *fyne.MenuItem
@@ -70,7 +72,7 @@ func NewFyneGUI(crlEditor *crleditor.Editor) *CrlEditorFyneGUI {
 func initializeFyneGUI(gui *CrlEditorFyneGUI, crlEditor *crleditor.Editor) {
 	FyneGUISingleton = gui
 	gui.editor = crlEditor
-	InitBindings()
+	gui.conceptStateBindingMap = make(map[string]ConceptStateBinding)
 	gui.app.Settings().SetTheme(&fyneGuiTheme{})
 	gui.treeManager = NewFyneTreeManager(gui)
 	gui.propertyManager = NewFynePropertyManager()
@@ -330,7 +332,7 @@ func (gui *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
 	gui.mainMenu = fyne.NewMainMenu(gui.fileMenu, gui.editMenu, gui.debugMenu, gui.helpMenu)
 }
 
-// CloseDiagramView
+// CloseDiagramView closes the view of the diagram
 func (gui *CrlEditorFyneGUI) CloseDiagramView(diagramID string, trans *core.Transaction) error {
 	gui.diagramManager.closeDiagram(diagramID)
 	return nil
@@ -358,7 +360,7 @@ func (gui *CrlEditorFyneGUI) ElementDeleted(elID string, trans *core.Transaction
 	return nil
 }
 
-// ElementSelected
+// ElementSelected causes the indicated element to  be selected in the properties, tree, and diagram.
 func (gui *CrlEditorFyneGUI) ElementSelected(el core.Element, trans *core.Transaction) error {
 	uid := ""
 	if el != nil {
@@ -373,7 +375,7 @@ func (gui *CrlEditorFyneGUI) ElementSelected(el core.Element, trans *core.Transa
 	return nil
 }
 
-// DisplayDiagram
+// DisplayDiagram displays the indicated diagram
 func (gui *CrlEditorFyneGUI) DisplayDiagram(diagram core.Element, trans *core.Transaction) error {
 	gui.diagramManager.displayDiagram(diagram, trans)
 	return nil
@@ -381,6 +383,17 @@ func (gui *CrlEditorFyneGUI) DisplayDiagram(diagram core.Element, trans *core.Tr
 
 // FileLoaded - no action required
 func (gui *CrlEditorFyneGUI) FileLoaded(el core.Element, trans *core.Transaction) {
+}
+
+// GetConceptStateBinding returns the ConceptStateBinding for the given uid. If the binding
+// does not already exist, one is created and indexed under the uid
+func (gui *CrlEditorFyneGUI) GetConceptStateBinding(uid string) ConceptStateBinding {
+	binding := gui.conceptStateBindingMap[uid]
+	if binding == nil {
+		binding = NewConceptStateBinding(uid)
+		gui.conceptStateBindingMap[uid] = binding
+	}
+	return binding
 }
 
 // GetNoSaveDomains - there aren't any for the CRLEditorFyneGUI
@@ -392,12 +405,12 @@ func (gui *CrlEditorFyneGUI) GetWindow() fyne.Window {
 	return gui.window
 }
 
-// Initialize
+// Initialize initializes the information content of the GUI. No action is required in the present implementation
 func (gui *CrlEditorFyneGUI) Initialize(trans *core.Transaction) error {
 	return nil
 }
 
-// InitializeGUI
+// InitializeGUI initializes the graphical state of the GUI
 func (gui *CrlEditorFyneGUI) InitializeGUI(trans *core.Transaction) error {
 	gui.GetWindow().SetTitle("Crl Editor         Workspace: " + gui.editor.GetWorkspacePath())
 	gui.treeManager.initialize()

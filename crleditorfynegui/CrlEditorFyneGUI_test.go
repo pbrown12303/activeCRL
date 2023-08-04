@@ -395,13 +395,13 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 				Specify("for a node source and link target", func() {
 					_, _, e1View := createElementAt(selectedDiagram, 100, 100, trans)
 					_, _, e2View := createElementAt(selectedDiagram, 100, 200, trans)
-					target, crlTargetView_, targetView := createRefinementLink(selectedDiagram, e2View, e1View, trans)
+					target, crlTargetView, targetView := createRefinementLink(selectedDiagram, e2View, e1View, trans)
 					source, crlSourceView, sourceView := createRefinementAt(selectedDiagram, 200, 150, trans)
 					newRefinement, crlNewRefinementView, _ := createRefinementLink(selectedDiagram, sourceView, targetView, trans)
 					Expect(newRefinement.GetAbstractConceptID(trans)).To(Equal(target.GetConceptID(trans)))
 					Expect(newRefinement.GetRefinedConceptID(trans)).To(Equal(source.GetConceptID(trans)))
 					Expect(crldiagramdomain.GetLinkSource(crlNewRefinementView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlNewRefinementView, trans).GetConceptID(trans)).To(Equal(crlTargetView_.GetConceptID(trans)))
+					Expect(crldiagramdomain.GetLinkTarget(crlNewRefinementView, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
 					PerformUndoRedoTest(5)
 				})
 			})
@@ -426,12 +426,12 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					// create the new owner
 					e3, crlE3View, e3View := createElementAt(selectedDiagram, 200, 150, trans)
 					// Now the ownerPointer
-					ownerPointerConcept, crlOwnerPointerView_, _ := createOwnerPointer(selectedDiagram, sourceView, e3View, trans)
+					ownerPointerConcept, crlOwnerPointerView, _ := createOwnerPointer(selectedDiagram, sourceView, e3View, trans)
 					// Now check the results
 					Expect(source.GetOwningConceptID(trans)).To(Equal(e3.GetConceptID(trans)))
 					Expect(source.GetConceptID(trans)).To(Equal(ownerPointerConcept.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkSource(crlOwnerPointerView_, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlOwnerPointerView_, trans).GetConceptID(trans)).To(Equal(crlE3View.GetConceptID(trans)))
+					Expect(crldiagramdomain.GetLinkSource(crlOwnerPointerView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
+					Expect(crldiagramdomain.GetLinkTarget(crlOwnerPointerView, trans).GetConceptID(trans)).To(Equal(crlE3View.GetConceptID(trans)))
 					PerformUndoRedoTest(5)
 				})
 				Specify("For a node source and ReferenceLink target", func() {
@@ -442,12 +442,12 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					// create the new owner
 					source, crlSourceView, sourceView := createElementAt(selectedDiagram, 200, 150, trans)
 					// Now the ownerPointer
-					ownerPointerConcept, crlOwnerPointerView_, _ := createOwnerPointer(selectedDiagram, sourceView, targetView, trans)
+					ownerPointerConcept, crlOwnerPointerView, _ := createOwnerPointer(selectedDiagram, sourceView, targetView, trans)
 					// Now check the results
 					Expect(source.GetOwningConceptID(trans)).To(Equal(target.GetConceptID(trans)))
 					Expect(source.GetConceptID(trans)).To(Equal(ownerPointerConcept.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkSource(crlOwnerPointerView_, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlOwnerPointerView_, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
+					Expect(crldiagramdomain.GetLinkSource(crlOwnerPointerView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
+					Expect(crldiagramdomain.GetLinkTarget(crlOwnerPointerView, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
 					PerformUndoRedoTest(5)
 				})
 				Specify("For a node source and RefinementLink target", func() {
@@ -632,7 +632,7 @@ func newLeftMouseEventAt(position fyne.Position, absolutePosition fyne.Position)
 
 func createElementAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (core.Element, core.Element, diagramwidget.DiagramElement) {
 	// Create the element
-	FyneGUISingleton.diagramManager.toolButtons[ELEMENT].Tapped(nil)
+	FyneGUISingleton.diagramManager.toolButtons[ElementSelected].Tapped(nil)
 	diagram.Tapped(newPointEventAt(100, 100))
 	// Get the Fyne node
 	fyneNode := diagram.GetPrimarySelection()
@@ -652,7 +652,7 @@ func createElementAt(diagram *diagramwidget.DiagramWidget, x float32, y float32,
 
 func createLiteralAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (core.Literal, core.Element, diagramwidget.DiagramElement) {
 	// Create the element
-	FyneGUISingleton.diagramManager.toolButtons[LITERAL].Tapped(nil)
+	FyneGUISingleton.diagramManager.toolButtons[LiteralSelected].Tapped(nil)
 	diagram.Tapped(newPointEventAt(100, 100))
 	// Get the Fyne node
 	fyneNode := diagram.GetPrimarySelection()
@@ -672,7 +672,7 @@ func createLiteralAt(diagram *diagramwidget.DiagramWidget, x float32, y float32,
 
 func createReferenceAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (core.Reference, core.Element, diagramwidget.DiagramElement) {
 	// Create the element
-	FyneGUISingleton.diagramManager.toolButtons[REFERENCE].Tapped(nil)
+	FyneGUISingleton.diagramManager.toolButtons[ReferenceSelected].Tapped(nil)
 	diagram.Tapped(newPointEventAt(100, 100))
 	// Get the Fyne node
 	fyneNode := diagram.GetPrimarySelection()
@@ -692,7 +692,7 @@ func createReferenceAt(diagram *diagramwidget.DiagramWidget, x float32, y float3
 
 func createRefinementAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (core.Refinement, core.Element, diagramwidget.DiagramElement) {
 	// Create the element
-	FyneGUISingleton.diagramManager.toolButtons[REFINEMENT].Tapped(nil)
+	FyneGUISingleton.diagramManager.toolButtons[RefinementSelected].Tapped(nil)
 	diagram.Tapped(newPointEventAt(100, 100))
 	// Get the Fyne node
 	fyneNode := diagram.GetPrimarySelection()
@@ -711,7 +711,7 @@ func createRefinementAt(diagram *diagramwidget.DiagramWidget, x float32, y float
 }
 
 func createReferenceLink(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (core.Reference, core.Element, diagramwidget.DiagramLink) {
-	FyneGUISingleton.diagramManager.toolButtons[REFERENCE_LINK].Tapped(nil)
+	FyneGUISingleton.diagramManager.toolButtons[ReferenceLinkSelected].Tapped(nil)
 	newFyneLink := createFyneLink(sourceView, targetView, diagram)
 	// Get the CRL diagram
 	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
@@ -736,7 +736,7 @@ func createReferenceLink(diagram *diagramwidget.DiagramWidget, sourceView diagra
 }
 
 func createRefinementLink(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (core.Refinement, core.Element, diagramwidget.DiagramLink) {
-	FyneGUISingleton.diagramManager.toolButtons[REFINEMENT_LINK].Tapped(nil)
+	FyneGUISingleton.diagramManager.toolButtons[RefinementLinkSelected].Tapped(nil)
 	newFyneLink := createFyneLink(sourceView, targetView, diagram)
 	// Get the CRL diagram
 	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
@@ -762,7 +762,7 @@ func createRefinementLink(diagram *diagramwidget.DiagramWidget, sourceView diagr
 }
 
 func createOwnerPointer(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (core.Element, core.Element, diagramwidget.DiagramLink) {
-	FyneGUISingleton.diagramManager.toolButtons[OWNER_POINTER].Tapped(nil)
+	FyneGUISingleton.diagramManager.toolButtons[OwnerPointerSelected].Tapped(nil)
 	newFyneLink := createFyneLink(sourceView, targetView, diagram)
 	// Get the CRL diagram
 	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
@@ -787,7 +787,7 @@ func createOwnerPointer(diagram *diagramwidget.DiagramWidget, sourceView diagram
 }
 
 func createReferencedElementPointer(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (core.Element, core.Element, diagramwidget.DiagramLink) {
-	FyneGUISingleton.diagramManager.toolButtons[REFERENCED_ELEMENT_POINTER].Tapped(nil)
+	FyneGUISingleton.diagramManager.toolButtons[ReferencedElementPointerSelected].Tapped(nil)
 	newFyneLink := createFyneLink(sourceView, targetView, diagram)
 	// Get the CRL diagram
 	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
@@ -813,7 +813,7 @@ func createReferencedElementPointer(diagram *diagramwidget.DiagramWidget, source
 }
 
 func createAbstractPointer(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (core.Element, core.Element, diagramwidget.DiagramLink) {
-	FyneGUISingleton.diagramManager.toolButtons[ABSTRACT_ELEMENT_POINTER].Tapped(nil)
+	FyneGUISingleton.diagramManager.toolButtons[AbstractElementPointerSelected].Tapped(nil)
 	newFyneLink := createFyneLink(sourceView, targetView, diagram)
 	// Get the CRL diagram
 	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
@@ -839,7 +839,7 @@ func createAbstractPointer(diagram *diagramwidget.DiagramWidget, sourceView diag
 }
 
 func createRefinedPointer(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (core.Element, core.Element, diagramwidget.DiagramLink) {
-	FyneGUISingleton.diagramManager.toolButtons[REFINED_ELEMENT_POINTER].Tapped(nil)
+	FyneGUISingleton.diagramManager.toolButtons[RefinedElementPointerSelected].Tapped(nil)
 	newFyneLink := createFyneLink(sourceView, targetView, diagram)
 	// Get the CRL diagram
 	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)

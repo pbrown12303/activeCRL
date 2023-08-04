@@ -8,11 +8,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+// DiagramManager manages the diagram display portion of the GUI
 type DiagramManager struct {
 	editor   *Editor
 	diagrams map[string]core.Element
 }
 
+// NewDiagramManager creates an instance of the DiagramManager
 func NewDiagramManager(editor *Editor) *DiagramManager {
 	var dMgr DiagramManager
 	dMgr.editor = editor
@@ -20,6 +22,7 @@ func NewDiagramManager(editor *Editor) *DiagramManager {
 	return &dMgr
 }
 
+// AddDiagram adds a diagram tab, if needed, and displays the tab
 func (dMgr *DiagramManager) AddDiagram(ownerID string, trans *core.Transaction) (core.Element, error) {
 	diagram, err := dMgr.NewDiagram(trans)
 	if err != nil {
@@ -40,6 +43,7 @@ func (dMgr *DiagramManager) AddDiagram(ownerID string, trans *core.Transaction) 
 	return diagram, nil
 }
 
+// AddConceptView adds a view of the concept to the indicated diagram
 func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x float64, y float64, trans *core.Transaction) (core.Element, error) {
 	uOfD := dMgr.editor.GetUofD()
 	diagram := uOfD.GetElement(diagramID)
@@ -123,7 +127,7 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 	return newElement, nil
 }
 
-// displayDiagram tells the client to display the indicated diagram.
+// DisplayDiagram tells the client to display the indicated diagram.
 func (dMgr *DiagramManager) DisplayDiagram(diagramID string, trans *core.Transaction) error {
 	diagram := dMgr.editor.GetUofD().GetElement(diagramID)
 	if diagram == nil {

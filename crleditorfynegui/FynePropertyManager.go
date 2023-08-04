@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+// FynePropertyManager manages the property display in the interface
 type FynePropertyManager struct {
 	properties                          *fyne.Container
 	propertyHeading                     *widget.Label
@@ -50,6 +51,7 @@ type FynePropertyManager struct {
 	literalValueValue                   *widget.Entry
 }
 
+// NewFynePropertyManager creates an initialized instance of the FynePropertyManager
 func NewFynePropertyManager() *FynePropertyManager {
 	var propertyManager FynePropertyManager
 	propertyManager.propertyHeading = widget.NewLabel("Property")
@@ -133,7 +135,7 @@ func NewFynePropertyManager() *FynePropertyManager {
 }
 
 func (pMgr *FynePropertyManager) displayProperties(uid string) {
-	conceptBinding := GetConceptStateBinding(uid)
+	conceptBinding := FyneGUISingleton.GetConceptStateBinding(uid)
 	if uid == "" || conceptBinding == nil {
 		pMgr.typeValue.Unbind()
 		pMgr.typeValue.SetText("")

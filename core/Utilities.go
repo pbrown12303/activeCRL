@@ -149,7 +149,15 @@ func printElement(el Element, prefix string, hl *Transaction) {
 	hl.ReadLockElement(el)
 	serializedElement, _ := el.MarshalJSON()
 	log.Printf("%s%s", prefix, string(serializedElement))
-	ownedIDs := el.GetUniverseOfDiscourse(hl).ownedIDsMap.GetMappedValues(el.GetConceptID(hl))
+	uOfD := el.GetUniverseOfDiscourse(hl)
+	if uOfD == nil {
+		return
+	}
+	ownedIDsMap := uOfD.ownedIDsMap
+	if ownedIDsMap == nil {
+		return
+	}
+	ownedIDs := ownedIDsMap.GetMappedValues(el.GetConceptID(hl))
 	it := ownedIDs.Iterator()
 	for id := range it.C {
 		ownedElement := el.GetUniverseOfDiscourse(hl).GetElement(id.(string))
@@ -161,25 +169,3 @@ func printElement(el Element, prefix string, hl *Transaction) {
 func PrintURIIndex(uOfD *UniverseOfDiscourse, hl *Transaction) {
 	uOfD.uriUUIDMap.Print(hl)
 }
-
-// func restoreValueOwningElementFieldsRecursively(el Element, hl *HeldLocks) {
-// if hl == nil {
-// 	hl = NewHeldLocks(nil)
-// 	defer hl.ReleaseLocks()
-// }
-// for _, child := range el.GetOwnedConcepts(hl) {
-// 	switch child.(type) {
-// 	//@TODO add reference to case
-// 	case *element:
-// 		restoreValueOwningElementFieldsRecursively(child.(*element), hl)
-// 	case *reference:
-// 		restoreValueOwningElementFieldsRecursively(child.(*reference), hl)
-// 	case *literal:
-// 		child.(*literal).internalSetOwningElement(el, hl)
-// 	case *refinement:
-// 		restoreValueOwningElementFieldsRecursively(child.(*refinement), hl)
-// 	default:
-// 		log.Printf("No case for %T in restoreValueOwningElementFieldsRecursively \n", child)
-// 	}
-// }
-// }

@@ -1,7 +1,7 @@
 package crlmapsdomain
 
 import (
-	"log"
+	// "log"
 
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pkg/errors"
@@ -225,7 +225,7 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	}
 
 	// Only report the maps that are actually being executed
-	log.Printf("Executing executeOneToOneMap for map labeled %s", mapInstance.GetLabel(trans))
+	// log.Printf("Executing executeOneToOneMap for map labeled %s", mapInstance.GetLabel(trans))
 
 	// Validate that the abstraction has a sourceRef and that the sourceRef is referencing an element
 	definingSourceRef := definingMap.GetFirstOwnedReferenceRefinedFromURI(CrlOneToOneMapSourceReferenceURI, trans)

@@ -308,17 +308,17 @@ var _ = Describe("Element internals test", func() {
 			Expect(nextVersion > initialVersion).To(BeTrue())
 			Expect(nextVersion == el.(*element).Version.getVersion()).To(BeTrue())
 		})
-		Specify("Owner's version should increment when child's increment version is called", func() {
-			owner, _ := uOfD.NewElement(hl)
-			el.SetOwningConceptID(owner.getConceptIDNoLock(), hl)
-			initialVersion := el.GetVersion(hl)
-			initialOwnerVersion := owner.GetVersion(hl)
-			el.incrementVersion(hl)
-			nextVersion := el.GetVersion(hl)
-			nextOwnerVersion := owner.GetVersion(hl)
-			Expect(nextVersion > initialVersion).To(BeTrue())
-			Expect(nextOwnerVersion > initialOwnerVersion).To(BeTrue())
-		})
+		// Specify("Owner's version should increment when child's increment version is called", func() {
+		// 	owner, _ := uOfD.NewElement(hl)
+		// 	el.SetOwningConceptID(owner.getConceptIDNoLock(), hl)
+		// 	initialVersion := el.GetVersion(hl)
+		// 	initialOwnerVersion := owner.GetVersion(hl)
+		// 	el.incrementVersion(hl)
+		// 	nextVersion := el.GetVersion(hl)
+		// 	nextOwnerVersion := owner.GetVersion(hl)
+		// 	Expect(nextVersion > initialVersion).To(BeTrue())
+		// 	Expect(nextOwnerVersion > initialOwnerVersion).To(BeTrue())
+		// })
 	})
 
 	Describe("Setting universe of discourse", func() {

@@ -215,6 +215,8 @@ func (cnPtr *ChangeNotification) GetUnderlyingChange() *ChangeNotification {
 	return cnPtr.underlyingChange
 }
 
+// IsReferenced returns true if the element is either the changed concept or the reporting element
+// in the change notification, including underlying changes.
 func (cnPtr *ChangeNotification) IsReferenced(el Element) bool {
 	elID := el.getConceptIDNoLock()
 	if cnPtr.GetChangedConceptID() == elID || cnPtr.GetReportingElementID() == elID {

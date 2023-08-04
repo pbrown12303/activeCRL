@@ -444,7 +444,7 @@ func GetLinkSource(diagramLink core.Element, trans *core.Transaction) core.Eleme
 	return nil
 }
 
-// GetLinkSourceReferemce is a convenience function for getting the source reference of a link
+// GetLinkSourceReference is a convenience function for getting the source reference of a link
 func GetLinkSourceReference(diagramLink core.Element, trans *core.Transaction) core.Reference {
 	if diagramLink == nil {
 		return nil

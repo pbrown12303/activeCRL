@@ -25,15 +25,17 @@ type undoRedoStackEntry struct {
 	priorState         Element
 	priorOwnedElements mapset.Set
 	priorListeners     mapset.Set
+	priorUofD          string
 	changedElement     Element
 }
 
-func newUndoRedoStackEntry(changeType UndoChangeType, priorState Element, priorOwnedElements mapset.Set, priorListeners mapset.Set, changedElement Element) *undoRedoStackEntry {
+func newUndoRedoStackEntry(changeType UndoChangeType, priorState Element, priorOwnedElements mapset.Set, priorListeners mapset.Set, priorUofD string, changedElement Element) *undoRedoStackEntry {
 	var entry undoRedoStackEntry
 	entry.changeType = changeType
 	entry.priorState = priorState
 	entry.priorOwnedElements = priorOwnedElements
 	entry.priorListeners = priorListeners
+	entry.priorUofD = priorUofD
 	entry.changedElement = changedElement
 	return &entry
 }

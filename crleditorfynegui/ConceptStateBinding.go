@@ -8,21 +8,7 @@ import (
 	"github.com/pbrown12303/activeCRL/crleditor"
 )
 
-var conceptStateBindingMap map[string]ConceptStateBinding
-
-func InitBindings() {
-	conceptStateBindingMap = make(map[string]ConceptStateBinding)
-}
-
-func GetConceptStateBinding(uid string) ConceptStateBinding {
-	binding := conceptStateBindingMap[uid]
-	if binding == nil {
-		binding = NewConceptStateBinding(uid)
-		conceptStateBindingMap[uid] = binding
-	}
-	return binding
-}
-
+// ConceptStateBinding serves as an interface between a fyne data binding and an activeCRL concept
 type ConceptStateBinding interface {
 	GetBoundData() *binding.Struct
 	Update(*core.ChangeNotification, *core.Transaction) error
@@ -35,13 +21,14 @@ type conceptStateBinding struct {
 	lcl             *labelChangeListener
 	oldLabel        string
 	ucl             *uriChangeListener
-	oldUri          string
+	oldURI          string
 	dcl             *definitionChangeListener
 	oldDefinition   string
 	litcl           *literalChangeListener
 	oldLiteralValue string
 }
 
+// NewConceptStateBinding creates a binding for the given id
 func NewConceptStateBinding(id string) ConceptStateBinding {
 	view := conceptStateBinding{}
 	view.elementID = id
@@ -50,10 +37,10 @@ func NewConceptStateBinding(id string) ConceptStateBinding {
 		conceptState, _ := core.NewConceptState(el)
 		view.rawData = *conceptState
 		view.oldLabel = conceptState.Label
-		view.oldUri = conceptState.URI
+		view.oldURI = conceptState.URI
 		view.boundData = binding.BindStruct(&view.rawData)
 		view.lcl = newLabelChangeListener(&view)
-		view.ucl = newUriChangeListener(&view)
+		view.ucl = newURIChangeListener(&view)
 		view.dcl = newDefinitionChangeListener(&view)
 		view.litcl = newLiteralChangeListener(&view)
 		el.Register(&view)
@@ -62,10 +49,12 @@ func NewConceptStateBinding(id string) ConceptStateBinding {
 	return &view
 }
 
+// GetBoundData returns the bound data for the binding
 func (vPtr *conceptStateBinding) GetBoundData() *binding.Struct {
 	return &vPtr.boundData
 }
 
+// Update updates the bound data based on the information in the notification
 func (vPtr *conceptStateBinding) Update(notification *core.ChangeNotification, trans *core.Transaction) error {
 	// get the data from the notification
 	afterState := notification.GetAfterConceptState()
@@ -77,13 +66,14 @@ func (vPtr *conceptStateBinding) Update(notification *core.ChangeNotification, t
 	}
 	vPtr.rawData = *afterState
 	vPtr.oldLabel = afterState.Label
-	vPtr.oldUri = afterState.URI
+	vPtr.oldURI = afterState.URI
 	vPtr.oldDefinition = afterState.Definition
 	vPtr.oldLiteralValue = afterState.LiteralValue
 	vPtr.boundData.Reload()
 	return nil
 }
 
+// DataChanged is the callback invoked when the fyne binding data changes
 func (vPtr *conceptStateBinding) DataChanged() {
 }
 
@@ -99,6 +89,7 @@ func newLabelChangeListener(parentBinding *conceptStateBinding) *labelChangeList
 	return &lcl
 }
 
+// DataChanged is the fyne callback for changes in the Label widget
 func (lcl *labelChangeListener) DataChanged() {
 	labelItem, _ := lcl.parentBinding.boundData.GetItem("Label")
 	newValue, _ := labelItem.(binding.String).Get()
@@ -121,7 +112,7 @@ type uriChangeListener struct {
 	parentBinding *conceptStateBinding
 }
 
-func newUriChangeListener(parentBinding *conceptStateBinding) *uriChangeListener {
+func newURIChangeListener(parentBinding *conceptStateBinding) *uriChangeListener {
 	var ucl uriChangeListener
 	ucl.parentBinding = parentBinding
 	childField1Item, _ := parentBinding.boundData.GetItem("URI")
@@ -129,11 +120,12 @@ func newUriChangeListener(parentBinding *conceptStateBinding) *uriChangeListener
 	return &ucl
 }
 
+// DataChanged is the fyne callback callback for the URI Entry widget
 func (ucl *uriChangeListener) DataChanged() {
 	labelItem, _ := ucl.parentBinding.boundData.GetItem("URI")
 	newValue, _ := labelItem.(binding.String).Get()
-	if newValue != ucl.parentBinding.oldUri {
-		ucl.parentBinding.oldUri = newValue
+	if newValue != ucl.parentBinding.oldURI {
+		ucl.parentBinding.oldURI = newValue
 		editor := crleditor.CrlEditorSingleton
 		uOfD := editor.GetUofD()
 		trans, isNew := FyneGUISingleton.editor.GetTransaction()
@@ -159,6 +151,7 @@ func newDefinitionChangeListener(parentBinding *conceptStateBinding) *definition
 	return &dcl
 }
 
+// DataChanged is the fyne callback for changes to the Definition Entry widget
 func (dcl *definitionChangeListener) DataChanged() {
 	labelItem, _ := dcl.parentBinding.boundData.GetItem("Definition")
 	newValue, _ := labelItem.(binding.String).Get()
@@ -189,6 +182,7 @@ func newLiteralChangeListener(parentBinding *conceptStateBinding) *literalChange
 	return &litcl
 }
 
+// DataChanged is the fyne callback for changes to the Literal Value Entry widget
 func (litcl *literalChangeListener) DataChanged() {
 	labelItem, _ := litcl.parentBinding.boundData.GetItem("LiteralValue")
 	newValue, _ := labelItem.(binding.String).Get()

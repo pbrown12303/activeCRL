@@ -48,6 +48,7 @@ func NewFyneTreeManager(fyneGUI *CrlEditorFyneGUI) *FyneTreeManager {
 	return treeManager
 }
 
+// ElementSelected causes the tree manager to select the indicated tree entry
 func (ftm *FyneTreeManager) ElementSelected(uid string) {
 	if uid == "" {
 		ftm.tree.UnselectAll()
@@ -62,6 +63,7 @@ func (ftm *FyneTreeManager) ElementSelected(uid string) {
 	ftm.openParentsRecursively(uid, trans)
 }
 
+// ShowElementInTree ensures that the indicated element is shown in the tree
 func (ftm *FyneTreeManager) ShowElementInTree(element core.Element) {
 	if element != nil {
 		trans, new := ftm.fyneGUI.editor.GetTransaction()
@@ -100,15 +102,16 @@ func (ftm *FyneTreeManager) openParentsRecursively(childUID string, trans *core.
 	}
 }
 
-func GetChildUIDs(parentUid string) []string {
+// GetChildUIDs returns an array of the child UIDs
+func GetChildUIDs(parentUID string) []string {
 	var ids []string
-	if parentUid == "" {
+	if parentUID == "" {
 		uOfD := FyneGUISingleton.editor.GetUofD()
 		if uOfD != nil {
 			ids = uOfD.GetRootElementIDs()
 		}
 	} else {
-		iterator := FyneGUISingleton.editor.GetUofD().GetConceptsOwnedConceptIDs(parentUid).Iterator()
+		iterator := FyneGUISingleton.editor.GetUofD().GetConceptsOwnedConceptIDs(parentUID).Iterator()
 		for member := range iterator.C {
 			ids = append(ids, member.(string))
 		}
@@ -117,15 +120,18 @@ func GetChildUIDs(parentUid string) []string {
 	return ids
 }
 
+// IsBranch always returns true - all elements are potentially branches
 func IsBranch(uid string) bool {
 	// All elements in the uOfD are potentially branches
 	return true
 }
 
+// CreateNode creates a tree node
 func CreateNode(branch bool) fyne.CanvasObject {
 	return newTreeNode()
 }
 
+// UpdateNode updates the data in the indicated node
 func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
 	tn := node.(*treeNode)
 	tn.id = uid
@@ -133,7 +139,7 @@ func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
 	if uid == "" {
 		tn.label.SetText("uOfD")
 	} else {
-		conceptBinding := GetConceptStateBinding(uid)
+		conceptBinding := FyneGUISingleton.GetConceptStateBinding(uid)
 		structBinding := *conceptBinding.GetBoundData()
 		if structBinding != nil {
 			labelItem, _ := structBinding.GetItem("Label")

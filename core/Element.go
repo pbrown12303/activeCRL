@@ -38,7 +38,7 @@ func (ePtr *element) addOwnedConcept(ownedConceptID string, trans *Transaction) 
 	if !ePtr.uOfD.ownedIDsMap.ContainsMappedValue(ePtr.ConceptID, ownedConceptID) {
 		ePtr.uOfD.preChange(ePtr, trans)
 		ePtr.incrementVersion(trans)
-		ePtr.uOfD.ownedIDsMap.AddMappedValue(ePtr.GetConceptID(trans), ownedConceptID)
+		ePtr.uOfD.ownedIDsMap.addMappedValue(ePtr.GetConceptID(trans), ownedConceptID)
 	}
 }
 
@@ -51,7 +51,7 @@ func (ePtr *element) addRecoveredOwnedConcept(ownedConceptID string, trans *Tran
 	trans.ReadLockElement(ePtr)
 	if !ePtr.uOfD.ownedIDsMap.ContainsMappedValue(ePtr.ConceptID, ownedConceptID) {
 		ePtr.uOfD.preChange(ePtr, trans)
-		ePtr.uOfD.ownedIDsMap.AddMappedValue(ePtr.ConceptID, ownedConceptID)
+		ePtr.uOfD.ownedIDsMap.addMappedValue(ePtr.ConceptID, ownedConceptID)
 	}
 }
 
@@ -61,7 +61,7 @@ func (ePtr *element) addListener(listeningConceptID string, trans *Transaction) 
 	trans.ReadLockElement(ePtr)
 	if !ePtr.uOfD.listenersMap.ContainsMappedValue(ePtr.ConceptID, listeningConceptID) {
 		ePtr.uOfD.preChange(ePtr, trans)
-		ePtr.uOfD.listenersMap.AddMappedValue(ePtr.ConceptID, listeningConceptID)
+		ePtr.uOfD.listenersMap.addMappedValue(ePtr.ConceptID, listeningConceptID)
 	}
 }
 
@@ -740,13 +740,13 @@ func (ePtr *element) incrementVersion(trans *Transaction) {
 		// UofD may be nil during the deletion of this element
 		ePtr.uOfD.preChange(ePtr, trans)
 		ePtr.Version.incrementVersion()
-		if ePtr.OwningConceptID != "" {
-			owningConcept := ePtr.uOfD.GetElement(ePtr.OwningConceptID)
-			// the owning concept may also be in the process of deletion
-			if owningConcept != nil {
-				owningConcept.incrementVersion(trans)
-			}
-		}
+		// if ePtr.OwningConceptID != "" {
+		// 	owningConcept := ePtr.uOfD.GetElement(ePtr.OwningConceptID)
+		// 	// the owning concept may also be in the process of deletion
+		// 	if owningConcept != nil {
+		// 		owningConcept.incrementVersion(trans)
+		// 	}
+		// }
 	}
 }
 
@@ -942,10 +942,10 @@ func (ePtr *element) notifyOwner(notification *ChangeNotification, trans *Transa
 	trans.ReadLockElement(ePtr)
 	switch notification.natureOfChange {
 	case OwningConceptChanged:
-		oldOwnerId := notification.beforeConceptState.OwningConceptID
-		newOwnerId := notification.afterConceptState.OwningConceptID
-		if oldOwnerId != "" {
-			oldOwner := ePtr.uOfD.GetElement(oldOwnerId)
+		oldOwnerID := notification.beforeConceptState.OwningConceptID
+		newOwnerID := notification.afterConceptState.OwningConceptID
+		if oldOwnerID != "" {
+			oldOwner := ePtr.uOfD.GetElement(oldOwnerID)
 			if oldOwner != nil {
 				ownedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(oldOwner, OwnedConceptChanged, notification, trans)
 				if err != nil {
@@ -961,8 +961,8 @@ func (ePtr *element) notifyOwner(notification *ChangeNotification, trans *Transa
 				}
 			}
 		}
-		if newOwnerId != "" {
-			newOwner := ePtr.uOfD.GetElement(newOwnerId)
+		if newOwnerID != "" {
+			newOwner := ePtr.uOfD.GetElement(newOwnerID)
 			if newOwner != nil {
 				ownedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(newOwner, OwnedConceptChanged, notification, trans)
 				if err != nil {
@@ -1141,7 +1141,7 @@ func (ePtr *element) recoverElementFields(unmarshaledData *map[string]json.RawMe
 func (ePtr *element) removeListener(listeningConceptID string, trans *Transaction) {
 	trans.ReadLockElement(ePtr)
 	ePtr.uOfD.preChange(ePtr, trans)
-	ePtr.uOfD.listenersMap.RemoveMappedValue(ePtr.ConceptID, listeningConceptID)
+	ePtr.uOfD.listenersMap.removeMappedValue(ePtr.ConceptID, listeningConceptID)
 }
 
 // Register adds the registration of an Observer
@@ -1158,7 +1158,7 @@ func (ePtr *element) removeOwnedConcept(ownedConceptID string, trans *Transactio
 	}
 	ePtr.uOfD.preChange(ePtr, trans)
 	ePtr.incrementVersion(trans)
-	ePtr.uOfD.ownedIDsMap.RemoveMappedValue(ePtr.ConceptID, ownedConceptID)
+	ePtr.uOfD.ownedIDsMap.removeMappedValue(ePtr.ConceptID, ownedConceptID)
 	return nil
 }
 

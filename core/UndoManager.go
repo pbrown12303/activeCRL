@@ -7,7 +7,6 @@ package core
 import (
 	"errors"
 	"log"
-	"runtime/debug"
 	"sync"
 )
 
@@ -30,40 +29,46 @@ func newUndoManager(uOfD *UniverseOfDiscourse) *undoManager {
 }
 
 // markChangedElement() If undo is enabled, updates the undo stack.
-func (undoMgr *undoManager) markChangedElement(changedElement Element, hl *Transaction) error {
+func (undoMgr *undoManager) markChangedElement(changedElement Element, trans *Transaction) error {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
-	hl.ReadLockElement(changedElement)
-	if undoMgr.debugUndo {
-		debug.PrintStack()
+	trans.ReadLockElement(changedElement)
+	priorState := clone(changedElement, trans)
+	priorOwnedElements := undoMgr.uOfD.ownedIDsMap.GetMappedValues(changedElement.GetConceptID(trans)).Clone()
+	priorListeners := undoMgr.uOfD.listenersMap.GetMappedValues(changedElement.GetConceptID(trans)).Clone()
+	priorUofD := ""
+	if changedElement.getUniverseOfDiscourseNoLock() != nil {
+		priorUofD = changedElement.getUniverseOfDiscourseNoLock().id
 	}
-	priorState := clone(changedElement, hl)
-	priorOwnedElements := undoMgr.uOfD.ownedIDsMap.GetMappedValues(changedElement.GetConceptID(hl)).Clone()
-	priorListeners := undoMgr.uOfD.listenersMap.GetMappedValues(changedElement.GetConceptID(hl)).Clone()
 	if undoMgr.recordingUndo {
-		undoMgr.undoStack.Push(newUndoRedoStackEntry(Change, priorState, priorOwnedElements, priorListeners, changedElement))
+		stackEntry := newUndoRedoStackEntry(Change, priorState, priorOwnedElements, priorListeners, priorUofD, changedElement)
+		if undoMgr.debugUndo {
+			PrintStackEntry(stackEntry, trans)
+		}
+		undoMgr.undoStack.Push(stackEntry)
 	}
 	return nil
 }
 
 // markNewElement() If undo is enabled, updates the undo stack.
-func (undoMgr *undoManager) markNewElement(el Element, hl *Transaction) error {
+func (undoMgr *undoManager) markNewElement(el Element, trans *Transaction) error {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
-	if hl == nil {
+	if trans == nil {
 		return errors.New("UndoManager.markNewElement called with nil HeldLocks")
 	}
-	hl.ReadLockElement(el)
-	if undoMgr.debugUndo {
-		debug.PrintStack()
-	}
+	trans.ReadLockElement(el)
 	if undoMgr.recordingUndo {
-		clone := clone(el, hl)
-		priorOwnedElements := undoMgr.uOfD.ownedIDsMap.GetMappedValues(el.GetConceptID(hl)).Clone()
-		priorListeners := undoMgr.uOfD.listenersMap.GetMappedValues(el.GetConceptID(hl)).Clone()
-		stackEntry := newUndoRedoStackEntry(Creation, clone, priorOwnedElements, priorListeners, el)
+		clone := clone(el, trans)
+		priorOwnedElements := undoMgr.uOfD.ownedIDsMap.GetMappedValues(el.GetConceptID(trans)).Clone()
+		priorListeners := undoMgr.uOfD.listenersMap.GetMappedValues(el.GetConceptID(trans)).Clone()
+		priorUofD := ""
+		if el.getUniverseOfDiscourseNoLock() != nil {
+			priorUofD = el.getUniverseOfDiscourseNoLock().id
+		}
+		stackEntry := newUndoRedoStackEntry(Creation, clone, priorOwnedElements, priorListeners, priorUofD, el)
 		if undoMgr.debugUndo {
-			PrintStackEntry(stackEntry, hl)
+			PrintStackEntry(stackEntry, trans)
 		}
 		undoMgr.undoStack.Push(stackEntry)
 	}
@@ -71,21 +76,26 @@ func (undoMgr *undoManager) markNewElement(el Element, hl *Transaction) error {
 }
 
 // markRemoveElement() If undo is enabled, updates the undo stack.
-func (undoMgr *undoManager) markRemovedElement(el Element, hl *Transaction) error {
+func (undoMgr *undoManager) markRemovedElement(el Element, trans *Transaction) error {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
-	if hl == nil {
+	if trans == nil {
 		return errors.New("UndoManager.markRemovedElement called with nil HeldLocks")
 	}
-	hl.ReadLockElement(el)
-	if undoMgr.debugUndo {
-		debug.PrintStack()
-	}
+	trans.ReadLockElement(el)
 	if undoMgr.recordingUndo {
-		clone := clone(el, hl)
-		priorOwnedElements := undoMgr.uOfD.ownedIDsMap.GetMappedValues(el.GetConceptID(hl)).Clone()
-		priorListeners := undoMgr.uOfD.listenersMap.GetMappedValues(el.GetConceptID(hl)).Clone()
-		undoMgr.undoStack.Push(newUndoRedoStackEntry(Deletion, clone, priorOwnedElements, priorListeners, el))
+		clone := clone(el, trans)
+		priorOwnedElements := undoMgr.uOfD.ownedIDsMap.GetMappedValues(el.GetConceptID(trans)).Clone()
+		priorListeners := undoMgr.uOfD.listenersMap.GetMappedValues(el.GetConceptID(trans)).Clone()
+		priorUofD := ""
+		if el.getUniverseOfDiscourseNoLock() != nil {
+			priorUofD = el.getUniverseOfDiscourseNoLock().id
+		}
+		stackEntry := newUndoRedoStackEntry(Deletion, clone, priorOwnedElements, priorListeners, priorUofD, el)
+		if undoMgr.debugUndo {
+			PrintStackEntry(stackEntry, trans)
+		}
+		undoMgr.undoStack.Push(stackEntry)
 	}
 	return nil
 }
@@ -95,14 +105,17 @@ func (undoMgr *undoManager) MarkUndoPoint() {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	if undoMgr.recordingUndo {
-		undoMgr.undoStack.Push(newUndoRedoStackEntry(Marker, nil, nil, nil, nil))
+		if undoMgr.debugUndo {
+			log.Print("***** MARK UNDO POINT *****")
+		}
+		undoMgr.undoStack.Push(newUndoRedoStackEntry(Marker, nil, nil, nil, "", nil))
 	}
 }
 
 // PrintUndoStack prints the undo stack. It is intended only for debugging.
 func PrintUndoStack(s undoStack, stackName string, uOfD *UniverseOfDiscourse) {
-	hl := uOfD.NewTransaction()
-	defer hl.ReleaseLocks()
+	trans := uOfD.NewTransaction()
+	defer trans.ReleaseLocks()
 	log.Printf("%s:", stackName)
 	for _, entry := range s {
 		var changeType string
@@ -124,16 +137,17 @@ func PrintUndoStack(s undoStack, stackName string, uOfD *UniverseOfDiscourse) {
 				changeType = "Marker"
 			}
 		}
-		log.Printf("   Change type: %s", changeType)
+		log.Printf("Change type: %s", changeType)
 		log.Printf("   Prior state:")
-		Print(entry.priorState, "      ", hl)
+		Print(entry.priorState, "      ", trans)
 		log.Printf("   Changed element:")
-		Print(entry.changedElement, "      ", hl)
+		log.Printf("   Prior UofD: %s", entry.priorUofD)
+		Print(entry.changedElement, "      ", trans)
 	}
 }
 
 // PrintStackEntry prints the entry on the stack. It is intended for use only in debugging
-func PrintStackEntry(entry *undoRedoStackEntry, hl *Transaction) {
+func PrintStackEntry(entry *undoRedoStackEntry, trans *Transaction) {
 	var changeType string
 	switch entry.changeType {
 	case Creation:
@@ -153,14 +167,20 @@ func PrintStackEntry(entry *undoRedoStackEntry, hl *Transaction) {
 			changeType = "Marker"
 		}
 	}
-	log.Printf("   Change type: %s", changeType)
+	log.Printf("Change type: %s", changeType)
 	log.Printf("   Prior state:")
-	Print(entry.priorState, "      ", hl)
+	Print(entry.priorState, "      ", trans)
 	log.Printf("   Changed element:")
-	Print(entry.changedElement, "      ", hl)
+	Print(entry.changedElement, "      ", trans)
+	log.Printf("   Prior UofD: %s", entry.priorUofD)
+	log.Printf("   Undo/Redo Stack Entry priorOwnedElements: %v", trans.uOfD.ownedIDsMap.GetMappedValues(entry.changedElement.getConceptIDNoLock()))
+
 }
 
-func (undoMgr *undoManager) redo(hl *Transaction) {
+func (undoMgr *undoManager) redo(trans *Transaction) {
+	if undoMgr.debugUndo {
+		log.Print("***** BEGIN REDO ****")
+	}
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	uOfD := undoMgr.uOfD
@@ -168,91 +188,72 @@ func (undoMgr *undoManager) redo(hl *Transaction) {
 		currentEntry := undoMgr.redoStack.Pop()
 		var currentID string
 		if currentEntry.changedElement != nil {
-			currentID = currentEntry.changedElement.GetConceptID(hl)
+			currentID = currentEntry.changedElement.GetConceptID(trans)
 		}
 		if currentEntry.changeType == Marker {
 			undoMgr.undoStack.Push(currentEntry)
 			return
 		} else if currentEntry.changeType == Creation {
-			// Update owner's owned elements. Since we are redoing a creation, if the changed element has an owner
-			// we must add the current element to the owner's ownedElements
-			if currentEntry.changedElement.GetOwningConceptID(hl) != "" {
-				uOfD.ownedIDsMap.AddMappedValue(currentEntry.changedElement.GetOwningConceptID(hl), currentID)
-			}
 			// Update listeners. If this is a reference or refinement pointing to another element, add this element to the other element's listener's set
 			switch currentEntry.changedElement.(type) {
 			case *reference:
 				referencedElementID := currentEntry.changedElement.(*reference).ReferencedConceptID
 				if referencedElementID != "" {
-					uOfD.listenersMap.AddMappedValue(referencedElementID, currentID)
+					uOfD.listenersMap.addMappedValue(referencedElementID, currentID)
 				}
 			case *refinement:
 				abstractID := currentEntry.changedElement.(*refinement).AbstractConceptID
 				if abstractID != "" {
-					uOfD.listenersMap.AddMappedValue(abstractID, currentID)
+					uOfD.listenersMap.addMappedValue(abstractID, currentID)
 				}
 				refinedID := currentEntry.changedElement.(*refinement).RefinedConceptID
 				if refinedID != "" {
-					uOfD.listenersMap.AddMappedValue(refinedID, currentID)
+					uOfD.listenersMap.addMappedValue(refinedID, currentID)
 				}
 			}
 			// Update the uriUUIDMap
-			uri := currentEntry.changedElement.GetURI(hl)
+			uri := currentEntry.changedElement.GetURI(trans)
 			if uri != "" {
 				uOfD.uriUUIDMap.SetEntry(uri, currentID)
 			}
 			undoMgr.undoStack.Push(currentEntry)
-			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
+			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, trans)
 			// this was a new element
-			uOfD.addElementForUndo(currentEntry.changedElement, hl)
-			uOfD.ownedIDsMap.SetMappedValues(currentID, currentEntry.priorOwnedElements)
+			uOfD.addElementForUndo(currentEntry.changedElement, trans)
+			uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
 			uOfD.listenersMap.SetMappedValues(currentID, currentEntry.priorListeners)
+			uOfD.setUUIDElementMapEntry(currentEntry.changedElement.getConceptIDNoLock(), currentEntry.changedElement)
 		} else if currentEntry.changeType == Deletion {
-			// Update owner's owned elements. Since we are redoing a deletion, if the changed element has an owner
-			// we must remove the current element from the owner's ownedElements
-			if currentEntry.priorState.GetOwningConceptID(hl) != "" {
-				uOfD.ownedIDsMap.RemoveMappedValue(currentEntry.priorState.GetOwningConceptID(hl), currentEntry.priorState.GetConceptID(hl))
-			}
 			// Update listeners. If this is a reference or refinement pointing to another element, remove this element from the other element's listener's set
 			switch currentEntry.priorState.(type) {
 			case *reference:
 				referencedElementID := currentEntry.priorState.(*reference).ReferencedConceptID
 				if referencedElementID != "" {
-					uOfD.listenersMap.RemoveMappedValue(referencedElementID, currentEntry.priorState.GetConceptID(hl))
+					uOfD.listenersMap.removeMappedValue(referencedElementID, currentEntry.priorState.GetConceptID(trans))
 				}
 			case *refinement:
 				abstractID := currentEntry.priorState.(*refinement).AbstractConceptID
 				if abstractID != "" {
-					uOfD.listenersMap.RemoveMappedValue(abstractID, currentEntry.priorState.GetConceptID(hl))
+					uOfD.listenersMap.removeMappedValue(abstractID, currentEntry.priorState.GetConceptID(trans))
 				}
 				refinedID := currentEntry.priorState.(*refinement).RefinedConceptID
 				if refinedID != "" {
-					uOfD.listenersMap.RemoveMappedValue(refinedID, currentEntry.priorState.GetConceptID(hl))
+					uOfD.listenersMap.removeMappedValue(refinedID, currentEntry.priorState.GetConceptID(trans))
 				}
 			}
 			// Update the uriUUIDMap
-			uri := currentEntry.priorState.GetURI(hl)
+			uri := currentEntry.priorState.GetURI(trans)
 			if uri != "" {
 				uOfD.uriUUIDMap.DeleteEntry(uri)
 			}
 			undoMgr.undoStack.Push(currentEntry)
-			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
+			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, trans)
 			// this was an deleted element
-			uOfD.removeElementForUndo(currentEntry.changedElement, hl)
-			uOfD.ownedIDsMap.SetMappedValues(currentID, currentEntry.priorOwnedElements)
+			uOfD.removeElementForUndo(currentEntry.changedElement, trans)
+			uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
 			uOfD.listenersMap.SetMappedValues(currentID, currentEntry.priorListeners)
+			uOfD.deleteUUIDElementMapEntry(currentEntry.changedElement.getConceptIDNoLock())
 		} else if currentEntry.changeType == Change {
-			// If the owner changes, update owner's owned elements.
-			currentOwnerID := currentEntry.changedElement.GetOwningConceptID(hl)
-			priorOwnerID := currentEntry.priorState.GetOwningConceptID(hl)
-			if currentOwnerID != priorOwnerID {
-				if currentOwnerID != "" {
-					uOfD.ownedIDsMap.AddMappedValue(currentOwnerID, currentID)
-				}
-				if priorOwnerID != "" {
-					uOfD.ownedIDsMap.RemoveMappedValue(priorOwnerID, currentID)
-				}
-			}
 			// Update listeners. If this is a reference or refinement pointing to another element, remove this element from the other element's listener's set
 			switch currentEntry.changedElement.(type) {
 			case *reference:
@@ -260,10 +261,10 @@ func (undoMgr *undoManager) redo(hl *Transaction) {
 				priorReferencedElementID := currentEntry.priorState.(*reference).ReferencedConceptID
 				if currentReferencedElementID != priorReferencedElementID {
 					if currentReferencedElementID != "" {
-						uOfD.listenersMap.RemoveMappedValue(currentReferencedElementID, currentID)
+						uOfD.listenersMap.removeMappedValue(currentReferencedElementID, currentID)
 					}
 					if priorReferencedElementID != "" {
-						uOfD.listenersMap.AddMappedValue(priorReferencedElementID, currentID)
+						uOfD.listenersMap.addMappedValue(priorReferencedElementID, currentID)
 					}
 				}
 			case *refinement:
@@ -271,26 +272,26 @@ func (undoMgr *undoManager) redo(hl *Transaction) {
 				priorAbstractID := currentEntry.priorState.(*refinement).AbstractConceptID
 				if currentAbstractID != priorAbstractID {
 					if currentAbstractID != "" {
-						uOfD.listenersMap.RemoveMappedValue(currentAbstractID, currentID)
+						uOfD.listenersMap.removeMappedValue(currentAbstractID, currentID)
 					}
 					if priorAbstractID != "" {
-						uOfD.listenersMap.AddMappedValue(priorAbstractID, currentID)
+						uOfD.listenersMap.addMappedValue(priorAbstractID, currentID)
 					}
 				}
 				currentRefinedID := currentEntry.changedElement.(*refinement).RefinedConceptID
 				priorRefinedID := currentEntry.priorState.(*refinement).RefinedConceptID
 				if currentRefinedID != priorRefinedID {
 					if currentRefinedID != "" {
-						uOfD.listenersMap.RemoveMappedValue(currentRefinedID, currentID)
+						uOfD.listenersMap.removeMappedValue(currentRefinedID, currentID)
 					}
 					if priorRefinedID != "" {
-						uOfD.listenersMap.AddMappedValue(priorRefinedID, currentID)
+						uOfD.listenersMap.addMappedValue(priorRefinedID, currentID)
 					}
 				}
 			}
 			// Update the uriUUIDMap
-			currentURI := currentEntry.changedElement.GetURI(hl)
-			priorURI := currentEntry.priorState.GetURI(hl)
+			currentURI := currentEntry.changedElement.GetURI(trans)
+			priorURI := currentEntry.priorState.GetURI(trans)
 			if currentURI != priorURI {
 				if currentURI != "" {
 					uOfD.uriUUIDMap.DeleteEntry(currentURI)
@@ -299,13 +300,18 @@ func (undoMgr *undoManager) redo(hl *Transaction) {
 					uOfD.uriUUIDMap.SetEntry(priorURI, currentID)
 				}
 			}
-			clone := clone(currentEntry.changedElement, hl)
+			clone := clone(currentEntry.changedElement, trans)
 			priorOwnedElements := undoMgr.uOfD.ownedIDsMap.GetMappedValues(currentID).Clone()
 			priorListeners := undoMgr.uOfD.listenersMap.GetMappedValues(currentID).Clone()
-			undoEntry := newUndoRedoStackEntry(Change, clone, priorOwnedElements, priorListeners, currentEntry.changedElement)
-			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
-			uOfD.ownedIDsMap.SetMappedValues(currentID, currentEntry.priorOwnedElements)
+			undoEntry := newUndoRedoStackEntry(Change, clone, priorOwnedElements, priorListeners, currentEntry.priorUofD, currentEntry.changedElement)
+			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, trans)
+			uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
 			uOfD.listenersMap.SetMappedValues(currentID, currentEntry.priorListeners)
+			if currentEntry.priorUofD != uOfD.id {
+				uOfD.deleteUUIDElementMapEntry(currentID)
+			} else if currentEntry.priorUofD == uOfD.id {
+				uOfD.setUUIDElementMapEntry(currentID, currentEntry.changedElement)
+			}
 			undoMgr.undoStack.Push(undoEntry)
 		}
 	}
@@ -313,23 +319,23 @@ func (undoMgr *undoManager) redo(hl *Transaction) {
 
 // restoreState is used as part of the undo process. It changes the currentState object
 // to have the priorState.
-func (undoMgr *undoManager) restoreState(priorState Element, currentState Element, hl *Transaction) {
+func (undoMgr *undoManager) restoreState(priorState Element, currentState Element, trans *Transaction) {
 	if undoMgr.debugUndo {
 		log.Printf("Restoring State")
 		log.Printf("   Current state:")
-		Print(currentState, "      ", hl)
+		Print(currentState, "      ", trans)
 		log.Printf("   Prior state")
-		Print(priorState, "      ", hl)
+		Print(priorState, "      ", trans)
 	}
 	switch currentState.(type) {
 	case *element:
-		currentState.(*element).cloneAttributes(priorState.(*element), hl)
+		currentState.(*element).cloneAttributes(priorState.(*element), trans)
 	case *reference:
-		currentState.(*reference).cloneAttributes(priorState.(*reference), hl)
+		currentState.(*reference).cloneAttributes(priorState.(*reference), trans)
 	case *literal:
-		currentState.(*literal).cloneAttributes(priorState.(*literal), hl)
+		currentState.(*literal).cloneAttributes(priorState.(*literal), trans)
 	case *refinement:
-		currentState.(*refinement).cloneAttributes(priorState.(*refinement), hl)
+		currentState.(*refinement).cloneAttributes(priorState.(*refinement), trans)
 	default:
 		log.Printf("restoreState called with unhandled type %T\n", currentState)
 	}
@@ -361,7 +367,10 @@ func (undoMgr *undoManager) TraceableUnlock() {
 	undoMgr.Unlock()
 }
 
-func (undoMgr *undoManager) undo(hl *Transaction) {
+func (undoMgr *undoManager) undo(trans *Transaction) {
+	if undoMgr.debugUndo {
+		log.Print("***** BEGIN UNDO ****")
+	}
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	uOfD := undoMgr.uOfD
@@ -370,7 +379,7 @@ func (undoMgr *undoManager) undo(hl *Transaction) {
 		currentEntry := undoMgr.undoStack.Pop()
 		var currentID string
 		if currentEntry.changedElement != nil {
-			currentID = currentEntry.changedElement.GetConceptID(hl)
+			currentID = currentEntry.changedElement.GetConceptID(trans)
 		}
 		if currentEntry.changeType == Marker {
 			if firstEntry {
@@ -381,82 +390,63 @@ func (undoMgr *undoManager) undo(hl *Transaction) {
 				return
 			}
 		} else if currentEntry.changeType == Creation {
-			// Update owner's owned elements. Since we are undoing a creation, if the changed element has an owner
-			// we must remove the current element from the owner's ownedElements
-			if currentEntry.changedElement.GetOwningConceptID(hl) != "" {
-				uOfD.ownedIDsMap.RemoveMappedValue(currentEntry.changedElement.GetOwningConceptID(hl), currentID)
-			}
 			// Update listeners. If this is a reference or refinement pointing to another element, remove this element from the other element's listener's set
 			switch currentEntry.changedElement.(type) {
 			case *reference:
 				referencedElementID := currentEntry.changedElement.(*reference).ReferencedConceptID
 				if referencedElementID != "" {
-					uOfD.listenersMap.RemoveMappedValue(referencedElementID, currentID)
+					uOfD.listenersMap.removeMappedValue(referencedElementID, currentID)
 				}
 			case *refinement:
 				abstractID := currentEntry.changedElement.(*refinement).AbstractConceptID
 				if abstractID != "" {
-					uOfD.listenersMap.RemoveMappedValue(abstractID, currentID)
+					uOfD.listenersMap.removeMappedValue(abstractID, currentID)
 				}
 				refinedID := currentEntry.changedElement.(*refinement).RefinedConceptID
 				if refinedID != "" {
-					uOfD.listenersMap.RemoveMappedValue(refinedID, currentID)
+					uOfD.listenersMap.removeMappedValue(refinedID, currentID)
 				}
 			}
 			// Update the uriUUIDMap
-			uri := currentEntry.changedElement.GetURI(hl)
+			uri := currentEntry.changedElement.GetURI(trans)
 			if uri != "" {
 				uOfD.uriUUIDMap.DeleteEntry(uri)
 			}
 			undoMgr.redoStack.Push(currentEntry)
-			uOfD.removeElementForUndo(currentEntry.changedElement, hl)
-			uOfD.ownedIDsMap.SetMappedValues(currentID, currentEntry.priorOwnedElements)
+			uOfD.removeElementForUndo(currentEntry.changedElement, trans)
+			uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
 			uOfD.listenersMap.SetMappedValues(currentID, currentEntry.priorListeners)
+			uOfD.deleteUUIDElementMapEntry(currentEntry.changedElement.getConceptIDNoLock())
 		} else if currentEntry.changeType == Deletion {
-			// Update owner's owned elements. Since we are undoing a deletion, if the changed element has an owner
-			// we must add the current element from the owner's ownedElements
-			if currentEntry.priorState.GetOwningConceptID(hl) != "" {
-				uOfD.ownedIDsMap.AddMappedValue(currentEntry.priorState.GetOwningConceptID(hl), currentEntry.priorState.GetConceptID(hl))
-			}
 			// Update listeners. If this is a reference or refinement pointing to another element, add this element to the other element's listener's set
 			switch currentEntry.priorState.(type) {
 			case *reference:
 				referencedElementID := currentEntry.priorState.(*reference).ReferencedConceptID
 				if referencedElementID != "" {
-					uOfD.listenersMap.AddMappedValue(referencedElementID, currentEntry.priorState.GetConceptID(hl))
+					uOfD.listenersMap.addMappedValue(referencedElementID, currentEntry.priorState.GetConceptID(trans))
 				}
 			case *refinement:
 				abstractID := currentEntry.priorState.(*refinement).AbstractConceptID
 				if abstractID != "" {
-					uOfD.listenersMap.AddMappedValue(abstractID, currentEntry.priorState.GetConceptID(hl))
+					uOfD.listenersMap.addMappedValue(abstractID, currentEntry.priorState.GetConceptID(trans))
 				}
 				refinedID := currentEntry.priorState.(*refinement).RefinedConceptID
 				if refinedID != "" {
-					uOfD.listenersMap.AddMappedValue(refinedID, currentEntry.priorState.GetConceptID(hl))
+					uOfD.listenersMap.addMappedValue(refinedID, currentEntry.priorState.GetConceptID(trans))
 				}
 			}
 			// Update the uriUUIDMap
-			uri := currentEntry.priorState.GetURI(hl)
+			uri := currentEntry.priorState.GetURI(trans)
 			if uri != "" {
 				uOfD.uriUUIDMap.SetEntry(uri, currentID)
 			}
-			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
+			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, trans)
 			undoMgr.redoStack.Push(currentEntry)
-			uOfD.addElementForUndo(currentEntry.changedElement, hl)
-			uOfD.ownedIDsMap.SetMappedValues(currentID, currentEntry.priorOwnedElements)
+			uOfD.addElementForUndo(currentEntry.changedElement, trans)
+			uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
 			uOfD.listenersMap.SetMappedValues(currentID, currentEntry.priorListeners)
+			uOfD.setUUIDElementMapEntry(currentEntry.changedElement.getConceptIDNoLock(), currentEntry.changedElement)
 		} else if currentEntry.changeType == Change {
-			// If the owner changes, update owner's owned elements.
-			currentOwnerID := currentEntry.changedElement.GetOwningConceptID(hl)
-			priorOwnerID := currentEntry.priorState.GetOwningConceptID(hl)
-			if currentOwnerID != priorOwnerID {
-				if currentOwnerID != "" {
-					uOfD.ownedIDsMap.RemoveMappedValue(currentOwnerID, currentID)
-				}
-				if priorOwnerID != "" {
-					uOfD.ownedIDsMap.AddMappedValue(priorOwnerID, currentID)
-				}
-			}
 			// Update listeners. If this is a reference or refinement pointing to another element, remove this element from the other element's listener's set
 			switch currentEntry.changedElement.(type) {
 			case *reference:
@@ -464,10 +454,10 @@ func (undoMgr *undoManager) undo(hl *Transaction) {
 				priorReferencedElementID := currentEntry.priorState.(*reference).ReferencedConceptID
 				if currentReferencedElementID != priorReferencedElementID {
 					if currentReferencedElementID != "" {
-						uOfD.listenersMap.RemoveMappedValue(currentReferencedElementID, currentID)
+						uOfD.listenersMap.removeMappedValue(currentReferencedElementID, currentID)
 					}
 					if priorReferencedElementID != "" {
-						uOfD.listenersMap.AddMappedValue(priorReferencedElementID, currentID)
+						uOfD.listenersMap.addMappedValue(priorReferencedElementID, currentID)
 					}
 				}
 			case *refinement:
@@ -475,26 +465,26 @@ func (undoMgr *undoManager) undo(hl *Transaction) {
 				priorAbstractID := currentEntry.priorState.(*refinement).AbstractConceptID
 				if currentAbstractID != priorAbstractID {
 					if currentAbstractID != "" {
-						uOfD.listenersMap.RemoveMappedValue(currentAbstractID, currentID)
+						uOfD.listenersMap.removeMappedValue(currentAbstractID, currentID)
 					}
 					if priorAbstractID != "" {
-						uOfD.listenersMap.AddMappedValue(priorAbstractID, currentID)
+						uOfD.listenersMap.addMappedValue(priorAbstractID, currentID)
 					}
 				}
 				currentRefinedID := currentEntry.changedElement.(*refinement).RefinedConceptID
 				priorRefinedID := currentEntry.priorState.(*refinement).RefinedConceptID
 				if currentRefinedID != priorRefinedID {
 					if currentRefinedID != "" {
-						uOfD.listenersMap.RemoveMappedValue(currentRefinedID, currentID)
+						uOfD.listenersMap.removeMappedValue(currentRefinedID, currentID)
 					}
 					if priorRefinedID != "" {
-						uOfD.listenersMap.AddMappedValue(priorRefinedID, currentID)
+						uOfD.listenersMap.addMappedValue(priorRefinedID, currentID)
 					}
 				}
 			}
 			// Update the uriUUIDMap
-			currentURI := currentEntry.changedElement.GetURI(hl)
-			priorURI := currentEntry.priorState.GetURI(hl)
+			currentURI := currentEntry.changedElement.GetURI(trans)
+			priorURI := currentEntry.priorState.GetURI(trans)
 			if currentURI != priorURI {
 				if currentURI != "" {
 					uOfD.uriUUIDMap.DeleteEntry(currentURI)
@@ -503,13 +493,18 @@ func (undoMgr *undoManager) undo(hl *Transaction) {
 					uOfD.uriUUIDMap.SetEntry(priorURI, currentID)
 				}
 			}
-			clone := clone(currentEntry.changedElement, hl)
+			clone := clone(currentEntry.changedElement, trans)
 			priorOwnedElements := uOfD.ownedIDsMap.GetMappedValues(currentID).Clone()
 			priorListeners := uOfD.listenersMap.GetMappedValues(currentID).Clone()
-			redoEntry := newUndoRedoStackEntry(Change, clone, priorOwnedElements, priorListeners, currentEntry.changedElement)
-			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, hl)
-			uOfD.ownedIDsMap.SetMappedValues(currentID, currentEntry.priorOwnedElements)
+			redoEntry := newUndoRedoStackEntry(Change, clone, priorOwnedElements, priorListeners, currentEntry.priorUofD, currentEntry.changedElement)
+			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, trans)
+			uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
 			uOfD.listenersMap.SetMappedValues(currentID, currentEntry.priorListeners)
+			if currentEntry.priorUofD != uOfD.id {
+				uOfD.deleteUUIDElementMapEntry(currentID)
+			} else if currentEntry.priorUofD == uOfD.id {
+				uOfD.setUUIDElementMapEntry(currentID, currentEntry.changedElement)
+			}
 			undoMgr.redoStack.Push(redoEntry)
 		}
 		firstEntry = false

@@ -81,8 +81,8 @@ func (onMap *OneToNStringMap) IsEquivalent(sem *OneToNStringMap) bool {
 	return len(onMap.oneToNStringMap) == len(sem.oneToNStringMap)
 }
 
-// AddMappedValue adds the Element UUID as a child of the owner UUID
-func (onMap *OneToNStringMap) AddMappedValue(key string, value string) {
+// addMappedValue adds the Element UUID as a child of the owner UUID
+func (onMap *OneToNStringMap) addMappedValue(key string, value string) {
 	onMap.TraceableLock()
 	defer onMap.TraceableUnlock()
 	if onMap.oneToNStringMap[key] == nil {
@@ -101,8 +101,8 @@ func (onMap *OneToNStringMap) ContainsMappedValue(key string, value string) bool
 	return onMap.oneToNStringMap[key].Contains(value)
 }
 
-// RemoveMappedValue removes the Element UUID as a child of the owner UUID
-func (onMap *OneToNStringMap) RemoveMappedValue(key string, value string) {
+// removeMappedValue removes the Element UUID as a child of the owner UUID
+func (onMap *OneToNStringMap) removeMappedValue(key string, value string) {
 	onMap.TraceableLock()
 	defer onMap.TraceableUnlock()
 	if onMap.oneToNStringMap[key] == nil {

@@ -16,7 +16,7 @@ import (
 
 // UniverseOfDiscourse represents the scope of relevant concepts
 type UniverseOfDiscourse struct {
-	// element
+	id                  string
 	computeFunctions    functions
 	executedCalls       chan *functionCallRecord
 	undoManager         *undoManager
@@ -32,6 +32,11 @@ type UniverseOfDiscourse struct {
 // NewUniverseOfDiscourse creates and initializes a new UniverseOfDiscourse
 func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	var uOfD UniverseOfDiscourse
+	newUUID, err := uuid.NewV4()
+	if err != nil {
+		log.Printf("failure in UniverseOfDiscourse.NewUniverseOfDiscourse %s", err)
+	}
+	uOfD.id = newUUID.String()
 	uOfD.observers = mapset.NewSet()
 	uOfD.computeFunctions = make(map[string][]crlExecutionFunction)
 	uOfD.undoManager = newUndoManager(&uOfD)
@@ -57,14 +62,14 @@ func (uOfDPtr *UniverseOfDiscourse) addElement(el Element, inRecovery bool, tran
 	if uuid == "" {
 		return errors.New("UniverseOfDiscource addElement() failed because UUID was nil")
 	}
-	uOfDPtr.uuidElementMap.SetEntry(el.getConceptIDNoLock(), el)
+	uOfDPtr.setUUIDElementMapEntry(el.getConceptIDNoLock(), el)
 	uri := el.GetURI(trans)
 	if uri != "" {
 		uOfDPtr.uriUUIDMap.SetEntry(uri, uuid)
 	}
 	ownerID := el.GetOwningConceptID(trans)
 	if ownerID != "" {
-		uOfDPtr.ownedIDsMap.AddMappedValue(ownerID, uuid)
+		uOfDPtr.ownedIDsMap.addMappedValue(ownerID, uuid)
 	}
 	// Add element to all listener's lists
 	switch typedEl := el.(type) {
@@ -72,17 +77,17 @@ func (uOfDPtr *UniverseOfDiscourse) addElement(el Element, inRecovery bool, tran
 		ref := typedEl
 		referencedConceptID := ref.GetReferencedConceptID(trans)
 		if referencedConceptID != "" {
-			uOfDPtr.listenersMap.AddMappedValue(referencedConceptID, uuid)
+			uOfDPtr.listenersMap.addMappedValue(referencedConceptID, uuid)
 		}
 	case *refinement:
 		ref := el.(*refinement)
 		abstractConceptID := ref.GetAbstractConceptID(trans)
 		if abstractConceptID != "" {
-			uOfDPtr.listenersMap.AddMappedValue(abstractConceptID, uuid)
+			uOfDPtr.listenersMap.addMappedValue(abstractConceptID, uuid)
 		}
 		refinedConceptID := ref.GetRefinedConceptID(trans)
 		if refinedConceptID != "" {
-			uOfDPtr.listenersMap.AddMappedValue(refinedConceptID, uuid)
+			uOfDPtr.listenersMap.addMappedValue(refinedConceptID, uuid)
 		}
 	}
 	return nil
@@ -97,7 +102,7 @@ func (uOfDPtr *UniverseOfDiscourse) addElementForUndo(el Element, trans *Transac
 		log.Printf("Adding element for undo, id: %s\n", el.GetConceptID(trans))
 		Print(el, "Added Element: ", trans)
 	}
-	uOfDPtr.uuidElementMap.SetEntry(el.GetConceptID(trans), el)
+	uOfDPtr.setUUIDElementMapEntry(el.GetConceptID(trans), el)
 	uri := el.GetURI(trans)
 	if uri != "" {
 		uOfDPtr.uriUUIDMap.SetEntry(uri, el.GetConceptID(trans))
@@ -138,27 +143,19 @@ func (uOfDPtr *UniverseOfDiscourse) Clone(trans *Transaction) *UniverseOfDiscour
 		}
 	}
 
-	// uOfD.undoManager = newUndoManager(&uOfD)
-	// Nothing to do here
-
-	// uOfD.uriUUIDMap = NewStringStringMap()
 	for uri, uuid := range uOfDPtr.uriUUIDMap.CopyMap() {
 		newUofD.uriUUIDMap.SetEntry(uri, uuid)
 	}
 
-	// uOfD.uuidElementMap = NewStringElementMap()
 	for id, el := range uOfDPtr.uuidElementMap.CopyMap() {
 		switch el.(type) {
 		case *element, *literal, *reference, *refinement:
 			{
 				newElement := clone(el, trans)
-				newUofD.uuidElementMap.SetEntry(id, newElement)
+				newUofD.setUUIDElementMapEntry(id, newElement)
 			}
 		}
 	}
-	// newUofD.uuidElementMap.SetEntry(newUofD.ConceptID, newUofD)
-
-	// uOfD.ownedIDsMap = NewOneToNStringMap()
 	for key, strings := range uOfDPtr.ownedIDsMap.CopyMap() {
 		newUofD.ownedIDsMap.SetMappedValues(key, strings)
 	}
@@ -367,22 +364,22 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, trans *Transaction
 	case *reference:
 		referencedConceptID := typedEl.GetReferencedConceptID(trans)
 		if referencedConceptID != "" {
-			uOfDPtr.listenersMap.RemoveMappedValue(referencedConceptID, uuid)
+			uOfDPtr.listenersMap.removeMappedValue(referencedConceptID, uuid)
 		}
 	case *refinement:
 		abstractConceptID := typedEl.GetAbstractConceptID(trans)
 		if abstractConceptID != "" {
-			uOfDPtr.listenersMap.RemoveMappedValue(abstractConceptID, uuid)
+			uOfDPtr.listenersMap.removeMappedValue(abstractConceptID, uuid)
 		}
 		refinedConceptID := typedEl.GetRefinedConceptID(trans)
 		if refinedConceptID != "" {
-			uOfDPtr.listenersMap.RemoveMappedValue(refinedConceptID, uuid)
+			uOfDPtr.listenersMap.removeMappedValue(refinedConceptID, uuid)
 		}
 	}
 	uOfDPtr.listenersMap.DeleteKey(uuid)
 	uOfDPtr.abstractionsMap.DeleteKey(uuid)
 	uOfDPtr.ownedIDsMap.DeleteKey(uuid)
-	uOfDPtr.uuidElementMap.DeleteEntry(uuid)
+	uOfDPtr.deleteUUIDElementMapEntry(uuid)
 	// Finally, remove from the universe of discourse
 	el.setUniverseOfDiscourse(nil, trans)
 	return nil
@@ -419,10 +416,10 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, trans *T
 		descendants := mapset.NewSet()
 		uOfDPtr.GetConceptsOwnedConceptIDsRecursively(id.(string), descendants, trans)
 		it3 := descendants.Iterator()
-		for descendantId := range it3.C {
-			descendant := uOfDPtr.GetElement(descendantId.(string))
+		for descendantID := range it3.C {
+			descendant := uOfDPtr.GetElement(descendantID.(string))
 			if descendant != nil {
-				uOfDPtr.inProgressDeletions.SetEntry(descendantId.(string), descendant)
+				uOfDPtr.inProgressDeletions.SetEntry(descendantID.(string), descendant)
 			}
 		}
 	}
@@ -435,6 +432,14 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, trans *T
 	}
 	uOfDPtr.inProgressDeletions.Clear()
 	return nil
+}
+
+func (uOfDPtr *UniverseOfDiscourse) deleteUUIDElementMapEntry(conceptID string) {
+	if uOfDPtr.undoManager.debugUndo {
+		log.Printf("About to delete UUIDElementMapEntry ID: %s", conceptID)
+	}
+	uOfDPtr.uuidElementMap.DeleteEntry(conceptID)
+
 }
 
 // Deregister removes the registration of an Observer
@@ -1025,18 +1030,6 @@ func (uOfDPtr *UniverseOfDiscourse) NewRefinement(trans *Transaction, uri ...str
 	return &ref, nil
 }
 
-// newUniverseOfDiscourseChangeNotification creates a new ChangeNotification for a UofD change
-// func (uOfDPtr *UniverseOfDiscourse) newUniverseOfDiscourseChangeNotification(underlyingChange *ChangeNotification) *ChangeNotification {
-// 	var notification ChangeNotification
-// 	notification.reportingElementID = uOfDPtr.ConceptID
-// 	notification.reportingElementLabel = uOfDPtr.Label
-// 	notification.reportingElementType = reflect.TypeOf(uOfDPtr).String()
-// 	notification.natureOfChange = UofDConceptChanged
-// 	notification.underlyingChange = underlyingChange
-// 	notification.uOfD = uOfDPtr
-// 	return &notification
-// }
-
 // NotifyUofDObservers passes the notification to all registered Observers
 func (uOfDPtr *UniverseOfDiscourse) NotifyUofDObservers(notification *ChangeNotification, trans *Transaction) error {
 	it := uOfDPtr.observers.Iterator()
@@ -1099,7 +1092,7 @@ func (uOfDPtr *UniverseOfDiscourse) removeElementForUndo(el Element, trans *Tran
 			log.Printf("Removing element for undo, id: %s\n", elID)
 			Print(el, "Removed Element: ", trans)
 		}
-		uOfDPtr.uuidElementMap.DeleteEntry(elID)
+		uOfDPtr.deleteUUIDElementMapEntry(elID)
 	}
 }
 
@@ -1253,6 +1246,13 @@ func (uOfDPtr *UniverseOfDiscourse) Register(observer Observer) error {
 	return nil
 }
 
+func (uOfDPtr *UniverseOfDiscourse) setOwnedIDsMapValues(currentOwnerID string, values mapset.Set) {
+	if uOfDPtr.undoManager.debugUndo {
+		log.Printf("About to set ownedIDsMap values ownerID: %v values: %v", currentOwnerID, values)
+	}
+	uOfDPtr.ownedIDsMap.SetMappedValues(currentOwnerID, values)
+}
+
 // SetRecordingUndo turns undo/redo recording on and off
 func (uOfDPtr *UniverseOfDiscourse) SetRecordingUndo(newSetting bool) {
 	uOfDPtr.undoManager.setRecordingUndo(newSetting)
@@ -1286,6 +1286,15 @@ func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourse(el Element, trans *Tr
 		uOfDPtr.NotifyUofDObservers(conceptAddedNotification, trans)
 	}
 	return nil
+}
+
+func (uOfDPtr *UniverseOfDiscourse) setUUIDElementMapEntry(conceptID string, entry Element) {
+	if uOfDPtr.undoManager.debugUndo {
+		serializedElement, _ := entry.MarshalJSON()
+		log.Printf("About to add UUIDElementMapEntry ID: %s, entry: %v", conceptID, string(serializedElement))
+	}
+	uOfDPtr.uuidElementMap.SetEntry(conceptID, entry)
+
 }
 
 // Undo undoes all the changes up to the last UndoMarker or the beginning of Undo, whichever comes first.

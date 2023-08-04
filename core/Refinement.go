@@ -229,7 +229,7 @@ func (rPtr *refinement) SetAbstractConceptID(acID string, trans *Transaction) er
 				}
 			} else {
 				// This case can arise if the abstract concept is not currently loaded
-				rPtr.uOfD.listenersMap.RemoveMappedValue(rPtr.AbstractConceptID, rPtr.ConceptID)
+				rPtr.uOfD.listenersMap.removeMappedValue(rPtr.AbstractConceptID, rPtr.ConceptID)
 			}
 		}
 		var newAbstractConcept Element

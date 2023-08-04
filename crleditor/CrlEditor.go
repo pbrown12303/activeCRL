@@ -25,6 +25,7 @@ type UserPreferences struct {
 	DropDiagramRefinementAsLink bool
 }
 
+// Settings reflect the current status of the editing session
 type Settings struct {
 	DefaultDomainLabelCount     int
 	DefaultElementLabelCount    int
@@ -37,6 +38,7 @@ type Settings struct {
 	CurrentDiagram              string
 }
 
+// CrlEditorSingleton is the unique single instance of the Editor in an editng session
 var CrlEditorSingleton *Editor
 
 // Editor manages one or more CrlEditors
@@ -56,15 +58,6 @@ type Editor struct {
 	transientSelection         core.Literal
 	transientDisplayedDiagrams core.Literal
 	transientCurrentDiagram    core.Literal
-}
-
-// TODO Remove these methods when fyne transaction approach is determined
-func (editor *Editor) GetInProgressTransaction() *core.Transaction {
-	return editor.inProgressTransaction
-}
-
-func (editor *Editor) SetInProgressTransaction(trans *core.Transaction) {
-	editor.inProgressTransaction = trans
 }
 
 // NewEditor returns an initialized Editor
@@ -296,8 +289,8 @@ func (editor *Editor) GetSettings() *Settings {
 
 // GetTransaction returns the in-progress transaction, if there is one, and otherwise creates a new transaction
 func (editor *Editor) GetTransaction() (*core.Transaction, bool) {
-	if editor.GetInProgressTransaction() != nil {
-		return editor.GetInProgressTransaction(), false
+	if editor.inProgressTransaction != nil {
+		return editor.inProgressTransaction, false
 	}
 	editor.inProgressTransaction = editor.GetUofD().NewTransaction()
 	return editor.inProgressTransaction, true
@@ -541,12 +534,12 @@ func (editor *Editor) SelectElement(el core.Element, trans *core.Transaction) er
 				return errors.Wrap(err, "Editor.SelectElement failed")
 			}
 		}
-		elId := ""
+		elID := ""
 		if el != nil {
-			elId = el.GetConceptID(trans)
+			elID = el.GetConceptID(trans)
 		}
-		editor.transientSelection.SetLiteralValue(elId, trans)
-		editor.settings.Selection = elId
+		editor.transientSelection.SetLiteralValue(elID, trans)
+		editor.settings.Selection = elID
 	}
 	return nil
 }

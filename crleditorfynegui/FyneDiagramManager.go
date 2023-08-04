@@ -24,46 +24,49 @@ const (
 	displayLabel = "DisplayLabel"
 )
 
+// ToolbarSelection is the enumeration of toolbar items
 type ToolbarSelection int
 
+// The enumerated values ToolbarSelection
 const (
-	CURSOR ToolbarSelection = iota
-	ELEMENT
-	LITERAL
-	REFERENCE
-	REFERENCE_LINK
-	REFINEMENT
-	REFINEMENT_LINK
-	OWNER_POINTER
-	REFERENCED_ELEMENT_POINTER
-	ABSTRACT_ELEMENT_POINTER
-	REFINED_ELEMENT_POINTER
+	CursorSelected ToolbarSelection = iota
+	ElementSelected
+	LiteralSelected
+	ReferenceSelected
+	ReferenceLinkSelected
+	RefinementSelected
+	RefinementLinkSelected
+	OwnerPointerSelected
+	ReferencedElementPointerSelected
+	AbstractElementPointerSelected
+	RefinedElementPointerSelected
 )
 
+// ToString retuns text identifying the ToolbarSelection
 func (selection ToolbarSelection) ToString() string {
 	switch selection {
-	case CURSOR:
-		return "Cursor"
-	case ELEMENT:
-		return "Element"
-	case LITERAL:
-		return "Literal"
-	case REFERENCE:
-		return "Reference"
-	case REFERENCE_LINK:
-		return "Reference Link"
-	case REFINEMENT:
-		return "Refinement"
-	case REFINEMENT_LINK:
-		return "Refinement Link"
-	case OWNER_POINTER:
-		return "Owner Poiner"
-	case REFERENCED_ELEMENT_POINTER:
-		return "Referenced Element Pointer"
-	case ABSTRACT_ELEMENT_POINTER:
-		return "Abstract Element Pointer"
-	case REFINED_ELEMENT_POINTER:
-		return "RefinedElementPointer"
+	case CursorSelected:
+		return "Cursor Selected"
+	case ElementSelected:
+		return "Element Selected"
+	case LiteralSelected:
+		return "Literal Selected"
+	case ReferenceSelected:
+		return "Reference Selected"
+	case ReferenceLinkSelected:
+		return "Reference Link Selected"
+	case RefinementSelected:
+		return "Refinement Selected"
+	case RefinementLinkSelected:
+		return "Refinement Link Selected"
+	case OwnerPointerSelected:
+		return "Owner Poiner Selected"
+	case ReferencedElementPointerSelected:
+		return "Referenced Element Pointer Selected"
+	case AbstractElementPointerSelected:
+		return "Abstract Element Pointer Selected"
+	case RefinedElementPointerSelected:
+		return "RefinedElementPointer Selected"
 	}
 	return ""
 }
@@ -99,7 +102,7 @@ func NewFyneDiagramManager(fyneGUI *CrlEditorFyneGUI) *FyneDiagramManager {
 	dm.diagramObserver = newDiagramObserver(&dm)
 	dm.diagramElementObserver = newDiagramElementObserver(&dm)
 	dm.fyneGUI = fyneGUI
-	dm.currentToolbarSelection = CURSOR
+	dm.currentToolbarSelection = CursorSelected
 	return &dm
 }
 
@@ -169,85 +172,85 @@ func (dm *FyneDiagramManager) createToolbar() {
 	// Cursor
 	button := widget.NewButtonWithIcon("", images.ResourceCursorIconPng, nil)
 	button.OnTapped = func() {
-		dm.currentToolbarSelection = CURSOR
+		dm.currentToolbarSelection = CursorSelected
 	}
-	dm.toolButtons[CURSOR] = button
+	dm.toolButtons[CursorSelected] = button
 	dm.toolbar.Add(button)
 	// Element
 	button = widget.NewButtonWithIcon("", images.ResourceElementIconPng, nil)
 	button.OnTapped = func() {
-		dm.currentToolbarSelection = ELEMENT
+		dm.currentToolbarSelection = ElementSelected
 	}
-	dm.toolButtons[ELEMENT] = button
+	dm.toolButtons[ElementSelected] = button
 	dm.toolbar.Add(button)
 	// Literal
 	button = widget.NewButtonWithIcon("", images.ResourceLiteralIconPng, nil)
 	button.OnTapped = func() {
-		dm.currentToolbarSelection = LITERAL
+		dm.currentToolbarSelection = LiteralSelected
 	}
-	dm.toolButtons[LITERAL] = button
+	dm.toolButtons[LiteralSelected] = button
 	dm.toolbar.Add(button)
 	// Reference
 	button = widget.NewButtonWithIcon("", images.ResourceReferenceIconPng, nil)
 	button.OnTapped = func() {
-		dm.currentToolbarSelection = REFERENCE
+		dm.currentToolbarSelection = ReferenceSelected
 	}
-	dm.toolButtons[REFERENCE] = button
+	dm.toolButtons[ReferenceSelected] = button
 	dm.toolbar.Add(button)
 	// ReferenceLink
 	button = widget.NewButtonWithIcon("", images.ResourceReferenceLinkIconPng, nil)
 	button.OnTapped = func() {
-		dm.currentToolbarSelection = REFERENCE_LINK
+		dm.currentToolbarSelection = ReferenceLinkSelected
 		dm.startCreateLinkTransaction()
 	}
-	dm.toolButtons[REFERENCE_LINK] = button
+	dm.toolButtons[ReferenceLinkSelected] = button
 	dm.toolbar.Add(button)
 	// Refinement
 	button = widget.NewButtonWithIcon("", images.ResourceRefinementIconPng, nil)
 	button.OnTapped = func() {
-		dm.currentToolbarSelection = REFINEMENT
+		dm.currentToolbarSelection = RefinementSelected
 	}
-	dm.toolButtons[REFINEMENT] = button
+	dm.toolButtons[RefinementSelected] = button
 	dm.toolbar.Add(button)
 	// RefinementLink
 	button = widget.NewButtonWithIcon("", images.ResourceRefinementLinkIconPng, nil)
 	button.OnTapped = func() {
-		dm.currentToolbarSelection = REFINEMENT_LINK
+		dm.currentToolbarSelection = RefinementLinkSelected
 		dm.startCreateLinkTransaction()
 	}
-	dm.toolButtons[REFINEMENT_LINK] = button
+	dm.toolButtons[RefinementLinkSelected] = button
 	dm.toolbar.Add(button)
 	// OwnerPointer
 	button = widget.NewButtonWithIcon("", images.ResourceOwnerPointerIconPng, nil)
 	button.OnTapped = func() {
-		dm.currentToolbarSelection = OWNER_POINTER
+		dm.currentToolbarSelection = OwnerPointerSelected
 		dm.startCreateLinkTransaction()
 	}
-	dm.toolButtons[OWNER_POINTER] = button
+	dm.toolButtons[OwnerPointerSelected] = button
 	dm.toolbar.Add(button)
 	// ReferencedElementPointer
 	button = widget.NewButtonWithIcon("", images.ResourceElementPointerIconPng, nil)
 	button.OnTapped = func() {
-		dm.currentToolbarSelection = REFERENCED_ELEMENT_POINTER
+		dm.currentToolbarSelection = ReferencedElementPointerSelected
 		dm.startCreateLinkTransaction()
 	}
-	dm.toolButtons[REFERENCED_ELEMENT_POINTER] = button
+	dm.toolButtons[ReferencedElementPointerSelected] = button
 	dm.toolbar.Add(button)
 	// AbstractPointer
 	button = widget.NewButtonWithIcon("", images.ResourceAbstractPointerIconPng, nil)
 	button.OnTapped = func() {
-		dm.currentToolbarSelection = ABSTRACT_ELEMENT_POINTER
+		dm.currentToolbarSelection = AbstractElementPointerSelected
 		dm.startCreateLinkTransaction()
 	}
-	dm.toolButtons[ABSTRACT_ELEMENT_POINTER] = button
+	dm.toolButtons[AbstractElementPointerSelected] = button
 	dm.toolbar.Add(button)
 	// RefinedPointer
 	button = widget.NewButtonWithIcon("", images.ResourceRefinedPointerIconPng, nil)
 	button.OnTapped = func() {
-		dm.currentToolbarSelection = REFINED_ELEMENT_POINTER
+		dm.currentToolbarSelection = RefinedElementPointerSelected
 		dm.startCreateLinkTransaction()
 	}
-	dm.toolButtons[REFINED_ELEMENT_POINTER] = button
+	dm.toolButtons[RefinedElementPointerSelected] = button
 	dm.toolbar.Add(button)
 }
 
@@ -305,25 +308,25 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 	crlDiagram := uOfD.GetElement(fyneDiagram.ID)
 	var el core.Element
 	switch dm.currentToolbarSelection {
-	case CURSOR:
+	case CursorSelected:
 		fyneDiagram.ClearSelection()
-	case ELEMENT:
+	case ElementSelected:
 		uOfD.MarkUndoPoint()
 		el, _ = uOfD.NewElement(trans)
 		el.SetLabel(dm.fyneGUI.editor.GetDefaultElementLabel(), trans)
-	case LITERAL:
+	case LiteralSelected:
 		uOfD.MarkUndoPoint()
 		el, _ = uOfD.NewLiteral(trans)
 		el.SetLabel(dm.fyneGUI.editor.GetDefaultLiteralLabel(), trans)
-	case REFERENCE:
+	case ReferenceSelected:
 		uOfD.MarkUndoPoint()
 		el, _ = uOfD.NewReference(trans)
 		el.SetLabel(dm.fyneGUI.editor.GetDefaultReferenceLabel(), trans)
-	case REFINEMENT:
+	case RefinementSelected:
 		uOfD.MarkUndoPoint()
 		el, _ = uOfD.NewRefinement(trans)
 		el.SetLabel(dm.fyneGUI.editor.GetDefaultRefinementLabel(), trans)
-	case ABSTRACT_ELEMENT_POINTER, OWNER_POINTER, REFERENCED_ELEMENT_POINTER, REFERENCE_LINK, REFINED_ELEMENT_POINTER, REFINEMENT_LINK:
+	case AbstractElementPointerSelected, OwnerPointerSelected, ReferencedElementPointerSelected, ReferenceLinkSelected, RefinedElementPointerSelected, RefinementLinkSelected:
 		uOfD.MarkUndoPoint()
 	}
 
@@ -352,7 +355,7 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 	} else {
 		dm.ElementSelected("", trans)
 	}
-	dm.currentToolbarSelection = CURSOR
+	dm.currentToolbarSelection = CursorSelected
 }
 
 func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.Transaction) error {
@@ -387,6 +390,7 @@ func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.T
 	return nil
 }
 
+// ElementSelected selects the element in each diagram (if present)
 func (dm *FyneDiagramManager) ElementSelected(id string, trans *core.Transaction) {
 	for _, tabItem := range dm.diagramTabs {
 		dm.selectElementInDiagram(id, tabItem.diagram, trans)
@@ -399,10 +403,12 @@ func (dm *FyneDiagramManager) getDiagramWidget(diagramID string) *diagramwidget.
 	return diagramWidget
 }
 
+// GetDrawingArea returns the diagram area container
 func (dm *FyneDiagramManager) GetDrawingArea() *fyne.Container {
 	return dm.diagramArea
 }
 
+// GetSelectedDiagram returns the currently selected DiagramWidget
 func (dm *FyneDiagramManager) GetSelectedDiagram() *diagramwidget.DiagramWidget {
 	selectedTabItem := dm.tabArea.Selected()
 	for _, diagramTab := range dm.diagramTabs {
@@ -525,12 +531,12 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 		case "source":
 			crldiagramdomain.SetLinkSource(crlLink, crlNewPadOwner, trans)
 			switch typedLink.linkType {
-			case REFERENCE_LINK:
+			case ReferenceLinkSelected:
 				linkModelElement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				sourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				linkModelElement.SetOwningConcept(sourceModelElement, trans)
 				link.Show()
-			case REFINEMENT_LINK:
+			case RefinementLinkSelected:
 				linkModelElement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				sourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				switch typedElement := linkModelElement.(type) {
@@ -539,7 +545,7 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 					typedElement.SetRefinedConcept(sourceModelElement, trans)
 					link.Show()
 				}
-			case ABSTRACT_ELEMENT_POINTER:
+			case AbstractElementPointerSelected:
 				currentModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				newModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				if currentModelRefinement != newModelRefinement {
@@ -555,7 +561,7 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 						typedLink.modelElement = newModelRefinement
 					}
 				}
-			case OWNER_POINTER:
+			case OwnerPointerSelected:
 				currentLinkParent := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				newLinkParent := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				if currentLinkParent != newLinkParent {
@@ -568,7 +574,7 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 					crldiagramdomain.SetReferencedModelConcept(crlLink, newLinkParent, trans)
 					typedLink.modelElement = newLinkParent
 				}
-			case REFERENCED_ELEMENT_POINTER:
+			case ReferencedElementPointerSelected:
 				currentModelReference := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				newModelReference := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				if currentModelReference != newModelReference {
@@ -590,7 +596,7 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 						typedLink.modelElement = newModelReference
 					}
 				}
-			case REFINED_ELEMENT_POINTER:
+			case RefinedElementPointerSelected:
 				currentModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				newModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				if currentModelRefinement != newModelRefinement {
@@ -613,7 +619,7 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 		case "target":
 			crldiagramdomain.SetLinkTarget(crlLink, crlNewPadOwner, trans)
 			switch typedLink.linkType {
-			case REFERENCE_LINK:
+			case ReferenceLinkSelected:
 				linkModelElement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				targetModelElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				newPadOwner := newPad.GetPadOwner()
@@ -622,14 +628,14 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 				case core.Reference:
 					typedElement.SetReferencedConcept(targetModelElement, attributeName, trans)
 				}
-			case REFINEMENT_LINK:
+			case RefinementLinkSelected:
 				linkModelElement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				targetModelElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				switch typedElement := linkModelElement.(type) {
 				case core.Refinement:
 					typedElement.SetAbstractConcept(targetModelElement, trans)
 				}
-			case ABSTRACT_ELEMENT_POINTER:
+			case AbstractElementPointerSelected:
 				crlModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				currentAbstractElement := crlModelRefinement.(core.Refinement).GetAbstractConcept(trans)
 				newAbstractElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
@@ -639,13 +645,13 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 						typedElement.SetAbstractConcept(newAbstractElement, trans)
 					}
 				}
-			case OWNER_POINTER:
+			case OwnerPointerSelected:
 				crlLinkParent := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				targetModelElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				if crlLinkParent != nil && crlLinkParent.GetOwningConcept(trans) != targetModelElement {
 					crlLinkParent.SetOwningConcept(targetModelElement, trans)
 				}
-			case REFERENCED_ELEMENT_POINTER:
+			case ReferencedElementPointerSelected:
 				crlModelReference := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				currentReferencedElement := crlModelReference.(core.Reference).GetReferencedConcept(trans)
 				newReferencedElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
@@ -656,7 +662,7 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 						typedElement.SetReferencedConcept(newReferencedElement, attributeName, trans)
 					}
 				}
-			case REFINED_ELEMENT_POINTER:
+			case RefinedElementPointerSelected:
 				crlModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				currentRefinedElement := crlModelRefinement.(core.Refinement).GetRefinedConcept(trans)
 				newRefinedElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
@@ -682,13 +688,13 @@ func getAttributeNameBasedOnTargetType(newPadOwner diagramwidget.DiagramElement)
 	switch castPadOwner := typedPadOwner.(type) {
 	case *FyneCrlDiagramLink:
 		switch castPadOwner.linkType {
-		case OWNER_POINTER:
+		case OwnerPointerSelected:
 			attributeName = core.OwningConceptID
-		case REFERENCED_ELEMENT_POINTER:
+		case ReferencedElementPointerSelected:
 			attributeName = core.ReferencedConceptID
-		case ABSTRACT_ELEMENT_POINTER:
+		case AbstractElementPointerSelected:
 			attributeName = core.AbstractConceptID
-		case REFINED_ELEMENT_POINTER:
+		case RefinedElementPointerSelected:
 			attributeName = core.RefinedConceptID
 		}
 	}
@@ -748,6 +754,7 @@ func (dm *FyneDiagramManager) populateDiagram(diagram core.Element, trans *core.
 	return nil
 }
 
+// SelectDiagram selects the tab whose diagram has the indicated ID
 func (dm *FyneDiagramManager) SelectDiagram(diagramID string) {
 	tabItem := dm.diagramTabs[diagramID]
 	if tabItem != nil {
@@ -1072,7 +1079,7 @@ func (dm *FyneDiagramManager) startCreateLinkTransaction() {
 	}
 	// Only start if the current toolbar selection is for a link or pointer
 	switch dm.currentToolbarSelection {
-	case REFINEMENT_LINK, REFERENCE_LINK, ABSTRACT_ELEMENT_POINTER, OWNER_POINTER, REFERENCED_ELEMENT_POINTER, REFINED_ELEMENT_POINTER:
+	case RefinementLinkSelected, ReferenceLinkSelected, AbstractElementPointerSelected, OwnerPointerSelected, ReferencedElementPointerSelected, RefinedElementPointerSelected:
 		trans, new := dm.fyneGUI.editor.GetTransaction()
 		if new {
 			defer dm.fyneGUI.editor.EndTransaction()
@@ -1081,7 +1088,7 @@ func (dm *FyneDiagramManager) startCreateLinkTransaction() {
 		var crlLink core.Element
 		var fyneLink diagramwidget.DiagramLink
 		switch dm.currentToolbarSelection {
-		case REFERENCE_LINK:
+		case ReferenceLinkSelected:
 			uOfD.MarkUndoPoint()
 			crlLink, _ = crldiagramdomain.NewDiagramReferenceLink(uOfD, trans)
 			crlModelReference, _ := uOfD.NewReference(trans)
@@ -1089,7 +1096,7 @@ func (dm *FyneDiagramManager) startCreateLinkTransaction() {
 			crldiagramdomain.SetReferencedModelConcept(crlLink, crlModelReference, trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
 			fyneLink.Hide()
-		case REFINEMENT_LINK:
+		case RefinementLinkSelected:
 			uOfD.MarkUndoPoint()
 			crlLink, _ = crldiagramdomain.NewDiagramRefinementLink(uOfD, trans)
 			crlModelRefinement, _ := uOfD.NewRefinement(trans)
@@ -1097,19 +1104,19 @@ func (dm *FyneDiagramManager) startCreateLinkTransaction() {
 			crldiagramdomain.SetReferencedModelConcept(crlLink, crlModelRefinement, trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
 			fyneLink.Hide()
-		case ABSTRACT_ELEMENT_POINTER:
+		case AbstractElementPointerSelected:
 			uOfD.MarkUndoPoint()
 			crlLink, _ = crldiagramdomain.NewDiagramAbstractPointer(uOfD, trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
-		case OWNER_POINTER:
+		case OwnerPointerSelected:
 			uOfD.MarkUndoPoint()
 			crlLink, _ = crldiagramdomain.NewDiagramOwnerPointer(uOfD, trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
-		case REFERENCED_ELEMENT_POINTER:
+		case ReferencedElementPointerSelected:
 			uOfD.MarkUndoPoint()
 			crlLink, _ = crldiagramdomain.NewDiagramElementPointer(uOfD, trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
-		case REFINED_ELEMENT_POINTER:
+		case RefinedElementPointerSelected:
 			uOfD.MarkUndoPoint()
 			crlLink, _ = crldiagramdomain.NewDiagramRefinedPointer(uOfD, trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)

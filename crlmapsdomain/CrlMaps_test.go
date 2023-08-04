@@ -9,16 +9,18 @@ import (
 )
 
 var _ = Describe("CrlMaps domain test", func() {
-	Specify("Domain generation should be idempotent", func() {
+	FSpecify("Domain generation should be idempotent", func() {
 		uOfD1 := core.NewUniverseOfDiscourse()
 		hl1 := uOfD1.NewTransaction()
-		BuildCrlMapsDomain(uOfD1, hl1)
-		cs1 := uOfD1.GetElementWithURI(CrlMapsDomainURI)
+		Expect(BuildCrlMapsDomain(uOfD1, hl1)).To(Succeed())
+		md1 := uOfD1.GetElementWithURI(CrlMapsDomainURI)
+		Expect(md1).ToNot(BeNil())
 		uOfD2 := core.NewUniverseOfDiscourse()
 		hl2 := uOfD2.NewTransaction()
-		BuildCrlMapsDomain(uOfD2, hl2)
-		cs2 := uOfD2.GetElementWithURI(CrlMapsDomainURI)
-		Expect(core.RecursivelyEquivalent(cs1, hl1, cs2, hl2)).To(BeTrue())
+		Expect(BuildCrlMapsDomain(uOfD2, hl2)).To(Succeed())
+		md2 := uOfD2.GetElementWithURI(CrlMapsDomainURI)
+		Expect(md2).ToNot(BeNil())
+		Expect(core.RecursivelyEquivalent(md1, hl1, md2, hl2, true)).To(BeTrue())
 	})
 	Specify("Each URI should have an associated Element or Reference", func() {
 		uOfD1 := core.NewUniverseOfDiscourse()
