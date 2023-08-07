@@ -79,14 +79,11 @@ type ConceptState struct {
 	// Literal fields
 	LiteralValue string
 	// Reference fields
-	ReferencedConceptID      string
-	ReferencedAttributeName  string
-	ReferencedConceptVersion string
+	ReferencedConceptID     string
+	ReferencedAttributeName string
 	// Refinement Fields
-	AbstractConceptID      string
-	AbstractConceptVersion string
-	RefinedConceptID       string
-	RefinedConceptVersion  string
+	AbstractConceptID string
+	RefinedConceptID  string
 }
 
 // NewConceptState copies the state of an Element into a ConceptState struct

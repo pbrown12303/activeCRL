@@ -24,7 +24,6 @@ var _ = Describe("Reference Tests", func() {
 			Expect(ref.GetReferencedConceptID(hl)).To(Equal(""))
 			Expect(ref.GetReferencedConcept(hl)).To(BeNil())
 			Expect(ref.getReferencedConceptNoLock()).To(BeNil())
-			Expect(ref.GetReferencedConceptVersion(hl)).To(Equal(0))
 		})
 		Specify("Referenced concept should set correctly", func() {
 			ref, _ := uOfD.NewReference(hl)
@@ -35,7 +34,6 @@ var _ = Describe("Reference Tests", func() {
 			Expect(ref.GetReferencedConceptID(hl)).To(Equal(target.getConceptIDNoLock()))
 			Expect(ref.GetReferencedConcept(hl)).To(Equal(target))
 			Expect(ref.getReferencedConceptNoLock()).To(Equal(target))
-			Expect(ref.GetReferencedConceptVersion(hl)).To(Equal(target.GetVersion(hl)))
 			Expect(ref.GetVersion(hl)).To(Equal(initialVersion + 1))
 		})
 		Specify("Referenced concept should clear correctly", func() {
@@ -49,7 +47,6 @@ var _ = Describe("Reference Tests", func() {
 			Expect(ref.GetReferencedConceptID(hl)).To(Equal(""))
 			Expect(ref.GetReferencedConcept(hl)).To(BeNil())
 			Expect(ref.getReferencedConceptNoLock()).To(BeNil())
-			Expect(ref.GetReferencedConceptVersion(hl)).To(Equal(0))
 		})
 		Specify("SetReferencedConcept should work correctly", func() {
 			ref, _ := uOfD.NewReference(hl)
@@ -120,14 +117,6 @@ var _ = Describe("Reference Tests", func() {
 			ref.SetReferencedConcept(target, OwningConceptID, hl)
 			clonedReference := clone(ref, hl)
 			ref.SetReferencedConcept(target, ReferencedConceptID, hl)
-			Expect(Equivalent(ref, hl, clonedReference, hl)).To(BeFalse())
-		})
-		Specify("Equivalent should fail if there is a difference in the ReferencedConcept version", func() {
-			ref, _ := uOfD.NewReference(hl)
-			target, _ := uOfD.NewElement(hl)
-			ref.SetReferencedConceptID(target.getConceptIDNoLock(), NoAttribute, hl)
-			clonedReference := clone(ref, hl)
-			ref.(*reference).ReferencedConceptVersion = 100
 			Expect(Equivalent(ref, hl, clonedReference, hl)).To(BeFalse())
 		})
 		Specify("Equivalence should also fail if there is any difference in the underlying element", func() {

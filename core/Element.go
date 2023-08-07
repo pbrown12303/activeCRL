@@ -894,25 +894,6 @@ func (ePtr *element) notifyPointerOwners(notification *ChangeNotification, trans
 		it := ePtr.uOfD.listenersMap.GetMappedValues(ePtr.ConceptID).Iterator()
 		for id := range it.C {
 			listener := ePtr.uOfD.GetElement(id.(string))
-			if listener != nil {
-				rcID := notification.afterConceptState.ConceptID
-				if rcID != "" {
-					beforeVersion, _ := strconv.Atoi(notification.beforeConceptState.Version)
-					afterVersion, _ := strconv.Atoi(notification.afterConceptState.Version)
-					if beforeVersion != afterVersion {
-						switch typedListener := listener.(type) {
-						case Reference:
-							typedListener.setReferencedConceptVersion(rcID, afterVersion, trans)
-						case Refinement:
-							if typedListener.GetAbstractConceptID(trans) == rcID {
-								typedListener.setAbstractConceptVersion(rcID, afterVersion, trans)
-							} else if typedListener.GetRefinedConceptID(trans) == rcID {
-								typedListener.setRefinedConceptVersion(rcID, afterVersion, trans)
-							}
-						}
-					}
-				}
-			}
 			indicatedConceptChangeNotification, err := ePtr.uOfD.NewForwardingChangeNotification(listener, IndicatedConceptChanged, notification, trans)
 			if err != nil {
 				return errors.Wrap(err, "element.notifyPointerOwners failed")

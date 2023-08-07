@@ -17,6 +17,7 @@ import (
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 	"github.com/pbrown12303/activeCRL/crleditor"
+	"github.com/pbrown12303/activeCRL/crlmapsdomain"
 	"github.com/pbrown12303/activeCRL/images"
 )
 
@@ -40,6 +41,7 @@ const (
 	ReferencedElementPointerSelected
 	AbstractElementPointerSelected
 	RefinedElementPointerSelected
+	OneToOneMapSelected
 )
 
 // ToString retuns text identifying the ToolbarSelection
@@ -67,6 +69,8 @@ func (selection ToolbarSelection) ToString() string {
 		return "Abstract Element Pointer Selected"
 	case RefinedElementPointerSelected:
 		return "RefinedElementPointer Selected"
+	case OneToOneMapSelected:
+		return "OneToOne Map Selected"
 	}
 	return ""
 }
@@ -252,6 +256,13 @@ func (dm *FyneDiagramManager) createToolbar() {
 	}
 	dm.toolButtons[RefinedElementPointerSelected] = button
 	dm.toolbar.Add(button)
+	// OneToOne Map
+	button = widget.NewButtonWithIcon("", images.ResourceOneToOneIconPng, nil)
+	button.OnTapped = func() {
+		dm.currentToolbarSelection = OneToOneMapSelected
+	}
+	dm.toolButtons[OneToOneMapSelected] = button
+	dm.toolbar.Add(button)
 }
 
 func (dm *FyneDiagramManager) deleteDiagramElementView(elementID string) error {
@@ -328,6 +339,10 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 		el.SetLabel(dm.fyneGUI.editor.GetDefaultRefinementLabel(), trans)
 	case AbstractElementPointerSelected, OwnerPointerSelected, ReferencedElementPointerSelected, ReferenceLinkSelected, RefinedElementPointerSelected, RefinementLinkSelected:
 		uOfD.MarkUndoPoint()
+	case OneToOneMapSelected:
+		sourceMap := uOfD.GetElementWithURI(crlmapsdomain.CrlOneToOneMapURI)
+		el, _ = uOfD.CreateReplicateAsRefinement(sourceMap, trans)
+		el.SetOwningConcept(crlDiagram.GetOwningConcept(trans), trans)
 	}
 
 	if el != nil {

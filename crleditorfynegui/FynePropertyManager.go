@@ -37,16 +37,10 @@ type FynePropertyManager struct {
 	referencedConceptValue              *copyableLabel
 	referencedConceptAttributeNameLabel *widget.Label
 	referencedConceptAttributeNameValue *widget.Label
-	referencedConceptVersionLabel       *widget.Label
-	referencedConceptVersionValue       *widget.Label
 	abstractConceptLabel                *widget.Label
 	abstractConceptValue                *copyableLabel
-	abstractConceptVersionLabel         *widget.Label
-	abstractConceptVersionValue         *widget.Label
 	refinedConceptLabel                 *widget.Label
 	refinedConceptValue                 *copyableLabel
-	refinedConceptVersionLabel          *widget.Label
-	refinedConceptVersionValue          *widget.Label
 	literalValueLabel                   *widget.Label
 	literalValueValue                   *widget.Entry
 }
@@ -76,16 +70,10 @@ func NewFynePropertyManager() *FynePropertyManager {
 	propertyManager.referencedConceptValue = newCopyableLabel()
 	propertyManager.referencedConceptAttributeNameLabel = widget.NewLabel("Referenced Attribute Name")
 	propertyManager.referencedConceptAttributeNameValue = widget.NewLabel("")
-	propertyManager.referencedConceptVersionLabel = widget.NewLabel("Referenced Concept Version")
-	propertyManager.referencedConceptVersionValue = widget.NewLabel("")
 	propertyManager.abstractConceptLabel = widget.NewLabel("Abstract Concept ID")
 	propertyManager.abstractConceptValue = newCopyableLabel()
-	propertyManager.abstractConceptVersionLabel = widget.NewLabel("Abstract Concept Version")
-	propertyManager.abstractConceptVersionValue = widget.NewLabel("")
 	propertyManager.refinedConceptLabel = widget.NewLabel("Refined Concept ID")
 	propertyManager.refinedConceptValue = newCopyableLabel()
-	propertyManager.refinedConceptVersionLabel = widget.NewLabel("Refined Concept Version")
-	propertyManager.refinedConceptVersionValue = widget.NewLabel("")
 	propertyManager.isCoreLabel = widget.NewLabel("Is Core")
 	propertyManager.isCoreValue = widget.NewLabel("")
 	propertyManager.readOnlyLabel = widget.NewLabel("Read Only")
@@ -115,16 +103,10 @@ func NewFynePropertyManager() *FynePropertyManager {
 		propertyManager.referencedConceptValue,
 		propertyManager.referencedConceptAttributeNameLabel,
 		propertyManager.referencedConceptAttributeNameValue,
-		propertyManager.referencedConceptVersionLabel,
-		propertyManager.referencedConceptVersionValue,
 		propertyManager.abstractConceptLabel,
 		propertyManager.abstractConceptValue,
-		propertyManager.abstractConceptVersionLabel,
-		propertyManager.abstractConceptVersionValue,
 		propertyManager.refinedConceptLabel,
 		propertyManager.refinedConceptValue,
-		propertyManager.refinedConceptVersionLabel,
-		propertyManager.refinedConceptVersionValue,
 		propertyManager.isCoreLabel,
 		propertyManager.isCoreValue,
 		propertyManager.readOnlyLabel,
@@ -161,16 +143,10 @@ func (pMgr *FynePropertyManager) displayProperties(uid string) {
 		pMgr.abstractConceptValue.SetText("")
 		pMgr.referencedConceptAttributeNameValue.Unbind()
 		pMgr.referencedConceptAttributeNameValue.SetText("")
-		pMgr.referencedConceptVersionValue.Unbind()
-		pMgr.referencedConceptVersionValue.SetText("")
 		pMgr.abstractConceptValue.Unbind()
 		pMgr.abstractConceptValue.SetText("")
-		pMgr.abstractConceptVersionValue.Unbind()
-		pMgr.abstractConceptVersionValue.SetText("")
 		pMgr.refinedConceptValue.Unbind()
 		pMgr.refinedConceptValue.SetText("")
-		pMgr.refinedConceptVersionValue.Unbind()
-		pMgr.refinedConceptVersionValue.SetText("")
 		pMgr.literalValueValue.Unbind()
 		pMgr.literalValueValue.SetText("")
 	} else {
@@ -198,15 +174,12 @@ func (pMgr *FynePropertyManager) displayProperties(uid string) {
 		itemBinding, _ = structBinding.GetItem("ReferencedAttributeName")
 		pMgr.referencedConceptAttributeNameValue.Bind(itemBinding.(binding.String))
 		itemBinding, _ = structBinding.GetItem("ReferencedConceptVersion")
-		pMgr.referencedConceptVersionValue.Bind(itemBinding.(binding.String))
 		itemBinding, _ = structBinding.GetItem("AbstractConceptID")
 		pMgr.abstractConceptValue.Bind(itemBinding.(binding.String))
 		itemBinding, _ = structBinding.GetItem("AbstractConceptVersion")
-		pMgr.abstractConceptVersionValue.Bind(itemBinding.(binding.String))
 		itemBinding, _ = structBinding.GetItem("RefinedConceptID")
 		pMgr.refinedConceptValue.Bind(itemBinding.(binding.String))
 		itemBinding, _ = structBinding.GetItem("RefinedConceptVersion")
-		pMgr.refinedConceptVersionValue.Bind(itemBinding.(binding.String))
 		itemBinding, _ = structBinding.GetItem("LiteralValue")
 		pMgr.literalValueValue.Bind(itemBinding.(binding.String))
 	}

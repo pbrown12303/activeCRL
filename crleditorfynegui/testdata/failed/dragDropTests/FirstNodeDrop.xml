@@ -1,0 +1,421 @@
+<canvas padded size="1600x900">
+	<content>
+		<widget pos="2,2" size="1596x896" type="*container.Split">
+			<widget size="796x896" type="*container.Split">
+				<widget size="796x446" type="*widget.Tree">
+					<widget size="796x446" type="*widget.Scroll">
+						<widget size="796x446" type="*widget.treeContent">
+							<widget size="796x20" type="*widget.branch">
+								<rectangle fillColor="selection" size="796x20"/>
+								<widget pos="24,0" size="772x20" type="*crleditorfynegui.treeNode">
+									<container size="56x20">
+										<widget size="20x20" type="*widget.Icon">
+											<image fillMode="contain" rsc="ElementIcon.png" size="iconInlineSize"/>
+										</widget>
+										<widget pos="22,0" size="34x20" type="*widget.Label">
+											<text pos="1,1" size="76x17">CoreDomain</text>
+										</widget>
+									</container>
+								</widget>
+								<widget pos="2,0" size="20x20" type="*widget.branchIcon">
+									<image fillMode="contain" rsc="navigateNextIcon" size="iconInlineSize"/>
+								</widget>
+							</widget>
+							<widget pos="0,20" size="796x1" type="*widget.Separator">
+								<rectangle fillColor="rgba(0,0,0,255)" size="796x1"/>
+							</widget>
+							<widget pos="0,22" size="796x20" type="*widget.branch">
+								<widget pos="24,0" size="772x20" type="*crleditorfynegui.treeNode">
+									<container size="56x20">
+										<widget size="20x20" type="*widget.Icon">
+											<image fillMode="contain" rsc="ElementIcon.png" size="iconInlineSize"/>
+										</widget>
+										<widget pos="22,0" size="34x20" type="*widget.Label">
+											<text pos="1,1" size="156x17">CrlDataStructuresDomain</text>
+										</widget>
+									</container>
+								</widget>
+								<widget pos="2,0" size="20x20" type="*widget.branchIcon">
+									<image fillMode="contain" rsc="navigateNextIcon" size="iconInlineSize"/>
+								</widget>
+							</widget>
+							<widget pos="0,42" size="796x1" type="*widget.Separator">
+								<rectangle fillColor="rgba(0,0,0,255)" size="796x1"/>
+							</widget>
+							<widget pos="0,44" size="796x20" type="*widget.branch">
+								<widget pos="24,0" size="772x20" type="*crleditorfynegui.treeNode">
+									<container size="56x20">
+										<widget size="20x20" type="*widget.Icon">
+											<image fillMode="contain" rsc="ElementIcon.png" size="iconInlineSize"/>
+										</widget>
+										<widget pos="22,0" size="34x20" type="*widget.Label">
+											<text pos="1,1" size="129x17">CrlDataTypesDomain</text>
+										</widget>
+									</container>
+								</widget>
+								<widget pos="2,0" size="20x20" type="*widget.branchIcon">
+									<image fillMode="contain" rsc="navigateNextIcon" size="iconInlineSize"/>
+								</widget>
+							</widget>
+							<widget pos="0,64" size="796x1" type="*widget.Separator">
+								<rectangle fillColor="rgba(0,0,0,255)" size="796x1"/>
+							</widget>
+							<widget pos="0,66" size="796x20" type="*widget.branch">
+								<widget pos="24,0" size="772x20" type="*crleditorfynegui.treeNode">
+									<container size="56x20">
+										<widget size="20x20" type="*widget.Icon">
+											<image fillMode="contain" rsc="ElementIcon.png" size="iconInlineSize"/>
+										</widget>
+										<widget pos="22,0" size="34x20" type="*widget.Label">
+											<text pos="1,1" size="117x17">CrlDiagramDomain</text>
+										</widget>
+									</container>
+								</widget>
+								<widget pos="2,0" size="20x20" type="*widget.branchIcon">
+									<image fillMode="contain" rsc="navigateNextIcon" size="iconInlineSize"/>
+								</widget>
+							</widget>
+							<widget pos="0,86" size="796x1" type="*widget.Separator">
+								<rectangle fillColor="rgba(0,0,0,255)" size="796x1"/>
+							</widget>
+							<widget pos="0,88" size="796x20" type="*widget.branch">
+								<widget pos="24,0" size="772x20" type="*crleditorfynegui.treeNode">
+									<container size="56x20">
+										<widget size="20x20" type="*widget.Icon">
+											<image fillMode="contain" rsc="ElementIcon.png" size="iconInlineSize"/>
+										</widget>
+										<widget pos="22,0" size="34x20" type="*widget.Label">
+											<text pos="1,1" size="98x17">CrlMapsDomain</text>
+										</widget>
+									</container>
+								</widget>
+								<widget pos="2,0" size="20x20" type="*widget.branchIcon">
+									<image fillMode="contain" rsc="navigateNextIcon" size="iconInlineSize"/>
+								</widget>
+							</widget>
+							<widget pos="0,108" size="796x1" type="*widget.Separator">
+								<rectangle fillColor="rgba(0,0,0,255)" size="796x1"/>
+							</widget>
+							<widget pos="0,110" size="796x20" type="*widget.branch">
+								<widget pos="24,0" size="772x20" type="*crleditorfynegui.treeNode">
+									<container size="56x20">
+										<widget size="20x20" type="*widget.Icon">
+											<image fillMode="contain" rsc="ElementIcon.png" size="iconInlineSize"/>
+										</widget>
+										<widget pos="22,0" size="34x20" type="*widget.Label">
+											<text pos="1,1" size="55x17">Domain1</text>
+										</widget>
+									</container>
+								</widget>
+								<widget pos="2,0" size="20x20" type="*widget.branchIcon">
+									<image fillMode="contain" rsc="moveDownIcon" size="iconInlineSize"/>
+								</widget>
+							</widget>
+							<widget pos="0,130" size="796x1" type="*widget.Separator">
+								<rectangle fillColor="rgba(0,0,0,255)" size="796x1"/>
+							</widget>
+							<widget pos="0,132" size="796x20" type="*widget.branch">
+								<widget pos="46,0" size="750x20" type="*crleditorfynegui.treeNode">
+									<container size="56x20">
+										<widget size="20x20" type="*widget.Icon">
+											<image fillMode="contain" rsc="DiagramIcon.png" size="iconInlineSize"/>
+										</widget>
+										<widget pos="22,0" size="34x20" type="*widget.Label">
+											<text pos="1,1" size="60x17">Diagram1</text>
+										</widget>
+									</container>
+								</widget>
+								<widget pos="24,0" size="20x20" type="*widget.branchIcon">
+									<image fillMode="contain" rsc="navigateNextIcon" size="iconInlineSize"/>
+								</widget>
+							</widget>
+						</widget>
+					</widget>
+				</widget>
+				<widget pos="0,446" size="796x4" type="*container.divider">
+					<rectangle fillColor="shadow" size="796x4"/>
+					<rectangle fillColor="foreground" pos="394,1" size="8x1"/>
+				</widget>
+				<container pos="0,450" size="796x446">
+					<widget size="397x27" type="*widget.Label">
+						<text bold pos="1,1" size="56x17">Property</text>
+					</widget>
+					<widget pos="399,0" size="397x27" type="*widget.Label">
+						<text bold pos="1,1" size="36x17">Value</text>
+					</widget>
+					<widget pos="0,29" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="28x17">Type</text>
+					</widget>
+					<widget pos="399,29" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="87x17">*core.element</text>
+					</widget>
+					<widget pos="0,59" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="13x17">ID</text>
+					</widget>
+					<widget pos="399,59" size="397x27" type="*crleditorfynegui.copyableLabel">
+						<text pos="1,1" size="253x17">b4b4505c-c709-57da-86dc-1392c224de8b</text>
+					</widget>
+					<widget pos="0,89" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="118x17">Owning Concept ID</text>
+					</widget>
+					<widget pos="399,89" size="397x27" type="*crleditorfynegui.copyableLabel">
+						<text pos="1,1" size="0x17"></text>
+					</widget>
+					<widget pos="0,119" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="32x17">Label</text>
+					</widget>
+					<widget pos="399,119" size="397x27" type="*widget.Entry">
+						<rectangle pos="1,1" size="395x25"/>
+						<rectangle size="395x26" strokeColor="inputBorder" strokeWidth="1"/>
+						<widget pos="0,1" size="373x25" type="*widget.Scroll">
+							<widget size="373x25" type="*widget.entryContent">
+								<widget size="373x25" type="*widget.RichText">
+									<text pos="1,0" size="76x17">CoreDomain</text>
+								</widget>
+							</widget>
+						</widget>
+						<widget pos="376,1" size="20x20" type="*widget.validationStatus">
+							<image rsc="confirmIcon" size="iconInlineSize"/>
+						</widget>
+					</widget>
+					<widget pos="0,149" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="59x17">Definition</text>
+					</widget>
+					<widget pos="399,149" size="397x27" type="*widget.Entry">
+						<rectangle pos="1,1" size="395x25"/>
+						<rectangle size="395x26" strokeColor="inputBorder" strokeWidth="1"/>
+						<widget pos="0,1" size="373x25" type="*widget.Scroll">
+							<widget size="373x25" type="*widget.entryContent">
+								<widget size="373x25" type="*widget.RichText">
+									<text color="placeholder" pos="1,0" size="0x17"></text>
+								</widget>
+								<widget size="373x25" type="*widget.RichText">
+									<text pos="1,0" size="0x17"></text>
+								</widget>
+							</widget>
+						</widget>
+						<widget pos="376,1" size="20x20" type="*widget.validationStatus">
+						</widget>
+					</widget>
+					<widget pos="0,179" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="74x17">Literal Value</text>
+					</widget>
+					<widget pos="399,179" size="397x27" type="*widget.Entry">
+						<rectangle pos="1,1" size="395x25"/>
+						<rectangle size="395x26" strokeColor="inputBorder" strokeWidth="1"/>
+						<widget pos="0,1" size="373x25" type="*widget.Scroll">
+							<widget size="373x25" type="*widget.entryContent">
+								<widget size="373x25" type="*widget.RichText">
+									<text color="placeholder" pos="1,0" size="0x17"></text>
+								</widget>
+								<widget size="373x25" type="*widget.RichText">
+									<text pos="1,0" size="0x17"></text>
+								</widget>
+							</widget>
+						</widget>
+						<widget pos="376,1" size="20x20" type="*widget.validationStatus">
+						</widget>
+					</widget>
+					<widget pos="0,209" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="22x17">URI</text>
+					</widget>
+					<widget pos="399,209" size="397x27" type="*widget.Entry">
+						<rectangle pos="1,1" size="395x25"/>
+						<rectangle size="395x26" strokeColor="inputBorder" strokeWidth="1"/>
+						<widget pos="0,1" size="373x25" type="*widget.Scroll">
+							<widget size="373x25" type="*widget.entryContent">
+								<widget size="373x25" type="*widget.RichText">
+									<text pos="1,0" size="233x17">http://activeCrl.com/core/CoreDomain</text>
+								</widget>
+							</widget>
+						</widget>
+						<widget pos="376,1" size="20x20" type="*widget.validationStatus">
+							<image rsc="confirmIcon" size="iconInlineSize"/>
+						</widget>
+					</widget>
+					<widget pos="0,238" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="140x17">Referenced Concept ID</text>
+					</widget>
+					<widget pos="399,238" size="397x27" type="*crleditorfynegui.copyableLabel">
+						<text pos="1,1" size="0x17"></text>
+					</widget>
+					<widget pos="0,268" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="167x17">Referenced Attribute Name</text>
+					</widget>
+					<widget pos="399,268" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="0x17"></text>
+					</widget>
+					<widget pos="0,298" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="121x17">Abstract Concept ID</text>
+					</widget>
+					<widget pos="399,298" size="397x27" type="*crleditorfynegui.copyableLabel">
+						<text pos="1,1" size="0x17"></text>
+					</widget>
+					<widget pos="0,328" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="117x17">Refined Concept ID</text>
+					</widget>
+					<widget pos="399,328" size="397x27" type="*crleditorfynegui.copyableLabel">
+						<text pos="1,1" size="0x17"></text>
+					</widget>
+					<widget pos="0,358" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="42x17">Is Core</text>
+					</widget>
+					<widget pos="399,358" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="25x17">true</text>
+					</widget>
+					<widget pos="0,388" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="62x17">Read Only</text>
+					</widget>
+					<widget pos="399,388" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="28x17">false</text>
+					</widget>
+					<widget pos="0,418" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="45x17">Version</text>
+					</widget>
+					<widget pos="399,418" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="7x17">6</text>
+					</widget>
+				</container>
+			</widget>
+			<widget pos="796,0" size="4x896" type="*container.divider">
+				<rectangle fillColor="shadow" size="4x896"/>
+				<rectangle fillColor="foreground" pos="1,444" size="1x8"/>
+			</widget>
+			<container pos="800,0" size="796x896">
+				<widget pos="24,0" size="772x896" type="*container.DocTabs">
+					<container size="772x32">
+						<widget size="748x32" type="*widget.Scroll">
+							<container size="748x32">
+								<widget size="87x32" type="*container.tabButton">
+									<text bold color="primary" pos="1,1" size="85x30">Diagram1</text>
+								</widget>
+							</container>
+						</widget>
+						<container pos="750,0" size="22x32">
+							<widget size="22x32" type="*widget.Button">
+								<rectangle size="22x32"/>
+								<rectangle size="0x0"/>
+								<image fillMode="contain" pos="1,6" rsc="more-horizontal.svg" size="iconInlineSize" themed="default"/>
+							</widget>
+						</container>
+					</container>
+					<rectangle fillColor="shadow" pos="0,32" size="772x2"/>
+					<rectangle fillColor="primary" pos="0,32" size="87x2"/>
+					<widget pos="0,34" size="772x862" type="*widget.Scroll">
+						<widget size="800x862" type="*diagramwidget.DiagramWidget">
+							<widget pos="100,100" size="82x45" type="*crleditorfynegui.FyneCrlDiagramNode">
+								<rectangle fillColor="background" size="82x45" strokeColor="foreground" strokeWidth="1"/>
+								<container pos="2,2" size="78x41">
+									<container size="78x20">
+										<widget size="20x20" type="*widget.Icon">
+											<image fillMode="contain" rsc="ElementIcon.png" size="iconInlineSize"/>
+										</widget>
+										<text color="rgba(0,0,0,255)" italic pos="22,0" size="0x20" textSize="11"></text>
+									</container>
+									<widget pos="0,22" size="78x19" type="*widget.Entry">
+										<rectangle pos="1,1" size="76x17"/>
+										<rectangle size="77x18" strokeColor="inputBorder" strokeWidth="1"/>
+										<widget pos="0,1" size="78x17" type="*widget.entryContent">
+											<widget size="78x17" type="*widget.RichText">
+												<text pos="1,0" size="76x17">CoreDomain</text>
+											</widget>
+										</widget>
+									</widget>
+								</container>
+								<widget pos="77,-5" size="10x10" type="*diagramwidget.Handle">
+									<rectangle size="10x10" strokeColor="foreground" strokeWidth="1"/>
+								</widget>
+								<widget pos="-5,17" size="10x10" type="*diagramwidget.Handle">
+									<rectangle size="10x10" strokeColor="foreground" strokeWidth="1"/>
+								</widget>
+								<widget pos="77,17" size="10x10" type="*diagramwidget.Handle">
+									<rectangle size="10x10" strokeColor="foreground" strokeWidth="1"/>
+								</widget>
+								<widget pos="-5,40" size="10x10" type="*diagramwidget.Handle">
+									<rectangle size="10x10" strokeColor="foreground" strokeWidth="1"/>
+								</widget>
+								<widget pos="36,40" size="10x10" type="*diagramwidget.Handle">
+									<rectangle size="10x10" strokeColor="foreground" strokeWidth="1"/>
+								</widget>
+								<widget pos="77,40" size="10x10" type="*diagramwidget.Handle">
+									<rectangle size="10x10" strokeColor="foreground" strokeWidth="1"/>
+								</widget>
+								<widget pos="-5,-5" size="10x10" type="*diagramwidget.Handle">
+									<rectangle size="10x10" strokeColor="foreground" strokeWidth="1"/>
+								</widget>
+								<widget pos="36,-5" size="10x10" type="*diagramwidget.Handle">
+									<rectangle size="10x10" strokeColor="foreground" strokeWidth="1"/>
+								</widget>
+							</widget>
+						</widget>
+						<widget pos="772,0" size="0x862" type="*widget.Shadow">
+							<linearGradient angle="270" endColor="shadow" pos="-8,0" size="8x862"/>
+						</widget>
+						<widget pos="0,856" size="772x6" type="*widget.scrollBarArea">
+							<widget pos="0,3" size="744x3" type="*widget.scrollBar">
+								<rectangle fillColor="scrollbar" size="744x3"/>
+							</widget>
+						</widget>
+					</widget>
+				</widget>
+				<container size="22x896">
+					<widget size="22x22" type="*widget.Button">
+						<rectangle fillColor="menuBackground" size="22x22"/>
+						<rectangle size="0x0"/>
+						<image fillMode="contain" pos="1,1" rsc="CursorIcon.png" size="iconInlineSize"/>
+					</widget>
+					<widget pos="0,24" size="22x22" type="*widget.Button">
+						<rectangle fillColor="menuBackground" size="22x22"/>
+						<rectangle size="0x0"/>
+						<image fillMode="contain" pos="1,1" rsc="ElementIcon.png" size="iconInlineSize"/>
+					</widget>
+					<widget pos="0,48" size="22x22" type="*widget.Button">
+						<rectangle fillColor="menuBackground" size="22x22"/>
+						<rectangle size="0x0"/>
+						<image fillMode="contain" pos="1,1" rsc="LiteralIcon.png" size="iconInlineSize"/>
+					</widget>
+					<widget pos="0,72" size="22x22" type="*widget.Button">
+						<rectangle fillColor="menuBackground" size="22x22"/>
+						<rectangle size="0x0"/>
+						<image fillMode="contain" pos="1,1" rsc="ReferenceIcon.png" size="iconInlineSize"/>
+					</widget>
+					<widget pos="0,96" size="22x22" type="*widget.Button">
+						<rectangle fillColor="menuBackground" size="22x22"/>
+						<rectangle size="0x0"/>
+						<image fillMode="contain" pos="1,1" rsc="ReferenceLinkIcon.png" size="iconInlineSize"/>
+					</widget>
+					<widget pos="0,120" size="22x22" type="*widget.Button">
+						<rectangle fillColor="menuBackground" size="22x22"/>
+						<rectangle size="0x0"/>
+						<image fillMode="contain" pos="1,1" rsc="RefinementIcon.png" size="iconInlineSize"/>
+					</widget>
+					<widget pos="0,144" size="22x22" type="*widget.Button">
+						<rectangle fillColor="menuBackground" size="22x22"/>
+						<rectangle size="0x0"/>
+						<image fillMode="contain" pos="1,1" rsc="RefinementLinkIcon.png" size="iconInlineSize"/>
+					</widget>
+					<widget pos="0,168" size="22x22" type="*widget.Button">
+						<rectangle fillColor="menuBackground" size="22x22"/>
+						<rectangle size="0x0"/>
+						<image fillMode="contain" pos="1,1" rsc="OwnerPointerIcon.png" size="iconInlineSize"/>
+					</widget>
+					<widget pos="0,192" size="22x22" type="*widget.Button">
+						<rectangle fillColor="menuBackground" size="22x22"/>
+						<rectangle size="0x0"/>
+						<image fillMode="contain" pos="1,1" rsc="ElementPointerIcon.png" size="iconInlineSize"/>
+					</widget>
+					<widget pos="0,216" size="22x22" type="*widget.Button">
+						<rectangle fillColor="menuBackground" size="22x22"/>
+						<rectangle size="0x0"/>
+						<image fillMode="contain" pos="1,1" rsc="AbstractPointerIcon.png" size="iconInlineSize"/>
+					</widget>
+					<widget pos="0,240" size="22x22" type="*widget.Button">
+						<rectangle fillColor="menuBackground" size="22x22"/>
+						<rectangle size="0x0"/>
+						<image fillMode="contain" pos="1,1" rsc="RefinedPointerIcon.png" size="iconInlineSize"/>
+					</widget>
+				</container>
+			</container>
+		</widget>
+	</content>
+</canvas>

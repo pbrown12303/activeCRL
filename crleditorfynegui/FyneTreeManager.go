@@ -203,6 +203,10 @@ func (tn *treeNode) CreateRenderer() fyne.WidgetRenderer {
 	return newTreeNodeRenderer(tn)
 }
 
+func (tn *treeNode) Cursor() desktop.StandardCursor {
+	return FyneGUISingleton.activeCursor
+}
+
 func (tn *treeNode) DragEnd() {
 	if FyneGUISingleton.dragDropTransaction != nil {
 		ddt := FyneGUISingleton.dragDropTransaction
@@ -224,6 +228,7 @@ func (tn *treeNode) Dragged(event *fyne.DragEvent) {
 	if FyneGUISingleton.dragDropTransaction == nil {
 		FyneGUISingleton.dragDropTransaction = &dragDropTransaction{id: tn.id}
 	}
+	FyneGUISingleton.activeCursor = desktop.CrosshairCursor
 }
 
 func (tn *treeNode) MouseDown(event *desktop.MouseEvent) {

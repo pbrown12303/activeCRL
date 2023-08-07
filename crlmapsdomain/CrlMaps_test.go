@@ -9,7 +9,7 @@ import (
 )
 
 var _ = Describe("CrlMaps domain test", func() {
-	FSpecify("Domain generation should be idempotent", func() {
+	Specify("Domain generation should be idempotent", func() {
 		uOfD1 := core.NewUniverseOfDiscourse()
 		hl1 := uOfD1.NewTransaction()
 		Expect(BuildCrlMapsDomain(uOfD1, hl1)).To(Succeed())

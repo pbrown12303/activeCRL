@@ -73,7 +73,6 @@ var _ = Describe("Element internals test", func() {
 			Expect(err).To(BeNil())
 			Expect(ref.GetConceptID(hl)).To(Equal(cs.ConceptID))
 			Expect(target.GetConceptID(hl)).To(Equal(cs.ReferencedConceptID))
-			Expect(strconv.Itoa(target.GetVersion(hl))).To(Equal(cs.ReferencedConceptVersion))
 			Expect(ref.GetReferencedAttributeName(hl).String()).To(Equal(cs.ReferencedAttributeName))
 		})
 		Specify("Creation from Refinement should work without error and fields copied correctly", func() {
@@ -88,9 +87,7 @@ var _ = Describe("Element internals test", func() {
 			Expect(err).To(BeNil())
 			Expect(ref.GetConceptID(hl)).To(Equal(cs.ConceptID))
 			Expect(ref.GetAbstractConceptID(hl)).To(Equal(cs.AbstractConceptID))
-			Expect(strconv.Itoa(ref.GetAbstractConceptVersion(hl))).To(Equal(cs.AbstractConceptVersion))
 			Expect(ref.GetRefinedConceptID(hl)).To(Equal(cs.RefinedConceptID))
-			Expect(strconv.Itoa(ref.GetRefinedConceptVersion(hl))).To(Equal(cs.RefinedConceptVersion))
 		})
 	})
 })

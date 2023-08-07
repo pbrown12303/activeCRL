@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"strconv"
 
 	"github.com/pkg/errors"
 )
@@ -74,10 +73,8 @@ func FindAttributeName(stringName string) (AttributeName, error) {
 
 type reference struct {
 	element
-	ReferencedConceptID string
-	// referencedConcept is a cache for convenience
-	ReferencedAttributeName  AttributeName
-	ReferencedConceptVersion int
+	ReferencedConceptID     string
+	ReferencedAttributeName AttributeName
 }
 
 func (rPtr *reference) clone(trans *Transaction) Reference {
@@ -91,7 +88,6 @@ func (rPtr *reference) clone(trans *Transaction) Reference {
 func (rPtr *reference) cloneAttributes(source *reference, trans *Transaction) {
 	rPtr.element.cloneAttributes(&source.element, trans)
 	rPtr.ReferencedConceptID = source.ReferencedConceptID
-	rPtr.ReferencedConceptVersion = source.ReferencedConceptVersion
 }
 
 // GetReferencedConcept returns the element representing  the concept being referenced
@@ -148,12 +144,6 @@ func (rPtr *reference) GetReferencedAttributeValue(trans *Transaction) string {
 	return ""
 }
 
-// GetReferencedConceptVersion returns the last known version of the referenced concept
-func (rPtr *reference) GetReferencedConceptVersion(trans *Transaction) int {
-	trans.ReadLockElement(rPtr)
-	return rPtr.ReferencedConceptVersion
-}
-
 func (rPtr *reference) initializeReference(conceptID string, uri string) {
 	rPtr.initializeElement(conceptID, uri)
 }
@@ -177,12 +167,6 @@ func (rPtr *reference) isEquivalent(hl1 *Transaction, el *reference, hl2 *Transa
 		}
 		return false
 	}
-	if rPtr.ReferencedConceptVersion != el.ReferencedConceptVersion {
-		if print {
-			log.Printf("In reference.IsEquivalent, ReferencedConceptVersions do not match")
-		}
-		return false
-	}
 	return rPtr.element.isEquivalent(hl1, &el.element, hl2, print)
 }
 
@@ -199,7 +183,6 @@ func (rPtr *reference) MarshalJSON() ([]byte, error) {
 func (rPtr *reference) marshalReferenceFields(buffer *bytes.Buffer) error {
 	buffer.WriteString(fmt.Sprintf("\"ReferencedConceptID\":\"%s\",", rPtr.ReferencedConceptID))
 	buffer.WriteString(fmt.Sprintf("\"ReferencedAttributeName\":\"%s\",", rPtr.ReferencedAttributeName.String()))
-	buffer.WriteString(fmt.Sprintf("\"ReferencedConceptVersion\":\"%d\",", rPtr.ReferencedConceptVersion))
 	rPtr.element.marshalElementFields(buffer)
 	return nil
 }
@@ -234,18 +217,6 @@ func (rPtr *reference) recoverReferenceFields(unmarshaledData *map[string]json.R
 		return err
 	}
 	rPtr.ReferencedAttributeName = attributeName
-	// ReferencedConceptVersion
-	var recoveredReferencedConceptVersion string
-	err = json.Unmarshal((*unmarshaledData)["ReferencedConceptVersion"], &recoveredReferencedConceptVersion)
-	if err != nil {
-		log.Printf("Recovery of Reference.ReferencedConceptVersion failed\n")
-		return err
-	}
-	rPtr.ReferencedConceptVersion, err = strconv.Atoi(recoveredReferencedConceptVersion)
-	if err != nil {
-		log.Printf("Conversion of Reference.ReferencedConceptVersion to integer failed\n")
-		return err
-	}
 	return nil
 }
 
@@ -317,14 +288,6 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName Attribu
 		}
 		rPtr.ReferencedConceptID = rcID
 		rPtr.ReferencedAttributeName = attributeName
-		if newReferencedConcept == nil {
-			rPtr.ReferencedConceptVersion = 0
-		} else {
-			rPtr.ReferencedConceptVersion = newReferencedConcept.GetVersion(trans)
-			if err != nil {
-				return errors.Wrap(err, "reference.SetReferencedConceptID failed")
-			}
-		}
 		afterState, err2 := NewConceptState(rPtr)
 		if err2 != nil {
 			return errors.Wrap(err2, "reference.SetReferencedConceptID failed")
@@ -337,36 +300,6 @@ func (rPtr *reference) SetReferencedConceptID(rcID string, attributeName Attribu
 	return nil
 }
 
-// setReferencedConceptVersion sets the referenced concept version when the reference is notified that
-// it has changed
-func (rPtr *reference) setReferencedConceptVersion(rcID string, version int, trans *Transaction) error {
-	if rPtr.uOfD == nil {
-		return errors.New("reference.SetReferencedConceptID failed because the element uOfD is nil")
-	}
-	trans.WriteLockElement(rPtr)
-	if !rPtr.isEditable(trans) {
-		return errors.New("reference.SetReferencedConceptID failed because the reference is not editable")
-	}
-	if rcID == rPtr.ReferencedConceptID {
-		beforeState, err := NewConceptState(rPtr)
-		if err != nil {
-			return errors.Wrap(err, "reference.setReferencedConceptVersion failed")
-		}
-		rPtr.uOfD.preChange(rPtr, trans)
-		rPtr.incrementVersion(trans)
-		rPtr.ReferencedConceptVersion = version
-		afterState, err2 := NewConceptState(rPtr)
-		if err2 != nil {
-			return errors.Wrap(err2, "reference.setReferencedConceptVersion failed")
-		}
-		err = rPtr.uOfD.SendConceptChangeNotification(rPtr, beforeState, afterState, trans)
-		if err != nil {
-			return errors.Wrap(err, "reference.setReferencedConceptVersion failed")
-		}
-	}
-	return nil
-}
-
 // Reference represents a concept that is a pointer to another concept.
 type Reference interface {
 	Element
@@ -374,9 +307,7 @@ type Reference interface {
 	GetReferencedConceptID(*Transaction) string
 	GetReferencedAttributeName(*Transaction) AttributeName
 	GetReferencedAttributeValue(*Transaction) string
-	GetReferencedConceptVersion(*Transaction) int
 	getReferencedConceptNoLock() Element
 	SetReferencedConcept(Element, AttributeName, *Transaction) error
 	SetReferencedConceptID(string, AttributeName, *Transaction) error
-	setReferencedConceptVersion(string, int, *Transaction) error
 }

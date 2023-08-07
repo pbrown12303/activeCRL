@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
 	"fyne.io/x/fyne/widget/diagramwidget"
 
@@ -33,6 +34,8 @@ type CrlEditorFyneGUI struct {
 	windowContent          fyne.CanvasObject
 	conceptStateBindingMap map[string]ConceptStateBinding
 	currentSelectionID     string
+	activeCursor           desktop.StandardCursor
+	dragDropTransaction    *dragDropTransaction
 	propertiesClipboard    *diagramwidget.DiagramElementProperties
 	// The following attributes are kept for testing purposes
 	// File Menu Items
@@ -53,12 +56,11 @@ type CrlEditorFyneGUI struct {
 	// Help Menu Items
 	helpItem *fyne.MenuItem
 	// Main Menu Items
-	mainMenu            *fyne.MainMenu
-	fileMenu            *fyne.Menu
-	editMenu            *fyne.Menu
-	debugMenu           *fyne.Menu
-	helpMenu            *fyne.Menu
-	dragDropTransaction *dragDropTransaction
+	mainMenu  *fyne.MainMenu
+	fileMenu  *fyne.Menu
+	editMenu  *fyne.Menu
+	debugMenu *fyne.Menu
+	helpMenu  *fyne.Menu
 }
 
 // NewFyneGUI returns an initialized FyneGUI
@@ -74,6 +76,7 @@ func initializeFyneGUI(gui *CrlEditorFyneGUI, crlEditor *crleditor.Editor) {
 	gui.editor = crlEditor
 	gui.conceptStateBindingMap = make(map[string]ConceptStateBinding)
 	gui.app.Settings().SetTheme(&fyneGuiTheme{})
+	gui.activeCursor = desktop.DefaultCursor
 	gui.treeManager = NewFyneTreeManager(gui)
 	gui.propertyManager = NewFynePropertyManager()
 	gui.diagramManager = NewFyneDiagramManager(gui)

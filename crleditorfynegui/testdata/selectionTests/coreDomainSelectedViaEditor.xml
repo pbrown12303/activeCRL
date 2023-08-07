@@ -101,39 +101,39 @@
 					<rectangle fillColor="foreground" pos="394,1" size="8x1"/>
 				</widget>
 				<container pos="0,450" size="796x446">
-					<widget size="397x22" type="*widget.Label">
+					<widget size="397x27" type="*widget.Label">
 						<text bold pos="1,1" size="56x17">Property</text>
 					</widget>
-					<widget pos="399,0" size="397x22" type="*widget.Label">
+					<widget pos="399,0" size="397x27" type="*widget.Label">
 						<text bold pos="1,1" size="36x17">Value</text>
 					</widget>
-					<widget pos="0,24" size="397x22" type="*widget.Label">
+					<widget pos="0,29" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="28x17">Type</text>
 					</widget>
-					<widget pos="399,24" size="397x22" type="*widget.Label">
+					<widget pos="399,29" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="87x17">*core.element</text>
 					</widget>
-					<widget pos="0,49" size="397x22" type="*widget.Label">
+					<widget pos="0,59" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="13x17">ID</text>
 					</widget>
-					<widget pos="399,49" size="397x22" type="*crleditorfynegui.copyableLabel">
+					<widget pos="399,59" size="397x27" type="*crleditorfynegui.copyableLabel">
 						<text pos="1,1" size="253x17">b4b4505c-c709-57da-86dc-1392c224de8b</text>
 					</widget>
-					<widget pos="0,74" size="397x22" type="*widget.Label">
+					<widget pos="0,89" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="118x17">Owning Concept ID</text>
 					</widget>
-					<widget pos="399,74" size="397x22" type="*crleditorfynegui.copyableLabel">
+					<widget pos="399,89" size="397x27" type="*crleditorfynegui.copyableLabel">
 						<text pos="1,1" size="0x17"></text>
 					</widget>
-					<widget pos="0,99" size="397x22" type="*widget.Label">
+					<widget pos="0,119" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="32x17">Label</text>
 					</widget>
-					<widget pos="399,99" size="397x22" type="*widget.Entry">
-						<rectangle pos="1,1" size="395x20"/>
-						<rectangle size="395x21" strokeColor="inputBorder" strokeWidth="1"/>
-						<widget pos="0,1" size="373x20" type="*widget.Scroll">
-							<widget size="373x20" type="*widget.entryContent">
-								<widget size="373x20" type="*widget.RichText">
+					<widget pos="399,119" size="397x27" type="*widget.Entry">
+						<rectangle pos="1,1" size="395x25"/>
+						<rectangle size="395x26" strokeColor="inputBorder" strokeWidth="1"/>
+						<widget pos="0,1" size="373x25" type="*widget.Scroll">
+							<widget size="373x25" type="*widget.entryContent">
+								<widget size="373x25" type="*widget.RichText">
 									<text pos="1,0" size="76x17">CoreDomain</text>
 								</widget>
 							</widget>
@@ -142,18 +142,18 @@
 							<image rsc="confirmIcon" size="iconInlineSize"/>
 						</widget>
 					</widget>
-					<widget pos="0,124" size="397x22" type="*widget.Label">
+					<widget pos="0,149" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="59x17">Definition</text>
 					</widget>
-					<widget pos="399,124" size="397x22" type="*widget.Entry">
-						<rectangle pos="1,1" size="395x20"/>
-						<rectangle size="395x21" strokeColor="inputBorder" strokeWidth="1"/>
-						<widget pos="0,1" size="373x20" type="*widget.Scroll">
-							<widget size="373x20" type="*widget.entryContent">
-								<widget size="373x20" type="*widget.RichText">
+					<widget pos="399,149" size="397x27" type="*widget.Entry">
+						<rectangle pos="1,1" size="395x25"/>
+						<rectangle size="395x26" strokeColor="inputBorder" strokeWidth="1"/>
+						<widget pos="0,1" size="373x25" type="*widget.Scroll">
+							<widget size="373x25" type="*widget.entryContent">
+								<widget size="373x25" type="*widget.RichText">
 									<text color="placeholder" pos="1,0" size="0x17"></text>
 								</widget>
-								<widget size="373x20" type="*widget.RichText">
+								<widget size="373x25" type="*widget.RichText">
 									<text pos="1,0" size="0x17"></text>
 								</widget>
 							</widget>
@@ -161,18 +161,18 @@
 						<widget pos="376,1" size="20x20" type="*widget.validationStatus">
 						</widget>
 					</widget>
-					<widget pos="0,149" size="397x22" type="*widget.Label">
+					<widget pos="0,179" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="74x17">Literal Value</text>
 					</widget>
-					<widget pos="399,149" size="397x22" type="*widget.Entry">
-						<rectangle pos="1,1" size="395x20"/>
-						<rectangle size="395x21" strokeColor="inputBorder" strokeWidth="1"/>
-						<widget pos="0,1" size="373x20" type="*widget.Scroll">
-							<widget size="373x20" type="*widget.entryContent">
-								<widget size="373x20" type="*widget.RichText">
+					<widget pos="399,179" size="397x27" type="*widget.Entry">
+						<rectangle pos="1,1" size="395x25"/>
+						<rectangle size="395x26" strokeColor="inputBorder" strokeWidth="1"/>
+						<widget pos="0,1" size="373x25" type="*widget.Scroll">
+							<widget size="373x25" type="*widget.entryContent">
+								<widget size="373x25" type="*widget.RichText">
 									<text color="placeholder" pos="1,0" size="0x17"></text>
 								</widget>
-								<widget size="373x20" type="*widget.RichText">
+								<widget size="373x25" type="*widget.RichText">
 									<text pos="1,0" size="0x17"></text>
 								</widget>
 							</widget>
@@ -180,15 +180,15 @@
 						<widget pos="376,1" size="20x20" type="*widget.validationStatus">
 						</widget>
 					</widget>
-					<widget pos="0,174" size="397x22" type="*widget.Label">
+					<widget pos="0,209" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="22x17">URI</text>
 					</widget>
-					<widget pos="399,174" size="397x22" type="*widget.Entry">
-						<rectangle pos="1,1" size="395x20"/>
-						<rectangle size="395x21" strokeColor="inputBorder" strokeWidth="1"/>
-						<widget pos="0,1" size="373x20" type="*widget.Scroll">
-							<widget size="373x20" type="*widget.entryContent">
-								<widget size="373x20" type="*widget.RichText">
+					<widget pos="399,209" size="397x27" type="*widget.Entry">
+						<rectangle pos="1,1" size="395x25"/>
+						<rectangle size="395x26" strokeColor="inputBorder" strokeWidth="1"/>
+						<widget pos="0,1" size="373x25" type="*widget.Scroll">
+							<widget size="373x25" type="*widget.entryContent">
+								<widget size="373x25" type="*widget.RichText">
 									<text pos="1,0" size="233x17">http://activeCrl.com/core/CoreDomain</text>
 								</widget>
 							</widget>
@@ -197,65 +197,47 @@
 							<image rsc="confirmIcon" size="iconInlineSize"/>
 						</widget>
 					</widget>
-					<widget pos="0,199" size="397x22" type="*widget.Label">
+					<widget pos="0,238" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="140x17">Referenced Concept ID</text>
 					</widget>
-					<widget pos="399,199" size="397x22" type="*crleditorfynegui.copyableLabel">
+					<widget pos="399,238" size="397x27" type="*crleditorfynegui.copyableLabel">
 						<text pos="1,1" size="0x17"></text>
 					</widget>
-					<widget pos="0,224" size="397x22" type="*widget.Label">
+					<widget pos="0,268" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="167x17">Referenced Attribute Name</text>
 					</widget>
-					<widget pos="399,224" size="397x22" type="*widget.Label">
+					<widget pos="399,268" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="0x17"></text>
 					</widget>
-					<widget pos="0,248" size="397x22" type="*widget.Label">
-						<text pos="1,1" size="172x17">Referenced Concept Version</text>
-					</widget>
-					<widget pos="399,248" size="397x22" type="*widget.Label">
-						<text pos="1,1" size="0x17"></text>
-					</widget>
-					<widget pos="0,273" size="397x22" type="*widget.Label">
+					<widget pos="0,298" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="121x17">Abstract Concept ID</text>
 					</widget>
-					<widget pos="399,273" size="397x22" type="*crleditorfynegui.copyableLabel">
+					<widget pos="399,298" size="397x27" type="*crleditorfynegui.copyableLabel">
 						<text pos="1,1" size="0x17"></text>
 					</widget>
-					<widget pos="0,298" size="397x22" type="*widget.Label">
-						<text pos="1,1" size="153x17">Abstract Concept Version</text>
-					</widget>
-					<widget pos="399,298" size="397x22" type="*widget.Label">
-						<text pos="1,1" size="0x17"></text>
-					</widget>
-					<widget pos="0,323" size="397x22" type="*widget.Label">
+					<widget pos="0,328" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="117x17">Refined Concept ID</text>
 					</widget>
-					<widget pos="399,323" size="397x22" type="*crleditorfynegui.copyableLabel">
+					<widget pos="399,328" size="397x27" type="*crleditorfynegui.copyableLabel">
 						<text pos="1,1" size="0x17"></text>
 					</widget>
-					<widget pos="0,348" size="397x22" type="*widget.Label">
-						<text pos="1,1" size="149x17">Refined Concept Version</text>
-					</widget>
-					<widget pos="399,348" size="397x22" type="*widget.Label">
-						<text pos="1,1" size="0x17"></text>
-					</widget>
-					<widget pos="0,373" size="397x22" type="*widget.Label">
+					<widget pos="0,358" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="42x17">Is Core</text>
 					</widget>
-					<widget pos="399,373" size="397x22" type="*widget.Label">
+					<widget pos="399,358" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="25x17">true</text>
 					</widget>
-					<widget pos="0,398" size="397x22" type="*widget.Label">
+					<widget pos="0,388" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="62x17">Read Only</text>
 					</widget>
-					<widget pos="399,398" size="397x22" type="*widget.Label">
+					<widget pos="399,388" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="28x17">false</text>
 					</widget>
-					<widget pos="0,423" size="397x22" type="*widget.Label">
+					<widget pos="0,418" size="397x27" type="*widget.Label">
 						<text pos="1,1" size="45x17">Version</text>
 					</widget>
-					<widget pos="399,423" size="397x22" type="*widget.Label">
-						<text pos="1,1" size="14x17">14</text>
+					<widget pos="399,418" size="397x27" type="*widget.Label">
+						<text pos="1,1" size="7x17">6</text>
 					</widget>
 				</container>
 			</widget>

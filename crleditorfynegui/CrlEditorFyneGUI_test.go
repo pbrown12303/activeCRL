@@ -122,7 +122,7 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 			}
 			Expect(uOfD.IsEquivalent(trans, afterUofD, afterTrans, true)).To(BeTrue())
 		}
-		Specify("Drag and drop of a tree node should produce a view of the element represented by the tree node", func() {
+		FSpecify("Drag and drop of a tree node should produce a view of the element represented by the tree node", func() {
 			fyneDiagram := FyneGUISingleton.diagramManager.getDiagramWidget(diagramID)
 			coreDomain := uOfD.GetElementWithURI(core.CoreDomainURI)
 			coreDomainID := coreDomain.GetConceptID(trans)
