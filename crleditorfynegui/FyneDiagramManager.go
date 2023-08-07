@@ -42,6 +42,7 @@ const (
 	AbstractElementPointerSelected
 	RefinedElementPointerSelected
 	OneToOneMapSelected
+	CloneSelectionAsRefinementSelected
 )
 
 // ToString retuns text identifying the ToolbarSelection
@@ -71,6 +72,8 @@ func (selection ToolbarSelection) ToString() string {
 		return "RefinedElementPointer Selected"
 	case OneToOneMapSelected:
 		return "OneToOne Map Selected"
+	case CloneSelectionAsRefinementSelected:
+		return "Clone Selection As Refinement Selected"
 	}
 	return ""
 }
@@ -256,12 +259,22 @@ func (dm *FyneDiagramManager) createToolbar() {
 	}
 	dm.toolButtons[RefinedElementPointerSelected] = button
 	dm.toolbar.Add(button)
+	// Separator
+	separator := widget.NewSeparator()
+	dm.toolbar.Add(separator)
 	// OneToOne Map
 	button = widget.NewButtonWithIcon("", images.ResourceOneToOneIconPng, nil)
 	button.OnTapped = func() {
 		dm.currentToolbarSelection = OneToOneMapSelected
 	}
 	dm.toolButtons[OneToOneMapSelected] = button
+	dm.toolbar.Add(button)
+	// Clone Selection As Refinement
+	button = widget.NewButtonWithIcon("", images.ResourceRefinedCloneIconPng, nil)
+	button.OnTapped = func() {
+		dm.currentToolbarSelection = CloneSelectionAsRefinementSelected
+	}
+	dm.toolButtons[CloneSelectionAsRefinementSelected] = button
 	dm.toolbar.Add(button)
 }
 
@@ -343,6 +356,12 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 		sourceMap := uOfD.GetElementWithURI(crlmapsdomain.CrlOneToOneMapURI)
 		el, _ = uOfD.CreateReplicateAsRefinement(sourceMap, trans)
 		el.SetOwningConcept(crlDiagram.GetOwningConcept(trans), trans)
+	case CloneSelectionAsRefinementSelected:
+		selection := FyneGUISingleton.editor.GetCurrentSelection()
+		if selection != nil {
+			el, _ = uOfD.CreateReplicateAsRefinement(selection, trans)
+			el.SetOwningConcept(crlDiagram.GetOwningConcept(trans), trans)
+		}
 	}
 
 	if el != nil {

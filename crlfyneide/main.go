@@ -14,6 +14,7 @@ package main
 //go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../images/icons/RefinementIcon.png
 //go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../images/icons/RefinementLinkIcon.png
 //go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../images/icons/OneToOneIcon.png
+//go:generate fyne bundle -a -o ../images/icons.go  --prefix Resource ../images/icons/RefinedCloneIcon.png
 
 import (
 	"flag"
