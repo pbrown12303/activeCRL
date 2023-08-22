@@ -12,10 +12,8 @@ require (
 	github.com/onsi/gomega v1.27.6
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.1-0.20181028125025-b2ce2384e17b
-	github.com/sclevine/agouti v3.0.0+incompatible
 	github.com/sqweek/dialog v0.0.0-20220809060634-e981b270ebbf
 	golang.org/x/image v0.3.0
-	nhooyr.io/websocket v1.8.7
 )
 
 replace fyne.io/x/fyne => C:/GoWorkspace/src/github.com/pbrown12303/fyne-x

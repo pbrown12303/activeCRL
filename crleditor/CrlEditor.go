@@ -98,7 +98,8 @@ func (editor *Editor) AddEditorGUI(editorGUI EditorGUI) error {
 	if isNew {
 		defer editor.EndTransaction()
 	}
-	editorGUI.InitializeGUI(trans)
+	editorGUI.Initialize(trans)
+	editorGUI.RefreshGUI(trans)
 	return nil
 }
 
@@ -149,7 +150,7 @@ func (editor *Editor) CloseWorkspace(trans *core.Transaction) error {
 	if err != nil {
 		return errors.Wrap(err, "crleditor.Editor.CloseWorkspace failed")
 	}
-	err = editor.InitializeGUI(trans)
+	err = editor.RefreshGUI(trans)
 	if err != nil {
 		return errors.Wrap(err, "crleditor.Editor.CloseWorkspace failed")
 	}
@@ -325,6 +326,7 @@ func (editor *Editor) GetWorkspacePath() string {
 func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection bool) error {
 	editor.settings = &Settings{}
 	editor.settings.OpenDiagrams = []string{}
+	editor.inProgressTransaction = nil
 	editor.uOfDManager.Initialize()
 	trans, isNew := editor.GetTransaction()
 	if isNew {
@@ -376,7 +378,7 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 	}
 
 	for _, editorGUI := range editor.editorGUIs {
-		err = editorGUI.InitializeGUI(trans)
+		err = editorGUI.RefreshGUI(trans)
 		if err != nil {
 			return errors.Wrap(err, "Editor.Initialize failed")
 		}
@@ -386,10 +388,10 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 	return nil
 }
 
-// InitializeGUI tells all GUIs to initialize their state
-func (editor *Editor) InitializeGUI(trans *core.Transaction) error {
+// RefreshGUI tells all GUIs to initialize their state
+func (editor *Editor) RefreshGUI(trans *core.Transaction) error {
 	for _, gui := range editor.editorGUIs {
-		err := gui.InitializeGUI(trans)
+		err := gui.RefreshGUI(trans)
 		if err != nil {
 			return errors.Wrap(err, "Editor.InitializeGUI failed")
 		}
@@ -441,7 +443,7 @@ func (editor *Editor) Redo(trans *core.Transaction) error {
 	json.Unmarshal([]byte(editor.transientDisplayedDiagrams.GetLiteralValue(trans)), &recoveredOpenDiagrams)
 	editor.settings.OpenDiagrams = recoveredOpenDiagrams
 	editor.settings.CurrentDiagram = editor.transientCurrentDiagram.GetLiteralValue(trans)
-	err := editor.InitializeGUI(trans)
+	err := editor.RefreshGUI(trans)
 	if err != nil {
 		return errors.Wrap(err, "Editor.Redo failed")
 	}
@@ -604,7 +606,7 @@ func (editor *Editor) Undo(trans *core.Transaction) error {
 	editor.settings.OpenDiagrams = recoveredOpenDiagrams
 	editor.settings.CurrentDiagram = editor.transientCurrentDiagram.GetLiteralValue(trans)
 	for _, gui := range editor.editorGUIs {
-		err := gui.InitializeGUI(trans)
+		err := gui.RefreshGUI(trans)
 		if err != nil {
 			return errors.Wrap(err, "Editor.Undo failed")
 		}
@@ -621,5 +623,5 @@ type EditorGUI interface {
 	FileLoaded(el core.Element, trans *core.Transaction)
 	GetNoSaveDomains(noSaveDomains map[string]core.Element, trans *core.Transaction)
 	Initialize(trans *core.Transaction) error
-	InitializeGUI(trans *core.Transaction) error
+	RefreshGUI(trans *core.Transaction) error
 }

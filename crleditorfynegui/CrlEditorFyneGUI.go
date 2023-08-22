@@ -64,14 +64,13 @@ type CrlEditorFyneGUI struct {
 }
 
 // NewFyneGUI returns an initialized FyneGUI
-func NewFyneGUI(crlEditor *crleditor.Editor) *CrlEditorFyneGUI {
+func NewFyneGUI(crlEditor *crleditor.Editor, providedApp fyne.App) *CrlEditorFyneGUI {
 	gui := &CrlEditorFyneGUI{}
-	gui.app = app.New()
-	initializeFyneGUI(gui, crlEditor)
-	return gui
-}
-
-func initializeFyneGUI(gui *CrlEditorFyneGUI, crlEditor *crleditor.Editor) {
+	if providedApp == nil {
+		gui.app = app.New()
+	} else {
+		gui.app = providedApp
+	}
 	FyneGUISingleton = gui
 	gui.editor = crlEditor
 	gui.conceptStateBindingMap = make(map[string]ConceptStateBinding)
@@ -80,7 +79,7 @@ func initializeFyneGUI(gui *CrlEditorFyneGUI, crlEditor *crleditor.Editor) {
 	gui.treeManager = NewFyneTreeManager(gui)
 	gui.propertyManager = NewFynePropertyManager()
 	gui.diagramManager = NewFyneDiagramManager(gui)
-	gui.window = gui.app.NewWindow("Crl Editor    Workspace: " + crlEditor.GetWorkspacePath())
+	gui.window = gui.app.NewWindow("Crl Editor    Workspace: " + gui.editor.GetWorkspacePath())
 	gui.buildCrlFyneEditorMenus()
 	gui.window.SetMainMenu(gui.mainMenu)
 	gui.window.SetMaster()
@@ -91,6 +90,12 @@ func initializeFyneGUI(gui *CrlEditorFyneGUI, crlEditor *crleditor.Editor) {
 	gui.windowContent = container.NewHSplit(leftSide, drawingArea)
 
 	gui.window.SetContent(gui.windowContent)
+	err := crleditor.CrlEditorSingleton.AddEditorGUI(FyneGUISingleton)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return gui
 }
 
 func (gui *CrlEditorFyneGUI) addDiagram(parentID string) core.Element {
@@ -408,15 +413,16 @@ func (gui *CrlEditorFyneGUI) GetWindow() fyne.Window {
 	return gui.window
 }
 
-// Initialize initializes the information content of the GUI. No action is required in the present implementation
+// Initialize initializes the information content of the GUI.
 func (gui *CrlEditorFyneGUI) Initialize(trans *core.Transaction) error {
+	gui.conceptStateBindingMap = make(map[string]ConceptStateBinding)
+	gui.treeManager.initialize()
 	return nil
 }
 
-// InitializeGUI initializes the graphical state of the GUI
-func (gui *CrlEditorFyneGUI) InitializeGUI(trans *core.Transaction) error {
+// RefreshGUI initializes the graphical state of the GUI
+func (gui *CrlEditorFyneGUI) RefreshGUI(trans *core.Transaction) error {
 	gui.GetWindow().SetTitle("Crl Editor         Workspace: " + gui.editor.GetWorkspacePath())
-	gui.treeManager.initialize()
 	gui.diagramManager.initialize()
 	for _, openDiagramID := range gui.editor.GetSettings().OpenDiagrams {
 		diagram := gui.editor.GetUofD().GetElement(openDiagramID)
@@ -432,6 +438,7 @@ func (gui *CrlEditorFyneGUI) InitializeGUI(trans *core.Transaction) error {
 	gui.diagramManager.SelectDiagram(gui.editor.GetSettings().CurrentDiagram)
 	selectedElement := gui.editor.GetUofD().GetElement(gui.editor.GetSettings().Selection)
 	gui.ElementSelected(selectedElement, trans)
+	gui.treeManager.tree.Refresh()
 	return nil
 }
 

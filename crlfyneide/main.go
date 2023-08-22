@@ -40,7 +40,7 @@ func main() {
 	}
 
 	// Fyne GUI
-	fyneEditor := crleditorfynegui.NewFyneGUI(crleditor.CrlEditorSingleton)
+	fyneEditor := crleditorfynegui.NewFyneGUI(crleditor.CrlEditorSingleton, nil)
 	err = crleditor.CrlEditorSingleton.AddEditorGUI(fyneEditor)
 	if err != nil {
 		log.Fatal(err)

@@ -1,10 +1,10 @@
 package crleditorfynegui
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	// "time"
 
@@ -20,13 +20,8 @@ var testRootDir string
 var testUserDir string
 var testWorkspaceDir string
 var testT *testing.T
-var RequestFocus func()
 
 var _ = BeforeSuite(func() {
-	RequestFocus = func() {
-		FyneGUISingleton.GetWindow().RequestFocus()
-	}
-
 	var err error
 	// Get the tempDir
 	tempDirPath := os.TempDir()
@@ -37,7 +32,7 @@ var _ = BeforeSuite(func() {
 	}
 	log.Printf("TempDir created")
 
-	testRootDir, err = ioutil.TempDir(tempDirPath, "crlEditorTestDir*")
+	testRootDir, err = os.MkdirTemp(tempDirPath, "crlEditorTestDir*")
 	Expect(err).NotTo(HaveOccurred())
 	testUserDir = testRootDir + "/testUserDir"
 	err = os.Mkdir(testUserDir, os.ModeDir)
@@ -47,24 +42,20 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	// Common infrastructure
-	crleditor.CrlEditorSingleton = crleditor.NewEditor(testWorkspaceDir)
+	crlEditor := crleditor.NewEditor(testWorkspaceDir)
+	crleditor.CrlEditorSingleton = crlEditor
 	err = crleditor.CrlEditorSingleton.Initialize(testWorkspaceDir, true)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fyneGUI := &CrlEditorFyneGUI{}
-	fyneGUI.app = test.NewApp()
-	initializeFyneGUI(fyneGUI, crleditor.CrlEditorSingleton)
-
-	err = crleditor.CrlEditorSingleton.AddEditorGUI(FyneGUISingleton)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// create a test app instead of a normal Fyne app.
+	FyneGUISingleton = NewFyneGUI(crlEditor, test.NewApp())
 	initialSize := fyne.NewSize(1600.0, 900.0)
 	FyneGUISingleton.GetWindow().Resize(initialSize)
 	FyneGUISingleton.GetWindow().ShowAndRun()
-
+	time.Sleep(1000 * time.Millisecond)
+	Expect(test.AssertRendersToImage(testT, "afterSuiteInitializaqtion.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 })
 
 func TestCrlEditor(t *testing.T) {

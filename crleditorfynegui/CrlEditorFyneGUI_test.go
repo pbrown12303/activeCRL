@@ -55,19 +55,23 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 			Expect(test.AssertRendersToImage(testT, "/selectionTests/coreDomainSelectedViaTree.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			Expect(FyneGUISingleton.editor.GetCurrentSelectionID(trans)).To(Equal(coreDomainID))
 		})
-		Specify("Domain creation should Undo and Redo successfully", func() {
+		FSpecify("Domain creation should Undo and Redo successfully", func() {
 			uOfD.MarkUndoPoint()
 			beforeUofD := uOfD.Clone(trans)
 			beforeTrans := beforeUofD.NewTransaction()
 			cs1 := FyneGUISingleton.addElement("", FyneGUISingleton.editor.GetDefaultDomainLabel())
 			Expect(cs1).ToNot(BeNil())
 			Expect(crleditor.CrlEditorSingleton.GetCurrentSelection()).To(Equal(cs1))
+			time.Sleep(1000 * time.Millisecond)
+			Expect(test.AssertRendersToImage(testT, "/undoRedoTests/afterDomainCreation.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			afterUofD := uOfD.Clone(trans)
 			afterTrans := afterUofD.NewTransaction()
 			FyneGUISingleton.undo()
 			Expect(uOfD.IsEquivalent(trans, beforeUofD, beforeTrans, true)).To(BeTrue())
 			Expect(crleditor.CrlEditorSingleton.GetCurrentSelection()).To(BeNil())
 			FyneGUISingleton.redo()
+			time.Sleep(1000 * time.Millisecond)
+			Expect(test.AssertRendersToImage(testT, "/undoRedoTests/afterDomainCreation.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			Expect(uOfD.IsEquivalent(trans, afterUofD, afterTrans, true)).To(BeTrue())
 			Expect(crleditor.CrlEditorSingleton.GetCurrentSelection()).To(Equal(cs1))
 		})
@@ -597,15 +601,17 @@ func beforeEachTest() (*core.UniverseOfDiscourse, *core.Transaction) {
 	Expect(trans).ToNot(BeNil())
 	uOfD := trans.GetUniverseOfDiscourse()
 	Expect(uOfD).ToNot(BeNil())
+	time.Sleep(1000 * time.Millisecond)
+	Expect(test.AssertRendersToImage(testT, "beforeEachTest.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 	return uOfD, trans
 }
 
 func afterEachTest() {
 	// Clear existing workspace
 	// log.Printf("**************************** About to hit ClearWorkspaceButton")
-	clearWorkspaceItem := FyneGUISingleton.clearWorkspaceItem
-	Expect(clearWorkspaceItem).ToNot(BeNil())
-	clearWorkspaceItem.Action()
+	closeWorkspaceItem := FyneGUISingleton.closeWorkspaceItem
+	Expect(closeWorkspaceItem).ToNot(BeNil())
+	closeWorkspaceItem.Action()
 	crleditor.CrlEditorSingleton.EndTransaction()
 }
 

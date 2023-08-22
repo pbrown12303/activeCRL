@@ -15,7 +15,7 @@ func (m fyneGuiTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant)
 	if name == "inputBackground" {
 		return color.Transparent
 	}
-	return theme.DefaultTheme().Color(name, variant)
+	return theme.DefaultTheme().Color(name, theme.VariantLight)
 }
 
 func (m fyneGuiTheme) Icon(name fyne.ThemeIconName) fyne.Resource {

@@ -454,6 +454,14 @@ func (dm *FyneDiagramManager) GetSelectedDiagram() *diagramwidget.DiagramWidget 
 }
 
 func (dm *FyneDiagramManager) initialize() {
+	dm.diagramObserver = newDiagramObserver(dm)
+	dm.diagramElementObserver = newDiagramElementObserver(dm)
+	dm.currentToolbarSelection = CursorSelected
+	dm.CloseAllDiagrams()
+}
+
+// CloseAllDiagrams closes all of the currently displayed diagrams.
+func (dm *FyneDiagramManager) CloseAllDiagrams() {
 	diagramIDs := []string{}
 	for _, diagramTab := range dm.diagramTabs {
 		diagramIDs = append(diagramIDs, diagramTab.diagramID)
@@ -461,6 +469,25 @@ func (dm *FyneDiagramManager) initialize() {
 	for _, diagramID := range diagramIDs {
 		dm.closeDiagram(diagramID)
 	}
+}
+
+func (dm *FyneDiagramManager) refreshGUI(trans *core.Transaction) {
+	diagramIDs := []string{}
+	for _, diagramTab := range dm.diagramTabs {
+		diagramIDs = append(diagramIDs, diagramTab.diagramID)
+	}
+	for _, diagramID := range diagramIDs {
+		if !dm.fyneGUI.editor.IsDiagramDisplayed(diagramID, trans) {
+			dm.closeDiagram(diagramID)
+		}
+	}
+	editor := dm.fyneGUI.editor
+	for _, diagramID := range editor.GetSettings().OpenDiagrams {
+		if !dm.fyneGUI.editor.IsDiagramDisplayed(diagramID, trans) {
+			editor.GetDiagramManager().DisplayDiagram(diagramID, trans)
+		}
+	}
+	dm.SelectDiagram(editor.GetSettings().CurrentDiagram)
 }
 
 // isConnectionAllowed is the callback function for determining acceptable link connections
