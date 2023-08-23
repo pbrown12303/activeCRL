@@ -72,11 +72,11 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			Expect(err).Should(BeNil())
 			recoveredLit := uOfD.GetElement(litID)
 			var correctType bool
-			switch recoveredLit.(type) {
-			case *element:
-				correctType = false
-			case *literal:
+			switch recoveredLit.GetConceptType() {
+			case Literal:
 				correctType = true
+			default:
+				correctType = false
 			}
 			Expect(correctType).To(BeTrue())
 			Expect(uOfD.GetLiteral(litID)).To(Equal(lit))
@@ -160,12 +160,12 @@ var _ = Describe("UniverseOfDiscourse", func() {
 	})
 
 	Describe("Test Replicate as Refinement for Element", func() {
-		var original Element
-		var oChild1 Element
+		var original Concept
+		var oChild1 Concept
 		var oChild1Label string
-		var oChild2 Reference
+		var oChild2 Concept
 		var oChild2Label string
-		var oChild3 Literal
+		var oChild3 Concept
 		var oChild3Label string
 		var replicateURI string
 
@@ -244,12 +244,12 @@ var _ = Describe("UniverseOfDiscourse", func() {
 	})
 
 	Describe("Test Replicate as Refinement for Literal", func() {
-		var original Literal
-		var oChild1 Element
+		var original Concept
+		var oChild1 Concept
 		var oChild1Label string
-		var oChild2 Reference
+		var oChild2 Concept
 		var oChild2Label string
-		var oChild3 Literal
+		var oChild3 Concept
 		var oChild3Label string
 		var replicateURI string
 
@@ -315,12 +315,12 @@ var _ = Describe("UniverseOfDiscourse", func() {
 	})
 
 	Describe("Test Replicate as Refinement for Reference", func() {
-		var original Reference
-		var oChild1 Element
+		var original Concept
+		var oChild1 Concept
 		var oChild1Label string
-		var oChild2 Reference
+		var oChild2 Concept
 		var oChild2Label string
-		var oChild3 Literal
+		var oChild3 Concept
 		var oChild3Label string
 		var replicateURI string
 
@@ -386,12 +386,12 @@ var _ = Describe("UniverseOfDiscourse", func() {
 	})
 
 	Describe("Test Replicate as Refinement for Refinement", func() {
-		var original Refinement
-		var oChild1 Element
+		var original Concept
+		var oChild1 Concept
 		var oChild1Label string
-		var oChild2 Reference
+		var oChild2 Concept
 		var oChild2Label string
-		var oChild3 Literal
+		var oChild3 Concept
 		var oChild3Label string
 		var replicateURI string
 

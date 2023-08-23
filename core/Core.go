@@ -32,7 +32,7 @@ var UniverseOfDiscourseURI = CorePrefix + "UniverseOfDiscourse"
 var TransientURI = CorePrefix + "Transient"
 
 // Transient is the instantiated Transient element
-var Transient Element
+var Transient Concept
 
 // AdHocTrace is a global variable used in troubleshooting. Generally debugging logic is wrapped in a
 // conditional expression contingent on the value of this variable
@@ -45,7 +45,7 @@ func init() {
 	// notificationsCount = 0
 }
 
-func buildCoreDomain(uOfD *UniverseOfDiscourse, hl *Transaction) Element {
+func buildCoreDomain(uOfD *UniverseOfDiscourse, hl *Transaction) Concept {
 	coreElement, _ := uOfD.NewElement(hl, CoreDomainURI)
 	coreElementID := coreElement.getConceptIDNoLock()
 	coreElement.SetLabel("CoreDomain", hl)

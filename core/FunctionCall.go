@@ -12,16 +12,16 @@ import (
 // its children) experience a change. Its arguments are the element that changed, the array of ChangeNotifications, and
 // a pointer to a WaitGroup that is used to determine (on a larger scale) when the execution of the triggered functions
 // has completed.
-type crlExecutionFunction func(Element, *ChangeNotification, *Transaction) error
+type crlExecutionFunction func(Concept, *ChangeNotification, *Transaction) error
 
 type functionCallRecord struct {
 	function     crlExecutionFunction
 	functionID   string
-	target       Element
+	target       Concept
 	notification *ChangeNotification
 }
 
-func newFunctionCallRecord(functionID string, function crlExecutionFunction, target Element, notification *ChangeNotification) (*functionCallRecord, error) {
+func newFunctionCallRecord(functionID string, function crlExecutionFunction, target Concept, notification *ChangeNotification) (*functionCallRecord, error) {
 	if target == nil {
 		return nil, errors.New("FunctionCallManager.go newPendingFunctionCall invoked with nil target")
 	}

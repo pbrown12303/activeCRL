@@ -103,7 +103,7 @@ func (ftm *FyneTreeManager) openParentsRecursively(childUID string, trans *core.
 }
 
 // ShowElementInTree ensures that the indicated element is shown in the tree
-func (ftm *FyneTreeManager) ShowElementInTree(element core.Element) {
+func (ftm *FyneTreeManager) ShowElementInTree(element core.Concept) {
 	if element != nil {
 		trans, new := ftm.fyneGUI.editor.GetTransaction()
 		if new {
@@ -179,9 +179,9 @@ func getIconResourceByID(id string) *fyne.StaticResource {
 }
 
 // getIconResource returns the icon image resource to be used in representing the given Element in the tree
-func getIconResource(el core.Element, trans *core.Transaction) *fyne.StaticResource {
+func getIconResource(el core.Concept, trans *core.Transaction) *fyne.StaticResource {
 	isDiagram := crldiagramdomain.IsDiagram(el, trans)
-	switch el.(type) {
+	switch el.GetConceptType() {
 	case core.Reference:
 		return images.ResourceReferenceIconPng
 	case core.Literal:

@@ -10,14 +10,14 @@ import (
 var CrlBooleanURI = CrlDataTypesDomainURI + "/Boolean"
 
 // NewBoolean creates an instance of a Boolean
-func NewBoolean(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) core.Literal {
+func NewBoolean(uOfD *core.UniverseOfDiscourse, hl *core.Transaction) core.Concept {
 	newBoolean, _ := uOfD.CreateReplicateLiteralAsRefinementFromURI(CrlBooleanURI, hl)
 	SetBooleanValue(newBoolean, false, hl)
 	return newBoolean
 }
 
 // GetBooleanValue returns the Boolean value
-func GetBooleanValue(literal core.Literal, hl *core.Transaction) (bool, error) {
+func GetBooleanValue(literal core.Concept, hl *core.Transaction) (bool, error) {
 	if !IsBoolean(literal, hl) {
 		return false, errors.New("GetBooleanValue called with non-Boolean Literal")
 	}
@@ -31,12 +31,12 @@ func GetBooleanValue(literal core.Literal, hl *core.Transaction) (bool, error) {
 }
 
 // IsBoolean returns true if the Literal is a refinement of Boolean
-func IsBoolean(literal core.Literal, hl *core.Transaction) bool {
+func IsBoolean(literal core.Concept, hl *core.Transaction) bool {
 	return literal.IsRefinementOfURI(CrlBooleanURI, hl)
 }
 
 // SetBooleanValue sets the value of the Boolean Literal
-func SetBooleanValue(literal core.Literal, value bool, hl *core.Transaction) error {
+func SetBooleanValue(literal core.Concept, value bool, hl *core.Transaction) error {
 	if !IsBoolean(literal, hl) {
 		return errors.New("GetBooleanValue called with non-Boolean Literal")
 	}
@@ -49,7 +49,7 @@ func SetBooleanValue(literal core.Literal, value bool, hl *core.Transaction) err
 }
 
 // BuildCrlBooleanConcept builds the CrlBoolean concept and adds it to the parent space
-func BuildCrlBooleanConcept(uOfD *core.UniverseOfDiscourse, parentSpace core.Element, hl *core.Transaction) {
+func BuildCrlBooleanConcept(uOfD *core.UniverseOfDiscourse, parentSpace core.Concept, hl *core.Transaction) {
 	crlBoolean, _ := uOfD.NewLiteral(hl, CrlBooleanURI)
 	crlBoolean.SetLabel("CrlBoolean", hl)
 	crlBoolean.SetOwningConcept(parentSpace, hl)

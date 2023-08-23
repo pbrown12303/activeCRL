@@ -7,7 +7,6 @@ package core
 import (
 	"encoding/json"
 	"log"
-	"reflect"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -87,7 +86,7 @@ type ConceptState struct {
 }
 
 // NewConceptState copies the state of an Element into a ConceptState struct
-func NewConceptState(el Element) (*ConceptState, error) {
+func NewConceptState(el Concept) (*ConceptState, error) {
 	if el == nil {
 		return nil, errors.New("NewConceptState called with nil element")
 	}
@@ -95,9 +94,7 @@ func NewConceptState(el Element) (*ConceptState, error) {
 	if uOfD == nil {
 		return nil, errors.New("NewConceptState called with no uOfD in element")
 	}
-	// We need the real type of the element, so we have to retrieve the element from the uOfD
-	typedEl := uOfD.GetElement(el.getConceptIDNoLock())
-	mJSON, err := typedEl.MarshalJSON()
+	mJSON, err := el.MarshalJSON()
 	if err != nil {
 		return nil, errors.Wrap(err, "NewConceptState failed")
 	}
@@ -106,7 +103,6 @@ func NewConceptState(el Element) (*ConceptState, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "NewConceptState failed")
 	}
-	newConceptState.ConceptType = reflect.TypeOf(typedEl).String()
 	return &newConceptState, nil
 }
 
@@ -214,7 +210,7 @@ func (cnPtr *ChangeNotification) GetUnderlyingChange() *ChangeNotification {
 
 // IsReferenced returns true if the element is either the changed concept or the reporting element
 // in the change notification, including underlying changes.
-func (cnPtr *ChangeNotification) IsReferenced(el Element) bool {
+func (cnPtr *ChangeNotification) IsReferenced(el Concept) bool {
 	elID := el.getConceptIDNoLock()
 	if cnPtr.GetChangedConceptID() == elID || cnPtr.GetReportingElementID() == elID {
 		return true

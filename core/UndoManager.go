@@ -29,7 +29,7 @@ func newUndoManager(uOfD *UniverseOfDiscourse) *undoManager {
 }
 
 // markChangedElement() If undo is enabled, updates the undo stack.
-func (undoMgr *undoManager) markChangedElement(changedElement Element, trans *Transaction) error {
+func (undoMgr *undoManager) markChangedElement(changedElement Concept, trans *Transaction) error {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	trans.ReadLockElement(changedElement)
@@ -51,7 +51,7 @@ func (undoMgr *undoManager) markChangedElement(changedElement Element, trans *Tr
 }
 
 // markNewElement() If undo is enabled, updates the undo stack.
-func (undoMgr *undoManager) markNewElement(el Element, trans *Transaction) error {
+func (undoMgr *undoManager) markNewElement(el Concept, trans *Transaction) error {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	if trans == nil {
@@ -76,7 +76,7 @@ func (undoMgr *undoManager) markNewElement(el Element, trans *Transaction) error
 }
 
 // markRemoveElement() If undo is enabled, updates the undo stack.
-func (undoMgr *undoManager) markRemovedElement(el Element, trans *Transaction) error {
+func (undoMgr *undoManager) markRemovedElement(el Concept, trans *Transaction) error {
 	undoMgr.TraceableLock()
 	defer undoMgr.TraceableUnlock()
 	if trans == nil {
@@ -195,18 +195,18 @@ func (undoMgr *undoManager) redo(trans *Transaction) {
 			return
 		} else if currentEntry.changeType == Creation {
 			// Update listeners. If this is a reference or refinement pointing to another element, add this element to the other element's listener's set
-			switch currentEntry.changedElement.(type) {
-			case *reference:
-				referencedElementID := currentEntry.changedElement.(*reference).ReferencedConceptID
+			switch currentEntry.changedElement.GetConceptType() {
+			case Reference:
+				referencedElementID := currentEntry.changedElement.(*concept).ReferencedConceptID
 				if referencedElementID != "" {
 					uOfD.listenersMap.addMappedValue(referencedElementID, currentID)
 				}
-			case *refinement:
-				abstractID := currentEntry.changedElement.(*refinement).AbstractConceptID
+			case Refinement:
+				abstractID := currentEntry.changedElement.(*concept).AbstractConceptID
 				if abstractID != "" {
 					uOfD.listenersMap.addMappedValue(abstractID, currentID)
 				}
-				refinedID := currentEntry.changedElement.(*refinement).RefinedConceptID
+				refinedID := currentEntry.changedElement.(*concept).RefinedConceptID
 				if refinedID != "" {
 					uOfD.listenersMap.addMappedValue(refinedID, currentID)
 				}
@@ -225,18 +225,18 @@ func (undoMgr *undoManager) redo(trans *Transaction) {
 			uOfD.setUUIDElementMapEntry(currentEntry.changedElement.getConceptIDNoLock(), currentEntry.changedElement)
 		} else if currentEntry.changeType == Deletion {
 			// Update listeners. If this is a reference or refinement pointing to another element, remove this element from the other element's listener's set
-			switch currentEntry.priorState.(type) {
-			case *reference:
-				referencedElementID := currentEntry.priorState.(*reference).ReferencedConceptID
+			switch currentEntry.priorState.GetConceptType() {
+			case Reference:
+				referencedElementID := currentEntry.priorState.(*concept).ReferencedConceptID
 				if referencedElementID != "" {
 					uOfD.listenersMap.removeMappedValue(referencedElementID, currentEntry.priorState.GetConceptID(trans))
 				}
-			case *refinement:
-				abstractID := currentEntry.priorState.(*refinement).AbstractConceptID
+			case Refinement:
+				abstractID := currentEntry.priorState.(*concept).AbstractConceptID
 				if abstractID != "" {
 					uOfD.listenersMap.removeMappedValue(abstractID, currentEntry.priorState.GetConceptID(trans))
 				}
-				refinedID := currentEntry.priorState.(*refinement).RefinedConceptID
+				refinedID := currentEntry.priorState.(*concept).RefinedConceptID
 				if refinedID != "" {
 					uOfD.listenersMap.removeMappedValue(refinedID, currentEntry.priorState.GetConceptID(trans))
 				}
@@ -255,10 +255,10 @@ func (undoMgr *undoManager) redo(trans *Transaction) {
 			uOfD.deleteUUIDElementMapEntry(currentEntry.changedElement.getConceptIDNoLock())
 		} else if currentEntry.changeType == Change {
 			// Update listeners. If this is a reference or refinement pointing to another element, remove this element from the other element's listener's set
-			switch currentEntry.changedElement.(type) {
-			case *reference:
-				currentReferencedElementID := currentEntry.changedElement.(*reference).ReferencedConceptID
-				priorReferencedElementID := currentEntry.priorState.(*reference).ReferencedConceptID
+			switch currentEntry.changedElement.GetConceptType() {
+			case Reference:
+				currentReferencedElementID := currentEntry.changedElement.(*concept).ReferencedConceptID
+				priorReferencedElementID := currentEntry.priorState.(*concept).ReferencedConceptID
 				if currentReferencedElementID != priorReferencedElementID {
 					if currentReferencedElementID != "" {
 						uOfD.listenersMap.removeMappedValue(currentReferencedElementID, currentID)
@@ -267,9 +267,9 @@ func (undoMgr *undoManager) redo(trans *Transaction) {
 						uOfD.listenersMap.addMappedValue(priorReferencedElementID, currentID)
 					}
 				}
-			case *refinement:
-				currentAbstractID := currentEntry.changedElement.(*refinement).AbstractConceptID
-				priorAbstractID := currentEntry.priorState.(*refinement).AbstractConceptID
+			case Refinement:
+				currentAbstractID := currentEntry.changedElement.(*concept).AbstractConceptID
+				priorAbstractID := currentEntry.priorState.(*concept).AbstractConceptID
 				if currentAbstractID != priorAbstractID {
 					if currentAbstractID != "" {
 						uOfD.listenersMap.removeMappedValue(currentAbstractID, currentID)
@@ -278,8 +278,8 @@ func (undoMgr *undoManager) redo(trans *Transaction) {
 						uOfD.listenersMap.addMappedValue(priorAbstractID, currentID)
 					}
 				}
-				currentRefinedID := currentEntry.changedElement.(*refinement).RefinedConceptID
-				priorRefinedID := currentEntry.priorState.(*refinement).RefinedConceptID
+				currentRefinedID := currentEntry.changedElement.(*concept).RefinedConceptID
+				priorRefinedID := currentEntry.priorState.(*concept).RefinedConceptID
 				if currentRefinedID != priorRefinedID {
 					if currentRefinedID != "" {
 						uOfD.listenersMap.removeMappedValue(currentRefinedID, currentID)
@@ -319,7 +319,7 @@ func (undoMgr *undoManager) redo(trans *Transaction) {
 
 // restoreState is used as part of the undo process. It changes the currentState object
 // to have the priorState.
-func (undoMgr *undoManager) restoreState(priorState Element, currentState Element, trans *Transaction) {
+func (undoMgr *undoManager) restoreState(priorState Concept, currentState Concept, trans *Transaction) {
 	if undoMgr.debugUndo {
 		log.Printf("Restoring State")
 		log.Printf("   Current state:")
@@ -328,14 +328,8 @@ func (undoMgr *undoManager) restoreState(priorState Element, currentState Elemen
 		Print(priorState, "      ", trans)
 	}
 	switch currentState.(type) {
-	case *element:
-		currentState.(*element).cloneAttributes(priorState.(*element), trans)
-	case *reference:
-		currentState.(*reference).cloneAttributes(priorState.(*reference), trans)
-	case *literal:
-		currentState.(*literal).cloneAttributes(priorState.(*literal), trans)
-	case *refinement:
-		currentState.(*refinement).cloneAttributes(priorState.(*refinement), trans)
+	case *concept:
+		currentState.(*concept).cloneAttributes(priorState.(*concept), trans)
 	default:
 		log.Printf("restoreState called with unhandled type %T\n", currentState)
 	}
@@ -391,18 +385,18 @@ func (undoMgr *undoManager) undo(trans *Transaction) {
 			}
 		} else if currentEntry.changeType == Creation {
 			// Update listeners. If this is a reference or refinement pointing to another element, remove this element from the other element's listener's set
-			switch currentEntry.changedElement.(type) {
-			case *reference:
-				referencedElementID := currentEntry.changedElement.(*reference).ReferencedConceptID
+			switch currentEntry.changedElement.GetConceptType() {
+			case Reference:
+				referencedElementID := currentEntry.changedElement.(*concept).ReferencedConceptID
 				if referencedElementID != "" {
 					uOfD.listenersMap.removeMappedValue(referencedElementID, currentID)
 				}
-			case *refinement:
-				abstractID := currentEntry.changedElement.(*refinement).AbstractConceptID
+			case Refinement:
+				abstractID := currentEntry.changedElement.(*concept).AbstractConceptID
 				if abstractID != "" {
 					uOfD.listenersMap.removeMappedValue(abstractID, currentID)
 				}
-				refinedID := currentEntry.changedElement.(*refinement).RefinedConceptID
+				refinedID := currentEntry.changedElement.(*concept).RefinedConceptID
 				if refinedID != "" {
 					uOfD.listenersMap.removeMappedValue(refinedID, currentID)
 				}
@@ -419,18 +413,18 @@ func (undoMgr *undoManager) undo(trans *Transaction) {
 			uOfD.deleteUUIDElementMapEntry(currentEntry.changedElement.getConceptIDNoLock())
 		} else if currentEntry.changeType == Deletion {
 			// Update listeners. If this is a reference or refinement pointing to another element, add this element to the other element's listener's set
-			switch currentEntry.priorState.(type) {
-			case *reference:
-				referencedElementID := currentEntry.priorState.(*reference).ReferencedConceptID
+			switch currentEntry.priorState.GetConceptType() {
+			case Reference:
+				referencedElementID := currentEntry.priorState.(*concept).ReferencedConceptID
 				if referencedElementID != "" {
 					uOfD.listenersMap.addMappedValue(referencedElementID, currentEntry.priorState.GetConceptID(trans))
 				}
-			case *refinement:
-				abstractID := currentEntry.priorState.(*refinement).AbstractConceptID
+			case Refinement:
+				abstractID := currentEntry.priorState.(*concept).AbstractConceptID
 				if abstractID != "" {
 					uOfD.listenersMap.addMappedValue(abstractID, currentEntry.priorState.GetConceptID(trans))
 				}
-				refinedID := currentEntry.priorState.(*refinement).RefinedConceptID
+				refinedID := currentEntry.priorState.(*concept).RefinedConceptID
 				if refinedID != "" {
 					uOfD.listenersMap.addMappedValue(refinedID, currentEntry.priorState.GetConceptID(trans))
 				}
@@ -448,10 +442,10 @@ func (undoMgr *undoManager) undo(trans *Transaction) {
 			uOfD.setUUIDElementMapEntry(currentEntry.changedElement.getConceptIDNoLock(), currentEntry.changedElement)
 		} else if currentEntry.changeType == Change {
 			// Update listeners. If this is a reference or refinement pointing to another element, remove this element from the other element's listener's set
-			switch currentEntry.changedElement.(type) {
-			case *reference:
-				currentReferencedElementID := currentEntry.changedElement.(*reference).ReferencedConceptID
-				priorReferencedElementID := currentEntry.priorState.(*reference).ReferencedConceptID
+			switch currentEntry.changedElement.GetConceptType() {
+			case Reference:
+				currentReferencedElementID := currentEntry.changedElement.(*concept).ReferencedConceptID
+				priorReferencedElementID := currentEntry.priorState.(*concept).ReferencedConceptID
 				if currentReferencedElementID != priorReferencedElementID {
 					if currentReferencedElementID != "" {
 						uOfD.listenersMap.removeMappedValue(currentReferencedElementID, currentID)
@@ -460,9 +454,9 @@ func (undoMgr *undoManager) undo(trans *Transaction) {
 						uOfD.listenersMap.addMappedValue(priorReferencedElementID, currentID)
 					}
 				}
-			case *refinement:
-				currentAbstractID := currentEntry.changedElement.(*refinement).AbstractConceptID
-				priorAbstractID := currentEntry.priorState.(*refinement).AbstractConceptID
+			case Refinement:
+				currentAbstractID := currentEntry.changedElement.(*concept).AbstractConceptID
+				priorAbstractID := currentEntry.priorState.(*concept).AbstractConceptID
 				if currentAbstractID != priorAbstractID {
 					if currentAbstractID != "" {
 						uOfD.listenersMap.removeMappedValue(currentAbstractID, currentID)
@@ -471,8 +465,8 @@ func (undoMgr *undoManager) undo(trans *Transaction) {
 						uOfD.listenersMap.addMappedValue(priorAbstractID, currentID)
 					}
 				}
-				currentRefinedID := currentEntry.changedElement.(*refinement).RefinedConceptID
-				priorRefinedID := currentEntry.priorState.(*refinement).RefinedConceptID
+				currentRefinedID := currentEntry.changedElement.(*concept).RefinedConceptID
+				priorRefinedID := currentEntry.priorState.(*concept).RefinedConceptID
 				if currentRefinedID != priorRefinedID {
 					if currentRefinedID != "" {
 						uOfD.listenersMap.removeMappedValue(currentRefinedID, currentID)

@@ -13,13 +13,13 @@ import (
 // StringElementMap is a map from a UUID (a string) to the Element that represents it
 type StringElementMap struct {
 	sync.Mutex
-	elementMap map[string]Element
+	elementMap map[string]Concept
 }
 
 // NewStringElementMap creates and initializes a stringElementMap
 func NewStringElementMap() *StringElementMap {
 	var uuidElementMap StringElementMap
-	uuidElementMap.elementMap = make(map[string]Element)
+	uuidElementMap.elementMap = make(map[string]Concept)
 	return &uuidElementMap
 }
 
@@ -27,14 +27,14 @@ func NewStringElementMap() *StringElementMap {
 func (seMap *StringElementMap) Clear() {
 	seMap.TraceableLock()
 	defer seMap.TraceableUnlock()
-	seMap.elementMap = make(map[string]Element)
+	seMap.elementMap = make(map[string]Concept)
 }
 
 // CopyMap returns a copy of the map
-func (seMap *StringElementMap) CopyMap() map[string]Element {
+func (seMap *StringElementMap) CopyMap() map[string]Concept {
 	seMap.TraceableLock()
 	defer seMap.TraceableUnlock()
-	copy := make(map[string]Element)
+	copy := make(map[string]Concept)
 	for key, value := range seMap.elementMap {
 		copy[key] = value
 	}
@@ -49,7 +49,7 @@ func (seMap *StringElementMap) DeleteEntry(key string) {
 }
 
 // GetEntry returns the Element corresponding to the UUID
-func (seMap *StringElementMap) GetEntry(key string) Element {
+func (seMap *StringElementMap) GetEntry(key string) Concept {
 	seMap.TraceableLock()
 	defer seMap.TraceableUnlock()
 	return seMap.elementMap[key]
@@ -94,7 +94,7 @@ func (seMap *StringElementMap) PrintJustIdentifiers(hl *Transaction) {
 }
 
 // SetEntry sets the Element corresponding to the given UUID
-func (seMap *StringElementMap) SetEntry(key string, value Element) {
+func (seMap *StringElementMap) SetEntry(key string, value Concept) {
 	seMap.TraceableLock()
 	defer seMap.TraceableUnlock()
 	seMap.elementMap[key] = value

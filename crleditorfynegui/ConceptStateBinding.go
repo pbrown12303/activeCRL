@@ -196,9 +196,9 @@ func (litcl *literalChangeListener) DataChanged() {
 		}
 		el := uOfD.GetElement(litcl.parentBinding.elementID)
 		if el != nil {
-			switch typedElement := el.(type) {
+			switch el.GetConceptType() {
 			case core.Literal:
-				typedElement.SetLiteralValue(newValue, trans)
+				el.SetLiteralValue(newValue, trans)
 			}
 		}
 	}

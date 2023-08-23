@@ -56,9 +56,9 @@ func (bgPtr *baseGraph) addNotification(notification *ChangeNotification, parent
 
 	bgPtr.graphParentsRecursively(reportingElement, parentGraph)
 
-	switch typedReportingElement := reportingElement.(type) {
+	switch reportingElement.GetConceptType() {
 	case Reference:
-		indicatedElement := typedReportingElement.getReferencedConceptNoLock()
+		indicatedElement := reportingElement.getReferencedConceptNoLock()
 		if indicatedElement != nil {
 			indicatedElementID := makeGraphID(indicatedElement.getConceptIDNoLock(), bgPtr.parentGraphNodePrefix[parentGraph])
 			bgPtr.nodeElementLabels[indicatedElementID] = indicatedElement.getLabelNoLock()
@@ -68,7 +68,7 @@ func (bgPtr *baseGraph) addNotification(notification *ChangeNotification, parent
 			bgPtr.graphParentsRecursively(indicatedElement, parentGraph)
 		}
 	case Refinement:
-		abstractConcept := typedReportingElement.getAbstractConceptNoLock()
+		abstractConcept := reportingElement.getAbstractConceptNoLock()
 		if abstractConcept != nil {
 			abstractConceptID := makeGraphID(abstractConcept.getConceptIDNoLock(), bgPtr.parentGraphNodePrefix[parentGraph])
 			bgPtr.nodeElementLabels[abstractConceptID] = abstractConcept.getLabelNoLock()
@@ -77,7 +77,7 @@ func (bgPtr *baseGraph) addNotification(notification *ChangeNotification, parent
 			bgPtr.makeAbstractConceptEdge(reportingElementNodeID, abstractConceptID)
 			bgPtr.graphParentsRecursively(abstractConcept, parentGraph)
 		}
-		refinedConcept := typedReportingElement.getAbstractConceptNoLock()
+		refinedConcept := reportingElement.getAbstractConceptNoLock()
 		if refinedConcept != nil {
 			refinedConceptID := makeGraphID(refinedConcept.getConceptIDNoLock(), bgPtr.parentGraphNodePrefix[parentGraph])
 			bgPtr.nodeElementLabels[refinedConceptID] = refinedConcept.getLabelNoLock()
@@ -99,7 +99,7 @@ func (bgPtr *baseGraph) addNotification(notification *ChangeNotification, parent
 // 	return bgPtr.rootNodeIDs[parentGraph]
 // }
 
-func (bgPtr *baseGraph) graphParentsRecursively(child Element, parentGraph string) {
+func (bgPtr *baseGraph) graphParentsRecursively(child Concept, parentGraph string) {
 	if child == nil {
 		return
 	}

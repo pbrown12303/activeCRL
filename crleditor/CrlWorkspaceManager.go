@@ -15,7 +15,7 @@ type workspaceFile struct {
 	File          *os.File
 	LoadedVersion int
 	Info          os.FileInfo
-	Domain        core.Element
+	Domain        core.Concept
 }
 
 // CrlWorkspaceManager manages Crl Workspaces
@@ -82,7 +82,7 @@ func (mgr *CrlWorkspaceManager) deleteFile(wf *workspaceFile) error {
 	return nil
 }
 
-func (mgr *CrlWorkspaceManager) generateFilename(el core.Element, trans *core.Transaction) string {
+func (mgr *CrlWorkspaceManager) generateFilename(el core.Concept, trans *core.Transaction) string {
 	return mgr.editor.userPreferences.WorkspacePath + "/" + el.GetLabel(trans) + "--" + el.GetConceptID(trans) + ".acrl"
 }
 
@@ -92,7 +92,7 @@ func (mgr *CrlWorkspaceManager) GetUofD() *core.UniverseOfDiscourse {
 }
 
 // newFile creates a file with the name being the ConceptID of the supplied Element and returns the workspaceFile struct
-func (mgr *CrlWorkspaceManager) newFile(el core.Element, trans *core.Transaction) (*workspaceFile, error) {
+func (mgr *CrlWorkspaceManager) newFile(el core.Concept, trans *core.Transaction) (*workspaceFile, error) {
 	if mgr.editor.userPreferences.WorkspacePath == "" {
 		return nil, errors.New("CrlBrowserEditor.NewFile called with no settings.WorkspacePath defined")
 	}

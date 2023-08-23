@@ -16,7 +16,7 @@ var CrlSetMemberReferenceURI = CrlSetURI + "/SetMemberReference"
 var CrlSetTypeReferenceURI = CrlSetURI + "/SetTypeReference"
 
 // NewSet creates an instance of a set
-func NewSet(uOfD *core.UniverseOfDiscourse, setType core.Element, hl *core.Transaction) (core.Element, error) {
+func NewSet(uOfD *core.UniverseOfDiscourse, setType core.Concept, hl *core.Transaction) (core.Concept, error) {
 	if setType == nil {
 		return nil, errors.New("no type specified for set")
 	}
@@ -27,7 +27,7 @@ func NewSet(uOfD *core.UniverseOfDiscourse, setType core.Element, hl *core.Trans
 }
 
 // AddSetMember adds a member to the set
-func AddSetMember(set core.Element, newMember core.Element, hl *core.Transaction) error {
+func AddSetMember(set core.Concept, newMember core.Concept, hl *core.Transaction) error {
 	uOfD := set.GetUniverseOfDiscourse(hl)
 	if IsSetMember(set, newMember, hl) {
 		return errors.New("newMember is already a member of the set")
@@ -43,7 +43,7 @@ func AddSetMember(set core.Element, newMember core.Element, hl *core.Transaction
 }
 
 // ClearSet removes all members from the set
-func ClearSet(set core.Element, hl *core.Transaction) {
+func ClearSet(set core.Concept, hl *core.Transaction) {
 	uOfD := set.GetUniverseOfDiscourse(hl)
 	it := set.GetOwnedConceptIDs(hl).Iterator()
 	for id := range it.C {
@@ -55,7 +55,7 @@ func ClearSet(set core.Element, hl *core.Transaction) {
 }
 
 // GetSetType returns the element that should be an abstraction of every member. It returns an error if the argument is not a set
-func GetSetType(set core.Element, hl *core.Transaction) (core.Element, error) {
+func GetSetType(set core.Concept, hl *core.Transaction) (core.Concept, error) {
 	if !set.IsRefinementOfURI(CrlSetURI, hl) {
 		return nil, errors.New("argument is not a set")
 	}
@@ -64,7 +64,7 @@ func GetSetType(set core.Element, hl *core.Transaction) (core.Element, error) {
 }
 
 // IsSetMember returns true if the element is a memeber of the given set
-func IsSetMember(set core.Element, el core.Element, hl *core.Transaction) bool {
+func IsSetMember(set core.Concept, el core.Concept, hl *core.Transaction) bool {
 	uOfD := set.GetUniverseOfDiscourse(hl)
 	it := set.GetOwnedConceptIDs(hl).Iterator()
 	for id := range it.C {
@@ -78,7 +78,7 @@ func IsSetMember(set core.Element, el core.Element, hl *core.Transaction) bool {
 }
 
 // RemoveSetMember removes the element from the given set
-func RemoveSetMember(set core.Element, el core.Element, hl *core.Transaction) error {
+func RemoveSetMember(set core.Concept, el core.Concept, hl *core.Transaction) error {
 	uOfD := set.GetUniverseOfDiscourse(hl)
 	it := set.GetOwnedConceptIDs(hl).Iterator()
 	for id := range it.C {
@@ -93,7 +93,7 @@ func RemoveSetMember(set core.Element, el core.Element, hl *core.Transaction) er
 }
 
 // BuildCrlSetsConcepts builds the CrlSets concept space and adds it as a child of the provided parent concept space
-func BuildCrlSetsConcepts(uOfD *core.UniverseOfDiscourse, parentSpace core.Element, hl *core.Transaction) {
+func BuildCrlSetsConcepts(uOfD *core.UniverseOfDiscourse, parentSpace core.Concept, hl *core.Transaction) {
 	crlSet, _ := uOfD.NewElement(hl, CrlSetURI)
 	crlSet.SetLabel("CrlSet", hl)
 	crlSet.SetOwningConcept(parentSpace, hl)

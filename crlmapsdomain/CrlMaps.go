@@ -194,7 +194,7 @@ func BuildCrlMapsDomain(uOfD *core.UniverseOfDiscourse, trans *core.Transaction)
 }
 
 // executeOneToOneMap performs the mapping function
-func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotification, trans *core.Transaction) error {
+func executeOneToOneMap(mapInstance core.Concept, notification *core.ChangeNotification, trans *core.Transaction) error {
 	uOfD := trans.GetUniverseOfDiscourse()
 	var err error = nil
 	trans.WriteLockElement(mapInstance)
@@ -211,9 +211,9 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	// This function can be called when creating a direct refinement of a one-to-one map. This is a defining map, and
 	// we don't want to execute this function on defining maps, only on their instantiations. The following check eliminates
 	// those calls
-	var immediateAbstractions = map[string]core.Element{}
+	var immediateAbstractions = map[string]core.Concept{}
 	mapInstance.FindImmediateAbstractions(immediateAbstractions, trans)
-	var definingMap core.Element
+	var definingMap core.Concept
 	for _, abs := range immediateAbstractions {
 		if abs.GetURI(trans) != CrlOneToOneMapURI && abs.IsRefinementOfURI(CrlOneToOneMapURI, trans) {
 			definingMap = abs
@@ -314,37 +314,37 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 		sourceAttributeName := sourceRef.GetReferencedAttributeName(trans)
 		if sourceAttributeName != core.NoAttribute {
 			var sourceReferentValue string
-			var sourceReferent core.Element
+			var sourceReferent core.Concept
 			switch sourceAttributeName {
 			case core.ReferencedConceptID:
-				switch sourceElement := source.(type) {
+				switch source.GetConceptType() {
 				case core.Reference:
-					sourceReferentValue = sourceElement.GetReferencedConceptID(trans)
+					sourceReferentValue = source.GetReferencedConceptID(trans)
 					sourceReferent = uOfD.GetElement(sourceReferentValue)
 				}
 			case core.AbstractConceptID:
-				switch sourceElement := source.(type) {
+				switch source.GetConceptType() {
 				case core.Refinement:
-					sourceReferentValue = sourceElement.GetAbstractConceptID(trans)
+					sourceReferentValue = source.GetAbstractConceptID(trans)
 					sourceReferent = uOfD.GetElement(sourceReferentValue)
 				}
 			case core.RefinedConceptID:
-				switch sourceElement := source.(type) {
+				switch source.GetConceptType() {
 				case core.Refinement:
-					sourceReferentValue = sourceElement.GetRefinedConceptID(trans)
+					sourceReferentValue = source.GetRefinedConceptID(trans)
 					sourceReferent = uOfD.GetElement(sourceReferentValue)
 				}
 			case core.OwningConceptID:
 				sourceReferentValue = source.GetOwningConceptID(trans)
 				sourceReferent = uOfD.GetElement(sourceReferentValue)
 			case core.LiteralValue, core.Definition, core.Label:
-				sourceReferentValue = source.(core.Literal).GetLiteralValue(trans)
+				sourceReferentValue = source.GetLiteralValue(trans)
 			}
 
 			// We now know the source referent value. If it is an Element and we are setting a target pointer,
 			// we need to find the corresponding target referent Element
 
-			var targetReferent core.Element
+			var targetReferent core.Concept
 			switch targetRefAttributeName {
 			case core.OwningConceptID, core.ReferencedConceptID, core.RefinedConceptID, core.AbstractConceptID:
 				if sourceReferent == nil {
@@ -363,19 +363,19 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 				case core.OwningConceptID:
 					target.SetOwningConcept(targetReferent, trans)
 				case core.ReferencedConceptID:
-					switch typedTarget := target.(type) {
+					switch target.GetConceptType() {
 					case core.Reference:
-						typedTarget.SetReferencedConcept(targetReferent, core.NoAttribute, trans)
+						target.SetReferencedConcept(targetReferent, core.NoAttribute, trans)
 					}
 				case core.RefinedConceptID:
-					switch typedTarget := target.(type) {
+					switch target.GetConceptType() {
 					case core.Refinement:
-						typedTarget.SetRefinedConcept(targetReferent, trans)
+						target.SetRefinedConcept(targetReferent, trans)
 					}
 				case core.AbstractConceptID:
-					switch typedTarget := target.(type) {
+					switch target.GetConceptType() {
 					case core.Refinement:
-						typedTarget.SetAbstractConcept(targetReferent, trans)
+						target.SetAbstractConcept(targetReferent, trans)
 					}
 				}
 			case core.Label:
@@ -383,9 +383,9 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 			case core.Definition:
 				target.SetDefinition(sourceReferentValue, trans)
 			case core.LiteralValue:
-				switch typedTarget := target.(type) {
+				switch target.GetConceptType() {
 				case core.Literal:
-					typedTarget.SetLiteralValue(sourceReferentValue, trans)
+					target.SetLiteralValue(sourceReferentValue, trans)
 				}
 			}
 		}
@@ -403,8 +403,8 @@ func executeOneToOneMap(mapInstance core.Element, notification *core.ChangeNotif
 	return nil
 }
 
-func getAbstractMap(thisMap core.Element, trans *core.Transaction) core.Element {
-	immediateAbstractions := map[string]core.Element{}
+func getAbstractMap(thisMap core.Concept, trans *core.Transaction) core.Concept {
+	immediateAbstractions := map[string]core.Concept{}
 	thisMap.FindImmediateAbstractions(immediateAbstractions, trans)
 	for _, abstraction := range immediateAbstractions {
 		if abstraction.IsRefinementOfURI(CrlOneToOneMapURI, trans) {
@@ -414,7 +414,7 @@ func getAbstractMap(thisMap core.Element, trans *core.Transaction) core.Element 
 	return nil
 }
 
-func getAttributeTarget(attributeMap core.Element, trans *core.Transaction) core.Element {
+func getAttributeTarget(attributeMap core.Concept, trans *core.Transaction) core.Concept {
 	// Assumes that the parent map's target is either the desired target or an ancestor of the desired target
 	// The target is either going to be the parent map's target or one of its descendants
 	parentTarget := getParentMapTarget(attributeMap, trans)
@@ -437,7 +437,7 @@ func getAttributeTarget(attributeMap core.Element, trans *core.Transaction) core
 }
 
 // GetSource returns the source referenced by the given map
-func GetSource(theMap core.Element, trans *core.Transaction) core.Element {
+func GetSource(theMap core.Concept, trans *core.Transaction) core.Concept {
 	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, trans)
 	if ref == nil {
 		return nil
@@ -446,12 +446,12 @@ func GetSource(theMap core.Element, trans *core.Transaction) core.Element {
 }
 
 // GetSourceReference returns the source reference for the given map
-func GetSourceReference(theMap core.Element, trans *core.Transaction) core.Reference {
+func GetSourceReference(theMap core.Concept, trans *core.Transaction) core.Concept {
 	return theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, trans)
 }
 
 // GetTarget returns the target referenced by the given map
-func GetTarget(theMap core.Element, trans *core.Transaction) core.Element {
+func GetTarget(theMap core.Concept, trans *core.Transaction) core.Concept {
 	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, trans)
 	if ref == nil {
 		return nil
@@ -460,11 +460,11 @@ func GetTarget(theMap core.Element, trans *core.Transaction) core.Element {
 }
 
 // GetTargetReference returns the target reference for the given map
-func GetTargetReference(theMap core.Element, trans *core.Transaction) core.Reference {
+func GetTargetReference(theMap core.Concept, trans *core.Transaction) core.Concept {
 	return theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, trans)
 }
 
-func getRootMap(theMap core.Element, trans *core.Transaction) core.Element {
+func getRootMap(theMap core.Concept, trans *core.Transaction) core.Concept {
 	owner := theMap.GetOwningConcept(trans)
 	if owner != nil && isMap(owner, trans) {
 		return getRootMap(owner, trans)
@@ -472,7 +472,7 @@ func getRootMap(theMap core.Element, trans *core.Transaction) core.Element {
 	return theMap
 }
 
-func getParentMapTarget(theMap core.Element, trans *core.Transaction) core.Element {
+func getParentMapTarget(theMap core.Concept, trans *core.Transaction) core.Concept {
 	parentMap := theMap.GetOwningConcept(trans)
 	ref := parentMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, trans)
 	if ref == nil {
@@ -491,7 +491,7 @@ func getParentMapTarget(theMap core.Element, trans *core.Transaction) core.Eleme
 // }
 
 // FindAttributeMapForSource locates the attribute map referencing the given source, if any.
-func FindAttributeMapForSource(currentMap core.Element, source core.Element, attributeName core.AttributeName, trans *core.Transaction) core.Element {
+func FindAttributeMapForSource(currentMap core.Concept, source core.Concept, attributeName core.AttributeName, trans *core.Transaction) core.Concept {
 	if GetSource(currentMap, trans) == source && GetSourceReference(currentMap, trans).GetReferencedAttributeName(trans) == attributeName {
 		return currentMap
 	}
@@ -505,7 +505,7 @@ func FindAttributeMapForSource(currentMap core.Element, source core.Element, att
 }
 
 // FindMapForSource locates the map corresponding to the given source, if any. It explores the current map and its descendants.
-func FindMapForSource(currentMap core.Element, source core.Element, trans *core.Transaction) core.Element {
+func FindMapForSource(currentMap core.Concept, source core.Concept, trans *core.Transaction) core.Concept {
 	if GetSource(currentMap, trans) == source && GetSourceReference(currentMap, trans).GetReferencedAttributeName(trans) == core.NoAttribute {
 		return currentMap
 	}
@@ -521,7 +521,7 @@ func FindMapForSource(currentMap core.Element, source core.Element, trans *core.
 // SearchForMapForSource locates the map corresponding to the given source, if any. It starts with the current map.
 // If not found, it then goes up one level to the parent map. It keeps going up until either a target is found or
 // there is no parent. This method returns the first map found if there is more than one map.
-func SearchForMapForSource(currentMap core.Element, source core.Element, trans *core.Transaction) core.Element {
+func SearchForMapForSource(currentMap core.Concept, source core.Concept, trans *core.Transaction) core.Concept {
 	foundMap := FindMapForSource(currentMap, source, trans)
 	if foundMap == nil {
 		parentMap := currentMap.GetOwningConcept(trans)
@@ -533,7 +533,7 @@ func SearchForMapForSource(currentMap core.Element, source core.Element, trans *
 }
 
 // FindMapForSourceAttribute locates the map corresponding to the given source attribute, if any.
-func FindMapForSourceAttribute(currentMap core.Element, source core.Element, attributeName core.AttributeName, trans *core.Transaction) core.Element {
+func FindMapForSourceAttribute(currentMap core.Concept, source core.Concept, attributeName core.AttributeName, trans *core.Transaction) core.Concept {
 	if GetSource(currentMap, trans) == source && GetSourceReference(currentMap, trans).GetReferencedAttributeName(trans) == attributeName {
 		return currentMap
 	}
@@ -547,7 +547,7 @@ func FindMapForSourceAttribute(currentMap core.Element, source core.Element, att
 }
 
 // FindTargetForSource locates the map corresponding to the given source (if any) and then returns its target
-func FindTargetForSource(currentMap core.Element, source core.Element, trans *core.Transaction) core.Element {
+func FindTargetForSource(currentMap core.Concept, source core.Concept, trans *core.Transaction) core.Concept {
 	// get root map
 	rootMap := getRootMap(currentMap, trans)
 	// search the root map for a mapping whose source is the given source. If found, return target of the map
@@ -558,7 +558,7 @@ func FindTargetForSource(currentMap core.Element, source core.Element, trans *co
 	return nil
 }
 
-func instantiateMapChildren(parentDefiningMap core.Element, parentInstanceMap core.Element, source core.Element, target core.Element, uOfD *core.UniverseOfDiscourse, trans *core.Transaction) error {
+func instantiateMapChildren(parentDefiningMap core.Concept, parentInstanceMap core.Concept, source core.Concept, target core.Concept, uOfD *core.UniverseOfDiscourse, trans *core.Transaction) error {
 	// for each of the abstractMap's children that is a map
 	for _, definingChildMap := range parentDefiningMap.GetOwnedConceptsRefinedFromURI(CrlMapURI, trans) {
 		definingChildMapSource := GetSource(definingChildMap, trans)
@@ -599,7 +599,7 @@ func instantiateMapChildren(parentDefiningMap core.Element, parentInstanceMap co
 						return nil
 					}
 				}
-				var newMapInstance core.Element
+				var newMapInstance core.Concept
 				for _, mapInstance := range parentInstanceMap.GetOwnedConceptsRefinedFrom(definingChildMap, trans) {
 					mapInstanceSource := GetSource(mapInstance, trans)
 					if mapInstanceSource == nil || mapInstanceSource.GetConceptID(trans) == foundChildSource.GetConceptID(trans) {
@@ -642,7 +642,7 @@ func instantiateMapChildren(parentDefiningMap core.Element, parentInstanceMap co
 				// and wire up the element as the source
 				for _, sourceEl := range source.GetOwnedDescendantsRefinedFrom(definingChildMapSource, trans) {
 					// Check to see whether there is already a map instance for this source
-					var newMapInstance core.Element
+					var newMapInstance core.Concept
 					for _, mapInstance := range parentInstanceMap.GetOwnedConceptsRefinedFrom(definingChildMap, trans) {
 						mapInstanceSource := GetSource(mapInstance, trans)
 						if mapInstanceSource == nil || mapInstanceSource.GetConceptID(trans) == sourceEl.GetConceptID(trans) {
@@ -676,17 +676,17 @@ func instantiateMapChildren(parentDefiningMap core.Element, parentInstanceMap co
 	return nil
 }
 
-func isMap(candidate core.Element, trans *core.Transaction) bool {
+func isMap(candidate core.Concept, trans *core.Transaction) bool {
 	return candidate != nil && candidate.IsRefinementOfURI(CrlMapURI, trans)
 }
 
-func isRootMap(candidate core.Element, trans *core.Transaction) bool {
+func isRootMap(candidate core.Concept, trans *core.Transaction) bool {
 	rootMap := getRootMap(candidate, trans)
 	return rootMap == candidate
 }
 
 // SetSource sets the source referenced by the given map
-func SetSource(theMap core.Element, newSource core.Element, attributeName core.AttributeName, trans *core.Transaction) error {
+func SetSource(theMap core.Concept, newSource core.Concept, attributeName core.AttributeName, trans *core.Transaction) error {
 	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, trans)
 	if ref == nil {
 		return errors.New("CrlMaps.SetSource called with map that does not have a source reference")
@@ -704,7 +704,7 @@ func SetSource(theMap core.Element, newSource core.Element, attributeName core.A
 // }
 
 // SetTarget sets the target referenced by the given map
-func SetTarget(theMap core.Element, newTarget core.Element, attributeName core.AttributeName, trans *core.Transaction) error {
+func SetTarget(theMap core.Concept, newTarget core.Concept, attributeName core.AttributeName, trans *core.Transaction) error {
 	ref := theMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, trans)
 	if ref == nil {
 		return errors.New("CrlMaps.SetTarget called with map that does not have a target reference")
@@ -721,7 +721,7 @@ func SetTarget(theMap core.Element, newTarget core.Element, attributeName core.A
 // 	return ref.SetReferencedAttributeName(attributeName, trans)
 // }
 
-func tickleMapChildren(parentInstanceMap core.Element, trans *core.Transaction) error {
+func tickleMapChildren(parentInstanceMap core.Concept, trans *core.Transaction) error {
 	// for each of the abstractMap's children that is a map
 	for _, childMap := range parentInstanceMap.GetOwnedConceptsRefinedFromURI(CrlMapURI, trans) {
 		err := trans.GetUniverseOfDiscourse().SendTickleNotification(parentInstanceMap, childMap, trans)

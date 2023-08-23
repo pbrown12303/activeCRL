@@ -40,16 +40,16 @@ var _ = Describe("CrlMaps domain test", func() {
 var _ = Describe("CrlMaps mapping tests", func() {
 	var uOfD *core.UniverseOfDiscourse
 	var trans *core.Transaction
-	var definingSourceFolder core.Element
-	var definingSourceDomain core.Element
-	var definingTargetFolder core.Element
-	var definingTargetDomain core.Element
-	var definingMapFolder core.Element
-	var definingDomainMap core.Element
-	var instanceSourceFolder core.Element
-	var instanceSourceDomain core.Element
-	var instanceMapFolder core.Element
-	var instanceDomainMap core.Element
+	var definingSourceFolder core.Concept
+	var definingSourceDomain core.Concept
+	var definingTargetFolder core.Concept
+	var definingTargetDomain core.Concept
+	var definingMapFolder core.Concept
+	var definingDomainMap core.Concept
+	var instanceSourceFolder core.Concept
+	var instanceSourceDomain core.Concept
+	var instanceMapFolder core.Concept
+	var instanceDomainMap core.Concept
 	var tempDirPath string
 
 	BeforeEach(func() {
@@ -116,14 +116,14 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 	})
 	Describe("Individual Concept Mapping - any to any", func() {
-		var definingSourceElement core.Element
-		var definingSourceReference core.Reference
-		var definingSourceRefinement core.Refinement
-		var definingSourceLiteral core.Literal
-		var definingTargetElement core.Element
-		var definingTargetReference core.Reference
-		var definingTargetRefinement core.Refinement
-		var definingTargetLiteral core.Literal
+		var definingSourceElement core.Concept
+		var definingSourceReference core.Concept
+		var definingSourceRefinement core.Concept
+		var definingSourceLiteral core.Concept
+		var definingTargetElement core.Concept
+		var definingTargetReference core.Concept
+		var definingTargetRefinement core.Concept
+		var definingTargetLiteral core.Concept
 		BeforeEach(func() {
 			var err error
 			definingSourceElement, err = uOfD.NewOwnedElement(definingSourceDomain, "DefiningSourceElement", trans)
@@ -572,24 +572,24 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 	})
 	Describe("Individual Pointer Mapping - any to any", func() {
-		var definingSourceReferent core.Element    // The source element being referenced
-		var definingSourceReference core.Reference // The reference to the source element
-		var definingSourceRefinement core.Refinement
-		var definingSourceLiteral core.Literal
-		var definingTargetReferent core.Element
-		var definingTargetReference core.Reference
-		var definingTargetRefinement core.Refinement
-		var definingTargetLiteral core.Literal
+		var definingSourceReferent core.Concept  // The source element being referenced
+		var definingSourceReference core.Concept // The reference to the source element
+		var definingSourceRefinement core.Concept
+		var definingSourceLiteral core.Concept
+		var definingTargetReferent core.Concept
+		var definingTargetReference core.Concept
+		var definingTargetRefinement core.Concept
+		var definingTargetLiteral core.Concept
 
-		var definingReferent2ReferentMap core.Element
-		var definingReference2ReferenceMap core.Element
-		var definingRefinement2RefinementMap core.Element
-		var definingLiteral2LiteralMap core.Element
+		var definingReferent2ReferentMap core.Concept
+		var definingReference2ReferenceMap core.Concept
+		var definingRefinement2RefinementMap core.Concept
+		var definingLiteral2LiteralMap core.Concept
 
-		var instanceSourceReferent core.Element
-		var instanceSourceReference core.Reference
-		var instanceSourceRefinement core.Refinement
-		var instanceSourceLiteral core.Literal
+		var instanceSourceReferent core.Concept
+		var instanceSourceReference core.Concept
+		var instanceSourceRefinement core.Concept
+		var instanceSourceLiteral core.Concept
 
 		BeforeEach(func() {
 			var err error
@@ -705,9 +705,9 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			instanceTargetReferent2 := GetTarget(instanceReferent2ReferentMap, trans)
 			Expect(instanceTargetReferent2).ToNot(BeNil())
 
-			switch castInstance := instanceTargetReference.(type) {
+			switch instanceTargetReference.GetConceptType() {
 			case core.Reference:
-				Expect(castInstance.GetReferencedConcept(trans).GetConceptID(trans)).To(Equal(instanceTargetReferent2.GetConceptID(trans)))
+				Expect(instanceTargetReference.GetReferencedConcept(trans).GetConceptID(trans)).To(Equal(instanceTargetReferent2.GetConceptID(trans)))
 			}
 		})
 		Specify("Reference Owner Pointer to Reference Owner Pointer", func() {
@@ -797,9 +797,9 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			instanceTargetReferent2 := GetTarget(instanceReferent2ReferentMap, trans)
 			Expect(instanceTargetReferent2).ToNot(BeNil())
 
-			switch typedInstanceTargetReference := instanceTargetReference.(type) {
+			switch instanceTargetReference.GetConceptType() {
 			case core.Refinement:
-				Expect(typedInstanceTargetReference.GetAbstractConceptID(trans)).To(Equal(instanceTargetReferent2.GetConceptID(trans)))
+				Expect(instanceTargetReference.GetAbstractConceptID(trans)).To(Equal(instanceTargetReferent2.GetConceptID(trans)))
 			}
 		})
 		Specify("Refinement Refined Pointer to Refinement Refined Pointer", func() {
@@ -844,9 +844,9 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			instanceTargetReferent2 := GetTarget(instanceReferent2ReferentMap, trans)
 			Expect(instanceTargetReferent2).ToNot(BeNil())
 
-			switch typedInstanceTargetReference := instanceTargetReference.(type) {
+			switch instanceTargetReference.GetConceptType() {
 			case core.Refinement:
-				Expect(typedInstanceTargetReference.GetRefinedConceptID(trans)).To(Equal(instanceTargetReferent2.GetConceptID(trans)))
+				Expect(instanceTargetReference.GetRefinedConceptID(trans)).To(Equal(instanceTargetReferent2.GetConceptID(trans)))
 			}
 		})
 		Specify("Literal Value to Literal Value", func() {
@@ -887,9 +887,9 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			instanceAttributeTarget := GetTarget(instanceLiteralValue2LiteralValueMap, trans)
 			Expect(instanceAttributeTarget).To(Equal(instanceTargetReference))
 
-			switch typedInstanceTargetReference := instanceTargetReference.(type) {
+			switch instanceTargetReference.GetConceptType() {
 			case core.Literal:
-				Expect(typedInstanceTargetReference.GetLiteralValue(trans)).To(Equal(testString))
+				Expect(instanceTargetReference.GetLiteralValue(trans)).To(Equal(testString))
 			}
 		})
 	})

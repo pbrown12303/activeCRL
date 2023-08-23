@@ -7,7 +7,6 @@ package core
 import (
 	"log"
 	"reflect"
-	"runtime/debug"
 	// "sync"
 )
 
@@ -16,7 +15,7 @@ import (
 // }
 
 // GetConceptTypeString returns the string representing the reflected type
-func GetConceptTypeString(el Element) string {
+func GetConceptTypeString(el Concept) string {
 	if el == nil {
 		return ""
 	}
@@ -26,24 +25,12 @@ func GetConceptTypeString(el Element) string {
 // // PrintMutex provides a mututal exclusion for print routhines shared across threads
 // var PrintMutex printMutexStruct
 
-func clone(el Element, hl *Transaction) Element {
-	switch typedEl := el.(type) {
-	case *literal:
-		return typedEl.clone(hl)
-	case *reference:
-		return typedEl.clone(hl)
-	case *refinement:
-		return typedEl.clone(hl)
-	case *element:
-		return typedEl.clone(hl)
-	}
-	log.Printf("clone called with unhandled type %T\n", el)
-	debug.PrintStack()
-	return nil
+func clone(el Concept, hl *Transaction) Concept {
+	return el.(*concept).clone(hl)
 }
 
 // Equivalent returns true if the two elements are equivalent
-func Equivalent(be1 Element, hl1 *Transaction, be2 Element, hl2 *Transaction, printExceptions ...bool) bool {
+func Equivalent(be1 Concept, hl1 *Transaction, be2 Concept, hl2 *Transaction, printExceptions ...bool) bool {
 	var print bool
 	if len(printExceptions) > 0 {
 		print = printExceptions[0]
@@ -62,7 +49,7 @@ func Equivalent(be1 Element, hl1 *Transaction, be2 Element, hl2 *Transaction, pr
 }
 
 // RecursivelyEquivalent returns true if two elements and all of their children are equivalent
-func RecursivelyEquivalent(e1 Element, hl1 *Transaction, e2 Element, hl2 *Transaction, printExceptions ...bool) bool {
+func RecursivelyEquivalent(e1 Concept, hl1 *Transaction, e2 Concept, hl2 *Transaction, printExceptions ...bool) bool {
 	var print bool
 	if len(printExceptions) == 1 {
 		print = printExceptions[0]
@@ -108,7 +95,7 @@ func RecursivelyEquivalent(e1 Element, hl1 *Transaction, e2 Element, hl2 *Transa
 	return true
 }
 
-func equivalent(be1 Element, hl1 *Transaction, be2 Element, hl2 *Transaction, printExceptions ...bool) bool {
+func equivalent(be1 Concept, hl1 *Transaction, be2 Concept, hl2 *Transaction, printExceptions ...bool) bool {
 	var print bool
 	if len(printExceptions) > 0 {
 		print = printExceptions[0]
@@ -120,16 +107,8 @@ func equivalent(be1 Element, hl1 *Transaction, be2 Element, hl2 *Transaction, pr
 		return false
 	}
 	switch be1.(type) {
-	case *element:
-		return be1.(*element).isEquivalent(hl1, be2.(*element), hl2, print)
-	case *reference:
-		return be1.(*reference).isEquivalent(hl1, be2.(*reference), hl2, print)
-	case *literal:
-		return be1.(*literal).isEquivalent(hl1, be2.(*literal), hl2, print)
-	case *refinement:
-		return be1.(*refinement).isEquivalent(hl1, be2.(*refinement), hl2, print)
-	// case *UniverseOfDiscourse:
-	// 	return be1.(*UniverseOfDiscourse).element.isEquivalent(hl1, &be2.(*UniverseOfDiscourse).element, hl2, print)
+	case *concept:
+		return be1.(*concept).isEquivalent(hl1, be2.(*concept), hl2, print)
 	default:
 		log.Printf("Equivalent default case entered for object: \n")
 		Print(be1, "   ", hl1)
@@ -138,11 +117,11 @@ func equivalent(be1 Element, hl1 *Transaction, be2 Element, hl2 *Transaction, pr
 }
 
 // Print prints the indicated element and its ownedConcepts, recursively
-func Print(el Element, prefix string, hl *Transaction) {
+func Print(el Concept, prefix string, hl *Transaction) {
 	printElement(el, prefix, hl)
 }
 
-func printElement(el Element, prefix string, hl *Transaction) {
+func printElement(el Concept, prefix string, hl *Transaction) {
 	if el == nil {
 		return
 	}

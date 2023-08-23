@@ -58,7 +58,7 @@ var _ = Describe("Literal Tests", func() {
 			lit, _ := uOfD.NewLiteral(hl)
 			cl := clone(lit, hl)
 			Expect(Equivalent(lit, hl, cl, hl)).To(BeTrue())
-			lit.(*literal).Version.counter = 123
+			lit.(*concept).Version.counter = 123
 			Expect(Equivalent(lit, hl, cl, hl)).To(BeFalse())
 		})
 	})

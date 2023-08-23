@@ -113,7 +113,7 @@ func NewFyneDiagramManager(fyneGUI *CrlEditorFyneGUI) *FyneDiagramManager {
 	return &dm
 }
 
-func (dm *FyneDiagramManager) addElementToDiagram(element core.Element, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramElement {
+func (dm *FyneDiagramManager) addElementToDiagram(element core.Concept, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramElement {
 	if element.IsRefinementOfURI(crldiagramdomain.CrlDiagramNodeURI, trans) {
 		return dm.addNodeToDiagram(element, trans, diagramWidget)
 	} else if element.IsRefinementOfURI(crldiagramdomain.CrlDiagramLinkURI, trans) {
@@ -122,7 +122,7 @@ func (dm *FyneDiagramManager) addElementToDiagram(element core.Element, trans *c
 	return nil
 }
 
-func (dm *FyneDiagramManager) addLinkToDiagram(link core.Element, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) *FyneCrlDiagramLink {
+func (dm *FyneDiagramManager) addLinkToDiagram(link core.Concept, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) *FyneCrlDiagramLink {
 	crlDiagramSource := crldiagramdomain.GetLinkSource(link, trans)
 	if crlDiagramSource == nil {
 		// Register for changes so that when sufficient information is present we can add it to the diagram
@@ -150,7 +150,7 @@ func (dm *FyneDiagramManager) addLinkToDiagram(link core.Element, trans *core.Tr
 	return diagramLink
 }
 
-func (dm *FyneDiagramManager) addNodeToDiagram(node core.Element, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramNode {
+func (dm *FyneDiagramManager) addNodeToDiagram(node core.Concept, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramNode {
 	nodeID := node.GetConceptID(trans)
 	diagramNode := diagramWidget.Nodes[nodeID]
 	if diagramNode == nil {
@@ -299,7 +299,7 @@ func (dm *FyneDiagramManager) diagramElementSelectionChanged(diagramElementID st
 		defer editor.EndTransaction()
 	}
 	fyneDiagramElement := dm.GetSelectedDiagram().GetDiagramElement(diagramElementID)
-	var crlElement core.Element
+	var crlElement core.Concept
 	switch typedElement := fyneDiagramElement.(type) {
 	case *FyneCrlDiagramNode:
 		crlElement = typedElement.modelElement
@@ -330,7 +330,7 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 	}
 	uOfD := trans.GetUniverseOfDiscourse()
 	crlDiagram := uOfD.GetElement(fyneDiagram.ID)
-	var el core.Element
+	var el core.Concept
 	switch dm.currentToolbarSelection {
 	case CursorSelected:
 		fyneDiagram.ClearSelection()
@@ -392,7 +392,7 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 	dm.currentToolbarSelection = CursorSelected
 }
 
-func (dm *FyneDiagramManager) displayDiagram(diagram core.Element, trans *core.Transaction) error {
+func (dm *FyneDiagramManager) displayDiagram(diagram core.Concept, trans *core.Transaction) error {
 	diagramID := diagram.GetConceptID(trans)
 	tabItem := dm.diagramTabs[diagramID]
 	if tabItem == nil {
@@ -508,7 +508,7 @@ func (dm *FyneDiagramManager) isConnectionAllowed(fyneLink diagramwidget.Diagram
 		}
 		switch linkEnd {
 		case diagramwidget.SOURCE:
-			switch padOwnerModelElement.(type) {
+			switch padOwnerModelElement.GetConceptType() {
 			case core.Refinement:
 				return true
 			}
@@ -526,7 +526,7 @@ func (dm *FyneDiagramManager) isConnectionAllowed(fyneLink diagramwidget.Diagram
 		}
 		switch linkEnd {
 		case diagramwidget.SOURCE:
-			switch padOwnerModelElement.(type) {
+			switch padOwnerModelElement.GetConceptType() {
 			case core.Reference:
 				return true
 			}
@@ -554,7 +554,7 @@ func (dm *FyneDiagramManager) isConnectionAllowed(fyneLink diagramwidget.Diagram
 		}
 		switch linkEnd {
 		case diagramwidget.SOURCE:
-			switch padOwnerModelElement.(type) {
+			switch padOwnerModelElement.GetConceptType() {
 			case core.Refinement:
 				return true
 			}
@@ -600,10 +600,10 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 			case RefinementLinkSelected:
 				linkModelElement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				sourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
-				switch typedElement := linkModelElement.(type) {
+				switch linkModelElement.GetConceptType() {
 				case core.Refinement:
-					typedElement.SetOwningConcept(sourceModelElement, trans)
-					typedElement.SetRefinedConcept(sourceModelElement, trans)
+					linkModelElement.SetOwningConcept(sourceModelElement, trans)
+					linkModelElement.SetRefinedConcept(sourceModelElement, trans)
 					link.Show()
 				}
 			case AbstractElementPointerSelected:
@@ -611,13 +611,13 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 				newModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				if currentModelRefinement != newModelRefinement {
 					if currentModelRefinement != nil {
-						currentModelRefinement.(core.Refinement).SetAbstractConcept(nil, trans)
+						currentModelRefinement.SetAbstractConcept(nil, trans)
 					}
 					crlLinkTarget := crldiagramdomain.GetLinkTarget(crlLink, trans)
 					targetModelElement := crldiagramdomain.GetReferencedModelConcept(crlLinkTarget, trans)
-					switch typedElement := newModelRefinement.(type) {
+					switch newModelRefinement.GetConceptType() {
 					case core.Refinement:
-						typedElement.SetAbstractConcept(targetModelElement, trans)
+						newModelRefinement.SetAbstractConcept(targetModelElement, trans)
 						crldiagramdomain.SetReferencedModelConcept(crlLink, newModelRefinement, trans)
 						typedLink.modelElement = newModelRefinement
 					}
@@ -642,17 +642,17 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 					crldiagramdomain.SetReferencedModelConcept(crlLink, newModelReference, trans)
 					attributeName := core.NoAttribute
 					if currentModelReference != nil {
-						switch typedElement := currentModelReference.(type) {
+						switch currentModelReference.GetConceptType() {
 						case core.Reference:
-							attributeName = typedElement.GetReferencedAttributeName(trans)
-							currentModelReference.(core.Reference).SetReferencedConcept(nil, core.NoAttribute, trans)
+							attributeName = currentModelReference.GetReferencedAttributeName(trans)
+							currentModelReference.SetReferencedConcept(nil, core.NoAttribute, trans)
 						}
 					}
 					crlLinkTarget := crldiagramdomain.GetLinkTarget(crlLink, trans)
 					targetModelElement := crldiagramdomain.GetReferencedModelConcept(crlLinkTarget, trans)
-					switch typedElement := newModelReference.(type) {
+					switch newModelReference.GetConceptType() {
 					case core.Reference:
-						typedElement.SetReferencedConcept(targetModelElement, attributeName, trans)
+						newModelReference.SetReferencedConcept(targetModelElement, attributeName, trans)
 						crldiagramdomain.SetReferencedModelConcept(crlLink, newModelReference, trans)
 						typedLink.modelElement = newModelReference
 					}
@@ -662,16 +662,16 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 				newModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				if currentModelRefinement != newModelRefinement {
 					if currentModelRefinement != nil {
-						switch typedElement := currentModelRefinement.(type) {
+						switch currentModelRefinement.GetConceptType() {
 						case core.Refinement:
-							typedElement.SetRefinedConcept(nil, trans)
+							currentModelRefinement.SetRefinedConcept(nil, trans)
 						}
 					}
 					crlLinkTarget := crldiagramdomain.GetLinkTarget(crlLink, trans)
 					targetModelElement := crldiagramdomain.GetReferencedModelConcept(crlLinkTarget, trans)
-					switch typedElement := newModelRefinement.(type) {
+					switch newModelRefinement.GetConceptType() {
 					case core.Refinement:
-						typedElement.SetRefinedConcept(targetModelElement, trans)
+						newModelRefinement.SetRefinedConcept(targetModelElement, trans)
 						crldiagramdomain.SetReferencedModelConcept(crlLink, newModelRefinement, trans)
 						typedLink.modelElement = newModelRefinement
 					}
@@ -685,25 +685,25 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 				targetModelElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				newPadOwner := newPad.GetPadOwner()
 				attributeName := getAttributeNameBasedOnTargetType(newPadOwner)
-				switch typedElement := linkModelElement.(type) {
+				switch linkModelElement.GetConceptType() {
 				case core.Reference:
-					typedElement.SetReferencedConcept(targetModelElement, attributeName, trans)
+					linkModelElement.SetReferencedConcept(targetModelElement, attributeName, trans)
 				}
 			case RefinementLinkSelected:
 				linkModelElement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
 				targetModelElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
-				switch typedElement := linkModelElement.(type) {
+				switch linkModelElement.GetConceptType() {
 				case core.Refinement:
-					typedElement.SetAbstractConcept(targetModelElement, trans)
+					linkModelElement.SetAbstractConcept(targetModelElement, trans)
 				}
 			case AbstractElementPointerSelected:
 				crlModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
-				currentAbstractElement := crlModelRefinement.(core.Refinement).GetAbstractConcept(trans)
+				currentAbstractElement := crlModelRefinement.GetAbstractConcept(trans)
 				newAbstractElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				if currentAbstractElement != newAbstractElement {
-					switch typedElement := crlModelRefinement.(type) {
+					switch crlModelRefinement.GetConceptType() {
 					case core.Refinement:
-						typedElement.SetAbstractConcept(newAbstractElement, trans)
+						crlModelRefinement.SetAbstractConcept(newAbstractElement, trans)
 					}
 				}
 			case OwnerPointerSelected:
@@ -714,23 +714,23 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 				}
 			case ReferencedElementPointerSelected:
 				crlModelReference := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
-				currentReferencedElement := crlModelReference.(core.Reference).GetReferencedConcept(trans)
+				currentReferencedElement := crlModelReference.GetReferencedConcept(trans)
 				newReferencedElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				if currentReferencedElement != newReferencedElement {
 					attributeName := getAttributeNameBasedOnTargetType(newPad.GetPadOwner())
-					switch typedElement := crlModelReference.(type) {
+					switch crlModelReference.GetConceptType() {
 					case core.Reference:
-						typedElement.SetReferencedConcept(newReferencedElement, attributeName, trans)
+						crlModelReference.SetReferencedConcept(newReferencedElement, attributeName, trans)
 					}
 				}
 			case RefinedElementPointerSelected:
 				crlModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
-				currentRefinedElement := crlModelRefinement.(core.Refinement).GetRefinedConcept(trans)
+				currentRefinedElement := crlModelRefinement.GetRefinedConcept(trans)
 				newRefinedElement := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
 				if currentRefinedElement != newRefinedElement {
-					switch typedElement := crlModelRefinement.(type) {
+					switch crlModelRefinement.GetConceptType() {
 					case core.Refinement:
-						typedElement.SetRefinedConcept(newRefinedElement, trans)
+						crlModelRefinement.SetRefinedConcept(newRefinedElement, trans)
 
 					}
 				}
@@ -780,9 +780,9 @@ func (dm *FyneDiagramManager) nullifyReferencedConcept(fcde FyneCrlDiagramElemen
 	if ref == nil {
 		return errors.New("FyneDiagramManager.nullifyReferencedConcept called with nil model element")
 	}
-	switch typedRef := ref.(type) {
+	switch ref.GetConceptType() {
 	case core.Reference:
-		err := typedRef.SetReferencedConceptID("", core.NoAttribute, trans)
+		err := ref.SetReferencedConceptID("", core.NoAttribute, trans)
 		if err != nil {
 			return errors.Wrap(err, "FyneDiagramManager.nullifyReferencedConcept failed")
 		}
@@ -791,7 +791,7 @@ func (dm *FyneDiagramManager) nullifyReferencedConcept(fcde FyneCrlDiagramElemen
 }
 
 // populateDiagram adds all elements to the diagram
-func (dm *FyneDiagramManager) populateDiagram(diagram core.Element, trans *core.Transaction) error {
+func (dm *FyneDiagramManager) populateDiagram(diagram core.Concept, trans *core.Transaction) error {
 	diagramWidget := dm.getDiagramWidget(diagram.GetConceptID(trans))
 	nodes := diagram.GetOwnedConceptsRefinedFromURI(crldiagramdomain.CrlDiagramNodeURI, trans)
 	for _, node := range nodes {
@@ -962,10 +962,10 @@ func (dm *FyneDiagramManager) showAbstractConcept(elementID string) error {
 	if modelConcept == nil {
 		return errors.New("diagramManager.showAbstractConcept modelConcept not found for elementID " + elementID)
 	}
-	var modelRefinement core.Refinement
-	switch typedModelConcept := modelConcept.(type) {
+	var modelRefinement core.Concept
+	switch modelConcept.GetConceptType() {
 	case core.Refinement:
-		modelRefinement = typedModelConcept
+		modelRefinement = modelConcept
 	default:
 		return errors.New("diagramManager.showAbstractConcept modelConcept is not a Refinement")
 	}
@@ -1014,10 +1014,10 @@ func (dm *FyneDiagramManager) showReferencedConcept(elementID string) error {
 	if modelConcept == nil {
 		return errors.New("diagramManager.showReferencedConcept modelConcept not found for elementID " + elementID)
 	}
-	var modelReference core.Reference
-	switch typedModelConcept := modelConcept.(type) {
+	var modelReference core.Concept
+	switch modelConcept.GetConceptType() {
 	case core.Reference:
-		modelReference = typedModelConcept
+		modelReference = modelConcept
 	default:
 		return errors.New("diagramManager.showReferencedConcept modelConcept is not a Reference")
 	}
@@ -1025,7 +1025,7 @@ func (dm *FyneDiagramManager) showReferencedConcept(elementID string) error {
 	if modelReferencedConcept == nil {
 		return errors.New("Referenced Concept is nil")
 	}
-	var diagramReferencedConcept core.Element
+	var diagramReferencedConcept core.Concept
 	switch modelReference.GetReferencedAttributeName(trans) {
 	case core.NoAttribute, core.LiteralValue:
 		diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConcept(diagram, modelReferencedConcept, trans)
@@ -1045,25 +1045,25 @@ func (dm *FyneDiagramManager) showReferencedConcept(elementID string) error {
 			return errors.New("No representation of the owner pointer currently exists in this diagram")
 		}
 	case core.ReferencedConceptID:
-		switch typedModelReferencedConcept := modelReferencedConcept.(type) {
+		switch modelReferencedConcept.GetConceptType() {
 		case core.Reference:
-			diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConceptElementPointer(diagram, typedModelReferencedConcept, trans)
+			diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConceptElementPointer(diagram, modelReferencedConcept, trans)
 			if diagramReferencedConcept == nil {
 				return errors.New("No representation of the referenced concept pointer currently exists in this diagram")
 			}
 		}
 	case core.AbstractConceptID:
-		switch typedModelReferencedConcept := modelReferencedConcept.(type) {
+		switch modelReferencedConcept.GetConceptType() {
 		case core.Refinement:
-			diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConceptAbstractPointer(diagram, typedModelReferencedConcept, trans)
+			diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConceptAbstractPointer(diagram, modelReferencedConcept, trans)
 		}
 		if diagramReferencedConcept == nil {
 			return errors.New("No representation of the abstract concept pointer currently exists in this diagram")
 		}
 	case core.RefinedConceptID:
-		switch typedModelReferencedConcept := modelReferencedConcept.(type) {
+		switch modelReferencedConcept.GetConceptType() {
 		case core.Refinement:
-			diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConceptRefinedPointer(diagram, typedModelReferencedConcept, trans)
+			diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConceptRefinedPointer(diagram, modelReferencedConcept, trans)
 			if diagramReferencedConcept == nil {
 				return errors.New("No representation of the refined concept pointer currently exists in this diagram")
 			}
@@ -1099,10 +1099,10 @@ func (dm *FyneDiagramManager) showRefinedConcept(elementID string) error {
 	if modelConcept == nil {
 		return errors.New("diagramManager.showRefinedConcept modelConcept not found for elementID " + elementID)
 	}
-	var modelRefinement core.Refinement
-	switch typedModelConcept := modelConcept.(type) {
+	var modelRefinement core.Concept
+	switch modelConcept.GetConceptType() {
 	case core.Refinement:
-		modelRefinement = typedModelConcept
+		modelRefinement = modelConcept
 	default:
 		return errors.New("diagramManager.showRefinedConcept modelConcept is not a Refinement")
 	}
@@ -1146,7 +1146,7 @@ func (dm *FyneDiagramManager) startCreateLinkTransaction() {
 			defer dm.fyneGUI.editor.EndTransaction()
 		}
 		uOfD := trans.GetUniverseOfDiscourse()
-		var crlLink core.Element
+		var crlLink core.Concept
 		var fyneLink diagramwidget.DiagramLink
 		switch dm.currentToolbarSelection {
 		case ReferenceLinkSelected:

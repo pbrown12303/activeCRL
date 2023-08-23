@@ -8,9 +8,9 @@ import (
 var _ = Describe("Refinement tests", func() {
 	var uOfD *UniverseOfDiscourse
 	var hl *Transaction
-	var ref Refinement
-	var abstractConcept Element
-	var refinedConcept Element
+	var ref Concept
+	var abstractConcept Concept
+	var refinedConcept Concept
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
 		hl = uOfD.NewTransaction()
@@ -60,9 +60,9 @@ var _ = Describe("Refinement tests", func() {
 			Expect(ref.GetRefinedConcept(hl)).To(Equal(refinedConcept))
 		})
 		Specify("If a referenced element becomes available after it's ID is set, GetElement should find it", func() {
-			ref.(*refinement).AbstractConceptID = abstractConcept.getConceptIDNoLock()
+			ref.(*concept).AbstractConceptID = abstractConcept.getConceptIDNoLock()
 			Expect(ref.GetAbstractConcept(hl)).To(Equal(abstractConcept))
-			ref.(*refinement).RefinedConceptID = refinedConcept.getConceptIDNoLock()
+			ref.(*concept).RefinedConceptID = refinedConcept.getConceptIDNoLock()
 			Expect(ref.GetRefinedConcept(hl)).To(Equal(refinedConcept))
 		})
 	})
@@ -92,7 +92,7 @@ var _ = Describe("Refinement tests", func() {
 			target, _ := uOfD.NewElement(hl)
 			ref.SetAbstractConceptID(target.getConceptIDNoLock(), hl)
 			clonedRefinement := clone(ref, hl)
-			ref.(*refinement).AbstractConceptID = ""
+			ref.(*concept).AbstractConceptID = ""
 			Expect(Equivalent(ref, hl, clonedRefinement, hl)).To(BeFalse())
 		})
 		Specify("Equivalent should fail if there is a difference in the RefinementdConceptID", func() {
@@ -100,14 +100,14 @@ var _ = Describe("Refinement tests", func() {
 			target, _ := uOfD.NewElement(hl)
 			ref.SetRefinedConceptID(target.getConceptIDNoLock(), hl)
 			clonedRefinement := clone(ref, hl)
-			ref.(*refinement).RefinedConceptID = ""
+			ref.(*concept).RefinedConceptID = ""
 			Expect(Equivalent(ref, hl, clonedRefinement, hl)).To(BeFalse())
 		})
 		Specify("Equivalence should also fail if there is any difference in the underlying element", func() {
 			ref, _ := uOfD.NewRefinement(hl)
 			clonedRefinement := clone(ref, hl)
 			Expect(Equivalent(ref, hl, clonedRefinement, hl)).To(BeTrue())
-			ref.(*refinement).Version.counter = 123
+			ref.(*concept).Version.counter = 123
 			Expect(Equivalent(ref, hl, clonedRefinement, hl)).To(BeFalse())
 		})
 	})

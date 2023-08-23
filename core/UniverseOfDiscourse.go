@@ -52,7 +52,7 @@ func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	return &uOfD
 }
 
-func (uOfDPtr *UniverseOfDiscourse) addElement(el Element, inRecovery bool, trans *Transaction) error {
+func (uOfDPtr *UniverseOfDiscourse) addElement(el Concept, inRecovery bool, trans *Transaction) error {
 	if el == nil {
 		return errors.New("UniverseOfDiscource addElement() failed because element was nil")
 	}
@@ -72,20 +72,18 @@ func (uOfDPtr *UniverseOfDiscourse) addElement(el Element, inRecovery bool, tran
 		uOfDPtr.ownedIDsMap.addMappedValue(ownerID, uuid)
 	}
 	// Add element to all listener's lists
-	switch typedEl := el.(type) {
-	case *reference:
-		ref := typedEl
-		referencedConceptID := ref.GetReferencedConceptID(trans)
+	switch el.GetConceptType() {
+	case Reference:
+		referencedConceptID := el.GetReferencedConceptID(trans)
 		if referencedConceptID != "" {
 			uOfDPtr.listenersMap.addMappedValue(referencedConceptID, uuid)
 		}
-	case *refinement:
-		ref := el.(*refinement)
-		abstractConceptID := ref.GetAbstractConceptID(trans)
+	case Refinement:
+		abstractConceptID := el.GetAbstractConceptID(trans)
 		if abstractConceptID != "" {
 			uOfDPtr.listenersMap.addMappedValue(abstractConceptID, uuid)
 		}
-		refinedConceptID := ref.GetRefinedConceptID(trans)
+		refinedConceptID := el.GetRefinedConceptID(trans)
 		if refinedConceptID != "" {
 			uOfDPtr.listenersMap.addMappedValue(refinedConceptID, uuid)
 		}
@@ -93,7 +91,7 @@ func (uOfDPtr *UniverseOfDiscourse) addElement(el Element, inRecovery bool, tran
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) addElementForUndo(el Element, trans *Transaction) error {
+func (uOfDPtr *UniverseOfDiscourse) addElementForUndo(el Concept, trans *Transaction) error {
 	if el == nil {
 		return errors.New("UniverseOfDiscource addElementForUndo() failed because element was nil")
 	}
@@ -115,7 +113,7 @@ func (uOfDPtr *UniverseOfDiscourse) AddFunction(uri string, function crlExecutio
 	uOfDPtr.computeFunctions[string(uri)] = append(uOfDPtr.computeFunctions[string(uri)], function)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) changeURIForElement(el Element, oldURI string, newURI string) error {
+func (uOfDPtr *UniverseOfDiscourse) changeURIForElement(el Concept, oldURI string, newURI string) error {
 	if oldURI != "" && uOfDPtr.uriUUIDMap.GetEntry(oldURI) == el.getConceptIDNoLock() {
 		uOfDPtr.uriUUIDMap.DeleteEntry(oldURI)
 	}
@@ -148,13 +146,8 @@ func (uOfDPtr *UniverseOfDiscourse) Clone(trans *Transaction) *UniverseOfDiscour
 	}
 
 	for id, el := range uOfDPtr.uuidElementMap.CopyMap() {
-		switch el.(type) {
-		case *element, *literal, *reference, *refinement:
-			{
-				newElement := clone(el, trans)
-				newUofD.setUUIDElementMapEntry(id, newElement)
-			}
-		}
+		newElement := clone(el, trans)
+		newUofD.setUUIDElementMapEntry(id, newElement)
 	}
 	for key, strings := range uOfDPtr.ownedIDsMap.CopyMap() {
 		newUofD.ownedIDsMap.SetMappedValues(key, strings)
@@ -177,23 +170,12 @@ func (uOfDPtr *UniverseOfDiscourse) Clone(trans *Transaction) *UniverseOfDiscour
 // except that descendant Refinements are not replicated.
 // For each replicated Element, a Refinement is created with the abstractElement being the original and the refinedElement
 // being the replica. The root replicated element is returned.
-func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinement(original Element, trans *Transaction, newURI ...string) (Element, error) {
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinement(original Concept, trans *Transaction, newURI ...string) (Concept, error) {
 	uri := ""
 	if len(newURI) > 0 {
 		uri = newURI[0]
 	}
-	var replicate Element
-	var err error
-	switch original.(type) {
-	case Literal:
-		replicate, err = uOfDPtr.NewLiteral(trans, uri)
-	case Reference:
-		replicate, err = uOfDPtr.NewReference(trans, uri)
-	case Refinement:
-		replicate, err = uOfDPtr.NewRefinement(trans, uri)
-	case Element:
-		replicate, err = uOfDPtr.NewElement(trans, uri)
-	}
+	replicate, err := uOfDPtr.NewConcept(original.GetConceptType(), trans, uri)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +187,7 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinement(original Element
 }
 
 // CreateReplicateAsRefinementFromURI replicates the Element indicated by the URI
-func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinementFromURI(originalURI string, trans *Transaction, newURI ...string) (Element, error) {
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinementFromURI(originalURI string, trans *Transaction, newURI ...string) (Concept, error) {
 	original := uOfDPtr.GetElementWithURI(originalURI)
 	if original == nil {
 		return nil, fmt.Errorf("in CreateReplicateAsRefinementFromURI Element with uri %s not found", originalURI)
@@ -215,7 +197,7 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinementFromURI(originalU
 
 // CreateReplicateLiteralAsRefinement replicates the supplied Literal and makes all elements of the replicate
 // refinements of the original elements
-func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinement(original Literal, trans *Transaction, newURI ...string) (Literal, error) {
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinement(original Concept, trans *Transaction, newURI ...string) (Concept, error) {
 	uri := ""
 	if len(newURI) > 0 {
 		uri = newURI[0]
@@ -232,7 +214,7 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinement(original 
 }
 
 // CreateReplicateLiteralAsRefinementFromURI replicates the Literal indicated by the URI
-func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinementFromURI(originalURI string, trans *Transaction, newURI ...string) (Literal, error) {
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinementFromURI(originalURI string, trans *Transaction, newURI ...string) (Concept, error) {
 	original := uOfDPtr.GetLiteralWithURI(originalURI)
 	if original == nil {
 		return nil, fmt.Errorf("in CreateReplicateLiteralAsRefinementFromURI Element with uri %s not found", originalURI)
@@ -242,7 +224,10 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinementFromURI(or
 
 // CreateReplicateReferenceAsRefinement replicates the supplied reference and makes all elements of the replicate
 // refinements of the original elements
-func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinement(original Reference, trans *Transaction, newURI ...string) (Reference, error) {
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinement(original Concept, trans *Transaction, newURI ...string) (Concept, error) {
+	if original.GetConceptType() != Reference {
+		return nil, errors.New("CreateReplicateReferenceAsRefinement called with non-Reference argument")
+	}
 	uri := ""
 	if len(newURI) > 0 {
 		uri = newURI[0]
@@ -259,7 +244,7 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinement(origina
 }
 
 // CreateReplicateReferenceAsRefinementFromURI replicates the Reference indicated by the URI
-func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinementFromURI(originalURI string, trans *Transaction, newURI ...string) (Reference, error) {
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinementFromURI(originalURI string, trans *Transaction, newURI ...string) (Concept, error) {
 	original := uOfDPtr.GetReferenceWithURI(originalURI)
 	if original == nil {
 		return nil, fmt.Errorf("in CreateReplicateAsRefinementFromURI Element with uri %s not found", originalURI)
@@ -269,7 +254,7 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinementFromURI(
 
 // CreateReplicateRefinementAsRefinement replicates the supplied refinement and makes all elements of the replicate
 // refinements of the original elements
-func (uOfDPtr *UniverseOfDiscourse) CreateReplicateRefinementAsRefinement(original Refinement, trans *Transaction, newURI ...string) (Refinement, error) {
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateRefinementAsRefinement(original Concept, trans *Transaction, newURI ...string) (Concept, error) {
 	uri := ""
 	if len(newURI) > 0 {
 		uri = newURI[0]
@@ -286,7 +271,7 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateRefinementAsRefinement(origin
 }
 
 // CreateReplicateRefinementAsRefinementFromURI replicates the Refinement indicated by the URI
-func (uOfDPtr *UniverseOfDiscourse) CreateReplicateRefinementAsRefinementFromURI(originalURI string, trans *Transaction, newURI ...string) (Refinement, error) {
+func (uOfDPtr *UniverseOfDiscourse) CreateReplicateRefinementAsRefinementFromURI(originalURI string, trans *Transaction, newURI ...string) (Concept, error) {
 	original := uOfDPtr.GetRefinementWithURI(originalURI)
 	if original == nil {
 		return nil, fmt.Errorf("in CreateReplicateRefinementAsRefinementFromURI Element with uri %s not found", originalURI)
@@ -294,13 +279,13 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateRefinementAsRefinementFromURI
 	return uOfDPtr.CreateReplicateRefinementAsRefinement(original, trans, newURI...)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) findFunctions(element Element, notification *ChangeNotification, trans *Transaction) []string {
+func (uOfDPtr *UniverseOfDiscourse) findFunctions(element Concept, notification *ChangeNotification, trans *Transaction) []string {
 	var functionIdentifiers []string
 	if element == nil {
 		return functionIdentifiers
 	}
 	// Now find functions associated with self and abstractions
-	selfAndAbstractions := make(map[string]Element)
+	selfAndAbstractions := make(map[string]Concept)
 	selfAndAbstractions[element.getConceptIDNoLock()] = element
 	element.FindAbstractions(selfAndAbstractions, trans)
 	for _, candidate := range selfAndAbstractions {
@@ -315,7 +300,7 @@ func (uOfDPtr *UniverseOfDiscourse) findFunctions(element Element, notification 
 	return functionIdentifiers
 }
 
-func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, trans *Transaction) error {
+func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Concept, trans *Transaction) error {
 	if el == nil {
 		return errors.New("UniverseOfDiscource removeElement failed elcause Element was nil")
 	}
@@ -338,14 +323,14 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, trans *Transaction
 	it := uOfDPtr.listenersMap.GetMappedValues(uuid).Iterator()
 	for id := range it.C {
 		listener := uOfDPtr.GetElement(id.(string))
-		switch typedListener := listener.(type) {
+		switch listener.GetConceptType() {
 		case Reference:
-			typedListener.SetReferencedConcept(nil, NoAttribute, trans)
+			listener.SetReferencedConcept(nil, NoAttribute, trans)
 		case Refinement:
-			if typedListener.GetAbstractConcept(trans) == el {
-				typedListener.SetAbstractConcept(nil, trans)
-			} else if typedListener.GetRefinedConcept(trans) == el {
-				typedListener.SetRefinedConcept(nil, trans)
+			if listener.GetAbstractConcept(trans) == el {
+				listener.SetAbstractConcept(nil, trans)
+			} else if listener.GetRefinedConcept(trans) == el {
+				listener.SetRefinedConcept(nil, trans)
 			}
 		}
 	}
@@ -360,18 +345,18 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, trans *Transaction
 		return errors.Wrap(err, "UniverseOfDiscourse.deleteElement failed")
 	}
 	// Remove element from all listener's lists
-	switch typedEl := el.(type) {
-	case *reference:
-		referencedConceptID := typedEl.GetReferencedConceptID(trans)
+	switch el.GetConceptType() {
+	case Reference:
+		referencedConceptID := el.GetReferencedConceptID(trans)
 		if referencedConceptID != "" {
 			uOfDPtr.listenersMap.removeMappedValue(referencedConceptID, uuid)
 		}
-	case *refinement:
-		abstractConceptID := typedEl.GetAbstractConceptID(trans)
+	case Refinement:
+		abstractConceptID := el.GetAbstractConceptID(trans)
 		if abstractConceptID != "" {
 			uOfDPtr.listenersMap.removeMappedValue(abstractConceptID, uuid)
 		}
-		refinedConceptID := typedEl.GetRefinedConceptID(trans)
+		refinedConceptID := el.GetRefinedConceptID(trans)
 		if refinedConceptID != "" {
 			uOfDPtr.listenersMap.removeMappedValue(refinedConceptID, uuid)
 		}
@@ -386,7 +371,7 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Element, trans *Transaction
 }
 
 // DeleteElement removes a single element and its descentants from the uOfD. Pointers to the elements from other elements are set to nil.
-func (uOfDPtr *UniverseOfDiscourse) DeleteElement(element Element, trans *Transaction) error {
+func (uOfDPtr *UniverseOfDiscourse) DeleteElement(element Concept, trans *Transaction) error {
 	id := element.GetConceptID(trans)
 	elements := mapset.NewSet(id)
 	return uOfDPtr.DeleteElements(elements, trans)
@@ -426,7 +411,6 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, trans *T
 	for _, el := range uOfDPtr.inProgressDeletions.CopyMap() {
 		if el != nil {
 			trans.WriteLockElement(el)
-			uOfDPtr.preChange(el, trans)
 			uOfDPtr.deleteElement(el, trans)
 		}
 	}
@@ -477,7 +461,7 @@ func (uOfDPtr *UniverseOfDiscourse) generateConceptID(uri ...string) (string, er
 // }
 
 // GetElement returns the Element with the conceptID
-func (uOfDPtr *UniverseOfDiscourse) GetElement(conceptID string) Element {
+func (uOfDPtr *UniverseOfDiscourse) GetElement(conceptID string) Concept {
 	return uOfDPtr.uuidElementMap.GetEntry(conceptID)
 }
 
@@ -491,12 +475,12 @@ func (uOfDPtr *UniverseOfDiscourse) GetElementLabel(conceptID string) string {
 }
 
 // GetElements returns the Elements in the uOfD mapped by their ConceptIDs
-func (uOfDPtr *UniverseOfDiscourse) GetElements() map[string]Element {
+func (uOfDPtr *UniverseOfDiscourse) GetElements() map[string]Concept {
 	return uOfDPtr.uuidElementMap.CopyMap()
 }
 
 // GetElementWithURI returns the Element with the given URI
-func (uOfDPtr *UniverseOfDiscourse) GetElementWithURI(uri string) Element {
+func (uOfDPtr *UniverseOfDiscourse) GetElementWithURI(uri string) Concept {
 	return uOfDPtr.GetElement(uOfDPtr.uriUUIDMap.GetEntry(uri))
 }
 
@@ -525,21 +509,27 @@ func (uOfDPtr *UniverseOfDiscourse) getListenerIDs(id string) mapset.Set {
 }
 
 // GetLiteral returns the literal with the indicated ID (if found)
-func (uOfDPtr *UniverseOfDiscourse) GetLiteral(conceptID string) Literal {
+func (uOfDPtr *UniverseOfDiscourse) GetLiteral(conceptID string) Concept {
 	el := uOfDPtr.GetElement(conceptID)
-	switch typedEl := el.(type) {
-	case *literal:
-		return typedEl
+	if el == nil {
+		return nil
+	}
+	switch el.GetConceptType() {
+	case Literal:
+		return el
 	}
 	return nil
 }
 
 // GetLiteralWithURI returns the literal with the indicated URI (if found)
-func (uOfDPtr *UniverseOfDiscourse) GetLiteralWithURI(uri string) Literal {
+func (uOfDPtr *UniverseOfDiscourse) GetLiteralWithURI(uri string) Concept {
 	el := uOfDPtr.GetElementWithURI(uri)
-	switch typedEl := el.(type) {
+	if el == nil {
+		return nil
+	}
+	switch el.GetConceptType() {
 	case Literal:
-		return typedEl
+		return el
 	}
 	return nil
 }
@@ -559,49 +549,61 @@ func (uOfDPtr *UniverseOfDiscourse) GetConceptsOwnedConceptIDsRecursively(rootID
 }
 
 // GetReference returns the reference with the indicated ID (if found)
-func (uOfDPtr *UniverseOfDiscourse) GetReference(conceptID string) Reference {
+func (uOfDPtr *UniverseOfDiscourse) GetReference(conceptID string) Concept {
 	el := uOfDPtr.GetElement(conceptID)
-	switch typedEl := el.(type) {
-	case *reference:
-		return typedEl
+	if el == nil {
+		return nil
+	}
+	switch el.GetConceptType() {
+	case Reference:
+		return el
 	}
 	return nil
 }
 
 // GetReferenceWithURI returns the reference with the indicated URI (if found)
-func (uOfDPtr *UniverseOfDiscourse) GetReferenceWithURI(uri string) Reference {
+func (uOfDPtr *UniverseOfDiscourse) GetReferenceWithURI(uri string) Concept {
 	el := uOfDPtr.GetElementWithURI(uri)
-	switch typedEl := el.(type) {
-	case *reference:
-		return typedEl
+	if el == nil {
+		return nil
+	}
+	switch el.GetConceptType() {
+	case Reference:
+		return el
 	}
 	return nil
 }
 
 // GetRefinement returns the refinement with the indicated ID (if found)
-func (uOfDPtr *UniverseOfDiscourse) GetRefinement(conceptID string) Refinement {
+func (uOfDPtr *UniverseOfDiscourse) GetRefinement(conceptID string) Concept {
 	el := uOfDPtr.GetElement(conceptID)
-	switch typedEl := el.(type) {
-	case *refinement:
-		return typedEl
+	if el == nil {
+		return nil
+	}
+	switch el.GetConceptType() {
+	case Refinement:
+		return el
 	}
 	return nil
 }
 
 // GetRefinementWithURI returns the refinement with the indicated URI (if found)
-func (uOfDPtr *UniverseOfDiscourse) GetRefinementWithURI(uri string) Refinement {
+func (uOfDPtr *UniverseOfDiscourse) GetRefinementWithURI(uri string) Concept {
 	el := uOfDPtr.GetElementWithURI(uri)
-	switch typedEl := el.(type) {
-	case *refinement:
-		return typedEl
+	if el == nil {
+		return nil
+	}
+	switch el.GetConceptType() {
+	case Refinement:
+		return el
 	}
 	return nil
 }
 
 // GetRootElements returns all elements that do not have owners
-func (uOfDPtr *UniverseOfDiscourse) GetRootElements(trans *Transaction) map[string]Element {
+func (uOfDPtr *UniverseOfDiscourse) GetRootElements(trans *Transaction) map[string]Concept {
 	allElements := uOfDPtr.GetElements()
-	rootElements := make(map[string]Element)
+	rootElements := make(map[string]Concept)
 	for id, el := range allElements {
 		if el.GetOwningConceptID(trans) == "" && el.GetURI(trans) != TransientURI {
 			rootElements[id] = el
@@ -722,7 +724,7 @@ func (uOfDPtr *UniverseOfDiscourse) MarkUndoPoint() {
 }
 
 // MarshalDomain creates a JSON representation of an element and all of its descendants
-func (uOfDPtr *UniverseOfDiscourse) MarshalDomain(el Element, trans *Transaction) ([]byte, error) {
+func (uOfDPtr *UniverseOfDiscourse) MarshalDomain(el Concept, trans *Transaction) ([]byte, error) {
 	var result []byte
 	result = append(result, []byte("[")...)
 	marshaledConcept, err := uOfDPtr.marshalConceptRecursively(el, trans)
@@ -735,7 +737,7 @@ func (uOfDPtr *UniverseOfDiscourse) MarshalDomain(el Element, trans *Transaction
 	return result, nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) marshalConceptRecursively(el Element, trans *Transaction) ([]byte, error) {
+func (uOfDPtr *UniverseOfDiscourse) marshalConceptRecursively(el Concept, trans *Transaction) ([]byte, error) {
 	var result []byte
 	if el == nil {
 		return result, errors.New("UniverseOfDiscourse.marshalConceptRecursively called with nil concept")
@@ -770,7 +772,7 @@ func (uOfDPtr *UniverseOfDiscourse) newUofDConceptAddedNotification(afterState *
 }
 
 // SendConceptChangeNotification creates a ConceptChangeNotification
-func (uOfDPtr *UniverseOfDiscourse) SendConceptChangeNotification(reportingElement Element, beforeState *ConceptState, afterState *ConceptState, trans *Transaction) error {
+func (uOfDPtr *UniverseOfDiscourse) SendConceptChangeNotification(reportingElement Concept, beforeState *ConceptState, afterState *ConceptState, trans *Transaction) error {
 	notification := &ChangeNotification{}
 	reportingConceptState, err := NewConceptState(reportingElement)
 	if err != nil {
@@ -789,7 +791,7 @@ func (uOfDPtr *UniverseOfDiscourse) SendConceptChangeNotification(reportingEleme
 }
 
 // SendPointerChangeNotification creates a PointerChangeNotification and sends it to the relevant parties
-func (uOfDPtr *UniverseOfDiscourse) SendPointerChangeNotification(reportingElement Element, natureOfChange NatureOfChange, beforeConceptState *ConceptState, afterConceptState *ConceptState, trans *Transaction) error {
+func (uOfDPtr *UniverseOfDiscourse) SendPointerChangeNotification(reportingElement Concept, natureOfChange NatureOfChange, beforeConceptState *ConceptState, afterConceptState *ConceptState, trans *Transaction) error {
 	notification := &ChangeNotification{}
 	reportingConceptState, err := NewConceptState(reportingElement)
 	if err != nil {
@@ -806,7 +808,7 @@ func (uOfDPtr *UniverseOfDiscourse) SendPointerChangeNotification(reportingEleme
 
 // SendTickleNotification creates a Tickle notification and sends it to the indicated target element. Its purpose is to
 // trigger the execution of any functions associated with the target element
-func (uOfDPtr *UniverseOfDiscourse) SendTickleNotification(reportingElement Element, targetElement Element, trans *Transaction) error {
+func (uOfDPtr *UniverseOfDiscourse) SendTickleNotification(reportingElement Concept, targetElement Concept, trans *Transaction) error {
 	notification := &ChangeNotification{}
 	reportingConceptState, err := NewConceptState(reportingElement)
 	if err != nil {
@@ -833,7 +835,7 @@ func (uOfDPtr *UniverseOfDiscourse) newUofDConceptRemovedNotification(beforeStat
 // NewForwardingChangeNotification creates a ChangeNotification that records the reason for the change to the element,
 // including the nature of the change, an indication of which component originated the change, and whether there
 // was a preceeding notification that triggered this change.
-func (uOfDPtr *UniverseOfDiscourse) NewForwardingChangeNotification(reportingElement Element, natureOfChange NatureOfChange, underlyingChange *ChangeNotification, trans *Transaction) (*ChangeNotification, error) {
+func (uOfDPtr *UniverseOfDiscourse) NewForwardingChangeNotification(reportingElement Concept, natureOfChange NatureOfChange, underlyingChange *ChangeNotification, trans *Transaction) (*ChangeNotification, error) {
 	notification := &ChangeNotification{}
 	reportingElementState, err := NewConceptState(reportingElement)
 	if err != nil {
@@ -846,8 +848,8 @@ func (uOfDPtr *UniverseOfDiscourse) NewForwardingChangeNotification(reportingEle
 	return notification, nil
 }
 
-// NewElement creates and initializes a new Element
-func (uOfDPtr *UniverseOfDiscourse) NewElement(trans *Transaction, uri ...string) (Element, error) {
+// NewConcept creates and initializes a new Concept
+func (uOfDPtr *UniverseOfDiscourse) NewConcept(conceptType ConceptType, trans *Transaction, uri ...string) (Concept, error) {
 	conceptID, err := uOfDPtr.generateConceptID(uri...)
 	if err != nil {
 		return nil, err
@@ -856,8 +858,28 @@ func (uOfDPtr *UniverseOfDiscourse) NewElement(trans *Transaction, uri ...string
 	if len(uri) == 1 {
 		actualURI = uri[0]
 	}
-	var el element
-	el.initializeElement(conceptID, actualURI)
+	var el concept
+	el.initializeConcept(conceptType, conceptID, actualURI)
+	trans.WriteLockElement(&el)
+	uOfDPtr.SetUniverseOfDiscourse(&el, trans)
+	if actualURI != "" {
+		el.SetURI(actualURI, trans)
+	}
+	return &el, nil
+}
+
+// NewElement creates and initializes a new Element
+func (uOfDPtr *UniverseOfDiscourse) NewElement(trans *Transaction, uri ...string) (Concept, error) {
+	conceptID, err := uOfDPtr.generateConceptID(uri...)
+	if err != nil {
+		return nil, err
+	}
+	actualURI := ""
+	if len(uri) == 1 {
+		actualURI = uri[0]
+	}
+	var el concept
+	el.initializeConcept(Element, conceptID, actualURI)
 	trans.WriteLockElement(&el)
 	uOfDPtr.SetUniverseOfDiscourse(&el, trans)
 	if actualURI != "" {
@@ -869,15 +891,15 @@ func (uOfDPtr *UniverseOfDiscourse) NewElement(trans *Transaction, uri ...string
 // NewTransaction creates and initializes a HeldLocks structure utilizing the supplied WaitGroup
 func (uOfDPtr *UniverseOfDiscourse) NewTransaction() *Transaction {
 	var trans Transaction
-	trans.readLocks = make(map[string]Element)
-	trans.writeLocks = make(map[string]Element)
+	trans.readLocks = make(map[string]Concept)
+	trans.writeLocks = make(map[string]Concept)
 	trans.inProgressCalls = make(map[string]bool)
 	trans.uOfD = uOfDPtr
 	return &trans
 }
 
 // NewLiteral creates and initializes a new Literal
-func (uOfDPtr *UniverseOfDiscourse) NewLiteral(trans *Transaction, uri ...string) (Literal, error) {
+func (uOfDPtr *UniverseOfDiscourse) NewLiteral(trans *Transaction, uri ...string) (Concept, error) {
 	conceptID, err := uOfDPtr.generateConceptID(uri...)
 	if err != nil {
 		return nil, err
@@ -886,8 +908,8 @@ func (uOfDPtr *UniverseOfDiscourse) NewLiteral(trans *Transaction, uri ...string
 	if len(uri) == 1 {
 		actualURI = uri[0]
 	}
-	var lit literal
-	lit.initializeLiteral(conceptID, actualURI)
+	var lit concept
+	lit.initializeConcept(Literal, conceptID, actualURI)
 	trans.WriteLockElement(&lit)
 	uOfDPtr.SetUniverseOfDiscourse(&lit, trans)
 	if actualURI != "" {
@@ -897,7 +919,7 @@ func (uOfDPtr *UniverseOfDiscourse) NewLiteral(trans *Transaction, uri ...string
 }
 
 // NewOwnedElement creates an element (with optional URI) and sets its owner and label
-func (uOfDPtr *UniverseOfDiscourse) NewOwnedElement(owner Element, label string, trans *Transaction, uri ...string) (Element, error) {
+func (uOfDPtr *UniverseOfDiscourse) NewOwnedElement(owner Concept, label string, trans *Transaction, uri ...string) (Concept, error) {
 	el, err := uOfDPtr.NewElement(trans, uri...)
 	if err != nil {
 		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedElement failed")
@@ -914,7 +936,7 @@ func (uOfDPtr *UniverseOfDiscourse) NewOwnedElement(owner Element, label string,
 }
 
 // NewOwnedLiteral creates a literal (with optional URI) and sets its owner and label
-func (uOfDPtr *UniverseOfDiscourse) NewOwnedLiteral(owner Element, label string, trans *Transaction, uri ...string) (Literal, error) {
+func (uOfDPtr *UniverseOfDiscourse) NewOwnedLiteral(owner Concept, label string, trans *Transaction, uri ...string) (Concept, error) {
 	lit, err := uOfDPtr.NewLiteral(trans, uri...)
 	if err != nil {
 		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedLiteral failed")
@@ -931,7 +953,7 @@ func (uOfDPtr *UniverseOfDiscourse) NewOwnedLiteral(owner Element, label string,
 }
 
 // NewOwnedReference creates a reference (with optional URI) and sets its owner and label
-func (uOfDPtr *UniverseOfDiscourse) NewOwnedReference(owner Element, label string, trans *Transaction, uri ...string) (Reference, error) {
+func (uOfDPtr *UniverseOfDiscourse) NewOwnedReference(owner Concept, label string, trans *Transaction, uri ...string) (Concept, error) {
 	ref, err := uOfDPtr.NewReference(trans, uri...)
 	if err != nil {
 		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedReference failed")
@@ -948,7 +970,7 @@ func (uOfDPtr *UniverseOfDiscourse) NewOwnedReference(owner Element, label strin
 }
 
 // NewOwnedRefinement creates a refinement (with optional URI) and sets its owner and label
-func (uOfDPtr *UniverseOfDiscourse) NewOwnedRefinement(owner Element, label string, trans *Transaction, uri ...string) (Refinement, error) {
+func (uOfDPtr *UniverseOfDiscourse) NewOwnedRefinement(owner Concept, label string, trans *Transaction, uri ...string) (Concept, error) {
 	ref, err := uOfDPtr.NewRefinement(trans, uri...)
 	if err != nil {
 		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
@@ -966,7 +988,7 @@ func (uOfDPtr *UniverseOfDiscourse) NewOwnedRefinement(owner Element, label stri
 
 // NewCompleteRefinement creates a refinement (with optional URI) and sets its abstract and refined references, sets the label, and
 // makes the refined element the owner
-func (uOfDPtr *UniverseOfDiscourse) NewCompleteRefinement(abstractElement Element, refinedElement Element, label string, trans *Transaction, uri ...string) (Refinement, error) {
+func (uOfDPtr *UniverseOfDiscourse) NewCompleteRefinement(abstractElement Concept, refinedElement Concept, label string, trans *Transaction, uri ...string) (Concept, error) {
 	ref, err := uOfDPtr.NewRefinement(trans, uri...)
 	if err != nil {
 		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
@@ -991,7 +1013,7 @@ func (uOfDPtr *UniverseOfDiscourse) NewCompleteRefinement(abstractElement Elemen
 }
 
 // NewReference creates and initializes a new Reference
-func (uOfDPtr *UniverseOfDiscourse) NewReference(trans *Transaction, uri ...string) (Reference, error) {
+func (uOfDPtr *UniverseOfDiscourse) NewReference(trans *Transaction, uri ...string) (Concept, error) {
 	conceptID, err := uOfDPtr.generateConceptID(uri...)
 	if err != nil {
 		return nil, err
@@ -1000,8 +1022,8 @@ func (uOfDPtr *UniverseOfDiscourse) NewReference(trans *Transaction, uri ...stri
 	if len(uri) == 1 {
 		actualURI = uri[0]
 	}
-	var ref reference
-	ref.initializeReference(conceptID, actualURI)
+	var ref concept
+	ref.initializeConcept(Reference, conceptID, actualURI)
 	trans.WriteLockElement(&ref)
 	uOfDPtr.SetUniverseOfDiscourse(&ref, trans)
 	if actualURI != "" {
@@ -1011,7 +1033,7 @@ func (uOfDPtr *UniverseOfDiscourse) NewReference(trans *Transaction, uri ...stri
 }
 
 // NewRefinement creates and initializes a new Refinement
-func (uOfDPtr *UniverseOfDiscourse) NewRefinement(trans *Transaction, uri ...string) (Refinement, error) {
+func (uOfDPtr *UniverseOfDiscourse) NewRefinement(trans *Transaction, uri ...string) (Concept, error) {
 	conceptID, err := uOfDPtr.generateConceptID(uri...)
 	if err != nil {
 		return nil, err
@@ -1020,8 +1042,8 @@ func (uOfDPtr *UniverseOfDiscourse) NewRefinement(trans *Transaction, uri ...str
 	if len(uri) == 1 {
 		actualURI = uri[0]
 	}
-	var ref refinement
-	ref.initializeRefinement(conceptID, actualURI)
+	var ref concept
+	ref.initializeConcept(Refinement, conceptID, actualURI)
 	trans.WriteLockElement(&ref)
 	uOfDPtr.SetUniverseOfDiscourse(&ref, trans)
 	if actualURI != "" {
@@ -1043,13 +1065,13 @@ func (uOfDPtr *UniverseOfDiscourse) NotifyUofDObservers(notification *ChangeNoti
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) preChange(el Element, trans *Transaction) {
+func (uOfDPtr *UniverseOfDiscourse) preChange(el Concept, trans *Transaction) {
 	if el != nil && uOfDPtr.IsRecordingUndo() {
 		uOfDPtr.undoManager.markChangedElement(el, trans)
 	}
 }
 
-func (uOfDPtr *UniverseOfDiscourse) callAssociatedFunctions(el Element, notification *ChangeNotification, trans *Transaction) error {
+func (uOfDPtr *UniverseOfDiscourse) callAssociatedFunctions(el Concept, notification *ChangeNotification, trans *Transaction) error {
 	if el == nil {
 		return errors.New("UniverseOfDiscourse.queueFunctionExecution called with a nil Element")
 	}
@@ -1084,7 +1106,7 @@ func (uOfDPtr *UniverseOfDiscourse) Redo(trans *Transaction) {
 	uOfDPtr.undoManager.redo(trans)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) removeElementForUndo(el Element, trans *Transaction) {
+func (uOfDPtr *UniverseOfDiscourse) removeElementForUndo(el Concept, trans *Transaction) {
 	if el != nil {
 		trans.ReadLockElement(el)
 		elID := el.GetConceptID(trans)
@@ -1097,15 +1119,15 @@ func (uOfDPtr *UniverseOfDiscourse) removeElementForUndo(el Element, trans *Tran
 }
 
 // RecoverDomain reconstructs a concept space from its JSON representation
-func (uOfDPtr *UniverseOfDiscourse) RecoverDomain(data []byte, trans *Transaction) (Element, error) {
+func (uOfDPtr *UniverseOfDiscourse) RecoverDomain(data []byte, trans *Transaction) (Concept, error) {
 	var unmarshaledData []json.RawMessage
-	var conceptSpace Element
+	var conceptSpace Concept
 	err := json.Unmarshal(data, &unmarshaledData)
 	if err != nil {
 		return nil, err
 	}
 	for _, data := range unmarshaledData {
-		var el Element
+		var el Concept
 		el, err = uOfDPtr.RecoverElement(data, trans)
 		if err != nil {
 			return nil, err
@@ -1122,12 +1144,12 @@ func (uOfDPtr *UniverseOfDiscourse) RecoverDomain(data []byte, trans *Transactio
 }
 
 // RecoverElement reconstructs an Element (or subclass) from its JSON representation
-func (uOfDPtr *UniverseOfDiscourse) RecoverElement(data []byte, trans *Transaction) (Element, error) {
+func (uOfDPtr *UniverseOfDiscourse) RecoverElement(data []byte, trans *Transaction) (Concept, error) {
 	if len(data) == 0 {
 		err := errors.New("RecoverElement called with no data")
 		return nil, err
 	}
-	var recoveredElement Element
+	var recoveredElement Concept
 	err := uOfDPtr.unmarshalPolymorphicElement(data, &recoveredElement, trans)
 	if err != nil {
 		log.Printf("Error recovering Element: %s \n", err)
@@ -1144,7 +1166,7 @@ func (uOfDPtr *UniverseOfDiscourse) RecoverElement(data []byte, trans *Transacti
 // This function is idempotent: if applied to an existing structure,
 // Elements of that structure that have existing Refinement relationships with original Elements
 // will not be re-created.
-func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, replicate Element, trans *Transaction, uri ...string) error {
+func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Concept, replicate Concept, trans *Transaction, uri ...string) error {
 	trans.ReadLockElement(original)
 	trans.WriteLockElement(replicate)
 
@@ -1153,11 +1175,11 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 	if err != nil {
 		return errors.Wrap(err, "UniverseOfDiscourse.replicateAsRefinement replicate.SetLabel failed")
 	}
-	switch castOriginal := original.(type) {
+	switch original.GetConceptType() {
 	case Reference:
-		switch castReplicate := replicate.(type) {
+		switch replicate.GetConceptType() {
 		case Reference:
-			castReplicate.SetReferencedConcept(nil, castOriginal.GetReferencedAttributeName(trans), trans)
+			replicate.SetReferencedConcept(nil, original.GetReferencedAttributeName(trans), trans)
 		}
 	}
 
@@ -1185,21 +1207,21 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 	for id := range it.C {
 		newChildURI := ""
 		originalChild := uOfDPtr.GetElement(id.(string))
-		switch originalChild.(type) {
+		switch originalChild.GetConceptType() {
 		case Refinement:
 			continue
 		}
-		var replicateChild Element
+		var replicateChild Concept
 		// For each original child, determine whether there is already a replicate child that
 		// has the original child as one of its abstractions. This is replicateChild
 		it2 := uOfDPtr.GetConceptsOwnedConceptIDs(replicateID).Iterator()
 		for id := range it2.C {
 			currentChild := uOfDPtr.GetElement(id.(string))
-			switch currentChild.(type) {
+			switch currentChild.GetConceptType() {
 			case Refinement:
 				continue
 			}
-			currentChildAbstractions := make(map[string]Element)
+			currentChildAbstractions := make(map[string]Concept)
 			currentChild.FindAbstractions(currentChildAbstractions, trans)
 			for _, currentChildAbstraction := range currentChildAbstractions {
 				if currentChildAbstraction == originalChild {
@@ -1217,14 +1239,7 @@ func (uOfDPtr *UniverseOfDiscourse) replicateAsRefinement(original Element, repl
 				newChildURI = ""
 			}
 			var replicateError error
-			switch originalChild.(type) {
-			case Reference:
-				replicateChild, replicateError = uOfDPtr.NewReference(trans, newChildURI)
-			case Literal:
-				replicateChild, replicateError = uOfDPtr.NewLiteral(trans, newChildURI)
-			case Element:
-				replicateChild, replicateError = uOfDPtr.NewElement(trans, newChildURI)
-			}
+			replicateChild, replicateError = uOfDPtr.NewConcept(originalChild.GetConceptType(), trans, newChildURI)
 			if replicateError != nil {
 				return errors.Wrap(replicateError, "UniverseOfDiscourse.replicateAsRefinement failed: ")
 			}
@@ -1262,7 +1277,7 @@ func (uOfDPtr *UniverseOfDiscourse) SetRecordingUndo(newSetting bool) {
 // speaking, this is not an attribute of the elment, but rather a context in which
 // the element is operating in which the element may be able to locate other objects
 // by id.
-func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourse(el Element, trans *Transaction) error {
+func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourse(el Concept, trans *Transaction) error {
 	trans.WriteLockElement(el)
 	currentUofD := el.GetUniverseOfDiscourse(trans)
 	if currentUofD != uOfDPtr {
@@ -1288,7 +1303,7 @@ func (uOfDPtr *UniverseOfDiscourse) SetUniverseOfDiscourse(el Element, trans *Tr
 	return nil
 }
 
-func (uOfDPtr *UniverseOfDiscourse) setUUIDElementMapEntry(conceptID string, entry Element) {
+func (uOfDPtr *UniverseOfDiscourse) setUUIDElementMapEntry(conceptID string, entry Concept) {
 	if uOfDPtr.undoManager.debugUndo {
 		serializedElement, _ := entry.MarshalJSON()
 		log.Printf("About to add UUIDElementMapEntry ID: %s, entry: %v", conceptID, string(serializedElement))
@@ -1302,60 +1317,31 @@ func (uOfDPtr *UniverseOfDiscourse) Undo(trans *Transaction) {
 	uOfDPtr.undoManager.undo(trans)
 }
 
-func (uOfDPtr *UniverseOfDiscourse) unmarshalPolymorphicElement(data []byte, result *Element, trans *Transaction) error {
+func (uOfDPtr *UniverseOfDiscourse) unmarshalPolymorphicElement(data []byte, result *Concept, trans *Transaction) error {
 	var unmarshaledData map[string]json.RawMessage
 	err := json.Unmarshal(data, &unmarshaledData)
 	if err != nil {
 		return err
 	}
-	var elementType string
-	err = json.Unmarshal(unmarshaledData["Type"], &elementType)
+	var conceptTypeString string
+	err = json.Unmarshal(unmarshaledData["ConceptType"], &conceptTypeString)
+	if err != nil {
+		return errors.Wrap(err, "unmarshalPolymorphicElement failed")
+	}
+	conceptType, err2 := StringToConceptType(conceptTypeString)
+	if err2 != nil {
+		return errors.Wrap(err, "unmarshalPolymorphicElement failed")
+	}
+
+	var recoveredElement concept
+	recoveredElement.uOfD = uOfDPtr
+	recoveredElement.initializeConcept(conceptType, "", "")
+	*result = &recoveredElement
+	err = recoveredElement.recoverElementFields(&unmarshaledData, trans)
 	if err != nil {
 		return err
 	}
-	switch elementType {
-	case "*core.element":
-		//		fmt.Printf("Switch choice *core.element \n")
-		var recoveredElement element
-		recoveredElement.uOfD = uOfDPtr
-		recoveredElement.initializeElement("", "")
-		*result = &recoveredElement
-		err = recoveredElement.recoverElementFields(&unmarshaledData, trans)
-		if err != nil {
-			return err
-		}
-	case "*core.reference":
-		//		fmt.Printf("Switch choice *core.elementReference \n")
-		var recoveredReference reference
-		recoveredReference.uOfD = uOfDPtr
-		recoveredReference.initializeReference("", "")
-		*result = &recoveredReference
-		err = recoveredReference.recoverReferenceFields(&unmarshaledData, trans)
-		if err != nil {
-			return err
-		}
-	case "*core.literal":
-		//		fmt.Printf("Switch choice *core.literal \n")
-		var recoveredLiteral literal
-		recoveredLiteral.uOfD = uOfDPtr
-		recoveredLiteral.initializeLiteral("", "")
-		*result = &recoveredLiteral
-		err = recoveredLiteral.recoverLiteralFields(&unmarshaledData, trans)
-		if err != nil {
-			return err
-		}
-	case "*core.refinement":
-		var recoveredRefinement refinement
-		recoveredRefinement.uOfD = uOfDPtr
-		recoveredRefinement.initializeRefinement("", "")
-		*result = &recoveredRefinement
-		err = recoveredRefinement.recoverRefinementFields(&unmarshaledData, trans)
-		if err != nil {
-			return err
-		}
-	default:
-		log.Printf("No case for %s in unmarshalPolymorphicBaseElement \n", elementType)
-	}
+
 	return nil
 }
 

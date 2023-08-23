@@ -1,7 +1,6 @@
 package core
 
 import (
-	"reflect"
 	"strconv"
 
 	. "github.com/onsi/ginkgo/v2/dsl/core"
@@ -41,7 +40,7 @@ var _ = Describe("Element internals test", func() {
 			cs, err2 := NewConceptState(el)
 			Expect(err2).To(BeNil())
 			Expect(el.GetConceptID(hl)).To(Equal(cs.ConceptID))
-			Expect(reflect.TypeOf(el).String()).To(Equal(cs.ConceptType))
+			Expect(ConceptTypeToString(el.GetConceptType())).To(Equal(cs.ConceptType))
 			Expect(el.GetOwningConceptID(hl)).To(Equal(cs.OwningConceptID))
 			Expect(el.GetLabel(hl)).To(Equal(cs.Label))
 			Expect(el.GetDefinition(hl)).To(Equal(cs.Definition))

@@ -16,9 +16,9 @@ import (
 
 // FyneCrlDiagramElement serves as a mapping between the Fyne DiagramElement and the core DiagramElement
 type FyneCrlDiagramElement interface {
-	GetDiagramElement() core.Element
+	GetDiagramElement() core.Concept
 	GetDiagramElementID() string
-	GetModelElement() core.Element
+	GetModelElement() core.Concept
 	GetModelElementID() string
 	GetFyneProperties() diagramwidget.DiagramElementProperties
 	SetFyneProperties(diagramwidget.DiagramElementProperties)
@@ -34,8 +34,8 @@ var _ fyne.Tappable = (*FyneCrlDiagramNode)(nil)
 // between the diagramwidget nodes and the crldiagramdomain diagram noddes
 type FyneCrlDiagramNode struct {
 	diagramwidget.BaseDiagramNode
-	diagramElement  core.Element
-	modelElement    core.Element
+	diagramElement  core.Concept
+	modelElement    core.Concept
 	entryWidget     *widget.Entry
 	abstractionText *canvas.Text
 	labelBinding    binding.String
@@ -43,7 +43,7 @@ type FyneCrlDiagramNode struct {
 }
 
 // NewFyneCrlDiagramNode creates a fyne node that corresponds to the supplied crldiagram node
-func NewFyneCrlDiagramNode(node core.Element, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramNode {
+func NewFyneCrlDiagramNode(node core.Concept, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramNode {
 	newNode := &FyneCrlDiagramNode{}
 	nodeID := node.GetConceptID(trans)
 	newNode.diagramElement = node
@@ -82,7 +82,7 @@ func NewFyneCrlDiagramNode(node core.Element, trans *core.Transaction, diagramWi
 }
 
 // GetDiagramElement returns the crl diagram element associated with the link
-func (fcdn *FyneCrlDiagramNode) GetDiagramElement() core.Element {
+func (fcdn *FyneCrlDiagramNode) GetDiagramElement() core.Concept {
 	return fcdn.diagramElement
 }
 
@@ -96,7 +96,7 @@ func (fcdn *FyneCrlDiagramNode) GetDiagramElementID() string {
 }
 
 // GetModelElement returns the crl model element represented by the link
-func (fcdn *FyneCrlDiagramNode) GetModelElement() core.Element {
+func (fcdn *FyneCrlDiagramNode) GetModelElement() core.Concept {
 	return fcdn.modelElement
 }
 
@@ -151,7 +151,7 @@ func ShowSecondaryPopup(fcde FyneCrlDiagramElement, event *desktop.MouseEvent) {
 		FyneGUISingleton.diagramManager.showOwnedConcepts(fcde.GetDiagramElementID())
 	})
 	items = append(items, showOwnedConceptsItem)
-	switch fcde.GetModelElement().(type) {
+	switch fcde.GetModelElement().GetConceptType() {
 	case core.Reference:
 		showReferencedConceptItem := fyne.NewMenuItem("Show Referenced Concept", func() {
 			FyneGUISingleton.diagramManager.showReferencedConcept(fcde.GetDiagramElementID())
@@ -230,14 +230,14 @@ var _ diagramwidget.DiagramLink = (*FyneCrlDiagramLink)(nil)
 // the fyne link and the crldiagramdomain link
 type FyneCrlDiagramLink struct {
 	diagramwidget.BaseDiagramLink
-	diagramElement    core.Element
-	modelElement      core.Element
+	diagramElement    core.Concept
+	modelElement      core.Concept
 	labelAnchoredText *diagramwidget.AnchoredText
 	linkType          ToolbarSelection
 }
 
 // NewFyneCrlDiagramLink creates a fyne link that corresponds to the supplied crldiagramdomain link
-func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, link core.Element, trans *core.Transaction) *FyneCrlDiagramLink {
+func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, link core.Concept, trans *core.Transaction) *FyneCrlDiagramLink {
 	diagramLink := &FyneCrlDiagramLink{}
 	diagramLink.diagramElement = link
 	diagramLink.modelElement = crldiagramdomain.GetReferencedModelConcept(link, trans)
@@ -280,7 +280,7 @@ func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, link core
 }
 
 // GetDiagramElement returns the crl diagram element associated with the link
-func (fcdl *FyneCrlDiagramLink) GetDiagramElement() core.Element {
+func (fcdl *FyneCrlDiagramLink) GetDiagramElement() core.Concept {
 	return fcdl.diagramElement
 }
 
@@ -294,7 +294,7 @@ func (fcdl *FyneCrlDiagramLink) GetDiagramElementID() string {
 }
 
 // GetModelElement returns the crl model element represented by the link
-func (fcdl *FyneCrlDiagramLink) GetModelElement() core.Element {
+func (fcdl *FyneCrlDiagramLink) GetModelElement() core.Concept {
 	return fcdl.modelElement
 }
 

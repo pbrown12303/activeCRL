@@ -25,7 +25,7 @@ var CrlStringListReferenceToNextMemberLiteralURI = CrlStringListURI + "/Referenc
 var CrlStringListReferenceToPriorMemberLiteralURI = CrlStringListURI + "/ReferenceToPriorMemberLiteral"
 
 // NewStringList creates an instance of a list
-func NewStringList(uOfD *core.UniverseOfDiscourse, hl *core.Transaction, newURI ...string) (core.Element, error) {
+func NewStringList(uOfD *core.UniverseOfDiscourse, hl *core.Transaction, newURI ...string) (core.Concept, error) {
 	newStringList, err := uOfD.CreateReplicateAsRefinementFromURI(CrlStringListURI, hl, newURI...)
 	if err != nil {
 		return nil, errors.Wrap(err, "StringLists.go NewStringList failed")
@@ -36,7 +36,7 @@ func NewStringList(uOfD *core.UniverseOfDiscourse, hl *core.Transaction, newURI 
 // AddStringListMemberAfter adds a string to the list after the priorMemberLiteral and returns the newMemberLiteral.
 // If the priorMemberLiteral is nil, the string is added to the beginning of the list. An error is returned if the
 // supplied list is not a list, the newMember is the empty string, or the priorMemberLiteral is not a CrlStringListMemberLiteral in this list.
-func AddStringListMemberAfter(list core.Element, priorMemberLiteral core.Literal, newMember string, hl *core.Transaction) (core.Literal, error) {
+func AddStringListMemberAfter(list core.Concept, priorMemberLiteral core.Concept, newMember string, hl *core.Transaction) (core.Concept, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	if !IsStringList(list, hl) {
 		return nil, errors.New("In AddStringListMemberAfter, supplied Element is not a CRL StringList")
@@ -56,14 +56,14 @@ func AddStringListMemberAfter(list core.Element, priorMemberLiteral core.Literal
 			return nil, errors.New("In AddStringListMemberAfter, supplied priorMemberLiteral does not belong to this list")
 		}
 	}
-	var newPostMemberLiteral core.Literal
+	var newPostMemberLiteral core.Concept
 	referenceToPostMemberLiteral, err := getReferenceToNextMemberLiteral(priorMemberLiteral, hl)
 	if err != nil {
 		return nil, err
 	}
 	referencedPostMemberLiteral := referenceToPostMemberLiteral.GetReferencedConcept(hl)
 	if referencedPostMemberLiteral != nil {
-		newPostMemberLiteral = referencedPostMemberLiteral.(core.Literal)
+		newPostMemberLiteral = referencedPostMemberLiteral
 	}
 	newMemberLiteral, _ := uOfD.CreateReplicateLiteralAsRefinementFromURI(CrlStringListMemberLiteralURI, hl)
 	newMemberLiteral.SetOwningConcept(list, hl)
@@ -91,7 +91,7 @@ func AddStringListMemberAfter(list core.Element, priorMemberLiteral core.Literal
 
 // AddStringListMemberBefore adds a member to the list before the postMember.
 // If the postMember is nil, the member is added at the end of the list.
-func AddStringListMemberBefore(list core.Element, postMemberLiteral core.Literal, newMember string, hl *core.Transaction) (core.Literal, error) {
+func AddStringListMemberBefore(list core.Concept, postMemberLiteral core.Concept, newMember string, hl *core.Transaction) (core.Concept, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	if !IsStringList(list, hl) {
 		return nil, errors.New("In AddStringListMemberBefore, Supplied Element is not a CRL StringList")
@@ -109,7 +109,7 @@ func AddStringListMemberBefore(list core.Element, postMemberLiteral core.Literal
 	if postMemberLiteral.GetOwningConcept(hl) != list {
 		return nil, errors.New("In AddStringListMemberBefore, Supplied postMemberLiteral does not belong to this list")
 	}
-	var newPriorMemberLiteral core.Literal
+	var newPriorMemberLiteral core.Concept
 	// If the postMemberLiteral exists, then its priorMemberLiteral should point to the newMemberLiteral
 	referenceToPriorMemberLiteral, err := getReferenceToPriorMemberLiteral(postMemberLiteral, hl)
 	if err != nil {
@@ -117,7 +117,7 @@ func AddStringListMemberBefore(list core.Element, postMemberLiteral core.Literal
 	}
 	referencedPriorMemberLiteral := referenceToPriorMemberLiteral.GetReferencedConcept(hl)
 	if referencedPriorMemberLiteral != nil {
-		newPriorMemberLiteral = referencedPriorMemberLiteral.(core.Literal)
+		newPriorMemberLiteral = referencedPriorMemberLiteral
 	}
 	// Create the newMemberLiteral
 	newMemberLiteral, _ := uOfD.CreateReplicateLiteralAsRefinementFromURI(CrlStringListMemberLiteralURI, hl)
@@ -141,7 +141,7 @@ func AddStringListMemberBefore(list core.Element, postMemberLiteral core.Literal
 }
 
 // AppendStringListMember adds a string to the end of the list
-func AppendStringListMember(list core.Element, value string, hl *core.Transaction) (core.Literal, error) {
+func AppendStringListMember(list core.Concept, value string, hl *core.Transaction) (core.Concept, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	if !IsStringList(list, hl) {
 		return nil, errors.New("In AddStringListMemberBefore, Supplied Element is not a CRL StringList")
@@ -200,7 +200,7 @@ func AppendStringListMember(list core.Element, value string, hl *core.Transactio
 }
 
 // ClearStringList removes all members from the list
-func ClearStringList(list core.Element, hl *core.Transaction) {
+func ClearStringList(list core.Concept, hl *core.Transaction) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
 	for id := range it.C {
@@ -213,7 +213,7 @@ func ClearStringList(list core.Element, hl *core.Transaction) {
 
 // GetFirstMemberLiteral returns the reference to the first member of the list. It returns an error if the
 // list is not a list. It returns nil if the list is empty
-func GetFirstMemberLiteral(list core.Element, hl *core.Transaction) (core.Literal, error) {
+func GetFirstMemberLiteral(list core.Concept, hl *core.Transaction) (core.Concept, error) {
 	refRef, err := getStringListReferenceToFirstMemberLiteral(list, hl)
 	if err != nil {
 		return nil, errors.Wrap(err, "GetFirstMemberLiteral failed")
@@ -225,12 +225,12 @@ func GetFirstMemberLiteral(list core.Element, hl *core.Transaction) (core.Litera
 	if firstMemberLiteral == nil {
 		return nil, nil
 	}
-	return firstMemberLiteral.(core.Literal), nil
+	return firstMemberLiteral, nil
 }
 
 // GetFirstLiteralForString returns the first Literal whose value is the given string. It returns an error if the list is not a list.
 // It returns nil if the string it is not found in the list.
-func GetFirstLiteralForString(list core.Element, value string, hl *core.Transaction) (core.Literal, error) {
+func GetFirstLiteralForString(list core.Concept, value string, hl *core.Transaction) (core.Concept, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
 	for id := range it.C {
@@ -247,7 +247,7 @@ func GetFirstLiteralForString(list core.Element, value string, hl *core.Transact
 
 // GetLastMemberLiteral returns the reference to the last member of the list. It returns an error if list is not a list.
 // It returns nil if the list is empty
-func GetLastMemberLiteral(list core.Element, hl *core.Transaction) (core.Literal, error) {
+func GetLastMemberLiteral(list core.Concept, hl *core.Transaction) (core.Concept, error) {
 	refRef, err := getStringListReferenceToLastMemberLiteral(list, hl)
 	if err != nil {
 		return nil, err
@@ -259,11 +259,11 @@ func GetLastMemberLiteral(list core.Element, hl *core.Transaction) (core.Literal
 	if lastMemberLiteral == nil {
 		return nil, nil
 	}
-	return lastMemberLiteral.(core.Literal), nil
+	return lastMemberLiteral, nil
 }
 
 // getStringListReferenceToFirstMemberLiteral returns the reference to the first member literal. It returns an error if list is not a StringList
-func getStringListReferenceToFirstMemberLiteral(list core.Element, hl *core.Transaction) (core.Reference, error) {
+func getStringListReferenceToFirstMemberLiteral(list core.Concept, hl *core.Transaction) (core.Concept, error) {
 	if !IsStringList(list, hl) {
 		return nil, errors.New("Argument is not a CrlDataStructures.StringList")
 	}
@@ -275,7 +275,7 @@ func getStringListReferenceToFirstMemberLiteral(list core.Element, hl *core.Tran
 }
 
 // getStringListReferenceToLastMemberLiteral returns the reference to the last member literal. It returns an error if list is not a StringList
-func getStringListReferenceToLastMemberLiteral(list core.Element, hl *core.Transaction) (core.Reference, error) {
+func getStringListReferenceToLastMemberLiteral(list core.Concept, hl *core.Transaction) (core.Concept, error) {
 	if !IsStringList(list, hl) {
 		return nil, errors.New("Argument is not a CrlDataStructures.StringList")
 	}
@@ -283,7 +283,7 @@ func getStringListReferenceToLastMemberLiteral(list core.Element, hl *core.Trans
 }
 
 // GetNextMemberLiteral returns the successor member literal in the list
-func GetNextMemberLiteral(memberLiteral core.Literal, hl *core.Transaction) (core.Literal, error) {
+func GetNextMemberLiteral(memberLiteral core.Concept, hl *core.Transaction) (core.Concept, error) {
 	if !IsStringListMemberLiteral(memberLiteral, hl) {
 		return nil, errors.New("Supplied memberLiteral is not a refinement of CrlStringListMemberLiteral")
 	}
@@ -295,11 +295,11 @@ func GetNextMemberLiteral(memberLiteral core.Literal, hl *core.Transaction) (cor
 	if nextMemberLiteral == nil {
 		return nil, nil
 	}
-	return nextMemberLiteral.(core.Literal), nil
+	return nextMemberLiteral, nil
 }
 
 // GetPriorMemberLiteral returns the predecessor member literal in the list
-func GetPriorMemberLiteral(memberLiteral core.Literal, hl *core.Transaction) (core.Literal, error) {
+func GetPriorMemberLiteral(memberLiteral core.Concept, hl *core.Transaction) (core.Concept, error) {
 	if !IsStringListMemberLiteral(memberLiteral, hl) {
 		return nil, errors.New("Supplied memberLiteral is not a refinement of CrlStringListMemberLiteral")
 	}
@@ -311,12 +311,12 @@ func GetPriorMemberLiteral(memberLiteral core.Literal, hl *core.Transaction) (co
 	if priorMemberLiteral == nil {
 		return nil, nil
 	}
-	return priorMemberLiteral.(core.Literal), nil
+	return priorMemberLiteral.(core.Concept), nil
 }
 
 // getReferenceToNextMemberLiteral returns the reference to the next member of the list.
 // It returns nil if the reference is the last member of the list
-func getReferenceToNextMemberLiteral(memberLiteral core.Literal, hl *core.Transaction) (core.Reference, error) {
+func getReferenceToNextMemberLiteral(memberLiteral core.Concept, hl *core.Transaction) (core.Concept, error) {
 	if memberLiteral == nil {
 		return nil, errors.New("GetNextMemberLiteral called with nil memberLiteral")
 	}
@@ -333,7 +333,7 @@ func getReferenceToNextMemberLiteral(memberLiteral core.Literal, hl *core.Transa
 // getReferenceToPriorMemberLiteral returns the reference to the previous member of the list. It returns an error if the memberLiteral
 // is either nil or is not a refinement of CrlStringListMemberLiteral
 // It returns nil if the reference is the first member of the list
-func getReferenceToPriorMemberLiteral(memberLiteral core.Literal, hl *core.Transaction) (core.Reference, error) {
+func getReferenceToPriorMemberLiteral(memberLiteral core.Concept, hl *core.Transaction) (core.Concept, error) {
 	if memberLiteral == nil {
 		return nil, errors.New("getReferenceToPriorMemberLiteral called with nil memberLiteral")
 	}
@@ -348,12 +348,12 @@ func getReferenceToPriorMemberLiteral(memberLiteral core.Literal, hl *core.Trans
 }
 
 // IsStringList returns true if the supplied Element is a refinement of StringList
-func IsStringList(list core.Element, hl *core.Transaction) bool {
+func IsStringList(list core.Concept, hl *core.Transaction) bool {
 	return list.IsRefinementOfURI(CrlStringListURI, hl)
 }
 
 // IsStringListMember returns true if the string is a memeber of the given list
-func IsStringListMember(list core.Element, value string, hl *core.Transaction) bool {
+func IsStringListMember(list core.Concept, value string, hl *core.Transaction) bool {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
 	for id := range it.C {
@@ -367,12 +367,12 @@ func IsStringListMember(list core.Element, value string, hl *core.Transaction) b
 }
 
 // IsStringListMemberLiteral returns true if the supplied Reference is a refinement of StringListMemberLiteral
-func IsStringListMemberLiteral(memberLiteral core.Literal, hl *core.Transaction) bool {
+func IsStringListMemberLiteral(memberLiteral core.Concept, hl *core.Transaction) bool {
 	return memberLiteral.IsRefinementOfURI(CrlStringListMemberLiteralURI, hl)
 }
 
 // PrependStringListMember adds a string to the beginning of the list
-func PrependStringListMember(list core.Element, value string, hl *core.Transaction) (core.Literal, error) {
+func PrependStringListMember(list core.Concept, value string, hl *core.Transaction) (core.Concept, error) {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	if !IsStringList(list, hl) {
 		return nil, errors.New("In PrependStringListMember, Supplied Element is not a CRL StringList")
@@ -431,7 +431,7 @@ func PrependStringListMember(list core.Element, value string, hl *core.Transacti
 }
 
 // RemoveStringListMember removes the first occurrance of an element from the given list
-func RemoveStringListMember(list core.Element, value string, hl *core.Transaction) error {
+func RemoveStringListMember(list core.Concept, value string, hl *core.Transaction) error {
 	uOfD := list.GetUniverseOfDiscourse(hl)
 	it := list.GetOwnedConceptIDs(hl).Iterator()
 	for id := range it.C {
@@ -462,7 +462,7 @@ func RemoveStringListMember(list core.Element, value string, hl *core.Transactio
 }
 
 // setNextMemberLiteral takes a memberLiteral and sets its next reference
-func setNextMemberLiteral(memberLiteral core.Literal, nextLiteral core.Literal, hl *core.Transaction) error {
+func setNextMemberLiteral(memberLiteral core.Concept, nextLiteral core.Concept, hl *core.Transaction) error {
 	// since this is an internal function we assume that the references are refinements of CrlStringListMemberLiteral
 	nextLiteralReference, err := getReferenceToNextMemberLiteral(memberLiteral, hl)
 	if err != nil {
@@ -476,7 +476,7 @@ func setNextMemberLiteral(memberLiteral core.Literal, nextLiteral core.Literal, 
 }
 
 // setPriorMemberLiteral takes a memberLiteral and sets its prior reference
-func setPriorMemberLiteral(memberLiteral core.Literal, priorLiteral core.Literal, hl *core.Transaction) error {
+func setPriorMemberLiteral(memberLiteral core.Concept, priorLiteral core.Concept, hl *core.Transaction) error {
 	// since this is an internal function we assume that the references are refinements of CrlStringListMemberLiteral
 	priorLiteralReference, err := getReferenceToPriorMemberLiteral(memberLiteral, hl)
 	if err != nil {
@@ -490,7 +490,7 @@ func setPriorMemberLiteral(memberLiteral core.Literal, priorLiteral core.Literal
 }
 
 // BuildCrlStringListsConcepts builds the CrlStringList concept and adds it as a child of the provided parent concept space
-func BuildCrlStringListsConcepts(uOfD *core.UniverseOfDiscourse, parentSpace core.Element, hl *core.Transaction) {
+func BuildCrlStringListsConcepts(uOfD *core.UniverseOfDiscourse, parentSpace core.Concept, hl *core.Transaction) {
 	crlStringList, _ := uOfD.NewElement(hl, CrlStringListURI)
 	crlStringList.SetLabel("CrlStringList", hl)
 	crlStringList.SetOwningConcept(parentSpace, hl)

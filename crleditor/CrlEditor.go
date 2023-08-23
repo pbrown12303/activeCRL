@@ -43,8 +43,8 @@ var CrlEditorSingleton *Editor
 
 // Editor manages one or more CrlEditors
 type Editor struct {
-	currentSelection           core.Element
-	cutBuffer                  map[string]core.Element
+	currentSelection           core.Concept
+	cutBuffer                  map[string]core.Concept
 	editorGUIs                 []EditorGUI
 	exitRequested              bool
 	home                       string
@@ -55,9 +55,9 @@ type Editor struct {
 	userFolder                 string
 	workspaceManager           *CrlWorkspaceManager
 	inProgressTransaction      *core.Transaction
-	transientSelection         core.Literal
-	transientDisplayedDiagrams core.Literal
-	transientCurrentDiagram    core.Literal
+	transientSelection         core.Concept
+	transientDisplayedDiagrams core.Concept
+	transientCurrentDiagram    core.Concept
 }
 
 // NewEditor returns an initialized Editor
@@ -193,14 +193,14 @@ func (editor *Editor) EndTransaction() {
 }
 
 // FileLoaded is used to inform the CrlEditor that a file has been loaded
-func (editor *Editor) FileLoaded(el core.Element, trans *core.Transaction) {
+func (editor *Editor) FileLoaded(el core.Concept, trans *core.Transaction) {
 	for _, editorGUI := range editor.editorGUIs {
 		editorGUI.FileLoaded(el, trans)
 	}
 }
 
 // GetCurrentSelection returns the Element that is the current selection in the editor
-func (editor *Editor) GetCurrentSelection() core.Element {
+func (editor *Editor) GetCurrentSelection() core.Concept {
 	return editor.currentSelection
 }
 
@@ -275,8 +275,8 @@ func (editor *Editor) GetExitRequested() bool {
 }
 
 // getNoSaveDomains returns a map of the editor domains that should not be saved
-func (editor *Editor) getNoSaveDomains(trans *core.Transaction) map[string]core.Element {
-	noSaveDomains := make(map[string]core.Element)
+func (editor *Editor) getNoSaveDomains(trans *core.Transaction) map[string]core.Concept {
+	noSaveDomains := make(map[string]core.Concept)
 	for _, editor := range editor.editorGUIs {
 		editor.GetNoSaveDomains(noSaveDomains, trans)
 	}
@@ -361,7 +361,7 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 			return errors.Wrap(err, "Editor.Initialize failed")
 		}
 	}
-	editor.cutBuffer = make(map[string]core.Element)
+	editor.cutBuffer = make(map[string]core.Concept)
 
 	for _, editorGUI := range editor.editorGUIs {
 		err = editorGUI.Initialize(trans)
@@ -527,7 +527,7 @@ func (editor *Editor) SaveWorkspace(trans *core.Transaction) error {
 
 // SelectElement selects the indicated Element in the tree, displays the Element in the Properties window, and selects it in the
 // current diagram (if present).
-func (editor *Editor) SelectElement(el core.Element, trans *core.Transaction) error {
+func (editor *Editor) SelectElement(el core.Concept, trans *core.Transaction) error {
 	if editor.currentSelection != el {
 		editor.currentSelection = el
 		for _, gui := range editor.editorGUIs {
@@ -617,11 +617,11 @@ func (editor *Editor) Undo(trans *core.Transaction) error {
 // EditorGUI is the interface for all CrlEditors, independent of implementation technology
 type EditorGUI interface {
 	CloseDiagramView(diagramID string, trans *core.Transaction) error
-	DisplayDiagram(diagram core.Element, trans *core.Transaction) error
+	DisplayDiagram(diagram core.Concept, trans *core.Transaction) error
 	ElementDeleted(elID string, trans *core.Transaction) error
-	ElementSelected(el core.Element, trans *core.Transaction) error
-	FileLoaded(el core.Element, trans *core.Transaction)
-	GetNoSaveDomains(noSaveDomains map[string]core.Element, trans *core.Transaction)
+	ElementSelected(el core.Concept, trans *core.Transaction) error
+	FileLoaded(el core.Concept, trans *core.Transaction)
+	GetNoSaveDomains(noSaveDomains map[string]core.Concept, trans *core.Transaction)
 	Initialize(trans *core.Transaction) error
 	RefreshGUI(trans *core.Transaction) error
 }

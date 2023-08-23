@@ -11,19 +11,19 @@ import (
 // DiagramManager manages the diagram display portion of the GUI
 type DiagramManager struct {
 	editor   *Editor
-	diagrams map[string]core.Element
+	diagrams map[string]core.Concept
 }
 
 // NewDiagramManager creates an instance of the DiagramManager
 func NewDiagramManager(editor *Editor) *DiagramManager {
 	var dMgr DiagramManager
 	dMgr.editor = editor
-	dMgr.diagrams = map[string]core.Element{}
+	dMgr.diagrams = map[string]core.Concept{}
 	return &dMgr
 }
 
 // AddDiagram adds a diagram tab, if needed, and displays the tab
-func (dMgr *DiagramManager) AddDiagram(ownerID string, trans *core.Transaction) (core.Element, error) {
+func (dMgr *DiagramManager) AddDiagram(ownerID string, trans *core.Transaction) (core.Concept, error) {
 	diagram, err := dMgr.NewDiagram(trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.addDiagram failed")
@@ -44,7 +44,7 @@ func (dMgr *DiagramManager) AddDiagram(ownerID string, trans *core.Transaction) 
 }
 
 // AddConceptView adds a view of the concept to the indicated diagram
-func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x float64, y float64, trans *core.Transaction) (core.Element, error) {
+func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x float64, y float64, trans *core.Transaction) (core.Concept, error) {
 	uOfD := dMgr.editor.GetUofD()
 	diagram := uOfD.GetElement(diagramID)
 	el := uOfD.GetElement(conceptID)
@@ -52,25 +52,25 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 		return nil, errors.New("Indicated model element not found in addNodeView, ID: " + conceptID)
 	}
 	createAsLink := false
-	switch el.(type) {
+	switch el.GetConceptType() {
 	case core.Reference:
 		createAsLink = dMgr.editor.GetDropDiagramReferenceAsLink(trans)
 	case core.Refinement:
 		createAsLink = dMgr.editor.GetDropDiagramRefinementAsLink(trans)
 	}
 
-	var newElement core.Element
+	var newElement core.Concept
 	var err error
 	if createAsLink {
-		var modelSourceConcept core.Element
-		var modelTargetConcept core.Element
-		switch elTyped := el.(type) {
+		var modelSourceConcept core.Concept
+		var modelTargetConcept core.Concept
+		switch el.GetConceptType() {
 		case core.Reference:
 			newElement, err = crldiagramdomain.NewDiagramReferenceLink(uOfD, trans)
 			if err != nil {
 				return nil, err
 			}
-			reference := elTyped
+			reference := el
 			modelSourceConcept = reference.GetOwningConcept(trans)
 			modelTargetConcept = reference.GetReferencedConcept(trans)
 		case core.Refinement:
@@ -78,7 +78,7 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 			if err != nil {
 				return nil, err
 			}
-			refinement := elTyped
+			refinement := el
 			modelSourceConcept = refinement.GetRefinedConcept(trans)
 			modelTargetConcept = refinement.GetAbstractConcept(trans)
 		}
@@ -157,7 +157,7 @@ func (dMgr *DiagramManager) DisplayDiagram(diagramID string, trans *core.Transac
 }
 
 // NewDiagram creates a new crldiagram
-func (dMgr *DiagramManager) NewDiagram(trans *core.Transaction) (core.Element, error) {
+func (dMgr *DiagramManager) NewDiagram(trans *core.Transaction) (core.Concept, error) {
 	name := dMgr.editor.GetDefaultDiagramLabel()
 	uOfD := dMgr.editor.GetUofD()
 	diagram, err := crldiagramdomain.NewDiagram(uOfD, trans)

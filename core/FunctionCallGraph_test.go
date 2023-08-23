@@ -10,9 +10,9 @@ import (
 var df1URI = "http://dummy.function.uri,df1"
 
 var df1Called = false
-var df1CalledElement Element = nil
+var df1CalledElement Concept = nil
 
-func dummyChangeFunction(el Element, cn *ChangeNotification, tran *Transaction) error {
+func dummyChangeFunction(el Concept, cn *ChangeNotification, tran *Transaction) error {
 	df1Called = true
 	df1CalledElement = el
 	return nil
@@ -21,7 +21,7 @@ func dummyChangeFunction(el Element, cn *ChangeNotification, tran *Transaction) 
 var _ = Describe("Verify function call graph generation", func() {
 	var uOfD *UniverseOfDiscourse
 	var hl *Transaction
-	var df1 Element
+	var df1 Concept
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()

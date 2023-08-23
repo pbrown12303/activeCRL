@@ -98,7 +98,7 @@ func NewFyneGUI(crlEditor *crleditor.Editor, providedApp fyne.App) *CrlEditorFyn
 	return gui
 }
 
-func (gui *CrlEditorFyneGUI) addDiagram(parentID string) core.Element {
+func (gui *CrlEditorFyneGUI) addDiagram(parentID string) core.Concept {
 	trans, isNew := gui.editor.GetTransaction()
 	if isNew {
 		defer gui.editor.EndTransaction()
@@ -113,7 +113,7 @@ func (gui *CrlEditorFyneGUI) addDiagram(parentID string) core.Element {
 	return newElement
 }
 
-func (gui *CrlEditorFyneGUI) addElement(parentID string, label string) core.Element {
+func (gui *CrlEditorFyneGUI) addElement(parentID string, label string) core.Concept {
 	trans, isNew := gui.editor.GetTransaction()
 	if isNew {
 		defer gui.editor.EndTransaction()
@@ -130,7 +130,7 @@ func (gui *CrlEditorFyneGUI) addElement(parentID string, label string) core.Elem
 	return newElement
 }
 
-func (gui *CrlEditorFyneGUI) addLiteral(parentID string, label string) core.Literal {
+func (gui *CrlEditorFyneGUI) addLiteral(parentID string, label string) core.Concept {
 	trans, isNew := gui.editor.GetTransaction()
 	if isNew {
 		defer gui.editor.EndTransaction()
@@ -147,7 +147,7 @@ func (gui *CrlEditorFyneGUI) addLiteral(parentID string, label string) core.Lite
 	return newLiteral
 }
 
-func (gui *CrlEditorFyneGUI) addReference(parentID string, label string) core.Reference {
+func (gui *CrlEditorFyneGUI) addReference(parentID string, label string) core.Concept {
 	trans, isNew := gui.editor.GetTransaction()
 	if isNew {
 		defer gui.editor.EndTransaction()
@@ -164,7 +164,7 @@ func (gui *CrlEditorFyneGUI) addReference(parentID string, label string) core.Re
 	return newReference
 }
 
-func (gui *CrlEditorFyneGUI) addRefinement(parentID string, label string) core.Refinement {
+func (gui *CrlEditorFyneGUI) addRefinement(parentID string, label string) core.Concept {
 	trans, isNew := gui.editor.GetTransaction()
 	if isNew {
 		defer gui.editor.EndTransaction()
@@ -369,7 +369,7 @@ func (gui *CrlEditorFyneGUI) ElementDeleted(elID string, trans *core.Transaction
 }
 
 // ElementSelected causes the indicated element to  be selected in the properties, tree, and diagram.
-func (gui *CrlEditorFyneGUI) ElementSelected(el core.Element, trans *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) ElementSelected(el core.Concept, trans *core.Transaction) error {
 	uid := ""
 	if el != nil {
 		uid = el.GetConceptID(trans)
@@ -384,13 +384,13 @@ func (gui *CrlEditorFyneGUI) ElementSelected(el core.Element, trans *core.Transa
 }
 
 // DisplayDiagram displays the indicated diagram
-func (gui *CrlEditorFyneGUI) DisplayDiagram(diagram core.Element, trans *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) DisplayDiagram(diagram core.Concept, trans *core.Transaction) error {
 	gui.diagramManager.displayDiagram(diagram, trans)
 	return nil
 }
 
 // FileLoaded - no action required
-func (gui *CrlEditorFyneGUI) FileLoaded(el core.Element, trans *core.Transaction) {
+func (gui *CrlEditorFyneGUI) FileLoaded(el core.Concept, trans *core.Transaction) {
 }
 
 // GetConceptStateBinding returns the ConceptStateBinding for the given uid. If the binding
@@ -405,7 +405,7 @@ func (gui *CrlEditorFyneGUI) GetConceptStateBinding(uid string) ConceptStateBind
 }
 
 // GetNoSaveDomains - there aren't any for the CRLEditorFyneGUI
-func (gui *CrlEditorFyneGUI) GetNoSaveDomains(noSaveDomains map[string]core.Element, trans *core.Transaction) {
+func (gui *CrlEditorFyneGUI) GetNoSaveDomains(noSaveDomains map[string]core.Concept, trans *core.Transaction) {
 }
 
 // GetWindow returns the main window of the FyneGUI

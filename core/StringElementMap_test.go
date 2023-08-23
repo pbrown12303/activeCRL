@@ -9,7 +9,7 @@ var _ = Describe("StringElementMap Test", func() {
 	var uOfD *UniverseOfDiscourse
 	var hl *Transaction
 	var seMap *StringElementMap
-	var el Element
+	var el Concept
 	var elID string
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
