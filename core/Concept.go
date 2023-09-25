@@ -92,7 +92,9 @@ func (cPtr *concept) addOwnedConcept(ownedConceptID string, trans *Transaction) 
 		cPtr.uOfD.preChange(cPtr, trans)
 		cPtr.Version.incrementVersion()
 		cPtr.uOfD.ownedIDsMap.addMappedValue(cPtr.GetConceptID(trans), ownedConceptID)
-		cPtr.uOfD.postChange(cPtr, trans)
+		if cPtr.uOfD != nil {
+			cPtr.uOfD.postChange(cPtr, trans)
+		}
 	}
 }
 
@@ -111,7 +113,9 @@ func (cPtr *concept) addRecoveredOwnedConcept(ownedConceptID string, trans *Tran
 		}
 		cPtr.uOfD.preChange(cPtr, trans)
 		cPtr.uOfD.ownedIDsMap.addMappedValue(cPtr.ConceptID, ownedConceptID)
-		cPtr.uOfD.postChange(cPtr, trans)
+		if cPtr.uOfD != nil {
+			cPtr.uOfD.postChange(cPtr, trans)
+		}
 	}
 }
 
@@ -127,7 +131,9 @@ func (cPtr *concept) addListener(listeningConceptID string, trans *Transaction) 
 		}
 		cPtr.uOfD.preChange(cPtr, trans)
 		cPtr.uOfD.listenersMap.addMappedValue(cPtr.ConceptID, listeningConceptID)
-		cPtr.uOfD.postChange(cPtr, trans)
+		if cPtr.uOfD != nil {
+			cPtr.uOfD.postChange(cPtr, trans)
+		}
 	}
 }
 
@@ -1214,7 +1220,9 @@ func (cPtr *concept) removeListener(listeningConceptID string, trans *Transactio
 	}
 	cPtr.uOfD.preChange(cPtr, trans)
 	cPtr.uOfD.listenersMap.removeMappedValue(cPtr.ConceptID, listeningConceptID)
-	cPtr.uOfD.postChange(cPtr, trans)
+	if cPtr.uOfD != nil {
+		cPtr.uOfD.postChange(cPtr, trans)
+	}
 }
 
 // Register adds the registration of an Observer
@@ -1237,7 +1245,9 @@ func (cPtr *concept) removeOwnedConcept(ownedConceptID string, trans *Transactio
 	cPtr.uOfD.preChange(cPtr, trans)
 	cPtr.Version.incrementVersion()
 	cPtr.uOfD.ownedIDsMap.removeMappedValue(cPtr.ConceptID, ownedConceptID)
-	cPtr.uOfD.postChange(cPtr, trans)
+	if cPtr.uOfD != nil {
+		cPtr.uOfD.postChange(cPtr, trans)
+	}
 	return nil
 }
 
@@ -1306,7 +1316,9 @@ func (cPtr *concept) SetAbstractConceptID(acID string, trans *Transaction) error
 		if err != nil {
 			return errors.Wrap(err, "refinement.SetAbstractConceptID failed")
 		}
-		cPtr.uOfD.postChange(cPtr, trans)
+		if cPtr.uOfD != nil {
+			cPtr.uOfD.postChange(cPtr, trans)
+		}
 	}
 	return nil
 }
@@ -1341,7 +1353,9 @@ func (cPtr *concept) SetDefinition(def string, trans *Transaction) error {
 		if err != nil {
 			return errors.Wrap(err, "element.SetDefinition failed")
 		}
-		cPtr.uOfD.postChange(cPtr, trans)
+		if cPtr.uOfD != nil {
+			cPtr.uOfD.postChange(cPtr, trans)
+		}
 	}
 	return nil
 }
@@ -1373,7 +1387,9 @@ func (cPtr *concept) SetIsCore(trans *Transaction) error {
 		if err != nil {
 			return errors.Wrap(err, "element.SetIsCore failed")
 		}
-		cPtr.uOfD.postChange(cPtr, trans)
+		if cPtr.uOfD != nil {
+			cPtr.uOfD.postChange(cPtr, trans)
+		}
 	}
 	return nil
 }
@@ -1430,7 +1446,9 @@ func (cPtr *concept) SetLabel(label string, trans *Transaction) error {
 		if err != nil {
 			return errors.Wrap(err, "element.SetLabel failed")
 		}
-		cPtr.uOfD.postChange(cPtr, trans)
+		if cPtr.uOfD != nil {
+			cPtr.uOfD.postChange(cPtr, trans)
+		}
 	}
 	return nil
 }
@@ -1464,7 +1482,9 @@ func (cPtr *concept) SetLiteralValue(value string, trans *Transaction) error {
 		if err != nil {
 			return errors.Wrap(err, "literal.SetLiteralValue failed")
 		}
-		cPtr.uOfD.postChange(cPtr, trans)
+		if cPtr.uOfD != nil {
+			cPtr.uOfD.postChange(cPtr, trans)
+		}
 	}
 	return nil
 }
@@ -1546,7 +1566,9 @@ func (cPtr *concept) SetOwningConceptID(ocID string, trans *Transaction) error {
 		if err != nil {
 			return errors.Wrap(err, "element.SetOwningConceptID failed")
 		}
-		cPtr.uOfD.postChange(cPtr, trans)
+		if cPtr.uOfD != nil {
+			cPtr.uOfD.postChange(cPtr, trans)
+		}
 	}
 	return nil
 }
@@ -1588,7 +1610,9 @@ func (cPtr *concept) SetReadOnly(value bool, trans *Transaction) error {
 		if err != nil {
 			return errors.Wrap(err, "element.SetDeSetReadOnlyfinition failed")
 		}
-		cPtr.uOfD.postChange(cPtr, trans)
+		if cPtr.uOfD != nil {
+			cPtr.uOfD.postChange(cPtr, trans)
+		}
 	}
 	return nil
 }
@@ -1694,7 +1718,9 @@ func (cPtr *concept) SetReferencedConceptID(rcID string, attributeName Attribute
 		if err != nil {
 			return errors.Wrap(err, "reference.SetReferencedConceptID failed")
 		}
-		cPtr.uOfD.postChange(cPtr, trans)
+		if cPtr.uOfD != nil {
+			cPtr.uOfD.postChange(cPtr, trans)
+		}
 	}
 	return nil
 }
@@ -1763,7 +1789,9 @@ func (cPtr *concept) SetRefinedConceptID(rcID string, trans *Transaction) error 
 		if err != nil {
 			return errors.Wrap(err, "refinement.SetRefinedConceptID failed")
 		}
-		cPtr.uOfD.postChange(cPtr, trans)
+		if cPtr.uOfD != nil {
+			cPtr.uOfD.postChange(cPtr, trans)
+		}
 	}
 	return nil
 }
@@ -1809,7 +1837,9 @@ func (cPtr *concept) SetURI(uri string, trans *Transaction) error {
 		if err != nil {
 			return errors.Wrap(err, "element.SetURI failed")
 		}
-		cPtr.uOfD.postChange(cPtr, trans)
+		if cPtr.uOfD != nil {
+			cPtr.uOfD.postChange(cPtr, trans)
+		}
 	}
 	return nil
 }
