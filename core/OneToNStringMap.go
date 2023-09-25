@@ -7,6 +7,7 @@ package core
 import (
 	//	"github.com/satori/go.uuid"
 
+	"sort"
 	"sync"
 
 	mapset "github.com/deckarep/golang-set"
@@ -48,6 +49,24 @@ func (onMap *OneToNStringMap) DeleteKey(key string) {
 	onMap.TraceableLock()
 	defer onMap.TraceableUnlock()
 	delete(onMap.oneToNStringMap, key)
+}
+
+// GetKeys returns an array of the string keys
+func (onMap *OneToNStringMap) GetKeys() []string {
+	keys := []string{}
+	for k := range onMap.oneToNStringMap {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+// GetSortedKeys returns an array of the string keys, sorted by string value
+func (onMap *OneToNStringMap) GetSortedKeys() []string {
+	keys := onMap.GetKeys()
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+	return keys
 }
 
 // GetMappedValues returns the set of strings corresponding to the key

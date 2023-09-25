@@ -96,12 +96,16 @@ func NewConceptState(el Concept) (*ConceptState, error) {
 	}
 	mJSON, err := el.MarshalJSON()
 	if err != nil {
-		return nil, errors.Wrap(err, "NewConceptState failed")
+		wrappedError := errors.Wrap(err, "NewConceptState failed")
+		log.Print(wrappedError)
+		return nil, wrappedError
 	}
 	var newConceptState ConceptState
 	err = json.Unmarshal([]byte(mJSON), &newConceptState)
 	if err != nil {
-		return nil, errors.Wrap(err, "NewConceptState failed")
+		wrappedError := errors.Wrap(err, "NewConceptState failed")
+		log.Print(wrappedError)
+		return nil, wrappedError
 	}
 	return &newConceptState, nil
 }
@@ -221,16 +225,16 @@ func (cnPtr *ChangeNotification) IsReferenced(el Concept) bool {
 }
 
 // Print prints the change notification for diagnostic purposes to the log
-func (cnPtr *ChangeNotification) Print(prefix string, hl *Transaction) {
+func (cnPtr *ChangeNotification) Print(prefix string, trans *Transaction) {
 	if EnableNotificationPrint {
 		startCount := 0
-		cnPtr.printRecursively(prefix, hl, startCount)
+		cnPtr.printRecursively(prefix, trans, startCount)
 	}
 }
 
 // printRecursively prints the change notification for diagnostic purposes to the log. The startCount
 // indicates the depth of nesting of the print so that the printout can be indented appropriately.
-func (cnPtr *ChangeNotification) printRecursively(prefix string, hl *Transaction, startCount int) {
+func (cnPtr *ChangeNotification) printRecursively(prefix string, trans *Transaction, startCount int) {
 	notificationType := "+++ " + cnPtr.natureOfChange.String()
 	log.Printf("%s%s: \n", prefix, "### Notification Level: "+strconv.Itoa(startCount)+" Type: "+notificationType)
 	if cnPtr.reportingElementState != nil {
@@ -243,7 +247,7 @@ func (cnPtr *ChangeNotification) printRecursively(prefix string, hl *Transaction
 		log.Printf(prefix+"  BeforeState: %s", cnPtr.beforeConceptState)
 	}
 	if cnPtr.underlyingChange != nil {
-		cnPtr.underlyingChange.printRecursively(prefix+"      ", hl, startCount-1)
+		cnPtr.underlyingChange.printRecursively(prefix+"      ", trans, startCount-1)
 	}
 	log.Printf(prefix + "End of notification")
 }

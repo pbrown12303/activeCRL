@@ -15,16 +15,16 @@ import (
 )
 
 /*
-************************** ByLabel ******************************
+************************** IDsSortedByLabel ******************************
  */
 
-// ByLabel implements the sort.Interface for []string based on the string
+// IDsSortedByLabel implements the sort.Interface for []string based on the string
 // being the ID of a core.Element sorted by the Label of the Element
-type ByLabel []string
+type IDsSortedByLabel []string
 
-func (a ByLabel) Len() int      { return len(a) }
-func (a ByLabel) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a ByLabel) Less(i, j int) bool {
+func (a IDsSortedByLabel) Len() int      { return len(a) }
+func (a IDsSortedByLabel) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a IDsSortedByLabel) Less(i, j int) bool {
 	uOfD := FyneGUISingleton.editor.GetUofD()
 	iLabel := uOfD.GetElementLabel(a[i])
 	jLabel := uOfD.GetElementLabel(a[j])
@@ -40,7 +40,7 @@ type FyneTreeManager struct {
 	fyneGUI      *CrlEditorFyneGUI
 	tree         *widget.Tree
 	uofdObserver *uOfDObserver
-	treeNodes    map[string]*treeNode
+	treeNodes    map[string]*fyneTreeNode
 }
 
 // NewFyneTreeManager returns an initialized FyneTreeManager
@@ -78,7 +78,7 @@ func (ftm *FyneTreeManager) initialize() {
 	} else {
 		ftm.uofdObserver.initialize()
 	}
-	ftm.treeNodes = make(map[string]*treeNode)
+	ftm.treeNodes = make(map[string]*fyneTreeNode)
 }
 
 func (ftm *FyneTreeManager) onNodeSelected(id string) {
@@ -134,7 +134,7 @@ func GetChildUIDs(parentUID string) []string {
 			ids = append(ids, member.(string))
 		}
 	}
-	sort.Sort(ByLabel(ids))
+	sort.Sort(IDsSortedByLabel(ids))
 	return ids
 }
 
@@ -146,12 +146,12 @@ func IsBranch(uid string) bool {
 
 // CreateNode creates a tree node
 func CreateNode(branch bool) fyne.CanvasObject {
-	return newTreeNode()
+	return newFyneTreeNode()
 }
 
 // UpdateNode updates the data in the indicated node
 func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
-	tn := node.(*treeNode)
+	tn := node.(*fyneTreeNode)
 	tn.id = uid
 	tn.icon.SetResource(getIconResourceByID(uid))
 	if uid == "" {
@@ -201,11 +201,11 @@ func getIconResource(el core.Concept, trans *core.Transaction) *fyne.StaticResou
 ***************** TREE NODE ****************************
  */
 
-var _ fyne.Draggable = (*treeNode)(nil)
-var _ fyne.Tappable = (*treeNode)(nil)
-var _ fyne.SecondaryTappable = (*treeNode)(nil)
+var _ fyne.Draggable = (*fyneTreeNode)(nil)
+var _ fyne.Tappable = (*fyneTreeNode)(nil)
+var _ fyne.SecondaryTappable = (*fyneTreeNode)(nil)
 
-type treeNode struct {
+type fyneTreeNode struct {
 	widget.BaseWidget
 	id    string
 	icon  *widget.Icon
@@ -213,24 +213,25 @@ type treeNode struct {
 	box   *fyne.Container
 }
 
-func newTreeNode() *treeNode {
-	tn := &treeNode{}
+func newFyneTreeNode() *fyneTreeNode {
+	tn := &fyneTreeNode{}
 	tn.BaseWidget.ExtendBaseWidget(tn)
 	tn.icon = widget.NewIcon(images.ResourceElementIconPng)
+	// tn.icon.Resize(fyne.NewSize(20, 20))
 	tn.label = widget.NewLabel("short")
 	tn.box = container.NewHBox(tn.icon, tn.label)
 	return tn
 }
 
-func (tn *treeNode) CreateRenderer() fyne.WidgetRenderer {
-	return newTreeNodeRenderer(tn)
+func (tn *fyneTreeNode) CreateRenderer() fyne.WidgetRenderer {
+	return newFyneTreeNodeRenderer(tn)
 }
 
-func (tn *treeNode) Cursor() desktop.StandardCursor {
+func (tn *fyneTreeNode) Cursor() desktop.StandardCursor {
 	return FyneGUISingleton.activeCursor
 }
 
-func (tn *treeNode) DragEnd() {
+func (tn *fyneTreeNode) DragEnd() {
 	if FyneGUISingleton.dragDropTransaction != nil {
 		ddt := FyneGUISingleton.dragDropTransaction
 		if ddt.diagramID != "" && FyneGUISingleton.dragDropTransaction.currentDiagramMousePosition != fyne.NewPos(-1, -1) {
@@ -248,7 +249,7 @@ func (tn *treeNode) DragEnd() {
 	}
 }
 
-func (tn *treeNode) Dragged(event *fyne.DragEvent) {
+func (tn *fyneTreeNode) Dragged(event *fyne.DragEvent) {
 	if FyneGUISingleton.dragDropTransaction == nil {
 		FyneGUISingleton.dragDropTransaction = &dragDropTransaction{id: tn.id}
 	}
@@ -256,11 +257,11 @@ func (tn *treeNode) Dragged(event *fyne.DragEvent) {
 	FyneGUISingleton.windowContent.Refresh()
 }
 
-func (tn *treeNode) Tapped(event *fyne.PointEvent) {
+func (tn *fyneTreeNode) Tapped(event *fyne.PointEvent) {
 	FyneGUISingleton.treeManager.tree.Select(tn.id)
 }
 
-func (tn *treeNode) TappedSecondary(event *fyne.PointEvent) {
+func (tn *fyneTreeNode) TappedSecondary(event *fyne.PointEvent) {
 	addElement := fyne.NewMenuItem("Add Child Element", func() {
 		FyneGUISingleton.addElement(tn.id, "")
 	})
@@ -303,33 +304,34 @@ func (tn *treeNode) TappedSecondary(event *fyne.PointEvent) {
 	popup.ShowAtPosition(event.AbsolutePosition)
 }
 
-type treeNodeRenderer struct {
-	tn *treeNode
+type fyneTreeNodeRenderer struct {
+	tn *fyneTreeNode
 }
 
-func newTreeNodeRenderer(tn *treeNode) *treeNodeRenderer {
-	tnr := &treeNodeRenderer{}
+func newFyneTreeNodeRenderer(tn *fyneTreeNode) *fyneTreeNodeRenderer {
+	tnr := &fyneTreeNodeRenderer{}
 	tnr.tn = tn
 	return tnr
 }
 
-func (tnr *treeNodeRenderer) Destroy() {
+func (tnr *fyneTreeNodeRenderer) Destroy() {
 }
 
-func (tnr *treeNodeRenderer) Layout(size fyne.Size) {
+func (tnr *fyneTreeNodeRenderer) Layout(size fyne.Size) {
+	tnr.tn.box.Resize(tnr.tn.box.MinSize())
 }
 
-func (tnr *treeNodeRenderer) MinSize() fyne.Size {
+func (tnr *fyneTreeNodeRenderer) MinSize() fyne.Size {
 	return tnr.tn.box.MinSize()
 }
 
-func (tnr *treeNodeRenderer) Objects() []fyne.CanvasObject {
+func (tnr *fyneTreeNodeRenderer) Objects() []fyne.CanvasObject {
 	obj := []fyne.CanvasObject{}
 	obj = append(obj, tnr.tn.box)
 	return obj
 }
 
-func (tnr *treeNodeRenderer) Refresh() {
+func (tnr *fyneTreeNodeRenderer) Refresh() {
 }
 
 /*

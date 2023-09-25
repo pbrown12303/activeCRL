@@ -61,6 +61,7 @@ func NewFyneCrlDiagramNode(node core.Concept, trans *core.Transaction, diagramWi
 	newNode.labelBinding.AddListener(binding.NewDataListener(func() { newNode.labelChanged() }))
 	newNode.entryWidget = widget.NewEntryWithData(newNode.labelBinding)
 	newNode.entryWidget.Wrapping = fyne.TextWrapOff
+	newNode.entryWidget.Scroll = container.ScrollNone
 	newNode.entryWidget.Validator = nil
 	newNode.entryWidget.Refresh()
 

@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"runtime/pprof"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -17,7 +18,6 @@ import (
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 	"github.com/pbrown12303/activeCRL/crleditor"
-	"github.com/pkg/errors"
 )
 
 // FyneGUISingleton is the unique instance of the CrlEditorFyneGUI for the application
@@ -50,9 +50,11 @@ type CrlEditorFyneGUI struct {
 	undoItem *fyne.MenuItem
 	redoItem *fyne.MenuItem
 	// Debug Menu Items
-	traceSettingsItem *fyne.MenuItem
-	startProfileItem  *fyne.MenuItem
-	stopProfileItem   *fyne.MenuItem
+	traceSettingsItem  *fyne.MenuItem
+	startProfileItem   *fyne.MenuItem
+	stopProfileItem    *fyne.MenuItem
+	startDebugUndoItem *fyne.MenuItem
+	stopDebugUndoItem  *fyne.MenuItem
 	// Help Menu Items
 	helpItem *fyne.MenuItem
 	// Main Menu Items
@@ -95,6 +97,25 @@ func NewFyneGUI(crlEditor *crleditor.Editor, providedApp fyne.App) *CrlEditorFyn
 		log.Fatal(err)
 	}
 
+	ctrlZ := &desktop.CustomShortcut{KeyName: fyne.KeyZ, Modifier: fyne.KeyModifierControl}
+	ctrlY := &desktop.CustomShortcut{KeyName: fyne.KeyY, Modifier: fyne.KeyModifierControl}
+
+	gui.window.Canvas().AddShortcut(ctrlZ, func(shortcut fyne.Shortcut) {
+		trans, new := gui.editor.GetTransaction()
+		if new {
+			defer gui.editor.EndTransaction()
+		}
+		gui.editor.Undo(trans)
+	})
+
+	gui.window.Canvas().AddShortcut(ctrlY, func(shortcut fyne.Shortcut) {
+		trans, new := gui.editor.GetTransaction()
+		if new {
+			defer gui.editor.EndTransaction()
+		}
+		gui.editor.Redo(trans)
+	})
+
 	return gui
 }
 
@@ -109,7 +130,7 @@ func (gui *CrlEditorFyneGUI) addDiagram(parentID string) core.Concept {
 	newElement.SetLabel(gui.editor.GetDefaultDiagramLabel(), trans)
 	newElement.SetOwningConceptID(parentID, trans)
 	gui.editor.SelectElement(newElement, trans)
-	gui.DisplayDiagram(newElement, trans)
+	gui.editor.GetDiagramManager().DisplayDiagram(newElement.GetConceptID(trans), trans)
 	return newElement
 }
 
@@ -328,13 +349,19 @@ func (gui *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
 	gui.stopProfileItem = fyne.NewMenuItem("Stop Profiling", func() {
 		pprof.StopCPUProfile()
 	})
+	gui.startDebugUndoItem = fyne.NewMenuItem("Start debug logging of Undo", func() {
+		crleditor.CrlEditorSingleton.GetUofD().StartDebugUndo()
+	})
+	gui.stopDebugUndoItem = fyne.NewMenuItem("Stop debug logging of Undo", func() {
+		crleditor.CrlEditorSingleton.GetUofD().StopDebugUndo()
+	})
 	// Help Menu Items
 	gui.helpItem = fyne.NewMenuItem("Help", func() { fmt.Println("Help Menu") })
 
 	// Main Menu
 	gui.fileMenu = fyne.NewMenu("File", gui.newDomainItem, fyne.NewMenuItemSeparator(), gui.saveWorkspaceItem, gui.closeWorkspaceItem, gui.clearWorkspaceItem, gui.openWorkspaceItem, fyne.NewMenuItemSeparator(), gui.userPreferencesItem)
 	gui.editMenu = fyne.NewMenu("Edit", gui.selectConceptWithIDItem, gui.undoItem, gui.redoItem)
-	gui.debugMenu = fyne.NewMenu("Debug", gui.traceSettingsItem, gui.startProfileItem, gui.stopProfileItem)
+	gui.debugMenu = fyne.NewMenu("Debug", gui.traceSettingsItem, gui.startProfileItem, gui.stopProfileItem, gui.startDebugUndoItem, gui.stopDebugUndoItem)
 	gui.helpMenu = fyne.NewMenu("Help", gui.helpItem)
 
 	gui.mainMenu = fyne.NewMainMenu(gui.fileMenu, gui.editMenu, gui.debugMenu, gui.helpMenu)
@@ -356,6 +383,7 @@ func (gui *CrlEditorFyneGUI) deleteElement(elementID string) {
 }
 
 func (gui *CrlEditorFyneGUI) displayDiagram(diagramID string) {
+	gui.editor.GetUofD().MarkUndoPoint()
 	trans, isNew := gui.editor.GetTransaction()
 	if isNew {
 		defer gui.editor.EndTransaction()
@@ -417,28 +445,29 @@ func (gui *CrlEditorFyneGUI) GetWindow() fyne.Window {
 func (gui *CrlEditorFyneGUI) Initialize(trans *core.Transaction) error {
 	gui.conceptStateBindingMap = make(map[string]ConceptStateBinding)
 	gui.treeManager.initialize()
+	gui.propertyManager.initialize()
+	gui.diagramManager.initialize()
+	// The following is a work-around for the Entry widget issue #4218. The issue is that the first time
+	// the entry widget is bound to a value it displays the validation checkmark. However, after unbinding
+	// and  rebinding (which occurs in the properties pane each time a concept is selected), the checkmark
+	// is never displayed again. For consistency (particularly in testing), we force an initial binding/unbinding
+	// as part of the initialization.
+	gui.editor.SelectElement(nil, trans)
+	time.Sleep(1000 * time.Millisecond)
+	coreDomain := trans.GetUniverseOfDiscourse().GetElementWithURI(core.CoreDomainURI)
+	gui.editor.SelectElement(coreDomain, trans)
+	time.Sleep(1000 * time.Millisecond)
+	gui.editor.SelectElement(nil, trans)
 	return nil
 }
 
 // RefreshGUI initializes the graphical state of the GUI
 func (gui *CrlEditorFyneGUI) RefreshGUI(trans *core.Transaction) error {
 	gui.GetWindow().SetTitle("Crl Editor         Workspace: " + gui.editor.GetWorkspacePath())
-	gui.diagramManager.initialize()
-	for _, openDiagramID := range gui.editor.GetSettings().OpenDiagrams {
-		diagram := gui.editor.GetUofD().GetElement(openDiagramID)
-		if diagram == nil {
-			log.Printf("In FyneGui.initializeClientState: Failed to load diagram with ID: %s", openDiagramID)
-		} else {
-			err := gui.diagramManager.displayDiagram(diagram, trans)
-			if err != nil {
-				return errors.Wrap(err, "In FyneGUI.initializeClientState diagram "+diagram.GetLabel(trans)+" did not display")
-			}
-		}
-	}
-	gui.diagramManager.SelectDiagram(gui.editor.GetSettings().CurrentDiagram)
-	selectedElement := gui.editor.GetUofD().GetElement(gui.editor.GetSettings().Selection)
+	gui.diagramManager.refreshGUI(trans)
+	selectedElementID := gui.editor.GetSettings().Selection
+	selectedElement := gui.editor.GetUofD().GetElement(selectedElementID)
 	gui.ElementSelected(selectedElement, trans)
-	gui.treeManager.tree.Refresh()
 	return nil
 }
 

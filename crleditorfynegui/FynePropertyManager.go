@@ -185,6 +185,10 @@ func (pMgr *FynePropertyManager) displayProperties(uid string) {
 	}
 }
 
+func (pMgr *FynePropertyManager) initialize() {
+	pMgr.displayProperties("")
+}
+
 var _ fyne.Shortcutable = (*copyableLabel)(nil)
 var _ fyne.Focusable = (*copyableLabel)(nil)
 var _ fyne.Tappable = (*copyableLabel)(nil)

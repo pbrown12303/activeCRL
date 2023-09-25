@@ -25,44 +25,44 @@ func NewCrlGraph(graphName string) *CrlGraph {
 
 // AddConceptRecursively will add the given concept and all its child descendants to the graph.
 // it will also add any referenced concepts, but not recursively. Existing concepts will not be duplicated.
-func (graphPtr *CrlGraph) AddConceptRecursively(concept Concept, hl *Transaction) error {
-	err := graphPtr.addConcept(concept, hl)
+func (graphPtr *CrlGraph) AddConceptRecursively(concept Concept, trans *Transaction) error {
+	err := graphPtr.addConcept(concept, trans)
 	if err != nil {
 		return errors.Wrap(err, "CrlGraph.AddConceptRecursively failed")
 	}
-	ownedConcepts := concept.GetOwnedConcepts(hl)
+	ownedConcepts := concept.GetOwnedConcepts(trans)
 	for _, el := range ownedConcepts {
 		switch el.GetConceptType() {
 		case Refinement:
 			ref := el
-			abstractConcept := ref.GetAbstractConcept(hl)
-			refinedConcept := ref.GetRefinedConcept(hl)
+			abstractConcept := ref.GetAbstractConcept(trans)
+			refinedConcept := ref.GetRefinedConcept(trans)
 			if abstractConcept != nil && refinedConcept != nil {
-				abstractConceptID := abstractConcept.GetConceptID(hl)
+				abstractConceptID := abstractConcept.GetConceptID(trans)
 				if !graphPtr.gvgraph.IsNode(abstractConceptID) {
-					err := graphPtr.addConcept(abstractConcept, hl)
+					err := graphPtr.addConcept(abstractConcept, trans)
 					if err != nil {
 						return errors.Wrap(err, "CrlGraph.addConcept failed")
 					}
 				}
-				refinedConceptID := refinedConcept.GetConceptID(hl)
+				refinedConceptID := refinedConcept.GetConceptID(trans)
 				if !graphPtr.gvgraph.IsNode(refinedConceptID) {
-					err := graphPtr.addConcept(refinedConcept, hl)
+					err := graphPtr.addConcept(refinedConcept, trans)
 					if err != nil {
 						return errors.Wrap(err, "CrlGraph.addConcept failed")
 					}
 				}
-				err := graphPtr.addRefinementEdge(abstractConcept, refinedConcept, hl)
+				err := graphPtr.addRefinementEdge(abstractConcept, refinedConcept, trans)
 				if err != nil {
 					return errors.Wrap(err, "CrlGraph.addConcept failed")
 				}
 			}
 		case Element, Reference, Literal:
-			err := graphPtr.AddConceptRecursively(el, hl)
+			err := graphPtr.AddConceptRecursively(el, trans)
 			if err != nil {
 				return errors.Wrap(err, "CrlGraph.AddConceptRecursively failed")
 			}
-			err = graphPtr.addOwnerEdge(concept, el, hl)
+			err = graphPtr.addOwnerEdge(concept, el, trans)
 			if err != nil {
 				return errors.Wrap(err, "CrlGraph.AddConceptRecursively failed")
 			}
@@ -71,34 +71,34 @@ func (graphPtr *CrlGraph) AddConceptRecursively(concept Concept, hl *Transaction
 	return nil
 }
 
-func (graphPtr *CrlGraph) addConcept(concept Concept, hl *Transaction) error {
+func (graphPtr *CrlGraph) addConcept(concept Concept, trans *Transaction) error {
 	switch concept.GetConceptType() {
 	case Refinement:
-		abstractConcept := concept.GetAbstractConcept(hl)
-		refinedConcept := concept.GetRefinedConcept(hl)
+		abstractConcept := concept.GetAbstractConcept(trans)
+		refinedConcept := concept.GetRefinedConcept(trans)
 		if abstractConcept != nil && refinedConcept != nil {
-			abstractConceptID := abstractConcept.GetConceptID(hl)
+			abstractConceptID := abstractConcept.GetConceptID(trans)
 			if !graphPtr.gvgraph.IsNode(abstractConceptID) {
-				err := graphPtr.addConcept(abstractConcept, hl)
+				err := graphPtr.addConcept(abstractConcept, trans)
 				if err != nil {
 					return errors.Wrap(err, "CrlGraph.addConcept failed")
 				}
 			}
-			refinedConceptID := refinedConcept.GetConceptID(hl)
+			refinedConceptID := refinedConcept.GetConceptID(trans)
 			if !graphPtr.gvgraph.IsNode(refinedConceptID) {
-				err := graphPtr.addConcept(refinedConcept, hl)
+				err := graphPtr.addConcept(refinedConcept, trans)
 				if err != nil {
 					return errors.Wrap(err, "CrlGraph.addConcept failed")
 				}
 			}
-			err := graphPtr.addRefinementEdge(abstractConcept, refinedConcept, hl)
+			err := graphPtr.addRefinementEdge(abstractConcept, refinedConcept, trans)
 			if err != nil {
 				return errors.Wrap(err, "CrlGraph.addConcept failed")
 			}
 		}
 	case Element, Reference, Literal:
-		id := "\"" + concept.GetConceptID(hl) + "\""
-		label := concept.GetLabel(hl)
+		id := "\"" + concept.GetConceptID(trans) + "\""
+		label := concept.GetLabel(trans)
 		typeName := ConceptTypeToString(concept.GetConceptType())
 		if !graphPtr.gvgraph.IsNode(id) {
 			nodeAttrs := make(map[string]string)
@@ -106,7 +106,7 @@ func (graphPtr *CrlGraph) addConcept(concept Concept, hl *Transaction) error {
 			referencedAttributeNameExt := ""
 			switch concept.GetConceptType() {
 			case Reference:
-				referencedAttributeNameExt = "<TR><TD>" + concept.GetReferencedAttributeName(hl).String() + "</TD></TR>"
+				referencedAttributeNameExt = "<TR><TD>" + concept.GetReferencedAttributeName(trans).String() + "</TD></TR>"
 			}
 			nodeAttrs["label"] = "<<TABLE><TR><TD>" + typeName + "</TD></TR><TR><TD>" + label + "</TD></TR><TR><TD>" + id + "</TD></TR>" + referencedAttributeNameExt + " </TABLE>>"
 			err := graphPtr.gvgraph.AddNode("", id, nodeAttrs)
@@ -114,15 +114,15 @@ func (graphPtr *CrlGraph) addConcept(concept Concept, hl *Transaction) error {
 				return errors.Wrap(err, "CrlGraph.addConcept failed")
 			}
 			// Make sure the owner is displayed
-			owner := concept.GetOwningConcept(hl)
+			owner := concept.GetOwningConcept(trans)
 			if owner != nil {
-				ownerID := owner.GetConceptID(hl)
+				ownerID := owner.GetConceptID(trans)
 				if !graphPtr.gvgraph.IsNode(ownerID) {
-					err := graphPtr.addConcept(owner, hl)
+					err := graphPtr.addConcept(owner, trans)
 					if err != nil {
 						return errors.Wrap(err, "CrlGraph.addConcept failed")
 					}
-					err = graphPtr.addOwnerEdge(owner, concept, hl)
+					err = graphPtr.addOwnerEdge(owner, concept, trans)
 					if err != nil {
 						return errors.Wrap(err, "CrlGraph.addConcept failed")
 					}
@@ -130,16 +130,16 @@ func (graphPtr *CrlGraph) addConcept(concept Concept, hl *Transaction) error {
 			}
 			switch concept.GetConceptType() {
 			case Reference:
-				referencedConceptID := concept.GetReferencedConceptID(hl)
+				referencedConceptID := concept.GetReferencedConceptID(trans)
 				if referencedConceptID != "" {
-					referencedConcept := concept.GetReferencedConcept(hl)
+					referencedConcept := concept.GetReferencedConcept(trans)
 					if !graphPtr.gvgraph.IsNode(referencedConceptID) {
-						err := graphPtr.addConcept(referencedConcept, hl)
+						err := graphPtr.addConcept(referencedConcept, trans)
 						if err != nil {
 							return errors.Wrap(err, "CrlGraph.addConcept failed")
 						}
 					}
-					err := graphPtr.addReferencedElementEdge(concept, referencedConcept, hl)
+					err := graphPtr.addReferencedElementEdge(concept, referencedConcept, trans)
 					if err != nil {
 						return errors.Wrap(err, "CrlGraph.addConcept failed")
 					}
@@ -150,12 +150,12 @@ func (graphPtr *CrlGraph) addConcept(concept Concept, hl *Transaction) error {
 	return nil
 }
 
-func (graphPtr *CrlGraph) addOwnerEdge(parent Concept, child Concept, hl *Transaction) error {
-	parentID := "\"" + parent.GetConceptID(hl) + "\""
+func (graphPtr *CrlGraph) addOwnerEdge(parent Concept, child Concept, trans *Transaction) error {
+	parentID := "\"" + parent.GetConceptID(trans) + "\""
 	if !graphPtr.gvgraph.IsNode(parentID) {
 		return errors.New("CrlGraph.addOwnerEdge called with parent node not present")
 	}
-	childID := "\"" + child.GetConceptID(hl) + "\""
+	childID := "\"" + child.GetConceptID(trans) + "\""
 	if !graphPtr.gvgraph.IsNode(childID) {
 		return errors.New("CrlGraph.addOwnerEdge called with child node not present")
 	}
@@ -171,12 +171,12 @@ func (graphPtr *CrlGraph) addOwnerEdge(parent Concept, child Concept, hl *Transa
 	return nil
 }
 
-func (graphPtr *CrlGraph) addReferencedElementEdge(reference Concept, referencedElement Concept, hl *Transaction) error {
-	referenceID := "\"" + reference.GetConceptID(hl) + "\""
+func (graphPtr *CrlGraph) addReferencedElementEdge(reference Concept, referencedElement Concept, trans *Transaction) error {
+	referenceID := "\"" + reference.GetConceptID(trans) + "\""
 	if !graphPtr.gvgraph.IsNode(referenceID) {
 		return errors.New("CrlGraph.addReferencedElementEdge called with reference node not present")
 	}
-	referencedElementID := "\"" + referencedElement.GetConceptID(hl) + "\""
+	referencedElementID := "\"" + referencedElement.GetConceptID(trans) + "\""
 	if !graphPtr.gvgraph.IsNode(referencedElementID) {
 		return nil
 	}
@@ -194,12 +194,12 @@ func (graphPtr *CrlGraph) addReferencedElementEdge(reference Concept, referenced
 	return nil
 }
 
-func (graphPtr *CrlGraph) addRefinementEdge(abstractConcept Concept, refinedConcept Concept, hl *Transaction) error {
-	abstractConceptID := "\"" + abstractConcept.GetConceptID(hl) + "\""
+func (graphPtr *CrlGraph) addRefinementEdge(abstractConcept Concept, refinedConcept Concept, trans *Transaction) error {
+	abstractConceptID := "\"" + abstractConcept.GetConceptID(trans) + "\""
 	if !graphPtr.gvgraph.IsNode(abstractConceptID) {
 		return errors.New("CrlGraph.addRefinementEdge called with abstractConcept node not present")
 	}
-	refinedConceptID := "\"" + refinedConcept.GetConceptID(hl) + "\""
+	refinedConceptID := "\"" + refinedConcept.GetConceptID(trans) + "\""
 	if !graphPtr.gvgraph.IsNode(refinedConceptID) {
 		return errors.New("CrlGraph.addRefinementEdge called with refinedConcept node not present")
 	}

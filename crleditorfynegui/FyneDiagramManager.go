@@ -19,6 +19,8 @@ import (
 	"github.com/pbrown12303/activeCRL/crleditor"
 	"github.com/pbrown12303/activeCRL/crlmapsdomain"
 	"github.com/pbrown12303/activeCRL/images"
+
+	mapset "github.com/deckarep/golang-set"
 )
 
 const (
@@ -130,6 +132,10 @@ func (dm *FyneDiagramManager) addLinkToDiagram(link core.Concept, trans *core.Tr
 		return nil
 	}
 	fyneSource := diagramWidget.GetDiagramElement(crlDiagramSource.GetConceptID(trans))
+	if fyneSource == nil {
+		// the source is not in the diagram
+		return nil
+	}
 	fyneSourcePad := fyneSource.GetDefaultConnectionPad()
 	crlDiagramTarget := crldiagramdomain.GetLinkTarget(link, trans)
 	if crlDiagramTarget == nil {
@@ -140,6 +146,7 @@ func (dm *FyneDiagramManager) addLinkToDiagram(link core.Concept, trans *core.Tr
 	targetConceptID := crlDiagramTarget.GetConceptID(trans)
 	fyneTarget := diagramWidget.GetDiagramElement(targetConceptID)
 	if fyneTarget == nil {
+		// the target is not in the diagram
 		return nil
 	}
 	fyneTargetPad := fyneTarget.GetDefaultConnectionPad()
@@ -152,7 +159,7 @@ func (dm *FyneDiagramManager) addLinkToDiagram(link core.Concept, trans *core.Tr
 
 func (dm *FyneDiagramManager) addNodeToDiagram(node core.Concept, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramNode {
 	nodeID := node.GetConceptID(trans)
-	diagramNode := diagramWidget.Nodes[nodeID]
+	diagramNode := diagramWidget.GetDiagramNode(nodeID)
 	if diagramNode == nil {
 
 		diagramNode = NewFyneCrlDiagramNode(node, trans, diagramWidget)
@@ -162,6 +169,20 @@ func (dm *FyneDiagramManager) addNodeToDiagram(node core.Concept, trans *core.Tr
 }
 
 func (dm *FyneDiagramManager) closeDiagram(diagramID string) {
+	tabItem := dm.diagramTabs[diagramID]
+	if tabItem != nil {
+		dm.tabArea.Remove(tabItem.tab)
+		delete(dm.diagramTabs, diagramID)
+		diagram := dm.fyneGUI.editor.GetUofD().GetElement(diagramID)
+		if diagram != nil {
+			diagram.Deregister(dm.diagramObserver)
+		}
+	}
+	dm.fyneGUI.editor.DiagramDisplayRemoved(diagramID)
+	dm.fyneGUI.editor.DiagramSelected("")
+}
+
+func (dm *FyneDiagramManager) closeDiagramNoUndo(diagramID string) {
 	tabItem := dm.diagramTabs[diagramID]
 	if tabItem != nil {
 		dm.tabArea.Remove(tabItem.tab)
@@ -419,6 +440,7 @@ func (dm *FyneDiagramManager) displayDiagram(diagram core.Concept, trans *core.T
 			return dm.isConnectionAllowed(link, linkEnd, pad)
 		}
 		diagramWidget.LinkSegmentMouseDownSecondaryCallback = dm.linkMouseDown
+		dm.fyneGUI.editor.DiagramDisplayed(diagramID)
 	}
 	dm.tabArea.Select(tabItem.tab)
 	return nil
@@ -456,18 +478,20 @@ func (dm *FyneDiagramManager) GetSelectedDiagram() *diagramwidget.DiagramWidget 
 func (dm *FyneDiagramManager) initialize() {
 	dm.diagramObserver = newDiagramObserver(dm)
 	dm.diagramElementObserver = newDiagramElementObserver(dm)
+	dm.tabArea.SetItems([]*container.TabItem{})
+	dm.tabArea.Select(nil)
 	dm.currentToolbarSelection = CursorSelected
-	dm.CloseAllDiagrams()
+	dm.closeAllDiagrams()
 }
 
-// CloseAllDiagrams closes all of the currently displayed diagrams.
-func (dm *FyneDiagramManager) CloseAllDiagrams() {
+// closeAllDiagrams closes all of the currently displayed diagrams. It is not an undoable operation
+func (dm *FyneDiagramManager) closeAllDiagrams() {
 	diagramIDs := []string{}
 	for _, diagramTab := range dm.diagramTabs {
 		diagramIDs = append(diagramIDs, diagramTab.diagramID)
 	}
 	for _, diagramID := range diagramIDs {
-		dm.closeDiagram(diagramID)
+		dm.closeDiagramNoUndo(diagramID)
 	}
 }
 
@@ -483,9 +507,15 @@ func (dm *FyneDiagramManager) refreshGUI(trans *core.Transaction) {
 	}
 	editor := dm.fyneGUI.editor
 	for _, diagramID := range editor.GetSettings().OpenDiagrams {
-		if !dm.fyneGUI.editor.IsDiagramDisplayed(diagramID, trans) {
-			editor.GetDiagramManager().DisplayDiagram(diagramID, trans)
+		editor.GetDiagramManager().DisplayDiagram(diagramID, trans)
+		diagram := dm.getDiagramWidget(diagramID)
+		for _, diagramElement := range diagram.GetDiagramElements() {
+			diagram.RemoveElement(diagramElement.GetDiagramElementID())
 		}
+		crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagramID)
+		dm.populateDiagram(crlDiagram, trans)
+		dm.selectElementInDiagram(editor.GetSettings().Selection, diagram, trans)
+		diagram.Refresh()
 	}
 	dm.SelectDiagram(editor.GetSettings().CurrentDiagram)
 }
@@ -623,17 +653,17 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 					}
 				}
 			case OwnerPointerSelected:
-				currentLinkParent := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
-				newLinkParent := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
-				if currentLinkParent != newLinkParent {
-					if currentLinkParent != nil {
-						currentLinkParent.SetOwningConcept(nil, trans)
+				currentLinkModelConcept := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
+				newLinkModelConcept := crldiagramdomain.GetReferencedModelConcept(crlNewPadOwner, trans)
+				if currentLinkModelConcept != newLinkModelConcept {
+					if currentLinkModelConcept != nil {
+						currentLinkModelConcept.SetOwningConcept(nil, trans)
 					}
 					crlLinkTarget := crldiagramdomain.GetLinkTarget(crlLink, trans)
 					targetModelElement := crldiagramdomain.GetReferencedModelConcept(crlLinkTarget, trans)
-					newLinkParent.SetOwningConcept(targetModelElement, trans)
-					crldiagramdomain.SetReferencedModelConcept(crlLink, newLinkParent, trans)
-					typedLink.modelElement = newLinkParent
+					newLinkModelConcept.SetOwningConcept(targetModelElement, trans)
+					crldiagramdomain.SetReferencedModelConcept(crlLink, newLinkModelConcept, trans)
+					typedLink.modelElement = newLinkModelConcept
 				}
 			case ReferencedElementPointerSelected:
 				currentModelReference := crldiagramdomain.GetReferencedModelConcept(crlLink, trans)
@@ -745,7 +775,7 @@ func getAttributeNameBasedOnTargetType(newPadOwner diagramwidget.DiagramElement)
 	if newPadOwner == nil {
 		return attributeName
 	}
-	typedPadOwner := newPadOwner.GetDiagram().Links[newPadOwner.GetDiagramElementID()]
+	typedPadOwner := newPadOwner.GetDiagram().GetDiagramLink(newPadOwner.GetDiagramElementID())
 	switch castPadOwner := typedPadOwner.(type) {
 	case *FyneCrlDiagramLink:
 		switch castPadOwner.linkType {
@@ -792,24 +822,35 @@ func (dm *FyneDiagramManager) nullifyReferencedConcept(fcde FyneCrlDiagramElemen
 
 // populateDiagram adds all elements to the diagram
 func (dm *FyneDiagramManager) populateDiagram(diagram core.Concept, trans *core.Transaction) error {
+	uOfD := trans.GetUniverseOfDiscourse()
 	diagramWidget := dm.getDiagramWidget(diagram.GetConceptID(trans))
 	nodes := diagram.GetOwnedConceptsRefinedFromURI(crldiagramdomain.CrlDiagramNodeURI, trans)
 	for _, node := range nodes {
-		// Get the node ID
-		// Get the icon
-		// Get the abstraction string
-		// Build the node content
-		// Display the text
-		// Now create the node itself
 		dm.addNodeToDiagram(node, trans, diagramWidget)
 	}
 	links := diagram.GetOwnedConceptsRefinedFromURI(crldiagramdomain.CrlDiagramLinkURI, trans)
+	// Since links may have other links as source or target, the source or target may not have been added to the
+	// diagram yet. DeferredLinkIDs keeps track of those that were not added due to the absence of the source or target
+	desiredLinkIDs := mapset.NewSet()
 	for _, link := range links {
-		linkID := link.GetConceptID(trans)
-		diagramLink := diagramWidget.Links[linkID]
-		if diagramLink == nil {
-			dm.addLinkToDiagram(link, trans, diagramWidget)
+		desiredLinkIDs.Add(link.GetConceptID(trans))
+	}
+	workingLinkIDs := desiredLinkIDs.Clone()
+	for workingLinkIDs.Cardinality() > 0 {
+		deferredLinkIDs := mapset.NewSet()
+		workingIterator := workingLinkIDs.Iterator()
+		for entry := range workingIterator.C {
+			linkID := entry.(string)
+			diagramLink := diagramWidget.GetDiagramLink(linkID)
+			if diagramLink == nil {
+				link := uOfD.GetElement(linkID)
+				addedLink := dm.addLinkToDiagram(link, trans, diagramWidget)
+				if addedLink == nil {
+					deferredLinkIDs.Add(linkID)
+				}
+			}
 		}
+		workingLinkIDs = deferredLinkIDs.Clone()
 	}
 	diagramWidget.Refresh()
 	return nil
@@ -821,6 +862,7 @@ func (dm *FyneDiagramManager) SelectDiagram(diagramID string) {
 	if tabItem != nil {
 		dm.tabArea.Select(tabItem.tab)
 	}
+	dm.fyneGUI.editor.DiagramSelected(diagramID)
 }
 
 func (dm *FyneDiagramManager) selectElementInDiagram(elementID string, diagram *diagramwidget.DiagramWidget, trans *core.Transaction) error {
@@ -830,13 +872,14 @@ func (dm *FyneDiagramManager) selectElementInDiagram(elementID string, diagram *
 		return nil
 	}
 	foundDiagramElementID := ""
-	for key := range diagram.GetDiagramElements() {
-		crlDiagramElement := uOfD.GetElement(key)
+	for _, fyneDiagramElement := range diagram.GetDiagramElements() {
+		id := fyneDiagramElement.GetDiagramElementID()
+		crlDiagramElement := uOfD.GetElement(id)
 		if crlDiagramElement != nil {
 			crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
 			if crlModelElement != nil {
 				if crlModelElement.GetConceptID(trans) == elementID {
-					foundDiagramElementID = key
+					foundDiagramElementID = id
 					break
 				}
 			}

@@ -7,15 +7,15 @@ import (
 
 var _ = Describe("StringElementMap Test", func() {
 	var uOfD *UniverseOfDiscourse
-	var hl *Transaction
+	var trans *Transaction
 	var seMap *StringElementMap
 	var el Concept
 	var elID string
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
-		hl = uOfD.NewTransaction()
+		trans = uOfD.NewTransaction()
 		seMap = NewStringElementMap()
-		el, _ = uOfD.NewElement(hl)
+		el, _ = uOfD.NewElement(trans)
 		elID = el.getConceptIDNoLock()
 	})
 	Specify("Element should not initially show as a member", func() {

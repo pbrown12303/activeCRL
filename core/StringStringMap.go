@@ -100,7 +100,7 @@ func (seMap *StringStringMap) IsEquivalent(sem *StringStringMap, printExceptions
 }
 
 // Print prints the map. The function is intended for use in debugging
-func (seMap *StringStringMap) Print(hl *Transaction) {
+func (seMap *StringStringMap) Print(trans *Transaction) {
 	seMap.TraceableLock()
 	defer seMap.TraceableUnlock()
 	for uri, uuid := range seMap.uriUUIDMap {

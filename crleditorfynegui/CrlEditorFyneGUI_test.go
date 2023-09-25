@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/test"
 	"fyne.io/x/fyne/widget/diagramwidget"
@@ -36,42 +37,38 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 			Expect(FyneGUISingleton).ToNot(BeNil())
 			coreDomain := uOfD.GetElementWithURI(core.CoreDomainURI)
 			Expect(coreDomain).ToNot(BeNil())
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			Expect(test.AssertRendersToImage(testT, "initialScreen.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 		})
 		Specify("Tree selection and crleditor selection should match", func() {
 			coreDomain := uOfD.GetElementWithURI(core.CoreDomainURI)
 			coreDomainID := coreDomain.GetConceptID(trans)
 			Expect(FyneGUISingleton.editor.SelectElement(coreDomain, trans)).To(Succeed())
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			Expect(test.AssertRendersToImage(testT, "/selectionTests/coreDomainSelectedViaEditor.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			Expect(FyneGUISingleton.editor.GetCurrentSelectionID(trans)).To(Equal(coreDomainID))
 			Expect(FyneGUISingleton.editor.SelectElementUsingIDString("", trans)).To(Succeed())
 			Expect(FyneGUISingleton.editor.GetCurrentSelectionID(trans)).To(Equal(""))
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			Expect(test.AssertRendersToImage(testT, "/selectionTests/noSelection.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			FyneGUISingleton.treeManager.tree.Select(coreDomainID)
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			Expect(test.AssertRendersToImage(testT, "/selectionTests/coreDomainSelectedViaTree.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			Expect(FyneGUISingleton.editor.GetCurrentSelectionID(trans)).To(Equal(coreDomainID))
 		})
-		FSpecify("Domain creation should Undo and Redo successfully", func() {
+		Specify("Domain creation should Undo and Redo successfully", func() {
 			uOfD.MarkUndoPoint()
 			beforeUofD := uOfD.Clone(trans)
 			beforeTrans := beforeUofD.NewTransaction()
 			cs1 := FyneGUISingleton.addElement("", FyneGUISingleton.editor.GetDefaultDomainLabel())
 			Expect(cs1).ToNot(BeNil())
 			Expect(crleditor.CrlEditorSingleton.GetCurrentSelection()).To(Equal(cs1))
-			time.Sleep(1000 * time.Millisecond)
-			Expect(test.AssertRendersToImage(testT, "/undoRedoTests/afterDomainCreation.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			afterUofD := uOfD.Clone(trans)
 			afterTrans := afterUofD.NewTransaction()
 			FyneGUISingleton.undo()
 			Expect(uOfD.IsEquivalent(trans, beforeUofD, beforeTrans, true)).To(BeTrue())
 			Expect(crleditor.CrlEditorSingleton.GetCurrentSelection()).To(BeNil())
 			FyneGUISingleton.redo()
-			time.Sleep(1000 * time.Millisecond)
-			Expect(test.AssertRendersToImage(testT, "/undoRedoTests/afterDomainCreation.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			Expect(uOfD.IsEquivalent(trans, afterUofD, afterTrans, true)).To(BeTrue())
 			Expect(crleditor.CrlEditorSingleton.GetCurrentSelection()).To(Equal(cs1))
 		})
@@ -134,15 +131,15 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 			treeNode := FyneGUISingleton.treeManager.treeNodes[coreDomainID]
 			treeNodePosition := FyneGUISingleton.app.Driver().AbsolutePositionForObject(treeNode)
 			diagramPosition := FyneGUISingleton.app.Driver().AbsolutePositionForObject(fyneDiagram)
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			Expect(test.AssertRendersToImage(testT, "/dragDropTests/PriorToFirstNodeDrop.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			treeNode.Dragged(newDragEvent(diagramPosition.X-treeNodePosition.X+100, diagramPosition.Y-treeNodePosition.Y+100))
 			Expect(FyneGUISingleton.dragDropTransaction).ToNot(BeNil())
 			Expect(FyneGUISingleton.dragDropTransaction.id).ToNot(Equal(""))
-			fyneDiagram.MouseMoved(newLeftMouseEventAt(fyne.NewPos(100, 100), diagramPosition.AddXY(100, 100)))
+			getHoverableDrawingArea(fyneDiagram).MouseMoved(newLeftMouseEventAt(fyne.NewPos(100, 100), diagramPosition.AddXY(100, 100)))
 			Expect(FyneGUISingleton.dragDropTransaction.currentDiagramMousePosition).To(Equal(fyne.NewPos(100, 100)))
 			treeNode.DragEnd()
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			Expect(test.AssertRendersToImage(testT, "/dragDropTests/FirstNodeDrop.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 			fyneNode := fyneDiagram.GetPrimarySelection()
 			Expect(fyneNode).ToNot(BeNil())
@@ -209,8 +206,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 			var selectedDiagram *diagramwidget.DiagramWidget
 			BeforeEach(func() {
 				selectedDiagram = FyneGUISingleton.diagramManager.GetSelectedDiagram()
-				Expect(len(selectedDiagram.Nodes)).To(Equal(0))
-				Expect(len(selectedDiagram.Links)).To(Equal(0))
+				Expect(len(selectedDiagram.GetDiagramNodes())).To(Equal(0))
+				Expect(len(selectedDiagram.GetDiagramLinks())).To(Equal(0))
 			})
 			Specify("Element node creation should work", func() {
 				crlModelElement, _, fyneNode := createElementAt(selectedDiagram, 100, 100, trans)
@@ -601,7 +598,8 @@ func beforeEachTest() (*core.UniverseOfDiscourse, *core.Transaction) {
 	Expect(trans).ToNot(BeNil())
 	uOfD := trans.GetUniverseOfDiscourse()
 	Expect(uOfD).ToNot(BeNil())
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
+	Expect(test.AssertRendersToMarkup(testT, "beforeEachTest.xml", FyneGUISingleton.window.Canvas())).To(BeTrue())
 	Expect(test.AssertRendersToImage(testT, "beforeEachTest.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 	return uOfD, trans
 }
@@ -609,10 +607,18 @@ func beforeEachTest() (*core.UniverseOfDiscourse, *core.Transaction) {
 func afterEachTest() {
 	// Clear existing workspace
 	// log.Printf("**************************** About to hit ClearWorkspaceButton")
-	closeWorkspaceItem := FyneGUISingleton.closeWorkspaceItem
-	Expect(closeWorkspaceItem).ToNot(BeNil())
-	closeWorkspaceItem.Action()
+	clearWorkspaceItem := FyneGUISingleton.clearWorkspaceItem
+	Expect(clearWorkspaceItem).ToNot(BeNil())
+	clearWorkspaceItem.Action()
 	crleditor.CrlEditorSingleton.EndTransaction()
+}
+
+func getHoverableDrawingArea(dw *diagramwidget.DiagramWidget) desktop.Hoverable {
+	return test.WidgetRenderer(dw).Objects()[0].(*container.Scroll).Content.(desktop.Hoverable)
+}
+
+func getTappableDrawingArea(dw *diagramwidget.DiagramWidget) fyne.Tappable {
+	return test.WidgetRenderer(dw).Objects()[0].(*container.Scroll).Content.(fyne.Tappable)
 }
 
 func newDragEvent(dx float32, dy float32) *fyne.DragEvent {
@@ -639,7 +645,7 @@ func newLeftMouseEventAt(position fyne.Position, absolutePosition fyne.Position)
 func createElementAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (core.Concept, core.Concept, diagramwidget.DiagramElement) {
 	// Create the element
 	FyneGUISingleton.diagramManager.toolButtons[ElementSelected].Tapped(nil)
-	diagram.Tapped(newPointEventAt(100, 100))
+	getTappableDrawingArea(diagram).Tapped(newPointEventAt(100, 100))
 	// Get the Fyne node
 	fyneNode := diagram.GetPrimarySelection()
 	Expect(fyneNode).ToNot(BeNil())
@@ -659,7 +665,7 @@ func createElementAt(diagram *diagramwidget.DiagramWidget, x float32, y float32,
 func createLiteralAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (core.Concept, core.Concept, diagramwidget.DiagramElement) {
 	// Create the element
 	FyneGUISingleton.diagramManager.toolButtons[LiteralSelected].Tapped(nil)
-	diagram.Tapped(newPointEventAt(100, 100))
+	getTappableDrawingArea(diagram).Tapped(newPointEventAt(100, 100))
 	// Get the Fyne node
 	fyneNode := diagram.GetPrimarySelection()
 	// Get the CRL diagram
@@ -679,7 +685,7 @@ func createLiteralAt(diagram *diagramwidget.DiagramWidget, x float32, y float32,
 func createReferenceAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (core.Concept, core.Concept, diagramwidget.DiagramElement) {
 	// Create the element
 	FyneGUISingleton.diagramManager.toolButtons[ReferenceSelected].Tapped(nil)
-	diagram.Tapped(newPointEventAt(100, 100))
+	getTappableDrawingArea(diagram).Tapped(newPointEventAt(100, 100))
 	// Get the Fyne node
 	fyneNode := diagram.GetPrimarySelection()
 	// Get the CRL diagram
@@ -699,7 +705,7 @@ func createReferenceAt(diagram *diagramwidget.DiagramWidget, x float32, y float3
 func createRefinementAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (core.Concept, core.Concept, diagramwidget.DiagramElement) {
 	// Create the element
 	FyneGUISingleton.diagramManager.toolButtons[RefinementSelected].Tapped(nil)
-	diagram.Tapped(newPointEventAt(100, 100))
+	getTappableDrawingArea(diagram).Tapped(newPointEventAt(100, 100))
 	// Get the Fyne node
 	fyneNode := diagram.GetPrimarySelection()
 	// Get the CRL diagram

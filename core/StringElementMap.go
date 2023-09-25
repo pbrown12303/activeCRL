@@ -75,17 +75,17 @@ func (seMap *StringElementMap) IsEquivalent(sem *StringElementMap) bool {
 }
 
 // Print prints the map. The function is intended for use in debugging
-func (seMap *StringElementMap) Print(hl *Transaction) {
+func (seMap *StringElementMap) Print(trans *Transaction) {
 	seMap.TraceableLock()
 	defer seMap.TraceableUnlock()
 	for uuid, be := range seMap.elementMap {
 		log.Printf("Uri: %s\n", uuid)
-		Print(be, "    ", hl)
+		Print(be, "    ", trans)
 	}
 }
 
 // PrintJustIdentifiers prints just the UUIDs (keys) of the map. It is intended for use in debugging
-func (seMap *StringElementMap) PrintJustIdentifiers(hl *Transaction) {
+func (seMap *StringElementMap) PrintJustIdentifiers(trans *Transaction) {
 	seMap.TraceableLock()
 	defer seMap.TraceableUnlock()
 	for uuid := range seMap.elementMap {

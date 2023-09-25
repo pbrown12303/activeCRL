@@ -6,11 +6,11 @@ import (
 
 // UofDInitializationFunction is a function that adds core elements to the uOfD during its initialization process. These
 // functions are called by the UofDManager after a new UniverseOfDiscourse has been created
-type UofDInitializationFunction func(uOFD *UniverseOfDiscourse, hl *Transaction) error
+type UofDInitializationFunction func(uOFD *UniverseOfDiscourse, trans *Transaction) error
 
 // UofDPostInitializationFunction is an application-specific function that is called after a UofD has been created and all
 // UofDInitializationFunctions have been invoked.
-type UofDPostInitializationFunction func(uOfD *UniverseOfDiscourse, hl *Transaction) error
+type UofDPostInitializationFunction func(uOfD *UniverseOfDiscourse, trans *Transaction) error
 
 // UofDManager manages a universe of discourse and the functions used to initialize it
 type UofDManager struct {
@@ -35,16 +35,16 @@ func (mgr *UofDManager) AddPostInitializationFunction(function UofDInitializatio
 // and then calls all of the post-initialization functions.
 func (mgr *UofDManager) Initialize() error {
 	mgr.UofD = NewUniverseOfDiscourse()
-	hl := mgr.UofD.NewTransaction()
-	defer hl.ReleaseLocks()
+	trans := mgr.UofD.NewTransaction()
+	defer trans.ReleaseLocks()
 	for _, function := range mgr.initializationFunctions {
-		err := function(mgr.UofD, hl)
+		err := function(mgr.UofD, trans)
 		if err != nil {
 			errors.Wrap(err, "UofDManager.Initialize failed")
 		}
 	}
 	for _, function := range mgr.postInitializationFunctions {
-		err := function(mgr.UofD, hl)
+		err := function(mgr.UofD, trans)
 		if err != nil {
 			errors.Wrap(err, "UofDManager.Initialize failed")
 		}

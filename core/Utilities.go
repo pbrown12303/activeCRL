@@ -25,8 +25,8 @@ func GetConceptTypeString(el Concept) string {
 // // PrintMutex provides a mututal exclusion for print routhines shared across threads
 // var PrintMutex printMutexStruct
 
-func clone(el Concept, hl *Transaction) Concept {
-	return el.(*concept).clone(hl)
+func clone(el Concept, trans *Transaction) Concept {
+	return el.(*concept).clone(trans)
 }
 
 // Equivalent returns true if the two elements are equivalent
@@ -117,18 +117,18 @@ func equivalent(be1 Concept, hl1 *Transaction, be2 Concept, hl2 *Transaction, pr
 }
 
 // Print prints the indicated element and its ownedConcepts, recursively
-func Print(el Concept, prefix string, hl *Transaction) {
-	printElement(el, prefix, hl)
+func Print(el Concept, prefix string, trans *Transaction) {
+	printElement(el, prefix, trans)
 }
 
-func printElement(el Concept, prefix string, hl *Transaction) {
+func printElement(el Concept, prefix string, trans *Transaction) {
 	if el == nil {
 		return
 	}
-	hl.ReadLockElement(el)
+	trans.ReadLockElement(el)
 	serializedElement, _ := el.MarshalJSON()
 	log.Printf("%s%s", prefix, string(serializedElement))
-	uOfD := el.GetUniverseOfDiscourse(hl)
+	uOfD := el.GetUniverseOfDiscourse(trans)
 	if uOfD == nil {
 		return
 	}
@@ -136,15 +136,15 @@ func printElement(el Concept, prefix string, hl *Transaction) {
 	if ownedIDsMap == nil {
 		return
 	}
-	ownedIDs := ownedIDsMap.GetMappedValues(el.GetConceptID(hl))
+	ownedIDs := ownedIDsMap.GetMappedValues(el.GetConceptID(trans))
 	it := ownedIDs.Iterator()
 	for id := range it.C {
-		ownedElement := el.GetUniverseOfDiscourse(hl).GetElement(id.(string))
-		printElement(ownedElement, prefix+"  ", hl)
+		ownedElement := el.GetUniverseOfDiscourse(trans).GetElement(id.(string))
+		printElement(ownedElement, prefix+"  ", trans)
 	}
 }
 
 // PrintURIIndex prints the URI index of the uOfD with full Element information
-func PrintURIIndex(uOfD *UniverseOfDiscourse, hl *Transaction) {
-	uOfD.uriUUIDMap.Print(hl)
+func PrintURIIndex(uOfD *UniverseOfDiscourse, trans *Transaction) {
+	uOfD.uriUUIDMap.Print(trans)
 }

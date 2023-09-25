@@ -1,8 +1,6 @@
 package crleditor
 
 import (
-	"encoding/json"
-
 	"github.com/pbrown12303/activeCRL/core"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 	"github.com/pkg/errors"
@@ -149,10 +147,9 @@ func (dMgr *DiagramManager) DisplayDiagram(diagramID string, trans *core.Transac
 			return errors.Wrap(err, "DiagramManager.DisplayDiagram failed")
 		}
 	}
-	dMgr.editor.transientCurrentDiagram.SetLiteralValue(diagramID, trans)
-	jsonOpenDiagrams, _ := json.Marshal(dMgr.editor.settings.OpenDiagrams)
-	dMgr.editor.transientDisplayedDiagrams.SetLiteralValue(string(jsonOpenDiagrams), trans)
-	dMgr.editor.settings.CurrentDiagram = diagramID
+	if !dMgr.editor.undoRedoInProgress {
+		dMgr.editor.transientCurrentDiagram.SetLiteralValue(diagramID, trans)
+	}
 	return nil
 }
 

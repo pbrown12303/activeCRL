@@ -45,34 +45,34 @@ func init() {
 	// notificationsCount = 0
 }
 
-func buildCoreDomain(uOfD *UniverseOfDiscourse, hl *Transaction) Concept {
-	coreElement, _ := uOfD.NewElement(hl, CoreDomainURI)
+func buildCoreDomain(uOfD *UniverseOfDiscourse, trans *Transaction) Concept {
+	coreElement, _ := uOfD.NewElement(trans, CoreDomainURI)
 	coreElementID := coreElement.getConceptIDNoLock()
-	coreElement.SetLabel("CoreDomain", hl)
+	coreElement.SetLabel("CoreDomain", trans)
 
 	// Element
-	element, _ := uOfD.NewElement(hl, ElementURI)
-	element.SetOwningConceptID(coreElementID, hl)
-	element.SetLabel("Element", hl)
+	element, _ := uOfD.NewElement(trans, ElementURI)
+	element.SetOwningConceptID(coreElementID, trans)
+	element.SetLabel("Element", trans)
 
 	// Literal
-	literal, _ := uOfD.NewLiteral(hl, LiteralURI)
-	literal.SetOwningConceptID(coreElementID, hl)
-	literal.SetLabel("Literal", hl)
+	literal, _ := uOfD.NewLiteral(trans, LiteralURI)
+	literal.SetOwningConceptID(coreElementID, trans)
+	literal.SetLabel("Literal", trans)
 
 	// Reference
-	reference, _ := uOfD.NewReference(hl, ReferenceURI)
-	reference.SetOwningConceptID(coreElementID, hl)
-	reference.SetLabel("Reference", hl)
+	reference, _ := uOfD.NewReference(trans, ReferenceURI)
+	reference.SetOwningConceptID(coreElementID, trans)
+	reference.SetLabel("Reference", trans)
 
 	// Refinement
-	refinement, _ := uOfD.NewRefinement(hl, RefinementURI)
-	refinement.SetOwningConceptID(coreElementID, hl)
-	refinement.SetLabel("Refinement", hl)
+	refinement, _ := uOfD.NewRefinement(trans, RefinementURI)
+	refinement.SetOwningConceptID(coreElementID, trans)
+	refinement.SetLabel("Refinement", trans)
 
-	coreElement.SetIsCoreRecursively(hl)
+	coreElement.SetIsCoreRecursively(trans)
 
-	Transient, _ = uOfD.NewElement(hl, TransientURI)
+	Transient, _ = uOfD.NewElement(trans, TransientURI)
 
 	return coreElement
 }

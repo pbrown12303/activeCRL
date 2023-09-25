@@ -58,6 +58,7 @@ type Editor struct {
 	transientSelection         core.Concept
 	transientDisplayedDiagrams core.Concept
 	transientCurrentDiagram    core.Concept
+	undoRedoInProgress         bool
 }
 
 // NewEditor returns an initialized Editor
@@ -85,7 +86,7 @@ func NewEditor(userFolderArg string) *Editor {
 // addDiagramToDisplayedList adds the diagramID to the list of displayed diagrams
 func (editor *Editor) addDiagramToDisplayedList(diagramID string, trans *core.Transaction) error {
 	if !editor.IsDiagramDisplayed(diagramID, trans) {
-		editor.settings.OpenDiagrams = append(editor.settings.OpenDiagrams, diagramID)
+		editor.UpdateOpenDiagrams(append(editor.settings.OpenDiagrams, diagramID), trans)
 	}
 	return nil
 }
@@ -150,10 +151,6 @@ func (editor *Editor) CloseWorkspace(trans *core.Transaction) error {
 	if err != nil {
 		return errors.Wrap(err, "crleditor.Editor.CloseWorkspace failed")
 	}
-	err = editor.RefreshGUI(trans)
-	if err != nil {
-		return errors.Wrap(err, "crleditor.Editor.CloseWorkspace failed")
-	}
 	return nil
 }
 
@@ -182,6 +179,46 @@ func (editor *Editor) DeleteElement(elID string, trans *core.Transaction) error 
 		}
 	}
 	return nil
+}
+
+// DiagramDisplayed ensures that the indicated diagram is on the list of currently displayed diagrams
+func (editor *Editor) DiagramDisplayed(id string) {
+	var found bool
+	for _, foundID := range editor.settings.OpenDiagrams {
+		if foundID == id {
+			found = true
+		}
+	}
+	if !found {
+		trans, new := editor.GetTransaction()
+		if new {
+			defer editor.EndTransaction()
+		}
+		editor.UpdateOpenDiagrams(append(editor.settings.OpenDiagrams, id), trans)
+	}
+}
+
+// DiagramDisplayRemoved ensures that the indicated diagram is not on the list of currently displayed diagrams
+func (editor *Editor) DiagramDisplayRemoved(id string) {
+	for i, foundID := range editor.settings.OpenDiagrams {
+		if foundID == id {
+			trans, new := editor.GetTransaction()
+			if new {
+				defer editor.EndTransaction()
+			}
+			editor.UpdateOpenDiagrams(append(editor.settings.OpenDiagrams[:i], editor.settings.OpenDiagrams[i+1:]...), trans)
+			return
+		}
+	}
+}
+
+// DiagramSelected ensures that the setting is updated to indicate the currently displayed diagram
+func (editor *Editor) DiagramSelected(id string) {
+	trans, new := editor.GetTransaction()
+	if new {
+		defer editor.EndTransaction()
+	}
+	editor.UpdateCurrentDiagram(id, trans)
 }
 
 // EndTransaction releases the transaction locks and clears the in-progress transaction
@@ -377,11 +414,9 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 		return errors.Wrap(err, "Editor.Initialize failed")
 	}
 
-	for _, editorGUI := range editor.editorGUIs {
-		err = editorGUI.RefreshGUI(trans)
-		if err != nil {
-			return errors.Wrap(err, "Editor.Initialize failed")
-		}
+	err = editor.RefreshGUI(trans)
+	if err != nil {
+		return errors.Wrap(err, "Editor.Initialize failed")
 	}
 
 	editor.uOfDManager.UofD.SetRecordingUndo(true)
@@ -393,7 +428,7 @@ func (editor *Editor) RefreshGUI(trans *core.Transaction) error {
 	for _, gui := range editor.editorGUIs {
 		err := gui.RefreshGUI(trans)
 		if err != nil {
-			return errors.Wrap(err, "Editor.InitializeGUI failed")
+			return errors.Wrap(err, "Editor.RefreshGUI failed")
 		}
 	}
 	return nil
@@ -436,17 +471,20 @@ func (editor *Editor) OpenWorkspace(trans *core.Transaction) error {
 
 // Redo performs an undo on the editor.editor.GetUofD() and refreshes the interface
 func (editor *Editor) Redo(trans *core.Transaction) error {
+	editor.undoRedoInProgress = true
 	editor.GetUofD().Redo(trans)
 	editor.SelectElementUsingIDString(editor.transientSelection.GetLiteralValue(trans), trans)
 	editor.settings.Selection = editor.transientSelection.GetLiteralValue(trans)
 	var recoveredOpenDiagrams []string
-	json.Unmarshal([]byte(editor.transientDisplayedDiagrams.GetLiteralValue(trans)), &recoveredOpenDiagrams)
+	recoverdJsonOpenDiagrams := editor.transientDisplayedDiagrams.GetLiteralValue(trans)
+	json.Unmarshal([]byte(recoverdJsonOpenDiagrams), &recoveredOpenDiagrams)
 	editor.settings.OpenDiagrams = recoveredOpenDiagrams
 	editor.settings.CurrentDiagram = editor.transientCurrentDiagram.GetLiteralValue(trans)
 	err := editor.RefreshGUI(trans)
 	if err != nil {
 		return errors.Wrap(err, "Editor.Redo failed")
 	}
+	editor.undoRedoInProgress = false
 	return nil
 }
 
@@ -457,7 +495,7 @@ func (editor *Editor) RemoveDiagramFromDisplayedList(diagramID string, trans *co
 			if openDiagramID == diagramID {
 				newList := make([]string, 0)
 				newList = append(newList, editor.settings.OpenDiagrams[:i]...)
-				editor.settings.OpenDiagrams = append(newList, editor.settings.OpenDiagrams[i+1:]...)
+				editor.UpdateOpenDiagrams(append(newList, editor.settings.OpenDiagrams[i+1:]...), trans)
 				return
 			}
 		}
@@ -540,7 +578,9 @@ func (editor *Editor) SelectElement(el core.Concept, trans *core.Transaction) er
 		if el != nil {
 			elID = el.GetConceptID(trans)
 		}
-		editor.transientSelection.SetLiteralValue(elID, trans)
+		if !editor.undoRedoInProgress {
+			editor.transientSelection.SetLiteralValue(elID, trans)
+		}
 		editor.settings.Selection = elID
 	}
 	return nil
@@ -598,11 +638,13 @@ func (editor *Editor) SetWorkspacePath(path string) error {
 
 // Undo performs an undo on the editor.GetUofD() and refreshes the interface
 func (editor *Editor) Undo(trans *core.Transaction) error {
+	editor.undoRedoInProgress = true
 	editor.GetUofD().Undo(trans)
 	editor.SelectElementUsingIDString(editor.transientSelection.GetLiteralValue(trans), trans)
 	editor.settings.Selection = editor.transientSelection.GetLiteralValue(trans)
 	var recoveredOpenDiagrams []string
-	json.Unmarshal([]byte(editor.transientDisplayedDiagrams.GetLiteralValue(trans)), &recoveredOpenDiagrams)
+	recoverdJsonOpenDiagrams := editor.transientDisplayedDiagrams.GetLiteralValue(trans)
+	json.Unmarshal([]byte(recoverdJsonOpenDiagrams), &recoveredOpenDiagrams)
 	editor.settings.OpenDiagrams = recoveredOpenDiagrams
 	editor.settings.CurrentDiagram = editor.transientCurrentDiagram.GetLiteralValue(trans)
 	for _, gui := range editor.editorGUIs {
@@ -611,7 +653,26 @@ func (editor *Editor) Undo(trans *core.Transaction) error {
 			return errors.Wrap(err, "Editor.Undo failed")
 		}
 	}
+	editor.undoRedoInProgress = false
 	return nil
+}
+
+// UpdateCurrentDiagram updates the setting value for current diagram in a way that allows the change to be undone
+func (editor *Editor) UpdateCurrentDiagram(diagramID string, trans *core.Transaction) {
+	editor.settings.CurrentDiagram = diagramID
+	if !editor.undoRedoInProgress {
+		editor.transientCurrentDiagram.SetLiteralValue(diagramID, trans)
+	}
+}
+
+// UpdateOpenDiagrams updates the setting value for open diagrams in a way that allows the change to be undone
+func (editor *Editor) UpdateOpenDiagrams(diagramIDs []string, trans *core.Transaction) {
+	editor.settings.OpenDiagrams = diagramIDs
+	if !editor.undoRedoInProgress {
+		jsonOpenDiagrams, _ := json.Marshal(editor.settings.OpenDiagrams)
+		stringifiedJsonOpenDiagrams := string(jsonOpenDiagrams)
+		editor.transientDisplayedDiagrams.SetLiteralValue(stringifiedJsonOpenDiagrams, trans)
+	}
 }
 
 // EditorGUI is the interface for all CrlEditors, independent of implementation technology

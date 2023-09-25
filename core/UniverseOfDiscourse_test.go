@@ -12,15 +12,15 @@ import (
 var _ = Describe("UniverseOfDiscourse", func() {
 
 	var uOfD *UniverseOfDiscourse
-	var hl *Transaction
+	var trans *Transaction
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
-		hl = uOfD.NewTransaction()
+		trans = uOfD.NewTransaction()
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocks()
+		trans.ReleaseLocks()
 	})
 
 	Describe("Creating Initialized UniverseOfDiscourse", func() {
@@ -50,23 +50,23 @@ var _ = Describe("UniverseOfDiscourse", func() {
 	Describe("Creating a Literal", func() {
 		Context("without URI specified", func() {
 			It("should not be nil", func() {
-				lit, err := uOfD.NewLiteral(hl)
+				lit, err := uOfD.NewLiteral(trans)
 				Expect(lit).ShouldNot(BeNil())
 				Expect(err).Should(BeNil())
 			})
 		})
 		Context("with URI specified", func() {
 			It("should have the correct URI", func() {
-				lit, err := uOfD.NewLiteral(hl, LiteralURI)
+				lit, err := uOfD.NewLiteral(trans, LiteralURI)
 				Expect(lit).ShouldNot(BeNil())
 				Expect(err).Should(BeNil())
 				expectedID := uuid.NewV5(uuid.NamespaceURL, LiteralURI).String()
-				Expect(lit.GetConceptID(hl)).To(Equal(expectedID))
+				Expect(lit.GetConceptID(trans)).To(Equal(expectedID))
 				Expect(uOfD.GetLiteralWithURI(LiteralURI)).To(Equal(lit))
 			})
 		})
 		Specify("UofD GetElement should return the correct type", func() {
-			lit, err := uOfD.NewLiteral(hl)
+			lit, err := uOfD.NewLiteral(trans)
 			litID := lit.getConceptIDNoLock()
 			Expect(lit).ShouldNot(BeNil())
 			Expect(err).Should(BeNil())
@@ -86,7 +86,7 @@ var _ = Describe("UniverseOfDiscourse", func() {
 	Describe("Creating an Element", func() {
 		Context("without URI specified", func() {
 			It("should not be nil", func() {
-				el, err := uOfD.NewElement(hl)
+				el, err := uOfD.NewElement(trans)
 				elID := el.getConceptIDNoLock()
 				Expect(el).ShouldNot(BeNil())
 				Expect(err).Should(BeNil())
@@ -95,11 +95,11 @@ var _ = Describe("UniverseOfDiscourse", func() {
 		})
 		Context("with URI specified", func() {
 			It("should have the correct URI", func() {
-				el, err := uOfD.NewElement(hl, ElementURI)
+				el, err := uOfD.NewElement(trans, ElementURI)
 				Expect(el).ShouldNot(BeNil())
 				Expect(err).Should(BeNil())
 				expectedID := uuid.NewV5(uuid.NamespaceURL, ElementURI).String()
-				Expect(el.GetConceptID(hl)).To(Equal(expectedID))
+				Expect(el.GetConceptID(trans)).To(Equal(expectedID))
 				Expect(uOfD.GetElementWithURI(ElementURI)).To(Equal(el))
 			})
 		})
@@ -108,7 +108,7 @@ var _ = Describe("UniverseOfDiscourse", func() {
 	Describe("Creating a Reference", func() {
 		Context("without URI specified", func() {
 			It("should not be nil", func() {
-				ref, err := uOfD.NewReference(hl)
+				ref, err := uOfD.NewReference(trans)
 				refID := ref.getConceptIDNoLock()
 				Expect(ref).ShouldNot(BeNil())
 				Expect(err).Should(BeNil())
@@ -117,11 +117,11 @@ var _ = Describe("UniverseOfDiscourse", func() {
 		})
 		Context("with URI specified", func() {
 			It("should have the correct URI", func() {
-				ref, err := uOfD.NewReference(hl, ReferenceURI)
+				ref, err := uOfD.NewReference(trans, ReferenceURI)
 				Expect(ref).ShouldNot(BeNil())
 				Expect(err).Should(BeNil())
 				expectedID := uuid.NewV5(uuid.NamespaceURL, ReferenceURI).String()
-				Expect(ref.GetConceptID(hl)).To(Equal(expectedID))
+				Expect(ref.GetConceptID(trans)).To(Equal(expectedID))
 				Expect(uOfD.GetReferenceWithURI(ReferenceURI)).To(Equal(ref))
 			})
 		})
@@ -130,7 +130,7 @@ var _ = Describe("UniverseOfDiscourse", func() {
 	Describe("Creating a Refinement", func() {
 		Context("without URI specified", func() {
 			It("should not be nil", func() {
-				ref, err := uOfD.NewRefinement(hl)
+				ref, err := uOfD.NewRefinement(trans)
 				refID := ref.getConceptIDNoLock()
 				Expect(ref).ShouldNot(BeNil())
 				Expect(err).Should(BeNil())
@@ -139,11 +139,11 @@ var _ = Describe("UniverseOfDiscourse", func() {
 		})
 		Context("with URI specified", func() {
 			It("should have the correct URI", func() {
-				ref, err := uOfD.NewRefinement(hl, RefinementURI)
+				ref, err := uOfD.NewRefinement(trans, RefinementURI)
 				Expect(ref).ShouldNot(BeNil())
 				Expect(err).Should(BeNil())
 				expectedID := uuid.NewV5(uuid.NamespaceURL, RefinementURI).String()
-				Expect(ref.GetConceptID(hl)).To(Equal(expectedID))
+				Expect(ref.GetConceptID(trans)).To(Equal(expectedID))
 				Expect(uOfD.GetRefinementWithURI(RefinementURI)).To(Equal(ref))
 			})
 		})
@@ -151,10 +151,10 @@ var _ = Describe("UniverseOfDiscourse", func() {
 
 	Describe("Changing the URI of an Element", func() {
 		Specify("Setting the URI of an Element should update the uriElementMap of the uOfD", func() {
-			el, _ := uOfD.NewElement(hl)
+			el, _ := uOfD.NewElement(trans)
 			uri := CorePrefix + "test"
 			Expect(uOfD.GetElementWithURI(uri)).To(BeNil())
-			el.SetURI(uri, hl)
+			el.SetURI(uri, trans)
 			Expect(uOfD.GetElementWithURI(uri)).To(Equal(el))
 		})
 	})
@@ -171,26 +171,26 @@ var _ = Describe("UniverseOfDiscourse", func() {
 
 		BeforeEach(func() {
 			replicateURI = "https://activeCRL.com/ReplicateURI"
-			original, _ = uOfD.NewElement(hl)
-			original.SetLabel("Root", hl)
-			oChild1, _ = uOfD.NewElement(hl)
-			oChild1.SetOwningConcept(original, hl)
+			original, _ = uOfD.NewElement(trans)
+			original.SetLabel("Root", trans)
+			oChild1, _ = uOfD.NewElement(trans)
+			oChild1.SetOwningConcept(original, trans)
 			oChild1Label = "Element"
-			oChild1.SetLabel(oChild1Label, hl)
-			oChild2, _ = uOfD.NewReference(hl)
-			oChild2.SetOwningConcept(original, hl)
+			oChild1.SetLabel(oChild1Label, trans)
+			oChild2, _ = uOfD.NewReference(trans)
+			oChild2.SetOwningConcept(original, trans)
 			oChild2Label = "Reference"
-			oChild2.SetLabel(oChild2Label, hl)
-			oChild3, _ = uOfD.NewLiteral(hl)
-			oChild3.SetOwningConcept(original, hl)
+			oChild2.SetLabel(oChild2Label, trans)
+			oChild3, _ = uOfD.NewLiteral(trans)
+			oChild3.SetOwningConcept(original, trans)
 			oChild3Label = "Literal"
-			oChild3.SetLabel(oChild3Label, hl)
+			oChild3.SetLabel(oChild3Label, trans)
 		})
 		Specify("Replicate should work properly", func() {
-			replicate, err := uOfD.CreateReplicateAsRefinement(original, hl, replicateURI)
+			replicate, err := uOfD.CreateReplicateAsRefinement(original, trans, replicateURI)
 			Expect(err).To(BeNil())
-			Expect(replicate.IsRefinementOf(original, hl)).To(BeTrue())
-			Expect(replicate.GetURI(hl)).To(Equal(replicateURI))
+			Expect(replicate.IsRefinementOf(original, trans)).To(BeTrue())
+			Expect(replicate.GetURI(trans)).To(Equal(replicateURI))
 			Expect(uOfD.GetElementWithURI(replicateURI)).To(Equal(replicate))
 			foundChild1Replicate := false
 			foundChild2Replicate := false
@@ -201,26 +201,26 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			child2PrefixFound := false
 			child3Suffix := ""
 			child3PrefixFound := false
-			it := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Iterator()
+			it := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(trans)).Iterator()
 			for id := range it.C {
 				replicateChild := uOfD.GetElement(id.(string))
-				if replicateChild.IsRefinementOf(oChild1, hl) {
+				if replicateChild.IsRefinementOf(oChild1, trans) {
 					foundChild1Replicate = true
-					replicateChildURI := replicateChild.GetURI(hl)
+					replicateChildURI := replicateChild.GetURI(trans)
 					Expect(replicateChildURI).ToNot(BeNil())
 					_, child1Suffix, child1PrefixFound = strings.Cut(replicateChildURI, replicateURI+".child")
 					Expect(child1PrefixFound).To(BeTrue())
 				}
-				if replicateChild.IsRefinementOf(oChild2, hl) {
+				if replicateChild.IsRefinementOf(oChild2, trans) {
 					foundChild2Replicate = true
-					replicateChildURI := replicateChild.GetURI(hl)
+					replicateChildURI := replicateChild.GetURI(trans)
 					Expect(replicateChildURI).ToNot(BeNil())
 					_, child2Suffix, child2PrefixFound = strings.Cut(replicateChildURI, replicateURI+".child")
 					Expect(child2PrefixFound).To(BeTrue())
 				}
-				if replicateChild.IsRefinementOf(oChild3, hl) {
+				if replicateChild.IsRefinementOf(oChild3, trans) {
 					foundChild3Replicate = true
-					replicateChildURI := replicateChild.GetURI(hl)
+					replicateChildURI := replicateChild.GetURI(trans)
 					Expect(replicateChildURI).ToNot(BeNil())
 					_, child3Suffix, child3PrefixFound = strings.Cut(replicateChildURI, replicateURI+".child")
 					Expect(child3PrefixFound).To(BeTrue())
@@ -235,11 +235,11 @@ var _ = Describe("UniverseOfDiscourse", func() {
 		})
 
 		Specify("replicateAsRefinement should be idempotent", func() {
-			replicate, err := uOfD.CreateReplicateAsRefinement(original, hl, replicateURI)
+			replicate, err := uOfD.CreateReplicateAsRefinement(original, trans, replicateURI)
 			Expect(err).To(BeNil())
-			childCount := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()
-			Expect(uOfD.replicateAsRefinement(original, replicate, hl)).To(Succeed())
-			Expect(uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()).To(Equal(childCount))
+			childCount := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(trans)).Cardinality()
+			Expect(uOfD.replicateAsRefinement(original, replicate, trans)).To(Succeed())
+			Expect(uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(trans)).Cardinality()).To(Equal(childCount))
 		})
 	})
 
@@ -255,48 +255,48 @@ var _ = Describe("UniverseOfDiscourse", func() {
 
 		BeforeEach(func() {
 			replicateURI = "https://activeCRL.com/ReplicateURI"
-			original, _ = uOfD.NewLiteral(hl)
-			original.SetLabel("Root", hl)
-			oChild1, _ = uOfD.NewElement(hl)
-			oChild1.SetOwningConcept(original, hl)
+			original, _ = uOfD.NewLiteral(trans)
+			original.SetLabel("Root", trans)
+			oChild1, _ = uOfD.NewElement(trans)
+			oChild1.SetOwningConcept(original, trans)
 			oChild1Label = "Element"
-			oChild1.SetLabel(oChild1Label, hl)
-			oChild2, _ = uOfD.NewReference(hl)
-			oChild2.SetOwningConcept(original, hl)
+			oChild1.SetLabel(oChild1Label, trans)
+			oChild2, _ = uOfD.NewReference(trans)
+			oChild2.SetOwningConcept(original, trans)
 			oChild2Label = "Reference"
-			oChild2.SetLabel(oChild2Label, hl)
-			oChild3, _ = uOfD.NewLiteral(hl)
-			oChild3.SetOwningConcept(original, hl)
+			oChild2.SetLabel(oChild2Label, trans)
+			oChild3, _ = uOfD.NewLiteral(trans)
+			oChild3.SetOwningConcept(original, trans)
 			oChild3Label = "Literal"
-			oChild3.SetLabel(oChild3Label, hl)
+			oChild3.SetLabel(oChild3Label, trans)
 		})
 		Specify("Replicate should work properly", func() {
-			replicate, err := uOfD.CreateReplicateAsRefinement(original, hl, replicateURI)
+			replicate, err := uOfD.CreateReplicateAsRefinement(original, trans, replicateURI)
 			Expect(err).To(BeNil())
-			Expect(replicate.IsRefinementOf(original, hl)).To(BeTrue())
-			Expect(replicate.GetURI(hl)).To(Equal(replicateURI))
+			Expect(replicate.IsRefinementOf(original, trans)).To(BeTrue())
+			Expect(replicate.GetURI(trans)).To(Equal(replicateURI))
 			Expect(uOfD.GetElementWithURI(replicateURI)).To(Equal(replicate))
 			var foundChild1Replicate = false
 			var foundChild2Replicate = false
 			var foundChild3Replicate = false
-			it := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Iterator()
+			it := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(trans)).Iterator()
 			for id := range it.C {
 				replicateChild := uOfD.GetElement(id.(string))
-				if replicateChild.IsRefinementOf(oChild1, hl) {
+				if replicateChild.IsRefinementOf(oChild1, trans) {
 					foundChild1Replicate = true
-					replicateChildURI := replicateChild.GetURI(hl)
+					replicateChildURI := replicateChild.GetURI(trans)
 					Expect(replicateChildURI).ToNot(BeNil())
 					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
-				if replicateChild.IsRefinementOf(oChild2, hl) {
+				if replicateChild.IsRefinementOf(oChild2, trans) {
 					foundChild2Replicate = true
-					replicateChildURI := replicateChild.GetURI(hl)
+					replicateChildURI := replicateChild.GetURI(trans)
 					Expect(replicateChildURI).ToNot(BeNil())
 					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
-				if replicateChild.IsRefinementOf(oChild3, hl) {
+				if replicateChild.IsRefinementOf(oChild3, trans) {
 					foundChild3Replicate = true
-					replicateChildURI := replicateChild.GetURI(hl)
+					replicateChildURI := replicateChild.GetURI(trans)
 					Expect(replicateChildURI).ToNot(BeNil())
 					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
@@ -306,11 +306,11 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			Expect(foundChild3Replicate).To(BeTrue())
 		})
 		Specify("replicateAsRefinement should be idempotent", func() {
-			replicate, err := uOfD.CreateReplicateAsRefinement(original, hl, replicateURI)
+			replicate, err := uOfD.CreateReplicateAsRefinement(original, trans, replicateURI)
 			Expect(err).To(BeNil())
-			childCount := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()
-			Expect(uOfD.replicateAsRefinement(original, replicate, hl)).To(Succeed())
-			Expect(uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()).To(Equal(childCount))
+			childCount := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(trans)).Cardinality()
+			Expect(uOfD.replicateAsRefinement(original, replicate, trans)).To(Succeed())
+			Expect(uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(trans)).Cardinality()).To(Equal(childCount))
 		})
 	})
 
@@ -326,48 +326,48 @@ var _ = Describe("UniverseOfDiscourse", func() {
 
 		BeforeEach(func() {
 			replicateURI = "https://activeCRL.com/ReplicateURI"
-			original, _ = uOfD.NewReference(hl)
-			original.SetLabel("Root", hl)
-			oChild1, _ = uOfD.NewElement(hl)
-			oChild1.SetOwningConcept(original, hl)
+			original, _ = uOfD.NewReference(trans)
+			original.SetLabel("Root", trans)
+			oChild1, _ = uOfD.NewElement(trans)
+			oChild1.SetOwningConcept(original, trans)
 			oChild1Label = "Element"
-			oChild1.SetLabel(oChild1Label, hl)
-			oChild2, _ = uOfD.NewReference(hl)
-			oChild2.SetOwningConcept(original, hl)
+			oChild1.SetLabel(oChild1Label, trans)
+			oChild2, _ = uOfD.NewReference(trans)
+			oChild2.SetOwningConcept(original, trans)
 			oChild2Label = "Reference"
-			oChild2.SetLabel(oChild2Label, hl)
-			oChild3, _ = uOfD.NewLiteral(hl)
-			oChild3.SetOwningConcept(original, hl)
+			oChild2.SetLabel(oChild2Label, trans)
+			oChild3, _ = uOfD.NewLiteral(trans)
+			oChild3.SetOwningConcept(original, trans)
 			oChild3Label = "Literal"
-			oChild3.SetLabel(oChild3Label, hl)
+			oChild3.SetLabel(oChild3Label, trans)
 		})
 		Specify("Replicate should work properly", func() {
-			replicate, err := uOfD.CreateReplicateAsRefinement(original, hl, replicateURI)
+			replicate, err := uOfD.CreateReplicateAsRefinement(original, trans, replicateURI)
 			Expect(err).To(BeNil())
-			Expect(replicate.IsRefinementOf(original, hl)).To(BeTrue())
-			Expect(replicate.GetURI(hl)).To(Equal(replicateURI))
+			Expect(replicate.IsRefinementOf(original, trans)).To(BeTrue())
+			Expect(replicate.GetURI(trans)).To(Equal(replicateURI))
 			Expect(uOfD.GetElementWithURI(replicateURI)).To(Equal(replicate))
 			var foundChild1Replicate = false
 			var foundChild2Replicate = false
 			var foundChild3Replicate = false
-			it := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Iterator()
+			it := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(trans)).Iterator()
 			for id := range it.C {
 				replicateChild := uOfD.GetElement(id.(string))
-				if replicateChild.IsRefinementOf(oChild1, hl) {
+				if replicateChild.IsRefinementOf(oChild1, trans) {
 					foundChild1Replicate = true
-					replicateChildURI := replicateChild.GetURI(hl)
+					replicateChildURI := replicateChild.GetURI(trans)
 					Expect(replicateChildURI).ToNot(BeNil())
 					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
-				if replicateChild.IsRefinementOf(oChild2, hl) {
+				if replicateChild.IsRefinementOf(oChild2, trans) {
 					foundChild2Replicate = true
-					replicateChildURI := replicateChild.GetURI(hl)
+					replicateChildURI := replicateChild.GetURI(trans)
 					Expect(replicateChildURI).ToNot(BeNil())
 					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
-				if replicateChild.IsRefinementOf(oChild3, hl) {
+				if replicateChild.IsRefinementOf(oChild3, trans) {
 					foundChild3Replicate = true
-					replicateChildURI := replicateChild.GetURI(hl)
+					replicateChildURI := replicateChild.GetURI(trans)
 					Expect(replicateChildURI).ToNot(BeNil())
 					Expect(strings.HasPrefix(replicateChildURI, replicateURI+".child")).To(BeTrue())
 				}
@@ -377,11 +377,11 @@ var _ = Describe("UniverseOfDiscourse", func() {
 			Expect(foundChild3Replicate).To(BeTrue())
 		})
 		Specify("replicateAsRefinement should be idempotent", func() {
-			replicate, err := uOfD.CreateReplicateAsRefinement(original, hl, replicateURI)
+			replicate, err := uOfD.CreateReplicateAsRefinement(original, trans, replicateURI)
 			Expect(err).To(BeNil())
-			childCount := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()
-			Expect(uOfD.replicateAsRefinement(original, replicate, hl)).To(Succeed())
-			Expect(uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()).To(Equal(childCount))
+			childCount := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(trans)).Cardinality()
+			Expect(uOfD.replicateAsRefinement(original, replicate, trans)).To(Succeed())
+			Expect(uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(trans)).Cardinality()).To(Equal(childCount))
 		})
 	})
 
@@ -397,40 +397,40 @@ var _ = Describe("UniverseOfDiscourse", func() {
 
 		BeforeEach(func() {
 			replicateURI = "https://activeCRL.com/ReplicateURI"
-			original, _ = uOfD.NewRefinement(hl)
-			original.SetLabel("Root", hl)
-			oChild1, _ = uOfD.NewElement(hl)
-			oChild1.SetOwningConcept(original, hl)
+			original, _ = uOfD.NewRefinement(trans)
+			original.SetLabel("Root", trans)
+			oChild1, _ = uOfD.NewElement(trans)
+			oChild1.SetOwningConcept(original, trans)
 			oChild1Label = "Element"
-			oChild1.SetLabel(oChild1Label, hl)
-			oChild2, _ = uOfD.NewReference(hl)
-			oChild2.SetOwningConcept(original, hl)
+			oChild1.SetLabel(oChild1Label, trans)
+			oChild2, _ = uOfD.NewReference(trans)
+			oChild2.SetOwningConcept(original, trans)
 			oChild2Label = "Reference"
-			oChild2.SetLabel(oChild2Label, hl)
-			oChild3, _ = uOfD.NewLiteral(hl)
-			oChild3.SetOwningConcept(original, hl)
+			oChild2.SetLabel(oChild2Label, trans)
+			oChild3, _ = uOfD.NewLiteral(trans)
+			oChild3.SetOwningConcept(original, trans)
 			oChild3Label = "Literal"
-			oChild3.SetLabel(oChild3Label, hl)
+			oChild3.SetLabel(oChild3Label, trans)
 		})
 		Specify("Replicate should work properly", func() {
-			replicate, err := uOfD.CreateReplicateAsRefinement(original, hl, replicateURI)
+			replicate, err := uOfD.CreateReplicateAsRefinement(original, trans, replicateURI)
 			Expect(err).To(BeNil())
-			Expect(replicate.IsRefinementOf(original, hl)).To(BeTrue())
-			Expect(replicate.GetURI(hl)).To(Equal(replicateURI))
+			Expect(replicate.IsRefinementOf(original, trans)).To(BeTrue())
+			Expect(replicate.GetURI(trans)).To(Equal(replicateURI))
 			Expect(uOfD.GetElementWithURI(replicateURI)).To(Equal(replicate))
 			var foundChild1Replicate = false
 			var foundChild2Replicate = false
 			var foundChild3Replicate = false
-			it := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Iterator()
+			it := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(trans)).Iterator()
 			for id := range it.C {
 				replicateChild := uOfD.GetElement(id.(string))
-				if replicateChild.IsRefinementOf(oChild1, hl) {
+				if replicateChild.IsRefinementOf(oChild1, trans) {
 					foundChild1Replicate = true
 				}
-				if replicateChild.IsRefinementOf(oChild2, hl) {
+				if replicateChild.IsRefinementOf(oChild2, trans) {
 					foundChild2Replicate = true
 				}
-				if replicateChild.IsRefinementOf(oChild3, hl) {
+				if replicateChild.IsRefinementOf(oChild3, trans) {
 					foundChild3Replicate = true
 				}
 			}
@@ -440,11 +440,11 @@ var _ = Describe("UniverseOfDiscourse", func() {
 		})
 
 		Specify("replicateAsRefinement should be idempotent", func() {
-			replicate, err := uOfD.CreateReplicateAsRefinement(original, hl, replicateURI)
+			replicate, err := uOfD.CreateReplicateAsRefinement(original, trans, replicateURI)
 			Expect(err).To(BeNil())
-			childCount := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()
-			Expect(uOfD.replicateAsRefinement(original, replicate, hl)).To(Succeed())
-			Expect(uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(hl)).Cardinality()).To(Equal(childCount))
+			childCount := uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(trans)).Cardinality()
+			Expect(uOfD.replicateAsRefinement(original, replicate, trans)).To(Succeed())
+			Expect(uOfD.GetConceptsOwnedConceptIDs(replicate.GetConceptID(trans)).Cardinality()).To(Equal(childCount))
 		})
 	})
 

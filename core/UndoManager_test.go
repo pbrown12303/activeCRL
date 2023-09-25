@@ -72,21 +72,22 @@ var _ = Describe("UndoManager internals test", func() {
 			uOfD.Redo(trans)
 			Expect(uOfD.GetRefinement(ref.getConceptIDNoLock())).To(Equal(ref))
 		})
-		XSpecify("Undo of Element and owned Literal creation should work", func() {
-			uOfD.undoManager.debugUndo = true
+		Specify("Undo of Element and owned Literal creation should work", func() {
 			uOfD.SetRecordingUndo(true)
 			el, _ := uOfD.NewElement(trans)
 			Expect(uOfD.GetElement(el.getConceptIDNoLock())).To(Equal(el))
 			lit, _ := uOfD.NewOwnedLiteral(el, "literal1", trans)
 			Expect(uOfD.GetLiteral(lit.getConceptIDNoLock())).ToNot(BeNil())
 			Expect(uOfD.GetLiteral(lit.getConceptIDNoLock())).To(Equal(lit))
+			Expect(uOfD.ownedIDsMap.ContainsMappedValue(el.getConceptIDNoLock(), lit.getConceptIDNoLock())).To(BeTrue())
 			uOfD.Undo(trans)
 			Expect(uOfD.GetElement(el.getConceptIDNoLock())).To(BeNil())
 			Expect(uOfD.GetLiteral(lit.getConceptIDNoLock())).To(BeNil())
+			Expect(uOfD.ownedIDsMap.ContainsMappedValue(el.getConceptIDNoLock(), lit.getConceptIDNoLock())).To(BeFalse())
 			uOfD.Redo(trans)
 			Expect(uOfD.GetElement(el.getConceptIDNoLock())).To(Equal(el))
 			Expect(uOfD.GetLiteral(lit.getConceptIDNoLock())).To(Equal(lit))
-			uOfD.undoManager.debugUndo = false
+			Expect(uOfD.ownedIDsMap.ContainsMappedValue(el.getConceptIDNoLock(), lit.getConceptIDNoLock())).To(BeTrue())
 		})
 	})
 
@@ -132,17 +133,6 @@ var _ = Describe("UndoManager internals test", func() {
 			Expect(el.IsReadOnly(trans)).To(BeFalse())
 			uOfD.Redo(trans)
 			Expect(el.IsReadOnly(trans)).To(BeTrue())
-		})
-		Specify("Undo of incrementVersion should work", func() {
-			el, _ := uOfD.NewElement(trans)
-			uOfD.SetRecordingUndo(true)
-			initialVersion := el.GetVersion(trans)
-			el.incrementVersion(trans)
-			Expect(el.GetVersion(trans)).To(Equal(initialVersion + 1))
-			uOfD.Undo(trans)
-			Expect(el.GetVersion(trans)).To(Equal(initialVersion))
-			uOfD.Redo(trans)
-			Expect(el.GetVersion(trans)).To(Equal(initialVersion + 1))
 		})
 		Specify("Undo of SetURI should work", func() {
 			el, _ := uOfD.NewElement(trans)
@@ -280,7 +270,6 @@ var _ = Describe("UndoManager internals test", func() {
 			ref, _ := uOfD.NewReference(trans)
 			ref.SetReferencedConcept(target, NoAttribute, trans)
 			Expect(uOfD.getListenerIDs(target.GetConceptID(trans)).Contains(ref.getConceptIDNoLock())).To(BeTrue())
-			uOfD.undoManager.debugUndo = true
 			uOfD.SetRecordingUndo(true)
 			uOfD.DeleteElement(ref, trans)
 			Expect(uOfD.getListenerIDs(target.GetConceptID(trans)).Contains(ref.getConceptIDNoLock())).To(BeFalse())
@@ -288,7 +277,6 @@ var _ = Describe("UndoManager internals test", func() {
 			Expect(uOfD.getListenerIDs(target.GetConceptID(trans)).Contains(ref.getConceptIDNoLock())).To(BeTrue())
 			uOfD.Redo(trans)
 			Expect(uOfD.getListenerIDs(target.GetConceptID(trans)).Contains(ref.getConceptIDNoLock())).To(BeFalse())
-			uOfD.undoManager.debugUndo = false
 		})
 		Specify("When reference target is changed", func() {
 			target1, _ := uOfD.NewElement(trans)

@@ -8,48 +8,48 @@ import (
 
 var _ = Describe("Boolean test", func() {
 	var uOfD *core.UniverseOfDiscourse
-	var hl *core.Transaction
+	var trans *core.Transaction
 
 	BeforeEach(func() {
 		uOfD = core.NewUniverseOfDiscourse()
-		hl = uOfD.NewTransaction()
-		BuildCrlDataTypesDomain(uOfD, hl)
+		trans = uOfD.NewTransaction()
+		BuildCrlDataTypesDomain(uOfD, trans)
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocks()
+		trans.ReleaseLocks()
 	})
 
 	Specify("Boolean should be created correctly", func() {
-		boolean := NewBoolean(uOfD, hl)
+		boolean := NewBoolean(uOfD, trans)
 		Expect(boolean).ToNot(BeNil())
-		Expect(boolean.IsRefinementOfURI(CrlBooleanURI, hl)).To(BeTrue())
-		value, err := GetBooleanValue(boolean, hl)
+		Expect(boolean.IsRefinementOfURI(CrlBooleanURI, trans)).To(BeTrue())
+		value, err := GetBooleanValue(boolean, trans)
 		Expect(err).To(BeNil())
 		Expect(value).To(Equal(false))
 	})
 
 	Specify("SetBooleanValue and GetBooleanValue should work correctly", func() {
-		boolean := NewBoolean(uOfD, hl)
-		Expect(GetBooleanValue(boolean, hl)).To(Equal(false))
-		Expect(SetBooleanValue(boolean, true, hl)).To(BeNil())
-		Expect(GetBooleanValue(boolean, hl)).To(Equal(true))
-		Expect(SetBooleanValue(boolean, false, hl)).To(BeNil())
-		Expect(GetBooleanValue(boolean, hl)).To(Equal(false))
+		boolean := NewBoolean(uOfD, trans)
+		Expect(GetBooleanValue(boolean, trans)).To(Equal(false))
+		Expect(SetBooleanValue(boolean, true, trans)).To(BeNil())
+		Expect(GetBooleanValue(boolean, trans)).To(Equal(true))
+		Expect(SetBooleanValue(boolean, false, trans)).To(BeNil())
+		Expect(GetBooleanValue(boolean, trans)).To(Equal(false))
 	})
 
 	Specify("GetBooleanValue and SetBooleanValue should produce errors if the argument is not a CrlBoolean", func() {
-		argument, _ := uOfD.NewLiteral(hl)
-		_, err := GetBooleanValue(argument, hl)
+		argument, _ := uOfD.NewLiteral(trans)
+		_, err := GetBooleanValue(argument, trans)
 		Expect(err).ToNot(BeNil())
-		err = SetBooleanValue(argument, true, hl)
+		err = SetBooleanValue(argument, true, trans)
 		Expect(err).ToNot(BeNil())
 	})
 
 	Specify("GetBooleanValue should produce an error if the literal value is neither true or false", func() {
-		boolean := NewBoolean(uOfD, hl)
-		boolean.SetLiteralValue("foo", hl)
-		_, err := GetBooleanValue(boolean, hl)
+		boolean := NewBoolean(uOfD, trans)
+		boolean.SetLiteralValue("foo", trans)
+		_, err := GetBooleanValue(boolean, trans)
 		Expect(err).ToNot(BeNil())
 	})
 })

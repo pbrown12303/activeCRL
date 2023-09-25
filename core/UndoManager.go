@@ -174,7 +174,7 @@ func PrintStackEntry(entry *undoRedoStackEntry, trans *Transaction) {
 	Print(entry.changedElement, "      ", trans)
 	log.Printf("   Prior UofD: %s", entry.priorUofD)
 	log.Printf("   Undo/Redo Stack Entry priorOwnedElements: %v", trans.uOfD.ownedIDsMap.GetMappedValues(entry.changedElement.getConceptIDNoLock()))
-
+	log.Printf("   Prior Listeners: %v", entry.priorListeners.ToSlice())
 }
 
 func (undoMgr *undoManager) redo(trans *Transaction) {
@@ -193,22 +193,27 @@ func (undoMgr *undoManager) redo(trans *Transaction) {
 		if currentEntry.changeType == Marker {
 			undoMgr.undoStack.Push(currentEntry)
 			return
-		} else if currentEntry.changeType == Creation {
+		}
+		if currentEntry.changeType == Creation {
 			// Update listeners. If this is a reference or refinement pointing to another element, add this element to the other element's listener's set
+			currentOwnerID := currentEntry.changedElement.(*concept).OwningConceptID
+			if currentOwnerID != "" {
+				uOfD.addMappedValueToOwnedIDsMap(currentOwnerID, currentID)
+			}
 			switch currentEntry.changedElement.GetConceptType() {
 			case Reference:
 				referencedElementID := currentEntry.changedElement.(*concept).ReferencedConceptID
 				if referencedElementID != "" {
-					uOfD.listenersMap.addMappedValue(referencedElementID, currentID)
+					uOfD.addMappedValueToListenersMap(referencedElementID, currentID)
 				}
 			case Refinement:
 				abstractID := currentEntry.changedElement.(*concept).AbstractConceptID
 				if abstractID != "" {
-					uOfD.listenersMap.addMappedValue(abstractID, currentID)
+					uOfD.addMappedValueToListenersMap(abstractID, currentID)
 				}
 				refinedID := currentEntry.changedElement.(*concept).RefinedConceptID
 				if refinedID != "" {
-					uOfD.listenersMap.addMappedValue(refinedID, currentID)
+					uOfD.addMappedValueToListenersMap(refinedID, currentID)
 				}
 			}
 			// Update the uriUUIDMap
@@ -221,24 +226,27 @@ func (undoMgr *undoManager) redo(trans *Transaction) {
 			// this was a new element
 			uOfD.addElementForUndo(currentEntry.changedElement, trans)
 			uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
-			uOfD.listenersMap.SetMappedValues(currentID, currentEntry.priorListeners)
-			uOfD.setUUIDElementMapEntry(currentEntry.changedElement.getConceptIDNoLock(), currentEntry.changedElement)
+			uOfD.setMappedValuesForListenersMap(currentID, currentEntry.priorListeners)
 		} else if currentEntry.changeType == Deletion {
 			// Update listeners. If this is a reference or refinement pointing to another element, remove this element from the other element's listener's set
+			priorOwnerID := currentEntry.priorState.(*concept).OwningConceptID
+			if priorOwnerID != "" {
+				uOfD.removeMappedValueFromOwnedIDsMap(priorOwnerID, currentEntry.priorState.(*concept).ConceptID)
+			}
 			switch currentEntry.priorState.GetConceptType() {
 			case Reference:
 				referencedElementID := currentEntry.priorState.(*concept).ReferencedConceptID
 				if referencedElementID != "" {
-					uOfD.listenersMap.removeMappedValue(referencedElementID, currentEntry.priorState.GetConceptID(trans))
+					uOfD.removeMappedValueFromListenersMap(referencedElementID, currentEntry.priorState.GetConceptID(trans))
 				}
 			case Refinement:
 				abstractID := currentEntry.priorState.(*concept).AbstractConceptID
 				if abstractID != "" {
-					uOfD.listenersMap.removeMappedValue(abstractID, currentEntry.priorState.GetConceptID(trans))
+					uOfD.removeMappedValueFromListenersMap(abstractID, currentEntry.priorState.GetConceptID(trans))
 				}
 				refinedID := currentEntry.priorState.(*concept).RefinedConceptID
 				if refinedID != "" {
-					uOfD.listenersMap.removeMappedValue(refinedID, currentEntry.priorState.GetConceptID(trans))
+					uOfD.removeMappedValueFromListenersMap(refinedID, currentEntry.priorState.GetConceptID(trans))
 				}
 			}
 			// Update the uriUUIDMap
@@ -251,20 +259,27 @@ func (undoMgr *undoManager) redo(trans *Transaction) {
 			// this was an deleted element
 			uOfD.removeElementForUndo(currentEntry.changedElement, trans)
 			uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
-			uOfD.listenersMap.SetMappedValues(currentID, currentEntry.priorListeners)
-			uOfD.deleteUUIDElementMapEntry(currentEntry.changedElement.getConceptIDNoLock())
+			uOfD.setMappedValuesForListenersMap(currentID, currentEntry.priorListeners)
 		} else if currentEntry.changeType == Change {
 			// Update listeners. If this is a reference or refinement pointing to another element, remove this element from the other element's listener's set
+			currentOwnerID := currentEntry.changedElement.(*concept).OwningConceptID
+			if currentOwnerID != "" {
+				uOfD.removeMappedValueFromOwnedIDsMap(currentOwnerID, currentID)
+			}
+			priorOwnerID := currentEntry.priorState.(*concept).OwningConceptID
+			if priorOwnerID != "" {
+				uOfD.addMappedValueToOwnedIDsMap(priorOwnerID, currentEntry.priorState.(*concept).ConceptID)
+			}
 			switch currentEntry.changedElement.GetConceptType() {
 			case Reference:
 				currentReferencedElementID := currentEntry.changedElement.(*concept).ReferencedConceptID
 				priorReferencedElementID := currentEntry.priorState.(*concept).ReferencedConceptID
 				if currentReferencedElementID != priorReferencedElementID {
 					if currentReferencedElementID != "" {
-						uOfD.listenersMap.removeMappedValue(currentReferencedElementID, currentID)
+						uOfD.removeMappedValueFromListenersMap(currentReferencedElementID, currentID)
 					}
 					if priorReferencedElementID != "" {
-						uOfD.listenersMap.addMappedValue(priorReferencedElementID, currentID)
+						uOfD.addMappedValueToListenersMap(priorReferencedElementID, currentID)
 					}
 				}
 			case Refinement:
@@ -272,20 +287,20 @@ func (undoMgr *undoManager) redo(trans *Transaction) {
 				priorAbstractID := currentEntry.priorState.(*concept).AbstractConceptID
 				if currentAbstractID != priorAbstractID {
 					if currentAbstractID != "" {
-						uOfD.listenersMap.removeMappedValue(currentAbstractID, currentID)
+						uOfD.removeMappedValueFromListenersMap(currentAbstractID, currentID)
 					}
 					if priorAbstractID != "" {
-						uOfD.listenersMap.addMappedValue(priorAbstractID, currentID)
+						uOfD.addMappedValueToListenersMap(priorAbstractID, currentID)
 					}
 				}
 				currentRefinedID := currentEntry.changedElement.(*concept).RefinedConceptID
 				priorRefinedID := currentEntry.priorState.(*concept).RefinedConceptID
 				if currentRefinedID != priorRefinedID {
 					if currentRefinedID != "" {
-						uOfD.listenersMap.removeMappedValue(currentRefinedID, currentID)
+						uOfD.removeMappedValueFromListenersMap(currentRefinedID, currentID)
 					}
 					if priorRefinedID != "" {
-						uOfD.listenersMap.addMappedValue(priorRefinedID, currentID)
+						uOfD.addMappedValueToListenersMap(priorRefinedID, currentID)
 					}
 				}
 			}
@@ -306,11 +321,9 @@ func (undoMgr *undoManager) redo(trans *Transaction) {
 			undoEntry := newUndoRedoStackEntry(Change, clone, priorOwnedElements, priorListeners, currentEntry.priorUofD, currentEntry.changedElement)
 			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, trans)
 			uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
-			uOfD.listenersMap.SetMappedValues(currentID, currentEntry.priorListeners)
+			uOfD.setMappedValuesForListenersMap(currentID, currentEntry.priorListeners)
 			if currentEntry.priorUofD != uOfD.id {
 				uOfD.deleteUUIDElementMapEntry(currentID)
-			} else if currentEntry.priorUofD == uOfD.id {
-				uOfD.setUUIDElementMapEntry(currentID, currentEntry.changedElement)
 			}
 			undoMgr.undoStack.Push(undoEntry)
 		}
@@ -334,12 +347,6 @@ func (undoMgr *undoManager) restoreState(priorState Concept, currentState Concep
 		log.Printf("restoreState called with unhandled type %T\n", currentState)
 	}
 }
-
-// func (undoMgr *undoManager) setDebugUndo(newSetting bool) {
-// 	undoMgr.TraceableLock()
-// 	defer undoMgr.TraceableUnlock()
-// 	undoMgr.debugUndo = newSetting
-// }
 
 func (undoMgr *undoManager) setRecordingUndo(newSetting bool) {
 	undoMgr.TraceableLock()
@@ -383,123 +390,139 @@ func (undoMgr *undoManager) undo(trans *Transaction) {
 				undoMgr.undoStack.Push(currentEntry)
 				return
 			}
-		} else if currentEntry.changeType == Creation {
-			// Update listeners. If this is a reference or refinement pointing to another element, remove this element from the other element's listener's set
-			switch currentEntry.changedElement.GetConceptType() {
-			case Reference:
-				referencedElementID := currentEntry.changedElement.(*concept).ReferencedConceptID
-				if referencedElementID != "" {
-					uOfD.listenersMap.removeMappedValue(referencedElementID, currentID)
+		} else {
+			if currentEntry.changeType == Creation {
+				// Update listeners. If this is a reference or refinement pointing to another element, remove this element from the other element's listener's set
+				currentOwnerID := currentEntry.changedElement.(*concept).OwningConceptID
+				if currentOwnerID != "" {
+					uOfD.removeMappedValueFromOwnedIDsMap(currentOwnerID, currentID)
 				}
-			case Refinement:
-				abstractID := currentEntry.changedElement.(*concept).AbstractConceptID
-				if abstractID != "" {
-					uOfD.listenersMap.removeMappedValue(abstractID, currentID)
-				}
-				refinedID := currentEntry.changedElement.(*concept).RefinedConceptID
-				if refinedID != "" {
-					uOfD.listenersMap.removeMappedValue(refinedID, currentID)
-				}
-			}
-			// Update the uriUUIDMap
-			uri := currentEntry.changedElement.GetURI(trans)
-			if uri != "" {
-				uOfD.uriUUIDMap.DeleteEntry(uri)
-			}
-			undoMgr.redoStack.Push(currentEntry)
-			uOfD.removeElementForUndo(currentEntry.changedElement, trans)
-			uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
-			uOfD.listenersMap.SetMappedValues(currentID, currentEntry.priorListeners)
-			uOfD.deleteUUIDElementMapEntry(currentEntry.changedElement.getConceptIDNoLock())
-		} else if currentEntry.changeType == Deletion {
-			// Update listeners. If this is a reference or refinement pointing to another element, add this element to the other element's listener's set
-			switch currentEntry.priorState.GetConceptType() {
-			case Reference:
-				referencedElementID := currentEntry.priorState.(*concept).ReferencedConceptID
-				if referencedElementID != "" {
-					uOfD.listenersMap.addMappedValue(referencedElementID, currentEntry.priorState.GetConceptID(trans))
-				}
-			case Refinement:
-				abstractID := currentEntry.priorState.(*concept).AbstractConceptID
-				if abstractID != "" {
-					uOfD.listenersMap.addMappedValue(abstractID, currentEntry.priorState.GetConceptID(trans))
-				}
-				refinedID := currentEntry.priorState.(*concept).RefinedConceptID
-				if refinedID != "" {
-					uOfD.listenersMap.addMappedValue(refinedID, currentEntry.priorState.GetConceptID(trans))
-				}
-			}
-			// Update the uriUUIDMap
-			uri := currentEntry.priorState.GetURI(trans)
-			if uri != "" {
-				uOfD.uriUUIDMap.SetEntry(uri, currentID)
-			}
-			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, trans)
-			undoMgr.redoStack.Push(currentEntry)
-			uOfD.addElementForUndo(currentEntry.changedElement, trans)
-			uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
-			uOfD.listenersMap.SetMappedValues(currentID, currentEntry.priorListeners)
-			uOfD.setUUIDElementMapEntry(currentEntry.changedElement.getConceptIDNoLock(), currentEntry.changedElement)
-		} else if currentEntry.changeType == Change {
-			// Update listeners. If this is a reference or refinement pointing to another element, remove this element from the other element's listener's set
-			switch currentEntry.changedElement.GetConceptType() {
-			case Reference:
-				currentReferencedElementID := currentEntry.changedElement.(*concept).ReferencedConceptID
-				priorReferencedElementID := currentEntry.priorState.(*concept).ReferencedConceptID
-				if currentReferencedElementID != priorReferencedElementID {
-					if currentReferencedElementID != "" {
-						uOfD.listenersMap.removeMappedValue(currentReferencedElementID, currentID)
+				switch currentEntry.changedElement.GetConceptType() {
+				case Reference:
+					referencedElementID := currentEntry.changedElement.(*concept).ReferencedConceptID
+					if referencedElementID != "" {
+						uOfD.removeMappedValueFromListenersMap(referencedElementID, currentID)
 					}
-					if priorReferencedElementID != "" {
-						uOfD.listenersMap.addMappedValue(priorReferencedElementID, currentID)
+				case Refinement:
+					abstractID := currentEntry.changedElement.(*concept).AbstractConceptID
+					if abstractID != "" {
+						uOfD.removeMappedValueFromListenersMap(abstractID, currentID)
+					}
+					refinedID := currentEntry.changedElement.(*concept).RefinedConceptID
+					if refinedID != "" {
+						uOfD.removeMappedValueFromListenersMap(refinedID, currentID)
 					}
 				}
-			case Refinement:
-				currentAbstractID := currentEntry.changedElement.(*concept).AbstractConceptID
-				priorAbstractID := currentEntry.priorState.(*concept).AbstractConceptID
-				if currentAbstractID != priorAbstractID {
-					if currentAbstractID != "" {
-						uOfD.listenersMap.removeMappedValue(currentAbstractID, currentID)
+				// Update the uriUUIDMap
+				uri := currentEntry.changedElement.GetURI(trans)
+				if uri != "" {
+					uOfD.uriUUIDMap.DeleteEntry(uri)
+				}
+				undoMgr.redoStack.Push(currentEntry)
+				uOfD.removeElementForUndo(currentEntry.changedElement, trans)
+				uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
+				uOfD.setMappedValuesForListenersMap(currentID, currentEntry.priorListeners)
+			} else if currentEntry.changeType == Deletion {
+				// Update listeners. If this is a reference or refinement pointing to another element, add this element to the other element's listener's set
+				priorOwnerID := currentEntry.priorState.(*concept).OwningConceptID
+				if priorOwnerID != "" {
+					uOfD.addMappedValueToOwnedIDsMap(priorOwnerID, currentEntry.priorState.(*concept).ConceptID)
+				}
+				switch currentEntry.priorState.GetConceptType() {
+				case Reference:
+					referencedElementID := currentEntry.priorState.(*concept).ReferencedConceptID
+					if referencedElementID != "" {
+						uOfD.addMappedValueToListenersMap(referencedElementID, currentEntry.priorState.GetConceptID(trans))
 					}
-					if priorAbstractID != "" {
-						uOfD.listenersMap.addMappedValue(priorAbstractID, currentID)
+				case Refinement:
+					abstractID := currentEntry.priorState.(*concept).AbstractConceptID
+					if abstractID != "" {
+						uOfD.addMappedValueToListenersMap(abstractID, currentEntry.priorState.GetConceptID(trans))
+					}
+					refinedID := currentEntry.priorState.(*concept).RefinedConceptID
+					if refinedID != "" {
+						uOfD.addMappedValueToListenersMap(refinedID, currentEntry.priorState.GetConceptID(trans))
 					}
 				}
-				currentRefinedID := currentEntry.changedElement.(*concept).RefinedConceptID
-				priorRefinedID := currentEntry.priorState.(*concept).RefinedConceptID
-				if currentRefinedID != priorRefinedID {
-					if currentRefinedID != "" {
-						uOfD.listenersMap.removeMappedValue(currentRefinedID, currentID)
+				// Update the uriUUIDMap
+				uri := currentEntry.priorState.GetURI(trans)
+				if uri != "" {
+					uOfD.uriUUIDMap.SetEntry(uri, currentID)
+				}
+				undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, trans)
+				undoMgr.redoStack.Push(currentEntry)
+				uOfD.addElementForUndo(currentEntry.changedElement, trans)
+				uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
+				uOfD.setMappedValuesForListenersMap(currentID, currentEntry.priorListeners)
+			} else if currentEntry.changeType == Change {
+				// Update listeners. If this is a reference or refinement pointing to another element, remove this element from the other element's listener's set
+				currentOwnerID := currentEntry.changedElement.(*concept).OwningConceptID
+				if currentOwnerID != "" {
+					uOfD.removeMappedValueFromOwnedIDsMap(currentOwnerID, currentID)
+				}
+				priorOwnerID := currentEntry.priorState.(*concept).OwningConceptID
+				if priorOwnerID != "" {
+					uOfD.addMappedValueToOwnedIDsMap(priorOwnerID, currentEntry.priorState.(*concept).ConceptID)
+				}
+				switch currentEntry.changedElement.GetConceptType() {
+				case Reference:
+					currentReferencedElementID := currentEntry.changedElement.(*concept).ReferencedConceptID
+					priorReferencedElementID := currentEntry.priorState.(*concept).ReferencedConceptID
+					if currentReferencedElementID != priorReferencedElementID {
+						if currentReferencedElementID != "" {
+							uOfD.removeMappedValueFromListenersMap(currentReferencedElementID, currentID)
+						}
+						if priorReferencedElementID != "" {
+							uOfD.addMappedValueToListenersMap(priorReferencedElementID, currentID)
+						}
 					}
-					if priorRefinedID != "" {
-						uOfD.listenersMap.addMappedValue(priorRefinedID, currentID)
+				case Refinement:
+					currentAbstractID := currentEntry.changedElement.(*concept).AbstractConceptID
+					priorAbstractID := currentEntry.priorState.(*concept).AbstractConceptID
+					if currentAbstractID != priorAbstractID {
+						if currentAbstractID != "" {
+							uOfD.removeMappedValueFromListenersMap(currentAbstractID, currentID)
+						}
+						if priorAbstractID != "" {
+							uOfD.addMappedValueToListenersMap(priorAbstractID, currentID)
+						}
+					}
+					currentRefinedID := currentEntry.changedElement.(*concept).RefinedConceptID
+					priorRefinedID := currentEntry.priorState.(*concept).RefinedConceptID
+					if currentRefinedID != priorRefinedID {
+						if currentRefinedID != "" {
+							uOfD.removeMappedValueFromListenersMap(currentRefinedID, currentID)
+						}
+						if priorRefinedID != "" {
+							uOfD.addMappedValueToListenersMap(priorRefinedID, currentID)
+						}
 					}
 				}
+				// Update the uriUUIDMap
+				currentURI := currentEntry.changedElement.GetURI(trans)
+				priorURI := currentEntry.priorState.GetURI(trans)
+				if currentURI != priorURI {
+					if currentURI != "" {
+						uOfD.uriUUIDMap.DeleteEntry(currentURI)
+					}
+					if priorURI != "" {
+						uOfD.uriUUIDMap.SetEntry(priorURI, currentID)
+					}
+				}
+				clone := clone(currentEntry.changedElement, trans)
+				priorOwnedElements := uOfD.ownedIDsMap.GetMappedValues(currentID).Clone()
+				priorListeners := uOfD.listenersMap.GetMappedValues(currentID).Clone()
+				redoEntry := newUndoRedoStackEntry(Change, clone, priorOwnedElements, priorListeners, currentEntry.priorUofD, currentEntry.changedElement)
+				undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, trans)
+				uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
+				uOfD.setMappedValuesForListenersMap(currentID, currentEntry.priorListeners)
+				if currentEntry.priorUofD != uOfD.id {
+					uOfD.deleteUUIDElementMapEntry(currentID)
+				} else if currentEntry.priorUofD == uOfD.id {
+					uOfD.setUUIDElementMapEntry(currentID, currentEntry.changedElement)
+				}
+				undoMgr.redoStack.Push(redoEntry)
 			}
-			// Update the uriUUIDMap
-			currentURI := currentEntry.changedElement.GetURI(trans)
-			priorURI := currentEntry.priorState.GetURI(trans)
-			if currentURI != priorURI {
-				if currentURI != "" {
-					uOfD.uriUUIDMap.DeleteEntry(currentURI)
-				}
-				if priorURI != "" {
-					uOfD.uriUUIDMap.SetEntry(priorURI, currentID)
-				}
-			}
-			clone := clone(currentEntry.changedElement, trans)
-			priorOwnedElements := uOfD.ownedIDsMap.GetMappedValues(currentID).Clone()
-			priorListeners := uOfD.listenersMap.GetMappedValues(currentID).Clone()
-			redoEntry := newUndoRedoStackEntry(Change, clone, priorOwnedElements, priorListeners, currentEntry.priorUofD, currentEntry.changedElement)
-			undoMgr.restoreState(currentEntry.priorState, currentEntry.changedElement, trans)
-			uOfD.setOwnedIDsMapValues(currentID, currentEntry.priorOwnedElements)
-			uOfD.listenersMap.SetMappedValues(currentID, currentEntry.priorListeners)
-			if currentEntry.priorUofD != uOfD.id {
-				uOfD.deleteUUIDElementMapEntry(currentID)
-			} else if currentEntry.priorUofD == uOfD.id {
-				uOfD.setUUIDElementMapEntry(currentID, currentEntry.changedElement)
-			}
-			undoMgr.redoStack.Push(redoEntry)
 		}
 		firstEntry = false
 	}

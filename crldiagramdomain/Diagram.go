@@ -1585,48 +1585,51 @@ func updateDiagramElement(diagramElement core.Concept, notification *core.Change
 								targetModelElement := GetReferencedModelConcept(targetDiagramElement, trans)
 								if IsDiagramOwnerPointer(diagramElement, trans) {
 									modelElement.SetOwningConcept(targetModelElement, trans)
-								}
-								switch modelElement.GetConceptType() {
-								case core.Reference:
-									// Setting the referenced concepts requires knowledge of what is being referenced
-									targetAttribute := core.NoAttribute
-									if IsDiagramElementPointer(targetDiagramElement, trans) {
-										targetAttribute = core.ReferencedConceptID
-									} else if IsDiagramOwnerPointer(targetDiagramElement, trans) {
-										targetAttribute = core.OwningConceptID
-									} else if IsDiagramAbstractPointer(targetDiagramElement, trans) {
-										targetAttribute = core.AbstractConceptID
-									} else if IsDiagramRefinedPointer(targetDiagramElement, trans) {
-										targetAttribute = core.RefinedConceptID
-									}
-									err := modelElement.SetReferencedConcept(targetModelElement, targetAttribute, trans)
-									if err != nil {
-										return errors.Wrap(err, "updateDiagramElement failed")
-									}
-								case core.Refinement:
-									if underlyingReportingElementIsTargetReference {
-										err := modelElement.SetAbstractConcept(targetModelElement, trans)
+								} else {
+									switch modelElement.GetConceptType() {
+									case core.Reference:
+										// Setting the referenced concepts requires knowledge of what is being referenced
+										targetAttribute := core.NoAttribute
+										if IsDiagramElementPointer(targetDiagramElement, trans) {
+											targetAttribute = core.ReferencedConceptID
+										} else if IsDiagramOwnerPointer(targetDiagramElement, trans) {
+											targetAttribute = core.OwningConceptID
+										} else if IsDiagramAbstractPointer(targetDiagramElement, trans) {
+											targetAttribute = core.AbstractConceptID
+										} else if IsDiagramRefinedPointer(targetDiagramElement, trans) {
+											targetAttribute = core.RefinedConceptID
+										}
+										err := modelElement.SetReferencedConcept(targetModelElement, targetAttribute, trans)
 										if err != nil {
 											return errors.Wrap(err, "updateDiagramElement failed")
 										}
-									} else if underlyingReportingElementIsSourceReference {
-										err := modelElement.SetRefinedConcept(targetModelElement, trans)
-										if err != nil {
-											return errors.Wrap(err, "updateDiagramElement failed")
+									case core.Refinement:
+										if underlyingReportingElementIsTargetReference {
+											err := modelElement.SetAbstractConcept(targetModelElement, trans)
+											if err != nil {
+												return errors.Wrap(err, "updateDiagramElement failed")
+											}
+										} else if underlyingReportingElementIsSourceReference {
+											err := modelElement.SetRefinedConcept(targetModelElement, trans)
+											if err != nil {
+												return errors.Wrap(err, "updateDiagramElement failed")
+											}
 										}
 									}
 								}
 							} else if underlyingReportingElementIsSourceReference {
 								sourceDiagramElement := uOfD.GetElement(underlyingChange.GetAfterConceptState().ReferencedConceptID)
 								sourceModelElement := GetReferencedModelConcept(sourceDiagramElement, trans)
-								switch modelElement.GetConceptType() {
-								case core.Reference:
-									if IsDiagramReferenceLink(diagramElement, trans) {
-										modelElement.SetOwningConcept(sourceModelElement, trans)
-									}
-								case core.Refinement:
-									if IsDiagramRefinementLink(diagramElement, trans) {
-										modelElement.SetRefinedConcept(sourceModelElement, trans)
+								if modelElement != nil {
+									switch modelElement.GetConceptType() {
+									case core.Reference:
+										if IsDiagramReferenceLink(diagramElement, trans) {
+											modelElement.SetOwningConcept(sourceModelElement, trans)
+										}
+									case core.Refinement:
+										if IsDiagramRefinementLink(diagramElement, trans) {
+											modelElement.SetRefinedConcept(sourceModelElement, trans)
+										}
 									}
 								}
 							}

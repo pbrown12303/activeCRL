@@ -20,19 +20,19 @@ func dummyChangeFunction(el Concept, cn *ChangeNotification, tran *Transaction) 
 
 var _ = Describe("Verify function call graph generation", func() {
 	var uOfD *UniverseOfDiscourse
-	var hl *Transaction
+	var trans *Transaction
 	var df1 Concept
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
-		hl = uOfD.NewTransaction()
+		trans = uOfD.NewTransaction()
 		uOfD.AddFunction(df1URI, dummyChangeFunction)
-		df1, _ = uOfD.NewElement(hl)
-		df1.SetURI(df1URI, hl)
+		df1, _ = uOfD.NewElement(trans)
+		df1.SetURI(df1URI, trans)
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocks()
+		trans.ReleaseLocks()
 	})
 
 	Describe("Test FunctionCallGraph for Element ConceptChanged generation", func() {
@@ -40,7 +40,7 @@ var _ = Describe("Verify function call graph generation", func() {
 			// Initiate the graph capture
 			TraceChange = true
 			definition := "Definition"
-			df1.SetDefinition(definition, hl)
+			df1.SetDefinition(definition, trans)
 			Expect(df1Called).To(BeTrue())
 			Expect(df1CalledElement == df1).To(BeTrue())
 			fcgZero := functionCallGraphs[0]

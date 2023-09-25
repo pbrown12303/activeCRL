@@ -1,9 +1,7 @@
 package core
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"strconv"
 	"sync"
@@ -61,21 +59,21 @@ func StringToConceptType(s string) (ConceptType, error) {
 // concept is the root representation of a concept
 type concept struct {
 	sync.RWMutex
-	AbstractConceptID string
-	ConceptID         string
+	Label     string
+	ConceptID string
 	ConceptType
 	Definition              string
-	Label                   string
+	AbstractConceptID       string
 	LiteralValue            string
-	IsCore                  bool
 	OwningConceptID         string
-	ReadOnly                bool
 	ReferencedConceptID     string
 	ReferencedAttributeName AttributeName
 	RefinedConceptID        string
 	Version                 *versionCounter
 	uOfD                    *UniverseOfDiscourse
 	URI                     string
+	IsCore                  bool
+	ReadOnly                bool
 	observers               mapset.Set
 }
 
@@ -86,9 +84,15 @@ type concept struct {
 func (cPtr *concept) addOwnedConcept(ownedConceptID string, trans *Transaction) {
 	trans.ReadLockElement(cPtr)
 	if !cPtr.uOfD.ownedIDsMap.ContainsMappedValue(cPtr.ConceptID, ownedConceptID) {
+		if cPtr.uOfD.undoManager.debugUndo {
+			log.Print("+++")
+			log.Print("+++ addOwnedConcept")
+			log.Print("+++")
+		}
 		cPtr.uOfD.preChange(cPtr, trans)
-		cPtr.incrementVersion(trans)
+		cPtr.Version.incrementVersion()
 		cPtr.uOfD.ownedIDsMap.addMappedValue(cPtr.GetConceptID(trans), ownedConceptID)
+		cPtr.uOfD.postChange(cPtr, trans)
 	}
 }
 
@@ -100,8 +104,14 @@ func (cPtr *concept) addOwnedConcept(ownedConceptID string, trans *Transaction) 
 func (cPtr *concept) addRecoveredOwnedConcept(ownedConceptID string, trans *Transaction) {
 	trans.ReadLockElement(cPtr)
 	if !cPtr.uOfD.ownedIDsMap.ContainsMappedValue(cPtr.ConceptID, ownedConceptID) {
+		if cPtr.uOfD.undoManager.debugUndo {
+			log.Print("+++")
+			log.Print("+++ addRecoveredOwnedConcept")
+			log.Print("+++")
+		}
 		cPtr.uOfD.preChange(cPtr, trans)
 		cPtr.uOfD.ownedIDsMap.addMappedValue(cPtr.ConceptID, ownedConceptID)
+		cPtr.uOfD.postChange(cPtr, trans)
 	}
 }
 
@@ -110,8 +120,14 @@ func (cPtr *concept) addRecoveredOwnedConcept(ownedConceptID string, trans *Tran
 func (cPtr *concept) addListener(listeningConceptID string, trans *Transaction) {
 	trans.ReadLockElement(cPtr)
 	if !cPtr.uOfD.listenersMap.ContainsMappedValue(cPtr.ConceptID, listeningConceptID) {
+		if cPtr.uOfD.undoManager.debugUndo {
+			log.Print("+++")
+			log.Print("+++ addListener")
+			log.Print("+++")
+		}
 		cPtr.uOfD.preChange(cPtr, trans)
 		cPtr.uOfD.listenersMap.addMappedValue(cPtr.ConceptID, listeningConceptID)
+		cPtr.uOfD.postChange(cPtr, trans)
 	}
 }
 
@@ -143,18 +159,6 @@ func (cPtr *concept) cloneAttributes(source *concept, trans *Transaction) {
 	cPtr.URI = source.URI
 	cPtr.Version.counter = source.Version.counter
 }
-
-// // editableError checks to see if the element cannot be edited because it
-// // is either a core element or has been marked readOnly.
-// func (cPtr *element) editableError(trans *HeldLocks) error {
-// 	if cPtr.GetIsCore(trans) {
-// 		return errors.New("Element.SetOwningConceptID called on core Element")
-// 	}
-// 	if cPtr.ReadOnly {
-// 		return errors.New("Element.SetOwningConcept called on read-only Element")
-// 	}
-// 	return nil
-// }
 
 func (cPtr *concept) GetAbstractConcept(trans *Transaction) Concept {
 	trans.ReadLockElement(cPtr)
@@ -470,8 +474,8 @@ func (cPtr *concept) getLabelNoLock() string {
 	return cPtr.Label
 }
 
-func (cPtr *concept) GetLiteralValue(hl *Transaction) string {
-	hl.ReadLockElement(cPtr)
+func (cPtr *concept) GetLiteralValue(trans *Transaction) string {
+	trans.ReadLockElement(cPtr)
 	return cPtr.LiteralValue
 }
 
@@ -886,22 +890,6 @@ func (cPtr *concept) IsRefinementOfURI(uri string, trans *Transaction) bool {
 	return cPtr.IsRefinementOf(abstraction, trans)
 }
 
-func (cPtr *concept) incrementVersion(trans *Transaction) {
-	trans.ReadLockElement(cPtr)
-	if cPtr.uOfD != nil {
-		// UofD may be nil during the deletion of this element
-		cPtr.uOfD.preChange(cPtr, trans)
-		cPtr.Version.incrementVersion()
-		// if cPtr.OwningConceptID != "" {
-		// 	owningConcept := cPtr.uOfD.GetElement(cPtr.OwningConceptID)
-		// 	// the owning concept may also be in the process of deletion
-		// 	if owningConcept != nil {
-		// 		owningConcept.incrementVersion(trans)
-		// 	}
-		// }
-	}
-}
-
 // initializeConcept creates the identifier (using the uri if supplied) and
 // creates the abstractions, ownedConcepts, and referrencingConcpsts maps.
 // Note that initialization is not considered a change, so the version counter is not incremented
@@ -1038,28 +1026,22 @@ func (cPtr *concept) IsOwnedConcept(el Concept, trans *Transaction) bool {
 
 // MarshalJSON produces a byte string JSON representation of the Element
 func (cPtr *concept) MarshalJSON() ([]byte, error) {
-	buffer := bytes.NewBufferString("{")
-	err := cPtr.marshalConceptFields(buffer)
-	buffer.WriteString("}")
-	return buffer.Bytes(), err
-}
-
-func (cPtr *concept) marshalConceptFields(buffer *bytes.Buffer) error {
-	buffer.WriteString(fmt.Sprintf("\"AbstractConceptID\":\"%s\",", cPtr.AbstractConceptID))
-	buffer.WriteString(fmt.Sprintf("\"ConceptID\":\"%s\",", cPtr.ConceptID))
-	buffer.WriteString(fmt.Sprintf("\"ConceptType\":\"%s\",", ConceptTypeToString(cPtr.ConceptType)))
-	buffer.WriteString(fmt.Sprintf("\"Definition\":\"%s\",", cPtr.Definition))
-	buffer.WriteString(fmt.Sprintf("\"Label\":\"%s\",", cPtr.Label))
-	buffer.WriteString(fmt.Sprintf("\"LiteralValue\":\"%s\",", cPtr.LiteralValue))
-	buffer.WriteString(fmt.Sprintf("\"IsCore\":\"%t\",", cPtr.IsCore))
-	buffer.WriteString(fmt.Sprintf("\"OwningConceptID\":\"%s\",", cPtr.OwningConceptID))
-	buffer.WriteString(fmt.Sprintf("\"ReadOnly\":\"%t\",", cPtr.ReadOnly))
-	buffer.WriteString(fmt.Sprintf("\"ReferencedConceptID\":\"%s\",", cPtr.ReferencedConceptID))
-	buffer.WriteString(fmt.Sprintf("\"ReferencedAttributeName\":\"%s\",", cPtr.ReferencedAttributeName.String()))
-	buffer.WriteString(fmt.Sprintf("\"RefinedConceptID\":\"%s\",", cPtr.RefinedConceptID))
-	buffer.WriteString(fmt.Sprintf("\"URI\":\"%s\",", cPtr.URI))
-	buffer.WriteString(fmt.Sprintf("\"Version\":\"%d\"", cPtr.Version.getVersion()))
-	return nil
+	type AliasConcept concept
+	return json.Marshal(&struct {
+		ConceptType string
+		*AliasConcept
+		IsCore                  string
+		ReadOnly                string
+		ReferencedAttributeName string
+		Version                 string
+	}{
+		ConceptType:             ConceptTypeToString(cPtr.ConceptType),
+		IsCore:                  strconv.FormatBool(cPtr.IsCore),
+		ReadOnly:                strconv.FormatBool(cPtr.ReadOnly),
+		ReferencedAttributeName: cPtr.ReferencedAttributeName.String(),
+		Version:                 strconv.Itoa(cPtr.Version.getVersion()),
+		AliasConcept:            (*AliasConcept)(cPtr),
+	})
 }
 
 // notifyObservers passes the notification to all registered Observers
@@ -1222,140 +1204,17 @@ func (cPtr *concept) tickle(targetElement Concept, notification *ChangeNotificat
 	return nil
 }
 
-// recoverElementFields() is used when de-serializing an element. The activities in restoring the
-// element are not considered changes so the version counter is not incremented and the monitors of this
-// element are not notified of chaanges.
-func (cPtr *concept) recoverElementFields(unmarshaledData *map[string]json.RawMessage, trans *Transaction) error {
-	// AbstractConceptID
-	var recoveredAbstractConceptID string
-	err := json.Unmarshal((*unmarshaledData)["AbstractConceptID"], &recoveredAbstractConceptID)
-	if err != nil {
-		log.Printf("Recovery of Refinement.AbstractConceptID as string failed\n")
-		return err
-	}
-	cPtr.AbstractConceptID = recoveredAbstractConceptID
-	// ConceptID
-	var recoveredConceptID string
-	err = json.Unmarshal((*unmarshaledData)["ConceptID"], &recoveredConceptID)
-	if err != nil {
-		log.Printf("Recovery of Element.ConceptID as string failed\n")
-		return err
-	}
-	cPtr.ConceptID = recoveredConceptID
-	// Definition
-	var recoveredDefinition string
-	err = json.Unmarshal((*unmarshaledData)["Definition"], &recoveredDefinition)
-	if err != nil {
-		log.Printf("Recovery of Element.Definition as string failed\n")
-		return err
-	}
-	cPtr.Definition = recoveredDefinition
-	// Label
-	var recoveredLabel string
-	err = json.Unmarshal((*unmarshaledData)["Label"], &recoveredLabel)
-	if err != nil {
-		log.Printf("Recovery of Element.Label as string failed\n")
-		return err
-	}
-	cPtr.Label = recoveredLabel
-	// LiteralValue
-	var recoveredLiteralValue string
-	err = json.Unmarshal((*unmarshaledData)["LiteralValue"], &recoveredLiteralValue)
-	if err != nil {
-		log.Printf("Recovery of Element.LiteralValue as string failed\n")
-		return err
-	}
-	cPtr.LiteralValue = recoveredLiteralValue
-	// IsCore
-	var recoveredIsCore string
-	err = json.Unmarshal((*unmarshaledData)["IsCore"], &recoveredIsCore)
-	if err != nil {
-		log.Printf("Recovery of Element.IsCore as string failed\n")
-		return err
-	}
-	cPtr.IsCore, err = strconv.ParseBool(recoveredIsCore)
-	if err != nil {
-		log.Printf("Conversion of IsCOre from string to bool failed")
-		return err
-	}
-	// OwningConceptID
-	var recoveredOwningConceptID string
-	err = json.Unmarshal((*unmarshaledData)["OwningConceptID"], &recoveredOwningConceptID)
-	if err != nil {
-		log.Printf("Recovery of Element.OwningConceptID as string failed\n")
-		return err
-	}
-	cPtr.OwningConceptID = recoveredOwningConceptID
-	// ReadOnly
-	var recoveredReadOnly string
-	err = json.Unmarshal((*unmarshaledData)["ReadOnly"], &recoveredReadOnly)
-	if err != nil {
-		log.Printf("Recovery of Element.ReadOnly as string failed\n")
-		return err
-	}
-	cPtr.ReadOnly, err = strconv.ParseBool(recoveredReadOnly)
-	if err != nil {
-		log.Printf("Conversion of ReadOnly from string to bool failed")
-		return err
-	}
-	// ReferencedConceptID
-	var recoveredReferencedConceptID string
-	err = json.Unmarshal((*unmarshaledData)["ReferencedConceptID"], &recoveredReferencedConceptID)
-	if err != nil {
-		log.Printf("Recovery of Reference.ReferencedConceptID as string failed\n")
-		return err
-	}
-	cPtr.ReferencedConceptID = recoveredReferencedConceptID
-	// ReferencedAttributeName
-	var recoveredReferencedConceptAttributeName string
-	err = json.Unmarshal((*unmarshaledData)["ReferencedAttributeName"], &recoveredReferencedConceptAttributeName)
-	if err != nil {
-		log.Printf("Recovery of Reference.ReferencedAttributeName as string failed\n")
-		return err
-	}
-	var attributeName AttributeName
-	attributeName, err = FindAttributeName(recoveredReferencedConceptAttributeName)
-	if err != nil {
-		log.Printf("Conversion of Reference.ReferencedAttributeName to AttributeName failed\n")
-		return err
-	}
-	cPtr.ReferencedAttributeName = attributeName
-	// RefinedConceptID
-	var recoveredRefinedConceptID string
-	err = json.Unmarshal((*unmarshaledData)["RefinedConceptID"], &recoveredRefinedConceptID)
-	if err != nil {
-		log.Printf("Recovery of Refinement.RefinedConceptID as string failed\n")
-		return err
-	}
-	cPtr.RefinedConceptID = recoveredRefinedConceptID
-	// Version
-	var recoveredVersion string
-	err = json.Unmarshal((*unmarshaledData)["Version"], &recoveredVersion)
-	if err != nil {
-		log.Printf("Recovery of BaseElement.version failed\n")
-		return err
-	}
-	cPtr.Version.counter, err = strconv.Atoi(recoveredVersion)
-	if err != nil {
-		log.Printf("Conversion of Element.version to integer failed\n")
-		return err
-	}
-	// URI
-	var recoveredURI string
-	err = json.Unmarshal((*unmarshaledData)["URI"], &recoveredURI)
-	if err != nil {
-		log.Printf("Recovery of Element.URI as string failed\n")
-		return err
-	}
-	cPtr.URI = recoveredURI
-	return nil
-}
-
 // removeListener removes the indicated Element as a listening concept.
 func (cPtr *concept) removeListener(listeningConceptID string, trans *Transaction) {
 	trans.ReadLockElement(cPtr)
+	if cPtr.uOfD.undoManager.debugUndo {
+		log.Print("+++")
+		log.Print("+++ removeListener")
+		log.Print("+++")
+	}
 	cPtr.uOfD.preChange(cPtr, trans)
 	cPtr.uOfD.listenersMap.removeMappedValue(cPtr.ConceptID, listeningConceptID)
+	cPtr.uOfD.postChange(cPtr, trans)
 }
 
 // Register adds the registration of an Observer
@@ -1370,9 +1229,15 @@ func (cPtr *concept) removeOwnedConcept(ownedConceptID string, trans *Transactio
 	if cPtr.IsReadOnly(trans) {
 		return errors.New("Element.removedOwnedConcept called on read-only Element")
 	}
+	if cPtr.uOfD.undoManager.debugUndo {
+		log.Print("+++")
+		log.Print("+++ removeOwnedConcept")
+		log.Print("+++")
+	}
 	cPtr.uOfD.preChange(cPtr, trans)
-	cPtr.incrementVersion(trans)
+	cPtr.Version.incrementVersion()
 	cPtr.uOfD.ownedIDsMap.removeMappedValue(cPtr.ConceptID, ownedConceptID)
+	cPtr.uOfD.postChange(cPtr, trans)
 	return nil
 }
 
@@ -1398,12 +1263,17 @@ func (cPtr *concept) SetAbstractConceptID(acID string, trans *Transaction) error
 		return errors.New("refinement.SetAbstractConceptID failed because the refinement is not editable")
 	}
 	if cPtr.AbstractConceptID != acID {
+		if cPtr.uOfD.undoManager.debugUndo {
+			log.Print("+++")
+			log.Print("+++ SetAbstractConcepetID")
+			log.Print("+++")
+		}
 		cPtr.uOfD.preChange(cPtr, trans)
 		beforeState, err := NewConceptState(cPtr)
 		if err != nil {
 			return errors.Wrap(err, "refinement.SetAbstractConceptID failed")
 		}
-		cPtr.incrementVersion(trans)
+		cPtr.Version.incrementVersion()
 		var oldAbstractConcept Concept
 		if cPtr.AbstractConceptID != "" {
 			oldAbstractConcept = cPtr.uOfD.GetElement(cPtr.AbstractConceptID)
@@ -1436,6 +1306,7 @@ func (cPtr *concept) SetAbstractConceptID(acID string, trans *Transaction) error
 		if err != nil {
 			return errors.Wrap(err, "refinement.SetAbstractConceptID failed")
 		}
+		cPtr.uOfD.postChange(cPtr, trans)
 	}
 	return nil
 }
@@ -1450,12 +1321,17 @@ func (cPtr *concept) SetDefinition(def string, trans *Transaction) error {
 		return errors.New("element.SetDefinition failed because the element is not editable")
 	}
 	if cPtr.Definition != def {
+		if cPtr.uOfD.undoManager.debugUndo {
+			log.Print("+++")
+			log.Print("+++ SetDefinition")
+			log.Print("+++")
+		}
 		cPtr.uOfD.preChange(cPtr, trans)
 		beforeState, err := NewConceptState(cPtr)
 		if err != nil {
 			return errors.Wrap(err, "element.SetDefinition failed")
 		}
-		cPtr.incrementVersion(trans)
+		cPtr.Version.incrementVersion()
 		cPtr.Definition = def
 		afterState, err2 := NewConceptState(cPtr)
 		if err2 != nil {
@@ -1465,6 +1341,7 @@ func (cPtr *concept) SetDefinition(def string, trans *Transaction) error {
 		if err != nil {
 			return errors.Wrap(err, "element.SetDefinition failed")
 		}
+		cPtr.uOfD.postChange(cPtr, trans)
 	}
 	return nil
 }
@@ -1476,12 +1353,17 @@ func (cPtr *concept) SetIsCore(trans *Transaction) error {
 	}
 	trans.WriteLockElement(cPtr)
 	if !cPtr.IsCore {
+		if cPtr.uOfD.undoManager.debugUndo {
+			log.Print("+++")
+			log.Print("+++ SetIsCore")
+			log.Print("+++")
+		}
 		cPtr.uOfD.preChange(cPtr, trans)
 		beforeState, err := NewConceptState(cPtr)
 		if err != nil {
 			return errors.Wrap(err, "element.SetIsCore failed")
 		}
-		cPtr.incrementVersion(trans)
+		cPtr.Version.incrementVersion()
 		cPtr.IsCore = true
 		afterState, err2 := NewConceptState(cPtr)
 		if err2 != nil {
@@ -1491,6 +1373,7 @@ func (cPtr *concept) SetIsCore(trans *Transaction) error {
 		if err != nil {
 			return errors.Wrap(err, "element.SetIsCore failed")
 		}
+		cPtr.uOfD.postChange(cPtr, trans)
 	}
 	return nil
 }
@@ -1527,12 +1410,17 @@ func (cPtr *concept) SetLabel(label string, trans *Transaction) error {
 		return errors.New("element.SetLabel failed because the element is not editable")
 	}
 	if cPtr.Label != label {
+		if cPtr.uOfD.undoManager.debugUndo {
+			log.Print("+++")
+			log.Print("+++ SetLabel")
+			log.Print("+++")
+		}
 		cPtr.uOfD.preChange(cPtr, trans)
 		beforeState, err := NewConceptState(cPtr)
 		if err != nil {
 			return errors.Wrap(err, "element.SetLabel failed")
 		}
-		cPtr.incrementVersion(trans)
+		cPtr.Version.incrementVersion()
 		cPtr.Label = label
 		afterState, err2 := NewConceptState(cPtr)
 		if err2 != nil {
@@ -1542,34 +1430,41 @@ func (cPtr *concept) SetLabel(label string, trans *Transaction) error {
 		if err != nil {
 			return errors.Wrap(err, "element.SetLabel failed")
 		}
+		cPtr.uOfD.postChange(cPtr, trans)
 	}
 	return nil
 }
 
-func (cPtr *concept) SetLiteralValue(value string, hl *Transaction) error {
+func (cPtr *concept) SetLiteralValue(value string, trans *Transaction) error {
 	if cPtr.uOfD == nil {
 		return errors.New("literal.SetLiteralValue failed because the element uOfD is nil")
 	}
-	hl.WriteLockElement(cPtr)
-	if !cPtr.isEditable(hl) {
+	trans.WriteLockElement(cPtr)
+	if !cPtr.isEditable(trans) {
 		return errors.New("literal.SetLiteralValue failed because the literal is not editable")
 	}
 	if cPtr.LiteralValue != value {
-		cPtr.uOfD.preChange(cPtr, hl)
+		if cPtr.uOfD.undoManager.debugUndo {
+			log.Print("+++")
+			log.Print("+++ SetLiteralValue")
+			log.Print("+++")
+		}
+		cPtr.uOfD.preChange(cPtr, trans)
 		beforeState, err := NewConceptState(cPtr)
 		if err != nil {
 			return errors.Wrap(err, "literal.SetLiteralValue failed")
 		}
-		cPtr.incrementVersion(hl)
+		cPtr.Version.incrementVersion()
 		cPtr.LiteralValue = value
 		afterState, err2 := NewConceptState(cPtr)
 		if err2 != nil {
 			return errors.Wrap(err2, "literal.SetLiteralValue failed")
 		}
-		err = cPtr.uOfD.SendConceptChangeNotification(cPtr, beforeState, afterState, hl)
+		err = cPtr.uOfD.SendConceptChangeNotification(cPtr, beforeState, afterState, trans)
 		if err != nil {
 			return errors.Wrap(err, "literal.SetLiteralValue failed")
 		}
+		cPtr.uOfD.postChange(cPtr, trans)
 	}
 	return nil
 }
@@ -1619,6 +1514,11 @@ func (cPtr *concept) SetOwningConceptID(ocID string, trans *Transaction) error {
 	}
 	// Do nothing if there is no change
 	if cPtr.OwningConceptID != ocID {
+		if cPtr.uOfD.undoManager.debugUndo {
+			log.Print("+++")
+			log.Print("+++ SetOwningConceptID")
+			log.Print("+++")
+		}
 		cPtr.uOfD.preChange(cPtr, trans)
 		beforeState, err := NewConceptState(cPtr)
 		if err != nil {
@@ -1630,7 +1530,7 @@ func (cPtr *concept) SetOwningConceptID(ocID string, trans *Transaction) error {
 				return errors.Wrap(err, "element.SetOwningConceptID failed")
 			}
 		}
-		cPtr.incrementVersion(trans)
+		cPtr.Version.incrementVersion()
 		if newOwner != nil {
 			newOwner.addOwnedConcept(cPtr.ConceptID, trans)
 			if err != nil {
@@ -1646,6 +1546,7 @@ func (cPtr *concept) SetOwningConceptID(ocID string, trans *Transaction) error {
 		if err != nil {
 			return errors.Wrap(err, "element.SetOwningConceptID failed")
 		}
+		cPtr.uOfD.postChange(cPtr, trans)
 	}
 	return nil
 }
@@ -1667,12 +1568,17 @@ func (cPtr *concept) SetReadOnly(value bool, trans *Transaction) error {
 		}
 	}
 	if cPtr.ReadOnly != value {
+		if cPtr.uOfD.undoManager.debugUndo {
+			log.Print("+++")
+			log.Print("+++ SetReadOnly")
+			log.Print("+++")
+		}
 		cPtr.uOfD.preChange(cPtr, trans)
 		beforeState, err := NewConceptState(cPtr)
 		if err != nil {
 			return errors.Wrap(err, "element.SetReadOnly failed")
 		}
-		cPtr.incrementVersion(trans)
+		cPtr.Version.incrementVersion()
 		cPtr.ReadOnly = value
 		afterState, err2 := NewConceptState(cPtr)
 		if err2 != nil {
@@ -1682,6 +1588,7 @@ func (cPtr *concept) SetReadOnly(value bool, trans *Transaction) error {
 		if err != nil {
 			return errors.Wrap(err, "element.SetDeSetReadOnlyfinition failed")
 		}
+		cPtr.uOfD.postChange(cPtr, trans)
 	}
 	return nil
 }
@@ -1732,6 +1639,12 @@ func (cPtr *concept) SetReferencedConceptID(rcID string, attributeName Attribute
 	var newReferencedConcept Concept
 	var oldReferencedConcept Concept
 	if cPtr.ReferencedConceptID != rcID || cPtr.ReferencedAttributeName != attributeName {
+		if cPtr.uOfD.undoManager.debugUndo {
+			log.Print("+++")
+			log.Print("+++ SetReferencedConceptID")
+			log.Print("+++")
+		}
+		cPtr.uOfD.preChange(cPtr, trans)
 		if rcID != "" {
 			newReferencedConcept = cPtr.uOfD.GetElement(rcID)
 			switch attributeName {
@@ -1756,8 +1669,7 @@ func (cPtr *concept) SetReferencedConceptID(rcID string, attributeName Attribute
 		if err != nil {
 			return errors.Wrap(err, "reference.SetReferencedConceptID failed")
 		}
-		cPtr.uOfD.preChange(cPtr, trans)
-		cPtr.incrementVersion(trans)
+		cPtr.Version.incrementVersion()
 		if cPtr.ReferencedConceptID != "" {
 			oldReferencedConcept = cPtr.uOfD.GetElement(cPtr.ReferencedConceptID)
 			if oldReferencedConcept != nil {
@@ -1782,6 +1694,7 @@ func (cPtr *concept) SetReferencedConceptID(rcID string, attributeName Attribute
 		if err != nil {
 			return errors.Wrap(err, "reference.SetReferencedConceptID failed")
 		}
+		cPtr.uOfD.postChange(cPtr, trans)
 	}
 	return nil
 }
@@ -1807,12 +1720,17 @@ func (cPtr *concept) SetRefinedConceptID(rcID string, trans *Transaction) error 
 		return errors.New("refinement.SetReferencedConceptID failed because the refinement is not editable")
 	}
 	if cPtr.RefinedConceptID != rcID {
+		if cPtr.uOfD.undoManager.debugUndo {
+			log.Print("+++")
+			log.Print("+++ SetRefinedConceptID")
+			log.Print("+++")
+		}
 		cPtr.uOfD.preChange(cPtr, trans)
 		beforeState, err := NewConceptState(cPtr)
 		if err != nil {
 			return errors.Wrap(err, "refinement.SetRefinedConceptID failed")
 		}
-		cPtr.incrementVersion(trans)
+		cPtr.Version.incrementVersion()
 		var oldRefinedConcept Concept
 		if cPtr.RefinedConceptID != "" {
 			oldRefinedConcept = cPtr.uOfD.GetElement(cPtr.RefinedConceptID)
@@ -1821,6 +1739,9 @@ func (cPtr *concept) SetRefinedConceptID(rcID string, trans *Transaction) error 
 				if err != nil {
 					return errors.Wrap(err, "refinement.SetRefinedConceptID failed")
 				}
+			} else {
+				// This case can arise if the abstract concept is not currently loaded
+				cPtr.uOfD.listenersMap.removeMappedValue(cPtr.RefinedConceptID, cPtr.ConceptID)
 			}
 		}
 		var newRefinedConcept Concept
@@ -1842,6 +1763,7 @@ func (cPtr *concept) SetRefinedConceptID(rcID string, trans *Transaction) error 
 		if err != nil {
 			return errors.Wrap(err, "refinement.SetRefinedConceptID failed")
 		}
+		cPtr.uOfD.postChange(cPtr, trans)
 	}
 	return nil
 }
@@ -1866,13 +1788,18 @@ func (cPtr *concept) SetURI(uri string, trans *Transaction) error {
 		if foundElement != nil && foundElement.GetConceptID(trans) != cPtr.ConceptID {
 			return errors.New("Element already exists with URI " + uri)
 		}
+		if cPtr.uOfD.undoManager.debugUndo {
+			log.Print("+++")
+			log.Print("+++ SetURI")
+			log.Print("+++")
+		}
 		cPtr.uOfD.preChange(cPtr, trans)
 		beforeState, err := NewConceptState(cPtr)
 		if err != nil {
 			return errors.Wrap(err, "element.SetURI failed")
 		}
 		cPtr.uOfD.changeURIForElement(cPtr, cPtr.URI, uri)
-		cPtr.incrementVersion(trans)
+		cPtr.Version.incrementVersion()
 		cPtr.URI = uri
 		afterState, err2 := NewConceptState(cPtr)
 		if err2 != nil {
@@ -1882,6 +1809,7 @@ func (cPtr *concept) SetURI(uri string, trans *Transaction) error {
 		if err != nil {
 			return errors.Wrap(err, "element.SetURI failed")
 		}
+		cPtr.uOfD.postChange(cPtr, trans)
 	}
 	return nil
 }
@@ -1912,6 +1840,45 @@ func (cPtr *concept) TraceableWriteUnlock(trans *Transaction) {
 		log.Printf("HL %p about to write unlock Element %p %s\n", trans, cPtr, cPtr.Label)
 	}
 	cPtr.Unlock()
+}
+
+func (cPtr *concept) UnmarshalJSON(data []byte) error {
+	type AliasConcept concept
+	aux := &struct {
+		ConceptType             string
+		IsCore                  string
+		ReadOnly                string
+		ReferencedAttributeName string
+		Version                 string
+		*AliasConcept
+	}{
+		AliasConcept: (*AliasConcept)(cPtr),
+	}
+	var err error
+	if err = json.Unmarshal(data, &aux); err != nil {
+		return errors.Wrap(err, "concept.UnmarshalJSON failed")
+	}
+	cPtr.ConceptType, err = StringToConceptType(aux.ConceptType)
+	if err = json.Unmarshal(data, &aux); err != nil {
+		return errors.Wrap(err, "concept.UnmarshalJSON failed")
+	}
+	cPtr.IsCore, err = strconv.ParseBool(aux.IsCore)
+	if err = json.Unmarshal(data, &aux); err != nil {
+		return errors.Wrap(err, "concept.UnmarshalJSON failed")
+	}
+	cPtr.ReadOnly, err = strconv.ParseBool(aux.ReadOnly)
+	if err = json.Unmarshal(data, &aux); err != nil {
+		return errors.Wrap(err, "concept.UnmarshalJSON failed")
+	}
+	cPtr.ReferencedAttributeName, err = FindAttributeName(aux.ReferencedAttributeName)
+	if err = json.Unmarshal(data, &aux); err != nil {
+		return errors.Wrap(err, "concept.UnmarshalJSON failed")
+	}
+	cPtr.Version.counter, err = strconv.Atoi(aux.Version)
+	if err = json.Unmarshal(data, &aux); err != nil {
+		return errors.Wrap(err, "concept.UnmarshalJSON failed")
+	}
+	return nil
 }
 
 // Concept is the representation of a concept
@@ -1970,7 +1937,6 @@ type Concept interface {
 	isEditable(*Transaction) bool
 	IsRefinementOf(Concept, *Transaction) bool
 	IsRefinementOfURI(string, *Transaction) bool
-	incrementVersion(*Transaction)
 	IsOwnedConcept(Concept, *Transaction) bool
 	IsReadOnly(*Transaction) bool
 	MarshalJSON() ([]byte, error)

@@ -54,7 +54,7 @@ var _ = BeforeSuite(func() {
 	initialSize := fyne.NewSize(1600.0, 900.0)
 	FyneGUISingleton.GetWindow().Resize(initialSize)
 	FyneGUISingleton.GetWindow().ShowAndRun()
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	Expect(test.AssertRendersToImage(testT, "afterSuiteInitializaqtion.png", FyneGUISingleton.window.Canvas())).To(BeTrue())
 })
 

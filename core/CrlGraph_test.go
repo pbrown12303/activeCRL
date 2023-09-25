@@ -10,15 +10,15 @@ import (
 
 var _ = Describe("CrlGraph tests", func() {
 	var uOfD *UniverseOfDiscourse
-	var hl *Transaction
+	var trans *Transaction
 
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
-		hl = uOfD.NewTransaction()
+		trans = uOfD.NewTransaction()
 	})
 
 	AfterEach(func() {
-		hl.ReleaseLocks()
+		trans.ReleaseLocks()
 	})
 
 	Specify("Creation of core diagram", func() {
@@ -34,7 +34,7 @@ var _ = Describe("CrlGraph tests", func() {
 
 		graph := NewCrlGraph("CoreDomain")
 		coreDomain := uOfD.GetElementWithURI(CoreDomainURI)
-		Expect(graph.AddConceptRecursively(coreDomain, hl)).To(Succeed())
+		Expect(graph.AddConceptRecursively(coreDomain, trans)).To(Succeed())
 		Expect(graph.ExportDOT(tempDirPath, "CoreDomain")).To(Succeed())
 	})
 })
