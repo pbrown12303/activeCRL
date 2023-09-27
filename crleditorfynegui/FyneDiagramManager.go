@@ -172,6 +172,33 @@ func (dm *FyneDiagramManager) addNodeToDiagram(node core.Concept, trans *core.Tr
 	return diagramNode
 }
 
+func (dm *FyneDiagramManager) cancelLinkTransaction() {
+	selectedDiagram := dm.GetSelectedDiagram()
+	connectionTransaction := selectedDiagram.ConnectionTransaction
+	if connectionTransaction != nil {
+		selectedDiagram.RemoveElement(connectionTransaction.Link.GetDiagramElementID())
+		selectedDiagram.ConnectionTransaction = nil
+	}
+	trans, isNew := dm.fyneGUI.editor.GetTransaction()
+	if isNew {
+		defer dm.fyneGUI.editor.EndTransaction()
+	}
+	trans.GetUniverseOfDiscourse().DeleteElements(dm.connectionTransactionTransientConcepts, trans)
+	dm.connectionTransactionTransientConcepts.Clear()
+	dm.fyneGUI.windowContent.Refresh()
+}
+
+// closeAllDiagrams closes all of the currently displayed diagrams. It is not an undoable operation
+func (dm *FyneDiagramManager) closeAllDiagrams() {
+	diagramIDs := []string{}
+	for _, diagramTab := range dm.diagramTabs {
+		diagramIDs = append(diagramIDs, diagramTab.diagramID)
+	}
+	for _, diagramID := range diagramIDs {
+		dm.closeDiagramNoUndo(diagramID)
+	}
+}
+
 func (dm *FyneDiagramManager) closeDiagram(diagramID string) {
 	tabItem := dm.diagramTabs[diagramID]
 	if tabItem != nil {
@@ -486,32 +513,6 @@ func (dm *FyneDiagramManager) initialize() {
 	dm.toolButtons[CursorSelected].Refresh()
 	dm.connectionTransactionTransientConcepts.Clear()
 	dm.closeAllDiagrams()
-}
-
-func (dm *FyneDiagramManager) cancelLinkTransaction() {
-	selectedDiagram := dm.GetSelectedDiagram()
-	connectionTransaction := selectedDiagram.ConnectionTransaction
-	if connectionTransaction != nil {
-		selectedDiagram.RemoveElement(connectionTransaction.Link.GetDiagramElementID())
-		selectedDiagram.ConnectionTransaction = nil
-	}
-	trans, isNew := dm.fyneGUI.editor.GetTransaction()
-	if isNew {
-		defer dm.fyneGUI.editor.EndTransaction()
-	}
-	trans.GetUniverseOfDiscourse().DeleteElements(dm.connectionTransactionTransientConcepts, trans)
-	dm.connectionTransactionTransientConcepts.Clear()
-}
-
-// closeAllDiagrams closes all of the currently displayed diagrams. It is not an undoable operation
-func (dm *FyneDiagramManager) closeAllDiagrams() {
-	diagramIDs := []string{}
-	for _, diagramTab := range dm.diagramTabs {
-		diagramIDs = append(diagramIDs, diagramTab.diagramID)
-	}
-	for _, diagramID := range diagramIDs {
-		dm.closeDiagramNoUndo(diagramID)
-	}
 }
 
 func (dm *FyneDiagramManager) refreshGUI(trans *core.Transaction) {
@@ -1008,7 +1009,9 @@ func (dm *FyneDiagramManager) showOwner(elementID string) error {
 
 func (dm *FyneDiagramManager) setToolbarSelection(sel ToolbarSelection) {
 	if sel != dm.currentToolbarSelection {
-		dm.cancelLinkTransaction()
+		if dm.GetSelectedDiagram().ConnectionTransaction != nil {
+			dm.cancelLinkTransaction()
+		}
 		dm.currentToolbarSelection = sel
 		dm.toolButtons[sel].Importance = widget.HighImportance
 		dm.toolButtons[sel].Refresh()

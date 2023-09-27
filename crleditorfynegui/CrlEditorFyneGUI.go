@@ -86,7 +86,9 @@ func NewFyneGUI(crlEditor *crleditor.Editor, providedApp fyne.App) *CrlEditorFyn
 	gui.window.SetMainMenu(gui.mainMenu)
 	gui.window.SetMaster()
 
-	leftSide := container.NewVSplit(gui.treeManager.tree, gui.propertyManager.properties)
+	treeScroll := container.NewScroll(gui.treeManager.tree)
+	propertyScroll := container.NewScroll(gui.propertyManager.properties)
+	leftSide := container.NewVSplit(treeScroll, propertyScroll)
 	drawingArea := gui.diagramManager.GetDrawingArea()
 
 	gui.windowContent = container.NewHSplit(leftSide, drawingArea)
@@ -373,24 +375,6 @@ func (gui *CrlEditorFyneGUI) CloseDiagramView(diagramID string, trans *core.Tran
 	return nil
 }
 
-func (gui *CrlEditorFyneGUI) deleteElement(elementID string) {
-	trans, isNew := gui.editor.GetTransaction()
-	if isNew {
-		defer gui.editor.EndTransaction()
-	}
-	gui.editor.DeleteElement(elementID, trans)
-	gui.editor.SelectElement(nil, trans)
-}
-
-func (gui *CrlEditorFyneGUI) displayDiagram(diagramID string) {
-	gui.editor.GetUofD().MarkUndoPoint()
-	trans, isNew := gui.editor.GetTransaction()
-	if isNew {
-		defer gui.editor.EndTransaction()
-	}
-	gui.editor.GetDiagramManager().DisplayDiagram(diagramID, trans)
-}
-
 // ConceptDeleted - no additional action required
 func (gui *CrlEditorFyneGUI) ConceptDeleted(elID string, trans *core.Transaction) error {
 	return nil
@@ -409,6 +393,24 @@ func (gui *CrlEditorFyneGUI) ConceptSelected(el core.Concept, trans *core.Transa
 		gui.currentSelectionID = uid
 	}
 	return nil
+}
+
+func (gui *CrlEditorFyneGUI) deleteElement(elementID string) {
+	trans, isNew := gui.editor.GetTransaction()
+	if isNew {
+		defer gui.editor.EndTransaction()
+	}
+	gui.editor.DeleteElement(elementID, trans)
+	gui.editor.SelectElement(nil, trans)
+}
+
+func (gui *CrlEditorFyneGUI) displayDiagram(diagramID string) {
+	gui.editor.GetUofD().MarkUndoPoint()
+	trans, isNew := gui.editor.GetTransaction()
+	if isNew {
+		defer gui.editor.EndTransaction()
+	}
+	gui.editor.GetDiagramManager().DisplayDiagram(diagramID, trans)
 }
 
 // DisplayDiagram displays the indicated diagram
@@ -461,16 +463,6 @@ func (gui *CrlEditorFyneGUI) Initialize(trans *core.Transaction) error {
 	return nil
 }
 
-// RefreshGUI initializes the graphical state of the GUI
-func (gui *CrlEditorFyneGUI) RefreshGUI(trans *core.Transaction) error {
-	gui.GetWindow().SetTitle("Crl Editor         Workspace: " + gui.editor.GetWorkspacePath())
-	gui.diagramManager.refreshGUI(trans)
-	selectedElementID := gui.editor.GetSettings().Selection
-	selectedElement := gui.editor.GetUofD().GetElement(selectedElementID)
-	gui.ConceptSelected(selectedElement, trans)
-	return nil
-}
-
 func (gui *CrlEditorFyneGUI) markUndoPoint() {
 	uOfD := gui.editor.GetUofD()
 	uOfD.MarkUndoPoint()
@@ -482,6 +474,16 @@ func (gui *CrlEditorFyneGUI) redo() {
 		defer gui.editor.EndTransaction()
 	}
 	gui.editor.Redo(trans)
+}
+
+// RefreshGUI initializes the graphical state of the GUI
+func (gui *CrlEditorFyneGUI) RefreshGUI(trans *core.Transaction) error {
+	gui.GetWindow().SetTitle("Crl Editor         Workspace: " + gui.editor.GetWorkspacePath())
+	gui.diagramManager.refreshGUI(trans)
+	selectedElementID := gui.editor.GetSettings().Selection
+	selectedElement := gui.editor.GetUofD().GetElement(selectedElementID)
+	gui.ConceptSelected(selectedElement, trans)
+	return nil
 }
 
 func (gui *CrlEditorFyneGUI) undo() {
