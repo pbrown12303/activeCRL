@@ -173,7 +173,7 @@ func (editor *Editor) DeleteElement(elID string, trans *core.Transaction) error 
 		editor.SelectElement(nil, trans)
 	}
 	for _, gui := range editor.editorGUIs {
-		err := gui.ElementDeleted(elID, trans)
+		err := gui.ConceptDeleted(elID, trans)
 		if err != nil {
 			errors.Wrap(err, "Editor.DeleteElement failed")
 		}
@@ -569,7 +569,7 @@ func (editor *Editor) SelectElement(el core.Concept, trans *core.Transaction) er
 	if editor.currentSelection != el {
 		editor.currentSelection = el
 		for _, gui := range editor.editorGUIs {
-			err := gui.ElementSelected(el, trans)
+			err := gui.ConceptSelected(el, trans)
 			if err != nil {
 				return errors.Wrap(err, "Editor.SelectElement failed")
 			}
@@ -679,8 +679,8 @@ func (editor *Editor) UpdateOpenDiagrams(diagramIDs []string, trans *core.Transa
 type EditorGUI interface {
 	CloseDiagramView(diagramID string, trans *core.Transaction) error
 	DisplayDiagram(diagram core.Concept, trans *core.Transaction) error
-	ElementDeleted(elID string, trans *core.Transaction) error
-	ElementSelected(el core.Concept, trans *core.Transaction) error
+	ConceptDeleted(elID string, trans *core.Transaction) error
+	ConceptSelected(el core.Concept, trans *core.Transaction) error
 	FileLoaded(el core.Concept, trans *core.Transaction)
 	GetNoSaveDomains(noSaveDomains map[string]core.Concept, trans *core.Transaction)
 	Initialize(trans *core.Transaction) error

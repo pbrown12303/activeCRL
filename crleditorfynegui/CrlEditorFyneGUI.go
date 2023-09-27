@@ -391,13 +391,13 @@ func (gui *CrlEditorFyneGUI) displayDiagram(diagramID string) {
 	gui.editor.GetDiagramManager().DisplayDiagram(diagramID, trans)
 }
 
-// ElementDeleted - no additional action required
-func (gui *CrlEditorFyneGUI) ElementDeleted(elID string, trans *core.Transaction) error {
+// ConceptDeleted - no additional action required
+func (gui *CrlEditorFyneGUI) ConceptDeleted(elID string, trans *core.Transaction) error {
 	return nil
 }
 
-// ElementSelected causes the indicated element to  be selected in the properties, tree, and diagram.
-func (gui *CrlEditorFyneGUI) ElementSelected(el core.Concept, trans *core.Transaction) error {
+// ConceptSelected causes the indicated element to  be selected in the properties, tree, and diagram.
+func (gui *CrlEditorFyneGUI) ConceptSelected(el core.Concept, trans *core.Transaction) error {
 	uid := ""
 	if el != nil {
 		uid = el.GetConceptID(trans)
@@ -467,7 +467,7 @@ func (gui *CrlEditorFyneGUI) RefreshGUI(trans *core.Transaction) error {
 	gui.diagramManager.refreshGUI(trans)
 	selectedElementID := gui.editor.GetSettings().Selection
 	selectedElement := gui.editor.GetUofD().GetElement(selectedElementID)
-	gui.ElementSelected(selectedElement, trans)
+	gui.ConceptSelected(selectedElement, trans)
 	return nil
 }
 

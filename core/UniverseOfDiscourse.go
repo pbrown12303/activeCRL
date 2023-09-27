@@ -394,7 +394,7 @@ func (uOfDPtr *UniverseOfDiscourse) DeleteElement(element Concept, trans *Transa
 	return uOfDPtr.DeleteElements(elements, trans)
 }
 
-// DeleteElements removes the elements from the uOfD. Pointers to the elements from elements not being deleted are set to nil.
+// DeleteElements removes the elements whose IDs are in the set from the uOfD. Pointers to the elements from elements not being deleted are set to nil.
 func (uOfDPtr *UniverseOfDiscourse) DeleteElements(elements mapset.Set, trans *Transaction) error {
 	it := elements.Iterator()
 	for id := range it.C {

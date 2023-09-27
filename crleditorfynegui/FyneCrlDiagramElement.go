@@ -170,8 +170,8 @@ func ShowSecondaryPopup(fcde FyneCrlDiagramElement, event *desktop.MouseEvent) {
 		})
 		items = append(items, showAbstractConceptItem, showRefinedConceptItem)
 	}
-	deleteDiagramElementViewItem := fyne.NewMenuItem("Delete Diagram Element View", func() {
-		FyneGUISingleton.diagramManager.deleteDiagramElementView(fcde.GetDiagramElementID())
+	deleteConceptViewItem := fyne.NewMenuItem("Delete Concept View", func() {
+		FyneGUISingleton.diagramManager.deleteConceptView(fcde.GetDiagramElementID())
 	})
 
 	editFormatItem := fyne.NewMenuItem("Edit Format", func() {
@@ -193,7 +193,7 @@ func ShowSecondaryPopup(fcde FyneCrlDiagramElement, event *desktop.MouseEvent) {
 			fcde.Refresh()
 		}
 	})
-	items = append(items, deleteDiagramElementViewItem, editFormatItem, copyFormatItem, pasteFormatItem)
+	items = append(items, deleteConceptViewItem, editFormatItem, copyFormatItem, pasteFormatItem)
 	menu := fyne.NewMenu("Diagram Element Popup", items...)
 	popup := widget.NewPopUpMenu(menu, FyneGUISingleton.window.Canvas())
 	popup.Move(event.AbsolutePosition)

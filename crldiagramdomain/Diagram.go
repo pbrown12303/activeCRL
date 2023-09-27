@@ -1719,7 +1719,19 @@ func updateDiagramElementForModelElementChange(diagramElement core.Concept, mode
 	if modelElement != nil {
 		modelElementLabel = modelElement.GetLabel(trans)
 		if modelElementLabel != diagramElement.GetLabel(trans) {
-			diagramElement.SetLabel(modelElementLabel, trans)
+			newLabel := modelElementLabel
+			if IsDiagramPointer(diagramElement, trans) {
+				if IsDiagramOwnerPointer(diagramElement, trans) {
+					newLabel = newLabel + " Owner Pointer"
+				} else if IsDiagramAbstractPointer(diagramElement, trans) {
+					newLabel = newLabel + " Abstract Pointer"
+				} else if IsDiagramRefinedPointer(diagramElement, trans) {
+					newLabel = newLabel + " Refined Pointer"
+				} else if IsDiagramElementPointer(diagramElement, trans) {
+					newLabel = newLabel + " Referenced Concept Pointer"
+				}
+			}
+			diagramElement.SetLabel(newLabel, trans)
 			if !IsDiagramPointer(diagramElement, trans) {
 				SetDisplayLabel(diagramElement, modelElementLabel, trans)
 			}

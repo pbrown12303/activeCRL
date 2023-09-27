@@ -89,15 +89,16 @@ type diagramTab struct {
 // FyneDiagramManager manages the relationship between the fyne DiagramWidgets and the
 // underlying CRL model. It is a component of the  FyneGUI
 type FyneDiagramManager struct {
-	fyneGUI                 *CrlEditorFyneGUI
-	diagramArea             *fyne.Container
-	diagramTabs             map[string]*diagramTab
-	toolbar                 *fyne.Container
-	toolButtons             map[ToolbarSelection]*widget.Button
-	tabArea                 *container.DocTabs
-	diagramObserver         *diagramObserver
-	diagramElementObserver  *diagramElementObserver
-	currentToolbarSelection ToolbarSelection
+	fyneGUI                                *CrlEditorFyneGUI
+	diagramArea                            *fyne.Container
+	diagramTabs                            map[string]*diagramTab
+	toolbar                                *fyne.Container
+	toolButtons                            map[ToolbarSelection]*widget.Button
+	tabArea                                *container.DocTabs
+	diagramObserver                        *diagramObserver
+	diagramElementObserver                 *diagramElementObserver
+	currentToolbarSelection                ToolbarSelection
+	connectionTransactionTransientConcepts mapset.Set
 }
 
 // NewFyneDiagramManager creates a diagram manager and associates it with the FyneGUI
@@ -105,6 +106,7 @@ func NewFyneDiagramManager(fyneGUI *CrlEditorFyneGUI) *FyneDiagramManager {
 	var dm FyneDiagramManager
 	dm.createToolbar()
 	dm.diagramTabs = make(map[string]*diagramTab)
+	dm.connectionTransactionTransientConcepts = mapset.NewSet()
 	dm.tabArea = container.NewDocTabs()
 	dm.tabArea.OnClosed = diagramClosed
 	dm.diagramArea = container.NewBorder(nil, nil, dm.toolbar, nil, dm.tabArea)
@@ -112,6 +114,8 @@ func NewFyneDiagramManager(fyneGUI *CrlEditorFyneGUI) *FyneDiagramManager {
 	dm.diagramElementObserver = newDiagramElementObserver(&dm)
 	dm.fyneGUI = fyneGUI
 	dm.currentToolbarSelection = CursorSelected
+	dm.toolButtons[CursorSelected].Importance = widget.HighImportance
+	dm.toolButtons[CursorSelected].Refresh()
 	return &dm
 }
 
@@ -194,112 +198,109 @@ func (dm *FyneDiagramManager) closeDiagramNoUndo(diagramID string) {
 	}
 }
 
+func (dm *FyneDiagramManager) completeLinkTransaction() {
+	selectedDiagram := dm.GetSelectedDiagram()
+	connectionTransaction := selectedDiagram.ConnectionTransaction
+	if connectionTransaction != nil {
+		selectedDiagram.ConnectionTransaction = nil
+	}
+	dm.connectionTransactionTransientConcepts.Clear()
+	dm.setToolbarSelection(CursorSelected)
+}
+
 func (dm *FyneDiagramManager) createToolbar() {
 	dm.toolbar = container.NewVBox()
 	dm.toolButtons = make(map[ToolbarSelection]*widget.Button)
 	// Cursor
-	button := widget.NewButtonWithIcon("", images.ResourceCursorIconPng, nil)
-	button.OnTapped = func() {
-		dm.currentToolbarSelection = CursorSelected
-	}
+	button := widget.NewButtonWithIcon("", images.ResourceCursorIconPng, func() {
+		dm.setToolbarSelection(CursorSelected)
+	})
 	dm.toolButtons[CursorSelected] = button
 	dm.toolbar.Add(button)
 	// Element
-	button = widget.NewButtonWithIcon("", images.ResourceElementIconPng, nil)
-	button.OnTapped = func() {
-		dm.currentToolbarSelection = ElementSelected
-	}
+	button = widget.NewButtonWithIcon("", images.ResourceElementIconPng, func() {
+		dm.setToolbarSelection(ElementSelected)
+	})
 	dm.toolButtons[ElementSelected] = button
 	dm.toolbar.Add(button)
 	// Literal
-	button = widget.NewButtonWithIcon("", images.ResourceLiteralIconPng, nil)
-	button.OnTapped = func() {
-		dm.currentToolbarSelection = LiteralSelected
-	}
+	button = widget.NewButtonWithIcon("", images.ResourceLiteralIconPng, func() {
+		dm.setToolbarSelection(LiteralSelected)
+	})
 	dm.toolButtons[LiteralSelected] = button
 	dm.toolbar.Add(button)
 	// Reference
-	button = widget.NewButtonWithIcon("", images.ResourceReferenceIconPng, nil)
-	button.OnTapped = func() {
-		dm.currentToolbarSelection = ReferenceSelected
-	}
+	button = widget.NewButtonWithIcon("", images.ResourceReferenceIconPng, func() {
+		dm.setToolbarSelection(ReferenceSelected)
+	})
 	dm.toolButtons[ReferenceSelected] = button
 	dm.toolbar.Add(button)
 	// ReferenceLink
-	button = widget.NewButtonWithIcon("", images.ResourceReferenceLinkIconPng, nil)
-	button.OnTapped = func() {
-		dm.currentToolbarSelection = ReferenceLinkSelected
+	button = widget.NewButtonWithIcon("", images.ResourceReferenceLinkIconPng, func() {
+		dm.setToolbarSelection(ReferenceLinkSelected)
 		dm.startCreateLinkTransaction()
-	}
+	})
 	dm.toolButtons[ReferenceLinkSelected] = button
 	dm.toolbar.Add(button)
 	// Refinement
-	button = widget.NewButtonWithIcon("", images.ResourceRefinementIconPng, nil)
-	button.OnTapped = func() {
-		dm.currentToolbarSelection = RefinementSelected
-	}
+	button = widget.NewButtonWithIcon("", images.ResourceRefinementIconPng, func() {
+		dm.setToolbarSelection(RefinementSelected)
+	})
 	dm.toolButtons[RefinementSelected] = button
 	dm.toolbar.Add(button)
 	// RefinementLink
-	button = widget.NewButtonWithIcon("", images.ResourceRefinementLinkIconPng, nil)
-	button.OnTapped = func() {
-		dm.currentToolbarSelection = RefinementLinkSelected
+	button = widget.NewButtonWithIcon("", images.ResourceRefinementLinkIconPng, func() {
+		dm.setToolbarSelection(RefinementLinkSelected)
 		dm.startCreateLinkTransaction()
-	}
+	})
 	dm.toolButtons[RefinementLinkSelected] = button
 	dm.toolbar.Add(button)
 	// OwnerPointer
-	button = widget.NewButtonWithIcon("", images.ResourceOwnerPointerIconPng, nil)
-	button.OnTapped = func() {
-		dm.currentToolbarSelection = OwnerPointerSelected
+	button = widget.NewButtonWithIcon("", images.ResourceOwnerPointerIconPng, func() {
+		dm.setToolbarSelection(OwnerPointerSelected)
 		dm.startCreateLinkTransaction()
-	}
+	})
 	dm.toolButtons[OwnerPointerSelected] = button
 	dm.toolbar.Add(button)
 	// ReferencedElementPointer
-	button = widget.NewButtonWithIcon("", images.ResourceElementPointerIconPng, nil)
-	button.OnTapped = func() {
-		dm.currentToolbarSelection = ReferencedElementPointerSelected
+	button = widget.NewButtonWithIcon("", images.ResourceElementPointerIconPng, func() {
+		dm.setToolbarSelection(ReferencedElementPointerSelected)
 		dm.startCreateLinkTransaction()
-	}
+	})
 	dm.toolButtons[ReferencedElementPointerSelected] = button
 	dm.toolbar.Add(button)
 	// AbstractPointer
-	button = widget.NewButtonWithIcon("", images.ResourceAbstractPointerIconPng, nil)
-	button.OnTapped = func() {
-		dm.currentToolbarSelection = AbstractElementPointerSelected
+	button = widget.NewButtonWithIcon("", images.ResourceAbstractPointerIconPng, func() {
+		dm.setToolbarSelection(AbstractElementPointerSelected)
 		dm.startCreateLinkTransaction()
-	}
+	})
 	dm.toolButtons[AbstractElementPointerSelected] = button
 	dm.toolbar.Add(button)
 	// RefinedPointer
-	button = widget.NewButtonWithIcon("", images.ResourceRefinedPointerIconPng, nil)
-	button.OnTapped = func() {
-		dm.currentToolbarSelection = RefinedElementPointerSelected
+	button = widget.NewButtonWithIcon("", images.ResourceRefinedPointerIconPng, func() {
+		dm.setToolbarSelection(RefinedElementPointerSelected)
 		dm.startCreateLinkTransaction()
-	}
+	})
 	dm.toolButtons[RefinedElementPointerSelected] = button
 	dm.toolbar.Add(button)
 	// Separator
 	separator := widget.NewSeparator()
 	dm.toolbar.Add(separator)
 	// OneToOne Map
-	button = widget.NewButtonWithIcon("", images.ResourceOneToOneIconPng, nil)
-	button.OnTapped = func() {
-		dm.currentToolbarSelection = OneToOneMapSelected
-	}
+	button = widget.NewButtonWithIcon("", images.ResourceOneToOneIconPng, func() {
+		dm.setToolbarSelection(OneToOneMapSelected)
+	})
 	dm.toolButtons[OneToOneMapSelected] = button
 	dm.toolbar.Add(button)
 	// Clone Selection As Refinement
-	button = widget.NewButtonWithIcon("", images.ResourceRefinedCloneIconPng, nil)
-	button.OnTapped = func() {
-		dm.currentToolbarSelection = CloneSelectionAsRefinementSelected
-	}
+	button = widget.NewButtonWithIcon("", images.ResourceRefinedCloneIconPng, func() {
+		dm.setToolbarSelection(CloneSelectionAsRefinementSelected)
+	})
 	dm.toolButtons[CloneSelectionAsRefinementSelected] = button
 	dm.toolbar.Add(button)
 }
 
-func (dm *FyneDiagramManager) deleteDiagramElementView(elementID string) error {
+func (dm *FyneDiagramManager) deleteConceptView(elementID string) error {
 	trans, isNew := FyneGUISingleton.editor.GetTransaction()
 	if isNew {
 		defer FyneGUISingleton.editor.EndTransaction()
@@ -410,7 +411,7 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 	} else {
 		dm.ElementSelected("", trans)
 	}
-	dm.currentToolbarSelection = CursorSelected
+	dm.setToolbarSelection(CursorSelected)
 }
 
 func (dm *FyneDiagramManager) displayDiagram(diagram core.Concept, trans *core.Transaction) error {
@@ -481,7 +482,25 @@ func (dm *FyneDiagramManager) initialize() {
 	dm.tabArea.SetItems([]*container.TabItem{})
 	dm.tabArea.Select(nil)
 	dm.currentToolbarSelection = CursorSelected
+	dm.toolButtons[CursorSelected].Importance = widget.HighImportance
+	dm.toolButtons[CursorSelected].Refresh()
+	dm.connectionTransactionTransientConcepts.Clear()
 	dm.closeAllDiagrams()
+}
+
+func (dm *FyneDiagramManager) cancelLinkTransaction() {
+	selectedDiagram := dm.GetSelectedDiagram()
+	connectionTransaction := selectedDiagram.ConnectionTransaction
+	if connectionTransaction != nil {
+		selectedDiagram.RemoveElement(connectionTransaction.Link.GetDiagramElementID())
+		selectedDiagram.ConnectionTransaction = nil
+	}
+	trans, isNew := dm.fyneGUI.editor.GetTransaction()
+	if isNew {
+		defer dm.fyneGUI.editor.EndTransaction()
+	}
+	trans.GetUniverseOfDiscourse().DeleteElements(dm.connectionTransactionTransientConcepts, trans)
+	dm.connectionTransactionTransientConcepts.Clear()
 }
 
 // closeAllDiagrams closes all of the currently displayed diagrams. It is not an undoable operation
@@ -765,6 +784,7 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 					}
 				}
 			}
+			dm.completeLinkTransaction()
 		}
 	}
 	return nil
@@ -986,6 +1006,21 @@ func (dm *FyneDiagramManager) showOwner(elementID string) error {
 	return nil
 }
 
+func (dm *FyneDiagramManager) setToolbarSelection(sel ToolbarSelection) {
+	if sel != dm.currentToolbarSelection {
+		dm.cancelLinkTransaction()
+		dm.currentToolbarSelection = sel
+		dm.toolButtons[sel].Importance = widget.HighImportance
+		dm.toolButtons[sel].Refresh()
+		for i := CursorSelected; i <= CloneSelectionAsRefinementSelected; i++ {
+			if i != sel {
+				dm.toolButtons[i].Importance = widget.LowImportance
+				dm.toolButtons[i].Refresh()
+			}
+		}
+	}
+}
+
 func (dm *FyneDiagramManager) showAbstractConcept(elementID string) error {
 	trans, isNew := FyneGUISingleton.editor.GetTransaction()
 	if isNew {
@@ -1196,6 +1231,7 @@ func (dm *FyneDiagramManager) startCreateLinkTransaction() {
 			uOfD.MarkUndoPoint()
 			crlLink, _ = crldiagramdomain.NewDiagramReferenceLink(uOfD, trans)
 			crlModelReference, _ := uOfD.NewReference(trans)
+			dm.connectionTransactionTransientConcepts.Add(crlModelReference.GetConceptID(trans))
 			crlModelReference.SetLabel(FyneGUISingleton.editor.GetDefaultReferenceLabel(), trans)
 			crldiagramdomain.SetReferencedModelConcept(crlLink, crlModelReference, trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
@@ -1204,6 +1240,7 @@ func (dm *FyneDiagramManager) startCreateLinkTransaction() {
 			uOfD.MarkUndoPoint()
 			crlLink, _ = crldiagramdomain.NewDiagramRefinementLink(uOfD, trans)
 			crlModelRefinement, _ := uOfD.NewRefinement(trans)
+			dm.connectionTransactionTransientConcepts.Add(crlModelRefinement.GetConceptID(trans))
 			crlModelRefinement.SetLabel(FyneGUISingleton.editor.GetDefaultRefinementLabel(), trans)
 			crldiagramdomain.SetReferencedModelConcept(crlLink, crlModelRefinement, trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
@@ -1227,6 +1264,7 @@ func (dm *FyneDiagramManager) startCreateLinkTransaction() {
 		}
 		crlDiagram := uOfD.GetElement(currentDiagram.ID)
 		crlLink.SetOwningConcept(crlDiagram, trans)
+		dm.connectionTransactionTransientConcepts.Add(crlLink.GetConceptID(trans))
 		currentDiagram.StartNewLinkConnectionTransaction(fyneLink)
 	}
 }
