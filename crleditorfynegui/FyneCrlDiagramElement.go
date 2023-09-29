@@ -194,6 +194,19 @@ func ShowSecondaryPopup(fcde FyneCrlDiagramElement, event *desktop.MouseEvent) {
 		}
 	})
 	items = append(items, deleteConceptViewItem, editFormatItem, copyFormatItem, pasteFormatItem)
+	bringForwardItem := fyne.NewMenuItem("Bring Forward", func() {
+		FyneGUISingleton.diagramManager.GetSelectedDiagram().BringForward(fcde.GetDiagramElementID())
+	})
+	bringToFrontItem := fyne.NewMenuItem("Bring To Front", func() {
+		FyneGUISingleton.diagramManager.GetSelectedDiagram().BringToFront(fcde.GetDiagramElementID())
+	})
+	sendBackwardItem := fyne.NewMenuItem("Send Backward", func() {
+		FyneGUISingleton.diagramManager.GetSelectedDiagram().SendBackward(fcde.GetDiagramElementID())
+	})
+	sendToBackItem := fyne.NewMenuItem("Send To Back", func() {
+		FyneGUISingleton.diagramManager.GetSelectedDiagram().SendToBack(fcde.GetDiagramElementID())
+	})
+	items = append(items, bringForwardItem, bringToFrontItem, sendBackwardItem, sendToBackItem)
 	menu := fyne.NewMenu("Diagram Element Popup", items...)
 	popup := widget.NewPopUpMenu(menu, FyneGUISingleton.window.Canvas())
 	popup.Move(event.AbsolutePosition)

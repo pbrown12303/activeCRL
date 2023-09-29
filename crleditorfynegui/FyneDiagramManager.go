@@ -44,7 +44,7 @@ const (
 	AbstractElementPointerSelected
 	RefinedElementPointerSelected
 	OneToOneMapSelected
-	CloneSelectionAsRefinementSelected
+	CreateRefinementOfConceptSelected
 )
 
 // ToString retuns text identifying the ToolbarSelection
@@ -74,7 +74,7 @@ func (selection ToolbarSelection) ToString() string {
 		return "RefinedElementPointer Selected"
 	case OneToOneMapSelected:
 		return "OneToOne Map Selected"
-	case CloneSelectionAsRefinementSelected:
+	case CreateRefinementOfConceptSelected:
 		return "Clone Selection As Refinement Selected"
 	}
 	return ""
@@ -158,6 +158,7 @@ func (dm *FyneDiagramManager) addLinkToDiagram(link core.Concept, trans *core.Tr
 	diagramLink.SetSourcePad(fyneSourcePad)
 	diagramLink.SetTargetPad(fyneTargetPad)
 	link.Register(dm.diagramElementObserver)
+	diagramWidget.Refresh()
 	return diagramLink
 }
 
@@ -321,9 +322,9 @@ func (dm *FyneDiagramManager) createToolbar() {
 	dm.toolbar.Add(button)
 	// Clone Selection As Refinement
 	button = widget.NewButtonWithIcon("", images.ResourceRefinedCloneIconPng, func() {
-		dm.setToolbarSelection(CloneSelectionAsRefinementSelected)
+		dm.setToolbarSelection(CreateRefinementOfConceptSelected)
 	})
-	dm.toolButtons[CloneSelectionAsRefinementSelected] = button
+	dm.toolButtons[CreateRefinementOfConceptSelected] = button
 	dm.toolbar.Add(button)
 }
 
@@ -405,10 +406,10 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 		sourceMap := uOfD.GetElementWithURI(crlmapsdomain.CrlOneToOneMapURI)
 		el, _ = uOfD.CreateReplicateAsRefinement(sourceMap, trans)
 		el.SetOwningConcept(crlDiagram.GetOwningConcept(trans), trans)
-	case CloneSelectionAsRefinementSelected:
+	case CreateRefinementOfConceptSelected:
 		selection := FyneGUISingleton.editor.GetCurrentSelection()
 		if selection != nil {
-			el, _ = uOfD.CreateReplicateAsRefinement(selection, trans)
+			el, _ = uOfD.CreateRefinementOfConcept(selection, trans)
 			el.SetOwningConcept(crlDiagram.GetOwningConcept(trans), trans)
 		}
 	}
@@ -1015,7 +1016,7 @@ func (dm *FyneDiagramManager) setToolbarSelection(sel ToolbarSelection) {
 		dm.currentToolbarSelection = sel
 		dm.toolButtons[sel].Importance = widget.HighImportance
 		dm.toolButtons[sel].Refresh()
-		for i := CursorSelected; i <= CloneSelectionAsRefinementSelected; i++ {
+		for i := CursorSelected; i <= CreateRefinementOfConceptSelected; i++ {
 			if i != sel {
 				dm.toolButtons[i].Importance = widget.LowImportance
 				dm.toolButtons[i].Refresh()

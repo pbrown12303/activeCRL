@@ -182,6 +182,36 @@ func (uOfDPtr *UniverseOfDiscourse) Clone(trans *Transaction) *UniverseOfDiscour
 	return newUofD
 }
 
+// CreateRefinementOfConcept creates a new concept of the same type as the original and makes the new concept a refinement of
+// the original
+func (uOfDPtr *UniverseOfDiscourse) CreateRefinementOfConcept(original Concept, trans *Transaction, newURI ...string) (Concept, error) {
+	uri := ""
+	if len(newURI) > 0 {
+		uri = newURI[0]
+	}
+	refinedConcept, err := uOfDPtr.NewConcept(original.GetConceptType(), trans, uri)
+	if err != nil {
+		return nil, err
+	}
+	err = refinedConcept.SetLabel("Instance of "+original.GetLabel(trans), trans)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.CreateRefinementOfConcept refinedConcept.SetLabel failed")
+	}
+	refinementURI := ""
+	if len(newURI) == 1 && newURI[0] != "" {
+		refinementURI = newURI[0] + original.GetConceptID(trans) + "/Refinement"
+	}
+	refinement, err := uOfDPtr.NewRefinement(trans, refinementURI)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.CreateRefinementOfConcept failed: ")
+	}
+	refinement.SetOwningConcept(refinedConcept, trans)
+	refinement.SetAbstractConcept(original, trans)
+	refinement.SetRefinedConcept(refinedConcept, trans)
+	refinement.SetLabel("Refines "+original.GetLabel(trans), trans)
+	return refinedConcept, nil
+}
+
 // CreateReplicateAsRefinement replicates the indicated Element and all of its descendent Elements
 // except that descendant Refinements are not replicated.
 // For each replicated Element, a Refinement is created with the abstractElement being the original and the refinedElement
@@ -340,14 +370,16 @@ func (uOfDPtr *UniverseOfDiscourse) deleteElement(el Concept, trans *Transaction
 	it := uOfDPtr.listenersMap.GetMappedValues(uuid).Iterator()
 	for id := range it.C {
 		listener := uOfDPtr.GetElement(id.(string))
-		switch listener.GetConceptType() {
-		case Reference:
-			listener.SetReferencedConcept(nil, NoAttribute, trans)
-		case Refinement:
-			if listener.GetAbstractConcept(trans) == el {
-				listener.SetAbstractConcept(nil, trans)
-			} else if listener.GetRefinedConcept(trans) == el {
-				listener.SetRefinedConcept(nil, trans)
+		if listener != nil {
+			switch listener.GetConceptType() {
+			case Reference:
+				listener.SetReferencedConcept(nil, NoAttribute, trans)
+			case Refinement:
+				if listener.GetAbstractConcept(trans) == el {
+					listener.SetAbstractConcept(nil, trans)
+				} else if listener.GetRefinedConcept(trans) == el {
+					listener.SetRefinedConcept(nil, trans)
+				}
 			}
 		}
 	}
