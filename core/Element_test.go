@@ -161,7 +161,7 @@ var _ = Describe("Element internals test", func() {
 		Context("After creating an element", func() {
 			Specify("listeningConcepts should be empty", func() {
 				el, _ := uOfD.NewElement(trans)
-				Expect(uOfD.getListenerIDs(el.GetConceptID(trans)).Cardinality()).To(Equal(0))
+				Expect(uOfD.GetListenerIDs(el.GetConceptID(trans)).Cardinality()).To(Equal(0))
 			})
 			Context("after adding an referencingConcept", func() {
 				var el Concept
@@ -173,7 +173,7 @@ var _ = Describe("Element internals test", func() {
 				})
 				It("should be present in listeners", func() {
 					found := false
-					it := uOfD.getListenerIDs(el.GetConceptID(trans)).Iterator()
+					it := uOfD.GetListenerIDs(el.GetConceptID(trans)).Iterator()
 					for id := range it.C {
 						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(trans) == referencingConcept.GetConceptID(trans) {
@@ -195,7 +195,7 @@ var _ = Describe("Element internals test", func() {
 				})
 				It("should not be present in the listeningConcepts", func() {
 					found := false
-					it := uOfD.getListenerIDs(el.GetConceptID(trans)).Iterator()
+					it := uOfD.GetListenerIDs(el.GetConceptID(trans)).Iterator()
 					for id := range it.C {
 						oc := uOfD.GetElement(id.(string))
 						if oc.GetConceptID(trans) == referencingConcept.GetConceptID(trans) {

@@ -289,7 +289,7 @@ func executeOneToOneMap(mapInstance core.Concept, notification *core.ChangeNotif
 				}
 				SetTarget(mapInstance, target, core.NoAttribute, trans)
 			} else {
-				target, err = uOfD.CreateReplicateAsRefinement(definingTarget, trans)
+				target, err = uOfD.CreateRefinementOfConcept(definingTarget, trans)
 				if err != nil {
 					return errors.Wrap(err, "executeOneToOneMap failed")
 				}
@@ -307,7 +307,10 @@ func executeOneToOneMap(mapInstance core.Concept, notification *core.ChangeNotif
 			}
 		}
 	case core.OwningConceptID, core.LiteralValue, core.ReferencedConceptID, core.AbstractConceptID, core.RefinedConceptID, core.Label, core.Definition:
-		target = getAttributeTarget(mapInstance, trans)
+		target, err = getAttributeTarget(mapInstance, trans)
+		if err != nil {
+			return errors.Wrap(err, "executeOneToOneMap failed")
+		}
 		SetTarget(mapInstance, target, targetRefAttributeName, trans)
 		// Make value assignments as required
 		// If the sourceRef is an attribute value reference, get the source value
@@ -356,6 +359,9 @@ func executeOneToOneMap(mapInstance core.Concept, notification *core.ChangeNotif
 				}
 				targetReferent = GetTarget(targetReferentMap, trans)
 				if targetReferent == nil {
+					return nil
+				}
+				if target == nil {
 					return nil
 				}
 				// Now actually assign the values
@@ -414,12 +420,12 @@ func getAbstractMap(thisMap core.Concept, trans *core.Transaction) core.Concept 
 	return nil
 }
 
-func getAttributeTarget(attributeMap core.Concept, trans *core.Transaction) core.Concept {
+func getAttributeTarget(attributeMap core.Concept, trans *core.Transaction) (core.Concept, error) {
 	// Assumes that the parent map's target is either the desired target or an ancestor of the desired target
 	// The target is either going to be the parent map's target or one of its descendants
 	parentTarget := getParentMapTarget(attributeMap, trans)
 	if parentTarget == nil {
-		return nil
+		return nil, nil
 	}
 	// Get the abstract attributeMap
 	abstractMap := getAbstractMap(attributeMap, trans)
@@ -427,13 +433,25 @@ func getAttributeTarget(attributeMap core.Concept, trans *core.Transaction) core
 	abstractTarget := GetTarget(abstractMap, trans)
 	// Find the descendent of the parent target that has the attributeMap's target as an ancestor
 	if parentTarget.IsRefinementOf(abstractTarget, trans) {
-		return parentTarget
+		return parentTarget, nil
 	}
-	childTarget := parentTarget.GetFirstOwnedConceptRefinedFrom(abstractTarget, trans)
-	if childTarget != nil {
-		return childTarget
+	// See if the parent target is of the right type to be the parent of the abstract target.
+	// If it is not, return nil (i.e. not found)
+	// If it is, search for an existing unmapped child that is of the correct type and not already the target of a
+	// map. If found, use it as the child target. If one is not found, create it and
+	// make the parent target its parent
+	candidateChildTargets := parentTarget.GetOwnedConceptsRefinedFrom(abstractTarget, trans)
+	for _, candidateChildTarget := range candidateChildTargets {
+		if !hasTargetListener(candidateChildTarget, trans) {
+			return candidateChildTarget, nil
+		}
 	}
-	return nil
+	// childTarget, err := trans.GetUniverseOfDiscourse().CreateRefinementOfConcept(abstractTarget, trans)
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "getAttributeTarget failed")
+	// }
+	// childTarget.SetOwningConcept(parentTarget, trans)
+	return nil, nil
 }
 
 // GetSource returns the source referenced by the given map
@@ -558,6 +576,18 @@ func FindTargetForSource(currentMap core.Concept, source core.Concept, trans *co
 	return nil
 }
 
+func hasTargetListener(el core.Concept, trans *core.Transaction) bool {
+	uOfD := trans.GetUniverseOfDiscourse()
+	it := uOfD.GetListenerIDs(el.GetConceptID(trans)).Iterator()
+	for listenerID := range it.C {
+		listener := uOfD.GetElement(listenerID.(string))
+		if listener.IsRefinementOfURI(CrlMapTargetURI, trans) {
+			return true
+		}
+	}
+	return false
+}
+
 func instantiateMapChildren(parentDefiningMap core.Concept, parentInstanceMap core.Concept, source core.Concept, target core.Concept, uOfD *core.UniverseOfDiscourse, trans *core.Transaction) error {
 	// for each of the abstractMap's children that is a map
 	for _, definingChildMap := range parentDefiningMap.GetOwnedConceptsRefinedFromURI(CrlMapURI, trans) {
@@ -608,7 +638,7 @@ func instantiateMapChildren(parentDefiningMap core.Concept, parentInstanceMap co
 					}
 				}
 				if newMapInstance == nil {
-					newMapInstance, err := uOfD.CreateReplicateAsRefinement(definingChildMap, trans)
+					newMapInstance, err := uOfD.CreateRefinementOfConcept(definingChildMap, trans)
 					if err != nil {
 						return errors.Wrap(err, "crlmaps.instantiateMapChildren failed")
 					}
@@ -652,7 +682,7 @@ func instantiateMapChildren(parentDefiningMap core.Concept, parentInstanceMap co
 					}
 					if newMapInstance == nil {
 						var err error
-						newMapInstance, err = uOfD.CreateReplicateAsRefinement(definingChildMap, trans)
+						newMapInstance, err = uOfD.CreateRefinementOfConcept(definingChildMap, trans)
 						if err != nil {
 							return errors.Wrap(err, "crlmaps.instantiateMapChildren failed")
 						}

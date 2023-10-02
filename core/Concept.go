@@ -1065,15 +1065,16 @@ func (cPtr *concept) notifyObservers(notification *ChangeNotification, trans *Tr
 
 func (cPtr *concept) notifyPointerOwners(notification *ChangeNotification, trans *Transaction) error {
 	trans.ReadLockElement(cPtr)
-	if cPtr.uOfD != nil {
-		it := cPtr.uOfD.listenersMap.GetMappedValues(cPtr.ConceptID).Iterator()
+	uOfD := cPtr.uOfD
+	if uOfD != nil {
+		it := uOfD.listenersMap.GetMappedValues(cPtr.ConceptID).Iterator()
 		for id := range it.C {
-			listener := cPtr.uOfD.GetElement(id.(string))
-			indicatedConceptChangeNotification, err := cPtr.uOfD.NewForwardingChangeNotification(listener, IndicatedConceptChanged, notification, trans)
+			listener := uOfD.GetElement(id.(string))
+			indicatedConceptChangeNotification, err := uOfD.NewForwardingChangeNotification(listener, IndicatedConceptChanged, notification, trans)
 			if err != nil {
 				return errors.Wrap(err, "element.notifyPointerOwners failed")
 			}
-			err = cPtr.uOfD.callAssociatedFunctions(listener, indicatedConceptChangeNotification, trans)
+			err = uOfD.callAssociatedFunctions(listener, indicatedConceptChangeNotification, trans)
 			if err != nil {
 				it.Stop()
 				return errors.Wrap(err, "element.notifyPointerOwners failed")

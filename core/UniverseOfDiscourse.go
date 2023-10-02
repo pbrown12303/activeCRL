@@ -566,8 +566,8 @@ func (uOfDPtr *UniverseOfDiscourse) GetIDForURI(uri string) string {
 	return uuid.NewV5(uuid.NamespaceURL, uri).String()
 }
 
-// getListenerIDs returns the set of listener IDs for the indicated ID
-func (uOfDPtr *UniverseOfDiscourse) getListenerIDs(id string) mapset.Set {
+// GetListenerIDs returns the set of listener IDs for the indicated ID
+func (uOfDPtr *UniverseOfDiscourse) GetListenerIDs(id string) mapset.Set {
 	return uOfDPtr.listenersMap.GetMappedValues(id)
 }
 
