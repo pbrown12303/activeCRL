@@ -140,18 +140,42 @@ func ShowSecondaryPopup(fcde FyneCrlDiagramElement, event *desktop.MouseEvent) {
 		FyneGUISingleton.treeManager.ShowElementInTree(fcde.GetModelElement())
 	})
 	items = append(items, showModelConceptItem)
+
 	showDiagramElementItem := fyne.NewMenuItem("Show Diagram Element in Navigator", func() {
 		FyneGUISingleton.treeManager.ShowElementInTree(fcde.GetDiagramElement())
 	})
 	items = append(items, showDiagramElementItem)
+
 	showOwnerItem := fyne.NewMenuItem("Show Owner", func() {
 		FyneGUISingleton.diagramManager.showOwner(fcde.GetDiagramElementID())
 	})
 	items = append(items, showOwnerItem)
+
 	showOwnedConceptsItem := fyne.NewMenuItem("Show Owned Conecpts", func() {
-		FyneGUISingleton.diagramManager.showOwnedConcepts(fcde.GetDiagramElementID())
+		FyneGUISingleton.diagramManager.showOwnedConcepts(fcde.GetDiagramElementID(), false, false)
 	})
 	items = append(items, showOwnedConceptsItem)
+
+	showOwnedConceptsSkipRefimementsItem := fyne.NewMenuItem("Show Owned Conecpts Skip Refinements", func() {
+		FyneGUISingleton.diagramManager.showOwnedConcepts(fcde.GetDiagramElementID(), false, true)
+	})
+	items = append(items, showOwnedConceptsSkipRefimementsItem)
+
+	showOwnedConceptsRecursivelyItem := fyne.NewMenuItem("Show Owned Conecpts Recursively", func() {
+		FyneGUISingleton.diagramManager.showOwnedConcepts(fcde.GetDiagramElementID(), true, false)
+	})
+	items = append(items, showOwnedConceptsRecursivelyItem)
+
+	showOwnedConceptsRecursivelySkipRefimementsItem := fyne.NewMenuItem("Show Owned Conecpts Recursively Skip Refinements", func() {
+		FyneGUISingleton.diagramManager.showOwnedConcepts(fcde.GetDiagramElementID(), true, true)
+	})
+	items = append(items, showOwnedConceptsRecursivelySkipRefimementsItem)
+
+	showReferencedConcepsRecursivelyItem := fyne.NewMenuItem("Show Referenced Concepts Recursively", func() {
+		FyneGUISingleton.diagramManager.showReferencedConceptsRecursively(fcde.GetDiagramElementID())
+	})
+	items = append(items, showReferencedConcepsRecursivelyItem)
+
 	switch fcde.GetModelElement().GetConceptType() {
 	case core.Reference:
 		showReferencedConceptItem := fyne.NewMenuItem("Show Referenced Concept", func() {

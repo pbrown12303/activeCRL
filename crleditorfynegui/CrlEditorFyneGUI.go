@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
@@ -257,6 +258,7 @@ func (gui *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
 	gui.userPreferencesItem = fyne.NewMenuItem("UserPreferences", func() {
 		preferences := crleditor.UserPreferences{}
 		preferences = *gui.editor.GetUserPreferences()
+
 		referenceRadioGroup := widget.NewRadioGroup([]string{"Node", "Link"}, func(s string) {
 			if s == "Link" {
 				preferences.DropDiagramReferenceAsLink = true
@@ -271,6 +273,7 @@ func (gui *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
 			referenceRadioGroup.Selected = "Node"
 		}
 		referenceChoice := container.NewHBox(widget.NewLabel("Drop Reference as: "), referenceRadioGroup)
+
 		refinementRadioGroup := widget.NewRadioGroup([]string{"Node", "Link"}, func(s string) {
 			if s == "Link" {
 				preferences.DropDiagramRefinementAsLink = true
@@ -285,7 +288,34 @@ func (gui *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
 			refinementRadioGroup.Selected = "Node"
 		}
 		refinementChoice := container.NewHBox(widget.NewLabel("Drop Refinement as: "), refinementRadioGroup)
-		vBox := container.NewVBox(referenceChoice, refinementChoice)
+
+		hSpacingBinding := binding.NewFloat()
+		hSpacingBinding.Set(preferences.HorizontalLayoutSpacing)
+		hSpacingString := binding.FloatToString(hSpacingBinding)
+		hSpacingEntry := widget.NewEntryWithData(hSpacingString)
+		hSpacingEntry.Scroll = container.ScrollNone
+		hSpacingEntry.Wrapping = fyne.TextWrapOff
+		hSpacing := container.NewHBox(widget.NewLabel("Horizontal Layout Spacing: "), hSpacingEntry)
+		hSpacingListener := binding.NewDataListener(func() {
+			hSpacingValue, _ := hSpacingBinding.Get()
+			preferences.HorizontalLayoutSpacing = hSpacingValue
+		})
+		hSpacingBinding.AddListener(hSpacingListener)
+
+		vSpacingBinding := binding.NewFloat()
+		vSpacingBinding.Set(preferences.VerticalLayoutSpacing)
+		vSpacingString := binding.FloatToString(vSpacingBinding)
+		vSpacingEntry := widget.NewEntryWithData(vSpacingString)
+		vSpacingEntry.Scroll = container.ScrollNone
+		vSpacingEntry.Wrapping = fyne.TextWrapOff
+		vSpacing := container.NewHBox(widget.NewLabel("Vertical Layout Spacing: "), vSpacingEntry)
+		vSpacingListener := binding.NewDataListener(func() {
+			vSpacingValue, _ := vSpacingBinding.Get()
+			preferences.VerticalLayoutSpacing = vSpacingValue
+		})
+		vSpacingBinding.AddListener(vSpacingListener)
+
+		vBox := container.NewVBox(referenceChoice, refinementChoice, hSpacing, vSpacing)
 		dialog.ShowCustomConfirm("User Preferences", "Save", "Cancel", vBox, func(b bool) {
 			if b {
 				*gui.editor.GetUserPreferences() = preferences

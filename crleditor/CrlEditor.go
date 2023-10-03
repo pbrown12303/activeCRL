@@ -23,6 +23,8 @@ type UserPreferences struct {
 	WorkspacePath               string
 	DropDiagramReferenceAsLink  bool
 	DropDiagramRefinementAsLink bool
+	HorizontalLayoutSpacing     float64
+	VerticalLayoutSpacing       float64
 }
 
 // Settings reflect the current status of the editing session
@@ -476,8 +478,8 @@ func (editor *Editor) Redo(trans *core.Transaction) error {
 	editor.SelectElementUsingIDString(editor.transientSelection.GetLiteralValue(trans), trans)
 	editor.settings.Selection = editor.transientSelection.GetLiteralValue(trans)
 	var recoveredOpenDiagrams []string
-	recoverdJsonOpenDiagrams := editor.transientDisplayedDiagrams.GetLiteralValue(trans)
-	json.Unmarshal([]byte(recoverdJsonOpenDiagrams), &recoveredOpenDiagrams)
+	recoverdJSONOpenDiagrams := editor.transientDisplayedDiagrams.GetLiteralValue(trans)
+	json.Unmarshal([]byte(recoverdJSONOpenDiagrams), &recoveredOpenDiagrams)
 	editor.settings.OpenDiagrams = recoveredOpenDiagrams
 	editor.settings.CurrentDiagram = editor.transientCurrentDiagram.GetLiteralValue(trans)
 	err := editor.RefreshGUI(trans)
@@ -643,8 +645,8 @@ func (editor *Editor) Undo(trans *core.Transaction) error {
 	editor.SelectElementUsingIDString(editor.transientSelection.GetLiteralValue(trans), trans)
 	editor.settings.Selection = editor.transientSelection.GetLiteralValue(trans)
 	var recoveredOpenDiagrams []string
-	recoverdJsonOpenDiagrams := editor.transientDisplayedDiagrams.GetLiteralValue(trans)
-	json.Unmarshal([]byte(recoverdJsonOpenDiagrams), &recoveredOpenDiagrams)
+	recoverdJSONOpenDiagrams := editor.transientDisplayedDiagrams.GetLiteralValue(trans)
+	json.Unmarshal([]byte(recoverdJSONOpenDiagrams), &recoveredOpenDiagrams)
 	editor.settings.OpenDiagrams = recoveredOpenDiagrams
 	editor.settings.CurrentDiagram = editor.transientCurrentDiagram.GetLiteralValue(trans)
 	for _, gui := range editor.editorGUIs {
@@ -670,8 +672,8 @@ func (editor *Editor) UpdateOpenDiagrams(diagramIDs []string, trans *core.Transa
 	editor.settings.OpenDiagrams = diagramIDs
 	if !editor.undoRedoInProgress {
 		jsonOpenDiagrams, _ := json.Marshal(editor.settings.OpenDiagrams)
-		stringifiedJsonOpenDiagrams := string(jsonOpenDiagrams)
-		editor.transientDisplayedDiagrams.SetLiteralValue(stringifiedJsonOpenDiagrams, trans)
+		stringifiedJSONOpenDiagrams := string(jsonOpenDiagrams)
+		editor.transientDisplayedDiagrams.SetLiteralValue(stringifiedJSONOpenDiagrams, trans)
 	}
 }
 

@@ -913,13 +913,17 @@ func (dm *FyneDiagramManager) selectElementInDiagram(elementID string, diagram *
 	return nil
 }
 
-func (dm *FyneDiagramManager) showOwnedConcepts(elementID string) error {
+func (dm *FyneDiagramManager) showOwnedConcepts(elementID string, recursive bool, skipRefinements bool) error {
 	trans, isNew := FyneGUISingleton.editor.GetTransaction()
 	if isNew {
 		defer FyneGUISingleton.editor.EndTransaction()
 	}
 	uOfD := trans.GetUniverseOfDiscourse()
 	uOfD.MarkUndoPoint()
+	return dm.showOwnedConceptsImpl(uOfD, elementID, recursive, skipRefinements, trans)
+}
+
+func (dm *FyneDiagramManager) showOwnedConceptsImpl(uOfD *core.UniverseOfDiscourse, elementID string, recursive bool, skipRefinements bool, trans *core.Transaction) error {
 	diagramElement := uOfD.GetElement(elementID)
 	if diagramElement == nil {
 		return errors.New("diagramManager.showOwnedConcepts diagramElement not found for elementID " + elementID)
@@ -933,11 +937,16 @@ func (dm *FyneDiagramManager) showOwnedConcepts(elementID string) error {
 		return errors.New("diagramManager.showOwnedConcepts modelConcept not found for elementID " + elementID)
 	}
 	it := modelConcept.GetOwnedConceptIDs(trans).Iterator()
-	var offset float64
+	var xOffset float64
+	xPreferencesOffset := FyneGUISingleton.editor.GetUserPreferences().HorizontalLayoutSpacing
+	yPreferencesOffset := FyneGUISingleton.editor.GetUserPreferences().VerticalLayoutSpacing
 	for id := range it.C {
 		child := uOfD.GetElement(id.(string))
 		if child == nil {
 			return errors.New("Child Concept is nil for id " + id.(string))
+		}
+		if skipRefinements && child.GetConceptType() == core.Refinement {
+			continue
 		}
 		diagramChildConcept := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, child, trans)
 		if diagramChildConcept == nil {
@@ -946,8 +955,9 @@ func (dm *FyneDiagramManager) showOwnedConcepts(elementID string) error {
 			crldiagramdomain.SetDisplayLabel(diagramChildConcept, child.GetLabel(trans), trans)
 			diagramElementX := crldiagramdomain.GetNodeX(diagramElement, trans)
 			diagramElementY := crldiagramdomain.GetNodeY(diagramElement, trans)
-			crldiagramdomain.SetNodeX(diagramChildConcept, diagramElementX+offset, trans)
-			crldiagramdomain.SetNodeY(diagramChildConcept, diagramElementY+50, trans)
+			diagramElementHeight := crldiagramdomain.GetNodeHeight(diagramElement, trans)
+			crldiagramdomain.SetNodeX(diagramChildConcept, diagramElementX+xOffset, trans)
+			crldiagramdomain.SetNodeY(diagramChildConcept, diagramElementY+diagramElementHeight+yPreferencesOffset, trans)
 			diagramChildConcept.SetOwningConcept(diagram, trans)
 		}
 		ownerPointer := crldiagramdomain.GetOwnerPointer(diagram, diagramElement, trans)
@@ -958,7 +968,10 @@ func (dm *FyneDiagramManager) showOwnedConcepts(elementID string) error {
 			crldiagramdomain.SetLinkTarget(ownerPointer, diagramElement, trans)
 			ownerPointer.SetOwningConcept(diagram, trans)
 		}
-		offset = offset + 50
+		xOffset = xOffset + xPreferencesOffset + crldiagramdomain.GetNodeWidth(diagramChildConcept, trans)
+		if recursive {
+			dm.showOwnedConceptsImpl(uOfD, diagramChildConcept.GetConceptID(trans), recursive, skipRefinements, trans)
+		}
 	}
 	return nil
 }
@@ -1084,6 +1097,10 @@ func (dm *FyneDiagramManager) showReferencedConcept(elementID string) error {
 	}
 	uOfD := trans.GetUniverseOfDiscourse()
 	uOfD.MarkUndoPoint()
+	return dm.showReferencedConceptImpl(uOfD, elementID, trans)
+}
+
+func (dm *FyneDiagramManager) showReferencedConceptImpl(uOfD *core.UniverseOfDiscourse, elementID string, trans *core.Transaction) error {
 	diagramElement := uOfD.GetElement(elementID)
 	if diagramElement == nil {
 		return errors.New("diagramManager.showReferencedConcept diagramElement not found for elementID " + elementID)
@@ -1101,11 +1118,11 @@ func (dm *FyneDiagramManager) showReferencedConcept(elementID string) error {
 	case core.Reference:
 		modelReference = modelConcept
 	default:
-		return errors.New("diagramManager.showReferencedConcept modelConcept is not a Reference")
+		return nil
 	}
 	modelReferencedConcept := modelReference.GetReferencedConcept(trans)
 	if modelReferencedConcept == nil {
-		return errors.New("Referenced Concept is nil")
+		return nil
 	}
 	var diagramReferencedConcept core.Concept
 	switch modelReference.GetReferencedAttributeName(trans) {
@@ -1117,8 +1134,10 @@ func (dm *FyneDiagramManager) showReferencedConcept(elementID string) error {
 			crldiagramdomain.SetDisplayLabel(diagramReferencedConcept, modelReferencedConcept.GetLabel(trans), trans)
 			diagramElementX := crldiagramdomain.GetNodeX(diagramElement, trans)
 			diagramElementY := crldiagramdomain.GetNodeY(diagramElement, trans)
-			crldiagramdomain.SetNodeX(diagramReferencedConcept, diagramElementX, trans)
-			crldiagramdomain.SetNodeY(diagramReferencedConcept, diagramElementY-100, trans)
+			diagramElementWidth := crldiagramdomain.GetNodeWidth(diagramElement, trans)
+			xOffset := FyneGUISingleton.editor.GetUserPreferences().HorizontalLayoutSpacing
+			crldiagramdomain.SetNodeX(diagramReferencedConcept, diagramElementX+diagramElementWidth+xOffset, trans)
+			crldiagramdomain.SetNodeY(diagramReferencedConcept, diagramElementY, trans)
 			diagramReferencedConcept.SetOwningConcept(diagram, trans)
 		}
 	case core.OwningConceptID:
@@ -1158,6 +1177,52 @@ func (dm *FyneDiagramManager) showReferencedConcept(elementID string) error {
 		crldiagramdomain.SetLinkSource(elementPointer, diagramElement, trans)
 		crldiagramdomain.SetLinkTarget(elementPointer, diagramReferencedConcept, trans)
 		elementPointer.SetOwningConcept(diagram, trans)
+	}
+	return nil
+}
+
+func (dm *FyneDiagramManager) showReferencedConceptsRecursively(elementID string) error {
+	trans, isNew := FyneGUISingleton.editor.GetTransaction()
+	if isNew {
+		defer FyneGUISingleton.editor.EndTransaction()
+	}
+	uOfD := trans.GetUniverseOfDiscourse()
+	uOfD.MarkUndoPoint()
+	return dm.showReferencedConceptsRecursivelyImpl(uOfD, elementID, trans)
+}
+
+func (dm *FyneDiagramManager) showReferencedConceptsRecursivelyImpl(uOfD *core.UniverseOfDiscourse, elementID string, trans *core.Transaction) error {
+	diagramElement := uOfD.GetElement(elementID)
+	if diagramElement == nil {
+		return errors.New("diagramManager.showReferencedConceptsRecursivelyImpl diagramElement not found for elementID " + elementID)
+	}
+	diagram := diagramElement.GetOwningConcept(trans)
+	if diagram == nil {
+		return errors.New("diagramManager.showOwnedConcepts diagram not found for elementID " + elementID)
+	}
+	modelConcept := crldiagramdomain.GetReferencedModelConcept(diagramElement, trans)
+	if modelConcept == nil {
+		return errors.New("diagramManager.showReferencedConceptsRecursivelyImpl modelConcept not found for elementID " + elementID)
+	}
+	if modelConcept.GetConceptType() == core.Reference {
+		err := dm.showReferencedConceptImpl(uOfD, elementID, trans)
+		if err != nil {
+			return errors.Wrap(err, "FyneDiagramManager.showReferencedConceptsRecursivelyImpl failed")
+		}
+	}
+	it := modelConcept.GetOwnedConceptIDs(trans).Iterator()
+	for id := range it.C {
+		child := uOfD.GetElement(id.(string))
+		if child == nil {
+			return errors.New("Child Concept is nil for id " + id.(string))
+		}
+		diagramChildConcept := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, child, trans)
+		if diagramChildConcept != nil {
+			err := dm.showReferencedConceptsRecursivelyImpl(uOfD, diagramChildConcept.GetConceptID(trans), trans)
+			if err != nil {
+				return errors.Wrap(err, "FyneDiagramManager.showReferencedConceptsRecursivelyImpl failed")
+			}
+		}
 	}
 	return nil
 }
