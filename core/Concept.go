@@ -1168,7 +1168,9 @@ func (cPtr *concept) propagateChange(notification *ChangeNotification, trans *Tr
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}
-		err = cPtr.notifyOwner(notification, trans)
+		if cPtr.uOfD != nil {
+			err = cPtr.notifyOwner(notification, trans)
+		}
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
 		}

@@ -372,6 +372,8 @@ func (gui *CrlEditorFyneGUI) buildCrlFyneEditorMenus() {
 				if err != nil {
 					dialog.ShowInformation("Error", "Invalid Profile Filename: "+profileNameEntry.Text, gui.window)
 				}
+				fileinfo, _ := f.Stat()
+				log.Printf("Profiling started, data in %s", fileinfo.Name())
 				pprof.StartCPUProfile(f)
 			}
 		}, gui.window)

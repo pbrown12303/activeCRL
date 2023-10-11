@@ -307,11 +307,13 @@ func executeOneToOneMap(mapInstance core.Concept, notification *core.ChangeNotif
 			}
 		}
 	case core.OwningConceptID, core.LiteralValue, core.ReferencedConceptID, core.AbstractConceptID, core.RefinedConceptID, core.Label, core.Definition:
-		target, err = getAttributeTarget(mapInstance, trans)
-		if err != nil {
-			return errors.Wrap(err, "executeOneToOneMap failed")
+		if target == nil {
+			target, err = getAttributeTarget(mapInstance, trans)
+			if err != nil {
+				return errors.Wrap(err, "executeOneToOneMap failed")
+			}
+			SetTarget(mapInstance, target, targetRefAttributeName, trans)
 		}
-		SetTarget(mapInstance, target, targetRefAttributeName, trans)
 		// Make value assignments as required
 		// If the sourceRef is an attribute value reference, get the source value
 		sourceAttributeName := sourceRef.GetReferencedAttributeName(trans)
@@ -446,12 +448,12 @@ func getAttributeTarget(attributeMap core.Concept, trans *core.Transaction) (cor
 			return candidateChildTarget, nil
 		}
 	}
-	// childTarget, err := trans.GetUniverseOfDiscourse().CreateRefinementOfConcept(abstractTarget, trans)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "getAttributeTarget failed")
-	// }
-	// childTarget.SetOwningConcept(parentTarget, trans)
-	return nil, nil
+	childTarget, err := trans.GetUniverseOfDiscourse().CreateRefinementOfConcept(abstractTarget, trans)
+	if err != nil {
+		return nil, errors.Wrap(err, "getAttributeTarget failed")
+	}
+	childTarget.SetOwningConcept(parentTarget, trans)
+	return childTarget, nil
 }
 
 // GetSource returns the source referenced by the given map
@@ -753,7 +755,16 @@ func SetTarget(theMap core.Concept, newTarget core.Concept, attributeName core.A
 
 func tickleMapChildren(parentInstanceMap core.Concept, trans *core.Transaction) error {
 	// for each of the abstractMap's children that is a map
-	for _, childMap := range parentInstanceMap.GetOwnedConceptsRefinedFromURI(CrlMapURI, trans) {
+	mapChildren := parentInstanceMap.GetOwnedConceptsRefinedFromURI(CrlMapURI, trans)
+	for _, childMap := range mapChildren {
+		err := trans.GetUniverseOfDiscourse().SendTickleNotification(parentInstanceMap, childMap, trans)
+		if err != nil {
+			return errors.Wrap(err, "tickleMapChildren failed")
+		}
+	}
+	// We have to repeat this a second time since an attempt to set a pointer will have failed if the
+	// element owning the pointer (or its parent) has not yet been created.
+	for _, childMap := range mapChildren {
 		err := trans.GetUniverseOfDiscourse().SendTickleNotification(parentInstanceMap, childMap, trans)
 		if err != nil {
 			return errors.Wrap(err, "tickleMapChildren failed")

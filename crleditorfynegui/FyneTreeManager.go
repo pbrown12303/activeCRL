@@ -153,7 +153,10 @@ func CreateNode(branch bool) fyne.CanvasObject {
 func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
 	tn := node.(*fyneTreeNode)
 	tn.id = uid
-	tn.icon.SetResource(getIconResourceByID(uid))
+	icon := getIconResourceByID(uid)
+	if icon != nil {
+		tn.icon.SetResource(icon)
+	}
 	if uid == "" {
 		tn.label.SetText("uOfD")
 	} else {
@@ -181,18 +184,20 @@ func getIconResourceByID(id string) *fyne.StaticResource {
 // getIconResource returns the icon image resource to be used in representing the given Element in the tree
 func getIconResource(el core.Concept, trans *core.Transaction) *fyne.StaticResource {
 	isDiagram := crldiagramdomain.IsDiagram(el, trans)
-	switch el.GetConceptType() {
-	case core.Reference:
-		return images.ResourceReferenceIconPng
-	case core.Literal:
-		return images.ResourceLiteralIconPng
-	case core.Refinement:
-		return images.ResourceRefinementIconPng
-	case core.Element:
-		if isDiagram {
-			return images.ResourceDiagramIconPng
+	if el != nil {
+		switch el.GetConceptType() {
+		case core.Reference:
+			return images.ResourceReferenceIconPng
+		case core.Literal:
+			return images.ResourceLiteralIconPng
+		case core.Refinement:
+			return images.ResourceRefinementIconPng
+		case core.Element:
+			if isDiagram {
+				return images.ResourceDiagramIconPng
+			}
+			return images.ResourceElementIconPng
 		}
-		return images.ResourceElementIconPng
 	}
 	return nil
 }

@@ -3,7 +3,7 @@ module github.com/pbrown12303/activeCRL
 go 1.14
 
 require (
-	fyne.io/fyne/v2 v2.4.0
+	fyne.io/fyne/v2 v2.4.1
 	fyne.io/x/fyne v0.0.0-20230411205836-1ca0ead20763
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/deckarep/golang-set v1.8.0
@@ -15,7 +15,5 @@ require (
 	github.com/sqweek/dialog v0.0.0-20220809060634-e981b270ebbf
 	golang.org/x/image v0.11.0
 )
-
-replace fyne.io/fyne/v2 v2.4.0 => C:/GoWorkspace/src/github.com/fyne
 
 replace fyne.io/x/fyne => C:/GoWorkspace/src/github.com/pbrown12303/fyne-x

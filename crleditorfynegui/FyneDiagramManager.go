@@ -937,7 +937,7 @@ func (dm *FyneDiagramManager) showOwnedConceptsImpl(uOfD *core.UniverseOfDiscour
 		return errors.New("diagramManager.showOwnedConcepts modelConcept not found for elementID " + elementID)
 	}
 	it := modelConcept.GetOwnedConceptIDs(trans).Iterator()
-	var xOffset float64
+	var xOffset float64 = 0
 	xPreferencesOffset := FyneGUISingleton.editor.GetUserPreferences().HorizontalLayoutSpacing
 	yPreferencesOffset := FyneGUISingleton.editor.GetUserPreferences().VerticalLayoutSpacing
 	for id := range it.C {
@@ -959,6 +959,7 @@ func (dm *FyneDiagramManager) showOwnedConceptsImpl(uOfD *core.UniverseOfDiscour
 			crldiagramdomain.SetNodeX(diagramChildConcept, diagramElementX+xOffset, trans)
 			crldiagramdomain.SetNodeY(diagramChildConcept, diagramElementY+diagramElementHeight+yPreferencesOffset, trans)
 			diagramChildConcept.SetOwningConcept(diagram, trans)
+			xOffset = xOffset + xPreferencesOffset + crldiagramdomain.GetNodeWidth(diagramChildConcept, trans)
 		}
 		ownerPointer := crldiagramdomain.GetOwnerPointer(diagram, diagramElement, trans)
 		if ownerPointer == nil {
@@ -968,7 +969,6 @@ func (dm *FyneDiagramManager) showOwnedConceptsImpl(uOfD *core.UniverseOfDiscour
 			crldiagramdomain.SetLinkTarget(ownerPointer, diagramElement, trans)
 			ownerPointer.SetOwningConcept(diagram, trans)
 		}
-		xOffset = xOffset + xPreferencesOffset + crldiagramdomain.GetNodeWidth(diagramChildConcept, trans)
 		if recursive {
 			dm.showOwnedConceptsImpl(uOfD, diagramChildConcept.GetConceptID(trans), recursive, skipRefinements, trans)
 		}
