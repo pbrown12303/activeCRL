@@ -8,10 +8,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// The crlExecutionFunction is the standard signature of a function that gets called when an element (including
-// its children) experience a change. Its arguments are the element that changed, the array of ChangeNotifications, and
-// a pointer to a WaitGroup that is used to determine (on a larger scale) when the execution of the triggered functions
-// has completed.
+// The crlExecutionFunction is the standard signature of a function that gets called when an element is notified of a change.
+// Its arguments are the concept that changed, and the triggering notification.
 type crlExecutionFunction func(Concept, *ChangeNotification, *Transaction) error
 
 type functionCallRecord struct {

@@ -10,10 +10,18 @@ import (
 var CrlBooleanURI = CrlDataTypesDomainURI + "/Boolean"
 
 // NewBoolean creates an instance of a Boolean
-func NewBoolean(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) core.Concept {
-	newBoolean, _ := uOfD.CreateReplicateLiteralAsRefinementFromURI(CrlBooleanURI, trans)
+func NewBoolean(label string, trans *core.Transaction, newURI ...string) core.Concept {
+	uOfD := trans.GetUniverseOfDiscourse()
+	newBoolean, _ := uOfD.CreateReplicateLiteralAsRefinementFromURI(CrlBooleanURI, trans, newURI...)
 	SetBooleanValue(newBoolean, false, trans)
+	newBoolean.SetLabel(label, trans)
 	return newBoolean
+}
+
+// NewOwnedBoolean creates a refinement of the Boolean concept and sets both its label and owner
+func NewOwnedBoolean(owner core.Concept, label string, trans *core.Transaction, newURI ...string) {
+	newBoolean := NewBoolean(label, trans, newURI...)
+	newBoolean.SetOwningConcept(owner, trans)
 }
 
 // GetBooleanValue returns the Boolean value

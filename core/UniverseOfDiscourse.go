@@ -182,18 +182,33 @@ func (uOfDPtr *UniverseOfDiscourse) Clone(trans *Transaction) *UniverseOfDiscour
 	return newUofD
 }
 
+// CreateOwnedRefinementOfConcept creates a refinement of the concept identified by the URI, setting its owner and label
+func (uOfDPtr *UniverseOfDiscourse) CreateOwnedRefinementOfConcept(original Concept, owner Concept, label string, trans *Transaction, newURI ...string) (Concept, error) {
+	newConcept, err := uOfDPtr.CreateRefinementOfConcept(original, label, trans, newURI...)
+	if err != nil {
+		return nil, errors.Wrap(err, "CreateOwnedRefinementOfConceptURI failed")
+	}
+	newConcept.SetOwningConcept(owner, trans)
+	return newConcept, nil
+}
+
+// CreateOwnedRefinementOfConceptURI creates a refinement of the concept identified by the URI, setting its owner and label
+func (uOfDPtr *UniverseOfDiscourse) CreateOwnedRefinementOfConceptURI(originalURI string, owner Concept, label string, trans *Transaction, newURI ...string) (Concept, error) {
+	original := uOfDPtr.GetElementWithURI(originalURI)
+	if original == nil {
+		return nil, errors.New("In CreateOwnedRefinementOfConceptURI, no concept found with uri: " + originalURI)
+	}
+	return uOfDPtr.CreateOwnedRefinementOfConcept(original, owner, label, trans, newURI...)
+}
+
 // CreateRefinementOfConcept creates a new concept of the same type as the original and makes the new concept a refinement of
 // the original
-func (uOfDPtr *UniverseOfDiscourse) CreateRefinementOfConcept(original Concept, trans *Transaction, newURI ...string) (Concept, error) {
-	uri := ""
-	if len(newURI) > 0 {
-		uri = newURI[0]
-	}
-	refinedConcept, err := uOfDPtr.NewConcept(original.GetConceptType(), trans, uri)
+func (uOfDPtr *UniverseOfDiscourse) CreateRefinementOfConcept(original Concept, label string, trans *Transaction, newURI ...string) (Concept, error) {
+	refinedConcept, err := uOfDPtr.NewConcept(original.GetConceptType(), trans, newURI...)
 	if err != nil {
 		return nil, err
 	}
-	err = refinedConcept.SetLabel("Instance of "+original.GetLabel(trans), trans)
+	err = refinedConcept.SetLabel(label, trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "UniverseOfDiscourse.CreateRefinementOfConcept refinedConcept.SetLabel failed")
 	}
@@ -217,11 +232,7 @@ func (uOfDPtr *UniverseOfDiscourse) CreateRefinementOfConcept(original Concept, 
 // For each replicated Element, a Refinement is created with the abstractElement being the original and the refinedElement
 // being the replica. The root replicated element is returned.
 func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinement(original Concept, trans *Transaction, newURI ...string) (Concept, error) {
-	uri := ""
-	if len(newURI) > 0 {
-		uri = newURI[0]
-	}
-	replicate, err := uOfDPtr.NewConcept(original.GetConceptType(), trans, uri)
+	replicate, err := uOfDPtr.NewConcept(original.GetConceptType(), trans, newURI...)
 	if err != nil {
 		return nil, err
 	}
@@ -244,15 +255,11 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinementFromURI(originalU
 // CreateReplicateLiteralAsRefinement replicates the supplied Literal and makes all elements of the replicate
 // refinements of the original elements
 func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinement(original Concept, trans *Transaction, newURI ...string) (Concept, error) {
-	uri := ""
-	if len(newURI) > 0 {
-		uri = newURI[0]
-	}
-	replicate, err := uOfDPtr.NewLiteral(trans, uri)
+	replicate, err := uOfDPtr.NewLiteral(trans, newURI...)
 	if err != nil {
 		return nil, err
 	}
-	err = uOfDPtr.replicateAsRefinement(original, replicate, trans, uri)
+	err = uOfDPtr.replicateAsRefinement(original, replicate, trans, newURI...)
 	if err != nil {
 		return nil, err
 	}
@@ -274,15 +281,11 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinement(origina
 	if original.GetConceptType() != Reference {
 		return nil, errors.New("CreateReplicateReferenceAsRefinement called with non-Reference argument")
 	}
-	uri := ""
-	if len(newURI) > 0 {
-		uri = newURI[0]
-	}
-	replicate, err := uOfDPtr.NewReference(trans, uri)
+	replicate, err := uOfDPtr.NewReference(trans, newURI...)
 	if err != nil {
 		return nil, err
 	}
-	err = uOfDPtr.replicateAsRefinement(original, replicate, trans, uri)
+	err = uOfDPtr.replicateAsRefinement(original, replicate, trans, newURI...)
 	if err != nil {
 		return nil, err
 	}
@@ -301,15 +304,11 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinementFromURI(
 // CreateReplicateRefinementAsRefinement replicates the supplied refinement and makes all elements of the replicate
 // refinements of the original elements
 func (uOfDPtr *UniverseOfDiscourse) CreateReplicateRefinementAsRefinement(original Concept, trans *Transaction, newURI ...string) (Concept, error) {
-	uri := ""
-	if len(newURI) > 0 {
-		uri = newURI[0]
-	}
-	replicate, err := uOfDPtr.NewRefinement(trans, uri)
+	replicate, err := uOfDPtr.NewRefinement(trans, newURI...)
 	if err != nil {
 		return nil, err
 	}
-	err = uOfDPtr.replicateAsRefinement(original, replicate, trans, uri)
+	err = uOfDPtr.replicateAsRefinement(original, replicate, trans, newURI...)
 	if err != nil {
 		return nil, err
 	}
@@ -1073,7 +1072,7 @@ func (uOfDPtr *UniverseOfDiscourse) NewOwnedReference(owner Concept, label strin
 }
 
 // NewOwnedRefinement creates a refinement (with optional URI) and sets its owner and label
-func (uOfDPtr *UniverseOfDiscourse) NewOwnedRefinement(owner Concept, label string, trans *Transaction, uri ...string) (Concept, error) {
+func (uOfDPtr *UniverseOfDiscourse) NewOwnedRefinement(owner Concept, label string, abstractConcept Concept, refinedConcept Concept, trans *Transaction, uri ...string) (Concept, error) {
 	ref, err := uOfDPtr.NewRefinement(trans, uri...)
 	if err != nil {
 		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
@@ -1083,6 +1082,14 @@ func (uOfDPtr *UniverseOfDiscourse) NewOwnedRefinement(owner Concept, label stri
 		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
 	}
 	err = ref.SetOwningConcept(owner, trans)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
+	}
+	err = ref.SetAbstractConcept(abstractConcept, trans)
+	if err != nil {
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
+	}
+	err = ref.SetRefinedConcept(refinedConcept, trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "UniverseOfDiscourse.NewOwnedRefinement failed")
 	}

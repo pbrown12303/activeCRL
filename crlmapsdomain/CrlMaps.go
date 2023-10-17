@@ -289,7 +289,7 @@ func executeOneToOneMap(mapInstance core.Concept, notification *core.ChangeNotif
 				}
 				SetTarget(mapInstance, target, core.NoAttribute, trans)
 			} else {
-				target, err = uOfD.CreateRefinementOfConcept(definingTarget, trans)
+				target, err = uOfD.CreateRefinementOfConcept(definingTarget, definingTarget.GetLabel(trans), trans)
 				if err != nil {
 					return errors.Wrap(err, "executeOneToOneMap failed")
 				}
@@ -448,7 +448,7 @@ func getAttributeTarget(attributeMap core.Concept, trans *core.Transaction) (cor
 			return candidateChildTarget, nil
 		}
 	}
-	childTarget, err := trans.GetUniverseOfDiscourse().CreateRefinementOfConcept(abstractTarget, trans)
+	childTarget, err := trans.GetUniverseOfDiscourse().CreateRefinementOfConcept(abstractTarget, abstractTarget.GetLabel(trans), trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "getAttributeTarget failed")
 	}
@@ -640,7 +640,7 @@ func instantiateMapChildren(parentDefiningMap core.Concept, parentInstanceMap co
 					}
 				}
 				if newMapInstance == nil {
-					newMapInstance, err := uOfD.CreateRefinementOfConcept(definingChildMap, trans)
+					newMapInstance, err := uOfD.CreateRefinementOfConcept(definingChildMap, "Instance of "+definingChildMap.GetLabel(trans), trans)
 					if err != nil {
 						return errors.Wrap(err, "crlmaps.instantiateMapChildren failed")
 					}
@@ -684,7 +684,7 @@ func instantiateMapChildren(parentDefiningMap core.Concept, parentInstanceMap co
 					}
 					if newMapInstance == nil {
 						var err error
-						newMapInstance, err = uOfD.CreateRefinementOfConcept(definingChildMap, trans)
+						newMapInstance, err = uOfD.CreateRefinementOfConcept(definingChildMap, "Instance of "+definingChildMap.GetLabel(trans), trans)
 						if err != nil {
 							return errors.Wrap(err, "crlmaps.instantiateMapChildren failed")
 						}

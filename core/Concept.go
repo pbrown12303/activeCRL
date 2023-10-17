@@ -452,9 +452,9 @@ func (cPtr *concept) FindImmediateAbstractions(abstractions map[string]Concept, 
 	it := cPtr.uOfD.listenersMap.GetMappedValues(cPtr.ConceptID).Iterator()
 	for id := range it.C {
 		listener := cPtr.uOfD.GetElement(id.(string))
-		switch typedElement := listener.(type) {
-		case *concept:
-			abstraction := typedElement.GetAbstractConcept(trans)
+		switch listener.GetConceptType() {
+		case Refinement:
+			abstraction := listener.GetAbstractConcept(trans)
 			if abstraction != nil && abstraction.getConceptIDNoLock() != cPtr.getConceptIDNoLock() {
 				abstractions[abstraction.GetConceptID(trans)] = abstraction
 			}

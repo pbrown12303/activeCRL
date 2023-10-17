@@ -21,7 +21,7 @@ var _ = Describe("Boolean test", func() {
 	})
 
 	Specify("Boolean should be created correctly", func() {
-		boolean := NewBoolean(uOfD, trans)
+		boolean := NewBoolean("", trans)
 		Expect(boolean).ToNot(BeNil())
 		Expect(boolean.IsRefinementOfURI(CrlBooleanURI, trans)).To(BeTrue())
 		value, err := GetBooleanValue(boolean, trans)
@@ -30,7 +30,7 @@ var _ = Describe("Boolean test", func() {
 	})
 
 	Specify("SetBooleanValue and GetBooleanValue should work correctly", func() {
-		boolean := NewBoolean(uOfD, trans)
+		boolean := NewBoolean("", trans)
 		Expect(GetBooleanValue(boolean, trans)).To(Equal(false))
 		Expect(SetBooleanValue(boolean, true, trans)).To(BeNil())
 		Expect(GetBooleanValue(boolean, trans)).To(Equal(true))
@@ -47,7 +47,7 @@ var _ = Describe("Boolean test", func() {
 	})
 
 	Specify("GetBooleanValue should produce an error if the literal value is neither true or false", func() {
-		boolean := NewBoolean(uOfD, trans)
+		boolean := NewBoolean("", trans)
 		boolean.SetLiteralValue("foo", trans)
 		_, err := GetBooleanValue(boolean, trans)
 		Expect(err).ToNot(BeNil())

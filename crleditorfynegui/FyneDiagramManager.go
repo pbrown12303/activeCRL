@@ -409,7 +409,7 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 	case CreateRefinementOfConceptSelected:
 		selection := FyneGUISingleton.editor.GetCurrentSelection()
 		if selection != nil {
-			el, _ = uOfD.CreateRefinementOfConcept(selection, trans)
+			el, _ = uOfD.CreateRefinementOfConcept(selection, selection.GetLabel(trans), trans)
 			el.SetOwningConcept(crlDiagram.GetOwningConcept(trans), trans)
 		}
 	}

@@ -1,4 +1,4 @@
-package crldiagramdomain
+package crlconstraintdomain
 
 import (
 	"testing"
@@ -9,5 +9,5 @@ import (
 
 func TestCore(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Diagram Suite")
+	RunSpecs(t, "Constraint Suite")
 }
