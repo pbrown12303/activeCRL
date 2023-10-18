@@ -70,7 +70,7 @@ type CrlEditorFyneGUI struct {
 func NewFyneGUI(crlEditor *crleditor.Editor, providedApp fyne.App) *CrlEditorFyneGUI {
 	gui := &CrlEditorFyneGUI{}
 	if providedApp == nil {
-		gui.app = app.New()
+		gui.app = app.NewWithID("ACRLIDE")
 	} else {
 		gui.app = providedApp
 	}

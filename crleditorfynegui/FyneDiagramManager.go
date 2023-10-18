@@ -1467,7 +1467,12 @@ func (deo *diagramElementObserver) Update(notification *core.ChangeNotification,
 						log.Printf("Line Color: %s", lineColor)
 						goColor := getGoColor(lineColor)
 						fyneDiagramElement.SetForegroundColor(goColor)
-
+					}
+					if changedConcept.IsRefinementOfURI(crldiagramdomain.CrlDiagramNodeBGColorURI, trans) {
+						bgColor := crldiagramdomain.GetBGColor(crlDiagramElement, trans)
+						log.Printf("Background Color: %s", bgColor)
+						goColor := getGoColor(bgColor)
+						fyneDiagramElement.SetBackgroundColor(goColor)
 					}
 				}
 			}

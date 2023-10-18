@@ -8,7 +8,15 @@ ActiveCRL is an extension to CRL that provides two additional capabilities:
 * The ability to visualize and edit CRL representations graphically (i.e. an IDE for CRL)
 * The ability to associate a function with any node of a CRL representation. This function can walk the network, starting from the assiciated node, and manipulate the network. 
 
-The current incarnation of ActiveCRL is built with the go-based [fyne GUI library](https://github.com/fyne-io/fyne) and a DiagramWidget extension to [fyne-X - public extensions to fyne](https://github.com/fyne-io/fyne-x). At present, the DiagramWidget extension is waiting for final review before being merged into fyne-x. The pending DiagramWidget work can be found [here](https://github.com/pbrown12303/fyne-x) in the diagramwidgt branch.
+The current incarnation of ActiveCRL is built with the go-based [fyne GUI library](https://github.com/fyne-io/fyne) and a DiagramWidget extension to [fyne-X - public extensions to fyne](https://github.com/fyne-io/fyne-x). 
+
+ActiveCRL includes an Interactive Development Environment (IDE):
+* [ActiveCRL IDE](./crlfyneide/main.go) 
+
+<p align="center" markdown="1" style="max-width: 100%">
+  <img src="./images/ACRLIDE.png" width="1600" height="900" alt="ActiveCRL IDE" style="max-width: 100%" />
+</p>
+
 
 ## A Bit Of History
 The core language for the ActiveCRL implementation is Go. However, in 2017 Go did not have a user interface capability rich enough to support the development of an interactive IDE. 
