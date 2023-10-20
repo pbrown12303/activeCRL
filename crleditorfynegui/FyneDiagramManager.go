@@ -1,6 +1,7 @@
 package crleditorfynegui
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 	"reflect"
@@ -1517,14 +1518,39 @@ func (deo *diagramElementObserver) Update(notification *core.ChangeNotification,
 	return nil
 }
 
-func getGoColor(lineColor string) color.RGBA {
+func getCrlColor(goColor color.Color) string {
+	switch typedColor := goColor.(type) {
+	case color.NRGBA:
+		r, g, b, a := typedColor.RGBA()
+		goColor = color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)}
+	}
+	switch typedColor := goColor.(type) {
+	case color.RGBA:
+		red := fmt.Sprintf("%02x", typedColor.R)
+		green := fmt.Sprintf("%02x", typedColor.G)
+		blue := fmt.Sprintf("%02x", typedColor.B)
+		a := fmt.Sprintf("%02x", typedColor.A)
+		crlColor := "x" + red + green + blue + a
+		return crlColor
+	}
+	return ""
+}
+
+func getGoColor(lineColor string) color.Color {
+	if lineColor == "" {
+		return color.Transparent
+	}
 	redString := lineColor[1:3]
 	red, _ := strconv.ParseUint(redString, 16, 8)
 	greenString := lineColor[3:5]
 	green, _ := strconv.ParseUint(greenString, 16, 8)
 	blueString := lineColor[5:7]
 	blue, _ := strconv.ParseUint(blueString, 16, 8)
-	a, _ := strconv.ParseUint("ff", 16, 8)
+	aString := "ff"
+	if len(lineColor) == 9 {
+		aString = lineColor[7:9]
+	}
+	a, _ := strconv.ParseUint(aString, 16, 8)
 	goColor := color.RGBA{
 		uint8(red),
 		uint8(green),

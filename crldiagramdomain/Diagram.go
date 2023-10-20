@@ -780,7 +780,9 @@ func SetLineColor(diagramElement core.Concept, value string, trans *core.Transac
 	}
 	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementLineColorURI, trans)
 	if literal == nil {
-		return
+		// This is remedial code: the literal should already be there
+		uOfD := trans.GetUniverseOfDiscourse()
+		literal, _ = uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementLineColorURI, diagramElement, "Line Color", trans)
 	}
 	literal.SetLiteralValue(value, trans)
 }
@@ -793,7 +795,9 @@ func SetBGColor(diagramElement core.Concept, value string, trans *core.Transacti
 	}
 	literal := diagramElement.GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementBGColorURI, trans)
 	if literal == nil {
-		return
+		// This is remedial code: the literal should already be there
+		uOfD := trans.GetUniverseOfDiscourse()
+		literal, _ = uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementBGColorURI, diagramElement, "Background Color", trans)
 	}
 	if IsDiagramPointer(diagramElement, trans) {
 		literal.SetLiteralValue("", trans)
@@ -991,7 +995,7 @@ func BuildCrlDiagramDomain(uOfD *core.UniverseOfDiscourse, trans *core.Transacti
 	crlDiagramNodeAbstractionDisplayLabelRefinement.SetRefinedConcept(crlDiagramNodeAbstractionDisplayLabel, trans)
 
 	crlDiagramNodeLineColor, _ := uOfD.NewOwnedLiteral(crlDiagramNode, "LineColor", trans, CrlDiagramNodeLineColorURI)
-	crlDiagramNodeLineColor.SetLiteralValue("#000000", trans)
+	crlDiagramNodeLineColor.SetLiteralValue("#000000ff", trans)
 	uOfD.NewCompleteRefinement(crlDiagramElementLineColor, crlDiagramNodeLineColor, "LineColorRefinement", trans)
 
 	crlDiagramNodeBGColor, _ := uOfD.NewOwnedLiteral(crlDiagramNode, "BGColor", trans, CrlDiagramNodeBGColorURI)

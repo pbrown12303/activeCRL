@@ -78,6 +78,10 @@ func NewFyneCrlDiagramNode(node core.Concept, trans *core.Transaction, diagramWi
 	y := crldiagramdomain.GetNodeY(node, trans)
 	fynePosition := fyne.NewPos(float32(x), float32(y))
 	newNode.Move(fynePosition)
+	fgColor := crldiagramdomain.GetLineColor(node, trans)
+	bgColor := crldiagramdomain.GetBGColor(node, trans)
+	newNode.SetForegroundColor(getGoColor(fgColor))
+	newNode.SetBackgroundColor(getGoColor(bgColor))
 	newNode.Refresh()
 	return newNode
 }
@@ -131,6 +135,23 @@ func (fcdn *FyneCrlDiagramNode) MouseDown(event *desktop.MouseEvent) {
 	if event.Button == desktop.MouseButtonSecondary {
 		ShowSecondaryPopup(fcdn, event)
 	}
+}
+
+func setCrlDiagramElementProperties(diagramElementID string, properties diagramwidget.DiagramElementProperties) {
+	trans, isNew := FyneGUISingleton.editor.GetTransaction()
+	if isNew {
+		defer FyneGUISingleton.editor.EndTransaction()
+	}
+	uOfD := trans.GetUniverseOfDiscourse()
+	uOfD.MarkUndoPoint()
+	crlDiagramElement := uOfD.GetElement(diagramElementID)
+	if crlDiagramElement == nil {
+		return
+	}
+	crlFGColor := getCrlColor(properties.ForegroundColor)
+	crlBGColor := getCrlColor(properties.BackgroundColor)
+	crldiagramdomain.SetLineColor(crlDiagramElement, crlFGColor, trans)
+	crldiagramdomain.SetBGColor(crlDiagramElement, crlBGColor, trans)
 }
 
 // ShowSecondaryPopup actually displays the secondary popup - it is used for both Nodes and Links
@@ -201,6 +222,7 @@ func ShowSecondaryPopup(fcde FyneCrlDiagramElement, event *desktop.MouseEvent) {
 	editFormatItem := fyne.NewMenuItem("Edit Format", func() {
 		ShowFyneFormatDialog(fcde.GetFyneProperties(), func(properties diagramwidget.DiagramElementProperties) {
 			fcde.SetFyneProperties(properties)
+			setCrlDiagramElementProperties(fcde.GetDiagramElementID(), properties)
 			fcde.Refresh()
 
 		})
@@ -214,6 +236,7 @@ func ShowSecondaryPopup(fcde FyneCrlDiagramElement, event *desktop.MouseEvent) {
 	pasteFormatItem := fyne.NewMenuItem("Paste Format", func() {
 		if FyneGUISingleton.propertiesClipboard != nil {
 			fcde.SetFyneProperties(*(FyneGUISingleton.propertiesClipboard))
+			setCrlDiagramElementProperties(fcde.GetDiagramElementID(), *(FyneGUISingleton.propertiesClipboard))
 			fcde.Refresh()
 		}
 	})
@@ -288,31 +311,42 @@ func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, link core
 		displayedTextBinding.Set(linkLabel)
 		displayedTextBinding.AddListener(binding.NewDataListener(func() { diagramLink.labelChanged() }))
 	}
-	grey := color.RGBA{153, 153, 153, 255}
 	if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramReferenceLinkURI, trans) {
 		diagramLink.AddTargetDecoration(createReferenceArrowhead())
 		diagramLink.AddSourceDecoration(createDiamond())
 		diagramLink.linkType = ReferenceLinkSelected
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramAbstractPointerURI, trans) {
 		diagramLink.AddSourceDecoration(createRefinementTriangle())
-		diagramLink.SetForegroundColor(grey)
 		diagramLink.linkType = AbstractElementPointerSelected
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramElementPointerURI, trans) {
 		diagramLink.AddTargetDecoration(createReferenceArrowhead())
-		diagramLink.SetForegroundColor(grey)
 		diagramLink.linkType = ReferencedElementPointerSelected
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramOwnerPointerURI, trans) {
 		diagramLink.AddTargetDecoration(createDiamond())
-		diagramLink.SetForegroundColor(grey)
 		diagramLink.linkType = OwnerPointerSelected
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramRefinedPointerURI, trans) {
 		diagramLink.AddSourceDecoration(createMirrorRefinementTriangle())
-		diagramLink.SetForegroundColor(grey)
 		diagramLink.linkType = RefinedElementPointerSelected
 	} else if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramRefinementLinkURI, trans) {
 		diagramLink.AddMidpointDecoration(createRefinementTriangle())
 		diagramLink.linkType = RefinementLinkSelected
 	}
+	// Some remedial work here for crlLinks that were initially saved without a fgColor, with the assumption
+	// that links never have a transparent color
+	black := color.RGBA{0, 0, 0, 255}
+	grey := color.RGBA{153, 153, 153, 255}
+	fgColor := crldiagramdomain.GetLineColor(link, trans)
+	if fgColor == "" {
+		if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramPointerURI, trans) {
+			fgColor = getCrlColor(grey)
+		} else {
+			fgColor = getCrlColor(black)
+		}
+		crldiagramdomain.SetLineColor(link, fgColor, trans)
+	}
+	bgColor := crldiagramdomain.GetBGColor(link, trans)
+	diagramLink.SetForegroundColor(getGoColor(fgColor))
+	diagramLink.SetBackgroundColor(getGoColor(bgColor))
 	diagramLink.Refresh()
 	return diagramLink
 }
