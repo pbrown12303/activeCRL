@@ -235,6 +235,7 @@ func (dm *FyneDiagramManager) completeLinkTransaction() {
 	}
 	dm.connectionTransactionTransientConcepts.Clear()
 	dm.setToolbarSelection(CursorSelected)
+	FyneGUISingleton.treeManager.tree.Refresh()
 }
 
 func (dm *FyneDiagramManager) createToolbar() {

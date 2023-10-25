@@ -227,6 +227,15 @@ func (uOfDPtr *UniverseOfDiscourse) CreateRefinementOfConcept(original Concept, 
 	return refinedConcept, nil
 }
 
+// CreateRefinementOfConceptURI creates a new concept of the same type as the indicated URI and makes the new concept a refinement of it
+func (uOfDPtr *UniverseOfDiscourse) CreateRefinementOfConceptURI(uri string, label string, trans *Transaction, newURI ...string) (Concept, error) {
+	abstractConcept := uOfDPtr.GetElementWithURI(uri)
+	if abstractConcept == nil {
+		return nil, errors.New("In CreateRefinementOfConceptURI, no concept found with URI: " + uri)
+	}
+	return uOfDPtr.CreateRefinementOfConcept(abstractConcept, label, trans, newURI...)
+}
+
 // CreateReplicateAsRefinement replicates the indicated Element and all of its descendent Elements
 // except that descendant Refinements are not replicated.
 // For each replicated Element, a Refinement is created with the abstractElement being the original and the refinedElement
