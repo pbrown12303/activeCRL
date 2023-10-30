@@ -20,10 +20,16 @@ func NewSet(uOfD *core.UniverseOfDiscourse, setType core.Concept, trans *core.Tr
 	if setType == nil {
 		return nil, errors.New("no type specified for set")
 	}
-	newSet, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlSetURI, trans)
-	typeReference := newSet.GetFirstOwnedReferenceRefinedFromURI(CrlSetTypeReferenceURI, trans)
+	newSet, _ := uOfD.CreateRefinementOfConceptURI(CrlSetURI, "Set", trans)
+	typeReference, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlSetTypeReferenceURI, newSet, "TypeReference", trans)
 	typeReference.SetReferencedConcept(setType, core.NoAttribute, trans)
 	return newSet, nil
+}
+
+// NewSetMemberReference creates a SetMemberReference with its child concepts
+func NewSetMemberReference(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Concept, error) {
+	setMemberReference, _ := uOfD.CreateRefinementOfConceptURI(CrlSetMemberReferenceURI, "MemberReference", trans)
+	return setMemberReference, nil
 }
 
 // AddSetMember adds a member to the set
@@ -36,7 +42,7 @@ func AddSetMember(set core.Concept, newMember core.Concept, trans *core.Transact
 	if !newMember.IsRefinementOf(setType, trans) {
 		return errors.New("NewMember is of wrong type")
 	}
-	newMemberReference, _ := uOfD.CreateReplicateReferenceAsRefinementFromURI(CrlSetMemberReferenceURI, trans)
+	newMemberReference, _ := NewSetMemberReference(uOfD, trans)
 	newMemberReference.SetOwningConcept(set, trans)
 	newMemberReference.SetReferencedConcept(newMember, core.NoAttribute, trans)
 	return nil

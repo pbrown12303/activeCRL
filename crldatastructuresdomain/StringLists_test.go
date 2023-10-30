@@ -29,9 +29,9 @@ var _ = Describe("StringList test", func() {
 		})
 	})
 
-	Describe("uOfD.CreateReplicateLiteralAsRefinementFromURI of StringListLiteralMember should produce the member with prior and next references", func() {
+	Describe("NewStringListMemberLiteral should produce the member with prior and next references", func() {
 		Specify("Replicate from URI without new URI", func() {
-			newLiteralMember, err := uOfD.CreateReplicateLiteralAsRefinementFromURI(CrlStringListMemberLiteralURI, trans)
+			newLiteralMember, err := NewStringListMemberLiteral(uOfD, trans)
 			Expect(err).To(BeNil())
 			priorLiteralReference, err2 := getReferenceToPriorMemberLiteral(newLiteralMember, trans)
 			Expect(err2).To(BeNil())
@@ -41,7 +41,7 @@ var _ = Describe("StringList test", func() {
 			Expect(nextLiteralReference).ToNot(BeNil())
 		})
 		Specify("Replicate from URI with new URI", func() {
-			newLiteralMember, err := uOfD.CreateReplicateLiteralAsRefinementFromURI(CrlStringListMemberLiteralURI, trans, CrlDataStructuresDomainURI+"/test")
+			newLiteralMember, err := NewStringListMemberLiteral(uOfD, trans, CrlDataStructuresDomainURI+"/test")
 			Expect(err).To(BeNil())
 			priorLiteralReference, err2 := getReferenceToPriorMemberLiteral(newLiteralMember, trans)
 			Expect(err2).To(BeNil())

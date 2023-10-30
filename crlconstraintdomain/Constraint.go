@@ -75,10 +75,10 @@ func NewMultiplicityConstraintSpecification(owner core.Concept, constrainedConce
 // NewConstraintCompliance creates and initializes a refinement of a ConstraintCompliance
 func NewConstraintCompliance(owner core.Concept, constraintSpecification core.Concept, trans *core.Transaction) core.Concept {
 	uOfD := trans.GetUniverseOfDiscourse()
-	constraintCompliance, _ := uOfD.CreateReplicateAsRefinementFromURI(CrlConstraintComplianceURI, trans)
-	constraintSpecificationReference := constraintCompliance.GetFirstOwnedReferenceRefinedFromURI(CrlConstraintSpecificationReferenceURI, trans)
+	constraintCompliance, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlConstraintComplianceURI, owner, "ConstraintCompliance", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlConstraintSatisfiedURI, constraintCompliance, "Satisfied", trans)
+	constraintSpecificationReference, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlConstraintSpecificationReferenceURI, constraintCompliance, "ConstraintSpecificationReference", trans)
 	constraintSpecificationReference.SetReferencedConcept(constraintSpecification, core.NoAttribute, trans)
-	constraintCompliance.SetOwningConcept(owner, trans)
 	return constraintCompliance
 }
 

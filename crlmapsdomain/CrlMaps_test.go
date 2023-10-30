@@ -30,9 +30,9 @@ var _ = Describe("CrlMaps domain test", func() {
 		Expect(domain).ShouldNot(BeNil())
 		eToEMap := uOfD1.GetElementWithURI(CrlOneToOneMapURI)
 		Expect(eToEMap).ShouldNot(BeNil())
-		eToEMapSource := uOfD1.GetReferenceWithURI(CrlOneToOneMapSourceReferenceURI)
+		eToEMapSource := uOfD1.GetReferenceWithURI(CrlMapSourceURI)
 		Expect(eToEMapSource).ShouldNot(BeNil())
-		eToEMapTarget := uOfD1.GetReferenceWithURI(CrlOneToOneMapTargetReferenceURI)
+		eToEMapTarget := uOfD1.GetReferenceWithURI(CrlMapTargetURI)
 		Expect(eToEMapTarget).ShouldNot(BeNil())
 	})
 })
@@ -73,7 +73,7 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		// Defining Map
 		definingMapFolder, err = uOfD.NewOwnedElement(nil, "DefiningMapFolder", trans)
 		Expect(err).To(BeNil())
-		definingDomainMap, err = uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+		definingDomainMap, err = NewOneToOneMap(uOfD, trans)
 		Expect(err).To(BeNil())
 		Expect(definingDomainMap.SetLabel("DefiningDomainMap", trans)).To(Succeed())
 		Expect(definingDomainMap.SetOwningConcept(definingMapFolder, trans)).To(Succeed())
@@ -87,18 +87,14 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		// Source Instance
 		instanceSourceFolder, err = uOfD.NewOwnedElement(nil, "instanceSourceFolder", trans)
 		Expect(err).To(BeNil())
-		instanceSourceDomain, err = uOfD.CreateReplicateAsRefinement(definingSourceDomain, trans)
+		instanceSourceDomain, err = uOfD.CreateOwnedRefinementOfConcept(definingSourceDomain, instanceSourceFolder, "InstanceSourceDomain", trans)
 		Expect(err).To(BeNil())
-		Expect(instanceSourceDomain.SetLabel("InstanceSourceDomain", trans)).To(Succeed())
-		Expect(instanceSourceDomain.SetOwningConcept(instanceSourceFolder, trans)).To(Succeed())
 
 		// Map Instance
 		instanceMapFolder, err = uOfD.NewOwnedElement(nil, "instanceMapFolder", trans)
 		Expect(err).To(BeNil())
-		instanceDomainMap, err = uOfD.CreateReplicateAsRefinement(definingDomainMap, trans)
+		instanceDomainMap, err = uOfD.CreateOwnedRefinementOfConcept(definingDomainMap, instanceMapFolder, "InstanceDomainMap", trans)
 		Expect(err).To(BeNil())
-		Expect(instanceDomainMap.SetLabel("InstanceDomainMap", trans)).To(Succeed())
-		Expect(instanceDomainMap.SetOwningConcept(instanceMapFolder, trans)).To(Succeed())
 
 		// Get the tempDir
 		// This will be the location for the graphs generated for debugging purposes
@@ -146,17 +142,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Element to Element Map", func() {
 			// Set up the abstract map
-			definingElementToElementMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingElementToElementMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingElementToElementMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingElementToElementMap.SetLabel("DefiningElementToElementMap", trans)).To(Succeed())
 			Expect(SetSource(definingElementToElementMap, definingSourceElement, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingElementToElementMap, definingTargetElement, core.NoAttribute, trans)).To(Succeed())
 			// Add the element to the source instance
-			instanceSourceElement, err2 := uOfD.CreateReplicateAsRefinement(definingSourceElement, trans)
+			instanceSourceElement, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceElement, instanceSourceDomain, "InstanceSourceElement", trans)
 			Expect(err2).To(BeNil())
-			Expect(instanceSourceElement.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceElement.SetLabel("InstanceSourceElement", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 			// Check the result
@@ -172,17 +166,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Reference to Reference Map", func() {
 			// Set up the abstract map
-			definingReference2ReferenceMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingReference2ReferenceMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingReference2ReferenceMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingReference2ReferenceMap.SetLabel("DefiningReference2ReferenceMap", trans)).To(Succeed())
 			Expect(SetSource(definingReference2ReferenceMap, definingSourceReference, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingReference2ReferenceMap, definingTargetReference, core.NoAttribute, trans)).To(Succeed())
 			// Add the reference to the source instance
-			instanceSourceReference, err2 := uOfD.CreateReplicateAsRefinement(definingSourceReference, trans)
+			instanceSourceReference, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceReference, instanceSourceDomain, "InstanceSourceReference", trans)
 			Expect(err2).To(BeNil())
-			Expect(instanceSourceReference.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceReference.SetLabel("InstanceSourceReference", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 
@@ -208,17 +200,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Literal to Literal Map", func() {
 			// Set up the abstract map
-			definingLiteral2LiteralMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingLiteral2LiteralMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingLiteral2LiteralMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingLiteral2LiteralMap.SetLabel("DefiningLiteral2LiteralMap", trans)).To(Succeed())
 			Expect(SetSource(definingLiteral2LiteralMap, definingSourceLiteral, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingLiteral2LiteralMap, definingTargetLiteral, core.NoAttribute, trans)).To(Succeed())
 			// Add the literal to the source instance
-			instanceSourceLiteral, err2 := uOfD.CreateReplicateAsRefinement(definingSourceLiteral, trans)
+			instanceSourceLiteral, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceLiteral, instanceSourceDomain, "InstanceSourceLiteral", trans)
 			Expect(err2).To(BeNil())
-			Expect(instanceSourceLiteral.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceLiteral.SetLabel("InstanceSourceLiteral", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 			// Check the result
@@ -234,17 +224,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Refinement to Refinement Map", func() {
 			// Set up the abstract map
-			definingRefinement2RefinementMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingRefinement2RefinementMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingRefinement2RefinementMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingRefinement2RefinementMap.SetLabel("DefiningRefinement2RefinementMap", trans)).To(Succeed())
 			Expect(SetSource(definingRefinement2RefinementMap, definingSourceRefinement, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingRefinement2RefinementMap, definingTargetRefinement, core.NoAttribute, trans)).To(Succeed())
 			// Add the refinement to the source instance
-			instanceSourceRefinement, err2 := uOfD.CreateReplicateAsRefinement(definingSourceRefinement, trans)
+			instanceSourceRefinement, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceRefinement, instanceSourceDomain, "InstanceSourceRefinement", trans)
 			Expect(err2).To(BeNil())
-			Expect(instanceSourceRefinement.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceRefinement.SetLabel("InstanceSourceRefinement", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 			// Check the result
@@ -260,17 +248,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Element2ReferenceMap", func() {
 			// Set up the abstract map
-			definingElementToReferenceMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingElementToReferenceMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingElementToReferenceMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingElementToReferenceMap.SetLabel("DefiningElementToReferenceMap", trans)).To(Succeed())
 			Expect(SetSource(definingElementToReferenceMap, definingSourceElement, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingElementToReferenceMap, definingTargetReference, core.NoAttribute, trans)).To(Succeed())
 			// Add the element to the source instance
-			instanceSourceElement, err2 := uOfD.CreateReplicateAsRefinement(definingSourceElement, trans)
+			instanceSourceElement, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceElement, instanceSourceDomain, "InstanceSourceElement", trans)
 			Expect(err2).To(BeNil())
-			Expect(instanceSourceElement.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceElement.SetLabel("InstanceSourceElement", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 			// Check the result
@@ -286,17 +272,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Element2LiteralMap", func() {
 			// Set up the abstract map
-			definingElementToLiteralMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingElementToLiteralMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingElementToLiteralMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingElementToLiteralMap.SetLabel("DefiningElementToLiteralMap", trans)).To(Succeed())
 			Expect(SetSource(definingElementToLiteralMap, definingSourceElement, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingElementToLiteralMap, definingTargetLiteral, core.NoAttribute, trans)).To(Succeed())
 			// Add the element to the source instance
-			instanceSourceElement, err2 := uOfD.CreateReplicateAsRefinement(definingSourceElement, trans)
+			instanceSourceElement, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceElement, instanceSourceDomain, "InstanceSourceElement", trans)
 			Expect(err2).To(BeNil())
-			Expect(instanceSourceElement.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceElement.SetLabel("InstanceSourceElement", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 			// Check the result
@@ -312,17 +296,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Element2RefinementMap", func() {
 			// Set up the abstract map
-			definingElementToRefinementMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingElementToRefinementMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingElementToRefinementMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingElementToRefinementMap.SetLabel("DefiningElementToRefinementMap", trans)).To(Succeed())
 			Expect(SetSource(definingElementToRefinementMap, definingSourceElement, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingElementToRefinementMap, definingTargetRefinement, core.NoAttribute, trans)).To(Succeed())
 			// Add the element to the source instance
-			instanceSourceElement, err2 := uOfD.CreateReplicateAsRefinement(definingSourceElement, trans)
+			instanceSourceElement, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceElement, instanceSourceDomain, "InstanceSourceElement", trans)
 			Expect(err2).To(BeNil())
-			Expect(instanceSourceElement.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceElement.SetLabel("InstanceSourceElement", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 			// Check the result
@@ -338,17 +320,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Reference2ElementMap", func() {
 			// Set up the abstract map
-			definingReferenceToElementMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingReferenceToElementMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingReferenceToElementMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingReferenceToElementMap.SetLabel("DefiningReferenceToElementMap", trans)).To(Succeed())
 			Expect(SetSource(definingReferenceToElementMap, definingSourceReference, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingReferenceToElementMap, definingTargetElement, core.NoAttribute, trans)).To(Succeed())
 			// Add the reference to the source instance
-			instanceSourceReference, err2 := uOfD.CreateReplicateAsRefinement(definingSourceReference, trans)
+			instanceSourceReference, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceReference, instanceSourceDomain, "InstanceSourceReference", trans)
 			Expect(err2).To(BeNil())
-			Expect(instanceSourceReference.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceReference.SetLabel("InstanceSourceReference", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 			// Check the result
@@ -364,17 +344,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Reference2LiteralMap", func() {
 			// Set up the abstract map
-			definingReference2LiteralMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingReference2LiteralMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingReference2LiteralMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingReference2LiteralMap.SetLabel("DefiningReference2LiteralMap", trans)).To(Succeed())
 			Expect(SetSource(definingReference2LiteralMap, definingSourceReference, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingReference2LiteralMap, definingTargetLiteral, core.NoAttribute, trans)).To(Succeed())
 			// Add the reference to the source instance
-			instanceSourceReference, err2 := uOfD.CreateReplicateAsRefinement(definingSourceReference, trans)
+			instanceSourceReference, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceReference, instanceSourceDomain, "InstanceSourceReference", trans)
 			Expect(err2).To(BeNil())
-			Expect(instanceSourceReference.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceReference.SetLabel("InstanceSourceReference", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 			// Check the result
@@ -390,17 +368,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Reference2RefinementMap", func() {
 			// Set up the abstract map
-			definingReferenceToRefinementMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingReferenceToRefinementMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingReferenceToRefinementMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingReferenceToRefinementMap.SetLabel("DefiningReferenceToRefinementMap", trans)).To(Succeed())
 			Expect(SetSource(definingReferenceToRefinementMap, definingSourceReference, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingReferenceToRefinementMap, definingTargetRefinement, core.NoAttribute, trans)).To(Succeed())
 			// Add the reference to the source instance
-			instanceSourceReference, err2 := uOfD.CreateReplicateAsRefinement(definingSourceReference, trans)
+			instanceSourceReference, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceReference, instanceSourceDomain, "InstanceSourceReference", trans)
 			Expect(err2).To(BeNil())
-			Expect(instanceSourceReference.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceReference.SetLabel("InstanceSourceReference", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 			// Check the result
@@ -416,17 +392,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Literal2ElementMap", func() {
 			// Set up the abstract map
-			definingLiteralToElementMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingLiteralToElementMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingLiteralToElementMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingLiteralToElementMap.SetLabel("DefiningLiteralToElementMap", trans)).To(Succeed())
 			Expect(SetSource(definingLiteralToElementMap, definingSourceLiteral, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingLiteralToElementMap, definingTargetElement, core.NoAttribute, trans)).To(Succeed())
 			// Add the literal to the source instance
-			instanceSourceLiteral, err2 := uOfD.CreateReplicateAsRefinement(definingSourceLiteral, trans)
+			instanceSourceLiteral, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceLiteral, instanceSourceDomain, "InstanceSourceLiteral", trans)
 			Expect(err2).To(BeNil())
-			Expect(instanceSourceLiteral.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceLiteral.SetLabel("InstanceSourceLiteral", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 			// Check the result
@@ -442,17 +416,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Literal2ReferenceMap", func() {
 			// Set up the abstract map
-			definingLiteralToReferenceMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingLiteralToReferenceMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingLiteralToReferenceMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingLiteralToReferenceMap.SetLabel("DefiningLiteralToReferenceMap", trans)).To(Succeed())
 			Expect(SetSource(definingLiteralToReferenceMap, definingSourceLiteral, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingLiteralToReferenceMap, definingTargetReference, core.NoAttribute, trans)).To(Succeed())
 			// Add the literal to the source instance
-			instanceSourceLiteral, err2 := uOfD.CreateReplicateAsRefinement(definingSourceLiteral, trans)
+			instanceSourceLiteral, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceLiteral, instanceSourceDomain, "InstanceSourceLiteral", trans)
 			Expect(err2).To(BeNil())
-			Expect(instanceSourceLiteral.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceLiteral.SetLabel("InstanceSourceLiteral", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 			// Check the result
@@ -468,14 +440,14 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Literal2RefinementMap", func() {
 			// Set up the abstract map
-			definingLiteralToRefinementMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingLiteralToRefinementMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingLiteralToRefinementMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingLiteralToRefinementMap.SetLabel("DefiningLiteralToRefinementMap", trans)).To(Succeed())
 			Expect(SetSource(definingLiteralToRefinementMap, definingSourceLiteral, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingLiteralToRefinementMap, definingTargetRefinement, core.NoAttribute, trans)).To(Succeed())
 			// Add the literal to the source instance
-			instanceSourceLiteral, err2 := uOfD.CreateReplicateAsRefinement(definingSourceLiteral, trans)
+			instanceSourceLiteral, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceLiteral, instanceSourceDomain, "", trans)
 			Expect(err2).To(BeNil())
 			Expect(instanceSourceLiteral.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
 			Expect(instanceSourceLiteral.SetLabel("InstanceSourceLiteral", trans)).To(Succeed())
@@ -494,17 +466,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Refinement2ElementMap", func() {
 			// Set up the abstract map
-			definingRefinementToElementMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingRefinementToElementMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingRefinementToElementMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingRefinementToElementMap.SetLabel("DefiningRefinementToElementMap", trans)).To(Succeed())
 			Expect(SetSource(definingRefinementToElementMap, definingSourceRefinement, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingRefinementToElementMap, definingTargetElement, core.NoAttribute, trans)).To(Succeed())
 			// Add the refinement to the source instance
-			instanceSourceRefinement, err2 := uOfD.CreateReplicateAsRefinement(definingSourceRefinement, trans)
+			instanceSourceRefinement, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceRefinement, instanceSourceDomain, "InstanceSourceRefinement", trans)
 			Expect(err2).To(BeNil())
-			Expect(instanceSourceRefinement.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceRefinement.SetLabel("InstanceSourceRefinement", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 			// Check the result
@@ -520,17 +490,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Refinement2ReferenceMap", func() {
 			// Set up the abstract map
-			definingRefinementToReferenceMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingRefinementToReferenceMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingRefinementToReferenceMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingRefinementToReferenceMap.SetLabel("DefiningRefinementToReferenceMap", trans)).To(Succeed())
 			Expect(SetSource(definingRefinementToReferenceMap, definingSourceRefinement, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingRefinementToReferenceMap, definingTargetReference, core.NoAttribute, trans)).To(Succeed())
 			// Add the refinement to the source instance
-			instaneSourceRefinement, err2 := uOfD.CreateReplicateAsRefinement(definingSourceRefinement, trans)
+			instaneSourceRefinement, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceRefinement, instanceSourceDomain, "InstanceSourceRefinement", trans)
 			Expect(err2).To(BeNil())
-			Expect(instaneSourceRefinement.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instaneSourceRefinement.SetLabel("InstanceSourceRefinement", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 			// Check the result
@@ -546,17 +514,15 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 		Specify("Refinement2LiteralMap", func() {
 			// Set up the abstract map
-			definingRefinementToLiteralMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingRefinementToLiteralMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingRefinementToLiteralMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingRefinementToLiteralMap.SetLabel("DefiningRefinementToLiteralMap", trans)).To(Succeed())
 			Expect(SetSource(definingRefinementToLiteralMap, definingSourceRefinement, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingRefinementToLiteralMap, definingTargetLiteral, core.NoAttribute, trans)).To(Succeed())
 			// Add the refinement to the source instance
-			instanceSourceRefinement, err2 := uOfD.CreateReplicateAsRefinement(definingSourceRefinement, trans)
+			instanceSourceRefinement, err2 := uOfD.CreateOwnedRefinementOfConcept(definingSourceRefinement, instanceSourceDomain, "InstanceSourceRefinement", trans)
 			Expect(err2).To(BeNil())
-			Expect(instanceSourceRefinement.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceRefinement.SetLabel("InstanceSourceRefinement", trans)).To(Succeed())
 			// Trigger the mapping
 			Expect(SetSource(instanceDomainMap, instanceSourceDomain, core.NoAttribute, trans)).To(Succeed())
 			// Check the result
@@ -612,28 +578,28 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(err).To(BeNil())
 
 			// Defining Map Setup
-			definingReferent2ReferentMap, err = uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingReferent2ReferentMap, err = NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingReferent2ReferentMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingReferent2ReferentMap.SetLabel("DefiningReferent2ReferentMap", trans)).To(Succeed())
 			Expect(SetSource(definingReferent2ReferentMap, definingSourceReferent, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingReferent2ReferentMap, definingTargetReferent, core.NoAttribute, trans)).To(Succeed())
 
-			definingReference2ReferenceMap, err = uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingReference2ReferenceMap, err = NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingReference2ReferenceMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingReference2ReferenceMap.SetLabel("DefiningReference2ReferenceMap", trans)).To(Succeed())
 			Expect(SetSource(definingReference2ReferenceMap, definingSourceReference, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingReference2ReferenceMap, definingTargetReference, core.NoAttribute, trans)).To(Succeed())
 
-			definingRefinement2RefinementMap, err = uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingRefinement2RefinementMap, err = NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingRefinement2RefinementMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingRefinement2RefinementMap.SetLabel("DefiningRefinement2RefinementMap", trans)).To(Succeed())
 			Expect(SetSource(definingRefinement2RefinementMap, definingSourceRefinement, core.NoAttribute, trans)).To(Succeed())
 			Expect(SetTarget(definingRefinement2RefinementMap, definingTargetRefinement, core.NoAttribute, trans)).To(Succeed())
 
-			definingLiteral2LiteralMap, err = uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingLiteral2LiteralMap, err = NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingLiteral2LiteralMap.SetOwningConcept(definingDomainMap, trans)).To(Succeed())
 			Expect(definingLiteral2LiteralMap.SetLabel("DefiningLiteral2LiteralMap", trans)).To(Succeed())
@@ -642,25 +608,17 @@ var _ = Describe("CrlMaps mapping tests", func() {
 
 			// Source Instance Setup
 
-			instanceSourceReferent, err = uOfD.CreateReplicateAsRefinement(definingSourceReferent, trans)
+			instanceSourceReferent, err = uOfD.CreateOwnedRefinementOfConcept(definingSourceReferent, instanceSourceDomain, "InstanceSourceReferent", trans)
 			Expect(err).To(BeNil())
-			Expect(instanceSourceReferent.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceReferent.SetLabel("InstanceSourceReferent", trans)).To(Succeed())
 
-			instanceSourceReference, err = uOfD.CreateReplicateReferenceAsRefinement(definingSourceReference, trans)
+			instanceSourceReference, err = uOfD.CreateOwnedRefinementOfConcept(definingSourceReference, instanceSourceDomain, "InstanceSourceReference", trans)
 			Expect(err).To(BeNil())
-			Expect(instanceSourceReference.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceReference.SetLabel("InstanceSourceReference", trans)).To(Succeed())
 
-			instanceSourceRefinement, err = uOfD.CreateReplicateRefinementAsRefinement(definingSourceRefinement, trans)
+			instanceSourceRefinement, err = uOfD.CreateOwnedRefinementOfConcept(definingSourceRefinement, instanceSourceDomain, "InstanceSourceRefinement", trans)
 			Expect(err).To(BeNil())
-			Expect(instanceSourceRefinement.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceRefinement.SetLabel("InstanceSourceRefinement", trans)).To(Succeed())
 
-			instanceSourceLiteral, err = uOfD.CreateReplicateLiteralAsRefinement(definingSourceLiteral, trans)
+			instanceSourceLiteral, err = uOfD.CreateOwnedRefinementOfConcept(definingSourceLiteral, instanceSourceDomain, "InstanceSourceLiteral", trans)
 			Expect(err).To(BeNil())
-			Expect(instanceSourceLiteral.SetOwningConcept(instanceSourceDomain, trans)).To(Succeed())
-			Expect(instanceSourceLiteral.SetLabel("InstanceSourceLiteral", trans)).To(Succeed())
 
 		})
 		Specify("Referenced Element Pointer to Referenced Element Pointer", func() {
@@ -670,7 +628,7 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(definingSourceReference.SetReferencedConcept(definingSourceReferent, core.NoAttribute, trans)).To(Succeed())
 			Expect(definingTargetReference.SetReferencedConcept(definingTargetReferent, core.NoAttribute, trans)).To(Succeed())
 			// Add the pointer map
-			definingReferencedElementPointer2ReferencedElementPointerMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingReferencedElementPointer2ReferencedElementPointerMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingReferencedElementPointer2ReferencedElementPointerMap.SetOwningConcept(definingReference2ReferenceMap, trans)).To(Succeed())
 			Expect(definingReferencedElementPointer2ReferencedElementPointerMap.SetLabel("DefiningReferencedElementPointer2ReferencedElementPointerMap", trans)).To(Succeed())
@@ -717,7 +675,7 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(definingSourceReference.SetOwningConcept(definingSourceReferent, trans)).To(Succeed())
 			Expect(definingTargetReference.SetOwningConcept(definingTargetReferent, trans)).To(Succeed())
 			// Add the pointer map
-			definingOwnerPointer2OwnerPointerMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingOwnerPointer2OwnerPointerMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingOwnerPointer2OwnerPointerMap.SetOwningConcept(definingReference2ReferenceMap, trans)).To(Succeed())
 			Expect(definingOwnerPointer2OwnerPointerMap.SetLabel("definingOwnerPointer2OwnerPointerMap", trans)).To(Succeed())
@@ -762,7 +720,7 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(definingSourceRefinement.SetAbstractConcept(definingSourceReferent, trans)).To(Succeed())
 			Expect(definingTargetRefinement.SetAbstractConcept(definingTargetReferent, trans)).To(Succeed())
 			// Add the pointer map
-			definingAbstractPointer2AbstractPointerMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingAbstractPointer2AbstractPointerMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingAbstractPointer2AbstractPointerMap.SetOwningConcept(definingRefinement2RefinementMap, trans)).To(Succeed())
 			Expect(definingAbstractPointer2AbstractPointerMap.SetLabel("definingAbstractPointer2AbstractPointerMap", trans)).To(Succeed())
@@ -809,7 +767,7 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			Expect(definingSourceRefinement.SetRefinedConcept(definingSourceReferent, trans)).To(Succeed())
 			Expect(definingTargetRefinement.SetRefinedConcept(definingTargetReferent, trans)).To(Succeed())
 			// Add the pointer map
-			definingRefinedPointer2RefinedPointerMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingRefinedPointer2RefinedPointerMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingRefinedPointer2RefinedPointerMap.SetOwningConcept(definingRefinement2RefinementMap, trans)).To(Succeed())
 			Expect(definingRefinedPointer2RefinedPointerMap.SetLabel("definingRefinedPointer2RefinedPointerMap", trans)).To(Succeed())
@@ -857,7 +815,7 @@ var _ = Describe("CrlMaps mapping tests", func() {
 			// Expect(definingSourceRefinement.SetRefinedConcept(definingSourceReferent, trans)).To(Succeed())
 			// Expect(definingTargetRefinement.SetRefinedConcept(definingTargetReferent, trans)).To(Succeed())
 			// Add the pointer map
-			definingLiteralValue2LiteralValueMap, err := uOfD.CreateReplicateAsRefinementFromURI(CrlOneToOneMapURI, trans)
+			definingLiteralValue2LiteralValueMap, err := NewOneToOneMap(uOfD, trans)
 			Expect(err).To(BeNil())
 			Expect(definingLiteralValue2LiteralValueMap.SetOwningConcept(definingLiteral2LiteralMap, trans)).To(Succeed())
 			Expect(definingLiteralValue2LiteralValueMap.SetLabel("definingLiteralValue2LiteralValueMap", trans)).To(Succeed())

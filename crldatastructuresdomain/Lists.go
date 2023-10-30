@@ -32,16 +32,31 @@ func NewList(uOfD *core.UniverseOfDiscourse, setType core.Concept, trans *core.T
 	if setType == nil {
 		return nil, errors.New("No type specified for list")
 	}
-	newList, err := uOfD.CreateReplicateAsRefinementFromURI(CrlListURI, trans, newURI...)
+	newList, err := uOfD.CreateRefinementOfConceptURI(CrlListURI, "List", trans, newURI...)
 	if err != nil {
 		return nil, err
 	}
+	addNewListConcepts(uOfD, newList, trans)
 	typeReference := newList.GetFirstOwnedReferenceRefinedFromURI(CrlListTypeReferenceURI, trans)
 	if typeReference == nil {
 		return nil, errors.New("In Lists.go, NewList failed to find a type reference")
 	}
 	typeReference.SetReferencedConcept(setType, core.NoAttribute, trans)
 	return newList, nil
+}
+
+// NewListMemberReference creates a list member reference with its child concepts
+func NewListMemberReference(uOfD *core.UniverseOfDiscourse, trans *core.Transaction, newURI ...string) (core.Concept, error) {
+	newReference, _ := uOfD.CreateRefinementOfConceptURI(CrlListMemberReferenceURI, "MemberReference", trans, newURI...)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlListReferenceToNextMemberReferenceURI, newReference, "NextMemberReference", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlListReferenceToPriorMemberReferenceURI, newReference, "PriorMemberReference", trans)
+	return newReference, nil
+}
+
+func addNewListConcepts(uOfD *core.UniverseOfDiscourse, newList core.Concept, trans *core.Transaction) {
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlListReferenceToFirstMemberReferenceURI, newList, "FirstMemberReference", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlListReferenceToLastMemberReferenceURI, newList, "LastMemberReference", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlListTypeReferenceURI, newList, "TypeReference", trans)
 }
 
 // AddListMemberAfter adds a member to the list after the priorMemberReference and returns the newMemberReference.
@@ -80,7 +95,7 @@ func AddListMemberAfter(list core.Concept, priorMemberReference core.Concept, ne
 	if referencedPostMemberReference != nil {
 		newPostMemberReference = referencedPostMemberReference
 	}
-	newMemberReference, _ := uOfD.CreateReplicateReferenceAsRefinementFromURI(CrlListMemberReferenceURI, trans)
+	newMemberReference, _ := NewListMemberReference(uOfD, trans)
 	newMemberReference.SetOwningConcept(list, trans)
 	newMemberReference.SetReferencedConcept(newMember, core.NoAttribute, trans)
 	// Wire up prior references
@@ -139,7 +154,7 @@ func AddListMemberBefore(list core.Concept, postMemberReference core.Concept, ne
 		newPriorMemberReference = referencedPriorMemberReference
 	}
 	// Create the newMemberReference
-	newMemberReference, _ := uOfD.CreateReplicateReferenceAsRefinementFromURI(CrlListMemberReferenceURI, trans)
+	newMemberReference, _ := NewListMemberReference(uOfD, trans)
 	newMemberReference.SetOwningConcept(list, trans)
 	newMemberReference.SetReferencedConcept(newMember, core.NoAttribute, trans)
 	// Wire up post references - be careful if inserting at the end
@@ -177,7 +192,7 @@ func AppendListMember(list core.Concept, newMember core.Concept, trans *core.Tra
 		return nil, errors.Wrap(err, "AppendListMember failed")
 	}
 	// Create the newMemberReference
-	newMemberReference, err2 := uOfD.CreateReplicateReferenceAsRefinementFromURI(CrlListMemberReferenceURI, trans)
+	newMemberReference, err2 := NewListMemberReference(uOfD, trans)
 	if err2 != nil {
 		return nil, errors.Wrap(err2, "AppendListMember failed")
 	}
@@ -421,7 +436,7 @@ func PrependListMember(list core.Concept, newMember core.Concept, trans *core.Tr
 		return nil, errors.Wrap(err, "PrependListMember failed")
 	}
 	// Create the newMemberReference
-	newMemberReference, err2 := uOfD.CreateReplicateReferenceAsRefinementFromURI(CrlListMemberReferenceURI, trans)
+	newMemberReference, err2 := NewListMemberReference(uOfD, trans)
 	if err2 != nil {
 		return nil, errors.Wrap(err2, "PrependListMember failed")
 	}

@@ -206,7 +206,14 @@ func (uOfDPtr *UniverseOfDiscourse) CreateOwnedRefinementOfConceptURI(originalUR
 func (uOfDPtr *UniverseOfDiscourse) CreateRefinementOfConcept(original Concept, label string, trans *Transaction, newURI ...string) (Concept, error) {
 	refinedConcept, err := uOfDPtr.NewConcept(original.GetConceptType(), trans, newURI...)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "UniverseOfDiscourse.CreateRefinementOfConcept uOfD.NewConcept failed")
+	}
+	switch original.GetConceptType() {
+	case Reference:
+		err = refinedConcept.SetReferencedConceptID("", original.GetReferencedAttributeName(trans), trans)
+		if err != nil {
+			return nil, errors.Wrap(err, "UniverseOfDiscourse.CreateRefinementOfConcept refinedConcept.SetReferencedConceptID failed")
+		}
 	}
 	err = refinedConcept.SetLabel(label, trans)
 	if err != nil {
@@ -227,10 +234,21 @@ func (uOfDPtr *UniverseOfDiscourse) CreateRefinementOfConcept(original Concept, 
 	return refinedConcept, nil
 }
 
+// CreateRefinementOfConceptURI creates a new concept of the same type as the indicated URI and makes the new concept a refinement of it
+func (uOfDPtr *UniverseOfDiscourse) CreateRefinementOfConceptURI(uri string, label string, trans *Transaction, newURI ...string) (Concept, error) {
+	abstractConcept := uOfDPtr.GetElementWithURI(uri)
+	if abstractConcept == nil {
+		return nil, errors.New("In CreateRefinementOfConceptURI, no concept found with URI: " + uri)
+	}
+	return uOfDPtr.CreateRefinementOfConcept(abstractConcept, label, trans, newURI...)
+}
+
 // CreateReplicateAsRefinement replicates the indicated Element and all of its descendent Elements
 // except that descendant Refinements are not replicated.
 // For each replicated Element, a Refinement is created with the abstractElement being the original and the refinedElement
 // being the replica. The root replicated element is returned.
+//
+// Deprecated: Create specific New<type>() functions instead that construct the desired concept with expected children
 func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinement(original Concept, trans *Transaction, newURI ...string) (Concept, error) {
 	replicate, err := uOfDPtr.NewConcept(original.GetConceptType(), trans, newURI...)
 	if err != nil {
@@ -244,6 +262,8 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinement(original Concept
 }
 
 // CreateReplicateAsRefinementFromURI replicates the Element indicated by the URI
+//
+// Deprecated: Create specific New<type>() functions instead that construct the desired concept with expected children
 func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinementFromURI(originalURI string, trans *Transaction, newURI ...string) (Concept, error) {
 	original := uOfDPtr.GetElementWithURI(originalURI)
 	if original == nil {
@@ -254,6 +274,8 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateAsRefinementFromURI(originalU
 
 // CreateReplicateLiteralAsRefinement replicates the supplied Literal and makes all elements of the replicate
 // refinements of the original elements
+//
+// Deprecated: Create specific New<type>() functions instead that construct the desired concept with expected children
 func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinement(original Concept, trans *Transaction, newURI ...string) (Concept, error) {
 	replicate, err := uOfDPtr.NewLiteral(trans, newURI...)
 	if err != nil {
@@ -267,6 +289,8 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinement(original 
 }
 
 // CreateReplicateLiteralAsRefinementFromURI replicates the Literal indicated by the URI
+//
+// Deprecated: Create specific New<type>() functions instead that construct the desired concept with expected children
 func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinementFromURI(originalURI string, trans *Transaction, newURI ...string) (Concept, error) {
 	original := uOfDPtr.GetLiteralWithURI(originalURI)
 	if original == nil {
@@ -277,6 +301,8 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateLiteralAsRefinementFromURI(or
 
 // CreateReplicateReferenceAsRefinement replicates the supplied reference and makes all elements of the replicate
 // refinements of the original elements
+//
+// Deprecated: Create specific New<type>() functions instead that construct the desired concept with expected children
 func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinement(original Concept, trans *Transaction, newURI ...string) (Concept, error) {
 	if original.GetConceptType() != Reference {
 		return nil, errors.New("CreateReplicateReferenceAsRefinement called with non-Reference argument")
@@ -293,6 +319,8 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinement(origina
 }
 
 // CreateReplicateReferenceAsRefinementFromURI replicates the Reference indicated by the URI
+//
+// Deprecated: Create specific New<type>() functions instead that construct the desired concept with expected children
 func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinementFromURI(originalURI string, trans *Transaction, newURI ...string) (Concept, error) {
 	original := uOfDPtr.GetReferenceWithURI(originalURI)
 	if original == nil {
@@ -303,6 +331,8 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateReferenceAsRefinementFromURI(
 
 // CreateReplicateRefinementAsRefinement replicates the supplied refinement and makes all elements of the replicate
 // refinements of the original elements
+//
+// Deprecated: Create specific New<type>() functions instead that construct the desired concept with expected children
 func (uOfDPtr *UniverseOfDiscourse) CreateReplicateRefinementAsRefinement(original Concept, trans *Transaction, newURI ...string) (Concept, error) {
 	replicate, err := uOfDPtr.NewRefinement(trans, newURI...)
 	if err != nil {
@@ -316,6 +346,8 @@ func (uOfDPtr *UniverseOfDiscourse) CreateReplicateRefinementAsRefinement(origin
 }
 
 // CreateReplicateRefinementAsRefinementFromURI replicates the Refinement indicated by the URI
+//
+// Deprecated: Create specific New<type>() functions instead that construct the desired concept with expected children
 func (uOfDPtr *UniverseOfDiscourse) CreateReplicateRefinementAsRefinementFromURI(originalURI string, trans *Transaction, newURI ...string) (Concept, error) {
 	original := uOfDPtr.GetRefinementWithURI(originalURI)
 	if original == nil {
