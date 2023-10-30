@@ -405,8 +405,7 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 	case AbstractElementPointerSelected, OwnerPointerSelected, ReferencedElementPointerSelected, ReferenceLinkSelected, RefinedElementPointerSelected, RefinementLinkSelected:
 		uOfD.MarkUndoPoint()
 	case OneToOneMapSelected:
-		sourceMap := uOfD.GetElementWithURI(crlmapsdomain.CrlOneToOneMapURI)
-		el, _ = uOfD.CreateReplicateAsRefinement(sourceMap, trans)
+		el, _ = crlmapsdomain.NewOneToOneMap(uOfD, trans)
 		el.SetOwningConcept(crlDiagram.GetOwningConcept(trans), trans)
 	case CreateRefinementOfConceptSelected:
 		selection := FyneGUISingleton.editor.GetCurrentSelection()
@@ -1470,7 +1469,7 @@ func (deo *diagramElementObserver) Update(notification *core.ChangeNotification,
 						goColor := getGoColor(lineColor)
 						fyneDiagramElement.SetForegroundColor(goColor)
 					}
-					if changedConcept.IsRefinementOfURI(crldiagramdomain.CrlDiagramNodeBGColorURI, trans) {
+					if changedConcept.IsRefinementOfURI(crldiagramdomain.CrlDiagramElementBGColorURI, trans) {
 						bgColor := crldiagramdomain.GetBGColor(crlDiagramElement, trans)
 						log.Printf("Background Color: %s", bgColor)
 						goColor := getGoColor(bgColor)

@@ -26,11 +26,21 @@ var CrlStringListReferenceToPriorMemberLiteralURI = CrlStringListURI + "/Referen
 
 // NewStringList creates an instance of a list
 func NewStringList(uOfD *core.UniverseOfDiscourse, trans *core.Transaction, newURI ...string) (core.Concept, error) {
-	newStringList, err := uOfD.CreateReplicateAsRefinementFromURI(CrlStringListURI, trans, newURI...)
+	newStringList, err := uOfD.CreateRefinementOfConceptURI(CrlStringListURI, "StringList", trans, newURI...)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlStringListReferenceToFirstMemberLiteralURI, newStringList, "StringListFirstMemberLiteral", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlStringListReferenceToLastMemberLiteralURI, newStringList, "StringListLastMemberLiteral", trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "StringLists.go NewStringList failed")
 	}
 	return newStringList, nil
+}
+
+// NewStringListMemberLiteral returns a new refinement of CrlStringListMemberLiteral
+func NewStringListMemberLiteral(uOfD *core.UniverseOfDiscourse, trans *core.Transaction, newURI ...string) (core.Concept, error) {
+	memberLiteral, _ := uOfD.CreateRefinementOfConceptURI(CrlStringListMemberLiteralURI, "StringListMemberLiteral", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlStringListReferenceToNextMemberLiteralURI, memberLiteral, "StringListNextMemberLiteral", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlStringListReferenceToPriorMemberLiteralURI, memberLiteral, "StringListPriorMemberLiteral", trans)
+	return memberLiteral, nil
 }
 
 // AddStringListMemberAfter adds a string to the list after the priorMemberLiteral and returns the newMemberLiteral.
@@ -65,7 +75,7 @@ func AddStringListMemberAfter(list core.Concept, priorMemberLiteral core.Concept
 	if referencedPostMemberLiteral != nil {
 		newPostMemberLiteral = referencedPostMemberLiteral
 	}
-	newMemberLiteral, _ := uOfD.CreateReplicateLiteralAsRefinementFromURI(CrlStringListMemberLiteralURI, trans)
+	newMemberLiteral, _ := NewStringListMemberLiteral(uOfD, trans)
 	newMemberLiteral.SetOwningConcept(list, trans)
 	newMemberLiteral.SetLiteralValue(newMember, trans)
 	// Wire up prior references
@@ -120,7 +130,7 @@ func AddStringListMemberBefore(list core.Concept, postMemberLiteral core.Concept
 		newPriorMemberLiteral = referencedPriorMemberLiteral
 	}
 	// Create the newMemberLiteral
-	newMemberLiteral, _ := uOfD.CreateReplicateLiteralAsRefinementFromURI(CrlStringListMemberLiteralURI, trans)
+	newMemberLiteral, _ := NewStringListMemberLiteral(uOfD, trans)
 	newMemberLiteral.SetOwningConcept(list, trans)
 	newMemberLiteral.SetLiteralValue(newMember, trans)
 	// Wire up post references - be careful if inserting at the end
@@ -154,7 +164,7 @@ func AppendStringListMember(list core.Concept, value string, trans *core.Transac
 		return nil, errors.Wrap(err, "AppendStringListMember failed")
 	}
 	// Create the newMemberLiteral
-	newMemberLiteral, err2 := uOfD.CreateReplicateLiteralAsRefinementFromURI(CrlStringListMemberLiteralURI, trans)
+	newMemberLiteral, err2 := NewStringListMemberLiteral(uOfD, trans)
 	if err2 != nil {
 		return nil, errors.Wrap(err2, "AppendStringListMember failed")
 	}
@@ -385,7 +395,7 @@ func PrependStringListMember(list core.Concept, value string, trans *core.Transa
 		return nil, errors.Wrap(err, "PrependStringListMember failed")
 	}
 	// Create the newMemberLiteral
-	newMemberLiteral, err2 := uOfD.CreateReplicateLiteralAsRefinementFromURI(CrlStringListMemberLiteralURI, trans)
+	newMemberLiteral, err2 := NewStringListMemberLiteral(uOfD, trans)
 	if err2 != nil {
 		return nil, errors.Wrap(err2, "PrependStringListMember failed")
 	}

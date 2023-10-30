@@ -129,12 +129,12 @@ func (gui *CrlEditorFyneGUI) addDiagram(parentID string) core.Concept {
 	}
 	gui.markUndoPoint()
 	uOfD := trans.GetUniverseOfDiscourse()
-	newElement, _ := uOfD.CreateReplicateAsRefinementFromURI(crldiagramdomain.CrlDiagramURI, trans)
-	newElement.SetLabel(gui.editor.GetDefaultDiagramLabel(), trans)
-	newElement.SetOwningConceptID(parentID, trans)
-	gui.editor.SelectElement(newElement, trans)
-	gui.editor.GetDiagramManager().DisplayDiagram(newElement.GetConceptID(trans), trans)
-	return newElement
+	newDiagram, _ := crldiagramdomain.NewDiagram(uOfD, trans)
+	newDiagram.SetLabel(gui.editor.GetDefaultDiagramLabel(), trans)
+	newDiagram.SetOwningConceptID(parentID, trans)
+	gui.editor.SelectElement(newDiagram, trans)
+	gui.editor.GetDiagramManager().DisplayDiagram(newDiagram.GetConceptID(trans), trans)
+	return newDiagram
 }
 
 func (gui *CrlEditorFyneGUI) addElement(parentID string, label string) core.Concept {

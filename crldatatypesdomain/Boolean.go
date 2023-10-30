@@ -12,7 +12,7 @@ var CrlBooleanURI = CrlDataTypesDomainURI + "/Boolean"
 // NewBoolean creates an instance of a Boolean
 func NewBoolean(label string, trans *core.Transaction, newURI ...string) core.Concept {
 	uOfD := trans.GetUniverseOfDiscourse()
-	newBoolean, _ := uOfD.CreateReplicateLiteralAsRefinementFromURI(CrlBooleanURI, trans, newURI...)
+	newBoolean, _ := uOfD.CreateRefinementOfConceptURI(CrlBooleanURI, "CrlBoolean", trans, newURI...)
 	SetBooleanValue(newBoolean, false, trans)
 	newBoolean.SetLabel(label, trans)
 	return newBoolean

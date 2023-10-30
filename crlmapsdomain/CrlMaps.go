@@ -27,59 +27,67 @@ var CrlMapTargetURI = CrlMapURI + "/Target"
 var CrlOneToOneMapURI = CrlMapsDomainURI + "/OneToOneMap"
 
 // CrlOneToOneMapRefinementURI is the URI of the refinement showing it to be a refinement of CrlMap
-var CrlOneToOneMapRefinementURI = CrlOneToOneMapURI + "/Refinement"
+// var CrlOneToOneMapRefinementURI = CrlOneToOneMapURI + "/Refinement"
 
 // CrlOneToOneMapSourceReferenceURI is the URI for the source reference
-var CrlOneToOneMapSourceReferenceURI = CrlOneToOneMapURI + "/SourceReference"
+// var CrlOneToOneMapSourceReferenceURI = CrlOneToOneMapURI + "/SourceReference"
 
 // CrlOneToOneMapSourceReferenceRefinementURI is the URI of the refinement showing it to be a refinement of CrlMapSource
-var CrlOneToOneMapSourceReferenceRefinementURI = CrlOneToOneMapSourceReferenceURI + "/Refinement"
+// var CrlOneToOneMapSourceReferenceRefinementURI = CrlOneToOneMapSourceReferenceURI + "/Refinement"
 
 // CrlOneToOneMapTargetReferenceURI is the URI for the target reference
-var CrlOneToOneMapTargetReferenceURI = CrlOneToOneMapURI + "/TargetReference"
+// var CrlOneToOneMapTargetReferenceURI = CrlOneToOneMapURI + "/TargetReference"
 
 // CrlOneToOneMapTargetReferenceRefinementURI is the URI of the refinement showing it to be a refinement of CrlMapTarget
-var CrlOneToOneMapTargetReferenceRefinementURI = CrlOneToOneMapTargetReferenceURI + "/Refinement"
+// var CrlOneToOneMapTargetReferenceRefinementURI = CrlOneToOneMapTargetReferenceURI + "/Refinement"
 
 // Reference to Element Map
 
 // CrlReferenceToElementMapURI is the URI for the Reference to Element Map
-var CrlReferenceToElementMapURI = CrlMapsDomainURI + "/ReferenceToElementMap"
+// var CrlReferenceToElementMapURI = CrlMapsDomainURI + "/ReferenceToElementMap"
 
 // CrlReferenceToElementMapRefinementURI is the URI for the refinement from CrlMap
-var CrlReferenceToElementMapRefinementURI = CrlReferenceToElementMapURI + "/Refinement"
+// var CrlReferenceToElementMapRefinementURI = CrlReferenceToElementMapURI + "/Refinement"
 
 // CrlReferenceToElementMapSourceURI is the URI for the source
-var CrlReferenceToElementMapSourceURI = CrlReferenceToElementMapURI + "/Source"
+// var CrlReferenceToElementMapSourceURI = CrlReferenceToElementMapURI + "/Source"
 
 // CrlReferenceToElementMapSourceRefinementURI is the URI for the refinement from CrlMapSource
-var CrlReferenceToElementMapSourceRefinementURI = CrlReferenceToElementMapSourceURI + "/Refinement"
+// var CrlReferenceToElementMapSourceRefinementURI = CrlReferenceToElementMapSourceURI + "/Refinement"
 
 // CrlReferenceToElementMapTargetURI is the URI for the target
-var CrlReferenceToElementMapTargetURI = CrlReferenceToElementMapURI + "/Target"
+// var CrlReferenceToElementMapTargetURI = CrlReferenceToElementMapURI + "/Target"
 
 // CrlReferenceToElementMapTargetRefinementURI is the URI for the refinement from CrlMapTarget
-var CrlReferenceToElementMapTargetRefinementURI = CrlReferenceToElementMapTargetURI + "Refinement"
+// var CrlReferenceToElementMapTargetRefinementURI = CrlReferenceToElementMapTargetURI + "Refinement"
 
 // ID to Reference Map
 
 // CrlIDToReferenceMapURI is the URI for a map from an attribute that is an ID to a Reference
-var CrlIDToReferenceMapURI = CrlMapsDomainURI + "/IDToReferenceMap"
+// var CrlIDToReferenceMapURI = CrlMapsDomainURI + "/IDToReferenceMap"
 
 // CrlIDToReferenceMapRefinementURI is the URI for the refinement from CrlMap
-var CrlIDToReferenceMapRefinementURI = CrlIDToReferenceMapURI + "/Refinement"
+// var CrlIDToReferenceMapRefinementURI = CrlIDToReferenceMapURI + "/Refinement"
 
 // CrlIDToReferenceMapSourceURI is the URI for the source reference
-var CrlIDToReferenceMapSourceURI = CrlIDToReferenceMapURI + "/Source"
+// var CrlIDToReferenceMapSourceURI = CrlIDToReferenceMapURI + "/Source"
 
 // CrlIDToReferenceMapSourceRefinementURI is the URI for the refinement from CrlMapSource
-var CrlIDToReferenceMapSourceRefinementURI = CrlIDToReferenceMapSourceURI + "/Refinement"
+// var CrlIDToReferenceMapSourceRefinementURI = CrlIDToReferenceMapSourceURI + "/Refinement"
 
 // CrlIDToReferenceMapTargetURI is the URI for the target reference
-var CrlIDToReferenceMapTargetURI = CrlIDToReferenceMapURI + "/Target"
+// var CrlIDToReferenceMapTargetURI = CrlIDToReferenceMapURI + "/Target"
 
 // CrlIDToReferenceMapTargetRefinementURI is the URI for the refinement from CrlMapTarget
-var CrlIDToReferenceMapTargetRefinementURI = CrlIDToReferenceMapTargetURI + "/Refinement"
+// var CrlIDToReferenceMapTargetRefinementURI = CrlIDToReferenceMapTargetURI + "/Refinement"
+
+// NewOneToOneMap creates an instance of a one-to-one map with its source and target references
+func NewOneToOneMap(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Concept, error) {
+	newMap, _ := uOfD.CreateRefinementOfConceptURI(CrlOneToOneMapURI, "OneToOneMap", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlMapSourceURI, newMap, "Source", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlMapTargetURI, newMap, "Target", trans)
+	return newMap, nil
+}
 
 // BuildCrlMapsDomain constructs the domain for CRL maps
 func BuildCrlMapsDomain(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) error {
@@ -93,92 +101,17 @@ func BuildCrlMapsDomain(uOfD *core.UniverseOfDiscourse, trans *core.Transaction)
 	if err2 != nil {
 		return errors.Wrap(err2, "crlmaps.BuildCrlMapsDomain failed")
 	}
-	crlMapSource, err3 := uOfD.NewOwnedReference(crlMap, "MapSource", trans, CrlMapSourceURI)
-	if err3 != nil {
-		return errors.Wrap(err3, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	crlMapTarget, err4 := uOfD.NewOwnedReference(crlMap, "MapTarget", trans, CrlMapTargetURI)
-	if err4 != nil {
-		return errors.Wrap(err4, "crlmaps.BuildCrlMapsDomain failed")
-	}
+	uOfD.NewOwnedReference(crlMap, "MapSource", trans, CrlMapSourceURI)
+	uOfD.NewOwnedReference(crlMap, "MapTarget", trans, CrlMapTargetURI)
 
 	// One to One Map
-	crlOneToOneMap, err5 := uOfD.NewOwnedElement(crlMapsDomain, "CrlOneToOneMap", trans, CrlOneToOneMapURI)
-	if err5 != nil {
-		return errors.Wrap(err5, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	_, err6 := uOfD.NewCompleteRefinement(crlMap, crlOneToOneMap, "Refines CrlMap", trans, CrlOneToOneMapRefinementURI)
-	if err6 != nil {
-		return errors.Wrap(err6, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	crlOneToOneMapSourceReference, err7 := uOfD.NewOwnedReference(crlOneToOneMap, "SourceReference", trans, CrlOneToOneMapSourceReferenceURI)
-	if err7 != nil {
-		return errors.Wrap(err7, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	_, err8 := uOfD.NewCompleteRefinement(crlMapSource, crlOneToOneMapSourceReference, "Refines CrlMapSource", trans, CrlOneToOneMapSourceReferenceRefinementURI)
-	if err8 != nil {
-		return errors.Wrap(err8, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	crlOneToOneMapTargetReference, err9 := uOfD.NewOwnedReference(crlOneToOneMap, "TargetReference", trans, CrlOneToOneMapTargetReferenceURI)
-	if err9 != nil {
-		return errors.Wrap(err9, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	_, err10 := uOfD.NewCompleteRefinement(crlMapTarget, crlOneToOneMapTargetReference, "Refines CrlMapTarget", trans, CrlOneToOneMapTargetReferenceRefinementURI)
-	if err10 != nil {
-		return errors.Wrap(err10, "crlmaps.BuildCrlMapsDomain failed")
-	}
+	uOfD.CreateOwnedRefinementOfConcept(crlMap, crlMapsDomain, "CrlOneToOneMap", trans, CrlOneToOneMapURI)
 
 	// Reference To Element Map
-	crlReferenceToElementMap, err11 := uOfD.NewOwnedElement(crlMapsDomain, "ReferenceToElementMap", trans, CrlReferenceToElementMapURI)
-	if err11 != nil {
-		return errors.Wrap(err11, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	_, err12 := uOfD.NewCompleteRefinement(crlMap, crlReferenceToElementMap, "Refinement", trans, CrlReferenceToElementMapRefinementURI)
-	if err12 != nil {
-		return errors.Wrap(err12, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	crlReferenceToElementMapSource, err13 := uOfD.NewOwnedReference(crlReferenceToElementMap, "Source", trans, CrlReferenceToElementMapSourceURI)
-	if err13 != nil {
-		return errors.Wrap(err13, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	_, err14 := uOfD.NewCompleteRefinement(crlMapSource, crlReferenceToElementMapSource, "Refinement", trans, CrlReferenceToElementMapSourceRefinementURI)
-	if err14 != nil {
-		return errors.Wrap(err14, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	crlReferenceToElementMapTarget, err15 := uOfD.NewOwnedReference(crlReferenceToElementMap, "Target", trans, CrlReferenceToElementMapTargetURI)
-	if err15 != nil {
-		return errors.Wrap(err15, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	_, err16 := uOfD.NewCompleteRefinement(crlMapTarget, crlReferenceToElementMapTarget, "Refinement", trans, CrlReferenceToElementMapTargetRefinementURI)
-	if err16 != nil {
-		return errors.Wrap(err16, "crlmaps.BuildCrlMapsDomain failed")
-	}
+	// uOfD.NewOwnedElement(crlMapsDomain, "ReferenceToElementMap", trans, CrlReferenceToElementMapURI)
 
 	// ID to Reference Map
-	crlIDToReferenceMap, err17 := uOfD.NewOwnedElement(crlMapsDomain, "IDToReferenceMap", trans, CrlIDToReferenceMapURI)
-	if err17 != nil {
-		return errors.Wrap(err17, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	_, err18 := uOfD.NewCompleteRefinement(crlMap, crlIDToReferenceMap, "Refinement", trans, CrlIDToReferenceMapRefinementURI)
-	if err18 != nil {
-		return errors.Wrap(err18, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	crlIDToReferenceMapSource, err19 := uOfD.NewOwnedReference(crlIDToReferenceMap, "Source", trans, CrlIDToReferenceMapSourceURI)
-	if err19 != nil {
-		return errors.Wrap(err19, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	_, err20 := uOfD.NewCompleteRefinement(crlMapSource, crlIDToReferenceMapSource, "Source", trans, CrlIDToReferenceMapSourceRefinementURI)
-	if err20 != nil {
-		return errors.Wrap(err20, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	crlIDToReferenceMapTarget, err21 := uOfD.NewOwnedReference(crlIDToReferenceMap, "Target", trans, CrlIDToReferenceMapTargetURI)
-	if err21 != nil {
-		return errors.Wrap(err21, "crlmaps.BuildCrlMapsDomain failed")
-	}
-	_, err22 := uOfD.NewCompleteRefinement(crlMapTarget, crlIDToReferenceMapTarget, "Refinement", trans, CrlIDToReferenceMapTargetRefinementURI)
-	if err22 != nil {
-		return errors.Wrap(err22, "crlmaps.BuildCrlMapsDomain failed")
-	}
+	// uOfD.NewOwnedElement(crlMapsDomain, "IDToReferenceMap", trans, CrlIDToReferenceMapURI)
 
 	err := crlMapsDomain.SetReadOnlyRecursively(true, trans)
 	if err != nil {
@@ -228,7 +161,7 @@ func executeOneToOneMap(mapInstance core.Concept, notification *core.ChangeNotif
 	// log.Printf("Executing executeOneToOneMap for map labeled %s", mapInstance.GetLabel(trans))
 
 	// Validate that the abstraction has a sourceRef and that the sourceRef is referencing an element
-	definingSourceRef := definingMap.GetFirstOwnedReferenceRefinedFromURI(CrlOneToOneMapSourceReferenceURI, trans)
+	definingSourceRef := definingMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapSourceURI, trans)
 	if definingSourceRef == nil {
 		return nil
 	}
@@ -237,7 +170,7 @@ func executeOneToOneMap(mapInstance core.Concept, notification *core.ChangeNotif
 		return nil
 	}
 	// Validate that the defining map has a targetRef and that the targetRef is referencing an element
-	definingTargetRef := definingMap.GetFirstOwnedReferenceRefinedFromURI(CrlOneToOneMapTargetReferenceURI, trans)
+	definingTargetRef := definingMap.GetFirstOwnedReferenceRefinedFromURI(CrlMapTargetURI, trans)
 	if definingTargetRef == nil {
 		return nil
 	}
@@ -248,8 +181,7 @@ func executeOneToOneMap(mapInstance core.Concept, notification *core.ChangeNotif
 	// Check to see whether the source reference exists and references an element of the correct type
 	sourceRef := mapInstance.GetFirstOwnedReferenceRefinedFrom(definingSourceRef, trans)
 	if sourceRef == nil {
-		sourceRef, err = uOfD.CreateReplicateReferenceAsRefinement(definingSourceRef, trans)
-		sourceRef.SetOwningConcept(mapInstance, trans)
+		sourceRef, err = uOfD.CreateOwnedRefinementOfConcept(definingSourceRef, mapInstance, "Source", trans)
 		if err != nil {
 			return errors.Wrap(err, "executeOneToOneMap failed")
 		}
@@ -259,8 +191,7 @@ func executeOneToOneMap(mapInstance core.Concept, notification *core.ChangeNotif
 	targetRef := mapInstance.GetFirstOwnedReferenceRefinedFrom(definingTargetRef, trans)
 	// If the target ref does not exist, create it
 	if targetRef == nil {
-		targetRef, err = uOfD.CreateReplicateReferenceAsRefinement(definingTargetRef, trans)
-		targetRef.SetOwningConcept(mapInstance, trans)
+		targetRef, err = uOfD.CreateOwnedRefinementOfConcept(definingTargetRef, mapInstance, "Target", trans)
 		if err != nil {
 			return errors.Wrap(err, "executeOneToOneMap failed")
 		}
