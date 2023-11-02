@@ -13,10 +13,7 @@ The current incarnation of ActiveCRL is built with the go-based [fyne GUI librar
 ActiveCRL includes an Interactive Development Environment (IDE):
 * [ActiveCRL IDE](./crlfyneide/main.go) 
 
-<p align="center" markdown="1" style="max-width: 100%">
-  <img src="./images/ACRLIDE.png" width="1600" height="900" alt="ActiveCRL IDE" style="max-width: 100%" />
-</p>
-
+ ![ActiveCRL IDE](./images/ACRLIDE.png)
 
 ## A Bit Of History
 The core language for the ActiveCRL implementation is Go. However, in 2017 Go did not have a user interface capability rich enough to support the development of an interactive IDE. 

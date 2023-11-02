@@ -6,15 +6,15 @@
 //		CrlDiagramNode: a node in the diagram
 //		CrlDiagramLink: a link in the diagram
 //	    CrlDiagramPointer: a pointer shown as a link in the diagram
+//		CrlDiagramAnchoredText: stand-alone text anchored to a reference point in the diagram
 //
 // These classes are intended to hold all of the information about the diagram that is not specific to the rendering engine.
 //
 // Intended Usage
 // CRL Elements, in general, can have functions associated with them. When refinements of the elements are created, modified, or deleted, these functions are
-// called. The strategy used for diagrams is to place all rendering-specific code in functions associated with the prototypes.
+// called. The strategy used for diagrams is to place all rendering-specific code in functions associated with the deining concepts.
 // This is accomplished using the FunctionCallManager.AddFunctionCall() method. Note that this registration is NOT done in the core diagram package, but
-// rather in the package providing the rendering engine linkage. For example, the crlEditor package provides the linkages to JavaScript code that does
-// the rendering in a browser.
+// rather in the package providing the rendering engine linkage.
 //
 // Instances of the prototpes can be conveniently instantiated using the supplied New<type>() functions. This creates a refinement of the type and
 // adds the appropriate children, with each child being a refinement of its defining type.
@@ -31,6 +31,7 @@ import (
 
 	"github.com/golang/freetype/truetype"
 	"github.com/pbrown12303/activeCRL/core"
+	"github.com/pbrown12303/activeCRL/crldatatypesdomain"
 
 	mapset "github.com/deckarep/golang-set"
 	"golang.org/x/image/font"
@@ -72,6 +73,28 @@ var CrlDiagramWidthURI = CrlDiagramURI + "/" + "Width"
 // CrlDiagramHeightURI identifies the CrlDiagramHeight concept
 var CrlDiagramHeightURI = CrlDiagramURI + "/" + "Height"
 
+// Diagram Anchored Text
+
+// CrlDiagramAnchoredTextURI identifies the concept of an Anchored Text
+var CrlDiagramAnchoredTextURI = CrlDiagramDomainURI + "/" + "AnchoredText"
+
+// CrlDiagramAnchoredTextAnchorXURI identifies the x coordinate of the anchored text anchor point
+var CrlDiagramAnchoredTextAnchorXURI = CrlDiagramAnchoredTextURI + "/" + "AnchorX"
+
+// CrlDiagramAnchoredTextAnchorYURI identifies the y coordinate of the anchored text anchor point
+var CrlDiagramAnchoredTextAnchorYURI = CrlDiagramAnchoredTextURI + "/" + "AnchorY"
+
+// CrlDiagramAnchoredTextOffsetXURI identifies the x offset of the anchored text anchor point
+var CrlDiagramAnchoredTextOffsetXURI = CrlDiagramAnchoredTextURI + "/" + "OffsetX"
+
+// CrlDiagramAnchoredTextOffsetYURI identifies the y offset of the anchored text anchor point
+var CrlDiagramAnchoredTextOffsetYURI = CrlDiagramAnchoredTextURI + "/" + "OffsetY"
+
+// CrlDiagramAnchoredTextVisibleURI identifies the boolean indicating whether the anchored text is presently viewable
+var CrlDiagramAnchoredTextVisibleURI = CrlDiagramAnchoredTextURI + "/" + "Visible"
+
+// Diagram Element
+
 // CrlDiagramElementURI identifies the CrlDiagramElement concept
 var CrlDiagramElementURI = CrlDiagramDomainURI + "/" + "CrlDiagramElement"
 
@@ -90,14 +113,7 @@ var CrlDiagramElementLineColorURI = CrlDiagramElementURI + "/" + "LineColor"
 // CrlDiagramElementBGColorURI identifies the background color to be used when displaying the element
 var CrlDiagramElementBGColorURI = CrlDiagramElementURI + "/" + "BGColor"
 
-// CrlDiagramLinkURI identifies the CrlDiagramLink concept
-var CrlDiagramLinkURI = CrlDiagramDomainURI + "/" + "CrlDiagramLink"
-
-// CrlDiagramLinkSourceURI identifies the concept that is the source of the link
-var CrlDiagramLinkSourceURI = CrlDiagramLinkURI + "/" + "Source"
-
-// CrlDiagramLinkTargetURI identifies the concept that is the target of the link
-var CrlDiagramLinkTargetURI = CrlDiagramLinkURI + "/" + "Target"
+// Diagram Node
 
 // CrlDiagramNodeURI identifies the CrlDiagramNode concept
 var CrlDiagramNodeURI = CrlDiagramDomainURI + "/" + "CrlDiagramNode"
@@ -116,6 +132,31 @@ var CrlDiagramNodeHeightURI = CrlDiagramNodeURI + "/" + "Height"
 
 // CrlDiagramNodeWidthURI identifies the width of the node
 var CrlDiagramNodeWidthURI = CrlDiagramNodeURI + "/" + "Width"
+
+// CrlDiagramNodeDisplayLabelYOffsetURI identifies the Y offset for the display label within the node
+var CrlDiagramNodeDisplayLabelYOffsetURI = CrlDiagramNodeURI + "/" + "DisplayLabelYOffset"
+
+// Diagram Link
+
+// CrlDiagramLinkURI identifies the CrlDiagramLink concept
+var CrlDiagramLinkURI = CrlDiagramDomainURI + "/" + "CrlDiagramLink"
+
+// CrlDiagramLinkSourceURI identifies the concept that is the source of the link
+var CrlDiagramLinkSourceURI = CrlDiagramLinkURI + "/" + "Source"
+
+// CrlDiagramLinkTargetURI identifies the concept that is the target of the link
+var CrlDiagramLinkTargetURI = CrlDiagramLinkURI + "/" + "Target"
+
+// CrlDiagramLinkDisplayLabelURI identifies the anchored text being used as the display label on a link
+var CrlDiagramLinkDisplayLabelURI = CrlDiagramLinkURI + "/" + "DisplayLabel"
+
+// CrlDiagramLinkAbstractionDisplayLabelURI identifies the anchored text used as the abstraction label on a link
+var CrlDiagramLinkAbstractionDisplayLabelURI = CrlDiagramLinkURI + "/" + "AbstractionDisplayLabel"
+
+// CrlDiagramLinkMultiplicityURI identifies the anchored text used to display multiplicity
+var CrlDiagramLinkMultiplicityURI = CrlDiagramLinkURI + "/" + "Multiplicity"
+
+// Diagram Pointer
 
 // CrlDiagramPointerURI identifies a pointer represented as a link
 var CrlDiagramPointerURI = CrlDiagramDomainURI + "/" + "Pointer"
@@ -138,7 +179,43 @@ var CrlDiagramReferenceLinkURI = CrlDiagramDomainURI + "/" + "ReferenceLink"
 // CrlDiagramRefinementLinkURI identifies the Refinement represented as a link in the diagram
 var CrlDiagramRefinementLinkURI = CrlDiagramDomainURI + "/" + "RefinementLink"
 
-// GetAbstractionDisplayLabel is a convenience function for getting the AbstractionDisplayLabel value for a node
+func addAnchoredTextConcepts(anchoredText core.Concept, trans *core.Transaction) {
+	uOfD := trans.GetUniverseOfDiscourse()
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextAnchorXURI, anchoredText, "AnchorX", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextAnchorYURI, anchoredText, "AnchorY", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextOffsetXURI, anchoredText, "OffsetX", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextOffsetYURI, anchoredText, "OffsetY", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextVisibleURI, anchoredText, "Visible", trans)
+}
+
+func addDiagramElementConcepts(newElement core.Concept, trans *core.Transaction) {
+	uOfD := trans.GetUniverseOfDiscourse()
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementModelReferenceURI, newElement, "Model Reference", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementLineColorURI, newElement, "Line Color", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementBGColorURI, newElement, "BG Color", trans)
+}
+
+func addDiagramLinkConcepts(newLink core.Concept, trans *core.Transaction) {
+	uOfD := trans.GetUniverseOfDiscourse()
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkSourceURI, newLink, "Source", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkTargetURI, newLink, "Target", trans)
+	displayLabel, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkDisplayLabelURI, newLink, "DisplayLabel", trans)
+	addAnchoredTextConcepts(displayLabel, trans)
+	abstractionDisplayLabel, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkAbstractionDisplayLabelURI, newLink, "AbstractionDisplayLabel", trans)
+	addAnchoredTextConcepts(abstractionDisplayLabel, trans)
+}
+
+func addDiagramNodeConcepts(newNode core.Concept, trans *core.Transaction) {
+	uOfD := trans.GetUniverseOfDiscourse()
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeXURI, newNode, "X", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeYURI, newNode, "Y", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeHeightURI, newNode, "Height", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeWidthURI, newNode, "Width", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementDisplayLabelURI, newNode, "DisplayLabel", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementAbstractionDisplayLabelURI, newNode, "AbstractionDisplayLabel", trans)
+}
+
+// GetAbstractionDisplayLabel is a convenience function for getting the AbstractionDisplayLabel value for a DiagramElement
 func GetAbstractionDisplayLabel(diagramElement core.Concept, trans *core.Transaction) string {
 	if diagramElement == nil {
 		return ""
@@ -576,7 +653,8 @@ func IsDisplayLabel(el core.Concept, trans *core.Transaction) bool {
 }
 
 // NewDiagram creates a new diagram
-func NewDiagram(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Concept, error) {
+func NewDiagram(trans *core.Transaction) (core.Concept, error) {
+	uOfD := trans.GetUniverseOfDiscourse()
 	newDiagram, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramURI, "New Diagram", trans)
 	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramWidthURI, newDiagram, "Width", trans)
 	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramHeightURI, newDiagram, "Height", trans)
@@ -584,80 +662,71 @@ func NewDiagram(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.C
 }
 
 // NewDiagramNode creates a new diagram node
-func NewDiagramNode(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Concept, error) {
+func NewDiagramNode(trans *core.Transaction) (core.Concept, error) {
+	uOfD := trans.GetUniverseOfDiscourse()
 	newNode, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramNodeURI, "New Node", trans)
-	addDiagramElementConcepts(uOfD, newNode, trans)
-	addDiagramNodeConcepts(uOfD, newNode, trans)
+	addDiagramElementConcepts(newNode, trans)
+	addDiagramNodeConcepts(newNode, trans)
 	SetLineColor(newNode, "#00000000", trans)
 	return newNode, nil
 }
 
-func addDiagramNodeConcepts(uOfD *core.UniverseOfDiscourse, newNode core.Concept, trans *core.Transaction) {
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeXURI, newNode, "X", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeYURI, newNode, "Y", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeHeightURI, newNode, "Height", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeWidthURI, newNode, "Width", trans)
-}
-
-func addDiagramElementConcepts(uOfD *core.UniverseOfDiscourse, newElement core.Concept, trans *core.Transaction) {
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementModelReferenceURI, newElement, "Model Reference", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementDisplayLabelURI, newElement, "DisplayLabel", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementAbstractionDisplayLabelURI, newElement, "AbstractionDisplayLabel", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementLineColorURI, newElement, "Line Color", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementBGColorURI, newElement, "BG Color", trans)
-}
-
 // NewDiagramReferenceLink creates a new diagram link to represent a reference
-func NewDiagramReferenceLink(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Concept, error) {
+func NewDiagramReferenceLink(trans *core.Transaction) (core.Concept, error) {
+	uOfD := trans.GetUniverseOfDiscourse()
 	newLink, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramReferenceLinkURI, "ReferenceLink", trans)
-	addDiagramElementConcepts(uOfD, newLink, trans)
-	addDiagramLinkConcepts(uOfD, newLink, trans)
+	addDiagramElementConcepts(newLink, trans)
+	addDiagramLinkConcepts(newLink, trans)
+	multiplicity, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkMultiplicityURI, newLink, "Multiplicity", trans)
+	addAnchoredTextConcepts(multiplicity, trans)
 	return newLink, nil
 }
 
 // NewDiagramRefinementLink creates a new diagram link
-func NewDiagramRefinementLink(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Concept, error) {
+func NewDiagramRefinementLink(trans *core.Transaction) (core.Concept, error) {
+	uOfD := trans.GetUniverseOfDiscourse()
 	newLink, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramRefinementLinkURI, "RefinementLink", trans)
-	addDiagramElementConcepts(uOfD, newLink, trans)
-	addDiagramLinkConcepts(uOfD, newLink, trans)
+	addDiagramElementConcepts(newLink, trans)
+	addDiagramLinkConcepts(newLink, trans)
 	return newLink, nil
 }
 
 // NewDiagramOwnerPointer creates a new DiagramOwnerPointer
-func NewDiagramOwnerPointer(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Concept, error) {
+func NewDiagramOwnerPointer(trans *core.Transaction) (core.Concept, error) {
+	uOfD := trans.GetUniverseOfDiscourse()
 	newPointer, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramOwnerPointerURI, "OwnerPointer", trans)
-	addDiagramElementConcepts(uOfD, newPointer, trans)
-	addDiagramLinkConcepts(uOfD, newPointer, trans)
+	addDiagramElementConcepts(newPointer, trans)
+	addDiagramLinkConcepts(newPointer, trans)
+	multiplicity, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkMultiplicityURI, newPointer, "Multiplicity", trans)
+	addAnchoredTextConcepts(multiplicity, trans)
 	return newPointer, nil
 }
 
 // NewDiagramElementPointer creates a new DiagramElementPointer
-func NewDiagramElementPointer(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Concept, error) {
+func NewDiagramElementPointer(trans *core.Transaction) (core.Concept, error) {
+	uOfD := trans.GetUniverseOfDiscourse()
 	newPointer, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramElementPointerURI, "ElementPointer", trans)
-	addDiagramElementConcepts(uOfD, newPointer, trans)
-	addDiagramLinkConcepts(uOfD, newPointer, trans)
+	addDiagramElementConcepts(newPointer, trans)
+	addDiagramLinkConcepts(newPointer, trans)
 	return newPointer, nil
 }
 
 // NewDiagramAbstractPointer creates a new DiagramAbstractPointer
-func NewDiagramAbstractPointer(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Concept, error) {
+func NewDiagramAbstractPointer(trans *core.Transaction) (core.Concept, error) {
+	uOfD := trans.GetUniverseOfDiscourse()
 	newPointer, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramAbstractPointerURI, "AbstractPointer", trans)
-	addDiagramElementConcepts(uOfD, newPointer, trans)
-	addDiagramLinkConcepts(uOfD, newPointer, trans)
+	addDiagramElementConcepts(newPointer, trans)
+	addDiagramLinkConcepts(newPointer, trans)
 	return newPointer, nil
 }
 
 // NewDiagramRefinedPointer creates a new DiagramRefinedPointer
-func NewDiagramRefinedPointer(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) (core.Concept, error) {
+func NewDiagramRefinedPointer(trans *core.Transaction) (core.Concept, error) {
+	uOfD := trans.GetUniverseOfDiscourse()
 	newPointer, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramRefinedPointerURI, "RefinedPointer", trans)
-	addDiagramElementConcepts(uOfD, newPointer, trans)
-	addDiagramLinkConcepts(uOfD, newPointer, trans)
+	addDiagramElementConcepts(newPointer, trans)
+	addDiagramLinkConcepts(newPointer, trans)
 	return newPointer, nil
-}
-
-func addDiagramLinkConcepts(uOfD *core.UniverseOfDiscourse, newPointer core.Concept, trans *core.Transaction) {
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkSourceURI, newPointer, "Source", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkTargetURI, newPointer, "Target", trans)
 }
 
 // SetAbstractionDisplayLabel is a function on a CrlDiagramNode that sets the abstraction display label of the diagram node
@@ -810,6 +879,9 @@ func SetReferencedModelConcept(diagramElement core.Concept, el core.Concept, tra
 
 // BuildCrlDiagramDomain builds the CrlDiagram concept space and adds it to the uOfD
 func BuildCrlDiagramDomain(uOfD *core.UniverseOfDiscourse, trans *core.Transaction) core.Concept {
+	if uOfD.GetElementWithURI(crldatatypesdomain.CrlDataTypesDomainURI) == nil {
+		crldatatypesdomain.BuildCrlDataTypesDomain(uOfD, trans)
+	}
 	// CrlDiagramDomain
 	crlDiagramDomain, _ := uOfD.NewElement(trans, CrlDiagramDomainURI)
 	crlDiagramDomain.SetLabel("CrlDiagramDomain", trans)
@@ -821,13 +893,25 @@ func BuildCrlDiagramDomain(uOfD *core.UniverseOfDiscourse, trans *core.Transacti
 	uOfD.NewOwnedLiteral(crlDiagram, "Width", trans, CrlDiagramWidthURI)
 	uOfD.NewOwnedLiteral(crlDiagram, "Height", trans, CrlDiagramHeightURI)
 
+	// Diagram Anchored Text
+
+	crlDiagramAnchoredText, _ := uOfD.NewOwnedLiteral(crlDiagramDomain, "AnchoredText", trans, CrlDiagramAnchoredTextURI)
+	uOfD.NewOwnedLiteral(crlDiagramAnchoredText, "AnchorX", trans, CrlDiagramAnchoredTextAnchorXURI)
+	uOfD.NewOwnedLiteral(crlDiagramAnchoredText, "AnchorY", trans, CrlDiagramAnchoredTextAnchorYURI)
+	uOfD.NewOwnedLiteral(crlDiagramAnchoredText, "OffsetX", trans, CrlDiagramAnchoredTextOffsetXURI)
+	uOfD.NewOwnedLiteral(crlDiagramAnchoredText, "OffsetY", trans, CrlDiagramAnchoredTextOffsetYURI)
+	crldatatypesdomain.NewOwnedBoolean(crlDiagramAnchoredText, "Visible", trans, CrlDiagramAnchoredTextVisibleURI)
+
+	// Multiplicity
+	uOfD.CreateOwnedRefinementOfConcept(crlDiagramAnchoredText, crlDiagramDomain, "Multiplicity", trans, CrlDiagramLinkMultiplicityURI)
+
 	//
 	// CrlDiagramElement
 	//
 	crlDiagramElement, _ := uOfD.NewOwnedElement(crlDiagramDomain, "CrlDiagramElement", trans, CrlDiagramElementURI)
 	uOfD.NewOwnedReference(crlDiagramElement, "ModelReference", trans, CrlDiagramElementModelReferenceURI)
-	uOfD.NewOwnedLiteral(crlDiagramElement, "DisplayLabel", trans, CrlDiagramElementDisplayLabelURI)
-	uOfD.NewOwnedLiteral(crlDiagramElement, "AbstractionDisplayLabel", trans, CrlDiagramElementAbstractionDisplayLabelURI)
+	crlDisplayLabel, _ := uOfD.NewOwnedLiteral(crlDiagramElement, "DisplayLabel", trans, CrlDiagramElementDisplayLabelURI)
+	crlAbstractionDisplayLabel, _ := uOfD.NewOwnedLiteral(crlDiagramElement, "AbstractionDisplayLabel", trans, CrlDiagramElementAbstractionDisplayLabelURI)
 	uOfD.NewOwnedLiteral(crlDiagramElement, "LineColor", trans, CrlDiagramElementLineColorURI)
 	uOfD.NewOwnedLiteral(crlDiagramElement, "BGColor", trans, CrlDiagramElementBGColorURI)
 
@@ -839,6 +923,7 @@ func BuildCrlDiagramDomain(uOfD *core.UniverseOfDiscourse, trans *core.Transacti
 	uOfD.NewOwnedLiteral(crlDiagramNode, "Y", trans, CrlDiagramNodeYURI)
 	uOfD.NewOwnedLiteral(crlDiagramNode, "Height", trans, CrlDiagramNodeHeightURI)
 	uOfD.NewOwnedLiteral(crlDiagramNode, "Width", trans, CrlDiagramNodeWidthURI)
+	uOfD.NewOwnedLiteral(crlDiagramNode, "DisplayLabelYOffset", trans, CrlDiagramNodeDisplayLabelYOffsetURI)
 
 	//
 	// CrlDiagramLink
@@ -846,40 +931,22 @@ func BuildCrlDiagramDomain(uOfD *core.UniverseOfDiscourse, trans *core.Transacti
 	crlDiagramLink, _ := uOfD.CreateOwnedRefinementOfConcept(crlDiagramElement, crlDiagramDomain, "CrlDiagramLink", trans, CrlDiagramLinkURI)
 	uOfD.NewOwnedReference(crlDiagramLink, "Source", trans, CrlDiagramLinkSourceURI)
 	uOfD.NewOwnedReference(crlDiagramLink, "Target", trans, CrlDiagramLinkTargetURI)
+	floatingDisplayLabel, _ := uOfD.CreateOwnedRefinementOfConcept(crlDiagramAnchoredText, crlDiagramLink, "DisplayLabel", trans, CrlDiagramLinkDisplayLabelURI)
+	uOfD.AddAbstractionToConcept(floatingDisplayLabel, crlDisplayLabel, trans)
+	floatingAbstractionDisplayLabel, _ := uOfD.CreateOwnedRefinementOfConcept(crlDiagramAnchoredText, crlDiagramLink, "DisplayLabel", trans, CrlDiagramLinkAbstractionDisplayLabelURI)
+	uOfD.AddAbstractionToConcept(floatingAbstractionDisplayLabel, crlAbstractionDisplayLabel, trans)
+
+	uOfD.CreateOwnedRefinementOfConcept(crlDiagramLink, crlDiagramDomain, "ReferenceLink", trans, CrlDiagramReferenceLinkURI)
+	uOfD.CreateOwnedRefinementOfConcept(crlDiagramLink, crlDiagramDomain, "RefinementLink", trans, CrlDiagramRefinementLinkURI)
 
 	//
-	// CrlDiagramPointer
+	// Pointers
 	//
 	crlDiagramPointer, _ := uOfD.CreateOwnedRefinementOfConcept(crlDiagramLink, crlDiagramDomain, "Pointer", trans, CrlDiagramPointerURI)
-
-	//
-	// CrlDiagramAbstractPointer
-	//
 	uOfD.CreateOwnedRefinementOfConcept(crlDiagramPointer, crlDiagramDomain, "AbstractPointer", trans, CrlDiagramAbstractPointerURI)
-
-	//
-	// ElementPointer
-	//
 	uOfD.CreateOwnedRefinementOfConcept(crlDiagramPointer, crlDiagramDomain, "ElementPointer", trans, CrlDiagramElementPointerURI)
-	//
-	// OwnerPointer
-	//
 	uOfD.CreateOwnedRefinementOfConcept(crlDiagramPointer, crlDiagramDomain, "OwnerPointer", trans, CrlDiagramOwnerPointerURI)
-
-	//
-	// RefinedPointer
-	//
 	uOfD.CreateOwnedRefinementOfConcept(crlDiagramPointer, crlDiagramDomain, "RefinedPointer", trans, CrlDiagramRefinedPointerURI)
-
-	//
-	// ReferenceLink
-	//
-	uOfD.CreateOwnedRefinementOfConcept(crlDiagramLink, crlDiagramDomain, "ReferenceLink", trans, CrlDiagramReferenceLinkURI)
-
-	//
-	// RefinementLink
-	//
-	uOfD.CreateOwnedRefinementOfConcept(crlDiagramLink, crlDiagramDomain, "RefinementLink", trans, CrlDiagramRefinementLinkURI)
 
 	uOfD.AddFunction(CrlDiagramElementURI, updateDiagramElement)
 	uOfD.AddFunction(CrlDiagramOwnerPointerURI, updateDiagramOwnerPointer)

@@ -53,6 +53,36 @@ func NewUniverseOfDiscourse() *UniverseOfDiscourse {
 	return &uOfD
 }
 
+// AddAbstractionToConcept creates a refinement with the concept being the refined concept. The new refinement is
+// a child of the supplied concept.
+func (uOfDPtr *UniverseOfDiscourse) AddAbstractionToConcept(con Concept, abstraction Concept, trans *Transaction) error {
+	if con == nil {
+		return errors.New("uOfD.AddAbstractionToConcept called with nil concept")
+	}
+	if abstraction == nil {
+		return errors.New("uOfD.AddAbstractionToConcept called with nil abstraction")
+	}
+	refinement, err := uOfDPtr.NewRefinement(trans)
+	if err != nil {
+		return errors.Wrap(err, "UniverseOfDiscourse.AddAbstractionToConcept failed: ")
+	}
+	refinement.SetOwningConcept(con, trans)
+	refinement.SetAbstractConcept(abstraction, trans)
+	refinement.SetRefinedConcept(con, trans)
+	refinement.SetLabel("Refines "+abstraction.GetLabel(trans), trans)
+	return nil
+}
+
+// AddAbstractionURIToConcept creates a refinement with the concept being the refined concept. The new refinement is
+// a child of the supplied concept.
+func (uOfDPtr *UniverseOfDiscourse) AddAbstractionURIToConcept(con Concept, abstractionURI string, trans *Transaction) error {
+	abstraction := uOfDPtr.GetElementWithURI(abstractionURI)
+	if abstraction == nil {
+		return errors.New("oOfD.AddAbstractionURIToConcept abstraction not found for abstractionURI: " + abstractionURI)
+	}
+	return uOfDPtr.AddAbstractionToConcept(con, abstraction, trans)
+}
+
 func (uOfDPtr *UniverseOfDiscourse) addElement(el Concept, inRecovery bool, trans *Transaction) error {
 	if el == nil {
 		return errors.New("UniverseOfDiscource addElement() failed because element was nil")

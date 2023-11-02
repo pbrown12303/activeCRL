@@ -423,12 +423,13 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 		// Now the view
 		x := event.Position.X
 		y := event.Position.Y
-		newNode, err := crldiagramdomain.NewDiagramNode(uOfD, trans)
+		newNode, err := crldiagramdomain.NewDiagramNode(trans)
 		if err != nil {
 			log.Print(err)
 			return
 		}
 		newNode.Register(dm.diagramElementObserver)
+		crldiagramdomain.SetLineColor(newNode, "x000000ff", trans)
 		crldiagramdomain.SetNodeX(newNode, float64(x), trans)
 		crldiagramdomain.SetNodeY(newNode, float64(y), trans)
 		newNode.SetLabel(el.GetLabel(trans), trans)
@@ -951,7 +952,7 @@ func (dm *FyneDiagramManager) showOwnedConceptsImpl(uOfD *core.UniverseOfDiscour
 		}
 		diagramChildConcept := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, child, trans)
 		if diagramChildConcept == nil {
-			diagramChildConcept, _ = crldiagramdomain.NewDiagramNode(uOfD, trans)
+			diagramChildConcept, _ = crldiagramdomain.NewDiagramNode(trans)
 			crldiagramdomain.SetReferencedModelConcept(diagramChildConcept, child, trans)
 			crldiagramdomain.SetDisplayLabel(diagramChildConcept, child.GetLabel(trans), trans)
 			diagramElementX := crldiagramdomain.GetNodeX(diagramElement, trans)
@@ -964,7 +965,7 @@ func (dm *FyneDiagramManager) showOwnedConceptsImpl(uOfD *core.UniverseOfDiscour
 		}
 		ownerPointer := crldiagramdomain.GetOwnerPointer(diagram, diagramElement, trans)
 		if ownerPointer == nil {
-			ownerPointer, _ = crldiagramdomain.NewDiagramOwnerPointer(uOfD, trans)
+			ownerPointer, _ = crldiagramdomain.NewDiagramOwnerPointer(trans)
 			crldiagramdomain.SetReferencedModelConcept(ownerPointer, child, trans)
 			crldiagramdomain.SetLinkSource(ownerPointer, diagramChildConcept, trans)
 			crldiagramdomain.SetLinkTarget(ownerPointer, diagramElement, trans)
@@ -1002,7 +1003,7 @@ func (dm *FyneDiagramManager) showOwner(elementID string) error {
 	}
 	diagramConceptOwner := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, modelConceptOwner, trans)
 	if diagramConceptOwner == nil {
-		diagramConceptOwner, _ = crldiagramdomain.NewDiagramNode(uOfD, trans)
+		diagramConceptOwner, _ = crldiagramdomain.NewDiagramNode(trans)
 		crldiagramdomain.SetReferencedModelConcept(diagramConceptOwner, modelConceptOwner, trans)
 		crldiagramdomain.SetDisplayLabel(diagramConceptOwner, modelConceptOwner.GetLabel(trans), trans)
 		diagramElementX := crldiagramdomain.GetNodeX(diagramElement, trans)
@@ -1013,7 +1014,7 @@ func (dm *FyneDiagramManager) showOwner(elementID string) error {
 	}
 	ownerPointer := crldiagramdomain.GetOwnerPointer(diagram, diagramElement, trans)
 	if ownerPointer == nil {
-		ownerPointer, _ = crldiagramdomain.NewDiagramOwnerPointer(uOfD, trans)
+		ownerPointer, _ = crldiagramdomain.NewDiagramOwnerPointer(trans)
 		crldiagramdomain.SetReferencedModelConcept(ownerPointer, modelConcept, trans)
 		crldiagramdomain.SetLinkSource(ownerPointer, diagramElement, trans)
 		crldiagramdomain.SetLinkTarget(ownerPointer, diagramConceptOwner, trans)
@@ -1071,7 +1072,7 @@ func (dm *FyneDiagramManager) showAbstractConcept(elementID string) error {
 	}
 	diagramAbstractConcept := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, modelAbstractConcept, trans)
 	if diagramAbstractConcept == nil {
-		diagramAbstractConcept, _ = crldiagramdomain.NewDiagramNode(uOfD, trans)
+		diagramAbstractConcept, _ = crldiagramdomain.NewDiagramNode(trans)
 		crldiagramdomain.SetReferencedModelConcept(diagramAbstractConcept, modelAbstractConcept, trans)
 		crldiagramdomain.SetDisplayLabel(diagramAbstractConcept, modelAbstractConcept.GetLabel(trans), trans)
 		diagramElementX := crldiagramdomain.GetNodeX(diagramElement, trans)
@@ -1082,7 +1083,7 @@ func (dm *FyneDiagramManager) showAbstractConcept(elementID string) error {
 	}
 	elementPointer := crldiagramdomain.GetElementPointer(diagram, diagramElement, trans)
 	if elementPointer == nil {
-		elementPointer, _ = crldiagramdomain.NewDiagramAbstractPointer(uOfD, trans)
+		elementPointer, _ = crldiagramdomain.NewDiagramAbstractPointer(trans)
 		crldiagramdomain.SetReferencedModelConcept(elementPointer, modelConcept, trans)
 		crldiagramdomain.SetLinkSource(elementPointer, diagramElement, trans)
 		crldiagramdomain.SetLinkTarget(elementPointer, diagramAbstractConcept, trans)
@@ -1130,7 +1131,7 @@ func (dm *FyneDiagramManager) showReferencedConceptImpl(uOfD *core.UniverseOfDis
 	case core.NoAttribute, core.LiteralValue:
 		diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConcept(diagram, modelReferencedConcept, trans)
 		if diagramReferencedConcept == nil {
-			diagramReferencedConcept, _ = crldiagramdomain.NewDiagramNode(uOfD, trans)
+			diagramReferencedConcept, _ = crldiagramdomain.NewDiagramNode(trans)
 			crldiagramdomain.SetReferencedModelConcept(diagramReferencedConcept, modelReferencedConcept, trans)
 			crldiagramdomain.SetDisplayLabel(diagramReferencedConcept, modelReferencedConcept.GetLabel(trans), trans)
 			diagramElementX := crldiagramdomain.GetNodeX(diagramElement, trans)
@@ -1173,7 +1174,7 @@ func (dm *FyneDiagramManager) showReferencedConceptImpl(uOfD *core.UniverseOfDis
 	}
 	elementPointer := crldiagramdomain.GetElementPointer(diagram, diagramElement, trans)
 	if elementPointer == nil {
-		elementPointer, _ = crldiagramdomain.NewDiagramElementPointer(uOfD, trans)
+		elementPointer, _ = crldiagramdomain.NewDiagramElementPointer(trans)
 		crldiagramdomain.SetReferencedModelConcept(elementPointer, modelConcept, trans)
 		crldiagramdomain.SetLinkSource(elementPointer, diagramElement, trans)
 		crldiagramdomain.SetLinkTarget(elementPointer, diagramReferencedConcept, trans)
@@ -1260,7 +1261,7 @@ func (dm *FyneDiagramManager) showRefinedConcept(elementID string) error {
 	}
 	diagramRefinedConcept := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, modelRefinedConcept, trans)
 	if diagramRefinedConcept == nil {
-		diagramRefinedConcept, _ = crldiagramdomain.NewDiagramNode(uOfD, trans)
+		diagramRefinedConcept, _ = crldiagramdomain.NewDiagramNode(trans)
 		crldiagramdomain.SetReferencedModelConcept(diagramRefinedConcept, modelRefinedConcept, trans)
 		crldiagramdomain.SetDisplayLabel(diagramRefinedConcept, modelRefinedConcept.GetLabel(trans), trans)
 		diagramElementX := crldiagramdomain.GetNodeX(diagramElement, trans)
@@ -1271,7 +1272,7 @@ func (dm *FyneDiagramManager) showRefinedConcept(elementID string) error {
 	}
 	elementPointer := crldiagramdomain.GetElementPointer(diagram, diagramElement, trans)
 	if elementPointer == nil {
-		elementPointer, _ = crldiagramdomain.NewDiagramRefinedPointer(uOfD, trans)
+		elementPointer, _ = crldiagramdomain.NewDiagramRefinedPointer(trans)
 		crldiagramdomain.SetReferencedModelConcept(elementPointer, modelConcept, trans)
 		crldiagramdomain.SetLinkSource(elementPointer, diagramElement, trans)
 		crldiagramdomain.SetLinkTarget(elementPointer, diagramRefinedConcept, trans)
@@ -1299,7 +1300,7 @@ func (dm *FyneDiagramManager) startCreateLinkTransaction() {
 		switch dm.currentToolbarSelection {
 		case ReferenceLinkSelected:
 			uOfD.MarkUndoPoint()
-			crlLink, _ = crldiagramdomain.NewDiagramReferenceLink(uOfD, trans)
+			crlLink, _ = crldiagramdomain.NewDiagramReferenceLink(trans)
 			crlModelReference, _ := uOfD.NewReference(trans)
 			dm.connectionTransactionTransientConcepts.Add(crlModelReference.GetConceptID(trans))
 			crlModelReference.SetLabel(FyneGUISingleton.editor.GetDefaultReferenceLabel(), trans)
@@ -1308,7 +1309,7 @@ func (dm *FyneDiagramManager) startCreateLinkTransaction() {
 			fyneLink.Hide()
 		case RefinementLinkSelected:
 			uOfD.MarkUndoPoint()
-			crlLink, _ = crldiagramdomain.NewDiagramRefinementLink(uOfD, trans)
+			crlLink, _ = crldiagramdomain.NewDiagramRefinementLink(trans)
 			crlModelRefinement, _ := uOfD.NewRefinement(trans)
 			dm.connectionTransactionTransientConcepts.Add(crlModelRefinement.GetConceptID(trans))
 			crlModelRefinement.SetLabel(FyneGUISingleton.editor.GetDefaultRefinementLabel(), trans)
@@ -1317,19 +1318,19 @@ func (dm *FyneDiagramManager) startCreateLinkTransaction() {
 			fyneLink.Hide()
 		case AbstractElementPointerSelected:
 			uOfD.MarkUndoPoint()
-			crlLink, _ = crldiagramdomain.NewDiagramAbstractPointer(uOfD, trans)
+			crlLink, _ = crldiagramdomain.NewDiagramAbstractPointer(trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
 		case OwnerPointerSelected:
 			uOfD.MarkUndoPoint()
-			crlLink, _ = crldiagramdomain.NewDiagramOwnerPointer(uOfD, trans)
+			crlLink, _ = crldiagramdomain.NewDiagramOwnerPointer(trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
 		case ReferencedElementPointerSelected:
 			uOfD.MarkUndoPoint()
-			crlLink, _ = crldiagramdomain.NewDiagramElementPointer(uOfD, trans)
+			crlLink, _ = crldiagramdomain.NewDiagramElementPointer(trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
 		case RefinedElementPointerSelected:
 			uOfD.MarkUndoPoint()
-			crlLink, _ = crldiagramdomain.NewDiagramRefinedPointer(uOfD, trans)
+			crlLink, _ = crldiagramdomain.NewDiagramRefinedPointer(trans)
 			fyneLink = NewFyneCrlDiagramLink(currentDiagram, crlLink, trans)
 		}
 		crlDiagram := uOfD.GetElement(currentDiagram.ID)

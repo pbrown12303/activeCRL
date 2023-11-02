@@ -128,8 +128,7 @@ func (gui *CrlEditorFyneGUI) addDiagram(parentID string) core.Concept {
 		defer gui.editor.EndTransaction()
 	}
 	gui.markUndoPoint()
-	uOfD := trans.GetUniverseOfDiscourse()
-	newDiagram, _ := crldiagramdomain.NewDiagram(uOfD, trans)
+	newDiagram, _ := crldiagramdomain.NewDiagram(trans)
 	newDiagram.SetLabel(gui.editor.GetDefaultDiagramLabel(), trans)
 	newDiagram.SetOwningConceptID(parentID, trans)
 	gui.editor.SelectElement(newDiagram, trans)

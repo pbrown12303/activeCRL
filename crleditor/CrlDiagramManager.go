@@ -64,7 +64,7 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 		var modelTargetConcept core.Concept
 		switch el.GetConceptType() {
 		case core.Reference:
-			newElement, err = crldiagramdomain.NewDiagramReferenceLink(uOfD, trans)
+			newElement, err = crldiagramdomain.NewDiagramReferenceLink(trans)
 			if err != nil {
 				return nil, err
 			}
@@ -72,7 +72,7 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 			modelSourceConcept = reference.GetOwningConcept(trans)
 			modelTargetConcept = reference.GetReferencedConcept(trans)
 		case core.Refinement:
-			newElement, err = crldiagramdomain.NewDiagramRefinementLink(uOfD, trans)
+			newElement, err = crldiagramdomain.NewDiagramRefinementLink(trans)
 			if err != nil {
 				return nil, err
 			}
@@ -97,7 +97,7 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 		crldiagramdomain.SetLinkSource(newElement, diagramSourceElement, trans)
 		crldiagramdomain.SetLinkTarget(newElement, diagramTargetElement, trans)
 	} else {
-		newElement, err = crldiagramdomain.NewDiagramNode(uOfD, trans)
+		newElement, err = crldiagramdomain.NewDiagramNode(trans)
 		if err != nil {
 			return nil, err
 		}
@@ -156,8 +156,7 @@ func (dMgr *DiagramManager) DisplayDiagram(diagramID string, trans *core.Transac
 // NewDiagram creates a new crldiagram
 func (dMgr *DiagramManager) NewDiagram(trans *core.Transaction) (core.Concept, error) {
 	name := dMgr.editor.GetDefaultDiagramLabel()
-	uOfD := dMgr.editor.GetUofD()
-	diagram, err := crldiagramdomain.NewDiagram(uOfD, trans)
+	diagram, err := crldiagramdomain.NewDiagram(trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.newDiagram failed")
 	}
