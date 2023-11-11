@@ -24,12 +24,12 @@ var _ = Describe("Element internals test", func() {
 			It("should have a non-nil conceptID", func() {
 				el, _ := uOfD.NewElement(trans)
 				Expect(el.GetConceptID(trans)).ShouldNot(Equal(""))
-				Expect(el.GetConceptID(trans) == el.(*concept).ConceptID).To(BeTrue())
+				Expect(el.GetConceptID(trans) == el.ConceptID).To(BeTrue())
 			})
 			It("should have the UniverseOfDiscourse assigned", func() {
 				el, _ := uOfD.NewElement(trans)
 				Expect(el.GetUniverseOfDiscourse(trans) == uOfD).To(BeTrue())
-				Expect(el.(*concept).uOfD == uOfD).To(BeTrue())
+				Expect(el.uOfD == uOfD).To(BeTrue())
 			})
 		})
 	})
@@ -37,8 +37,8 @@ var _ = Describe("Element internals test", func() {
 	Describe("Validating ID methods", func() {
 		It("should return the correct ID", func() {
 			el, _ := uOfD.NewElement(trans)
-			Expect(el.GetConceptID(trans) == el.(*concept).ConceptID).To(BeTrue())
-			Expect(el.getConceptIDNoLock() == el.(*concept).ConceptID).To(BeTrue())
+			Expect(el.GetConceptID(trans) == el.ConceptID).To(BeTrue())
+			Expect(el.getConceptIDNoLock() == el.ConceptID).To(BeTrue())
 		})
 	})
 
@@ -51,25 +51,25 @@ var _ = Describe("Element internals test", func() {
 		It("should be equivalent with an owning concept ID set", func() {
 			el, _ := uOfD.NewElement(trans)
 			x, _ := uOfD.NewElement(trans)
-			el.(*concept).OwningConceptID = x.GetConceptID(trans)
+			el.OwningConceptID = x.GetConceptID(trans)
 			clone := clone(el, trans)
 			Expect(Equivalent(el, trans, clone, trans)).To(BeTrue())
 		})
 		It("should be equivalent with readOnly set", func() {
 			el, _ := uOfD.NewElement(trans)
-			el.(*concept).ReadOnly = true
+			el.ReadOnly = true
 			clone := clone(el, trans)
 			Expect(Equivalent(el, trans, clone, trans)).To(BeTrue())
 		})
 		It("should be equivalent with version set", func() {
 			el, _ := uOfD.NewElement(trans)
-			el.(*concept).Version.counter = 3
+			el.Version.counter = 3
 			clone := clone(el, trans)
 			Expect(Equivalent(el, trans, clone, trans)).To(BeTrue())
 		})
 		It("should be equivalent with a universeOfDiscourse set", func() {
 			el, _ := uOfD.NewElement(trans)
-			el.(*concept).uOfD = uOfD
+			el.uOfD = uOfD
 			clone := clone(el, trans)
 			Expect(Equivalent(el, trans, clone, trans)).To(BeTrue())
 		})
@@ -97,8 +97,8 @@ var _ = Describe("Element internals test", func() {
 				Expect(uOfD.GetConceptsOwnedConceptIDs(el.GetConceptID(trans)).Cardinality() == 0).To(BeTrue())
 			})
 			Context("after adding an ownedConcept", func() {
-				var el Concept
-				var ownedConcept Concept
+				var el *Concept
+				var ownedConcept *Concept
 				BeforeEach(func() {
 					el, _ = uOfD.NewElement(trans)
 					ownedConcept, _ = uOfD.NewElement(trans)
@@ -121,8 +121,8 @@ var _ = Describe("Element internals test", func() {
 				})
 			})
 			Context("after removing an owned concept", func() {
-				var el Concept
-				var ownedConcept Concept
+				var el *Concept
+				var ownedConcept *Concept
 				BeforeEach(func() {
 					el, _ = uOfD.NewElement(trans)
 					ownedConcept, _ = uOfD.NewElement(trans)
@@ -164,8 +164,8 @@ var _ = Describe("Element internals test", func() {
 				Expect(uOfD.GetListenerIDs(el.GetConceptID(trans)).Cardinality()).To(Equal(0))
 			})
 			Context("after adding an referencingConcept", func() {
-				var el Concept
-				var referencingConcept Concept
+				var el *Concept
+				var referencingConcept *Concept
 				BeforeEach(func() {
 					el, _ = uOfD.NewElement(trans)
 					referencingConcept, _ = uOfD.NewElement(trans)
@@ -185,8 +185,8 @@ var _ = Describe("Element internals test", func() {
 				})
 			})
 			Context("after removing an referencingConcept", func() {
-				var el Concept
-				var referencingConcept Concept
+				var el *Concept
+				var referencingConcept *Concept
 				BeforeEach(func() {
 					el, _ = uOfD.NewElement(trans)
 					referencingConcept, _ = uOfD.NewElement(trans)
@@ -210,8 +210,8 @@ var _ = Describe("Element internals test", func() {
 	})
 
 	Describe("Setting concept owner", func() {
-		var el Concept
-		var owner Concept
+		var el *Concept
+		var owner *Concept
 		var ownerID string
 		BeforeEach(func() {
 			el, _ = uOfD.NewElement(trans)
@@ -222,7 +222,7 @@ var _ = Describe("Element internals test", func() {
 			Specify("conceptOwner should be nil", func() {
 				Expect(el.GetOwningConceptID(trans) == "").To(BeTrue())
 				Expect(el.GetOwningConcept(trans) == nil).To(BeTrue())
-				Expect(el.(*concept).OwningConceptID == "").To(BeTrue())
+				Expect(el.OwningConceptID == "").To(BeTrue())
 			})
 		})
 		Context("After setting the concept owner", func() {
@@ -231,7 +231,7 @@ var _ = Describe("Element internals test", func() {
 				el.SetOwningConceptID(ownerID, trans)
 				Expect(el.GetOwningConceptID(trans) == owner.GetConceptID(trans)).To(BeTrue())
 				Expect(el.GetOwningConcept(trans) == owner).To(BeTrue())
-				Expect(el.(*concept).OwningConceptID == owner.GetConceptID(trans)).To(BeTrue())
+				Expect(el.OwningConceptID == owner.GetConceptID(trans)).To(BeTrue())
 				Expect(owner.IsOwnedConcept(el, trans)).To(BeTrue())
 				Expect(el.GetVersion(trans)).To(Equal(initialVersion + 1))
 			})
@@ -243,7 +243,7 @@ var _ = Describe("Element internals test", func() {
 				el.SetOwningConceptID("", trans)
 				Expect(el.GetOwningConceptID(trans) == "").To(BeTrue())
 				Expect(el.GetOwningConcept(trans) == nil).To(BeTrue())
-				Expect(el.(*concept).OwningConceptID == "").To(BeTrue())
+				Expect(el.OwningConceptID == "").To(BeTrue())
 				Expect(owner.IsOwnedConcept(el, trans)).To(BeFalse())
 				Expect(el.GetVersion(trans)).To(Equal(initialVersion + 1))
 			})
@@ -257,8 +257,8 @@ var _ = Describe("Element internals test", func() {
 	})
 
 	Describe("Setting read only", func() {
-		var child Concept
-		var parent Concept
+		var child *Concept
+		var parent *Concept
 		BeforeEach(func() {
 			uOfD = NewUniverseOfDiscourse()
 			trans = uOfD.NewTransaction()
@@ -272,10 +272,10 @@ var _ = Describe("Element internals test", func() {
 				parent, _ = uOfD.NewElement(trans)
 				child.SetOwningConceptID(parent.getConceptIDNoLock(), trans)
 				Expect(child.IsReadOnly(trans)).ToNot(BeTrue())
-				Expect(child.(*concept).ReadOnly == false).To(BeTrue())
+				Expect(child.ReadOnly == false).To(BeTrue())
 				Expect(child.SetReadOnly(true, trans)).To(Succeed())
 				Expect(child.IsReadOnly(trans)).To(BeTrue())
-				Expect(child.(*concept).ReadOnly == true).To(BeTrue())
+				Expect(child.ReadOnly == true).To(BeTrue())
 			})
 		})
 		Context("Owner is readOnly", func() {
@@ -302,7 +302,7 @@ var _ = Describe("Element internals test", func() {
 			hl2 := uOfD2.NewTransaction()
 			defer hl2.ReleaseLocks()
 			Expect(el.GetUniverseOfDiscourse(trans) == uOfD).To(BeTrue())
-			Expect(el.(*concept).uOfD == uOfD).To(BeTrue())
+			Expect(el.uOfD == uOfD).To(BeTrue())
 			// Can't set new uOfD without removing it from the old uOfD first
 			Expect(uOfD2.SetUniverseOfDiscourse(el, trans)).ToNot(Succeed())
 			deleteElements := mapset.NewSet(el.GetConceptID(trans))
@@ -310,12 +310,12 @@ var _ = Describe("Element internals test", func() {
 			trans.ReleaseLocks()
 			Expect(uOfD2.SetUniverseOfDiscourse(el, hl2)).To(Succeed())
 			Expect(el.GetUniverseOfDiscourse(hl2) == uOfD2).To(BeTrue())
-			Expect(el.(*concept).uOfD == uOfD2).To(BeTrue())
+			Expect(el.uOfD == uOfD2).To(BeTrue())
 		})
 	})
 
 	Describe("Setting URI", func() {
-		var el Concept
+		var el *Concept
 		BeforeEach(func() {
 			el, _ = uOfD.NewElement(trans)
 		})
@@ -335,7 +335,7 @@ var _ = Describe("Element internals test", func() {
 	})
 
 	Describe("Setting Label", func() {
-		var el Concept
+		var el *Concept
 		BeforeEach(func() {
 			el, _ = uOfD.NewElement(trans)
 		})
@@ -352,7 +352,7 @@ var _ = Describe("Element internals test", func() {
 	})
 
 	Describe("Setting Definition", func() {
-		var el Concept
+		var el *Concept
 		BeforeEach(func() {
 			el, _ = uOfD.NewElement(trans)
 		})
@@ -369,11 +369,11 @@ var _ = Describe("Element internals test", func() {
 	})
 
 	Describe("Validating abstraction infrastructure", func() {
-		var owner Concept
-		var child Concept
-		var firstAbstraction Concept
-		var secondAbstraction Concept
-		var thirdAbstraction Concept
+		var owner *Concept
+		var child *Concept
+		var firstAbstraction *Concept
+		var secondAbstraction *Concept
+		var thirdAbstraction *Concept
 		var firstAbstractionURI = "http://firstAbstraction"
 		var secondAbstractionURI = "http://secondAbstraction"
 		var thirdAbstractionURI = "http://thirdAbstraction"
@@ -406,7 +406,7 @@ var _ = Describe("Element internals test", func() {
 			Expect(child.IsRefinementOf(firstAbstraction, trans)).To(BeTrue())
 			Expect(child.IsRefinementOfURI(firstAbstractionURI, trans)).To(BeTrue())
 			Expect(owner.GetFirstOwnedConceptRefinedFrom(firstAbstraction, trans)).To(Equal(child))
-			foundAbstractions := make(map[string]Concept)
+			foundAbstractions := make(map[string]*Concept)
 			child.FindAbstractions(foundAbstractions, trans)
 			Expect(foundAbstractions[firstAbstraction.getConceptIDNoLock()]).To(Equal(firstAbstraction))
 			Expect(foundAbstractions[secondAbstraction.getConceptIDNoLock()]).To(BeNil())
@@ -435,7 +435,7 @@ var _ = Describe("Element internals test", func() {
 			Expect(child.IsRefinementOfURI(thirdAbstractionURI, trans)).To(BeFalse())
 			Expect(owner.GetFirstOwnedConceptRefinedFrom(thirdAbstraction, trans)).To(BeNil())
 			Expect(owner.GetFirstOwnedConceptRefinedFromURI(thirdAbstractionURI, trans)).To(BeNil())
-			foundAbstractions := make(map[string]Concept)
+			foundAbstractions := make(map[string]*Concept)
 			child.FindAbstractions(foundAbstractions, trans)
 			Expect(foundAbstractions[firstAbstraction.getConceptIDNoLock()]).To(Equal(firstAbstraction))
 			Expect(foundAbstractions[secondAbstraction.getConceptIDNoLock()]).To(Equal(secondAbstraction))
@@ -463,14 +463,14 @@ var _ = Describe("Element internals test", func() {
 	})
 
 	Describe("Testing Element Equivalence", func() {
-		var original Concept
-		var copy Concept
+		var original *Concept
+		var copy *Concept
 		BeforeEach(func() {
 			original, _ = uOfD.NewElement(trans)
 			copy = clone(original, trans)
 		})
 		Specify("Differences in ConceptID should be detected", func() {
-			copy.(*concept).ConceptID = "123"
+			copy.ConceptID = "123"
 			Expect(Equivalent(original, trans, copy, trans)).To(BeFalse())
 		})
 		Specify("Differences in Definition should be detected", func() {
@@ -478,7 +478,7 @@ var _ = Describe("Element internals test", func() {
 			Expect(Equivalent(original, trans, copy, trans)).To(BeFalse())
 		})
 		Specify("Differences in IsCore should be detected", func() {
-			original.(*concept).IsCore = true
+			original.IsCore = true
 			Expect(Equivalent(original, trans, copy, trans)).To(BeFalse())
 		})
 		Specify("Differences in Label should be detected", func() {
@@ -500,7 +500,7 @@ var _ = Describe("Element internals test", func() {
 			Expect(Equivalent(original, trans, copy, trans)).To(BeFalse())
 		})
 		Specify("Differences in version should be detected", func() {
-			original.(*concept).Version.incrementVersion()
+			original.Version.incrementVersion()
 			Expect(Equivalent(original, trans, copy, trans)).To(BeFalse())
 		})
 		Specify("Differences in URI should be detected", func() {

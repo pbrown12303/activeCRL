@@ -28,7 +28,7 @@ var _ = Describe("Reference Tests", func() {
 		Specify("Referenced concept should set correctly", func() {
 			ref, _ := uOfD.NewReference(trans)
 			target, _ := uOfD.NewElement(trans)
-			target.(*concept).Version.counter = 66
+			target.Version.counter = 66
 			initialVersion := ref.GetVersion(trans)
 			ref.SetReferencedConceptID(target.getConceptIDNoLock(), NoAttribute, trans)
 			Expect(ref.GetReferencedConceptID(trans)).To(Equal(target.getConceptIDNoLock()))
@@ -39,7 +39,7 @@ var _ = Describe("Reference Tests", func() {
 		Specify("Referenced concept should clear correctly", func() {
 			ref, _ := uOfD.NewReference(trans)
 			target, _ := uOfD.NewElement(trans)
-			target.(*concept).Version.counter = 66
+			target.Version.counter = 66
 			initialVersion := ref.GetVersion(trans)
 			ref.SetReferencedConceptID(target.getConceptIDNoLock(), NoAttribute, trans)
 			Expect(ref.GetVersion(trans)).To(Equal(initialVersion + 1))
@@ -59,7 +59,7 @@ var _ = Describe("Reference Tests", func() {
 		Specify("Referenced element should be retrieved from uOfD if cache does not contain pointer", func() {
 			ref, _ := uOfD.NewReference(trans)
 			target, _ := uOfD.NewElement(trans)
-			ref.(*concept).ReferencedConceptID = target.getConceptIDNoLock()
+			ref.ReferencedConceptID = target.getConceptIDNoLock()
 			Expect(ref.GetReferencedConcept(trans)).To(Equal(target))
 		})
 	})
@@ -108,7 +108,7 @@ var _ = Describe("Reference Tests", func() {
 			target, _ := uOfD.NewElement(trans)
 			ref.SetReferencedConceptID(target.getConceptIDNoLock(), NoAttribute, trans)
 			clonedReference := clone(ref, trans)
-			ref.(*concept).ReferencedConceptID = ""
+			ref.ReferencedConceptID = ""
 			Expect(Equivalent(ref, trans, clonedReference, trans)).To(BeFalse())
 		})
 		Specify("Equivalent should fail if there is a difference in the ReferencedConceptAttributeName", func() {
@@ -123,7 +123,7 @@ var _ = Describe("Reference Tests", func() {
 			ref, _ := uOfD.NewReference(trans)
 			clonedReference := clone(ref, trans)
 			Expect(Equivalent(ref, trans, clonedReference, trans)).To(BeTrue())
-			ref.(*concept).Version.counter = 123
+			ref.Version.counter = 123
 			Expect(Equivalent(ref, trans, clonedReference, trans)).To(BeFalse())
 		})
 	})

@@ -15,7 +15,7 @@ import (
 // }
 
 // GetConceptTypeString returns the string representing the reflected type
-func GetConceptTypeString(el Concept) string {
+func GetConceptTypeString(el *Concept) string {
 	if el == nil {
 		return ""
 	}
@@ -25,12 +25,12 @@ func GetConceptTypeString(el Concept) string {
 // // PrintMutex provides a mututal exclusion for print routhines shared across threads
 // var PrintMutex printMutexStruct
 
-func clone(el Concept, trans *Transaction) Concept {
-	return el.(*concept).clone(trans)
+func clone(el *Concept, trans *Transaction) *Concept {
+	return el.clone(trans)
 }
 
 // Equivalent returns true if the two elements are equivalent
-func Equivalent(be1 Concept, hl1 *Transaction, be2 Concept, hl2 *Transaction, printExceptions ...bool) bool {
+func Equivalent(be1 *Concept, hl1 *Transaction, be2 *Concept, hl2 *Transaction, printExceptions ...bool) bool {
 	var print bool
 	if len(printExceptions) > 0 {
 		print = printExceptions[0]
@@ -49,7 +49,7 @@ func Equivalent(be1 Concept, hl1 *Transaction, be2 Concept, hl2 *Transaction, pr
 }
 
 // RecursivelyEquivalent returns true if two elements and all of their children are equivalent
-func RecursivelyEquivalent(e1 Concept, hl1 *Transaction, e2 Concept, hl2 *Transaction, printExceptions ...bool) bool {
+func RecursivelyEquivalent(e1 *Concept, hl1 *Transaction, e2 *Concept, hl2 *Transaction, printExceptions ...bool) bool {
 	var print bool
 	if len(printExceptions) == 1 {
 		print = printExceptions[0]
@@ -95,7 +95,7 @@ func RecursivelyEquivalent(e1 Concept, hl1 *Transaction, e2 Concept, hl2 *Transa
 	return true
 }
 
-func equivalent(be1 Concept, hl1 *Transaction, be2 Concept, hl2 *Transaction, printExceptions ...bool) bool {
+func equivalent(be1 *Concept, hl1 *Transaction, be2 *Concept, hl2 *Transaction, printExceptions ...bool) bool {
 	var print bool
 	if len(printExceptions) > 0 {
 		print = printExceptions[0]
@@ -106,22 +106,15 @@ func equivalent(be1 Concept, hl1 *Transaction, be2 Concept, hl2 *Transaction, pr
 		}
 		return false
 	}
-	switch be1.(type) {
-	case *concept:
-		return be1.(*concept).isEquivalent(hl1, be2.(*concept), hl2, print)
-	default:
-		log.Printf("Equivalent default case entered for object: \n")
-		Print(be1, "   ", hl1)
-	}
-	return false
+	return be1.isEquivalent(hl1, be2, hl2, print)
 }
 
 // Print prints the indicated element and its ownedConcepts, recursively
-func Print(el Concept, prefix string, trans *Transaction) {
+func Print(el *Concept, prefix string, trans *Transaction) {
 	printElement(el, prefix, trans)
 }
 
-func printElement(el Concept, prefix string, trans *Transaction) {
+func printElement(el *Concept, prefix string, trans *Transaction) {
 	if el == nil {
 		return
 	}

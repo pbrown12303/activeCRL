@@ -9,19 +9,19 @@ import (
 // DiagramManager manages the diagram display portion of the GUI
 type DiagramManager struct {
 	editor   *Editor
-	diagrams map[string]core.Concept
+	diagrams map[string]*core.Concept
 }
 
 // NewDiagramManager creates an instance of the DiagramManager
 func NewDiagramManager(editor *Editor) *DiagramManager {
 	var dMgr DiagramManager
 	dMgr.editor = editor
-	dMgr.diagrams = map[string]core.Concept{}
+	dMgr.diagrams = map[string]*core.Concept{}
 	return &dMgr
 }
 
 // AddDiagram adds a diagram tab, if needed, and displays the tab
-func (dMgr *DiagramManager) AddDiagram(ownerID string, trans *core.Transaction) (core.Concept, error) {
+func (dMgr *DiagramManager) AddDiagram(ownerID string, trans *core.Transaction) (*core.Concept, error) {
 	diagram, err := dMgr.NewDiagram(trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.addDiagram failed")
@@ -42,7 +42,7 @@ func (dMgr *DiagramManager) AddDiagram(ownerID string, trans *core.Transaction) 
 }
 
 // AddConceptView adds a view of the concept to the indicated diagram
-func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x float64, y float64, trans *core.Transaction) (core.Concept, error) {
+func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x float64, y float64, trans *core.Transaction) (*core.Concept, error) {
 	uOfD := dMgr.editor.GetUofD()
 	diagram := uOfD.GetElement(diagramID)
 	el := uOfD.GetElement(conceptID)
@@ -57,11 +57,11 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 		createAsLink = dMgr.editor.GetDropDiagramRefinementAsLink(trans)
 	}
 
-	var newElement core.Concept
+	var newElement *core.Concept
 	var err error
 	if createAsLink {
-		var modelSourceConcept core.Concept
-		var modelTargetConcept core.Concept
+		var modelSourceConcept *core.Concept
+		var modelTargetConcept *core.Concept
 		switch el.GetConceptType() {
 		case core.Reference:
 			newElement, err = crldiagramdomain.NewDiagramReferenceLink(trans)
@@ -154,7 +154,7 @@ func (dMgr *DiagramManager) DisplayDiagram(diagramID string, trans *core.Transac
 }
 
 // NewDiagram creates a new crldiagram
-func (dMgr *DiagramManager) NewDiagram(trans *core.Transaction) (core.Concept, error) {
+func (dMgr *DiagramManager) NewDiagram(trans *core.Transaction) (*core.Concept, error) {
 	name := dMgr.editor.GetDefaultDiagramLabel()
 	diagram, err := crldiagramdomain.NewDiagram(trans)
 	if err != nil {

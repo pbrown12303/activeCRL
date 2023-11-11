@@ -40,16 +40,16 @@ var _ = Describe("CrlMaps domain test", func() {
 var _ = Describe("CrlMaps mapping tests", func() {
 	var uOfD *core.UniverseOfDiscourse
 	var trans *core.Transaction
-	var definingSourceFolder core.Concept
-	var definingSourceDomain core.Concept
-	var definingTargetFolder core.Concept
-	var definingTargetDomain core.Concept
-	var definingMapFolder core.Concept
-	var definingDomainMap core.Concept
-	var instanceSourceFolder core.Concept
-	var instanceSourceDomain core.Concept
-	var instanceMapFolder core.Concept
-	var instanceDomainMap core.Concept
+	var definingSourceFolder *core.Concept
+	var definingSourceDomain *core.Concept
+	var definingTargetFolder *core.Concept
+	var definingTargetDomain *core.Concept
+	var definingMapFolder *core.Concept
+	var definingDomainMap *core.Concept
+	var instanceSourceFolder *core.Concept
+	var instanceSourceDomain *core.Concept
+	var instanceMapFolder *core.Concept
+	var instanceDomainMap *core.Concept
 	var tempDirPath string
 
 	BeforeEach(func() {
@@ -112,14 +112,14 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 	})
 	Describe("Individual Concept Mapping - any to any", func() {
-		var definingSourceElement core.Concept
-		var definingSourceReference core.Concept
-		var definingSourceRefinement core.Concept
-		var definingSourceLiteral core.Concept
-		var definingTargetElement core.Concept
-		var definingTargetReference core.Concept
-		var definingTargetRefinement core.Concept
-		var definingTargetLiteral core.Concept
+		var definingSourceElement *core.Concept
+		var definingSourceReference *core.Concept
+		var definingSourceRefinement *core.Concept
+		var definingSourceLiteral *core.Concept
+		var definingTargetElement *core.Concept
+		var definingTargetReference *core.Concept
+		var definingTargetRefinement *core.Concept
+		var definingTargetLiteral *core.Concept
 		BeforeEach(func() {
 			var err error
 			definingSourceElement, err = uOfD.NewOwnedElement(definingSourceDomain, "DefiningSourceElement", trans)
@@ -538,24 +538,24 @@ var _ = Describe("CrlMaps mapping tests", func() {
 		})
 	})
 	Describe("Individual Pointer Mapping - any to any", func() {
-		var definingSourceReferent core.Concept  // The source element being referenced
-		var definingSourceReference core.Concept // The reference to the source element
-		var definingSourceRefinement core.Concept
-		var definingSourceLiteral core.Concept
-		var definingTargetReferent core.Concept
-		var definingTargetReference core.Concept
-		var definingTargetRefinement core.Concept
-		var definingTargetLiteral core.Concept
+		var definingSourceReferent *core.Concept  // The source element being referenced
+		var definingSourceReference *core.Concept // The reference to the source element
+		var definingSourceRefinement *core.Concept
+		var definingSourceLiteral *core.Concept
+		var definingTargetReferent *core.Concept
+		var definingTargetReference *core.Concept
+		var definingTargetRefinement *core.Concept
+		var definingTargetLiteral *core.Concept
 
-		var definingReferent2ReferentMap core.Concept
-		var definingReference2ReferenceMap core.Concept
-		var definingRefinement2RefinementMap core.Concept
-		var definingLiteral2LiteralMap core.Concept
+		var definingReferent2ReferentMap *core.Concept
+		var definingReference2ReferenceMap *core.Concept
+		var definingRefinement2RefinementMap *core.Concept
+		var definingLiteral2LiteralMap *core.Concept
 
-		var instanceSourceReferent core.Concept
-		var instanceSourceReference core.Concept
-		var instanceSourceRefinement core.Concept
-		var instanceSourceLiteral core.Concept
+		var instanceSourceReferent *core.Concept
+		var instanceSourceReference *core.Concept
+		var instanceSourceRefinement *core.Concept
+		var instanceSourceLiteral *core.Concept
 
 		BeforeEach(func() {
 			var err error

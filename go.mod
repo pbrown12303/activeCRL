@@ -14,8 +14,12 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.1-0.20181028125025-b2ce2384e17b
 	github.com/sqweek/dialog v0.0.0-20220809060634-e981b270ebbf
+	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c // indirect
 	golang.org/x/image v0.11.0
+	golang.org/x/sys v0.13.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 )
 
-// replace fyne.io/x/fyne => C:/GoWorkspace/src/github.com/pbrown12303/fyne-x
+replace fyne.io/x/fyne => C:/GoWorkspace/src/github.com/pbrown12303/fyne-x
+
+replace fyne.io/fyne/v2 v2.4.1 => C:/GoWorkspace/src/github.com/fyne

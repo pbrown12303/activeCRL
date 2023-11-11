@@ -86,7 +86,7 @@ type ConceptState struct {
 }
 
 // NewConceptState copies the state of an Element into a ConceptState struct
-func NewConceptState(el Concept) (*ConceptState, error) {
+func NewConceptState(el *Concept) (*ConceptState, error) {
 	if el == nil {
 		return nil, errors.New("NewConceptState called with nil element")
 	}
@@ -214,7 +214,7 @@ func (cnPtr *ChangeNotification) GetUnderlyingChange() *ChangeNotification {
 
 // IsReferenced returns true if the element is either the changed concept or the reporting element
 // in the change notification, including underlying changes.
-func (cnPtr *ChangeNotification) IsReferenced(el Concept) bool {
+func (cnPtr *ChangeNotification) IsReferenced(el *Concept) bool {
 	elID := el.getConceptIDNoLock()
 	if cnPtr.GetChangedConceptID() == elID || cnPtr.GetReportingElementID() == elID {
 		return true

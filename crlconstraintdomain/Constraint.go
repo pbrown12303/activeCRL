@@ -39,7 +39,7 @@ var CrlMultiplicityConstraintMultiplicityURI = CrlMultiplicityConstraintSpecific
 var CrlMultiplicityConstraintConstrainedConceptURI = CrlMultiplicityConstraintSpecificationURI + "/ConstrainedConcept"
 
 // NewMultiplicityConstraintSpecification creates and initializes a multiplicity constraint specification
-func NewMultiplicityConstraintSpecification(owner core.Concept, constrainedConcept core.Concept, label string, multiplicity string, trans *core.Transaction, newURI ...string) (core.Concept, error) {
+func NewMultiplicityConstraintSpecification(owner *core.Concept, constrainedConcept *core.Concept, label string, multiplicity string, trans *core.Transaction, newURI ...string) (*core.Concept, error) {
 	if owner == nil || constrainedConcept == nil {
 		return nil, errors.New("NewMultiplicityConstraintSpecification called with nil owner or constrained concept")
 	}
@@ -73,7 +73,7 @@ func NewMultiplicityConstraintSpecification(owner core.Concept, constrainedConce
 }
 
 // NewConstraintCompliance creates and initializes a refinement of a ConstraintCompliance
-func NewConstraintCompliance(owner core.Concept, constraintSpecification core.Concept, trans *core.Transaction) core.Concept {
+func NewConstraintCompliance(owner *core.Concept, constraintSpecification *core.Concept, trans *core.Transaction) *core.Concept {
 	uOfD := trans.GetUniverseOfDiscourse()
 	constraintCompliance, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlConstraintComplianceURI, owner, "ConstraintCompliance", trans)
 	uOfD.CreateOwnedRefinementOfConceptURI(CrlConstraintSatisfiedURI, constraintCompliance, "Satisfied", trans)
@@ -83,7 +83,7 @@ func NewConstraintCompliance(owner core.Concept, constraintSpecification core.Co
 }
 
 // GetConstrainedConceptType returns the concept whose multiplicity is being constrained
-func GetConstrainedConceptType(target core.Concept, trans *core.Transaction) (core.Concept, error) {
+func GetConstrainedConceptType(target *core.Concept, trans *core.Transaction) (*core.Concept, error) {
 	if !target.IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
 		return nil, errors.New("GetMultiplicity called with invalid target")
 	}
@@ -95,7 +95,7 @@ func GetConstrainedConceptType(target core.Concept, trans *core.Transaction) (co
 }
 
 // GetConstraintSpecification returns the constraint specification for this compliance instance
-func GetConstraintSpecification(constraintComplianceInstance core.Concept, trans *core.Transaction) core.Concept {
+func GetConstraintSpecification(constraintComplianceInstance *core.Concept, trans *core.Transaction) *core.Concept {
 	if !constraintComplianceInstance.IsRefinementOfURI(CrlConstraintComplianceURI, trans) {
 		return nil
 	}
@@ -104,7 +104,7 @@ func GetConstraintSpecification(constraintComplianceInstance core.Concept, trans
 }
 
 // GetMultiplicity returns the literal value after checking that the target is valid
-func GetMultiplicity(target core.Concept, trans *core.Transaction) (string, error) {
+func GetMultiplicity(target *core.Concept, trans *core.Transaction) (string, error) {
 	if !target.IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
 		return "", errors.New("GetMultiplicity called with invalid target")
 	}
@@ -112,12 +112,12 @@ func GetMultiplicity(target core.Concept, trans *core.Transaction) (string, erro
 	return spec.GetLiteralValue(trans), nil
 }
 
-func getMultiplicitySpecification(target core.Concept, trans *core.Transaction) core.Concept {
+func getMultiplicitySpecification(target *core.Concept, trans *core.Transaction) *core.Concept {
 	return target.GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintMultiplicityURI, trans)
 }
 
 // IsSatisfied returns true if the ConstraintCompliance.ConstraintSatisfied is true
-func IsSatisfied(constraintCompliance core.Concept, trans *core.Transaction) bool {
+func IsSatisfied(constraintCompliance *core.Concept, trans *core.Transaction) bool {
 	if !constraintCompliance.IsRefinementOfURI(CrlConstraintComplianceURI, trans) {
 		return false
 	}
@@ -197,7 +197,7 @@ func SatisfiesMultiplicity(multiplicity string, candidate int) bool {
 }
 
 // SetMultiplicity sets the multiplicity specification after checking that the target and the multiplicity are both valid
-func SetMultiplicity(target core.Concept, multiplicity string, trans *core.Transaction) error {
+func SetMultiplicity(target *core.Concept, multiplicity string, trans *core.Transaction) error {
 	if !target.IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
 		return errors.New("SetMultiplicity called with invalid target")
 	}
@@ -212,12 +212,12 @@ func SetMultiplicity(target core.Concept, multiplicity string, trans *core.Trans
 	return nil
 }
 
-func evaluateMultiplicityConstraints(constrainedConcept core.Concept, notification *core.ChangeNotification, trans *core.Transaction) error {
+func evaluateMultiplicityConstraints(constrainedConcept *core.Concept, notification *core.ChangeNotification, trans *core.Transaction) error {
 	// Determine which immediate ancestor owns the constraint specifications
 	uOfD := trans.GetUniverseOfDiscourse()
 	multiplicityConstrainedConcept := uOfD.GetElementWithURI(CrlMultiplicityConstrainedURI)
-	var definingAbstraction core.Concept
-	immediateAbstractions := make(map[string]core.Concept)
+	var definingAbstraction *core.Concept
+	immediateAbstractions := make(map[string]*core.Concept)
 	constrainedConcept.FindImmediateAbstractions(immediateAbstractions, trans)
 	for _, abstraction := range immediateAbstractions {
 		if abstraction != multiplicityConstrainedConcept && abstraction.IsRefinementOf(multiplicityConstrainedConcept, trans) {
@@ -233,7 +233,7 @@ func evaluateMultiplicityConstraints(constrainedConcept core.Concept, notificati
 	multiplicityConstraintSpecifications := definingAbstraction.GetOwnedConceptsRefinedFromURI(CrlMultiplicityConstraintSpecificationURI, trans)
 	for _, constraintSpecification := range multiplicityConstraintSpecifications {
 		constraintComplianceInstances := constrainedConcept.GetOwnedConceptsRefinedFromURI(CrlConstraintComplianceURI, trans)
-		var foundComplianceInstance core.Concept
+		var foundComplianceInstance *core.Concept
 		for _, constraintComplianceInstance := range constraintComplianceInstances {
 			if GetConstraintSpecification(constraintComplianceInstance, trans) == constraintSpecification {
 				foundComplianceInstance = constraintComplianceInstance

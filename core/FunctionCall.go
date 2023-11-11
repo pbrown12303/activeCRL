@@ -10,16 +10,16 @@ import (
 
 // The crlExecutionFunction is the standard signature of a function that gets called when an element is notified of a change.
 // Its arguments are the concept that changed, and the triggering notification.
-type crlExecutionFunction func(Concept, *ChangeNotification, *Transaction) error
+type crlExecutionFunction func(*Concept, *ChangeNotification, *Transaction) error
 
 type functionCallRecord struct {
 	function     crlExecutionFunction
 	functionID   string
-	target       Concept
+	target       *Concept
 	notification *ChangeNotification
 }
 
-func newFunctionCallRecord(functionID string, function crlExecutionFunction, target Concept, notification *ChangeNotification) (*functionCallRecord, error) {
+func newFunctionCallRecord(functionID string, function crlExecutionFunction, target *Concept, notification *ChangeNotification) (*functionCallRecord, error) {
 	if target == nil {
 		return nil, errors.New("FunctionCallManager.go newPendingFunctionCall invoked with nil target")
 	}

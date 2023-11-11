@@ -26,18 +26,19 @@ var FyneGUISingleton *CrlEditorFyneGUI
 
 // CrlEditorFyneGUI is the Crl Editor built with Fyne
 type CrlEditorFyneGUI struct {
-	app                    fyne.App
-	editor                 *crleditor.Editor
-	diagramManager         *FyneDiagramManager
-	propertyManager        *FynePropertyManager
-	treeManager            *FyneTreeManager
-	window                 fyne.Window
-	windowContent          fyne.CanvasObject
-	conceptStateBindingMap map[string]ConceptStateBinding
-	currentSelectionID     string
-	activeCursor           desktop.StandardCursor
-	dragDropTransaction    *dragDropTransaction
-	propertiesClipboard    *diagramwidget.DiagramElementProperties
+	app                                 fyne.App
+	editor                              *crleditor.Editor
+	diagramManager                      *FyneDiagramManager
+	propertyManager                     *FynePropertyManager
+	treeManager                         *FyneTreeManager
+	window                              fyne.Window
+	windowContent                       fyne.CanvasObject
+	conceptStateBindingMap              map[string]ConceptStateBinding
+	conceptStateBindingMapForProperties map[string]ConceptStateBinding
+	currentSelectionID                  string
+	activeCursor                        desktop.StandardCursor
+	dragDropTransaction                 *dragDropTransaction
+	propertiesClipboard                 *diagramwidget.DiagramElementProperties
 	// The following attributes are kept for testing purposes
 	// File Menu Items
 	newDomainItem           *fyne.MenuItem
@@ -77,6 +78,7 @@ func NewFyneGUI(crlEditor *crleditor.Editor, providedApp fyne.App) *CrlEditorFyn
 	FyneGUISingleton = gui
 	gui.editor = crlEditor
 	gui.conceptStateBindingMap = make(map[string]ConceptStateBinding)
+	gui.conceptStateBindingMapForProperties = make(map[string]ConceptStateBinding)
 	gui.app.Settings().SetTheme(&fyneGuiTheme{})
 	gui.activeCursor = desktop.DefaultCursor
 	gui.treeManager = NewFyneTreeManager(gui)
@@ -122,7 +124,7 @@ func NewFyneGUI(crlEditor *crleditor.Editor, providedApp fyne.App) *CrlEditorFyn
 	return gui
 }
 
-func (gui *CrlEditorFyneGUI) addDiagram(parentID string) core.Concept {
+func (gui *CrlEditorFyneGUI) addDiagram(parentID string) *core.Concept {
 	trans, isNew := gui.editor.GetTransaction()
 	if isNew {
 		defer gui.editor.EndTransaction()
@@ -136,7 +138,7 @@ func (gui *CrlEditorFyneGUI) addDiagram(parentID string) core.Concept {
 	return newDiagram
 }
 
-func (gui *CrlEditorFyneGUI) addElement(parentID string, label string) core.Concept {
+func (gui *CrlEditorFyneGUI) addElement(parentID string, label string) *core.Concept {
 	trans, isNew := gui.editor.GetTransaction()
 	if isNew {
 		defer gui.editor.EndTransaction()
@@ -153,7 +155,7 @@ func (gui *CrlEditorFyneGUI) addElement(parentID string, label string) core.Conc
 	return newElement
 }
 
-func (gui *CrlEditorFyneGUI) addLiteral(parentID string, label string) core.Concept {
+func (gui *CrlEditorFyneGUI) addLiteral(parentID string, label string) *core.Concept {
 	trans, isNew := gui.editor.GetTransaction()
 	if isNew {
 		defer gui.editor.EndTransaction()
@@ -170,7 +172,7 @@ func (gui *CrlEditorFyneGUI) addLiteral(parentID string, label string) core.Conc
 	return newLiteral
 }
 
-func (gui *CrlEditorFyneGUI) addReference(parentID string, label string) core.Concept {
+func (gui *CrlEditorFyneGUI) addReference(parentID string, label string) *core.Concept {
 	trans, isNew := gui.editor.GetTransaction()
 	if isNew {
 		defer gui.editor.EndTransaction()
@@ -187,7 +189,7 @@ func (gui *CrlEditorFyneGUI) addReference(parentID string, label string) core.Co
 	return newReference
 }
 
-func (gui *CrlEditorFyneGUI) addRefinement(parentID string, label string) core.Concept {
+func (gui *CrlEditorFyneGUI) addRefinement(parentID string, label string) *core.Concept {
 	trans, isNew := gui.editor.GetTransaction()
 	if isNew {
 		defer gui.editor.EndTransaction()
@@ -412,7 +414,7 @@ func (gui *CrlEditorFyneGUI) ConceptDeleted(elID string, trans *core.Transaction
 }
 
 // ConceptSelected causes the indicated element to  be selected in the properties, tree, and diagram.
-func (gui *CrlEditorFyneGUI) ConceptSelected(el core.Concept, trans *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) ConceptSelected(el *core.Concept, trans *core.Transaction) error {
 	uid := ""
 	if el != nil {
 		uid = el.GetConceptID(trans)
@@ -422,6 +424,7 @@ func (gui *CrlEditorFyneGUI) ConceptSelected(el core.Concept, trans *core.Transa
 		gui.treeManager.ElementSelected(uid)
 		gui.diagramManager.ElementSelected(uid, trans)
 		gui.currentSelectionID = uid
+		gui.windowContent.Refresh()
 	}
 	return nil
 }
@@ -445,13 +448,13 @@ func (gui *CrlEditorFyneGUI) displayDiagram(diagramID string) {
 }
 
 // DisplayDiagram displays the indicated diagram
-func (gui *CrlEditorFyneGUI) DisplayDiagram(diagram core.Concept, trans *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) DisplayDiagram(diagram *core.Concept, trans *core.Transaction) error {
 	gui.diagramManager.displayDiagram(diagram, trans)
 	return nil
 }
 
 // FileLoaded - no action required
-func (gui *CrlEditorFyneGUI) FileLoaded(el core.Concept, trans *core.Transaction) {
+func (gui *CrlEditorFyneGUI) FileLoaded(el *core.Concept, trans *core.Transaction) {
 }
 
 // GetConceptStateBinding returns the ConceptStateBinding for the given uid. If the binding
@@ -465,8 +468,19 @@ func (gui *CrlEditorFyneGUI) GetConceptStateBinding(uid string) ConceptStateBind
 	return binding
 }
 
+// GetConceptStateBindingForProperties returns the ConceptStateBinding for the given uid. If the binding
+// does not already exist, one is created and indexed under the uid
+func (gui *CrlEditorFyneGUI) GetConceptStateBindingForProperties(uid string) ConceptStateBinding {
+	binding := gui.conceptStateBindingMapForProperties[uid]
+	if binding == nil {
+		binding = NewConceptStateBinding(uid)
+		gui.conceptStateBindingMapForProperties[uid] = binding
+	}
+	return binding
+}
+
 // GetNoSaveDomains - there aren't any for the CRLEditorFyneGUI
-func (gui *CrlEditorFyneGUI) GetNoSaveDomains(noSaveDomains map[string]core.Concept, trans *core.Transaction) {
+func (gui *CrlEditorFyneGUI) GetNoSaveDomains(noSaveDomains map[string]*core.Concept, trans *core.Transaction) {
 }
 
 // GetWindow returns the main window of the FyneGUI
@@ -477,6 +491,7 @@ func (gui *CrlEditorFyneGUI) GetWindow() fyne.Window {
 // Initialize initializes the information content of the GUI.
 func (gui *CrlEditorFyneGUI) Initialize(trans *core.Transaction) error {
 	gui.conceptStateBindingMap = make(map[string]ConceptStateBinding)
+	gui.conceptStateBindingMapForProperties = make(map[string]ConceptStateBinding)
 	gui.treeManager.initialize()
 	gui.propertyManager.initialize()
 	gui.diagramManager.initialize()

@@ -99,7 +99,7 @@ func (bgPtr *baseGraph) addNotification(notification *ChangeNotification, parent
 // 	return bgPtr.rootNodeIDs[parentGraph]
 // }
 
-func (bgPtr *baseGraph) graphParentsRecursively(child Concept, parentGraph string) {
+func (bgPtr *baseGraph) graphParentsRecursively(child *Concept, parentGraph string) {
 	if child == nil {
 		return
 	}

@@ -8,9 +8,9 @@ import (
 var _ = Describe("Refinement tests", func() {
 	var uOfD *UniverseOfDiscourse
 	var trans *Transaction
-	var ref Concept
-	var abstractConcept Concept
-	var refinedConcept Concept
+	var ref *Concept
+	var abstractConcept *Concept
+	var refinedConcept *Concept
 	BeforeEach(func() {
 		uOfD = NewUniverseOfDiscourse()
 		trans = uOfD.NewTransaction()
@@ -32,8 +32,8 @@ var _ = Describe("Refinement tests", func() {
 			Expect(ref.GetRefinedConceptID(trans)).To(Equal(""))
 		})
 		Specify("After assignment, abstract and refined concepts should be correctly set", func() {
-			abstractConcept.(*concept).Version.incrementVersion()
-			refinedConcept.(*concept).Version.incrementVersion()
+			abstractConcept.Version.incrementVersion()
+			refinedConcept.Version.incrementVersion()
 			initialVersion := ref.GetVersion(trans)
 			ref.SetAbstractConceptID(abstractConcept.getConceptIDNoLock(), trans)
 			Expect(ref.GetVersion(trans)).To(Equal(initialVersion + 1))
@@ -60,9 +60,9 @@ var _ = Describe("Refinement tests", func() {
 			Expect(ref.GetRefinedConcept(trans)).To(Equal(refinedConcept))
 		})
 		Specify("If a referenced element becomes available after it's ID is set, GetElement should find it", func() {
-			ref.(*concept).AbstractConceptID = abstractConcept.getConceptIDNoLock()
+			ref.AbstractConceptID = abstractConcept.getConceptIDNoLock()
 			Expect(ref.GetAbstractConcept(trans)).To(Equal(abstractConcept))
-			ref.(*concept).RefinedConceptID = refinedConcept.getConceptIDNoLock()
+			ref.RefinedConceptID = refinedConcept.getConceptIDNoLock()
 			Expect(ref.GetRefinedConcept(trans)).To(Equal(refinedConcept))
 		})
 	})
@@ -92,7 +92,7 @@ var _ = Describe("Refinement tests", func() {
 			target, _ := uOfD.NewElement(trans)
 			ref.SetAbstractConceptID(target.getConceptIDNoLock(), trans)
 			clonedRefinement := clone(ref, trans)
-			ref.(*concept).AbstractConceptID = ""
+			ref.AbstractConceptID = ""
 			Expect(Equivalent(ref, trans, clonedRefinement, trans)).To(BeFalse())
 		})
 		Specify("Equivalent should fail if there is a difference in the RefinementdConceptID", func() {
@@ -100,14 +100,14 @@ var _ = Describe("Refinement tests", func() {
 			target, _ := uOfD.NewElement(trans)
 			ref.SetRefinedConceptID(target.getConceptIDNoLock(), trans)
 			clonedRefinement := clone(ref, trans)
-			ref.(*concept).RefinedConceptID = ""
+			ref.RefinedConceptID = ""
 			Expect(Equivalent(ref, trans, clonedRefinement, trans)).To(BeFalse())
 		})
 		Specify("Equivalence should also fail if there is any difference in the underlying element", func() {
 			ref, _ := uOfD.NewRefinement(trans)
 			clonedRefinement := clone(ref, trans)
 			Expect(Equivalent(ref, trans, clonedRefinement, trans)).To(BeTrue())
-			ref.(*concept).Version.counter = 123
+			ref.Version.counter = 123
 			Expect(Equivalent(ref, trans, clonedRefinement, trans)).To(BeFalse())
 		})
 	})

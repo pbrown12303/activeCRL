@@ -120,7 +120,7 @@ func NewFyneDiagramManager(fyneGUI *CrlEditorFyneGUI) *FyneDiagramManager {
 	return &dm
 }
 
-func (dm *FyneDiagramManager) addElementToDiagram(element core.Concept, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramElement {
+func (dm *FyneDiagramManager) addElementToDiagram(element *core.Concept, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramElement {
 	if element.IsRefinementOfURI(crldiagramdomain.CrlDiagramNodeURI, trans) {
 		return dm.addNodeToDiagram(element, trans, diagramWidget)
 	} else if element.IsRefinementOfURI(crldiagramdomain.CrlDiagramLinkURI, trans) {
@@ -129,7 +129,7 @@ func (dm *FyneDiagramManager) addElementToDiagram(element core.Concept, trans *c
 	return nil
 }
 
-func (dm *FyneDiagramManager) addLinkToDiagram(link core.Concept, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) *FyneCrlDiagramLink {
+func (dm *FyneDiagramManager) addLinkToDiagram(link *core.Concept, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) *FyneCrlDiagramLink {
 	crlDiagramSource := crldiagramdomain.GetLinkSource(link, trans)
 	if crlDiagramSource == nil {
 		// Register for changes so that when sufficient information is present we can add it to the diagram
@@ -163,7 +163,7 @@ func (dm *FyneDiagramManager) addLinkToDiagram(link core.Concept, trans *core.Tr
 	return diagramLink
 }
 
-func (dm *FyneDiagramManager) addNodeToDiagram(node core.Concept, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramNode {
+func (dm *FyneDiagramManager) addNodeToDiagram(node *core.Concept, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramNode {
 	nodeID := node.GetConceptID(trans)
 	diagramNode := diagramWidget.GetDiagramNode(nodeID)
 	if diagramNode == nil {
@@ -351,7 +351,7 @@ func (dm *FyneDiagramManager) diagramElementSelectionChanged(diagramElementID st
 		defer editor.EndTransaction()
 	}
 	fyneDiagramElement := dm.GetSelectedDiagram().GetDiagramElement(diagramElementID)
-	var crlElement core.Concept
+	var crlElement *core.Concept
 	switch typedElement := fyneDiagramElement.(type) {
 	case *FyneCrlDiagramNode:
 		crlElement = typedElement.modelElement
@@ -382,7 +382,7 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 	}
 	uOfD := trans.GetUniverseOfDiscourse()
 	crlDiagram := uOfD.GetElement(fyneDiagram.ID)
-	var el core.Concept
+	var el *core.Concept
 	switch dm.currentToolbarSelection {
 	case CursorSelected:
 		fyneDiagram.ClearSelection()
@@ -444,7 +444,7 @@ func (dm *FyneDiagramManager) diagramTapped(fyneDiagram *diagramwidget.DiagramWi
 	dm.setToolbarSelection(CursorSelected)
 }
 
-func (dm *FyneDiagramManager) displayDiagram(diagram core.Concept, trans *core.Transaction) error {
+func (dm *FyneDiagramManager) displayDiagram(diagram *core.Concept, trans *core.Transaction) error {
 	diagramID := diagram.GetConceptID(trans)
 	tabItem := dm.diagramTabs[diagramID]
 	if tabItem == nil {
@@ -845,7 +845,7 @@ func (dm *FyneDiagramManager) nullifyReferencedConcept(fcde FyneCrlDiagramElemen
 }
 
 // populateDiagram adds all elements to the diagram
-func (dm *FyneDiagramManager) populateDiagram(diagram core.Concept, trans *core.Transaction) error {
+func (dm *FyneDiagramManager) populateDiagram(diagram *core.Concept, trans *core.Transaction) error {
 	uOfD := trans.GetUniverseOfDiscourse()
 	diagramWidget := dm.getDiagramWidget(diagram.GetConceptID(trans))
 	nodes := diagram.GetOwnedConceptsRefinedFromURI(crldiagramdomain.CrlDiagramNodeURI, trans)
@@ -1024,6 +1024,9 @@ func (dm *FyneDiagramManager) showOwner(elementID string) error {
 }
 
 func (dm *FyneDiagramManager) setToolbarSelection(sel ToolbarSelection) {
+	if dm.GetSelectedDiagram() == nil {
+		return
+	}
 	if sel != dm.currentToolbarSelection {
 		if dm.GetSelectedDiagram().ConnectionTransaction != nil {
 			dm.cancelLinkTransaction()
@@ -1033,7 +1036,7 @@ func (dm *FyneDiagramManager) setToolbarSelection(sel ToolbarSelection) {
 		dm.toolButtons[sel].Refresh()
 		for i := CursorSelected; i <= CreateRefinementOfConceptSelected; i++ {
 			if i != sel {
-				dm.toolButtons[i].Importance = widget.LowImportance
+				dm.toolButtons[i].Importance = widget.MediumImportance
 				dm.toolButtons[i].Refresh()
 			}
 		}
@@ -1059,7 +1062,7 @@ func (dm *FyneDiagramManager) showAbstractConcept(elementID string) error {
 	if modelConcept == nil {
 		return errors.New("diagramManager.showAbstractConcept modelConcept not found for elementID " + elementID)
 	}
-	var modelRefinement core.Concept
+	var modelRefinement *core.Concept
 	switch modelConcept.GetConceptType() {
 	case core.Refinement:
 		modelRefinement = modelConcept
@@ -1115,7 +1118,7 @@ func (dm *FyneDiagramManager) showReferencedConceptImpl(uOfD *core.UniverseOfDis
 	if modelConcept == nil {
 		return errors.New("diagramManager.showReferencedConcept modelConcept not found for elementID " + elementID)
 	}
-	var modelReference core.Concept
+	var modelReference *core.Concept
 	switch modelConcept.GetConceptType() {
 	case core.Reference:
 		modelReference = modelConcept
@@ -1126,7 +1129,7 @@ func (dm *FyneDiagramManager) showReferencedConceptImpl(uOfD *core.UniverseOfDis
 	if modelReferencedConcept == nil {
 		return nil
 	}
-	var diagramReferencedConcept core.Concept
+	var diagramReferencedConcept *core.Concept
 	switch modelReference.GetReferencedAttributeName(trans) {
 	case core.NoAttribute, core.LiteralValue:
 		diagramReferencedConcept = crldiagramdomain.GetFirstElementRepresentingConcept(diagram, modelReferencedConcept, trans)
@@ -1248,7 +1251,7 @@ func (dm *FyneDiagramManager) showRefinedConcept(elementID string) error {
 	if modelConcept == nil {
 		return errors.New("diagramManager.showRefinedConcept modelConcept not found for elementID " + elementID)
 	}
-	var modelRefinement core.Concept
+	var modelRefinement *core.Concept
 	switch modelConcept.GetConceptType() {
 	case core.Refinement:
 		modelRefinement = modelConcept
@@ -1295,7 +1298,7 @@ func (dm *FyneDiagramManager) startCreateLinkTransaction() {
 			defer dm.fyneGUI.editor.EndTransaction()
 		}
 		uOfD := trans.GetUniverseOfDiscourse()
-		var crlLink core.Concept
+		var crlLink *core.Concept
 		var fyneLink diagramwidget.DiagramLink
 		switch dm.currentToolbarSelection {
 		case ReferenceLinkSelected:

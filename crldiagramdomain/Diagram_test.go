@@ -333,7 +333,7 @@ var _ = Describe("CrlDiagramtest", func() {
 	})
 })
 
-func ValidateAnchoredText(anchoredText core.Concept, trans *core.Transaction) {
+func ValidateAnchoredText(anchoredText *core.Concept, trans *core.Transaction) {
 	anchorX := anchoredText.GetFirstOwnedConceptRefinedFromURI(CrlDiagramAnchoredTextAnchorXURI, trans)
 	Expect(anchorX).ToNot(BeNil())
 	anchorY := anchoredText.GetFirstOwnedConceptRefinedFromURI(CrlDiagramAnchoredTextAnchorYURI, trans)

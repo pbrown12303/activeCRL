@@ -22,14 +22,14 @@ const (
 
 type undoRedoStackEntry struct {
 	changeType         UndoChangeType
-	priorState         Concept
+	priorState         *Concept
 	priorOwnedElements mapset.Set
 	priorListeners     mapset.Set
 	priorUofD          string
-	changedElement     Concept
+	changedElement     *Concept
 }
 
-func newUndoRedoStackEntry(changeType UndoChangeType, priorState Concept, priorOwnedElements mapset.Set, priorListeners mapset.Set, priorUofD string, changedElement Concept) *undoRedoStackEntry {
+func newUndoRedoStackEntry(changeType UndoChangeType, priorState *Concept, priorOwnedElements mapset.Set, priorListeners mapset.Set, priorUofD string, changedElement *Concept) *undoRedoStackEntry {
 	var entry undoRedoStackEntry
 	entry.changeType = changeType
 	entry.priorState = priorState

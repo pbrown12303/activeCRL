@@ -160,12 +160,12 @@ var _ = Describe("UniverseOfDiscourse", func() {
 	})
 
 	Describe("Test Replicate as Refinement for Element", func() {
-		var original Concept
-		var oChild1 Concept
+		var original *Concept
+		var oChild1 *Concept
 		var oChild1Label string
-		var oChild2 Concept
+		var oChild2 *Concept
 		var oChild2Label string
-		var oChild3 Concept
+		var oChild3 *Concept
 		var oChild3Label string
 		var replicateURI string
 
@@ -244,12 +244,12 @@ var _ = Describe("UniverseOfDiscourse", func() {
 	})
 
 	Describe("Test Replicate as Refinement for Literal", func() {
-		var original Concept
-		var oChild1 Concept
+		var original *Concept
+		var oChild1 *Concept
 		var oChild1Label string
-		var oChild2 Concept
+		var oChild2 *Concept
 		var oChild2Label string
-		var oChild3 Concept
+		var oChild3 *Concept
 		var oChild3Label string
 		var replicateURI string
 
@@ -315,12 +315,12 @@ var _ = Describe("UniverseOfDiscourse", func() {
 	})
 
 	Describe("Test Replicate as Refinement for Reference", func() {
-		var original Concept
-		var oChild1 Concept
+		var original *Concept
+		var oChild1 *Concept
 		var oChild1Label string
-		var oChild2 Concept
+		var oChild2 *Concept
 		var oChild2Label string
-		var oChild3 Concept
+		var oChild3 *Concept
 		var oChild3Label string
 		var replicateURI string
 
@@ -386,12 +386,12 @@ var _ = Describe("UniverseOfDiscourse", func() {
 	})
 
 	Describe("Test Replicate as Refinement for Refinement", func() {
-		var original Concept
-		var oChild1 Concept
+		var original *Concept
+		var oChild1 *Concept
 		var oChild1Label string
-		var oChild2 Concept
+		var oChild2 *Concept
 		var oChild2Label string
-		var oChild3 Concept
+		var oChild3 *Concept
 		var oChild3Label string
 		var replicateURI string
 

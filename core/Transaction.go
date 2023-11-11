@@ -16,15 +16,15 @@ import (
 // suppression of circular function calls.
 type Transaction struct {
 	sync.Mutex
-	readLocks  map[string]Concept
+	readLocks  map[string]*Concept
 	uOfD       *UniverseOfDiscourse
-	writeLocks map[string]Concept
+	writeLocks map[string]*Concept
 	// The key to inProgressCalls is the catenation of the functionID and the target element ID
 	inProgressCalls map[string]bool
 }
 
 // callFunction calls the referenced function on the target element
-func (transPtr *Transaction) callFunctions(functionID string, targetElement Concept, notification *ChangeNotification) error {
+func (transPtr *Transaction) callFunctions(functionID string, targetElement *Concept, notification *ChangeNotification) error {
 	// First, check to see whether the targetElement is in the process of being deleted. If it is, simply return: we don't
 	// execute functions on deleted elements
 	targetID := targetElement.GetConceptID(transPtr)
@@ -69,7 +69,7 @@ func (transPtr *Transaction) GetUniverseOfDiscourse() *UniverseOfDiscourse {
 // ReadLockElement checks to see whether this HeldLocks structure already has a record of the Element being
 // locked, either read or write. If it does, it simply returns. If not, it attempts to acquire the read on the Element and makes
 // a record of the fact that the read lock has been obtained.
-func (transPtr *Transaction) ReadLockElement(el Concept) {
+func (transPtr *Transaction) ReadLockElement(el *Concept) {
 	transPtr.Lock()
 	defer transPtr.Unlock()
 	id := el.getConceptIDNoLock()
@@ -87,7 +87,7 @@ func (transPtr *Transaction) ReadLockElement(el Concept) {
 // WriteLockElement checks to see whether this HeldLocks structure already has a record of the Element being
 // write locked. If it does, it simply returns. If not, it attempts to acquire the write lock on the Element and makes
 // a record of the fact that the lock has been obtained.
-func (transPtr *Transaction) WriteLockElement(el Concept) error {
+func (transPtr *Transaction) WriteLockElement(el *Concept) error {
 	transPtr.Lock()
 	defer transPtr.Unlock()
 	id := el.getConceptIDNoLock()

@@ -16,9 +16,9 @@ import (
 
 // FyneCrlDiagramElement serves as a mapping between the Fyne DiagramElement and the core DiagramElement
 type FyneCrlDiagramElement interface {
-	GetDiagramElement() core.Concept
+	GetDiagramElement() *core.Concept
 	GetDiagramElementID() string
-	GetModelElement() core.Concept
+	GetModelElement() *core.Concept
 	GetModelElementID() string
 	GetFyneProperties() diagramwidget.DiagramElementProperties
 	SetFyneProperties(diagramwidget.DiagramElementProperties)
@@ -34,8 +34,8 @@ var _ fyne.Tappable = (*FyneCrlDiagramNode)(nil)
 // between the diagramwidget nodes and the crldiagramdomain diagram noddes
 type FyneCrlDiagramNode struct {
 	diagramwidget.BaseDiagramNode
-	diagramElement  core.Concept
-	modelElement    core.Concept
+	diagramElement  *core.Concept
+	modelElement    *core.Concept
 	entryWidget     *widget.Entry
 	abstractionText *canvas.Text
 	labelBinding    binding.String
@@ -43,7 +43,7 @@ type FyneCrlDiagramNode struct {
 }
 
 // NewFyneCrlDiagramNode creates a fyne node that corresponds to the supplied crldiagram node
-func NewFyneCrlDiagramNode(node core.Concept, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramNode {
+func NewFyneCrlDiagramNode(node *core.Concept, trans *core.Transaction, diagramWidget *diagramwidget.DiagramWidget) diagramwidget.DiagramNode {
 	newNode := &FyneCrlDiagramNode{}
 	nodeID := node.GetConceptID(trans)
 	newNode.diagramElement = node
@@ -87,7 +87,7 @@ func NewFyneCrlDiagramNode(node core.Concept, trans *core.Transaction, diagramWi
 }
 
 // GetDiagramElement returns the crl diagram element associated with the link
-func (fcdn *FyneCrlDiagramNode) GetDiagramElement() core.Concept {
+func (fcdn *FyneCrlDiagramNode) GetDiagramElement() *core.Concept {
 	return fcdn.diagramElement
 }
 
@@ -101,7 +101,7 @@ func (fcdn *FyneCrlDiagramNode) GetDiagramElementID() string {
 }
 
 // GetModelElement returns the crl model element represented by the link
-func (fcdn *FyneCrlDiagramNode) GetModelElement() core.Concept {
+func (fcdn *FyneCrlDiagramNode) GetModelElement() *core.Concept {
 	return fcdn.modelElement
 }
 
@@ -291,14 +291,14 @@ var _ diagramwidget.DiagramLink = (*FyneCrlDiagramLink)(nil)
 // the fyne link and the crldiagramdomain link
 type FyneCrlDiagramLink struct {
 	diagramwidget.BaseDiagramLink
-	diagramElement    core.Concept
-	modelElement      core.Concept
+	diagramElement    *core.Concept
+	modelElement      *core.Concept
 	labelAnchoredText *diagramwidget.AnchoredText
 	linkType          ToolbarSelection
 }
 
 // NewFyneCrlDiagramLink creates a fyne link that corresponds to the supplied crldiagramdomain link
-func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, link core.Concept, trans *core.Transaction) *FyneCrlDiagramLink {
+func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, link *core.Concept, trans *core.Transaction) *FyneCrlDiagramLink {
 	diagramLink := &FyneCrlDiagramLink{}
 	diagramLink.diagramElement = link
 	diagramLink.modelElement = crldiagramdomain.GetReferencedModelConcept(link, trans)
@@ -310,6 +310,8 @@ func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, link core
 		displayedTextBinding := diagramLink.labelAnchoredText.GetDisplayedTextBinding()
 		displayedTextBinding.Set(linkLabel)
 		displayedTextBinding.AddListener(binding.NewDataListener(func() { diagramLink.labelChanged() }))
+		offsetBinding := diagramLink.labelAnchoredText.GetOffsetBinding()
+		offsetBinding.AddListener(binding.NewDataListener(func() { diagramLink.offsetChanged() }))
 	}
 	if link.IsRefinementOfURI(crldiagramdomain.CrlDiagramReferenceLinkURI, trans) {
 		diagramLink.AddTargetDecoration(createReferenceArrowhead())
@@ -352,7 +354,7 @@ func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, link core
 }
 
 // GetDiagramElement returns the crl diagram element associated with the link
-func (fcdl *FyneCrlDiagramLink) GetDiagramElement() core.Concept {
+func (fcdl *FyneCrlDiagramLink) GetDiagramElement() *core.Concept {
 	return fcdl.diagramElement
 }
 
@@ -366,7 +368,7 @@ func (fcdl *FyneCrlDiagramLink) GetDiagramElementID() string {
 }
 
 // GetModelElement returns the crl model element represented by the link
-func (fcdl *FyneCrlDiagramLink) GetModelElement() core.Concept {
+func (fcdl *FyneCrlDiagramLink) GetModelElement() *core.Concept {
 	return fcdl.modelElement
 }
 
@@ -385,6 +387,38 @@ func (fcdl *FyneCrlDiagramLink) GetFyneProperties() diagramwidget.DiagramElement
 }
 
 func (fcdl *FyneCrlDiagramLink) labelChanged() {
+	newValue, _ := fcdl.labelAnchoredText.GetDisplayedTextBinding().Get()
+	trans, isNew := FyneGUISingleton.editor.GetTransaction()
+	if isNew {
+		defer FyneGUISingleton.editor.EndTransaction()
+	}
+	if fcdl.modelElement != nil {
+		if fcdl.modelElement.GetLabel(trans) != newValue {
+			fcdl.modelElement.SetLabel(newValue, trans)
+		}
+	}
+}
+
+func (fcdl *FyneCrlDiagramLink) offsetChanged() {
+	xOffset, _ := fcdl.labelAnchoredText.GetOffsetBinding().GetValue("X")
+	// yOffset, _ := fcdl.labelAnchoredText.GetOffsetBinding().GetValue("Y")
+	trans, isNew := FyneGUISingleton.editor.GetTransaction()
+	if isNew {
+		defer FyneGUISingleton.editor.EndTransaction()
+	}
+	diagramElement := fcdl.GetDiagramElement()
+	displayLabel := crldiagramdomain.GetAnchoredTextWithLabel(diagramElement, "DisplayLabel", trans)
+	if displayLabel != nil {
+		switch typedValue := xOffset.(type) {
+		case float64:
+			if crldiagramdomain.GetOffsetX(displayLabel, trans) != typedValue {
+				crldiagramdomain.SetOffsetX(displayLabel, typedValue, trans)
+			}
+		}
+	}
+}
+
+func (fcdl *FyneCrlDiagramLink) referencePositionChanged() {
 	newValue, _ := fcdl.labelAnchoredText.GetDisplayedTextBinding().Get()
 	trans, isNew := FyneGUISingleton.editor.GetTransaction()
 	if isNew {

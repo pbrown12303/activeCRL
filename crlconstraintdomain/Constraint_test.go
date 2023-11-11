@@ -112,10 +112,10 @@ var _ = Describe("ConstraintSpecification functionality testing", func() {
 var _ = Describe("ConstraintCompliance functionality testing", func() {
 	var uOfD *core.UniverseOfDiscourse
 	var trans *core.Transaction
-	var abstractConcept core.Concept
-	var reference core.Concept
-	var constraintSpecification core.Concept
-	var constrainedConcept core.Concept
+	var abstractConcept *core.Concept
+	var reference *core.Concept
+	var constraintSpecification *core.Concept
+	var constrainedConcept *core.Concept
 	BeforeEach(func() {
 		uOfD = core.NewUniverseOfDiscourse()
 		trans = uOfD.NewTransaction()
@@ -136,9 +136,9 @@ var _ = Describe("ConstraintCompliance functionality testing", func() {
 var _ = Describe("Multiplicity constrant compliance testing", func() {
 	var uOfD *core.UniverseOfDiscourse
 	var trans *core.Transaction
-	var owner core.Concept
-	var reference core.Concept
-	var constraintSpecification core.Concept
+	var owner *core.Concept
+	var reference *core.Concept
+	var constraintSpecification *core.Concept
 	BeforeEach(func() {
 		uOfD = core.NewUniverseOfDiscourse()
 		trans = uOfD.NewTransaction()
