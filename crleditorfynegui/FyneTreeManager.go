@@ -174,6 +174,9 @@ func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
 // getIconResourceByID returns the icon image resource to be used in representing the given Element in the tree
 func getIconResourceByID(id string) *fyne.StaticResource {
 	el := crleditor.CrlEditorSingleton.GetUofD().GetElement(id)
+	if el == nil {
+		return nil
+	}
 	trans, isNew := FyneGUISingleton.editor.GetTransaction()
 	if isNew {
 		defer FyneGUISingleton.editor.EndTransaction()
@@ -247,7 +250,7 @@ func (tn *fyneTreeNode) DragEnd() {
 			trans.GetUniverseOfDiscourse().MarkUndoPoint()
 			view, _ := FyneGUISingleton.editor.GetDiagramManager().AddConceptView(ddt.diagramID, ddt.id, float64(ddt.currentDiagramMousePosition.X), float64(ddt.currentDiagramMousePosition.Y), trans)
 			fyneDiagram := FyneGUISingleton.diagramManager.GetSelectedDiagram()
-			fyneDiagram.SelectDiagramElementNoCallback(view.GetConceptID(trans))
+			fyneDiagram.SelectDiagramElementNoCallback(view.ToCore().GetConceptID(trans))
 			fyneDiagram.Refresh()
 		}
 		FyneGUISingleton.dragDropTransaction = nil

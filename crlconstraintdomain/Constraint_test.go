@@ -53,8 +53,8 @@ var _ = Describe("ConstraintSpecification functionality testing", func() {
 		Expect(err).To(BeNil())
 		Expect(constraintSpecification).ToNot(BeNil())
 		Expect(owner.GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintSpecificationURI, trans)).ToNot(BeNil())
-		Expect(constraintSpecification.GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintMultiplicityURI, trans)).ToNot(BeNil())
-		constrainedConceptReference := constraintSpecification.GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintConstrainedConceptURI, trans)
+		Expect(constraintSpecification.ToCore().GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintMultiplicityURI, trans)).ToNot(BeNil())
+		constrainedConceptReference := constraintSpecification.ToCore().GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintConstrainedConceptURI, trans)
 		Expect(constrainedConceptReference).ToNot(BeNil())
 		Expect(constrainedConceptReference.GetReferencedConcept(trans)).To(Equal(reference))
 		Expect(owner.IsRefinementOfURI(CrlMultiplicityConstrainedURI, trans)).To(BeTrue())
@@ -92,20 +92,21 @@ var _ = Describe("ConstraintSpecification functionality testing", func() {
 		owner, _ := uOfD.NewElement(trans)
 		reference, _ := uOfD.NewOwnedReference(owner, "Reference", trans)
 		constraintSpecification, _ := NewMultiplicityConstraintSpecification(owner, reference, "Reference Constraint", "*", trans)
-		Expect(GetMultiplicity(constraintSpecification, trans)).To(Equal("*"))
-		Expect(SetMultiplicity(constraintSpecification, "1..*", trans)).To(Succeed())
+		Expect(constraintSpecification.GetMultiplicity(trans)).To(Equal("*"))
+		Expect(constraintSpecification.SetMultiplicity("1..*", trans)).To(Succeed())
 	})
 	Specify("Get and Set Multiplicity should fail with invalid target", func() {
 		constraintSpecification, _ := uOfD.NewElement(trans)
-		_, err := GetMultiplicity(constraintSpecification, trans)
+		improperCast := (*CrlMultiplicityConstraintSpecification)(constraintSpecification)
+		_, err := improperCast.GetMultiplicity(trans)
 		Expect(err).ToNot(BeNil())
-		Expect(SetMultiplicity(constraintSpecification, "1..*", trans)).ToNot(Succeed())
+		Expect(improperCast.SetMultiplicity("1..*", trans)).ToNot(Succeed())
 	})
 	Specify("SetMultiplicity should fail with invalid multiplicity", func() {
 		owner, _ := uOfD.NewElement(trans)
 		reference, _ := uOfD.NewOwnedReference(owner, "Reference", trans)
 		constraintSpecification, _ := NewMultiplicityConstraintSpecification(owner, reference, "Reference Constraint", "*", trans)
-		Expect(SetMultiplicity(constraintSpecification, "x", trans)).ToNot(Succeed())
+		Expect(constraintSpecification.SetMultiplicity("x", trans)).ToNot(Succeed())
 	})
 })
 
@@ -114,7 +115,7 @@ var _ = Describe("ConstraintCompliance functionality testing", func() {
 	var trans *core.Transaction
 	var abstractConcept *core.Concept
 	var reference *core.Concept
-	var constraintSpecification *core.Concept
+	var constraintSpecification *CrlMultiplicityConstraintSpecification
 	var constrainedConcept *core.Concept
 	BeforeEach(func() {
 		uOfD = core.NewUniverseOfDiscourse()
@@ -127,9 +128,9 @@ var _ = Describe("ConstraintCompliance functionality testing", func() {
 	Specify("NewConstraintCompliance ", func() {
 		constrainedConcept, _ = uOfD.NewElement(trans)
 		constrainedConcept.SetLabel("Constrained Concept", trans)
-		newCompliance := NewConstraintCompliance(constrainedConcept, constraintSpecification, trans)
+		newCompliance := NewConstraintCompliance(constrainedConcept, constraintSpecification.ToCore(), trans)
 		Expect(newCompliance.GetOwningConcept(trans)).To(Equal(constrainedConcept))
-		Expect(GetConstraintSpecification(newCompliance, trans)).To(Equal(constraintSpecification))
+		Expect((*CrlMultiplicityConstraintSpecification)(GetConstraintSpecification(newCompliance, trans))).To(Equal(constraintSpecification))
 	})
 })
 
@@ -138,7 +139,7 @@ var _ = Describe("Multiplicity constrant compliance testing", func() {
 	var trans *core.Transaction
 	var owner *core.Concept
 	var reference *core.Concept
-	var constraintSpecification *core.Concept
+	var constraintSpecification *CrlMultiplicityConstraintSpecification
 	BeforeEach(func() {
 		uOfD = core.NewUniverseOfDiscourse()
 		trans = uOfD.NewTransaction()
@@ -154,16 +155,16 @@ var _ = Describe("Multiplicity constrant compliance testing", func() {
 		Expect(err).To(BeNil())
 		constraintCompliance := child.GetFirstOwnedConceptRefinedFromURI(CrlConstraintComplianceURI, trans)
 		Expect(constraintCompliance).ToNot(BeNil())
-		Expect(GetConstraintSpecification(constraintCompliance, trans)).To(Equal(constraintSpecification))
+		Expect((*CrlMultiplicityConstraintSpecification)(GetConstraintSpecification(constraintCompliance, trans))).To(Equal(constraintSpecification))
 		Expect(IsSatisfied(constraintCompliance, trans)).To(BeTrue())
 	})
 	Specify("Test evaluation of unsatisfied constraint", func() {
-		SetMultiplicity(constraintSpecification, "1", trans)
+		constraintSpecification.SetMultiplicity("1", trans)
 		child, err := uOfD.CreateRefinementOfConcept(owner, "Child", trans)
 		Expect(err).To(BeNil())
 		constraintCompliance := child.GetFirstOwnedConceptRefinedFromURI(CrlConstraintComplianceURI, trans)
 		Expect(constraintCompliance).ToNot(BeNil())
-		Expect(GetConstraintSpecification(constraintCompliance, trans)).To(Equal(constraintSpecification))
+		Expect((*CrlMultiplicityConstraintSpecification)(GetConstraintSpecification(constraintCompliance, trans))).To(Equal(constraintSpecification))
 		Expect(IsSatisfied(constraintCompliance, trans)).ToNot(BeTrue())
 	})
 })

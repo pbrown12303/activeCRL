@@ -680,7 +680,7 @@ func (editor *Editor) UpdateOpenDiagrams(diagramIDs []string, trans *core.Transa
 // EditorGUI is the interface for all CrlEditors, independent of implementation technology
 type EditorGUI interface {
 	CloseDiagramView(diagramID string, trans *core.Transaction) error
-	DisplayDiagram(diagram *core.Concept, trans *core.Transaction) error
+	DisplayDiagram(diagram *crldiagramdomain.CrlDiagram, trans *core.Transaction) error
 	ConceptDeleted(elID string, trans *core.Transaction) error
 	ConceptSelected(el *core.Concept, trans *core.Transaction) error
 	FileLoaded(el *core.Concept, trans *core.Transaction)

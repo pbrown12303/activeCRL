@@ -15,8 +15,13 @@ var CrlConstraintDomainURI = "http://activeCRL.com/crldatastructuresdomain/CrlCo
 // CrlConstraintSpecificationURI is the URI for a constraint specification
 var CrlConstraintSpecificationURI = CrlConstraintDomainURI + "/ConstraintSpecification"
 
+// CrlConstraintSpecification is the CRL representation of a constraint specification
+type CrlConstraintSpecification core.Concept
+
 // CrlConstraintComplianceURI is the URI for a constraint status
 var CrlConstraintComplianceURI = CrlConstraintDomainURI + "/ConstraintCompliance"
+
+// CrlConstraintCompliance is the CRL representation of a constraint compliance
 
 // CrlConstraintSatisfiedURI is the URI for the boolean indicating whether the constraint is satisfied
 var CrlConstraintSatisfiedURI = CrlConstraintComplianceURI + "/Satisfied"
@@ -32,6 +37,9 @@ var CrlMultiplicityConstrainedURI = CrlConstraintDomainURI + "/MultiplicityConst
 // CrlMultiplicityConstraintSpecificationURI is the URI for a multiplicity constraint
 var CrlMultiplicityConstraintSpecificationURI = CrlConstraintDomainURI + "/MultiplicityConstraintSpecification"
 
+// CrlMultiplicityConstraintSpecification is the CRL representation of a multiplicity constraint
+type CrlMultiplicityConstraintSpecification CrlConstraintSpecification
+
 // CrlMultiplicityConstraintMultiplicityURI is the URI for the multiplicity specification
 var CrlMultiplicityConstraintMultiplicityURI = CrlMultiplicityConstraintSpecificationURI + "/Multiplicity"
 
@@ -39,16 +47,18 @@ var CrlMultiplicityConstraintMultiplicityURI = CrlMultiplicityConstraintSpecific
 var CrlMultiplicityConstraintConstrainedConceptURI = CrlMultiplicityConstraintSpecificationURI + "/ConstrainedConcept"
 
 // NewMultiplicityConstraintSpecification creates and initializes a multiplicity constraint specification
-func NewMultiplicityConstraintSpecification(owner *core.Concept, constrainedConcept *core.Concept, label string, multiplicity string, trans *core.Transaction, newURI ...string) (*core.Concept, error) {
+func NewMultiplicityConstraintSpecification(owner *core.Concept, constrainedConcept *core.Concept, label string, multiplicity string, trans *core.Transaction, newURI ...string) (*CrlMultiplicityConstraintSpecification, error) {
 	if owner == nil || constrainedConcept == nil {
 		return nil, errors.New("NewMultiplicityConstraintSpecification called with nil owner or constrained concept")
 	}
 	uOfD := trans.GetUniverseOfDiscourse()
-	newConstraint, err := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintSpecificationURI, owner, label, trans, newURI...)
+	newConcept, err := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintSpecificationURI, owner, label, trans, newURI...)
 	if err != nil {
 		return nil, errors.Wrap(err, "NewMultiplicityConstraintSpecification failed")
 	}
-	multiplicitySpecification, err3 := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintMultiplicityURI, newConstraint, "IsSatisfied", trans)
+	newMcs := CrlMultiplicityConstraintSpecification(*newConcept)
+	newMcsPtr := &newMcs
+	multiplicitySpecification, err3 := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintMultiplicityURI, newMcsPtr.ToCore(), "IsSatisfied", trans)
 	if err3 != nil {
 		return nil, errors.Wrap(err, "NewMultiplicityConstraintSpecification failed")
 	}
@@ -57,7 +67,7 @@ func NewMultiplicityConstraintSpecification(owner *core.Concept, constrainedConc
 	}
 	multiplicitySpecification.SetLiteralValue(multiplicity, trans)
 
-	constrainedConceptReference, err2 := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintConstrainedConceptURI, newConstraint, "Constrained Concept", trans)
+	constrainedConceptReference, err2 := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintConstrainedConceptURI, newMcsPtr.ToCore(), "Constrained Concept", trans)
 	if err2 != nil {
 		return nil, errors.Wrap(err, "NewMultiplicityConstraintSpecification failed")
 	}
@@ -69,7 +79,12 @@ func NewMultiplicityConstraintSpecification(owner *core.Concept, constrainedConc
 			return nil, errors.Wrap(err, "NewMultiplicityConstraintSpecification failed")
 		}
 	}
-	return newConstraint, nil
+	return newMcsPtr, nil
+}
+
+// ToCore casts the CrlMultiplicityConstraintSpecification pointer to *core.Concept
+func (mcs *CrlMultiplicityConstraintSpecification) ToCore() *core.Concept {
+	return (*core.Concept)(mcs)
 }
 
 // NewConstraintCompliance creates and initializes a refinement of a ConstraintCompliance
@@ -83,11 +98,11 @@ func NewConstraintCompliance(owner *core.Concept, constraintSpecification *core.
 }
 
 // GetConstrainedConceptType returns the concept whose multiplicity is being constrained
-func GetConstrainedConceptType(target *core.Concept, trans *core.Transaction) (*core.Concept, error) {
-	if !target.IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
+func (mcs *CrlMultiplicityConstraintSpecification) GetConstrainedConceptType(trans *core.Transaction) (*core.Concept, error) {
+	if !mcs.ToCore().IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
 		return nil, errors.New("GetMultiplicity called with invalid target")
 	}
-	conceptReference := target.GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintConstrainedConceptURI, trans)
+	conceptReference := mcs.ToCore().GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintConstrainedConceptURI, trans)
 	if conceptReference == nil {
 		return nil, errors.New("GetConstrainedConceptType failed: conceptReference not found")
 	}
@@ -103,17 +118,17 @@ func GetConstraintSpecification(constraintComplianceInstance *core.Concept, tran
 	return constraintSpecificationReference.GetReferencedConcept(trans)
 }
 
-// GetMultiplicity returns the literal value after checking that the target is valid
-func GetMultiplicity(target *core.Concept, trans *core.Transaction) (string, error) {
-	if !target.IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
+// GetMultiplicity returns the literal value of the multiplicity specification
+func (mcs *CrlMultiplicityConstraintSpecification) GetMultiplicity(trans *core.Transaction) (string, error) {
+	if !mcs.ToCore().IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
 		return "", errors.New("GetMultiplicity called with invalid target")
 	}
-	spec := getMultiplicitySpecification(target, trans)
+	spec := mcs.getMultiplicitySpecification(trans)
 	return spec.GetLiteralValue(trans), nil
 }
 
-func getMultiplicitySpecification(target *core.Concept, trans *core.Transaction) *core.Concept {
-	return target.GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintMultiplicityURI, trans)
+func (mcs *CrlMultiplicityConstraintSpecification) getMultiplicitySpecification(trans *core.Transaction) *core.Concept {
+	return mcs.ToCore().GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintMultiplicityURI, trans)
 }
 
 // IsSatisfied returns true if the ConstraintCompliance.ConstraintSatisfied is true
@@ -125,7 +140,7 @@ func IsSatisfied(constraintCompliance *core.Concept, trans *core.Transaction) bo
 	if constraintSatisfied == nil {
 		return false
 	}
-	value, err := crldatatypesdomain.GetBooleanValue(constraintSatisfied, trans)
+	value, err := (*crldatatypesdomain.CrlBoolean)(constraintSatisfied).GetBooleanValue(trans)
 	if err != nil {
 		return false
 	}
@@ -197,14 +212,14 @@ func SatisfiesMultiplicity(multiplicity string, candidate int) bool {
 }
 
 // SetMultiplicity sets the multiplicity specification after checking that the target and the multiplicity are both valid
-func SetMultiplicity(target *core.Concept, multiplicity string, trans *core.Transaction) error {
-	if !target.IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
+func (mcs *CrlMultiplicityConstraintSpecification) SetMultiplicity(multiplicity string, trans *core.Transaction) error {
+	if !mcs.ToCore().IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
 		return errors.New("SetMultiplicity called with invalid target")
 	}
 	if !IsValidMultiplicity(multiplicity) {
 		return errors.New("SetMultiplicity called with invalid multiplicity: " + multiplicity)
 	}
-	spec := getMultiplicitySpecification(target, trans)
+	spec := mcs.getMultiplicitySpecification(trans)
 	err := spec.SetLiteralValue(multiplicity, trans)
 	if err != nil {
 		return errors.Wrap(err, "SetMultiplicity failed")
@@ -232,6 +247,7 @@ func evaluateMultiplicityConstraints(constrainedConcept *core.Concept, notificat
 	// then evaluate the constraint and set the compliance value
 	multiplicityConstraintSpecifications := definingAbstraction.GetOwnedConceptsRefinedFromURI(CrlMultiplicityConstraintSpecificationURI, trans)
 	for _, constraintSpecification := range multiplicityConstraintSpecifications {
+		mcs := (*CrlMultiplicityConstraintSpecification)(constraintSpecification)
 		constraintComplianceInstances := constrainedConcept.GetOwnedConceptsRefinedFromURI(CrlConstraintComplianceURI, trans)
 		var foundComplianceInstance *core.Concept
 		for _, constraintComplianceInstance := range constraintComplianceInstances {
@@ -243,18 +259,18 @@ func evaluateMultiplicityConstraints(constrainedConcept *core.Concept, notificat
 		if foundComplianceInstance == nil {
 			foundComplianceInstance = NewConstraintCompliance(constrainedConcept, constraintSpecification, trans)
 		}
-		constrainedConceptType, err := GetConstrainedConceptType(constraintSpecification, trans)
+		constrainedConceptType, err := mcs.GetConstrainedConceptType(trans)
 		if err != nil {
 			return errors.Wrap(err, "evaluateMultiplicityConstraints failed")
 		}
 		typedChildren := constrainedConcept.GetOwnedConceptsRefinedFrom(constrainedConceptType, trans)
-		multiplicity, err2 := GetMultiplicity(constraintSpecification, trans)
+		multiplicity, err2 := mcs.GetMultiplicity(trans)
 		if err2 != nil {
 			return errors.Wrap(err, "evaluateMultiplicityConstraints failed")
 		}
 		sat := SatisfiesMultiplicity(multiplicity, len(typedChildren))
 		satisfied := foundComplianceInstance.GetFirstOwnedConceptRefinedFromURI(CrlConstraintSatisfiedURI, trans)
-		crldatatypesdomain.SetBooleanValue(satisfied, sat, trans)
+		(*crldatatypesdomain.CrlBoolean)(satisfied).SetBooleanValue(sat, trans)
 	}
 	return nil
 }

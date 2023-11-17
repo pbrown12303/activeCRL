@@ -93,7 +93,7 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 		var cs1ID string
 		var cs1 *core.Concept
 		var diagramID string
-		var diagram *core.Concept
+		var diagram *crldiagramdomain.CrlDiagram
 		var beforeUofD *core.UniverseOfDiscourse
 		var beforeTrans *core.Transaction
 		var afterUofD *core.UniverseOfDiscourse
@@ -104,7 +104,7 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 			cs1ID = cs1.GetConceptID(trans)
 			Expect(cs1ID).ToNot(Equal(""))
 			diagram = FyneGUISingleton.addDiagram(cs1.GetConceptID(trans))
-			diagramID = diagram.GetConceptID(trans)
+			diagramID = diagram.ToCore().GetConceptID(trans)
 			Expect(diagramID).ToNot(Equal(""))
 			uOfD.MarkUndoPoint()
 			beforeUofD = uOfD.Clone(trans)
@@ -148,9 +148,9 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 			fyneNode := fyneDiagram.GetPrimarySelection()
 			Expect(fyneNode).ToNot(BeNil())
 			newNodeID := fyneNode.GetDiagramElementID()
-			crlNode := uOfD.GetElement(newNodeID)
+			crlNode := (*crldiagramdomain.CrlDiagramNode)(uOfD.GetElement(newNodeID))
 			Expect(crlNode).ToNot(BeNil())
-			crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlNode, trans)
+			crlModelElement := crlNode.ToCrlDiagramElement().GetReferencedModelConcept(trans)
 			Expect(crlModelElement.GetConceptID(trans)).To(Equal(coreDomainID))
 			PerformUndoRedoTest(1)
 		})
@@ -159,8 +159,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 			Specify("AddChild Diagram should work", func() {
 				newDiagram := FyneGUISingleton.addDiagram(cs1ID)
 				Expect(newDiagram).ToNot(BeNil())
-				Expect(newDiagram.IsRefinementOfURI(crldiagramdomain.CrlDiagramURI, trans)).To(BeTrue())
-				Expect(newDiagram.GetOwningConcept(trans)).To(Equal(cs1))
+				Expect(newDiagram.ToCore().IsRefinementOfURI(crldiagramdomain.CrlDiagramURI, trans)).To(BeTrue())
+				Expect(newDiagram.ToCore().GetOwningConcept(trans)).To(Equal(cs1))
 				PerformUndoRedoTest(1)
 			})
 			Specify("AddChild Element should work", func() {
@@ -316,12 +316,12 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					Expect(ref.GetReferencedConceptID(trans)).To(Equal(e2.GetConceptID(trans)))
 					Expect(ref.GetReferencedAttributeName(trans)).To(Equal(core.OwningConceptID))
 					Expect(ref.GetOwningConceptID(trans)).To(Equal(e3.GetConceptID(trans)))
-					refView := uOfD.GetElement(refLinkView.GetDiagramElementID())
+					refView := crldiagramdomain.GetCrlDiagramLink(refLinkView.GetDiagramElementID(), trans)
 					Expect(refView).ToNot(BeNil())
-					e3View := uOfD.GetElement(e3LinkView.GetDiagramElementID())
+					e3View := crldiagramdomain.GetCrlDiagramLink(e3LinkView.GetDiagramElementID(), trans)
 					Expect(e3View).ToNot(BeNil())
-					Expect(crldiagramdomain.GetLinkSource(refView, trans).GetConceptID(trans)).To(Equal(e3View.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(refView, trans).GetConceptID(trans)).To(Equal(opView.GetDiagramElementID()))
+					Expect(refView.GetLinkSource(trans).ToCore().GetConceptID(trans)).To(Equal(e3View.ToCore().GetConceptID(trans)))
+					Expect(refView.GetLinkTarget(trans).ToCore().GetConceptID(trans)).To(Equal(opView.GetDiagramElementID()))
 					PerformUndoRedoTest(5)
 				})
 				Specify("for a node source and an ElementPointer target", func() {
@@ -337,8 +337,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					Expect(ref.GetReferencedConceptID(trans)).To(Equal(e2.GetConceptID(trans)))
 					Expect(ref.GetReferencedAttributeName(trans)).To(Equal(core.ReferencedConceptID))
 					Expect(ref.GetOwningConceptID(trans)).To(Equal(e3.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkSource(crlRefView, trans).GetConceptID(trans)).To(Equal(e3CrlView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlRefView, trans).GetConceptID(trans)).To(Equal(epCrlView.GetConceptID(trans)))
+					Expect(crlRefView.GetLinkSource(trans)).To(Equal(e3CrlView))
+					Expect(crlRefView.GetLinkTarget(trans)).To(Equal(epCrlView))
 					PerformUndoRedoTest(5)
 				})
 				Specify("for a node source and an AbstractPointer target", func() {
@@ -354,8 +354,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					Expect(ref.GetReferencedConceptID(trans)).To(Equal(e2.GetConceptID(trans)))
 					Expect(ref.GetReferencedAttributeName(trans)).To(Equal(core.AbstractConceptID))
 					Expect(ref.GetOwningConceptID(trans)).To(Equal(e3.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkSource(crlRefView, trans).GetConceptID(trans)).To(Equal(crlE3View.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlRefView, trans).GetConceptID(trans)).To(Equal(crlApView.GetConceptID(trans)))
+					Expect(crlRefView.GetLinkSource(trans)).To(Equal(crlE3View))
+					Expect(crlRefView.GetLinkTarget(trans)).To(Equal(crlApView))
 					PerformUndoRedoTest(5)
 				})
 				Specify("for a node source and an RefinedPointer target", func() {
@@ -371,8 +371,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					Expect(ref.GetReferencedConceptID(trans)).To(Equal(e2.GetConceptID(trans)))
 					Expect(ref.GetReferencedAttributeName(trans)).To(Equal(core.RefinedConceptID))
 					Expect(ref.GetOwningConceptID(trans)).To(Equal(e3.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkSource(crlRefView, trans).GetConceptID(trans)).To(Equal(crlE3View.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlRefView, trans).GetConceptID(trans)).To(Equal(crlAppView.GetConceptID(trans)))
+					Expect(crlRefView.GetLinkSource(trans)).To(Equal(crlE3View))
+					Expect(crlRefView.GetLinkTarget(trans)).To(Equal(crlAppView))
 					PerformUndoRedoTest(5)
 				})
 			})
@@ -393,8 +393,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					newRefinement, crlNewRefinementView, _ := createRefinementLink(selectedDiagram, sourceView, targetView, trans)
 					Expect(newRefinement.GetAbstractConceptID(trans)).To(Equal(target.GetConceptID(trans)))
 					Expect(newRefinement.GetRefinedConceptID(trans)).To(Equal(source.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkSource(crlNewRefinementView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlNewRefinementView, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
+					Expect(crlNewRefinementView.GetLinkSource(trans)).To(Equal(crlSourceView))
+					Expect(crlNewRefinementView.GetLinkTarget(trans)).To(Equal(crlTargetView))
 					PerformUndoRedoTest(5)
 				})
 				Specify("for a node source and link target", func() {
@@ -405,8 +405,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					newRefinement, crlNewRefinementView, _ := createRefinementLink(selectedDiagram, sourceView, targetView, trans)
 					Expect(newRefinement.GetAbstractConceptID(trans)).To(Equal(target.GetConceptID(trans)))
 					Expect(newRefinement.GetRefinedConceptID(trans)).To(Equal(source.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkSource(crlNewRefinementView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlNewRefinementView, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
+					Expect(crlNewRefinementView.GetLinkSource(trans)).To(Equal(crlSourceView))
+					Expect(crlNewRefinementView.GetLinkTarget(trans)).To(Equal(crlTargetView))
 					PerformUndoRedoTest(5)
 				})
 			})
@@ -419,8 +419,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					Expect(ownerPointerView).ToNot(BeNil())
 					Expect(source.GetConceptID(trans)).To(Equal(e2.GetConceptID(trans)))
 					Expect(e2.GetOwningConceptID(trans)).To(Equal(e1.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkSource(crlOwnerPointerView, trans).GetConceptID(trans)).To(Equal(crlE2View.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlOwnerPointerView, trans).GetConceptID(trans)).To(Equal(crlE1View.GetConceptID(trans)))
+					Expect(crlOwnerPointerView.GetLinkSource(trans)).To(Equal(crlE2View))
+					Expect(crlOwnerPointerView.GetLinkTarget(trans)).To(Equal(crlE1View))
 					PerformUndoRedoTest(3)
 				})
 				Specify("For a Refinement Link source and node target", func() {
@@ -435,8 +435,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					// Now check the results
 					Expect(source.GetOwningConceptID(trans)).To(Equal(e3.GetConceptID(trans)))
 					Expect(source.GetConceptID(trans)).To(Equal(ownerPointerConcept.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkSource(crlOwnerPointerView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlOwnerPointerView, trans).GetConceptID(trans)).To(Equal(crlE3View.GetConceptID(trans)))
+					Expect(crlOwnerPointerView.GetLinkSource(trans)).To(Equal(crlSourceView))
+					Expect(crlOwnerPointerView.GetLinkTarget(trans)).To(Equal(crlE3View))
 					PerformUndoRedoTest(5)
 				})
 				Specify("For a node source and ReferenceLink target", func() {
@@ -451,8 +451,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					// Now check the results
 					Expect(source.GetOwningConceptID(trans)).To(Equal(target.GetConceptID(trans)))
 					Expect(source.GetConceptID(trans)).To(Equal(ownerPointerConcept.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkSource(crlOwnerPointerView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlOwnerPointerView, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
+					Expect(crlOwnerPointerView.GetLinkSource(trans)).To(Equal(crlSourceView))
+					Expect(crlOwnerPointerView.GetLinkTarget(trans)).To(Equal(crlTargetView))
 					PerformUndoRedoTest(5)
 				})
 				Specify("For a node source and RefinementLink target", func() {
@@ -467,8 +467,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					// Now check the results
 					Expect(source.GetOwningConceptID(trans)).To(Equal(target.GetConceptID(trans)))
 					Expect(source.GetConceptID(trans)).To(Equal(ownerPointerConcept.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkSource(crlOwnerPointerView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlOwnerPointerView, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
+					Expect(crlOwnerPointerView.GetLinkSource(trans)).To(Equal(crlSourceView))
+					Expect(crlOwnerPointerView.GetLinkTarget(trans)).To(Equal(crlTargetView))
 					PerformUndoRedoTest(5)
 				})
 			})
@@ -482,9 +482,9 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					Expect(reference.GetConceptID(trans)).To(Equal(source.GetConceptID(trans)))
 					Expect(reference.GetReferencedConceptID(trans)).To(Equal(target.GetConceptID(trans)))
 					Expect(source.GetReferencedAttributeName(trans)).To(Equal(core.NoAttribute))
-					Expect(crldiagramdomain.GetLinkSource(crlEpView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlEpView, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
-					modelReference := crldiagramdomain.GetReferencedModelConcept(crlEpView, trans)
+					Expect(crlEpView.GetLinkSource(trans)).To(Equal(crlSourceView))
+					Expect(crlEpView.GetLinkTarget(trans)).To(Equal(crlTargetView))
+					modelReference := crlEpView.ToCrlDiagramElement().GetReferencedModelConcept(trans)
 					Expect(modelReference).ToNot(BeNil())
 					Expect(modelReference.IsRefinementOfURI(core.ReferenceURI, trans)).To(BeTrue())
 					Expect(modelReference.GetReferencedConceptID(trans)).To(Equal(target.GetConceptID(trans)))
@@ -499,8 +499,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					Expect(epModel.GetConceptID(trans)).To(Equal(source.GetConceptID(trans)))
 					Expect(source.GetReferencedConceptID(trans)).To(Equal(target.GetConceptID(trans)))
 					Expect(source.GetReferencedAttributeName(trans)).To(Equal(core.NoAttribute))
-					Expect(crldiagramdomain.GetLinkSource(crlEpView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlEpView, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
+					Expect(crlEpView.GetLinkSource(trans)).To(Equal(crlSourceView))
+					Expect(crlEpView.GetLinkTarget(trans)).To(Equal(crlTargetView))
 					PerformUndoRedoTest(5)
 				})
 				Specify("for a node source and RefinementLink target", func() {
@@ -512,8 +512,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					Expect(epModel.GetConceptID(trans)).To(Equal(source.GetConceptID(trans)))
 					Expect(source.GetReferencedConceptID(trans)).To(Equal(target.GetConceptID(trans)))
 					Expect(source.GetReferencedAttributeName(trans)).To(Equal(core.NoAttribute))
-					Expect(crldiagramdomain.GetLinkSource(crlEpView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlEpView, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
+					Expect(crlEpView.GetLinkSource(trans)).To(Equal(crlSourceView))
+					Expect(crlEpView.GetLinkTarget(trans)).To(Equal(crlTargetView))
 					PerformUndoRedoTest(5)
 				})
 				Specify("for a node source and an OwnerPointer target", func() {
@@ -527,8 +527,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					Expect(epModel.GetConceptID(trans)).To(Equal(source.GetConceptID(trans)))
 					Expect(source.GetReferencedConceptID(trans)).To(Equal(target.GetConceptID(trans)))
 					Expect(source.GetReferencedAttributeName(trans)).To(Equal(core.OwningConceptID))
-					Expect(crldiagramdomain.GetLinkSource(crlEpView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlEpView, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
+					Expect(crlEpView.GetLinkSource(trans)).To(Equal(crlSourceView))
+					Expect(crlEpView.GetLinkTarget(trans)).To(Equal(crlTargetView))
 					PerformUndoRedoTest(5)
 				})
 				Specify("for a node source and an ElementPointer target", func() {
@@ -540,8 +540,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					Expect(epModel.GetConceptID(trans)).To(Equal(source.GetConceptID(trans)))
 					Expect(source.GetReferencedConceptID(trans)).To(Equal(target.GetConceptID(trans)))
 					Expect(source.GetReferencedAttributeName(trans)).To(Equal(core.ReferencedConceptID))
-					Expect(crldiagramdomain.GetLinkSource(crlEpView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlEpView, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
+					Expect(crlEpView.GetLinkSource(trans)).To(Equal(crlSourceView))
+					Expect(crlEpView.GetLinkTarget(trans)).To(Equal(crlTargetView))
 					PerformUndoRedoTest(5)
 				})
 				Specify("for a node source and an AbstractPointer target", func() {
@@ -553,8 +553,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					Expect(epModel.GetConceptID(trans)).To(Equal(source.GetConceptID(trans)))
 					Expect(source.GetReferencedConceptID(trans)).To(Equal(target.GetConceptID(trans)))
 					Expect(source.GetReferencedAttributeName(trans)).To(Equal(core.AbstractConceptID))
-					Expect(crldiagramdomain.GetLinkSource(crlEpView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlEpView, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
+					Expect(crlEpView.GetLinkSource(trans)).To(Equal(crlSourceView))
+					Expect(crlEpView.GetLinkTarget(trans)).To(Equal(crlTargetView))
 					PerformUndoRedoTest(5)
 				})
 				Specify("for a node source and an RefinedPointer target", func() {
@@ -566,8 +566,8 @@ var _ = Describe("Basic CRLEditorFyneGUI testing", func() {
 					Expect(epModel.GetConceptID(trans)).To(Equal(source.GetConceptID(trans)))
 					Expect(source.GetReferencedConceptID(trans)).To(Equal(target.GetConceptID(trans)))
 					Expect(source.GetReferencedAttributeName(trans)).To(Equal(core.RefinedConceptID))
-					Expect(crldiagramdomain.GetLinkSource(crlEpView, trans).GetConceptID(trans)).To(Equal(crlSourceView.GetConceptID(trans)))
-					Expect(crldiagramdomain.GetLinkTarget(crlEpView, trans).GetConceptID(trans)).To(Equal(crlTargetView.GetConceptID(trans)))
+					Expect(crlEpView.GetLinkSource(trans)).To(Equal(crlSourceView))
+					Expect(crlEpView.GetLinkTarget(trans)).To(Equal(crlTargetView))
 					PerformUndoRedoTest(5)
 				})
 			})
@@ -646,7 +646,7 @@ func newLeftMouseEventAt(position fyne.Position, absolutePosition fyne.Position)
 	return newMouseEvent
 }
 
-func createElementAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (*core.Concept, *core.Concept, diagramwidget.DiagramElement) {
+func createElementAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (*core.Concept, *crldiagramdomain.CrlDiagramNode, diagramwidget.DiagramElement) {
 	// Create the element
 	FyneGUISingleton.diagramManager.toolButtons[ElementSelected].Tapped(nil)
 	getTappableDrawingArea(diagram).Tapped(newPointEventAt(100, 100))
@@ -654,230 +654,224 @@ func createElementAt(diagram *diagramwidget.DiagramWidget, x float32, y float32,
 	fyneNode := diagram.GetPrimarySelection()
 	Expect(fyneNode).ToNot(BeNil())
 	// Get the CRL diagram
-	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
+	crlDiagram := crldiagramdomain.GetCrlDiagram(diagram.ID, trans)
 	// Get the CRL diagram element
-	crlDiagramElement := trans.GetUniverseOfDiscourse().GetElement(fyneNode.GetDiagramElementID())
-	Expect(crlDiagramElement).ToNot(BeNil())
-	Expect(crlDiagramElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetConceptID(trans)))
+	crlDiagramNode := crldiagramdomain.GetCrlDiagramNode(fyneNode.GetDiagramElementID(), trans)
+	Expect(crlDiagramNode).ToNot(BeNil())
+	Expect(crlDiagramNode.ToCrlDiagramElement().GetDiagram(trans)).To(Equal(crlDiagram))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
+	crlModelElement := crlDiagramNode.ToCrlDiagramElement().GetReferencedModelConcept(trans)
 	Expect(crlModelElement).ToNot(BeNil())
-	Expect(crlModelElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetOwningConceptID(trans)))
-	return crlModelElement, crlDiagramElement, fyneNode
+	Expect(crlModelElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.ToCore().GetOwningConceptID(trans)))
+	return crlModelElement, crlDiagramNode, fyneNode
 }
 
-func createLiteralAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (*core.Concept, *core.Concept, diagramwidget.DiagramElement) {
+func createLiteralAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (*core.Concept, *crldiagramdomain.CrlDiagramNode, diagramwidget.DiagramElement) {
 	// Create the element
 	FyneGUISingleton.diagramManager.toolButtons[LiteralSelected].Tapped(nil)
 	getTappableDrawingArea(diagram).Tapped(newPointEventAt(100, 100))
 	// Get the Fyne node
 	fyneNode := diagram.GetPrimarySelection()
 	// Get the CRL diagram
-	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
+	crlDiagram := crldiagramdomain.GetCrlDiagram(diagram.ID, trans)
 	// Get the CRL diagram element
-	crlDiagramElement := trans.GetUniverseOfDiscourse().GetElement(fyneNode.GetDiagramElementID())
-	Expect(crlDiagramElement).ToNot(BeNil())
-	Expect(crlDiagramElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetConceptID(trans)))
+	crlDiagramNode := crldiagramdomain.GetCrlDiagramNode(fyneNode.GetDiagramElementID(), trans)
+	Expect(crlDiagramNode).ToNot(BeNil())
+	Expect(crlDiagramNode.ToCrlDiagramElement().GetDiagram(trans)).To(Equal(crlDiagram))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
+	crlModelElement := crlDiagramNode.ToCrlDiagramElement().GetReferencedModelConcept(trans)
 	Expect(crlModelElement).ToNot(BeNil())
-	Expect(crlModelElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetOwningConceptID(trans)))
+	Expect(crlModelElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.ToCore().GetOwningConceptID(trans)))
 	Expect(crlModelElement.IsRefinementOfURI(core.LiteralURI, trans)).To(BeTrue())
-	return crlModelElement, crlDiagramElement, fyneNode
+	return crlModelElement, crlDiagramNode, fyneNode
 }
 
-func createReferenceAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (*core.Concept, *core.Concept, diagramwidget.DiagramElement) {
+func createReferenceAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (*core.Concept, *crldiagramdomain.CrlDiagramNode, diagramwidget.DiagramElement) {
 	// Create the element
 	FyneGUISingleton.diagramManager.toolButtons[ReferenceSelected].Tapped(nil)
 	getTappableDrawingArea(diagram).Tapped(newPointEventAt(100, 100))
 	// Get the Fyne node
 	fyneNode := diagram.GetPrimarySelection()
 	// Get the CRL diagram
-	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
+	crlDiagram := crldiagramdomain.GetCrlDiagram(diagram.ID, trans)
 	// Get the CRL diagram element
-	crlDiagramElement := trans.GetUniverseOfDiscourse().GetElement(fyneNode.GetDiagramElementID())
-	Expect(crlDiagramElement).ToNot(BeNil())
-	Expect(crlDiagramElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetConceptID(trans)))
+	crlDiagramNode := crldiagramdomain.GetCrlDiagramNode(fyneNode.GetDiagramElementID(), trans)
+	Expect(crlDiagramNode).ToNot(BeNil())
+	Expect(crlDiagramNode.ToCrlDiagramElement().GetDiagram(trans)).To(Equal(crlDiagram))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
+	crlModelElement := crlDiagramNode.ToCrlDiagramElement().GetReferencedModelConcept(trans)
 	Expect(crlModelElement).ToNot(BeNil())
-	Expect(crlModelElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetOwningConceptID(trans)))
+	Expect(crlModelElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.ToCore().GetOwningConceptID(trans)))
 	Expect(crlModelElement.IsRefinementOfURI(core.ReferenceURI, trans)).To(BeTrue())
-	return crlModelElement, crlDiagramElement, fyneNode
+	return crlModelElement, crlDiagramNode, fyneNode
 }
 
-func createRefinementAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (*core.Concept, *core.Concept, diagramwidget.DiagramElement) {
+func createRefinementAt(diagram *diagramwidget.DiagramWidget, x float32, y float32, trans *core.Transaction) (*core.Concept, *crldiagramdomain.CrlDiagramNode, diagramwidget.DiagramElement) {
 	// Create the element
 	FyneGUISingleton.diagramManager.toolButtons[RefinementSelected].Tapped(nil)
 	getTappableDrawingArea(diagram).Tapped(newPointEventAt(100, 100))
 	// Get the Fyne node
 	fyneNode := diagram.GetPrimarySelection()
 	// Get the CRL diagram
-	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
+	crlDiagram := crldiagramdomain.GetCrlDiagram(diagram.ID, trans)
 	// Get the CRL diagram element
-	crlDiagramElement := trans.GetUniverseOfDiscourse().GetElement(fyneNode.GetDiagramElementID())
-	Expect(crlDiagramElement).ToNot(BeNil())
-	Expect(crlDiagramElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetConceptID(trans)))
+	crlDiagramNode := crldiagramdomain.GetCrlDiagramNode(fyneNode.GetDiagramElementID(), trans)
+	Expect(crlDiagramNode).ToNot(BeNil())
+	Expect(crlDiagramNode.ToCrlDiagramElement().GetDiagram(trans)).To(Equal(crlDiagram))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
+	crlModelElement := crlDiagramNode.ToCrlDiagramElement().GetReferencedModelConcept(trans)
 	Expect(crlModelElement).ToNot(BeNil())
-	Expect(crlModelElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetOwningConceptID(trans)))
+	Expect(crlModelElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.ToCore().GetOwningConceptID(trans)))
 	Expect(crlModelElement.IsRefinementOfURI(core.RefinementURI, trans)).To(BeTrue())
-	return crlModelElement, crlDiagramElement, fyneNode
+	return crlModelElement, crlDiagramNode, fyneNode
 }
 
-func createReferenceLink(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (*core.Concept, *core.Concept, diagramwidget.DiagramLink) {
+func createReferenceLink(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (*core.Concept, *crldiagramdomain.CrlDiagramLink, diagramwidget.DiagramLink) {
 	FyneGUISingleton.diagramManager.toolButtons[ReferenceLinkSelected].Tapped(nil)
 	newFyneLink := createFyneLink(sourceView, targetView, diagram)
 	// Get the CRL diagram
-	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
+	crlDiagram := crldiagramdomain.GetCrlDiagram(diagram.ID, trans)
 	// Get the CRL diagram element
-	crlDiagramElement := trans.GetUniverseOfDiscourse().GetElement(newFyneLink.GetDiagramElementID())
-	Expect(crlDiagramElement).ToNot(BeNil())
-	Expect(crlDiagramElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetConceptID(trans)))
-	crlSource := trans.GetUniverseOfDiscourse().GetElement(sourceView.GetDiagramElementID())
-	crlTarget := trans.GetUniverseOfDiscourse().GetElement(targetView.GetDiagramElementID())
-	Expect(crldiagramdomain.GetLinkSource(crlDiagramElement, trans)).To(Equal(crlSource))
-	Expect(crldiagramdomain.GetLinkTarget(crlDiagramElement, trans)).To(Equal(crlTarget))
+	crlDiagramLink := crldiagramdomain.GetCrlDiagramLink(newFyneLink.GetDiagramElementID(), trans)
+	Expect(crlDiagramLink).ToNot(BeNil())
+	Expect(crlDiagramLink.ToCrlDiagramElement().GetDiagram(trans)).To(Equal(crlDiagram))
+	crlSource := (*crldiagramdomain.CrlDiagramElement)(trans.GetUniverseOfDiscourse().GetElement(sourceView.GetDiagramElementID()))
+	crlTarget := (*crldiagramdomain.CrlDiagramElement)(trans.GetUniverseOfDiscourse().GetElement(targetView.GetDiagramElementID()))
+	Expect(crlDiagramLink.GetLinkSource(trans)).To(Equal(crlSource))
+	Expect(crlDiagramLink.GetLinkTarget(trans)).To(Equal(crlTarget))
 	// Get the model element
-	crlModelReference := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
-	crlSourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlSource, trans)
-	crlTargetModelElement := crldiagramdomain.GetReferencedModelConcept(crlTarget, trans)
+	crlModelReference := crlDiagramLink.ToCrlDiagramElement().GetReferencedModelConcept(trans)
+	crlSourceModelElement := crlSource.GetReferencedModelConcept(trans)
+	crlTargetModelElement := crlTarget.GetReferencedModelConcept(trans)
 	Expect(crlModelReference).ToNot(BeNil())
 	Expect(crlModelReference.GetOwningConceptID(trans)).To(Equal(crlSourceModelElement.GetConceptID(trans)))
 	Expect(crlModelReference.IsRefinementOfURI(core.ReferenceURI, trans)).To(BeTrue())
 	Expect(crlModelReference.GetReferencedConceptID(trans)).To(Equal(crlTargetModelElement.GetConceptID(trans)))
-
-	return crlModelReference, crlDiagramElement, newFyneLink
+	return crlModelReference, crlDiagramLink, newFyneLink
 }
 
-func createRefinementLink(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (*core.Concept, *core.Concept, diagramwidget.DiagramLink) {
+func createRefinementLink(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (*core.Concept, *crldiagramdomain.CrlDiagramLink, diagramwidget.DiagramLink) {
 	FyneGUISingleton.diagramManager.toolButtons[RefinementLinkSelected].Tapped(nil)
 	newFyneLink := createFyneLink(sourceView, targetView, diagram)
 	// Get the CRL diagram
-	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
+	crlDiagram := crldiagramdomain.GetCrlDiagram(diagram.ID, trans)
 	// Get the CRL diagram element
-	crlDiagramElement := trans.GetUniverseOfDiscourse().GetElement(newFyneLink.GetDiagramElementID())
-	Expect(crlDiagramElement).ToNot(BeNil())
-	Expect(crlDiagramElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetConceptID(trans)))
-	crlSource := trans.GetUniverseOfDiscourse().GetElement(sourceView.GetDiagramElementID())
-	crlTarget := trans.GetUniverseOfDiscourse().GetElement(targetView.GetDiagramElementID())
-	Expect(crldiagramdomain.GetLinkSource(crlDiagramElement, trans)).To(Equal(crlSource))
-	Expect(crldiagramdomain.GetLinkTarget(crlDiagramElement, trans)).To(Equal(crlTarget))
+	crlDiagramLink := crldiagramdomain.GetCrlDiagramLink(newFyneLink.GetDiagramElementID(), trans)
+	Expect(crlDiagramLink).ToNot(BeNil())
+	Expect(crlDiagramLink.ToCrlDiagramElement().GetDiagram(trans)).To(Equal(crlDiagram))
+	crlSource := crldiagramdomain.GetCrlDiagramElement(sourceView.GetDiagramElementID(), trans)
+	crlTarget := crldiagramdomain.GetCrlDiagramElement(targetView.GetDiagramElementID(), trans)
+	Expect(crlDiagramLink.GetLinkSource(trans)).To(Equal(crlSource))
+	Expect(crlDiagramLink.GetLinkTarget(trans)).To(Equal(crlTarget))
 	// Get the model element
-	crlModelRefinement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
-	crlSourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlSource, trans)
-	crlTargetModelElement := crldiagramdomain.GetReferencedModelConcept(crlTarget, trans)
+	crlModelRefinement := crlDiagramLink.ToCrlDiagramElement().GetReferencedModelConcept(trans)
+	crlSourceModelElement := crlSource.GetReferencedModelConcept(trans)
+	crlTargetModelElement := crlTarget.GetReferencedModelConcept(trans)
 	Expect(crlModelRefinement).ToNot(BeNil())
 	Expect(crlModelRefinement.GetOwningConceptID(trans)).To(Equal(crlSourceModelElement.GetConceptID(trans)))
 	Expect(crlModelRefinement.IsRefinementOfURI(core.RefinementURI, trans)).To(BeTrue())
 	Expect(crlModelRefinement.GetAbstractConceptID(trans)).To(Equal(crlTargetModelElement.GetConceptID(trans)))
 	Expect(crlModelRefinement.GetRefinedConceptID(trans)).To(Equal(crlSourceModelElement.GetConceptID(trans)))
-
-	return crlModelRefinement, crlDiagramElement, newFyneLink
+	return crlModelRefinement, crlDiagramLink, newFyneLink
 }
 
-func createOwnerPointer(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (*core.Concept, *core.Concept, diagramwidget.DiagramLink) {
+func createOwnerPointer(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (*core.Concept, *crldiagramdomain.CrlDiagramLink, diagramwidget.DiagramLink) {
 	FyneGUISingleton.diagramManager.toolButtons[OwnerPointerSelected].Tapped(nil)
 	newFyneLink := createFyneLink(sourceView, targetView, diagram)
 	// Get the CRL diagram
-	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
+	crlDiagram := crldiagramdomain.GetCrlDiagram(diagram.ID, trans)
 	// Get the CRL diagram element
-	crlDiagramElement := trans.GetUniverseOfDiscourse().GetElement(newFyneLink.GetDiagramElementID())
-	Expect(crlDiagramElement).ToNot(BeNil())
-	Expect(crlDiagramElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetConceptID(trans)))
-	Expect(crlDiagramElement.IsRefinementOfURI(crldiagramdomain.CrlDiagramOwnerPointerURI, trans)).To(BeTrue())
-	crlSource := trans.GetUniverseOfDiscourse().GetElement(sourceView.GetDiagramElementID())
-	crlTarget := trans.GetUniverseOfDiscourse().GetElement(targetView.GetDiagramElementID())
-	Expect(crldiagramdomain.GetLinkSource(crlDiagramElement, trans)).To(Equal(crlSource))
-	Expect(crldiagramdomain.GetLinkTarget(crlDiagramElement, trans)).To(Equal(crlTarget))
+	crlDiagramLink := crldiagramdomain.GetCrlDiagramLink(newFyneLink.GetDiagramElementID(), trans)
+	Expect(crlDiagramLink).ToNot(BeNil())
+	Expect(crlDiagramLink.ToCrlDiagramElement().GetDiagram(trans)).To(Equal(crlDiagram))
+	Expect(crlDiagramLink.ToCore().IsRefinementOfURI(crldiagramdomain.CrlDiagramOwnerPointerURI, trans)).To(BeTrue())
+	crlSource := crldiagramdomain.GetCrlDiagramElement(sourceView.GetDiagramElementID(), trans)
+	crlTarget := crldiagramdomain.GetCrlDiagramElement(targetView.GetDiagramElementID(), trans)
+	Expect(crlDiagramLink.GetLinkSource(trans)).To(Equal(crlSource))
+	Expect(crlDiagramLink.GetLinkTarget(trans)).To(Equal(crlTarget))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
-	crlSourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlSource, trans)
-	crlTargetModelElement := crldiagramdomain.GetReferencedModelConcept(crlTarget, trans)
+	crlModelElement := crlDiagramLink.ToCrlDiagramElement().GetReferencedModelConcept(trans)
+	crlSourceModelElement := crlSource.GetReferencedModelConcept(trans)
+	crlTargetModelElement := crlTarget.GetReferencedModelConcept(trans)
 	Expect(crlModelElement).ToNot(BeNil())
 	Expect(crlModelElement.GetConceptID(trans)).To(Equal(crlSourceModelElement.GetConceptID(trans)))
 	Expect(crlModelElement.GetOwningConceptID(trans)).To(Equal(crlTargetModelElement.GetConceptID(trans)))
-
-	return crlModelElement, crlDiagramElement, newFyneLink
+	return crlModelElement, crlDiagramLink, newFyneLink
 }
 
-func createReferencedElementPointer(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (*core.Concept, *core.Concept, diagramwidget.DiagramLink) {
+func createReferencedElementPointer(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (*core.Concept, *crldiagramdomain.CrlDiagramLink, diagramwidget.DiagramLink) {
 	FyneGUISingleton.diagramManager.toolButtons[ReferencedElementPointerSelected].Tapped(nil)
 	newFyneLink := createFyneLink(sourceView, targetView, diagram)
 	// Get the CRL diagram
-	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
+	crlDiagram := crldiagramdomain.GetCrlDiagram(diagram.ID, trans)
 	// Get the CRL diagram element
-	crlDiagramElement := trans.GetUniverseOfDiscourse().GetElement(newFyneLink.GetDiagramElementID())
-	Expect(crlDiagramElement).ToNot(BeNil())
-	Expect(crlDiagramElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetConceptID(trans)))
-	Expect(crlDiagramElement.IsRefinementOfURI(crldiagramdomain.CrlDiagramElementPointerURI, trans)).To(BeTrue())
-	crlSource := trans.GetUniverseOfDiscourse().GetElement(sourceView.GetDiagramElementID())
-	crlTarget := trans.GetUniverseOfDiscourse().GetElement(targetView.GetDiagramElementID())
-	Expect(crldiagramdomain.GetLinkSource(crlDiagramElement, trans)).To(Equal(crlSource))
-	Expect(crldiagramdomain.GetLinkTarget(crlDiagramElement, trans)).To(Equal(crlTarget))
+	crlDiagramLink := crldiagramdomain.GetCrlDiagramLink(newFyneLink.GetDiagramElementID(), trans)
+	Expect(crlDiagramLink).ToNot(BeNil())
+	Expect(crlDiagramLink.ToCrlDiagramElement().GetDiagram(trans)).To(Equal(crlDiagram))
+	Expect(crlDiagramLink.ToCore().IsRefinementOfURI(crldiagramdomain.CrlDiagramElementPointerURI, trans)).To(BeTrue())
+	crlSource := crldiagramdomain.GetCrlDiagramElement(sourceView.GetDiagramElementID(), trans)
+	crlTarget := crldiagramdomain.GetCrlDiagramElement(targetView.GetDiagramElementID(), trans)
+	Expect(crlDiagramLink.GetLinkSource(trans)).To(Equal(crlSource))
+	Expect(crlDiagramLink.GetLinkTarget(trans)).To(Equal(crlTarget))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
-	crlSourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlSource, trans)
-	crlTargetModelElement := crldiagramdomain.GetReferencedModelConcept(crlTarget, trans)
+	crlModelElement := crlDiagramLink.ToCrlDiagramElement().GetReferencedModelConcept(trans)
+	crlSourceModelElement := crlSource.GetReferencedModelConcept(trans)
+	crlTargetModelElement := crlTarget.GetReferencedModelConcept(trans)
 	Expect(crlModelElement).ToNot(BeNil())
 	Expect(crlModelElement.IsRefinementOfURI(core.ReferenceURI, trans)).To(BeTrue())
 	Expect(crlModelElement.GetConceptID(trans)).To(Equal(crlSourceModelElement.GetConceptID(trans)))
 	Expect(crlModelElement.GetReferencedConceptID(trans)).To(Equal(crlTargetModelElement.GetConceptID(trans)))
-
-	return crlModelElement, crlDiagramElement, newFyneLink
+	return crlModelElement, crlDiagramLink, newFyneLink
 }
 
-func createAbstractPointer(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (*core.Concept, *core.Concept, diagramwidget.DiagramLink) {
+func createAbstractPointer(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (*core.Concept, *crldiagramdomain.CrlDiagramLink, diagramwidget.DiagramLink) {
 	FyneGUISingleton.diagramManager.toolButtons[AbstractElementPointerSelected].Tapped(nil)
 	newFyneLink := createFyneLink(sourceView, targetView, diagram)
 	// Get the CRL diagram
-	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
+	crlDiagram := crldiagramdomain.GetCrlDiagram(diagram.ID, trans)
 	// Get the CRL diagram element
-	crlDiagramElement := trans.GetUniverseOfDiscourse().GetElement(newFyneLink.GetDiagramElementID())
-	Expect(crlDiagramElement).ToNot(BeNil())
-	Expect(crlDiagramElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetConceptID(trans)))
-	Expect(crlDiagramElement.IsRefinementOfURI(crldiagramdomain.CrlDiagramAbstractPointerURI, trans)).To(BeTrue())
-	crlSource := trans.GetUniverseOfDiscourse().GetElement(sourceView.GetDiagramElementID())
-	crlTarget := trans.GetUniverseOfDiscourse().GetElement(targetView.GetDiagramElementID())
-	Expect(crldiagramdomain.GetLinkSource(crlDiagramElement, trans)).To(Equal(crlSource))
-	Expect(crldiagramdomain.GetLinkTarget(crlDiagramElement, trans)).To(Equal(crlTarget))
+	crlDiagramLink := crldiagramdomain.GetCrlDiagramLink(newFyneLink.GetDiagramElementID(), trans)
+	Expect(crlDiagramLink).ToNot(BeNil())
+	Expect(crlDiagramLink.ToCrlDiagramElement().GetDiagram(trans)).To(Equal(crlDiagram))
+	Expect(crlDiagramLink.ToCore().IsRefinementOfURI(crldiagramdomain.CrlDiagramAbstractPointerURI, trans)).To(BeTrue())
+	crlSource := crldiagramdomain.GetCrlDiagramElement(sourceView.GetDiagramElementID(), trans)
+	crlTarget := crldiagramdomain.GetCrlDiagramElement(targetView.GetDiagramElementID(), trans)
+	Expect(crlDiagramLink.GetLinkSource(trans)).To(Equal(crlSource))
+	Expect(crlDiagramLink.GetLinkTarget(trans)).To(Equal(crlTarget))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
-	crlSourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlSource, trans)
-	crlTargetModelElement := crldiagramdomain.GetReferencedModelConcept(crlTarget, trans)
+	crlModelElement := crlDiagramLink.ToCrlDiagramElement().GetReferencedModelConcept(trans)
+	crlSourceModelElement := crlSource.GetReferencedModelConcept(trans)
+	crlTargetModelElement := crlTarget.GetReferencedModelConcept(trans)
 	Expect(crlModelElement).ToNot(BeNil())
 	Expect(crlModelElement.IsRefinementOfURI(core.RefinementURI, trans)).To(BeTrue())
 	Expect(crlModelElement.GetConceptID(trans)).To(Equal(crlSourceModelElement.GetConceptID(trans)))
 	Expect(crlModelElement.GetAbstractConceptID(trans)).To(Equal(crlTargetModelElement.GetConceptID(trans)))
-
-	return crlModelElement, crlDiagramElement, newFyneLink
+	return crlModelElement, crlDiagramLink, newFyneLink
 }
 
-func createRefinedPointer(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (*core.Concept, *core.Concept, diagramwidget.DiagramLink) {
+func createRefinedPointer(diagram *diagramwidget.DiagramWidget, sourceView diagramwidget.DiagramElement, targetView diagramwidget.DiagramElement, trans *core.Transaction) (*core.Concept, *crldiagramdomain.CrlDiagramLink, diagramwidget.DiagramLink) {
 	FyneGUISingleton.diagramManager.toolButtons[RefinedElementPointerSelected].Tapped(nil)
 	newFyneLink := createFyneLink(sourceView, targetView, diagram)
 	// Get the CRL diagram
 	crlDiagram := trans.GetUniverseOfDiscourse().GetElement(diagram.ID)
 	// Get the CRL diagram element
-	crlDiagramElement := trans.GetUniverseOfDiscourse().GetElement(newFyneLink.GetDiagramElementID())
-	Expect(crlDiagramElement).ToNot(BeNil())
-	Expect(crlDiagramElement.GetOwningConceptID(trans)).To(Equal(crlDiagram.GetConceptID(trans)))
-	Expect(crlDiagramElement.IsRefinementOfURI(crldiagramdomain.CrlDiagramRefinedPointerURI, trans)).To(BeTrue())
-	crlSource := trans.GetUniverseOfDiscourse().GetElement(sourceView.GetDiagramElementID())
-	crlTarget := trans.GetUniverseOfDiscourse().GetElement(targetView.GetDiagramElementID())
-	Expect(crldiagramdomain.GetLinkSource(crlDiagramElement, trans)).To(Equal(crlSource))
-	Expect(crldiagramdomain.GetLinkTarget(crlDiagramElement, trans)).To(Equal(crlTarget))
+	crlDiagramLink := crldiagramdomain.GetCrlDiagramLink(newFyneLink.GetDiagramElementID(), trans)
+	Expect(crlDiagramLink).ToNot(BeNil())
+	Expect(crlDiagramLink.ToCrlDiagramElement().GetDiagram(trans)).To(Equal(crlDiagram))
+	Expect(crlDiagramLink.ToCore().IsRefinementOfURI(crldiagramdomain.CrlDiagramRefinedPointerURI, trans)).To(BeTrue())
+	crlSource := crldiagramdomain.GetCrlDiagramElement(sourceView.GetDiagramElementID(), trans)
+	crlTarget := crldiagramdomain.GetCrlDiagramElement(targetView.GetDiagramElementID(), trans)
+	Expect(crlDiagramLink.GetLinkSource(trans)).To(Equal(crlSource))
+	Expect(crlDiagramLink.GetLinkTarget(trans)).To(Equal(crlTarget))
 	// Get the model element
-	crlModelElement := crldiagramdomain.GetReferencedModelConcept(crlDiagramElement, trans)
-	crlSourceModelElement := crldiagramdomain.GetReferencedModelConcept(crlSource, trans)
-	crlTargetModelElement := crldiagramdomain.GetReferencedModelConcept(crlTarget, trans)
+	crlModelElement := crlDiagramLink.ToCrlDiagramElement().GetReferencedModelConcept(trans)
+	crlSourceModelElement := crlSource.GetReferencedModelConcept(trans)
+	crlTargetModelElement := crlTarget.GetReferencedModelConcept(trans)
 	Expect(crlModelElement).ToNot(BeNil())
 	Expect(crlModelElement.IsRefinementOfURI(core.RefinementURI, trans)).To(BeTrue())
 	Expect(crlModelElement.GetConceptID(trans)).To(Equal(crlSourceModelElement.GetConceptID(trans)))
 	Expect(crlModelElement.GetRefinedConceptID(trans)).To(Equal(crlTargetModelElement.GetConceptID(trans)))
-
-	return crlModelElement, crlDiagramElement, newFyneLink
+	return crlModelElement, crlDiagramLink, newFyneLink
 }
 
 // createFyneLink assumes that the caller has already selected the appropriate toolbar button

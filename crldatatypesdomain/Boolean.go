@@ -9,27 +9,38 @@ import (
 // CrlBooleanURI is the URI that defines the prototype for Boolean
 var CrlBooleanURI = CrlDataTypesDomainURI + "/Boolean"
 
+// CrlBoolean is the crl representation of a boolean
+type CrlBoolean core.Concept
+
 // NewBoolean creates an instance of a Boolean
-func NewBoolean(label string, trans *core.Transaction, newURI ...string) *core.Concept {
+func NewBoolean(label string, trans *core.Transaction, newURI ...string) *CrlBoolean {
 	uOfD := trans.GetUniverseOfDiscourse()
-	newBoolean, _ := uOfD.CreateRefinementOfConceptURI(CrlBooleanURI, "CrlBoolean", trans, newURI...)
-	SetBooleanValue(newBoolean, false, trans)
-	newBoolean.SetLabel(label, trans)
-	return newBoolean
+	newLiteral, _ := uOfD.CreateRefinementOfConceptURI(CrlBooleanURI, "CrlBoolean", trans, newURI...)
+	newBoolean := CrlBoolean(*newLiteral)
+	newBooleanPtr := &newBoolean
+	newBooleanPtr.SetBooleanValue(false, trans)
+	newBooleanPtr.ToCore().SetLabel(label, trans)
+	return newBooleanPtr
 }
 
 // NewOwnedBoolean creates a refinement of the Boolean concept and sets both its label and owner
-func NewOwnedBoolean(owner *core.Concept, label string, trans *core.Transaction, newURI ...string) {
+func NewOwnedBoolean(owner *core.Concept, label string, trans *core.Transaction, newURI ...string) *CrlBoolean {
 	newBoolean := NewBoolean(label, trans, newURI...)
-	newBoolean.SetOwningConcept(owner, trans)
+	newBoolean.ToCore().SetOwningConcept(owner, trans)
+	return newBoolean
+}
+
+// ToCore casts CrlBoolean to core.Concept
+func (crlb *CrlBoolean) ToCore() *core.Concept {
+	return (*core.Concept)(crlb)
 }
 
 // GetBooleanValue returns the Boolean value
-func GetBooleanValue(literal *core.Concept, trans *core.Transaction) (bool, error) {
-	if !IsBoolean(literal, trans) {
+func (crlb *CrlBoolean) GetBooleanValue(trans *core.Transaction) (bool, error) {
+	if !IsBoolean(crlb.ToCore(), trans) {
 		return false, errors.New("GetBooleanValue called with non-Boolean Literal")
 	}
-	literalValue := literal.GetLiteralValue(trans)
+	literalValue := crlb.ToCore().GetLiteralValue(trans)
 	if literalValue == "true" {
 		return true, nil
 	} else if literalValue == "false" {
@@ -44,14 +55,14 @@ func IsBoolean(literal *core.Concept, trans *core.Transaction) bool {
 }
 
 // SetBooleanValue sets the value of the Boolean Literal
-func SetBooleanValue(literal *core.Concept, value bool, trans *core.Transaction) error {
-	if !IsBoolean(literal, trans) {
-		return errors.New("GetBooleanValue called with non-Boolean Literal")
+func (crlb *CrlBoolean) SetBooleanValue(value bool, trans *core.Transaction) error {
+	if !IsBoolean(crlb.ToCore(), trans) {
+		return errors.New("SetBooleanValue called with non-Boolean Literal")
 	}
 	if value == true {
-		literal.SetLiteralValue("true", trans)
+		crlb.ToCore().SetLiteralValue("true", trans)
 	} else {
-		literal.SetLiteralValue("false", trans)
+		crlb.ToCore().SetLiteralValue("false", trans)
 	}
 	return nil
 }

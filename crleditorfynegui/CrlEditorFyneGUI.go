@@ -33,6 +33,7 @@ type CrlEditorFyneGUI struct {
 	treeManager                         *FyneTreeManager
 	window                              fyne.Window
 	windowContent                       fyne.CanvasObject
+	anchoredTextBindingMap              map[string]AnchoredTextBinding
 	conceptStateBindingMap              map[string]ConceptStateBinding
 	conceptStateBindingMapForProperties map[string]ConceptStateBinding
 	currentSelectionID                  string
@@ -77,6 +78,7 @@ func NewFyneGUI(crlEditor *crleditor.Editor, providedApp fyne.App) *CrlEditorFyn
 	}
 	FyneGUISingleton = gui
 	gui.editor = crlEditor
+	gui.anchoredTextBindingMap = make(map[string]AnchoredTextBinding)
 	gui.conceptStateBindingMap = make(map[string]ConceptStateBinding)
 	gui.conceptStateBindingMapForProperties = make(map[string]ConceptStateBinding)
 	gui.app.Settings().SetTheme(&fyneGuiTheme{})
@@ -124,17 +126,17 @@ func NewFyneGUI(crlEditor *crleditor.Editor, providedApp fyne.App) *CrlEditorFyn
 	return gui
 }
 
-func (gui *CrlEditorFyneGUI) addDiagram(parentID string) *core.Concept {
+func (gui *CrlEditorFyneGUI) addDiagram(parentID string) *crldiagramdomain.CrlDiagram {
 	trans, isNew := gui.editor.GetTransaction()
 	if isNew {
 		defer gui.editor.EndTransaction()
 	}
 	gui.markUndoPoint()
 	newDiagram, _ := crldiagramdomain.NewDiagram(trans)
-	newDiagram.SetLabel(gui.editor.GetDefaultDiagramLabel(), trans)
-	newDiagram.SetOwningConceptID(parentID, trans)
-	gui.editor.SelectElement(newDiagram, trans)
-	gui.editor.GetDiagramManager().DisplayDiagram(newDiagram.GetConceptID(trans), trans)
+	newDiagram.ToCore().SetLabel(gui.editor.GetDefaultDiagramLabel(), trans)
+	newDiagram.ToCore().SetOwningConceptID(parentID, trans)
+	gui.editor.SelectElement(newDiagram.ToCore(), trans)
+	gui.editor.GetDiagramManager().DisplayDiagram(newDiagram.ToCore().GetConceptID(trans), trans)
 	return newDiagram
 }
 
@@ -448,13 +450,18 @@ func (gui *CrlEditorFyneGUI) displayDiagram(diagramID string) {
 }
 
 // DisplayDiagram displays the indicated diagram
-func (gui *CrlEditorFyneGUI) DisplayDiagram(diagram *core.Concept, trans *core.Transaction) error {
+func (gui *CrlEditorFyneGUI) DisplayDiagram(diagram *crldiagramdomain.CrlDiagram, trans *core.Transaction) error {
 	gui.diagramManager.displayDiagram(diagram, trans)
 	return nil
 }
 
 // FileLoaded - no action required
 func (gui *CrlEditorFyneGUI) FileLoaded(el *core.Concept, trans *core.Transaction) {
+}
+
+// GetAnchoredTextBinding returns the AnchoredTextBinding for the given uid.
+func (gui *CrlEditorFyneGUI) GetAnchoredTextBinding(uid string) AnchoredTextBinding {
+	return gui.anchoredTextBindingMap[uid]
 }
 
 // GetConceptStateBinding returns the ConceptStateBinding for the given uid. If the binding
@@ -520,6 +527,11 @@ func (gui *CrlEditorFyneGUI) redo() {
 		defer gui.editor.EndTransaction()
 	}
 	gui.editor.Redo(trans)
+}
+
+// SetAnchoredTextBinding sets the AnchoredTextBinding for the given uid.
+func (gui *CrlEditorFyneGUI) SetAnchoredTextBinding(uid string, binding AnchoredTextBinding) {
+	gui.anchoredTextBindingMap[uid] = binding
 }
 
 // RefreshGUI initializes the graphical state of the GUI

@@ -9,32 +9,32 @@ import (
 // DiagramManager manages the diagram display portion of the GUI
 type DiagramManager struct {
 	editor   *Editor
-	diagrams map[string]*core.Concept
+	diagrams map[string]*crldiagramdomain.CrlDiagram
 }
 
 // NewDiagramManager creates an instance of the DiagramManager
 func NewDiagramManager(editor *Editor) *DiagramManager {
 	var dMgr DiagramManager
 	dMgr.editor = editor
-	dMgr.diagrams = map[string]*core.Concept{}
+	dMgr.diagrams = map[string]*crldiagramdomain.CrlDiagram{}
 	return &dMgr
 }
 
 // AddDiagram adds a diagram tab, if needed, and displays the tab
-func (dMgr *DiagramManager) AddDiagram(ownerID string, trans *core.Transaction) (*core.Concept, error) {
+func (dMgr *DiagramManager) AddDiagram(ownerID string, trans *core.Transaction) (*crldiagramdomain.CrlDiagram, error) {
 	diagram, err := dMgr.NewDiagram(trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.addDiagram failed")
 	}
-	err = diagram.SetOwningConceptID(ownerID, trans)
+	err = diagram.ToCore().SetOwningConceptID(ownerID, trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.addDiagram failed")
 	}
-	err = dMgr.editor.SelectElement(diagram, trans)
+	err = dMgr.editor.SelectElement(diagram.ToCore(), trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.addDiagram failed")
 	}
-	err = dMgr.DisplayDiagram(diagram.GetConceptID(trans), trans)
+	err = dMgr.DisplayDiagram(diagram.ToCore().GetConceptID(trans), trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.addDiagram failed")
 	}
@@ -42,9 +42,9 @@ func (dMgr *DiagramManager) AddDiagram(ownerID string, trans *core.Transaction) 
 }
 
 // AddConceptView adds a view of the concept to the indicated diagram
-func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x float64, y float64, trans *core.Transaction) (*core.Concept, error) {
+func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x float64, y float64, trans *core.Transaction) (*crldiagramdomain.CrlDiagramElement, error) {
 	uOfD := dMgr.editor.GetUofD()
-	diagram := uOfD.GetElement(diagramID)
+	diagram := (*crldiagramdomain.CrlDiagram)(uOfD.GetElement(diagramID))
 	el := uOfD.GetElement(conceptID)
 	if el == nil {
 		return nil, errors.New("Indicated model element not found in addNodeView, ID: " + conceptID)
@@ -57,14 +57,15 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 		createAsLink = dMgr.editor.GetDropDiagramRefinementAsLink(trans)
 	}
 
-	var newElement *core.Concept
+	var newElement *crldiagramdomain.CrlDiagramElement
 	var err error
 	if createAsLink {
+		var newLink *crldiagramdomain.CrlDiagramLink
 		var modelSourceConcept *core.Concept
 		var modelTargetConcept *core.Concept
 		switch el.GetConceptType() {
 		case core.Reference:
-			newElement, err = crldiagramdomain.NewDiagramReferenceLink(trans)
+			newLink, err = crldiagramdomain.NewDiagramReferenceLink(trans)
 			if err != nil {
 				return nil, err
 			}
@@ -72,7 +73,7 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 			modelSourceConcept = reference.GetOwningConcept(trans)
 			modelTargetConcept = reference.GetReferencedConcept(trans)
 		case core.Refinement:
-			newElement, err = crldiagramdomain.NewDiagramRefinementLink(trans)
+			newLink, err = crldiagramdomain.NewDiagramRefinementLink(trans)
 			if err != nil {
 				return nil, err
 			}
@@ -86,37 +87,36 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 		if modelTargetConcept == nil {
 			return nil, errors.New("In addConceptView for link, modelTargetConcept is nil")
 		}
-		diagramSourceElement := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, modelSourceConcept, trans)
+		diagramSourceElement := diagram.GetFirstElementRepresentingConcept(modelSourceConcept, trans)
 		if diagramSourceElement == nil {
 			return nil, errors.New("In addConceptView for reference link, diagramSourceElement is nil")
 		}
-		diagramTargetElement := crldiagramdomain.GetFirstElementRepresentingConcept(diagram, modelTargetConcept, trans)
+		diagramTargetElement := diagram.GetFirstElementRepresentingConcept(modelTargetConcept, trans)
 		if diagramTargetElement == nil {
 			return nil, errors.New("In addConceptView for reference link, diagramTargetElement is nil")
 		}
-		crldiagramdomain.SetLinkSource(newElement, diagramSourceElement, trans)
-		crldiagramdomain.SetLinkTarget(newElement, diagramTargetElement, trans)
+		newLink.SetLinkSource(diagramSourceElement, trans)
+		newLink.SetLinkTarget(diagramTargetElement, trans)
+		newElement = newLink.ToCrlDiagramElement()
 	} else {
-		newElement, err = crldiagramdomain.NewDiagramNode(trans)
+		newNode, err := crldiagramdomain.NewDiagramNode(trans)
 		if err != nil {
 			return nil, err
 		}
-		crldiagramdomain.SetNodeX(newElement, x, trans)
-		crldiagramdomain.SetNodeY(newElement, y, trans)
-		crldiagramdomain.SetLineColor(newElement, "#000000", trans)
+		newNode.SetNodeX(x, trans)
+		newNode.SetNodeY(y, trans)
+		newElement = newNode.ToCrlDiagramElement()
+		newElement.SetLineColor("#000000", trans)
 	}
 
-	err = newElement.SetLabel(el.GetLabel(trans), trans)
+	err = newElement.ToCore().SetLabel(el.GetLabel(trans), trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.addConceptView failed")
 	}
-	crldiagramdomain.SetReferencedModelConcept(newElement, el, trans)
-	crldiagramdomain.SetDisplayLabel(newElement, el.GetLabel(trans), trans)
+	newElement.SetReferencedModelConcept(el, trans)
+	newElement.SetDisplayLabel(el.GetLabel(trans), trans)
 
-	err = newElement.SetOwningConceptID(diagram.GetConceptID(trans), trans)
-	if err != nil {
-		return nil, errors.Wrap(err, "DiagramManager.addConceptView failed")
-	}
+	newElement.SetDiagram(diagram, trans)
 	// err = newElement.Register(dMgr.elementManager)
 	// if err != nil {
 	// 	return nil, errors.Wrap(err, "DiagramManager.addConceptView failed")
@@ -127,12 +127,9 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 
 // DisplayDiagram tells the client to display the indicated diagram.
 func (dMgr *DiagramManager) DisplayDiagram(diagramID string, trans *core.Transaction) error {
-	diagram := dMgr.editor.GetUofD().GetElement(diagramID)
+	diagram := crldiagramdomain.GetCrlDiagram(diagramID, trans)
 	if diagram == nil {
 		return errors.New("In DiagramManager.DisplayDiagram, the diagram does not exist")
-	}
-	if !diagram.IsRefinementOfURI(crldiagramdomain.CrlDiagramURI, trans) {
-		return errors.New("In DiagramManager.DisplayDiagram, the supplied diagram is not a refinement of CrlDiagramURI")
 	}
 	// Make sure the diagram is in the list of displayed diagrams
 	if !dMgr.editor.IsDiagramDisplayed(diagramID, trans) {
@@ -154,17 +151,17 @@ func (dMgr *DiagramManager) DisplayDiagram(diagramID string, trans *core.Transac
 }
 
 // NewDiagram creates a new crldiagram
-func (dMgr *DiagramManager) NewDiagram(trans *core.Transaction) (*core.Concept, error) {
+func (dMgr *DiagramManager) NewDiagram(trans *core.Transaction) (*crldiagramdomain.CrlDiagram, error) {
 	name := dMgr.editor.GetDefaultDiagramLabel()
 	diagram, err := crldiagramdomain.NewDiagram(trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.newDiagram failed")
 	}
-	diagram.SetLabel(name, trans)
-	dMgr.diagrams[diagram.GetConceptID(trans)] = diagram
+	diagram.ToCore().SetLabel(name, trans)
+	dMgr.diagrams[diagram.ToCore().GetConceptID(trans)] = diagram
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.newDiagram failed")
 	}
-	dMgr.DisplayDiagram(diagram.GetConceptID(trans), trans)
+	dMgr.DisplayDiagram(diagram.ToCore().GetConceptID(trans), trans)
 	return diagram, nil
 }
