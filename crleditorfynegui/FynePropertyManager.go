@@ -5,7 +5,6 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 )
@@ -117,11 +116,9 @@ func NewFynePropertyManager() *FynePropertyManager {
 }
 
 func (pMgr *FynePropertyManager) displayProperties(uid string) {
-	conceptBinding := FyneGUISingleton.GetConceptStateBinding(uid)
-	if uid == "" || conceptBinding == nil {
-		pMgr.typeValue.Unbind()
+	csb := FyneGUISingleton.GetConceptStateBinding(uid)
+	if uid == "" || csb == nil {
 		pMgr.typeValue.SetText("")
-		pMgr.idValue.Unbind()
 		pMgr.idValue.SetText("")
 		pMgr.owningConceptIDValue.Unbind()
 		pMgr.owningConceptIDValue.SetText("")
@@ -133,7 +130,6 @@ func (pMgr *FynePropertyManager) displayProperties(uid string) {
 		pMgr.definitionValue.SetText("")
 		pMgr.uriValue.Unbind()
 		pMgr.uriValue.SetText("")
-		pMgr.isCoreValue.Unbind()
 		pMgr.isCoreValue.SetText("")
 		pMgr.readOnlyValue.Unbind()
 		pMgr.readOnlyValue.SetText("")
@@ -150,38 +146,20 @@ func (pMgr *FynePropertyManager) displayProperties(uid string) {
 		pMgr.literalValueValue.Unbind()
 		pMgr.literalValueValue.SetText("")
 	} else {
-		structBinding := *conceptBinding.GetBoundData()
-		itemBinding, _ := structBinding.GetItem("ConceptType")
-		pMgr.typeValue.Bind(itemBinding.(binding.String))
-		itemBinding, _ = structBinding.GetItem("ConceptID")
-		pMgr.idValue.Bind(itemBinding.(binding.String))
-		itemBinding, _ = structBinding.GetItem("OwningConceptID")
-		pMgr.owningConceptIDValue.Bind(itemBinding.(binding.String))
-		itemBinding, _ = structBinding.GetItem("Version")
-		pMgr.versionValue.Bind(itemBinding.(binding.String))
-		itemBinding, _ = structBinding.GetItem("Label")
-		pMgr.labelValue.Bind(itemBinding.(binding.String))
-		itemBinding, _ = structBinding.GetItem("Definition")
-		pMgr.definitionValue.Bind(itemBinding.(binding.String))
-		itemBinding, _ = structBinding.GetItem("URI")
-		pMgr.uriValue.Bind(itemBinding.(binding.String))
-		itemBinding, _ = structBinding.GetItem("IsCore")
-		pMgr.isCoreValue.Bind(itemBinding.(binding.String))
-		itemBinding, _ = structBinding.GetItem("ReadOnly")
-		pMgr.readOnlyValue.Bind(itemBinding.(binding.String))
-		itemBinding, _ = structBinding.GetItem("ReferencedConceptID")
-		pMgr.referencedConceptValue.Bind(itemBinding.(binding.String))
-		itemBinding, _ = structBinding.GetItem("ReferencedAttributeName")
-		pMgr.referencedConceptAttributeNameValue.Bind(itemBinding.(binding.String))
-		itemBinding, _ = structBinding.GetItem("ReferencedConceptVersion")
-		itemBinding, _ = structBinding.GetItem("AbstractConceptID")
-		pMgr.abstractConceptValue.Bind(itemBinding.(binding.String))
-		itemBinding, _ = structBinding.GetItem("AbstractConceptVersion")
-		itemBinding, _ = structBinding.GetItem("RefinedConceptID")
-		pMgr.refinedConceptValue.Bind(itemBinding.(binding.String))
-		itemBinding, _ = structBinding.GetItem("RefinedConceptVersion")
-		itemBinding, _ = structBinding.GetItem("LiteralValue")
-		pMgr.literalValueValue.Bind(itemBinding.(binding.String))
+		pMgr.typeValue.SetText(csb.conceptState.ConceptType)
+		pMgr.idValue.SetText(csb.conceptState.ConceptID)
+		pMgr.owningConceptIDValue.Bind(csb.owningConceptIDBinding)
+		pMgr.versionValue.Bind(csb.versionBinding)
+		pMgr.labelValue.Bind(csb.labelBinding)
+		pMgr.definitionValue.Bind(csb.definitionBinding)
+		pMgr.uriValue.Bind(csb.uriBinding)
+		pMgr.isCoreValue.SetText(csb.conceptState.IsCore)
+		pMgr.readOnlyValue.Bind(csb.readOnlyBinding)
+		pMgr.referencedConceptValue.Bind(csb.referencedConceptIDBinding)
+		pMgr.referencedConceptAttributeNameValue.Bind(csb.referencedAttributeNameBinding)
+		pMgr.abstractConceptValue.Bind(csb.abstractConceptIDBinding)
+		pMgr.refinedConceptValue.Bind(csb.refinedConceptIDBinding)
+		pMgr.literalValueValue.Bind(csb.literalValueBinding)
 	}
 }
 

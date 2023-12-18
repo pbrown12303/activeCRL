@@ -255,62 +255,62 @@
 						</container>
 					</container>
 					<rectangle fillColor="shadow" pos="0,32" size="771x2"/>
-					<rectangle fillColor="primary" radius="3" size="0x0"/>
+					<rectangle radius="3" size="0x0"/>
 				</widget>
 				<container size="22x896">
 					<widget size="22x22" type="*widget.Button">
 						<rectangle fillColor="primary" radius="5" size="22x22"/>
-						<rectangle size="0x0"/>
+						<rectangle size="22x22"/>
 						<image fillMode="contain" pos="1,1" rsc="CursorIcon.png" size="iconInlineSize"/>
 					</widget>
 					<widget pos="0,24" size="22x22" type="*widget.Button">
 						<rectangle fillColor="menuBackground" radius="5" size="22x22"/>
-						<rectangle size="0x0"/>
+						<rectangle size="22x22"/>
 						<image fillMode="contain" pos="1,1" rsc="ElementIcon.png" size="iconInlineSize"/>
 					</widget>
 					<widget pos="0,49" size="22x22" type="*widget.Button">
 						<rectangle fillColor="menuBackground" radius="5" size="22x22"/>
-						<rectangle size="0x0"/>
+						<rectangle size="22x22"/>
 						<image fillMode="contain" pos="1,1" rsc="LiteralIcon.png" size="iconInlineSize"/>
 					</widget>
 					<widget pos="0,73" size="22x22" type="*widget.Button">
 						<rectangle fillColor="menuBackground" radius="5" size="22x22"/>
-						<rectangle size="0x0"/>
+						<rectangle size="22x22"/>
 						<image fillMode="contain" pos="1,1" rsc="ReferenceIcon.png" size="iconInlineSize"/>
 					</widget>
 					<widget pos="0,98" size="22x22" type="*widget.Button">
 						<rectangle fillColor="menuBackground" radius="5" size="22x22"/>
-						<rectangle size="0x0"/>
+						<rectangle size="22x22"/>
 						<image fillMode="contain" pos="1,1" rsc="ReferenceLinkIcon.png" size="iconInlineSize"/>
 					</widget>
 					<widget pos="0,123" size="22x22" type="*widget.Button">
 						<rectangle fillColor="menuBackground" radius="5" size="22x22"/>
-						<rectangle size="0x0"/>
+						<rectangle size="22x22"/>
 						<image fillMode="contain" pos="1,1" rsc="RefinementIcon.png" size="iconInlineSize"/>
 					</widget>
 					<widget pos="0,147" size="22x22" type="*widget.Button">
 						<rectangle fillColor="menuBackground" radius="5" size="22x22"/>
-						<rectangle size="0x0"/>
+						<rectangle size="22x22"/>
 						<image fillMode="contain" pos="1,1" rsc="RefinementLinkIcon.png" size="iconInlineSize"/>
 					</widget>
 					<widget pos="0,172" size="22x22" type="*widget.Button">
 						<rectangle fillColor="menuBackground" radius="5" size="22x22"/>
-						<rectangle size="0x0"/>
+						<rectangle size="22x22"/>
 						<image fillMode="contain" pos="1,1" rsc="OwnerPointerIcon.png" size="iconInlineSize"/>
 					</widget>
 					<widget pos="0,196" size="22x22" type="*widget.Button">
 						<rectangle fillColor="menuBackground" radius="5" size="22x22"/>
-						<rectangle size="0x0"/>
+						<rectangle size="22x22"/>
 						<image fillMode="contain" pos="1,1" rsc="ElementPointerIcon.png" size="iconInlineSize"/>
 					</widget>
 					<widget pos="0,221" size="22x22" type="*widget.Button">
 						<rectangle fillColor="menuBackground" radius="5" size="22x22"/>
-						<rectangle size="0x0"/>
+						<rectangle size="22x22"/>
 						<image fillMode="contain" pos="1,1" rsc="AbstractPointerIcon.png" size="iconInlineSize"/>
 					</widget>
 					<widget pos="0,246" size="22x22" type="*widget.Button">
 						<rectangle fillColor="menuBackground" radius="5" size="22x22"/>
-						<rectangle size="0x0"/>
+						<rectangle size="22x22"/>
 						<image fillMode="contain" pos="1,1" rsc="RefinedPointerIcon.png" size="iconInlineSize"/>
 					</widget>
 					<widget pos="0,270" size="22x1" type="*widget.Separator">
@@ -318,12 +318,12 @@
 					</widget>
 					<widget pos="0,273" size="22x22" type="*widget.Button">
 						<rectangle fillColor="menuBackground" radius="5" size="22x22"/>
-						<rectangle size="0x0"/>
+						<rectangle size="22x22"/>
 						<image fillMode="contain" pos="1,1" rsc="OneToOneIcon.png" size="iconInlineSize"/>
 					</widget>
 					<widget pos="0,298" size="22x22" type="*widget.Button">
 						<rectangle fillColor="menuBackground" radius="5" size="22x22"/>
-						<rectangle size="0x0"/>
+						<rectangle size="22x22"/>
 						<image fillMode="contain" pos="1,1" rsc="RefinedCloneIcon.png" size="iconInlineSize"/>
 					</widget>
 				</container>

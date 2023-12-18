@@ -34,8 +34,8 @@ type CrlEditorFyneGUI struct {
 	window                              fyne.Window
 	windowContent                       fyne.CanvasObject
 	anchoredTextBindingMap              map[string]AnchoredTextBinding
-	conceptStateBindingMap              map[string]ConceptStateBinding
-	conceptStateBindingMapForProperties map[string]ConceptStateBinding
+	conceptStateBindingMap              map[string]*ConceptStateBinding
+	conceptStateBindingMapForProperties map[string]*ConceptStateBinding
 	currentSelectionID                  string
 	activeCursor                        desktop.StandardCursor
 	dragDropTransaction                 *dragDropTransaction
@@ -79,8 +79,8 @@ func NewFyneGUI(crlEditor *crleditor.Editor, providedApp fyne.App) *CrlEditorFyn
 	FyneGUISingleton = gui
 	gui.editor = crlEditor
 	gui.anchoredTextBindingMap = make(map[string]AnchoredTextBinding)
-	gui.conceptStateBindingMap = make(map[string]ConceptStateBinding)
-	gui.conceptStateBindingMapForProperties = make(map[string]ConceptStateBinding)
+	gui.conceptStateBindingMap = make(map[string]*ConceptStateBinding)
+	gui.conceptStateBindingMapForProperties = make(map[string]*ConceptStateBinding)
 	gui.app.Settings().SetTheme(&fyneGuiTheme{})
 	gui.activeCursor = desktop.DefaultCursor
 	gui.treeManager = NewFyneTreeManager(gui)
@@ -466,7 +466,7 @@ func (gui *CrlEditorFyneGUI) GetAnchoredTextBinding(uid string) AnchoredTextBind
 
 // GetConceptStateBinding returns the ConceptStateBinding for the given uid. If the binding
 // does not already exist, one is created and indexed under the uid
-func (gui *CrlEditorFyneGUI) GetConceptStateBinding(uid string) ConceptStateBinding {
+func (gui *CrlEditorFyneGUI) GetConceptStateBinding(uid string) *ConceptStateBinding {
 	binding := gui.conceptStateBindingMap[uid]
 	if binding == nil {
 		binding = NewConceptStateBinding(uid)
@@ -477,7 +477,7 @@ func (gui *CrlEditorFyneGUI) GetConceptStateBinding(uid string) ConceptStateBind
 
 // GetConceptStateBindingForProperties returns the ConceptStateBinding for the given uid. If the binding
 // does not already exist, one is created and indexed under the uid
-func (gui *CrlEditorFyneGUI) GetConceptStateBindingForProperties(uid string) ConceptStateBinding {
+func (gui *CrlEditorFyneGUI) GetConceptStateBindingForProperties(uid string) *ConceptStateBinding {
 	binding := gui.conceptStateBindingMapForProperties[uid]
 	if binding == nil {
 		binding = NewConceptStateBinding(uid)
@@ -497,8 +497,8 @@ func (gui *CrlEditorFyneGUI) GetWindow() fyne.Window {
 
 // Initialize initializes the information content of the GUI.
 func (gui *CrlEditorFyneGUI) Initialize(trans *core.Transaction) error {
-	gui.conceptStateBindingMap = make(map[string]ConceptStateBinding)
-	gui.conceptStateBindingMapForProperties = make(map[string]ConceptStateBinding)
+	gui.conceptStateBindingMap = make(map[string]*ConceptStateBinding)
+	gui.conceptStateBindingMapForProperties = make(map[string]*ConceptStateBinding)
 	gui.treeManager.initialize()
 	gui.propertyManager.initialize()
 	gui.diagramManager.initialize()
@@ -541,6 +541,7 @@ func (gui *CrlEditorFyneGUI) RefreshGUI(trans *core.Transaction) error {
 	selectedElementID := gui.editor.GetSettings().Selection
 	selectedElement := gui.editor.GetUofD().GetElement(selectedElementID)
 	gui.ConceptSelected(selectedElement, trans)
+	gui.windowContent.Refresh()
 	return nil
 }
 

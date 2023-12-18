@@ -206,7 +206,9 @@ func (mgr *CrlWorkspaceManager) LoadWorkspace(trans *core.Transaction) error {
 	}
 	mgr.LoadSettings(trans)
 	mgr.editor.SelectElementUsingIDString(mgr.editor.settings.Selection, trans)
-	mgr.editor.diagramManager.DisplayDiagram(mgr.editor.settings.CurrentDiagram, trans)
+	if mgr.editor.settings.CurrentDiagram != "" {
+		mgr.editor.diagramManager.DisplayDiagram(mgr.editor.settings.CurrentDiagram, trans)
+	}
 	return nil
 }
 

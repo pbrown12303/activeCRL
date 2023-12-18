@@ -31,7 +31,7 @@ func (m fyneGuiTheme) Size(name fyne.ThemeSizeName) float32 {
 		return 2.0
 	}
 	if name == theme.SizeNameInnerPadding {
-		return 1.0
+		return 1.3
 	}
 	return theme.DefaultTheme().Size(name)
 }

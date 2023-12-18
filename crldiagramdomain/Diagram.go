@@ -310,6 +310,9 @@ func (diagram *CrlDiagram) ToCore() *core.Concept {
 
 // GetFirstElementRepresentingConcept returns the first non-pointer diagram element that represents the indicated concept
 func (diagram *CrlDiagram) GetFirstElementRepresentingConcept(concept *core.Concept, trans *core.Transaction) *CrlDiagramElement {
+	if concept == nil {
+		return nil
+	}
 	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept && !el.IsRefinementOfURI(CrlDiagramPointerURI, trans) {
 			return (*CrlDiagramElement)(el)
@@ -320,6 +323,9 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConcept(concept *core.Conc
 
 // GetFirstElementRepresentingConceptID returns the first diagram element that represents the indicated concept
 func (diagram *CrlDiagram) GetFirstElementRepresentingConceptID(conceptID string, trans *core.Transaction) *CrlDiagramElement {
+	if conceptID == "" {
+		return nil
+	}
 	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans).GetConceptID(trans) == conceptID && !el.IsRefinementOfURI(CrlDiagramPointerURI, trans) {
 			return (*CrlDiagramElement)(el)
@@ -330,6 +336,9 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptID(conceptID string
 
 // GetFirstElementRepresentingConceptOwnerPointer returns the first diagram element that represents the indicated concept's OwnerPointer
 func (diagram *CrlDiagram) GetFirstElementRepresentingConceptOwnerPointer(concept *core.Concept, trans *core.Transaction) *CrlDiagramLink {
+	if concept == nil {
+		return nil
+	}
 	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept {
 			return (*CrlDiagramLink)(el)
@@ -340,6 +349,9 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptOwnerPointer(concep
 
 // GetFirstElementRepresentingConceptIDOwnerPointer returns the first diagram element that represents the indicated concept's OwnerPointer
 func (diagram *CrlDiagram) GetFirstElementRepresentingConceptIDOwnerPointer(conceptID string, trans *core.Transaction) *CrlDiagramLink {
+	if conceptID == "" {
+		return nil
+	}
 	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans).GetConceptID(trans) == conceptID {
 			return (*CrlDiagramLink)(el)
@@ -350,6 +362,9 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptIDOwnerPointer(conc
 
 // GetFirstElementRepresentingConceptElementPointer returns the first diagram element that represents the indicated concept's ElementPointer
 func (diagram *CrlDiagram) GetFirstElementRepresentingConceptElementPointer(concept *core.Concept, trans *core.Transaction) *CrlDiagramLink {
+	if concept == nil {
+		return nil
+	}
 	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept {
 			return (*CrlDiagramLink)(el)
@@ -360,6 +375,9 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptElementPointer(conc
 
 // GetFirstElementRepresentingConceptIDElementPointer returns the first diagram element that represents the indicated concept's ElementPointer
 func (diagram *CrlDiagram) GetFirstElementRepresentingConceptIDElementPointer(conceptID string, trans *core.Transaction) *CrlDiagramLink {
+	if conceptID == "" {
+		return nil
+	}
 	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans).GetConceptID(trans) == conceptID {
 			return (*CrlDiagramLink)(el)
@@ -370,6 +388,9 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptIDElementPointer(co
 
 // GetFirstElementRepresentingConceptAbstractPointer returns the first diagram element that represents the indicated concept's AbstractPointer
 func (diagram *CrlDiagram) GetFirstElementRepresentingConceptAbstractPointer(concept *core.Concept, trans *core.Transaction) *CrlDiagramLink {
+	if concept == nil {
+		return nil
+	}
 	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramAbstractPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept {
 			return (*CrlDiagramLink)(el)
@@ -380,6 +401,9 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptAbstractPointer(con
 
 // GetFirstElementRepresentingConceptIDAbstractPointer returns the first diagram element that represents the indicated concept's AbstractPointer
 func (diagram *CrlDiagram) GetFirstElementRepresentingConceptIDAbstractPointer(conceptID string, trans *core.Transaction) *CrlDiagramLink {
+	if conceptID == "" {
+		return nil
+	}
 	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramAbstractPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans).GetConceptID(trans) == conceptID {
 			return (*CrlDiagramLink)(el)
@@ -390,6 +414,9 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptIDAbstractPointer(c
 
 // GetFirstElementRepresentingConceptRefinedPointer returns the first diagram element that represents the indicated concept's RefinedPointer
 func (diagram *CrlDiagram) GetFirstElementRepresentingConceptRefinedPointer(concept *core.Concept, trans *core.Transaction) *CrlDiagramLink {
+	if concept == nil {
+		return nil
+	}
 	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramRefinedPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept {
 			return (*CrlDiagramLink)(el)
@@ -400,6 +427,9 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptRefinedPointer(conc
 
 // GetFirstElementRepresentingConceptIDRefinedPointer returns the first diagram element that represents the indicated concept's RefinedPointer
 func (diagram *CrlDiagram) GetFirstElementRepresentingConceptIDRefinedPointer(conceptID string, trans *core.Transaction) *CrlDiagramLink {
+	if conceptID == "" {
+		return nil
+	}
 	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramRefinedPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans).GetConceptID(trans) == conceptID {
 			return (*CrlDiagramLink)(el)
@@ -430,7 +460,7 @@ func (diagramLink *CrlDiagramLink) GetLinkSource(trans *core.Transaction) *CrlDi
 	sourceReference := diagramLink.ToCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, trans)
 	if sourceReference != nil {
 		referencedConcept := sourceReference.GetReferencedConcept(trans)
-		if referencedConcept.IsRefinementOfURI(CrlDiagramElementURI, trans) {
+		if referencedConcept != nil && referencedConcept.IsRefinementOfURI(CrlDiagramElementURI, trans) {
 			return (*CrlDiagramElement)(referencedConcept)
 		}
 	}
@@ -447,7 +477,7 @@ func (diagramLink *CrlDiagramLink) GetLinkTarget(trans *core.Transaction) *CrlDi
 	targetReference := diagramLink.ToCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
 	if targetReference != nil {
 		referencedConcept := targetReference.GetReferencedConcept(trans)
-		if referencedConcept.IsRefinementOfURI(CrlDiagramElementURI, trans) {
+		if referencedConcept != nil && referencedConcept.IsRefinementOfURI(CrlDiagramElementURI, trans) {
 			return (*CrlDiagramElement)(referencedConcept)
 		}
 	}
@@ -541,6 +571,9 @@ func (anchoredText *CrlDiagramAnchoredText) GetOffsetX(trans *core.Transaction) 
 
 // GetOwnerPointer returns the ownerPointer for the concept if one exists
 func (diagram *CrlDiagram) GetOwnerPointer(concept *CrlDiagramElement, trans *core.Transaction) *CrlDiagramLink {
+	if concept == nil {
+		return nil
+	}
 	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept.ToCore() {
 			return (*CrlDiagramLink)(el)
@@ -551,6 +584,9 @@ func (diagram *CrlDiagram) GetOwnerPointer(concept *CrlDiagramElement, trans *co
 
 // GetElementPointer returns the elementPointer for the concept if one exists
 func (diagram *CrlDiagram) GetElementPointer(concept *CrlDiagramElement, trans *core.Transaction) *CrlDiagramLink {
+	if concept == nil {
+		return nil
+	}
 	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept.ToCore() {
 			return (*CrlDiagramLink)(el)
@@ -599,7 +635,7 @@ func init() {
 // GetCrlDiagram returns the CrlDiagram with the given ID
 func GetCrlDiagram(id string, trans *core.Transaction) *CrlDiagram {
 	concept := trans.GetUniverseOfDiscourse().GetElement(id)
-	if concept.IsRefinementOfURI(CrlDiagramLinkURI, trans) {
+	if concept != nil && concept.IsRefinementOfURI(CrlDiagramURI, trans) {
 		return (*CrlDiagram)(concept)
 	}
 	return nil
@@ -608,7 +644,7 @@ func GetCrlDiagram(id string, trans *core.Transaction) *CrlDiagram {
 // GetCrlDiagramElement returns the CrlDiagramElement with the given ID
 func GetCrlDiagramElement(id string, trans *core.Transaction) *CrlDiagramElement {
 	concept := trans.GetUniverseOfDiscourse().GetElement(id)
-	if concept.IsRefinementOfURI(CrlDiagramElementURI, trans) {
+	if concept != nil && concept.IsRefinementOfURI(CrlDiagramElementURI, trans) {
 		return (*CrlDiagramElement)(concept)
 	}
 	return nil
@@ -617,7 +653,7 @@ func GetCrlDiagramElement(id string, trans *core.Transaction) *CrlDiagramElement
 // GetCrlDiagramLink returns the CrlDiagramLink with the given ID
 func GetCrlDiagramLink(id string, trans *core.Transaction) *CrlDiagramLink {
 	concept := trans.GetUniverseOfDiscourse().GetElement(id)
-	if concept.IsRefinementOfURI(CrlDiagramLinkURI, trans) {
+	if concept != nil && concept.IsRefinementOfURI(CrlDiagramLinkURI, trans) {
 		return (*CrlDiagramLink)(concept)
 	}
 	return nil
@@ -626,7 +662,7 @@ func GetCrlDiagramLink(id string, trans *core.Transaction) *CrlDiagramLink {
 // GetCrlDiagramNode returns the CrlDiagramNode with the given ID
 func GetCrlDiagramNode(id string, trans *core.Transaction) *CrlDiagramNode {
 	concept := trans.GetUniverseOfDiscourse().GetElement(id)
-	if concept.IsRefinementOfURI(CrlDiagramNodeURI, trans) {
+	if concept != nil && concept.IsRefinementOfURI(CrlDiagramNodeURI, trans) {
 		return (*CrlDiagramNode)(concept)
 	}
 	return nil
@@ -644,56 +680,89 @@ func IsDiagram(el *core.Concept, trans *core.Transaction) bool {
 
 // IsDiagramAbstractPointer returns true if the supplied element is a CrlDiagramAbstractPointer
 func IsDiagramAbstractPointer(el *core.Concept, trans *core.Transaction) bool {
+	if el == nil {
+		return false
+	}
 	return el.IsRefinementOfURI(CrlDiagramAbstractPointerURI, trans)
 }
 
 // IsDiagramElement returns true if the supplied element is a CrlDiagramElement
 func IsDiagramElement(el *core.Concept, trans *core.Transaction) bool {
+	if el == nil {
+		return false
+	}
 	return el.IsRefinementOfURI(CrlDiagramElementURI, trans)
 }
 
 // IsDiagramElementPointer returns true if the supplied element is a CrlDiagramElementPointer
 func IsDiagramElementPointer(el *core.Concept, trans *core.Transaction) bool {
+	if el == nil {
+		return false
+	}
 	return el.IsRefinementOfURI(CrlDiagramElementPointerURI, trans)
 }
 
 // IsDiagramLink returns true if the supplied element is a CrlDiagramLink
 func IsDiagramLink(el *core.Concept, trans *core.Transaction) bool {
+	if el == nil {
+		return false
+	}
 	return el.IsRefinementOfURI(CrlDiagramLinkURI, trans)
 }
 
 // IsDiagramNode returns true if the supplied element is a CrlDiagramNode
 func IsDiagramNode(el *core.Concept, trans *core.Transaction) bool {
+	if el == nil {
+		return false
+	}
 	return el.IsRefinementOfURI(CrlDiagramNodeURI, trans)
 }
 
 // IsDiagramOwnerPointer returns true if the supplied element is a CrlDiagramOwnerPointer
 func IsDiagramOwnerPointer(el *core.Concept, trans *core.Transaction) bool {
+	if el == nil {
+		return false
+	}
 	return el.IsRefinementOfURI(CrlDiagramOwnerPointerURI, trans)
 }
 
 // IsDiagramPointer returns true if the supplied element is a CrlDiagramPointer
 func IsDiagramPointer(el *core.Concept, trans *core.Transaction) bool {
+	if el == nil {
+		return false
+	}
 	return el.IsRefinementOfURI(CrlDiagramPointerURI, trans)
 }
 
 // IsDiagramRefinedPointer returns true if the supplied element is a CrlDiagramRefinedPointer
 func IsDiagramRefinedPointer(el *core.Concept, trans *core.Transaction) bool {
+	if el == nil {
+		return false
+	}
 	return el.IsRefinementOfURI(CrlDiagramRefinedPointerURI, trans)
 }
 
 // IsDiagramReferenceLink returns true if the supplied element is a CrlDiagramReferenceLink
 func IsDiagramReferenceLink(el *core.Concept, trans *core.Transaction) bool {
+	if el == nil {
+		return false
+	}
 	return el.IsRefinementOfURI(CrlDiagramReferenceLinkURI, trans)
 }
 
 // IsDiagramRefinementLink returns true if the supplied element is a CrlDiagramRefinementLink
 func IsDiagramRefinementLink(el *core.Concept, trans *core.Transaction) bool {
+	if el == nil {
+		return false
+	}
 	return el.IsRefinementOfURI(CrlDiagramRefinementLinkURI, trans)
 }
 
 // IsModelReference returns true if the supplied element is a ModelReference
 func IsModelReference(el *core.Concept, trans *core.Transaction) bool {
+	if el == nil {
+		return false
+	}
 	return el.IsRefinementOfURI(CrlDiagramElementModelReferenceURI, trans)
 }
 

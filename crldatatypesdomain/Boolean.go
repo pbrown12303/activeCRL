@@ -16,11 +16,10 @@ type CrlBoolean core.Concept
 func NewBoolean(label string, trans *core.Transaction, newURI ...string) *CrlBoolean {
 	uOfD := trans.GetUniverseOfDiscourse()
 	newLiteral, _ := uOfD.CreateRefinementOfConceptURI(CrlBooleanURI, "CrlBoolean", trans, newURI...)
-	newBoolean := CrlBoolean(*newLiteral)
-	newBooleanPtr := &newBoolean
-	newBooleanPtr.SetBooleanValue(false, trans)
-	newBooleanPtr.ToCore().SetLabel(label, trans)
-	return newBooleanPtr
+	newBoolean := (*CrlBoolean)(newLiteral)
+	newBoolean.SetBooleanValue(false, trans)
+	newBoolean.ToCore().SetLabel(label, trans)
+	return newBoolean
 }
 
 // NewOwnedBoolean creates a refinement of the Boolean concept and sets both its label and owner

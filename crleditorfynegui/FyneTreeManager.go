@@ -5,7 +5,6 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
 	"github.com/pbrown12303/activeCRL/core"
@@ -161,10 +160,8 @@ func UpdateNode(uid string, branch bool, node fyne.CanvasObject) {
 		tn.label.SetText("uOfD")
 	} else {
 		conceptBinding := FyneGUISingleton.GetConceptStateBinding(uid)
-		structBinding := *conceptBinding.GetBoundData()
-		if structBinding != nil {
-			labelItem, _ := structBinding.GetItem("Label")
-			tn.label.Bind(labelItem.(binding.String))
+		if conceptBinding != nil {
+			tn.label.Bind(conceptBinding.labelBinding)
 		}
 	}
 	FyneGUISingleton.treeManager.treeNodes[uid] = tn

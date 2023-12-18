@@ -68,18 +68,18 @@ type ConceptState struct {
 	// Element fields
 	ConceptID       string
 	ConceptType     string
-	OwningConceptID string
-	Label           string
 	Definition      string
+	IsCore          string
+	Label           string
+	OwningConceptID string
+	ReadOnly        string
 	URI             string
 	Version         string
-	IsCore          string
-	ReadOnly        string
 	// Literal fields
 	LiteralValue string
 	// Reference fields
-	ReferencedConceptID     string
 	ReferencedAttributeName string
+	ReferencedConceptID     string
 	// Refinement Fields
 	AbstractConceptID string
 	RefinedConceptID  string

@@ -486,8 +486,11 @@ func (dm *FyneDiagramManager) ElementSelected(id string, trans *core.Transaction
 
 func (dm *FyneDiagramManager) getDiagramWidget(diagramID string) *diagramwidget.DiagramWidget {
 	tabItem := dm.diagramTabs[diagramID]
-	diagramWidget := tabItem.diagram
-	return diagramWidget
+	if tabItem != nil {
+		diagramWidget := tabItem.diagram
+		return diagramWidget
+	}
+	return nil
 }
 
 // GetDrawingArea returns the diagram area container
@@ -532,13 +535,15 @@ func (dm *FyneDiagramManager) refreshGUI(trans *core.Transaction) {
 	for _, diagramID := range editor.GetSettings().OpenDiagrams {
 		editor.GetDiagramManager().DisplayDiagram(diagramID, trans)
 		diagram := dm.getDiagramWidget(diagramID)
-		for _, diagramElement := range diagram.GetDiagramElements() {
-			diagram.RemoveElement(diagramElement.GetDiagramElementID())
+		if diagram != nil {
+			for _, diagramElement := range diagram.GetDiagramElements() {
+				diagram.RemoveElement(diagramElement.GetDiagramElementID())
+			}
+			crlDiagram := crldiagramdomain.GetCrlDiagram(diagramID, trans)
+			dm.populateDiagram(crlDiagram, trans)
+			dm.selectElementInDiagram(editor.GetSettings().Selection, diagram, trans)
+			diagram.Refresh()
 		}
-		crlDiagram := crldiagramdomain.GetCrlDiagram(diagramID, trans)
-		dm.populateDiagram(crlDiagram, trans)
-		dm.selectElementInDiagram(editor.GetSettings().Selection, diagram, trans)
-		diagram.Refresh()
 	}
 	dm.SelectDiagram(editor.GetSettings().CurrentDiagram)
 }
@@ -665,7 +670,10 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 						currentModelRefinement.SetAbstractConcept(nil, trans)
 					}
 					crlLinkTarget := crlLink.GetLinkTarget(trans)
-					targetModelElement := crlLinkTarget.GetReferencedModelConcept(trans)
+					var targetModelElement *core.Concept
+					if crlLinkTarget != nil {
+						targetModelElement = crlLinkTarget.GetReferencedModelConcept(trans)
+					}
 					switch newModelRefinement.GetConceptType() {
 					case core.Refinement:
 						newModelRefinement.SetAbstractConcept(targetModelElement, trans)
@@ -680,11 +688,15 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 					if currentLinkModelConcept != nil {
 						currentLinkModelConcept.SetOwningConcept(nil, trans)
 					}
-					crlLinkTarget := crlLink.GetLinkTarget(trans)
-					targetModelElement := crlLinkTarget.GetReferencedModelConcept(trans)
-					newLinkModelConcept.SetOwningConcept(targetModelElement, trans)
 					crlLink.ToCrlDiagramElement().SetReferencedModelConcept(newLinkModelConcept, trans)
 					typedLink.modelElement = newLinkModelConcept
+					crlLinkTarget := crlLink.GetLinkTarget(trans)
+					if crlLinkTarget != nil {
+						targetModelElement := crlLinkTarget.GetReferencedModelConcept(trans)
+						newLinkModelConcept.SetOwningConcept(targetModelElement, trans)
+						crlLink.ToCrlDiagramElement().SetReferencedModelConcept(newLinkModelConcept, trans)
+						typedLink.modelElement = newLinkModelConcept
+					}
 				}
 			case ReferencedElementPointerSelected:
 				currentModelReference := crlLink.ToCrlDiagramElement().GetReferencedModelConcept(trans)
@@ -700,7 +712,10 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 						}
 					}
 					crlLinkTarget := crlLink.GetLinkTarget(trans)
-					targetModelElement := crlLinkTarget.GetReferencedModelConcept(trans)
+					var targetModelElement *core.Concept
+					if crlLinkTarget != nil {
+						targetModelElement = crlLinkTarget.GetReferencedModelConcept(trans)
+					}
 					switch newModelReference.GetConceptType() {
 					case core.Reference:
 						newModelReference.SetReferencedConcept(targetModelElement, attributeName, trans)
@@ -719,7 +734,10 @@ func (dm *FyneDiagramManager) linkConnectionChanged(link diagramwidget.DiagramLi
 						}
 					}
 					crlLinkTarget := crlLink.GetLinkTarget(trans)
-					targetModelElement := crlLinkTarget.GetReferencedModelConcept(trans)
+					var targetModelElement *core.Concept
+					if crlLinkTarget != nil {
+						targetModelElement = crlLinkTarget.GetReferencedModelConcept(trans)
+					}
 					switch newModelRefinement.GetConceptType() {
 					case core.Refinement:
 						newModelRefinement.SetRefinedConcept(targetModelElement, trans)

@@ -8,7 +8,7 @@ import (
 // AnchoredTextBinding is a bi-directional mapping transforming changes to and from the fyne-x AnchoredText
 type AnchoredTextBinding interface {
 	FyneAnchoredTextChanged(at *diagramwidget.AnchoredText)
-	Update(notification *ChangeNotification, heldLocks *Transaction) error
+	Update(notification *core.ChangeNotification, heldLocks *core.Transaction) error
 }
 
 // LinkLabelBinding maps the label on a link to the CRL DiagramLink label
@@ -34,6 +34,6 @@ func (llb *LinkLabelBinding) FyneAnchoredTextChanged(at *diagramwidget.AnchoredT
 }
 
 // Update handles the notification that the crl AnchoredText has changed
-func (llb *LinkLabelBinding) Update(notification *ChangeNotification, heldLocks *Transaction) error {
-
+func (llb *LinkLabelBinding) Update(notification *core.ChangeNotification, trans *core.Transaction) error {
+	return nil
 }
