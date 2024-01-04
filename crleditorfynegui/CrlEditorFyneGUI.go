@@ -33,7 +33,7 @@ type CrlEditorFyneGUI struct {
 	treeManager                         *FyneTreeManager
 	window                              fyne.Window
 	windowContent                       fyne.CanvasObject
-	anchoredTextBindingMap              map[string]AnchoredTextBinding
+	anchoredTextBindingMap              map[string]*AnchoredTextBinding
 	conceptStateBindingMap              map[string]*ConceptStateBinding
 	conceptStateBindingMapForProperties map[string]*ConceptStateBinding
 	currentSelectionID                  string
@@ -78,7 +78,7 @@ func NewFyneGUI(crlEditor *crleditor.Editor, providedApp fyne.App) *CrlEditorFyn
 	}
 	FyneGUISingleton = gui
 	gui.editor = crlEditor
-	gui.anchoredTextBindingMap = make(map[string]AnchoredTextBinding)
+	gui.anchoredTextBindingMap = make(map[string]*AnchoredTextBinding)
 	gui.conceptStateBindingMap = make(map[string]*ConceptStateBinding)
 	gui.conceptStateBindingMapForProperties = make(map[string]*ConceptStateBinding)
 	gui.app.Settings().SetTheme(&fyneGuiTheme{})
@@ -133,10 +133,10 @@ func (gui *CrlEditorFyneGUI) addDiagram(parentID string) *crldiagramdomain.CrlDi
 	}
 	gui.markUndoPoint()
 	newDiagram, _ := crldiagramdomain.NewDiagram(trans)
-	newDiagram.ToCore().SetLabel(gui.editor.GetDefaultDiagramLabel(), trans)
-	newDiagram.ToCore().SetOwningConceptID(parentID, trans)
-	gui.editor.SelectElement(newDiagram.ToCore(), trans)
-	gui.editor.GetDiagramManager().DisplayDiagram(newDiagram.ToCore().GetConceptID(trans), trans)
+	newDiagram.AsCore().SetLabel(gui.editor.GetDefaultDiagramLabel(), trans)
+	newDiagram.AsCore().SetOwningConceptID(parentID, trans)
+	gui.editor.SelectElement(newDiagram.AsCore(), trans)
+	gui.editor.GetDiagramManager().DisplayDiagram(newDiagram.AsCore().GetConceptID(trans), trans)
 	return newDiagram
 }
 
@@ -460,7 +460,7 @@ func (gui *CrlEditorFyneGUI) FileLoaded(el *core.Concept, trans *core.Transactio
 }
 
 // GetAnchoredTextBinding returns the AnchoredTextBinding for the given uid.
-func (gui *CrlEditorFyneGUI) GetAnchoredTextBinding(uid string) AnchoredTextBinding {
+func (gui *CrlEditorFyneGUI) GetAnchoredTextBinding(uid string) *AnchoredTextBinding {
 	return gui.anchoredTextBindingMap[uid]
 }
 
@@ -530,7 +530,7 @@ func (gui *CrlEditorFyneGUI) redo() {
 }
 
 // SetAnchoredTextBinding sets the AnchoredTextBinding for the given uid.
-func (gui *CrlEditorFyneGUI) SetAnchoredTextBinding(uid string, binding AnchoredTextBinding) {
+func (gui *CrlEditorFyneGUI) SetAnchoredTextBinding(uid string, binding *AnchoredTextBinding) {
 	gui.anchoredTextBindingMap[uid] = binding
 }
 

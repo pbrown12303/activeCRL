@@ -196,45 +196,44 @@ var CrlDiagramRefinementLinkURI = CrlDiagramDomainURI + "/" + "RefinementLink"
 
 func addAnchoredTextConcepts(anchoredText *CrlDiagramAnchoredText, trans *core.Transaction) {
 	uOfD := trans.GetUniverseOfDiscourse()
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextAnchorXURI, anchoredText.ToCore(), "AnchorX", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextAnchorYURI, anchoredText.ToCore(), "AnchorY", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextAnchorYURI, anchoredText.ToCore(), "AnchorY", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextOffsetXURI, anchoredText.ToCore(), "OffsetX", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextOffsetYURI, anchoredText.ToCore(), "OffsetY", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextVisibleURI, anchoredText.ToCore(), "Visible", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextAnchorXURI, anchoredText.AsCore(), "AnchorX", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextAnchorYURI, anchoredText.AsCore(), "AnchorY", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextOffsetXURI, anchoredText.AsCore(), "OffsetX", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextOffsetYURI, anchoredText.AsCore(), "OffsetY", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramAnchoredTextVisibleURI, anchoredText.AsCore(), "Visible", trans)
 }
 
 func addDiagramElementConcepts(newElement *CrlDiagramElement, trans *core.Transaction) {
 	uOfD := trans.GetUniverseOfDiscourse()
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementModelReferenceURI, newElement.ToCore(), "Model Reference", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementLineColorURI, newElement.ToCore(), "Line Color", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementBGColorURI, newElement.ToCore(), "BG Color", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementModelReferenceURI, newElement.AsCore(), "Model Reference", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementLineColorURI, newElement.AsCore(), "Line Color", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementBGColorURI, newElement.AsCore(), "BG Color", trans)
 }
 
 func addDiagramLinkConcepts(newLink *CrlDiagramLink, trans *core.Transaction) {
 	uOfD := trans.GetUniverseOfDiscourse()
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkSourceURI, newLink.ToCore(), "Source", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkTargetURI, newLink.ToCore(), "Target", trans)
-	displayLabel, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkDisplayLabelURI, newLink.ToCore(), "DisplayLabel", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkSourceURI, newLink.AsCore(), "Source", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkTargetURI, newLink.AsCore(), "Target", trans)
+	displayLabel, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkDisplayLabelURI, newLink.AsCore(), "DisplayLabel", trans)
 	uOfD.AddAbstractionURIToConcept(displayLabel, CrlDiagramAnchoredTextURI, trans)
 	addAnchoredTextConcepts((*CrlDiagramAnchoredText)(displayLabel), trans)
-	abstractionDisplayLabel, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkAbstractionDisplayLabelURI, newLink.ToCore(), "AbstractionDisplayLabel", trans)
+	abstractionDisplayLabel, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkAbstractionDisplayLabelURI, newLink.AsCore(), "AbstractionDisplayLabel", trans)
 	addAnchoredTextConcepts((*CrlDiagramAnchoredText)(abstractionDisplayLabel), trans)
 	addAnchoredTextConcepts((*CrlDiagramAnchoredText)(abstractionDisplayLabel), trans)
 }
 
 func addDiagramNodeConcepts(newNode *CrlDiagramNode, trans *core.Transaction) {
 	uOfD := trans.GetUniverseOfDiscourse()
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeXURI, newNode.ToCore(), "X", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeYURI, newNode.ToCore(), "Y", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeHeightURI, newNode.ToCore(), "Height", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeWidthURI, newNode.ToCore(), "Width", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementDisplayLabelURI, newNode.ToCore(), "DisplayLabel", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementAbstractionDisplayLabelURI, newNode.ToCore(), "AbstractionDisplayLabel", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeXURI, newNode.AsCore(), "X", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeYURI, newNode.AsCore(), "Y", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeHeightURI, newNode.AsCore(), "Height", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramNodeWidthURI, newNode.AsCore(), "Width", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementDisplayLabelURI, newNode.AsCore(), "DisplayLabel", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementAbstractionDisplayLabelURI, newNode.AsCore(), "AbstractionDisplayLabel", trans)
 }
 
-// ToCore casts a diagram element to core.Concept
-func (diagramElement *CrlDiagramElement) ToCore() *core.Concept {
+// AsCore casts a diagram element to core.Concept
+func (diagramElement *CrlDiagramElement) AsCore() *core.Concept {
 	return (*core.Concept)(diagramElement)
 }
 
@@ -258,7 +257,7 @@ func (diagramElement *CrlDiagramElement) ToNode(trans *core.Transaction) *CrlDia
 
 // GetAbstractionDisplayLabel is a convenience function for getting the AbstractionDisplayLabel value for a DiagramElement
 func (diagramElement *CrlDiagramElement) GetAbstractionDisplayLabel(trans *core.Transaction) string {
-	abstractionDisplayLabelLiteral := diagramElement.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementAbstractionDisplayLabelURI, trans)
+	abstractionDisplayLabelLiteral := diagramElement.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementAbstractionDisplayLabelURI, trans)
 	if abstractionDisplayLabelLiteral != nil {
 		return abstractionDisplayLabelLiteral.GetLiteralValue(trans)
 	}
@@ -267,11 +266,11 @@ func (diagramElement *CrlDiagramElement) GetAbstractionDisplayLabel(trans *core.
 
 // GetAnchoredTextWithLabel returns the diagram element's first anchored text child with the given label
 func (diagramElement *CrlDiagramElement) GetAnchoredTextWithLabel(label string, trans *core.Transaction) *CrlDiagramAnchoredText {
-	if !diagramElement.ToCore().IsRefinementOfURI(CrlDiagramElementURI, trans) {
+	if !diagramElement.AsCore().IsRefinementOfURI(CrlDiagramElementURI, trans) {
 		log.Print("GetAnchoredTextWithLabel called for a concept that is not a CrlDiagramElement")
 		return nil
 	}
-	anchoredTexts := diagramElement.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramAnchoredTextURI, trans)
+	anchoredTexts := diagramElement.AsCore().GetOwnedConceptsRefinedFromURI(CrlDiagramAnchoredTextURI, trans)
 	for _, anchoredText := range anchoredTexts {
 		if anchoredText.GetLabel(trans) == label {
 			return (*CrlDiagramAnchoredText)(anchoredText)
@@ -282,7 +281,7 @@ func (diagramElement *CrlDiagramElement) GetAnchoredTextWithLabel(label string, 
 
 // GetBGColor is a convenience function for getting the backgound color value of a DiagramElement
 func (diagramElement *CrlDiagramElement) GetBGColor(trans *core.Transaction) string {
-	BGColorLiteral := diagramElement.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementBGColorURI, trans)
+	BGColorLiteral := diagramElement.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementBGColorURI, trans)
 	if BGColorLiteral != nil {
 		return BGColorLiteral.GetLiteralValue(trans)
 	}
@@ -291,20 +290,20 @@ func (diagramElement *CrlDiagramElement) GetBGColor(trans *core.Transaction) str
 
 // GetDiagram returns the diagram within which the DiagramElement appears
 func (diagramElement *CrlDiagramElement) GetDiagram(trans *core.Transaction) *CrlDiagram {
-	return (*CrlDiagram)(diagramElement.ToCore().GetOwningConcept(trans))
+	return (*CrlDiagram)(diagramElement.AsCore().GetOwningConcept(trans))
 }
 
 // GetDisplayLabel is a convenience function for getting the DisplayLabel value of a DiagramElement
 func (diagramElement *CrlDiagramElement) GetDisplayLabel(trans *core.Transaction) string {
-	displayLabelLiteral := diagramElement.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementDisplayLabelURI, trans)
+	displayLabelLiteral := diagramElement.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementDisplayLabelURI, trans)
 	if displayLabelLiteral != nil {
 		return displayLabelLiteral.GetLiteralValue(trans)
 	}
 	return ""
 }
 
-// ToCore casts the diagram to core.Concept
-func (diagram *CrlDiagram) ToCore() *core.Concept {
+// AsCore casts the diagram to core.Concept
+func (diagram *CrlDiagram) AsCore() *core.Concept {
 	return (*core.Concept)(diagram)
 }
 
@@ -313,7 +312,7 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConcept(concept *core.Conc
 	if concept == nil {
 		return nil
 	}
-	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, trans) {
+	for _, el := range diagram.AsCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept && !el.IsRefinementOfURI(CrlDiagramPointerURI, trans) {
 			return (*CrlDiagramElement)(el)
 		}
@@ -326,7 +325,7 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptID(conceptID string
 	if conceptID == "" {
 		return nil
 	}
-	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, trans) {
+	for _, el := range diagram.AsCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans).GetConceptID(trans) == conceptID && !el.IsRefinementOfURI(CrlDiagramPointerURI, trans) {
 			return (*CrlDiagramElement)(el)
 		}
@@ -339,7 +338,7 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptOwnerPointer(concep
 	if concept == nil {
 		return nil
 	}
-	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
+	for _, el := range diagram.AsCore().GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept {
 			return (*CrlDiagramLink)(el)
 		}
@@ -352,7 +351,7 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptIDOwnerPointer(conc
 	if conceptID == "" {
 		return nil
 	}
-	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
+	for _, el := range diagram.AsCore().GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans).GetConceptID(trans) == conceptID {
 			return (*CrlDiagramLink)(el)
 		}
@@ -365,7 +364,7 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptElementPointer(conc
 	if concept == nil {
 		return nil
 	}
-	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
+	for _, el := range diagram.AsCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept {
 			return (*CrlDiagramLink)(el)
 		}
@@ -378,7 +377,7 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptIDElementPointer(co
 	if conceptID == "" {
 		return nil
 	}
-	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
+	for _, el := range diagram.AsCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans).GetConceptID(trans) == conceptID {
 			return (*CrlDiagramLink)(el)
 		}
@@ -391,7 +390,7 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptAbstractPointer(con
 	if concept == nil {
 		return nil
 	}
-	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramAbstractPointerURI, trans) {
+	for _, el := range diagram.AsCore().GetOwnedConceptsRefinedFromURI(CrlDiagramAbstractPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept {
 			return (*CrlDiagramLink)(el)
 		}
@@ -404,7 +403,7 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptIDAbstractPointer(c
 	if conceptID == "" {
 		return nil
 	}
-	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramAbstractPointerURI, trans) {
+	for _, el := range diagram.AsCore().GetOwnedConceptsRefinedFromURI(CrlDiagramAbstractPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans).GetConceptID(trans) == conceptID {
 			return (*CrlDiagramLink)(el)
 		}
@@ -417,7 +416,7 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptRefinedPointer(conc
 	if concept == nil {
 		return nil
 	}
-	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramRefinedPointerURI, trans) {
+	for _, el := range diagram.AsCore().GetOwnedConceptsRefinedFromURI(CrlDiagramRefinedPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept {
 			return (*CrlDiagramLink)(el)
 		}
@@ -430,7 +429,7 @@ func (diagram *CrlDiagram) GetFirstElementRepresentingConceptIDRefinedPointer(co
 	if conceptID == "" {
 		return nil
 	}
-	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramRefinedPointerURI, trans) {
+	for _, el := range diagram.AsCore().GetOwnedConceptsRefinedFromURI(CrlDiagramRefinedPointerURI, trans) {
 		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans).GetConceptID(trans) == conceptID {
 			return (*CrlDiagramLink)(el)
 		}
@@ -443,21 +442,27 @@ func (diagramElement *CrlDiagramElement) GetLineColor(trans *core.Transaction) s
 	if diagramElement == nil {
 		return ""
 	}
-	lineColorLiteral := diagramElement.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementLineColorURI, trans)
+	lineColorLiteral := diagramElement.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementLineColorURI, trans)
 	if lineColorLiteral != nil {
 		return lineColorLiteral.GetLiteralValue(trans)
 	}
 	return ""
 }
 
-// ToCore casts the CrlDiagramLink to core.Concept
-func (diagramLink *CrlDiagramLink) ToCore() *core.Concept {
+// AsCore casts the CrlDiagramLink to core.Concept
+func (diagramLink *CrlDiagramLink) AsCore() *core.Concept {
 	return (*core.Concept)(diagramLink)
+}
+
+// GetDisplayLabel returns the CrlAnchoredText for the display label
+func (diagramLink *CrlDiagramLink) GetDisplayLabel(trans *core.Transaction) *CrlDiagramAnchoredText {
+	at := diagramLink.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramLinkDisplayLabelURI, trans)
+	return (*CrlDiagramAnchoredText)(at)
 }
 
 // GetLinkSource is a convenience function for getting the source concept of a link
 func (diagramLink *CrlDiagramLink) GetLinkSource(trans *core.Transaction) *CrlDiagramElement {
-	sourceReference := diagramLink.ToCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, trans)
+	sourceReference := diagramLink.AsCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, trans)
 	if sourceReference != nil {
 		referencedConcept := sourceReference.GetReferencedConcept(trans)
 		if referencedConcept != nil && referencedConcept.IsRefinementOfURI(CrlDiagramElementURI, trans) {
@@ -469,12 +474,12 @@ func (diagramLink *CrlDiagramLink) GetLinkSource(trans *core.Transaction) *CrlDi
 
 // GetLinkSourceReference is a convenience function for getting the source reference of a link
 func (diagramLink *CrlDiagramLink) GetLinkSourceReference(trans *core.Transaction) *core.Concept {
-	return diagramLink.ToCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, trans)
+	return diagramLink.AsCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, trans)
 }
 
 // GetLinkTarget is a convenience function for getting the target concept of a link
 func (diagramLink *CrlDiagramLink) GetLinkTarget(trans *core.Transaction) *CrlDiagramElement {
-	targetReference := diagramLink.ToCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
+	targetReference := diagramLink.AsCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
 	if targetReference != nil {
 		referencedConcept := targetReference.GetReferencedConcept(trans)
 		if referencedConcept != nil && referencedConcept.IsRefinementOfURI(CrlDiagramElementURI, trans) {
@@ -486,17 +491,17 @@ func (diagramLink *CrlDiagramLink) GetLinkTarget(trans *core.Transaction) *CrlDi
 
 // GetLinkTargetReference is a convenience function for getting the target reference of a link
 func (diagramLink *CrlDiagramLink) GetLinkTargetReference(trans *core.Transaction) *core.Concept {
-	return diagramLink.ToCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
+	return diagramLink.AsCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
 }
 
-// ToCore casts CrlDiagramNode to core.Concept
-func (diagramNode *CrlDiagramNode) ToCore() *core.Concept {
+// AsCore casts CrlDiagramNode to core.Concept
+func (diagramNode *CrlDiagramNode) AsCore() *core.Concept {
 	return (*core.Concept)(diagramNode)
 }
 
 // GetNodeHeight is a convenience function for getting the Height value of a node's position
 func (diagramNode *CrlDiagramNode) GetNodeHeight(trans *core.Transaction) float64 {
-	heightLiteral := diagramNode.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeHeightURI, trans)
+	heightLiteral := diagramNode.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeHeightURI, trans)
 	if heightLiteral != nil {
 		value := heightLiteral.GetLiteralValue(trans)
 		numericValue, err := strconv.ParseFloat(value, 64)
@@ -509,7 +514,7 @@ func (diagramNode *CrlDiagramNode) GetNodeHeight(trans *core.Transaction) float6
 
 // GetNodeWidth is a convenience function for getting the Width value of a node's position
 func (diagramNode *CrlDiagramNode) GetNodeWidth(trans *core.Transaction) float64 {
-	widthLiteral := diagramNode.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeWidthURI, trans)
+	widthLiteral := diagramNode.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeWidthURI, trans)
 	if widthLiteral != nil {
 		value := widthLiteral.GetLiteralValue(trans)
 		numericValue, err := strconv.ParseFloat(value, 64)
@@ -525,7 +530,7 @@ func (diagramNode *CrlDiagramNode) GetNodeX(trans *core.Transaction) float64 {
 	if diagramNode == nil {
 		return 0.0
 	}
-	xLiteral := diagramNode.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeXURI, trans)
+	xLiteral := diagramNode.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeXURI, trans)
 	if xLiteral != nil {
 		value := xLiteral.GetLiteralValue(trans)
 		numericValue, err := strconv.ParseFloat(value, 64)
@@ -538,7 +543,7 @@ func (diagramNode *CrlDiagramNode) GetNodeX(trans *core.Transaction) float64 {
 
 // GetNodeY is a convenience function for getting the X value of a node's position
 func (diagramNode *CrlDiagramNode) GetNodeY(trans *core.Transaction) float64 {
-	yLiteral := diagramNode.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeYURI, trans)
+	yLiteral := diagramNode.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeYURI, trans)
 	if yLiteral != nil {
 		value := yLiteral.GetLiteralValue(trans)
 		numericValue, err := strconv.ParseFloat(value, 64)
@@ -549,14 +554,14 @@ func (diagramNode *CrlDiagramNode) GetNodeY(trans *core.Transaction) float64 {
 	return 0.0
 }
 
-// ToCore casts CrlDiagramAnchoredText to core.Concept
-func (anchoredText *CrlDiagramAnchoredText) ToCore() *core.Concept {
+// AsCore casts CrlDiagramAnchoredText to core.Concept
+func (anchoredText *CrlDiagramAnchoredText) AsCore() *core.Concept {
 	return (*core.Concept)(anchoredText)
 }
 
 // GetOffsetX returns the x offset value for an anchored text
 func (anchoredText *CrlDiagramAnchoredText) GetOffsetX(trans *core.Transaction) float64 {
-	xOffsetLiteral := anchoredText.ToCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramAnchoredTextOffsetXURI, trans)
+	xOffsetLiteral := anchoredText.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramAnchoredTextOffsetXURI, trans)
 	if xOffsetLiteral == nil {
 		log.Printf("GetOffsetX called but no xOffsetLiteral was found")
 		return 0
@@ -569,13 +574,110 @@ func (anchoredText *CrlDiagramAnchoredText) GetOffsetX(trans *core.Transaction) 
 	return xOffset
 }
 
+// GetOffsetY returns the x offset value for an anchored text
+func (anchoredText *CrlDiagramAnchoredText) GetOffsetY(trans *core.Transaction) float64 {
+	xOffsetLiteral := anchoredText.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramAnchoredTextOffsetYURI, trans)
+	if xOffsetLiteral == nil {
+		log.Printf("GetOffsetY called but no xOffsetLiteral was found")
+		return 0
+	}
+	xOffset, err := strconv.ParseFloat(xOffsetLiteral.GetLiteralValue(trans), 64)
+	if err != nil {
+		errors.Wrap(err, "GetOffsetY failed")
+		return 0
+	}
+	return xOffset
+}
+
+// GetAnchorX returns the x anchor value for an anchored text
+func (anchoredText *CrlDiagramAnchoredText) GetAnchorX(trans *core.Transaction) float64 {
+	xAnchorLiteral := anchoredText.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramAnchoredTextAnchorXURI, trans)
+	if xAnchorLiteral == nil {
+		log.Printf("GetAnchorX called but no xAnchorLiteral was found")
+		return 0
+	}
+	xAnchor, err := strconv.ParseFloat(xAnchorLiteral.GetLiteralValue(trans), 64)
+	if err != nil {
+		errors.Wrap(err, "GetAnchorX failed")
+		return 0
+	}
+	return xAnchor
+}
+
+// GetAnchorY returns the x anchor value for an anchored text
+func (anchoredText *CrlDiagramAnchoredText) GetAnchorY(trans *core.Transaction) float64 {
+	yAnchorLiteral := anchoredText.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramAnchoredTextAnchorYURI, trans)
+	if yAnchorLiteral == nil {
+		log.Printf("GetAnchorY called but no xAnchorLiteral was found")
+		return 0
+	}
+	yAnchor, err := strconv.ParseFloat(yAnchorLiteral.GetLiteralValue(trans), 64)
+	if err != nil {
+		errors.Wrap(err, "GetAnchorY failed")
+		return 0
+	}
+	return yAnchor
+}
+
+// SetOffsetX sets the x offset value for an anchored text
+func (anchoredText *CrlDiagramAnchoredText) SetOffsetX(value float64, trans *core.Transaction) {
+	xOffsetLiteral := anchoredText.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramAnchoredTextOffsetXURI, trans)
+	if xOffsetLiteral == nil {
+		log.Printf("SetOffsetX called but no xOffsetLiteral was found")
+		return
+	}
+	xOffset := fmt.Sprintf("%f", value)
+	if xOffset != xOffsetLiteral.GetLiteralValue(trans) {
+		xOffsetLiteral.SetLiteralValue(xOffset, trans)
+	}
+}
+
+// SetOffsetY sets the y offset value for an anchored text
+func (anchoredText *CrlDiagramAnchoredText) SetOffsetY(value float64, trans *core.Transaction) {
+	yOffsetLiteral := anchoredText.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramAnchoredTextOffsetYURI, trans)
+	if yOffsetLiteral == nil {
+		log.Printf("SetOffsetY called but no xOffsetLiteral was found")
+		return
+	}
+	yOffset := fmt.Sprintf("%f", value)
+	if yOffset != yOffsetLiteral.GetLiteralValue(trans) {
+		yOffsetLiteral.SetLiteralValue(yOffset, trans)
+	}
+}
+
+// SetAnchorX sets the x anchor value for an anchored text
+func (anchoredText *CrlDiagramAnchoredText) SetAnchorX(value float64, trans *core.Transaction) {
+	xAnchorLiteral := anchoredText.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramAnchoredTextAnchorXURI, trans)
+	if xAnchorLiteral == nil {
+		log.Printf("SetAnchorX called but no xAnchorLiteral was found")
+		return
+	}
+	xAnchor := fmt.Sprintf("%f", value)
+	if xAnchor != xAnchorLiteral.GetLiteralValue(trans) {
+		xAnchorLiteral.SetLiteralValue(xAnchor, trans)
+	}
+}
+
+// SetAnchorY sets the y anchor value for an anchored text
+func (anchoredText *CrlDiagramAnchoredText) SetAnchorY(value float64, trans *core.Transaction) {
+	yAnchorLiteral := anchoredText.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramAnchoredTextAnchorYURI, trans)
+	if yAnchorLiteral == nil {
+		log.Printf("SetAnchorY called but no xAnchorLiteral was found")
+		return
+	}
+	yAnchor := fmt.Sprintf("%f", value)
+	if yAnchor != yAnchorLiteral.GetLiteralValue(trans) {
+		yAnchorLiteral.SetLiteralValue(yAnchor, trans)
+	}
+}
+
 // GetOwnerPointer returns the ownerPointer for the concept if one exists
 func (diagram *CrlDiagram) GetOwnerPointer(concept *CrlDiagramElement, trans *core.Transaction) *CrlDiagramLink {
 	if concept == nil {
 		return nil
 	}
-	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
-		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept.ToCore() {
+	for _, el := range diagram.AsCore().GetOwnedConceptsRefinedFromURI(CrlDiagramOwnerPointerURI, trans) {
+		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept.AsCore() {
 			return (*CrlDiagramLink)(el)
 		}
 	}
@@ -587,8 +689,8 @@ func (diagram *CrlDiagram) GetElementPointer(concept *CrlDiagramElement, trans *
 	if concept == nil {
 		return nil
 	}
-	for _, el := range diagram.ToCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
-		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept.ToCore() {
+	for _, el := range diagram.AsCore().GetOwnedConceptsRefinedFromURI(CrlDiagramElementPointerURI, trans) {
+		if (*CrlDiagramElement)(el).GetReferencedModelConcept(trans) == concept.AsCore() {
 			return (*CrlDiagramLink)(el)
 		}
 	}
@@ -598,7 +700,7 @@ func (diagram *CrlDiagram) GetElementPointer(concept *CrlDiagramElement, trans *
 // GetReferencedModelConcept is a function on a CrlDiagramElement that returns the model element represented by the
 // diagram node
 func (diagramElement *CrlDiagramElement) GetReferencedModelConcept(trans *core.Transaction) *core.Concept {
-	reference := diagramElement.ToCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, trans)
+	reference := diagramElement.AsCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, trans)
 	if reference != nil {
 		return reference.GetReferencedConcept(trans)
 	}
@@ -779,18 +881,18 @@ func NewDiagram(trans *core.Transaction) (*CrlDiagram, error) {
 	uOfD := trans.GetUniverseOfDiscourse()
 	newElement, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramURI, "New Diagram", trans)
 	newDiagram := (*CrlDiagram)(newElement)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramWidthURI, newDiagram.ToCore(), "Width", trans)
-	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramHeightURI, newDiagram.ToCore(), "Height", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramWidthURI, newDiagram.AsCore(), "Width", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramHeightURI, newDiagram.AsCore(), "Height", trans)
 	return newDiagram, nil
 }
 
-// ToCrlDiagramElement casts a CrlDiagramNode to a CrlDiagramElement
-func (diagramNode *CrlDiagramNode) ToCrlDiagramElement() *CrlDiagramElement {
+// AsDiagramElement casts a CrlDiagramNode to a CrlDiagramElement
+func (diagramNode *CrlDiagramNode) AsDiagramElement() *CrlDiagramElement {
 	return (*CrlDiagramElement)(diagramNode)
 }
 
-// ToCrlDiagramElement casts a CrlDiagramLink to a CrlDiagramElement
-func (diagramLink *CrlDiagramLink) ToCrlDiagramElement() *CrlDiagramElement {
+// AsCrlDiagramElement casts a CrlDiagramLink to a CrlDiagramElement
+func (diagramLink *CrlDiagramLink) AsCrlDiagramElement() *CrlDiagramElement {
 	return (*CrlDiagramElement)(diagramLink)
 }
 
@@ -799,9 +901,9 @@ func NewDiagramNode(trans *core.Transaction) (*CrlDiagramNode, error) {
 	uOfD := trans.GetUniverseOfDiscourse()
 	newElement, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramNodeURI, "New Node", trans)
 	newNode := (*CrlDiagramNode)(newElement)
-	addDiagramElementConcepts(newNode.ToCrlDiagramElement(), trans)
+	addDiagramElementConcepts(newNode.AsDiagramElement(), trans)
 	addDiagramNodeConcepts(newNode, trans)
-	newNode.ToCrlDiagramElement().SetLineColor("#00000000", trans)
+	newNode.AsDiagramElement().SetLineColor("#00000000", trans)
 	return newNode, nil
 }
 
@@ -810,9 +912,9 @@ func NewDiagramReferenceLink(trans *core.Transaction) (*CrlDiagramLink, error) {
 	uOfD := trans.GetUniverseOfDiscourse()
 	newElement, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramReferenceLinkURI, "ReferenceLink", trans)
 	newLink := (*CrlDiagramLink)(newElement)
-	addDiagramElementConcepts(newLink.ToCrlDiagramElement(), trans)
+	addDiagramElementConcepts(newLink.AsCrlDiagramElement(), trans)
 	addDiagramLinkConcepts(newLink, trans)
-	multiplicity, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkMultiplicityURI, newLink.ToCore(), "Multiplicity", trans)
+	multiplicity, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkMultiplicityURI, newLink.AsCore(), "Multiplicity", trans)
 	addAnchoredTextConcepts((*CrlDiagramAnchoredText)(multiplicity), trans)
 	return newLink, nil
 }
@@ -822,7 +924,7 @@ func NewDiagramRefinementLink(trans *core.Transaction) (*CrlDiagramLink, error) 
 	uOfD := trans.GetUniverseOfDiscourse()
 	newObject, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramRefinementLinkURI, "RefinementLink", trans)
 	newLink := (*CrlDiagramLink)(newObject)
-	addDiagramElementConcepts(newLink.ToCrlDiagramElement(), trans)
+	addDiagramElementConcepts(newLink.AsCrlDiagramElement(), trans)
 	addDiagramLinkConcepts(newLink, trans)
 	return newLink, nil
 }
@@ -832,9 +934,9 @@ func NewDiagramOwnerPointer(trans *core.Transaction) (*CrlDiagramLink, error) {
 	uOfD := trans.GetUniverseOfDiscourse()
 	newObject, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramOwnerPointerURI, "OwnerPointer", trans)
 	newPointer := (*CrlDiagramLink)(newObject)
-	addDiagramElementConcepts(newPointer.ToCrlDiagramElement(), trans)
+	addDiagramElementConcepts(newPointer.AsCrlDiagramElement(), trans)
 	addDiagramLinkConcepts(newPointer, trans)
-	multiplicity, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkMultiplicityURI, newPointer.ToCore(), "Multiplicity", trans)
+	multiplicity, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkMultiplicityURI, newPointer.AsCore(), "Multiplicity", trans)
 	addAnchoredTextConcepts((*CrlDiagramAnchoredText)(multiplicity), trans)
 	return newPointer, nil
 }
@@ -844,7 +946,7 @@ func NewDiagramElementPointer(trans *core.Transaction) (*CrlDiagramLink, error) 
 	uOfD := trans.GetUniverseOfDiscourse()
 	newObject, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramElementPointerURI, "ElementPointer", trans)
 	newPointer := (*CrlDiagramLink)(newObject)
-	addDiagramElementConcepts((*CrlDiagramElement)(newPointer.ToCore()), trans)
+	addDiagramElementConcepts((*CrlDiagramElement)(newPointer.AsCore()), trans)
 	addDiagramLinkConcepts(newPointer, trans)
 	return newPointer, nil
 }
@@ -854,7 +956,7 @@ func NewDiagramAbstractPointer(trans *core.Transaction) (*CrlDiagramLink, error)
 	uOfD := trans.GetUniverseOfDiscourse()
 	newObject, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramAbstractPointerURI, "AbstractPointer", trans)
 	newPointer := (*CrlDiagramLink)(newObject)
-	addDiagramElementConcepts(newPointer.ToCrlDiagramElement(), trans)
+	addDiagramElementConcepts(newPointer.AsCrlDiagramElement(), trans)
 	addDiagramLinkConcepts(newPointer, trans)
 	return newPointer, nil
 }
@@ -864,7 +966,7 @@ func NewDiagramRefinedPointer(trans *core.Transaction) (*CrlDiagramLink, error) 
 	uOfD := trans.GetUniverseOfDiscourse()
 	newObject, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramRefinedPointerURI, "RefinedPointer", trans)
 	newPointer := (*CrlDiagramLink)(newObject)
-	addDiagramElementConcepts(newPointer.ToCrlDiagramElement(), trans)
+	addDiagramElementConcepts(newPointer.AsCrlDiagramElement(), trans)
 	addDiagramLinkConcepts(newPointer, trans)
 	return newPointer, nil
 }
@@ -874,12 +976,12 @@ func (diagramElement *CrlDiagramElement) SetAbstractionDisplayLabel(value string
 	if diagramElement == nil {
 		return
 	}
-	literal := diagramElement.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementAbstractionDisplayLabelURI, trans)
+	literal := diagramElement.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementAbstractionDisplayLabelURI, trans)
 	if literal == nil {
 		return
 	}
 	literal.SetLiteralValue(value, trans)
-	if IsDiagramNode(diagramElement.ToCore(), trans) {
+	if IsDiagramNode(diagramElement.AsCore(), trans) {
 		(*CrlDiagramNode)(diagramElement).updateNodeSize(trans)
 	}
 }
@@ -887,27 +989,27 @@ func (diagramElement *CrlDiagramElement) SetAbstractionDisplayLabel(value string
 // SetDisplayLabel is a function on a CrlDiagramNode that sets the display label of the diagram element.
 // If the diagram element is a pointer, the value is ignored and the label is set to the empty string
 func (diagramElement *CrlDiagramElement) SetDisplayLabel(value string, trans *core.Transaction) {
-	literal := diagramElement.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementDisplayLabelURI, trans)
+	literal := diagramElement.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementDisplayLabelURI, trans)
 	if literal == nil {
 		return
 	}
-	if IsDiagramPointer(diagramElement.ToCore(), trans) {
+	if IsDiagramPointer(diagramElement.AsCore(), trans) {
 		literal.SetLiteralValue("", trans)
 	} else {
 		literal.SetLiteralValue(value, trans)
 	}
-	if IsDiagramNode(diagramElement.ToCore(), trans) {
+	if IsDiagramNode(diagramElement.AsCore(), trans) {
 		(*CrlDiagramNode)(diagramElement).updateNodeSize(trans)
 	}
 }
 
 // SetLineColor is a function on a CrlDiagramElement that sets the line color for the diagram element.
 func (diagramElement *CrlDiagramElement) SetLineColor(value string, trans *core.Transaction) {
-	literal := diagramElement.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementLineColorURI, trans)
+	literal := diagramElement.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementLineColorURI, trans)
 	if literal == nil {
 		// This is remedial code: the literal should already be there
 		uOfD := trans.GetUniverseOfDiscourse()
-		literal, _ = uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementLineColorURI, diagramElement.ToCore(), "Line Color", trans)
+		literal, _ = uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementLineColorURI, diagramElement.AsCore(), "Line Color", trans)
 	}
 	literal.SetLiteralValue(value, trans)
 }
@@ -915,13 +1017,13 @@ func (diagramElement *CrlDiagramElement) SetLineColor(value string, trans *core.
 // SetBGColor is a function on a CrlDiagramNode that sets the background color for the diagram element.
 // If the diagram element is a pointer, the value is ignored and the label is set to the empty string
 func (diagramElement *CrlDiagramElement) SetBGColor(value string, trans *core.Transaction) {
-	literal := diagramElement.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementBGColorURI, trans)
+	literal := diagramElement.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramElementBGColorURI, trans)
 	if literal == nil {
 		// This is remedial code: the literal should already be there
 		uOfD := trans.GetUniverseOfDiscourse()
-		literal, _ = uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementBGColorURI, diagramElement.ToCore(), "Background Color", trans)
+		literal, _ = uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramElementBGColorURI, diagramElement.AsCore(), "Background Color", trans)
 	}
-	if IsDiagramPointer(diagramElement.ToCore(), trans) {
+	if IsDiagramPointer(diagramElement.AsCore(), trans) {
 		literal.SetLiteralValue("", trans)
 	} else {
 		literal.SetLiteralValue(value, trans)
@@ -930,78 +1032,78 @@ func (diagramElement *CrlDiagramElement) SetBGColor(value string, trans *core.Tr
 
 // SetDiagram sets the owner of the DiagramElement to the Diagram
 func (diagramElement *CrlDiagramElement) SetDiagram(diagram *CrlDiagram, trans *core.Transaction) {
-	diagramElement.ToCore().SetOwningConcept(diagram.ToCore(), trans)
+	diagramElement.AsCore().SetOwningConcept(diagram.AsCore(), trans)
 }
 
 // IsRefinementLink returns true if the link represents a refinement
 func (diagramLink *CrlDiagramLink) IsRefinementLink(trans *core.Transaction) bool {
-	return diagramLink.ToCore().IsRefinementOfURI(CrlDiagramRefinementLinkURI, trans)
+	return diagramLink.AsCore().IsRefinementOfURI(CrlDiagramRefinementLinkURI, trans)
 }
 
 // IsReferenceLink returns true if the link represents a reference
 func (diagramLink *CrlDiagramLink) IsReferenceLink(trans *core.Transaction) bool {
-	return diagramLink.ToCore().IsRefinementOfURI(CrlDiagramReferenceLinkURI, trans)
+	return diagramLink.AsCore().IsRefinementOfURI(CrlDiagramReferenceLinkURI, trans)
 }
 
 // IsOwnerPointer returns true if the link represents an owner pointer
 func (diagramLink *CrlDiagramLink) IsOwnerPointer(trans *core.Transaction) bool {
-	return diagramLink.ToCore().IsRefinementOfURI(CrlDiagramOwnerPointerURI, trans)
+	return diagramLink.AsCore().IsRefinementOfURI(CrlDiagramOwnerPointerURI, trans)
 }
 
 // IsElementPointer returns true if the link represents a referenced element pointer
 func (diagramLink *CrlDiagramLink) IsElementPointer(trans *core.Transaction) bool {
-	return diagramLink.ToCore().IsRefinementOfURI(CrlDiagramElementPointerURI, trans)
+	return diagramLink.AsCore().IsRefinementOfURI(CrlDiagramElementPointerURI, trans)
 }
 
 // IsAbstractPointer returns trkue if the link represents an abstract pointer
 func (diagramLink *CrlDiagramLink) IsAbstractPointer(trans *core.Transaction) bool {
-	return diagramLink.ToCore().IsRefinementOfURI(CrlDiagramAbstractPointerURI, trans)
+	return diagramLink.AsCore().IsRefinementOfURI(CrlDiagramAbstractPointerURI, trans)
 }
 
 // IsRefinedPointer returns true if the link represents a refined pointer
 func (diagramLink *CrlDiagramLink) IsRefinedPointer(trans *core.Transaction) bool {
-	return diagramLink.ToCore().IsRefinementOfURI(CrlDiagramRefinedPointerURI, trans)
+	return diagramLink.AsCore().IsRefinementOfURI(CrlDiagramRefinedPointerURI, trans)
 }
 
 // IsDiagramPointer returns true if the link represents a pointer
 func (diagramLink *CrlDiagramLink) IsDiagramPointer(trans *core.Transaction) bool {
-	return diagramLink.ToCore().IsRefinementOfURI(CrlDiagramPointerURI, trans)
+	return diagramLink.AsCore().IsRefinementOfURI(CrlDiagramPointerURI, trans)
 }
 
 // IsDiagramPointer returns true if the link represents a pointer
 func (diagramElement *CrlDiagramElement) IsDiagramPointer(trans *core.Transaction) bool {
-	return diagramElement.ToCore().IsRefinementOfURI(CrlDiagramPointerURI, trans)
+	return diagramElement.AsCore().IsRefinementOfURI(CrlDiagramPointerURI, trans)
 }
 
 // IsLink returns true if the diagram element is a link
 func (diagramElement *CrlDiagramElement) IsLink(trans *core.Transaction) bool {
-	return diagramElement.ToCore().IsRefinementOfURI(CrlDiagramLinkURI, trans)
+	return diagramElement.AsCore().IsRefinementOfURI(CrlDiagramLinkURI, trans)
 }
 
 // IsNode returns true if the diagram element is a node
 func (diagramElement *CrlDiagramElement) IsNode(trans *core.Transaction) bool {
-	return diagramElement.ToCore().IsRefinementOfURI(CrlDiagramNodeURI, trans)
+	return diagramElement.AsCore().IsRefinementOfURI(CrlDiagramNodeURI, trans)
 }
 
 // SetLinkSource is a convenience function for setting the source concept of a link
 func (diagramLink *CrlDiagramLink) SetLinkSource(source *CrlDiagramElement, trans *core.Transaction) {
-	sourceReference := diagramLink.ToCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, trans)
+	sourceReference := diagramLink.AsCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, trans)
 	if sourceReference != nil {
-		sourceReference.SetReferencedConcept(source.ToCore(), core.NoAttribute, trans)
+		sourceReference.SetReferencedConcept(source.AsCore(), core.NoAttribute, trans)
 	}
 }
 
 // SetLinkTarget is a convenience function for setting the target concept of a link
 func (diagramLink *CrlDiagramLink) SetLinkTarget(target *CrlDiagramElement, trans *core.Transaction) {
-	targetReference := diagramLink.ToCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
+	targetReference := diagramLink.AsCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
 	if targetReference != nil {
-		targetReference.SetReferencedConcept(target.ToCore(), core.NoAttribute, trans)
+		targetReference.SetReferencedConcept(target.AsCore(), core.NoAttribute, trans)
 	}
 }
 
 // SetNodeHeight is a function on a CrlDiagramNode that sets the height of the diagram node
 func (diagramNode *CrlDiagramNode) SetNodeHeight(value float64, trans *core.Transaction) {
-	literal := diagramNode.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeHeightURI, trans)
+	literal := diagramNode.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeHeightURI, trans)
 	if literal == nil {
 		return
 	}
@@ -1010,7 +1112,7 @@ func (diagramNode *CrlDiagramNode) SetNodeHeight(value float64, trans *core.Tran
 
 // SetNodeWidth is a function on a CrlDiagramNode that sets the width of the diagram node
 func (diagramNode *CrlDiagramNode) SetNodeWidth(value float64, trans *core.Transaction) {
-	literal := diagramNode.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeWidthURI, trans)
+	literal := diagramNode.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeWidthURI, trans)
 	if literal == nil {
 		return
 	}
@@ -1019,7 +1121,7 @@ func (diagramNode *CrlDiagramNode) SetNodeWidth(value float64, trans *core.Trans
 
 // SetNodeX is a function on a CrlDiagramNode that sets the x of the diagram node
 func (diagramNode *CrlDiagramNode) SetNodeX(value float64, trans *core.Transaction) {
-	literal := diagramNode.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeXURI, trans)
+	literal := diagramNode.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeXURI, trans)
 	if literal == nil {
 		return
 	}
@@ -1031,24 +1133,11 @@ func (diagramNode *CrlDiagramNode) SetNodeY(value float64, trans *core.Transacti
 	if diagramNode == nil {
 		return
 	}
-	literal := diagramNode.ToCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeYURI, trans)
+	literal := diagramNode.AsCore().GetFirstOwnedLiteralRefinementOfURI(CrlDiagramNodeYURI, trans)
 	if literal == nil {
 		return
 	}
 	literal.SetLiteralValue(strconv.FormatFloat(value, 'f', -1, 64), trans)
-}
-
-// SetOffsetX sets the x offset value for an anchored text
-func (anchoredText *CrlDiagramAnchoredText) SetOffsetX(value float64, trans *core.Transaction) {
-	xOffsetLiteral := anchoredText.ToCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramAnchoredTextOffsetXURI, trans)
-	if xOffsetLiteral == nil {
-		log.Printf("SetOffsetX called but no xOffsetLiteral was found")
-		return
-	}
-	xOffset := fmt.Sprintf("%f", value)
-	if xOffset != xOffsetLiteral.GetLiteralValue(trans) {
-		xOffsetLiteral.SetLiteralValue(xOffset, trans)
-	}
 }
 
 // SetReferencedModelConcept is a function on a CrlDiagramNode that sets the model element represented by the
@@ -1057,7 +1146,7 @@ func (diagramElement *CrlDiagramElement) SetReferencedModelConcept(el *core.Conc
 	if diagramElement == nil {
 		return
 	}
-	reference := diagramElement.ToCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, trans)
+	reference := diagramElement.AsCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, trans)
 	if reference == nil {
 		return
 	}
@@ -1162,7 +1251,7 @@ func updateDiagramElement(changedElement *core.Concept, notification *core.Chang
 	}
 	// Suppress circular notifications
 	underlyingChange := notification.GetUnderlyingChange()
-	if underlyingChange != nil && underlyingChange.IsReferenced(diagramElement.ToCore()) {
+	if underlyingChange != nil && underlyingChange.IsReferenced(diagramElement.AsCore()) {
 		return nil
 	}
 
@@ -1171,7 +1260,7 @@ func updateDiagramElement(changedElement *core.Concept, notification *core.Chang
 	//   - the label of the referenced model element
 	//   - the list of immediate abstractions of the referenced model element.
 	// First, determine whether it is the referenced model element that has changed
-	diagramElementModelReference := diagramElement.ToCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, trans)
+	diagramElementModelReference := diagramElement.AsCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramElementModelReferenceURI, trans)
 	if diagramElementModelReference == nil {
 		// Without a model reference, there is nothing to do. This scenario can occur during diagramElement deletion.
 		return nil
@@ -1185,21 +1274,30 @@ func updateDiagramElement(changedElement *core.Concept, notification *core.Chang
 				// The underlying change is from the model reference
 				diagramElement.updateForModelElementChange(modelElement, trans)
 			}
+			// If the reporting element of the underlying change is the display label, then
+			// see if the label needs to change
+			underlyingReportingElement := uOfD.GetElement(underlyingChange.GetReportingElementID())
+			if IsDisplayLabel(underlyingReportingElement, trans) {
+				displayLabelText := underlyingReportingElement.GetLiteralValue(trans)
+				if modelElement.GetLabel(trans) != displayLabelText {
+					modelElement.SetLabel(displayLabelText, trans)
+				}
+			}
 		case core.ReferencedConceptChanged:
 			underlyingReportingElementID := underlyingChange.GetReportingElementID()
 			if underlyingReportingElementID == diagramElementModelReference.GetConceptID(trans) {
 				// The underlying change is from the model reference
-				if IsDiagramNode(diagramElement.ToCore(), trans) {
+				if IsDiagramNode(diagramElement.AsCore(), trans) {
 					currentModelElement := underlyingChange.GetAfterConceptState()
 					previousModelElement := underlyingChange.GetBeforeConceptState()
 					if currentModelElement != nil && previousModelElement != nil {
 						if currentModelElement.ReferencedConceptID == "" && previousModelElement.ReferencedConceptID != "" {
-							uOfD.DeleteElement(diagramElement.ToCore(), trans)
+							uOfD.DeleteElement(diagramElement.AsCore(), trans)
 						} else {
 							diagramElement.updateForModelElementChange(modelElement, trans)
 						}
 					}
-				} else if IsDiagramLink(diagramElement.ToCore(), trans) {
+				} else if IsDiagramLink(diagramElement.AsCore(), trans) {
 					// First see if the underlying model element has been deleted
 					currentModelElement := underlyingChange.GetAfterConceptState()
 					previousModelElement := underlyingChange.GetBeforeConceptState()
@@ -1214,30 +1312,30 @@ func updateDiagramElement(changedElement *core.Concept, notification *core.Chang
 					if currentModelElement != nil && previousModelElement != nil {
 						if currentReferencedModelElementID == "" && previousReferencedModelElementID != "" {
 							// If the underlying model element has been deleted then delete the diagram element
-							uOfD.DeleteElement(diagramElement.ToCore(), trans)
+							uOfD.DeleteElement(diagramElement.AsCore(), trans)
 						} else {
 							// Otherwise we update the diagram element
 							previousReferencedModelElement := uOfD.GetElement(previousReferencedModelElementID)
 							switch modelElement.GetConceptType() {
 							case core.Reference:
-								if IsDiagramElementPointer(diagramElement.ToCore(), trans) {
+								if IsDiagramElementPointer(diagramElement.AsCore(), trans) {
 									currentReferencedModelElement := modelElement.GetReferencedConcept(trans)
 									if previousReferencedModelElement != currentReferencedModelElement {
 										if currentReferencedModelElement == nil {
-											uOfD.DeleteElement(diagramElement.ToCore(), trans)
+											uOfD.DeleteElement(diagramElement.AsCore(), trans)
 										} else {
 											newTargetDiagramElement := diagram.GetFirstElementRepresentingConcept(currentReferencedModelElement, trans)
 											(*CrlDiagramLink)(diagramElement).SetLinkTarget(newTargetDiagramElement, trans)
 										}
 									}
-								} else if IsDiagramReferenceLink(diagramElement.ToCore(), trans) {
+								} else if IsDiagramReferenceLink(diagramElement.AsCore(), trans) {
 									diagramReferenceLink := (*CrlDiagramLink)(diagramElement)
 									diagramElement.updateForModelElementChange(modelElement, trans)
 									diagramElement.SetDisplayLabel(modelElement.GetLabel(trans), trans)
 									newModelTarget := modelElement.GetReferencedConcept(trans)
 									newModelSource := modelElement.GetOwningConcept(trans)
 									if newModelSource == nil || newModelTarget == nil {
-										uOfD.DeleteElement(diagramElement.ToCore(), trans)
+										uOfD.DeleteElement(diagramElement.AsCore(), trans)
 										return nil
 									}
 									currentDiagramSource := diagramReferenceLink.GetLinkSource(trans)
@@ -1247,7 +1345,7 @@ func updateDiagramElement(changedElement *core.Concept, notification *core.Chang
 									if currentModelSource != newModelSource {
 										newDiagramSource := diagram.GetFirstElementRepresentingConcept(newModelSource, trans)
 										if newDiagramSource == nil {
-											uOfD.DeleteElement(diagramElement.ToCore(), trans)
+											uOfD.DeleteElement(diagramElement.AsCore(), trans)
 											return nil
 										}
 										diagramReferenceLink.SetLinkSource(newDiagramSource, trans)
@@ -1255,7 +1353,7 @@ func updateDiagramElement(changedElement *core.Concept, notification *core.Chang
 									if currentModelTarget != newModelTarget {
 										newDiagramTarget := diagram.GetFirstElementRepresentingConcept(newModelTarget, trans)
 										if newDiagramTarget == nil {
-											uOfD.DeleteElement(diagramElement.ToCore(), trans)
+											uOfD.DeleteElement(diagramElement.AsCore(), trans)
 											return nil
 										}
 										diagramReferenceLink.SetLinkTarget(newDiagramTarget, trans)
@@ -1263,32 +1361,32 @@ func updateDiagramElement(changedElement *core.Concept, notification *core.Chang
 								}
 							case core.Refinement:
 								refinement := modelElement
-								if IsDiagramPointer(diagramElement.ToCore(), trans) {
+								if IsDiagramPointer(diagramElement.AsCore(), trans) {
 									diagramPointer := (*CrlDiagramLink)(diagramElement)
 									var newTargetModelElement *core.Concept
-									if IsDiagramAbstractPointer(diagramPointer.ToCore(), trans) {
+									if IsDiagramAbstractPointer(diagramPointer.AsCore(), trans) {
 										newTargetModelElement = refinement.GetAbstractConcept(trans)
-									} else if IsDiagramRefinedPointer(diagramPointer.ToCore(), trans) {
+									} else if IsDiagramRefinedPointer(diagramPointer.AsCore(), trans) {
 										newTargetModelElement = refinement.GetRefinedConcept(trans)
-									} else if IsDiagramOwnerPointer(diagramPointer.ToCore(), trans) {
+									} else if IsDiagramOwnerPointer(diagramPointer.AsCore(), trans) {
 										newTargetModelElement = refinement.GetOwningConcept(trans)
 									}
 									if previousReferencedModelElement != newTargetModelElement {
 										if newTargetModelElement == nil {
-											uOfD.DeleteElement(diagramElement.ToCore(), trans)
+											uOfD.DeleteElement(diagramElement.AsCore(), trans)
 										} else {
 											newTargetDiagramElement := diagram.GetFirstElementRepresentingConcept(newTargetModelElement, trans)
 											diagramPointer.SetLinkTarget(newTargetDiagramElement, trans)
 										}
 									}
-								} else if IsDiagramRefinementLink(diagramElement.ToCore(), trans) {
+								} else if IsDiagramRefinementLink(diagramElement.AsCore(), trans) {
 									refinementLink := (*CrlDiagramLink)(diagramElement)
 									diagramElement.updateForModelElementChange(modelElement, trans)
 									diagramElement.SetDisplayLabel(refinement.GetLabel(trans), trans)
 									newModelTarget := refinement.GetAbstractConcept(trans)
 									newModelSource := refinement.GetRefinedConcept(trans)
 									if newModelTarget == nil || newModelSource == nil {
-										uOfD.DeleteElement(diagramElement.ToCore(), trans)
+										uOfD.DeleteElement(diagramElement.AsCore(), trans)
 										return nil
 									}
 									currentDiagramTarget := refinementLink.GetLinkTarget(trans)
@@ -1298,7 +1396,7 @@ func updateDiagramElement(changedElement *core.Concept, notification *core.Chang
 									if currentModelTarget != newModelTarget {
 										newDiagramTarget := diagram.GetFirstElementRepresentingConcept(newModelTarget, trans)
 										if newDiagramTarget == nil {
-											uOfD.DeleteElement(diagramElement.ToCore(), trans)
+											uOfD.DeleteElement(diagramElement.AsCore(), trans)
 											return nil
 										}
 										refinementLink.SetLinkTarget(newDiagramTarget, trans)
@@ -1306,7 +1404,7 @@ func updateDiagramElement(changedElement *core.Concept, notification *core.Chang
 									if currentModelSource != newModelSource {
 										newDiagramSource := diagram.GetFirstElementRepresentingConcept(newModelSource, trans)
 										if newDiagramSource == nil {
-											uOfD.DeleteElement(diagramElement.ToCore(), trans)
+											uOfD.DeleteElement(diagramElement.AsCore(), trans)
 											return nil
 										}
 										refinementLink.SetLinkSource(newDiagramSource, trans)
@@ -1319,7 +1417,7 @@ func updateDiagramElement(changedElement *core.Concept, notification *core.Chang
 			} else {
 				// If this is a diagram link and the underlying reporting element is either its source reference or its target reference
 				// and the referenced element is now nil, we need to delete the link
-				if IsDiagramLink(diagramElement.ToCore(), trans) {
+				if IsDiagramLink(diagramElement.AsCore(), trans) {
 					diagramLink := (*CrlDiagramLink)(diagramElement)
 					// If this is a diagram link and the underlying reporting element is either its source reference or its target reference
 					// and the referenced element is now nil, we need to delete the link
@@ -1327,7 +1425,7 @@ func updateDiagramElement(changedElement *core.Concept, notification *core.Chang
 					underlyingReportingElementIsTargetReference := diagramLink.GetLinkTargetReference(trans).GetConceptID(trans) == underlyingReportingElementID
 					if (underlyingReportingElementIsSourceReference || underlyingReportingElementIsTargetReference) &&
 						underlyingChange.GetAfterConceptState().ReferencedConceptID == "" {
-						uOfD.DeleteElement(diagramElement.ToCore(), trans)
+						uOfD.DeleteElement(diagramElement.AsCore(), trans)
 					} else {
 						switch underlyingChange.GetNatureOfChange() {
 						case core.ReferencedConceptChanged:
@@ -1336,20 +1434,20 @@ func updateDiagramElement(changedElement *core.Concept, notification *core.Chang
 								// Note that if the target is now null, the preceeding clause will have deleted the element
 								targetDiagramElement := (*CrlDiagramElement)(uOfD.GetElement(underlyingChange.GetAfterConceptState().ReferencedConceptID))
 								targetModelElement := targetDiagramElement.GetReferencedModelConcept(trans)
-								if IsDiagramOwnerPointer(diagramElement.ToCore(), trans) {
+								if IsDiagramOwnerPointer(diagramElement.AsCore(), trans) {
 									modelElement.SetOwningConcept(targetModelElement, trans)
 								} else {
 									switch modelElement.GetConceptType() {
 									case core.Reference:
 										// Setting the referenced concepts requires knowledge of what is being referenced
 										targetAttribute := core.NoAttribute
-										if IsDiagramElementPointer(targetDiagramElement.ToCore(), trans) {
+										if IsDiagramElementPointer(targetDiagramElement.AsCore(), trans) {
 											targetAttribute = core.ReferencedConceptID
-										} else if IsDiagramOwnerPointer(targetDiagramElement.ToCore(), trans) {
+										} else if IsDiagramOwnerPointer(targetDiagramElement.AsCore(), trans) {
 											targetAttribute = core.OwningConceptID
-										} else if IsDiagramAbstractPointer(targetDiagramElement.ToCore(), trans) {
+										} else if IsDiagramAbstractPointer(targetDiagramElement.AsCore(), trans) {
 											targetAttribute = core.AbstractConceptID
-										} else if IsDiagramRefinedPointer(targetDiagramElement.ToCore(), trans) {
+										} else if IsDiagramRefinedPointer(targetDiagramElement.AsCore(), trans) {
 											targetAttribute = core.RefinedConceptID
 										}
 										err := modelElement.SetReferencedConcept(targetModelElement, targetAttribute, trans)
@@ -1376,11 +1474,11 @@ func updateDiagramElement(changedElement *core.Concept, notification *core.Chang
 								if modelElement != nil {
 									switch modelElement.GetConceptType() {
 									case core.Reference:
-										if IsDiagramReferenceLink(diagramElement.ToCore(), trans) {
+										if IsDiagramReferenceLink(diagramElement.AsCore(), trans) {
 											modelElement.SetOwningConcept(sourceModelElement, trans)
 										}
 									case core.Refinement:
-										if IsDiagramRefinementLink(diagramElement.ToCore(), trans) {
+										if IsDiagramRefinementLink(diagramElement.AsCore(), trans) {
 											modelElement.SetRefinedConcept(sourceModelElement, trans)
 										}
 									}
@@ -1403,7 +1501,7 @@ func updateDiagramElement(changedElement *core.Concept, notification *core.Chang
 			break
 		}
 		if diagramElementModelReference.GetReferencedConceptID(trans) == "" {
-			uOfD.DeleteElement(diagramElement.ToCore(), trans)
+			uOfD.DeleteElement(diagramElement.AsCore(), trans)
 		} else {
 			diagramElement.updateForModelElementChange(modelElement, trans)
 		}
@@ -1418,8 +1516,8 @@ func updateDiagramOwnerPointer(concept *core.Concept, notification *core.ChangeN
 	trans.WriteLockElement(concept)
 	diagramPointer := (*CrlDiagramLink)(concept)
 	reportingElement := uOfD.GetElement(notification.GetReportingElementID())
-	diagram := diagramPointer.ToCrlDiagramElement().GetDiagram(trans)
-	modelElement := diagramPointer.ToCrlDiagramElement().GetReferencedModelConcept(trans)
+	diagram := diagramPointer.AsCrlDiagramElement().GetDiagram(trans)
+	modelElement := diagramPointer.AsCrlDiagramElement().GetReferencedModelConcept(trans)
 	switch notification.GetNatureOfChange() {
 	case core.OwnedConceptChanged:
 		if reportingElement == modelElement {
@@ -1438,7 +1536,7 @@ func updateDiagramOwnerPointer(concept *core.Concept, notification *core.ChangeN
 						newDiagramTarget := (*CrlDiagramElement)(diagram.GetFirstElementRepresentingConcept(modelOwner, trans))
 						if newDiagramTarget == nil {
 							// There is no view, delete the modelElement
-							uOfD.DeleteElement(diagramPointer.ToCore(), trans)
+							uOfD.DeleteElement(diagramPointer.AsCore(), trans)
 						} else {
 							diagramPointer.SetLinkTarget(newDiagramTarget, trans)
 						}
@@ -1449,8 +1547,8 @@ func updateDiagramOwnerPointer(concept *core.Concept, notification *core.ChangeN
 		}
 		// We are looking for a notification from either the source or target reference in the diagram
 		// If either source or target are nil, delete the pointer
-		sourceReference := diagramPointer.ToCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, trans)
-		targetReference := diagramPointer.ToCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
+		sourceReference := diagramPointer.AsCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, trans)
+		targetReference := diagramPointer.AsCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
 		if reportingElement == sourceReference || reportingElement == targetReference {
 			underlyingNotification := notification.GetUnderlyingChange()
 			switch underlyingNotification.GetNatureOfChange() {
@@ -1458,7 +1556,7 @@ func updateDiagramOwnerPointer(concept *core.Concept, notification *core.ChangeN
 				switch reportingElement.GetConceptType() {
 				case core.Reference:
 					if reportingElement.GetReferencedConcept(trans) == nil {
-						uOfD.DeleteElement(diagramPointer.ToCore(), trans)
+						uOfD.DeleteElement(diagramPointer.AsCore(), trans)
 					}
 				}
 			}
@@ -1471,21 +1569,21 @@ func (diagramElement *CrlDiagramElement) updateForModelElementChange(modelElemen
 	modelElementLabel := ""
 	if modelElement != nil {
 		modelElementLabel = modelElement.GetLabel(trans)
-		if modelElementLabel != diagramElement.ToCore().GetLabel(trans) {
+		if modelElementLabel != diagramElement.AsCore().GetLabel(trans) {
 			newLabel := modelElementLabel
-			if IsDiagramPointer(diagramElement.ToCore(), trans) {
-				if IsDiagramOwnerPointer(diagramElement.ToCore(), trans) {
+			if IsDiagramPointer(diagramElement.AsCore(), trans) {
+				if IsDiagramOwnerPointer(diagramElement.AsCore(), trans) {
 					newLabel = newLabel + " Owner Pointer"
-				} else if IsDiagramAbstractPointer(diagramElement.ToCore(), trans) {
+				} else if IsDiagramAbstractPointer(diagramElement.AsCore(), trans) {
 					newLabel = newLabel + " Abstract Pointer"
-				} else if IsDiagramRefinedPointer(diagramElement.ToCore(), trans) {
+				} else if IsDiagramRefinedPointer(diagramElement.AsCore(), trans) {
 					newLabel = newLabel + " Refined Pointer"
-				} else if IsDiagramElementPointer(diagramElement.ToCore(), trans) {
+				} else if IsDiagramElementPointer(diagramElement.AsCore(), trans) {
 					newLabel = newLabel + " Referenced Concept Pointer"
 				}
 			}
-			diagramElement.ToCore().SetLabel(newLabel, trans)
-			if !IsDiagramPointer(diagramElement.ToCore(), trans) {
+			diagramElement.AsCore().SetLabel(newLabel, trans)
+			if !IsDiagramPointer(diagramElement.AsCore(), trans) {
 				diagramElement.SetDisplayLabel(modelElementLabel, trans)
 			}
 		}
@@ -1507,7 +1605,7 @@ func (diagramElement *CrlDiagramElement) updateForModelElementChange(modelElemen
 // updateNodeSize recalcualtes the size of the node based on the string sizes for the display label and
 // abstractions listed
 func (diagramNode *CrlDiagramNode) updateNodeSize(trans *core.Transaction) {
-	displayLabel := diagramNode.ToCrlDiagramElement().GetDisplayLabel(trans)
+	displayLabel := diagramNode.AsDiagramElement().GetDisplayLabel(trans)
 	displayLabelBounds, _ := font.BoundString(go12PtBoldFace, displayLabel)
 	displayLabelMaxHeight := Int26_6ToFloat(displayLabelBounds.Max.Y)
 	displayLabelMaxWidth := Int26_6ToFloat(displayLabelBounds.Max.X)
@@ -1515,7 +1613,7 @@ func (diagramNode *CrlDiagramNode) updateNodeSize(trans *core.Transaction) {
 	displayLabelMinWidth := Int26_6ToFloat(displayLabelBounds.Min.X)
 	displayLabelHeight := displayLabelMaxHeight - displayLabelMinHeight
 	displayLabelWidth := displayLabelMaxWidth - displayLabelMinWidth
-	abstractionDisplayLabel := diagramNode.ToCrlDiagramElement().GetAbstractionDisplayLabel(trans)
+	abstractionDisplayLabel := diagramNode.AsDiagramElement().GetAbstractionDisplayLabel(trans)
 	abstractionDisplayLabelBounds, _ := font.BoundString(go10PtItalicFace, abstractionDisplayLabel)
 	abstractionDisplayLabelMaxWidth := Int26_6ToFloat(abstractionDisplayLabelBounds.Max.X)
 	abstractionDisplayLabelMaxHeight := Int26_6ToFloat(abstractionDisplayLabelBounds.Max.Y)

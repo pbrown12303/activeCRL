@@ -116,7 +116,7 @@ func NewFynePropertyManager() *FynePropertyManager {
 }
 
 func (pMgr *FynePropertyManager) displayProperties(uid string) {
-	csb := FyneGUISingleton.GetConceptStateBinding(uid)
+	csb := FyneGUISingleton.GetConceptStateBindingForProperties(uid)
 	if uid == "" || csb == nil {
 		pMgr.typeValue.SetText("")
 		pMgr.idValue.SetText("")

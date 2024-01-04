@@ -58,7 +58,7 @@ func NewMultiplicityConstraintSpecification(owner *core.Concept, constrainedConc
 	}
 	newMcs := CrlMultiplicityConstraintSpecification(*newConcept)
 	newMcsPtr := &newMcs
-	multiplicitySpecification, err3 := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintMultiplicityURI, newMcsPtr.ToCore(), "IsSatisfied", trans)
+	multiplicitySpecification, err3 := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintMultiplicityURI, newMcsPtr.AsCore(), "IsSatisfied", trans)
 	if err3 != nil {
 		return nil, errors.Wrap(err, "NewMultiplicityConstraintSpecification failed")
 	}
@@ -67,7 +67,7 @@ func NewMultiplicityConstraintSpecification(owner *core.Concept, constrainedConc
 	}
 	multiplicitySpecification.SetLiteralValue(multiplicity, trans)
 
-	constrainedConceptReference, err2 := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintConstrainedConceptURI, newMcsPtr.ToCore(), "Constrained Concept", trans)
+	constrainedConceptReference, err2 := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintConstrainedConceptURI, newMcsPtr.AsCore(), "Constrained Concept", trans)
 	if err2 != nil {
 		return nil, errors.Wrap(err, "NewMultiplicityConstraintSpecification failed")
 	}
@@ -82,8 +82,8 @@ func NewMultiplicityConstraintSpecification(owner *core.Concept, constrainedConc
 	return newMcsPtr, nil
 }
 
-// ToCore casts the CrlMultiplicityConstraintSpecification pointer to *core.Concept
-func (mcs *CrlMultiplicityConstraintSpecification) ToCore() *core.Concept {
+// AsCore casts the CrlMultiplicityConstraintSpecification pointer to *core.Concept
+func (mcs *CrlMultiplicityConstraintSpecification) AsCore() *core.Concept {
 	return (*core.Concept)(mcs)
 }
 
@@ -99,10 +99,10 @@ func NewConstraintCompliance(owner *core.Concept, constraintSpecification *core.
 
 // GetConstrainedConceptType returns the concept whose multiplicity is being constrained
 func (mcs *CrlMultiplicityConstraintSpecification) GetConstrainedConceptType(trans *core.Transaction) (*core.Concept, error) {
-	if !mcs.ToCore().IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
+	if !mcs.AsCore().IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
 		return nil, errors.New("GetMultiplicity called with invalid target")
 	}
-	conceptReference := mcs.ToCore().GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintConstrainedConceptURI, trans)
+	conceptReference := mcs.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintConstrainedConceptURI, trans)
 	if conceptReference == nil {
 		return nil, errors.New("GetConstrainedConceptType failed: conceptReference not found")
 	}
@@ -120,7 +120,7 @@ func GetConstraintSpecification(constraintComplianceInstance *core.Concept, tran
 
 // GetMultiplicity returns the literal value of the multiplicity specification
 func (mcs *CrlMultiplicityConstraintSpecification) GetMultiplicity(trans *core.Transaction) (string, error) {
-	if !mcs.ToCore().IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
+	if !mcs.AsCore().IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
 		return "", errors.New("GetMultiplicity called with invalid target")
 	}
 	spec := mcs.getMultiplicitySpecification(trans)
@@ -128,7 +128,7 @@ func (mcs *CrlMultiplicityConstraintSpecification) GetMultiplicity(trans *core.T
 }
 
 func (mcs *CrlMultiplicityConstraintSpecification) getMultiplicitySpecification(trans *core.Transaction) *core.Concept {
-	return mcs.ToCore().GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintMultiplicityURI, trans)
+	return mcs.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintMultiplicityURI, trans)
 }
 
 // IsSatisfied returns true if the ConstraintCompliance.ConstraintSatisfied is true
@@ -213,7 +213,7 @@ func SatisfiesMultiplicity(multiplicity string, candidate int) bool {
 
 // SetMultiplicity sets the multiplicity specification after checking that the target and the multiplicity are both valid
 func (mcs *CrlMultiplicityConstraintSpecification) SetMultiplicity(multiplicity string, trans *core.Transaction) error {
-	if !mcs.ToCore().IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
+	if !mcs.AsCore().IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
 		return errors.New("SetMultiplicity called with invalid target")
 	}
 	if !IsValidMultiplicity(multiplicity) {

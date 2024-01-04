@@ -23,7 +23,7 @@ var _ = Describe("Boolean test", func() {
 	Specify("Boolean should be created correctly", func() {
 		boolean := NewBoolean("", trans)
 		Expect(boolean).ToNot(BeNil())
-		Expect(boolean.ToCore().IsRefinementOfURI(CrlBooleanURI, trans)).To(BeTrue())
+		Expect(boolean.AsCore().IsRefinementOfURI(CrlBooleanURI, trans)).To(BeTrue())
 		value, err := boolean.GetBooleanValue(trans)
 		Expect(err).To(BeNil())
 		Expect(value).To(Equal(false))

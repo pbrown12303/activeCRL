@@ -26,15 +26,15 @@ func (dMgr *DiagramManager) AddDiagram(ownerID string, trans *core.Transaction) 
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.addDiagram failed")
 	}
-	err = diagram.ToCore().SetOwningConceptID(ownerID, trans)
+	err = diagram.AsCore().SetOwningConceptID(ownerID, trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.addDiagram failed")
 	}
-	err = dMgr.editor.SelectElement(diagram.ToCore(), trans)
+	err = dMgr.editor.SelectElement(diagram.AsCore(), trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.addDiagram failed")
 	}
-	err = dMgr.DisplayDiagram(diagram.ToCore().GetConceptID(trans), trans)
+	err = dMgr.DisplayDiagram(diagram.AsCore().GetConceptID(trans), trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.addDiagram failed")
 	}
@@ -97,7 +97,7 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 		}
 		newLink.SetLinkSource(diagramSourceElement, trans)
 		newLink.SetLinkTarget(diagramTargetElement, trans)
-		newElement = newLink.ToCrlDiagramElement()
+		newElement = newLink.AsCrlDiagramElement()
 	} else {
 		newNode, err := crldiagramdomain.NewDiagramNode(trans)
 		if err != nil {
@@ -105,11 +105,11 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 		}
 		newNode.SetNodeX(x, trans)
 		newNode.SetNodeY(y, trans)
-		newElement = newNode.ToCrlDiagramElement()
+		newElement = newNode.AsDiagramElement()
 		newElement.SetLineColor("#000000", trans)
 	}
 
-	err = newElement.ToCore().SetLabel(el.GetLabel(trans), trans)
+	err = newElement.AsCore().SetLabel(el.GetLabel(trans), trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.addConceptView failed")
 	}
@@ -157,11 +157,11 @@ func (dMgr *DiagramManager) NewDiagram(trans *core.Transaction) (*crldiagramdoma
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.newDiagram failed")
 	}
-	diagram.ToCore().SetLabel(name, trans)
-	dMgr.diagrams[diagram.ToCore().GetConceptID(trans)] = diagram
+	diagram.AsCore().SetLabel(name, trans)
+	dMgr.diagrams[diagram.AsCore().GetConceptID(trans)] = diagram
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.newDiagram failed")
 	}
-	dMgr.DisplayDiagram(diagram.ToCore().GetConceptID(trans), trans)
+	dMgr.DisplayDiagram(diagram.AsCore().GetConceptID(trans), trans)
 	return diagram, nil
 }
