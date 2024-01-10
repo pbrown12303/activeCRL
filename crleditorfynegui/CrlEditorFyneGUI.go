@@ -17,6 +17,7 @@ import (
 	"fyne.io/x/fyne/widget/diagramwidget"
 
 	"github.com/pbrown12303/activeCRL/core"
+	"github.com/pbrown12303/activeCRL/crlconstraintdomain"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 	"github.com/pbrown12303/activeCRL/crleditor"
 )
@@ -172,6 +173,31 @@ func (gui *CrlEditorFyneGUI) addLiteral(parentID string, label string) *core.Con
 	newLiteral.SetOwningConceptID(parentID, trans)
 	gui.editor.SelectElement(newLiteral, trans)
 	return newLiteral
+}
+
+func (gui *CrlEditorFyneGUI) addMultiplicityConstraint(constrainedConcept *core.Concept) {
+	multiplicityInput := widget.NewEntry()
+	multiplicityFormItem := widget.NewFormItem("Multiplicity:", multiplicityInput)
+	formItems := []*widget.FormItem{multiplicityFormItem}
+	form := dialog.NewForm("Add Multiplicity Constraint", "OK", "Cancel", formItems, func(bool) {
+		trans, isNew := gui.editor.GetTransaction()
+		if isNew {
+			defer gui.editor.EndTransaction()
+		}
+		gui.markUndoPoint()
+		owner := constrainedConcept.GetOwningConcept(trans)
+		if owner == nil {
+			errorForm := dialog.NewInformation("Error", "Concept does not have an owner for the constraint", FyneGUISingleton.window)
+			errorForm.Show()
+			return
+		}
+		_, err := crlconstraintdomain.NewMultiplicityConstraintSpecification(owner, constrainedConcept, "MultiplicityConstraint", multiplicityInput.Text, trans)
+		if err != nil {
+			errorForm := dialog.NewError(err, FyneGUISingleton.window)
+			errorForm.Show()
+		}
+	}, FyneGUISingleton.window)
+	form.Show()
 }
 
 func (gui *CrlEditorFyneGUI) addReference(parentID string, label string) *core.Concept {
@@ -453,6 +479,38 @@ func (gui *CrlEditorFyneGUI) displayDiagram(diagramID string) {
 func (gui *CrlEditorFyneGUI) DisplayDiagram(diagram *crldiagramdomain.CrlDiagram, trans *core.Transaction) error {
 	gui.diagramManager.displayDiagram(diagram, trans)
 	return nil
+}
+
+func (gui *CrlEditorFyneGUI) editMultiplicityConstraint(constrainedConcept *core.Concept) {
+	trans, isNew := gui.editor.GetTransaction()
+	if isNew {
+		defer gui.editor.EndTransaction()
+	}
+	multiplicityInput := widget.NewEntry()
+	multiplicityFormItem := widget.NewFormItem("Multiplicity:", multiplicityInput)
+	formItems := []*widget.FormItem{multiplicityFormItem}
+	constraintSpecification := crlconstraintdomain.GetMultiplicityConstraint(constrainedConcept, trans)
+	if constraintSpecification == nil {
+		errorForm := dialog.NewInformation("Error", "No multiplicity constraint found", FyneGUISingleton.window)
+		errorForm.Show()
+		return
+	}
+	multiplicity, err := constraintSpecification.GetMultiplicity(trans)
+	if err != nil {
+		errorForm := dialog.NewError(err, FyneGUISingleton.window)
+		errorForm.Show()
+		return
+	}
+	multiplicityInput.SetText(multiplicity)
+	form := dialog.NewForm("Edit Multiplicity Constraint", "OK", "Cancel", formItems, func(bool) {
+		// trans, isNew := gui.editor.GetTransaction()
+		// if isNew {
+		// 	defer gui.editor.EndTransaction()
+		// }
+		gui.markUndoPoint()
+		constraintSpecification.SetMultiplicity(multiplicityInput.Text, trans)
+	}, FyneGUISingleton.window)
+	form.Show()
 }
 
 // FileLoaded - no action required

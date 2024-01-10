@@ -612,7 +612,7 @@ func (uOfDPtr *UniverseOfDiscourse) getExecutedCalls() chan *functionCallRecord 
 	return uOfDPtr.executedCalls
 }
 
-// getFunctions returns the array of functions associatee with the given URI
+// getFunctions returns the array of functions associated with the given URI
 func (uOfDPtr *UniverseOfDiscourse) getFunctions(uri string) []crlExecutionFunction {
 	return uOfDPtr.computeFunctions[string(uri)]
 }

@@ -52,13 +52,12 @@ func NewMultiplicityConstraintSpecification(owner *core.Concept, constrainedConc
 		return nil, errors.New("NewMultiplicityConstraintSpecification called with nil owner or constrained concept")
 	}
 	uOfD := trans.GetUniverseOfDiscourse()
-	newConcept, err := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintSpecificationURI, owner, label, trans, newURI...)
+	newConcept, err := uOfD.CreateRefinementOfConceptURI(CrlMultiplicityConstraintSpecificationURI, label, trans, newURI...)
 	if err != nil {
 		return nil, errors.Wrap(err, "NewMultiplicityConstraintSpecification failed")
 	}
-	newMcs := CrlMultiplicityConstraintSpecification(*newConcept)
-	newMcsPtr := &newMcs
-	multiplicitySpecification, err3 := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintMultiplicityURI, newMcsPtr.AsCore(), "IsSatisfied", trans)
+	newMcs := (*CrlMultiplicityConstraintSpecification)(newConcept)
+	multiplicitySpecification, err3 := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintMultiplicityURI, newMcs.AsCore(), "Multiplicity", trans)
 	if err3 != nil {
 		return nil, errors.Wrap(err, "NewMultiplicityConstraintSpecification failed")
 	}
@@ -67,7 +66,7 @@ func NewMultiplicityConstraintSpecification(owner *core.Concept, constrainedConc
 	}
 	multiplicitySpecification.SetLiteralValue(multiplicity, trans)
 
-	constrainedConceptReference, err2 := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintConstrainedConceptURI, newMcsPtr.AsCore(), "Constrained Concept", trans)
+	constrainedConceptReference, err2 := uOfD.CreateOwnedRefinementOfConceptURI(CrlMultiplicityConstraintConstrainedConceptURI, newMcs.AsCore(), "Constrained Concept", trans)
 	if err2 != nil {
 		return nil, errors.Wrap(err, "NewMultiplicityConstraintSpecification failed")
 	}
@@ -79,7 +78,8 @@ func NewMultiplicityConstraintSpecification(owner *core.Concept, constrainedConc
 			return nil, errors.Wrap(err, "NewMultiplicityConstraintSpecification failed")
 		}
 	}
-	return newMcsPtr, nil
+	newConcept.SetOwningConcept(owner, trans)
+	return newMcs, nil
 }
 
 // AsCore casts the CrlMultiplicityConstraintSpecification pointer to *core.Concept
@@ -123,12 +123,17 @@ func (mcs *CrlMultiplicityConstraintSpecification) GetMultiplicity(trans *core.T
 	if !mcs.AsCore().IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans) {
 		return "", errors.New("GetMultiplicity called with invalid target")
 	}
-	spec := mcs.getMultiplicitySpecification(trans)
+	spec := mcs.GetMultiplicityLiteral(trans)
 	return spec.GetLiteralValue(trans), nil
 }
 
-func (mcs *CrlMultiplicityConstraintSpecification) getMultiplicitySpecification(trans *core.Transaction) *core.Concept {
+func (mcs *CrlMultiplicityConstraintSpecification) GetMultiplicityLiteral(trans *core.Transaction) *core.Concept {
 	return mcs.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlMultiplicityConstraintMultiplicityURI, trans)
+}
+
+// IsMultiplicityConstraint returns true if the supplied concept is a multiplicity constraint
+func IsMultiplicityConstraint(concept *core.Concept, trans *core.Transaction) bool {
+	return concept.IsRefinementOfURI(CrlMultiplicityConstraintSpecificationURI, trans)
 }
 
 // IsSatisfied returns true if the ConstraintCompliance.ConstraintSatisfied is true
@@ -219,7 +224,7 @@ func (mcs *CrlMultiplicityConstraintSpecification) SetMultiplicity(multiplicity 
 	if !IsValidMultiplicity(multiplicity) {
 		return errors.New("SetMultiplicity called with invalid multiplicity: " + multiplicity)
 	}
-	spec := mcs.getMultiplicitySpecification(trans)
+	spec := mcs.GetMultiplicityLiteral(trans)
 	err := spec.SetLiteralValue(multiplicity, trans)
 	if err != nil {
 		return errors.Wrap(err, "SetMultiplicity failed")
@@ -273,6 +278,49 @@ func evaluateMultiplicityConstraints(constrainedConcept *core.Concept, notificat
 		(*crldatatypesdomain.CrlBoolean)(satisfied).SetBooleanValue(sat, trans)
 	}
 	return nil
+}
+
+// GetMultiplicityConstraint returns the multiplicity constraint if the indicated concept's owner has a multiplicity constraint on the concept
+// Otherwise it returns nil
+func GetMultiplicityConstraint(concept *core.Concept, trans *core.Transaction) *CrlMultiplicityConstraintSpecification {
+	owner := concept.GetOwningConcept(trans)
+	if owner == nil {
+		return nil
+	}
+	multiplicityConstraints := owner.GetOwnedConceptsRefinedFromURI(CrlMultiplicityConstraintSpecificationURI, trans)
+	for _, multiplicityConstraint := range multiplicityConstraints {
+		typedConstraint := (*CrlMultiplicityConstraintSpecification)(multiplicityConstraint)
+		constrainedConcept, err := typedConstraint.GetConstrainedConceptType(trans)
+		if err != nil {
+			return nil
+		}
+		if constrainedConcept.ConceptID == concept.ConceptID {
+			return typedConstraint
+		}
+
+	}
+	return nil
+}
+
+// HasMultiplicityConstraint returns true if the indicated concept's owner has a multiplicity constraint on the concept
+func HasMultiplicityConstraint(concept *core.Concept, trans *core.Transaction) bool {
+	owner := concept.GetOwningConcept(trans)
+	if owner == nil {
+		return false
+	}
+	multiplicityConstraints := owner.GetOwnedConceptsRefinedFromURI(CrlMultiplicityConstraintSpecificationURI, trans)
+	for _, multiplicityConstraint := range multiplicityConstraints {
+		typedConstraint := (*CrlMultiplicityConstraintSpecification)(multiplicityConstraint)
+		constrainedConcept, err := typedConstraint.GetConstrainedConceptType(trans)
+		if err != nil {
+			return false
+		}
+		if constrainedConcept.ConceptID == concept.ConceptID {
+			return true
+		}
+
+	}
+	return false
 }
 
 // BuildCrlConstraintDomain constructs the concept space for CRL Constraints

@@ -11,6 +11,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"fyne.io/x/fyne/widget/diagramwidget"
 	"github.com/pbrown12303/activeCRL/core"
+	"github.com/pbrown12303/activeCRL/crlconstraintdomain"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 )
 
@@ -216,6 +217,21 @@ func ShowSecondaryPopup(fcde FyneCrlDiagramElement, event *desktop.MouseEvent) {
 			FyneGUISingleton.diagramManager.nullifyReferencedConcept(fcde)
 		})
 		items = append(items, showReferencedConceptItem, nullifyReferencedConceptItem)
+		trans, new := FyneGUISingleton.editor.GetTransaction()
+		if new {
+			defer FyneGUISingleton.editor.EndTransaction()
+		}
+		if crlconstraintdomain.HasMultiplicityConstraint(fcde.GetModelElement(), trans) {
+			editMultiplicityConstraintItem := fyne.NewMenuItem("Edit Multiplicity Constraint", func() {
+				FyneGUISingleton.editMultiplicityConstraint(fcde.GetModelElement())
+			})
+			items = append(items, editMultiplicityConstraintItem)
+		} else {
+			addMultiplicityConstraintItem := fyne.NewMenuItem("Add Multiplicity Constraint", func() {
+				FyneGUISingleton.addMultiplicityConstraint(fcde.GetModelElement())
+			})
+			items = append(items, addMultiplicityConstraintItem)
+		}
 	case core.Refinement:
 		showAbstractConceptItem := fyne.NewMenuItem("Show Abstract Concept", func() {
 			FyneGUISingleton.diagramManager.showAbstractConcept(fcde.GetDiagramElementID())
@@ -305,50 +321,61 @@ var _ diagramwidget.DiagramLink = (*FyneCrlDiagramLink)(nil)
 // the fyne link and the crldiagramdomain link
 type FyneCrlDiagramLink struct {
 	diagramwidget.BaseDiagramLink
-	diagramLink              *crldiagramdomain.CrlDiagramLink
-	modelElement             *core.Concept
-	labelAnchoredText        *diagramwidget.AnchoredText
-	labelAnchoredTextBinding *AnchoredTextBinding
-	linkType                 ToolbarSelection
-	initialized              bool
+	diagramLink                           *crldiagramdomain.CrlDiagramLink
+	modelElement                          *core.Concept
+	labelAnchoredText                     *diagramwidget.AnchoredText
+	labelAnchoredTextBinding              *AnchoredTextBinding
+	targetMultiplicityAnchoredText        *diagramwidget.AnchoredText
+	targetMultiplicityAnchoredTextBinding *AnchoredTextBinding
+	linkType                              ToolbarSelection
+	initialized                           bool
 }
 
 // NewFyneCrlDiagramLink creates a fyne link that corresponds to the supplied crldiagramdomain link
-func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, link *crldiagramdomain.CrlDiagramLink, trans *core.Transaction, deferInitialization ...bool) *FyneCrlDiagramLink {
+func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, crlLink *crldiagramdomain.CrlDiagramLink, trans *core.Transaction, deferInitialization ...bool) *FyneCrlDiagramLink {
 	fyneDiagramLink := &FyneCrlDiagramLink{}
-	fyneDiagramLink.diagramLink = link
-	fyneDiagramLink.modelElement = link.AsCrlDiagramElement().GetReferencedModelConcept(trans)
-	diagramwidget.InitializeBaseDiagramLink(fyneDiagramLink, diagramWidget, link.AsCore().GetConceptID(trans))
+	fyneDiagramLink.diagramLink = crlLink
+	fyneDiagramLink.modelElement = crlLink.AsCrlDiagramElement().GetReferencedModelConcept(trans)
+	diagramwidget.InitializeBaseDiagramLink(fyneDiagramLink, diagramWidget, crlLink.AsCore().GetConceptID(trans))
 	// Display labels are not appropriate for pointers
-	if !link.IsDiagramPointer(trans) {
-		linkLabel := link.AsCrlDiagramElement().GetDisplayLabel(trans)
+	if !crlLink.IsDiagramPointer(trans) {
+		linkLabel := crlLink.AsCrlDiagramElement().GetDisplayLabel(trans)
 		fyneDiagramLink.labelAnchoredText = fyneDiagramLink.AddMidpointAnchoredText(displayLabel, linkLabel)
-		crlDisplayLabel := link.GetDisplayLabel(trans)
+		crlDisplayLabel := crlLink.GetDisplayLabel(trans)
 		fyneDiagramLink.labelAnchoredText.ID = crlDisplayLabel.AsCore().ConceptID
 		fyneDiagramLink.labelAnchoredText.SetOffsetNoCallback(crlDisplayLabel.GetOffsetX(trans), crlDisplayLabel.GetOffsetY(trans))
-		fyneDiagramLink.labelAnchoredText.SetText(linkLabel)
 		newLinkLabelBinding, err := NewAnchoredTextBinding(crlDisplayLabel.AsCore().ConceptID, crlDisplayLabel, fyneDiagramLink.labelAnchoredText)
 		if err == nil {
 			fyneDiagramLink.labelAnchoredTextBinding = newLinkLabelBinding
 		}
 	}
-	if link.IsReferenceLink(trans) {
+	if crlLink.IsReferenceLink(trans) {
 		fyneDiagramLink.AddTargetDecoration(createReferenceArrowhead())
 		fyneDiagramLink.AddSourceDecoration(createDiamond())
 		fyneDiagramLink.linkType = ReferenceLinkSelected
-	} else if link.IsAbstractPointer(trans) {
+		crlLinkTargetMultiplicity := crlLink.GetLinkTargetMultiplicity(trans)
+		if crlLinkTargetMultiplicity != nil {
+			fyneDiagramLink.targetMultiplicityAnchoredText = fyneDiagramLink.AddTargetAnchoredText("Multiplicity", crlLinkTargetMultiplicity.LiteralValue)
+			fyneDiagramLink.targetMultiplicityAnchoredText.ID = crlLinkTargetMultiplicity.ConceptID
+			fyneDiagramLink.targetMultiplicityAnchoredText.SetOffsetNoCallback(crlLinkTargetMultiplicity.GetOffsetX(trans), crlLinkTargetMultiplicity.GetOffsetY(trans))
+			newTargetMultiplicityBinding, err := NewAnchoredTextBinding(crlLinkTargetMultiplicity.ConceptID, crlLinkTargetMultiplicity, fyneDiagramLink.targetMultiplicityAnchoredText)
+			if err == nil {
+				fyneDiagramLink.targetMultiplicityAnchoredTextBinding = newTargetMultiplicityBinding
+			}
+		}
+	} else if crlLink.IsAbstractPointer(trans) {
 		fyneDiagramLink.AddSourceDecoration(createRefinementTriangle())
 		fyneDiagramLink.linkType = AbstractElementPointerSelected
-	} else if link.IsElementPointer(trans) {
+	} else if crlLink.IsElementPointer(trans) {
 		fyneDiagramLink.AddTargetDecoration(createReferenceArrowhead())
 		fyneDiagramLink.linkType = ReferencedElementPointerSelected
-	} else if link.IsOwnerPointer(trans) {
+	} else if crlLink.IsOwnerPointer(trans) {
 		fyneDiagramLink.AddTargetDecoration(createDiamond())
 		fyneDiagramLink.linkType = OwnerPointerSelected
-	} else if link.IsRefinedPointer(trans) {
+	} else if crlLink.IsRefinedPointer(trans) {
 		fyneDiagramLink.AddSourceDecoration(createMirrorRefinementTriangle())
 		fyneDiagramLink.linkType = RefinedElementPointerSelected
-	} else if link.IsRefinementLink(trans) {
+	} else if crlLink.IsRefinementLink(trans) {
 		fyneDiagramLink.AddMidpointDecoration(createRefinementTriangle())
 		fyneDiagramLink.linkType = RefinementLinkSelected
 	}
@@ -356,16 +383,16 @@ func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, link *crl
 	// that links never have a transparent color
 	black := color.RGBA{0, 0, 0, 255}
 	grey := color.RGBA{153, 153, 153, 255}
-	fgColor := link.AsCrlDiagramElement().GetLineColor(trans)
+	fgColor := crlLink.AsCrlDiagramElement().GetLineColor(trans)
 	if fgColor == "" {
-		if link.AsCore().IsRefinementOfURI(crldiagramdomain.CrlDiagramPointerURI, trans) {
+		if crlLink.AsCore().IsRefinementOfURI(crldiagramdomain.CrlDiagramPointerURI, trans) {
 			fgColor = getCrlColor(grey)
 		} else {
 			fgColor = getCrlColor(black)
 		}
-		link.AsCrlDiagramElement().SetLineColor(fgColor, trans)
+		crlLink.AsCrlDiagramElement().SetLineColor(fgColor, trans)
 	}
-	bgColor := link.AsCrlDiagramElement().GetBGColor(trans)
+	bgColor := crlLink.AsCrlDiagramElement().GetBGColor(trans)
 	fyneDiagramLink.SetForegroundColor(getGoColor(fgColor))
 	fyneDiagramLink.SetBackgroundColor(getGoColor(bgColor))
 	fyneDiagramLink.Refresh()

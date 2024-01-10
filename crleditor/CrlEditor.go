@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pbrown12303/activeCRL/core"
+	"github.com/pbrown12303/activeCRL/crlconstraintdomain"
 	"github.com/pbrown12303/activeCRL/crldatastructuresdomain"
 	"github.com/pbrown12303/activeCRL/crldatatypesdomain"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
@@ -374,6 +375,7 @@ func (editor *Editor) Initialize(workspacePath string, promptWorkspaceSelection 
 	crldatatypesdomain.BuildCrlDataTypesDomain(editor.GetUofD(), trans)
 	crldatastructuresdomain.BuildCrlDataStructuresDomain(editor.GetUofD(), trans)
 	crldiagramdomain.BuildCrlDiagramDomain(editor.GetUofD(), trans)
+	crlconstraintdomain.BuildCrlConstraintDomain(editor.GetUofD(), trans)
 	err := crlmapsdomain.BuildCrlMapsDomain(editor.GetUofD(), trans)
 	if err != nil {
 		return errors.Wrap(err, "Editor.Initialize failed")

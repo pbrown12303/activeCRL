@@ -2,6 +2,7 @@ package crleditor
 
 import (
 	"github.com/pbrown12303/activeCRL/core"
+	"github.com/pbrown12303/activeCRL/crlconstraintdomain"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 	"github.com/pkg/errors"
 )
@@ -45,31 +46,37 @@ func (dMgr *DiagramManager) AddDiagram(ownerID string, trans *core.Transaction) 
 func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x float64, y float64, trans *core.Transaction) (*crldiagramdomain.CrlDiagramElement, error) {
 	uOfD := dMgr.editor.GetUofD()
 	diagram := (*crldiagramdomain.CrlDiagram)(uOfD.GetElement(diagramID))
-	el := uOfD.GetElement(conceptID)
-	if el == nil {
+	modelConcept := uOfD.GetElement(conceptID)
+	if modelConcept == nil {
 		return nil, errors.New("Indicated model element not found in addNodeView, ID: " + conceptID)
 	}
 	createAsLink := false
-	switch el.GetConceptType() {
+	switch modelConcept.GetConceptType() {
 	case core.Reference:
 		createAsLink = dMgr.editor.GetDropDiagramReferenceAsLink(trans)
 	case core.Refinement:
 		createAsLink = dMgr.editor.GetDropDiagramRefinementAsLink(trans)
 	}
-
 	var newElement *crldiagramdomain.CrlDiagramElement
 	var err error
 	if createAsLink {
 		var newLink *crldiagramdomain.CrlDiagramLink
 		var modelSourceConcept *core.Concept
 		var modelTargetConcept *core.Concept
-		switch el.GetConceptType() {
+		switch modelConcept.GetConceptType() {
 		case core.Reference:
 			newLink, err = crldiagramdomain.NewDiagramReferenceLink(trans)
 			if err != nil {
 				return nil, err
 			}
-			reference := el
+			// If model concept has a multiplicity constraint, wire up the target anchored text
+			if crlconstraintdomain.HasMultiplicityConstraint(modelConcept, trans) {
+				constraint := crlconstraintdomain.GetMultiplicityConstraint(modelConcept, trans)
+				constraintMultiplicity := constraint.GetMultiplicityLiteral(trans)
+				multiplicityMap := newLink.GetLinkMultiplicityMap(trans)
+				multiplicityMap.SetModelMultiplicity(constraintMultiplicity, trans)
+			}
+			reference := modelConcept
 			modelSourceConcept = reference.GetOwningConcept(trans)
 			modelTargetConcept = reference.GetReferencedConcept(trans)
 		case core.Refinement:
@@ -77,7 +84,7 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 			if err != nil {
 				return nil, err
 			}
-			refinement := el
+			refinement := modelConcept
 			modelSourceConcept = refinement.GetRefinedConcept(trans)
 			modelTargetConcept = refinement.GetAbstractConcept(trans)
 		}
@@ -109,12 +116,12 @@ func (dMgr *DiagramManager) AddConceptView(diagramID string, conceptID string, x
 		newElement.SetLineColor("#000000", trans)
 	}
 
-	err = newElement.AsCore().SetLabel(el.GetLabel(trans), trans)
+	err = newElement.AsCore().SetLabel(modelConcept.GetLabel(trans), trans)
 	if err != nil {
 		return nil, errors.Wrap(err, "DiagramManager.addConceptView failed")
 	}
-	newElement.SetReferencedModelConcept(el, trans)
-	newElement.SetDisplayLabel(el.GetLabel(trans), trans)
+	newElement.SetReferencedModelConcept(modelConcept, trans)
+	newElement.SetDisplayLabel(modelConcept.GetLabel(trans), trans)
 
 	newElement.SetDiagram(diagram, trans)
 	// err = newElement.Register(dMgr.elementManager)

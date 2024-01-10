@@ -99,6 +99,20 @@ var CrlDiagramAnchoredTextOffsetYURI = CrlDiagramAnchoredTextURI + "/" + "Offset
 // CrlDiagramAnchoredTextVisibleURI identifies the boolean indicating whether the anchored text is presently viewable
 var CrlDiagramAnchoredTextVisibleURI = CrlDiagramAnchoredTextURI + "/" + "Visible"
 
+// Multiplicity Map
+
+// CrlDiagramMultiplicityMapURI identifies a mapping from a model multiplicity to an anchored text literal value
+var CrlDiagramMultiplicityMapURI = CrlDiagramURI + "/" + "MultiplicityMap"
+
+// CrlDiagramMultiplicityMap manages the mapping between a model multiplicity and a diagram anchored text literal value
+type CrlDiagramMultiplicityMap core.Concept
+
+// CrlDiagramMultiplicityMapMultiplicityReferenceURI identifies the model multiplicity associated with the anchored text
+var CrlDiagramMultiplicityMapMultiplicityReferenceURI = CrlDiagramMultiplicityMapURI + "/" + "MultiplicityReference"
+
+// CrlDiagramMultiplicityMapAnchoredTextReferenceURI identifies the diagram anchored text associated with the anchored text
+var CrlDiagramMultiplicityMapAnchoredTextReferenceURI = CrlDiagramMultiplicityMapURI + "/" + "AnchoredText"
+
 // Diagram Element
 
 // CrlDiagramElementURI identifies the CrlDiagramElement concept
@@ -168,8 +182,11 @@ var CrlDiagramLinkDisplayLabelURI = CrlDiagramLinkURI + "/" + "DisplayLabel"
 // CrlDiagramLinkAbstractionDisplayLabelURI identifies the anchored text used as the abstraction label on a link
 var CrlDiagramLinkAbstractionDisplayLabelURI = CrlDiagramLinkURI + "/" + "AbstractionDisplayLabel"
 
-// CrlDiagramLinkMultiplicityURI identifies the anchored text used to display multiplicity
-var CrlDiagramLinkMultiplicityURI = CrlDiagramLinkURI + "/" + "Multiplicity"
+// CrlDiagramLinkSourceMultiplicityURI identifies the anchored text used to display target multiplicity
+var CrlDiagramLinkSourceMultiplicityURI = CrlDiagramLinkURI + "/" + "SourceMultiplicity"
+
+// CrlDiagramLinkTargetMultiplicityURI identifies the anchored text used to display target multiplicity
+var CrlDiagramLinkTargetMultiplicityURI = CrlDiagramLinkURI + "/" + "TargetMultiplicity"
 
 // Diagram Pointer
 
@@ -460,6 +477,12 @@ func (diagramLink *CrlDiagramLink) GetDisplayLabel(trans *core.Transaction) *Crl
 	return (*CrlDiagramAnchoredText)(at)
 }
 
+// GetLinkMultiplicityMap is a convenience function for getting the multiplicity map for a link
+func (diagramLink *CrlDiagramLink) GetLinkMultiplicityMap(trans *core.Transaction) *CrlDiagramMultiplicityMap {
+	multiplicityMap := diagramLink.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramMultiplicityMapURI, trans)
+	return (*CrlDiagramMultiplicityMap)(multiplicityMap)
+}
+
 // GetLinkSource is a convenience function for getting the source concept of a link
 func (diagramLink *CrlDiagramLink) GetLinkSource(trans *core.Transaction) *CrlDiagramElement {
 	sourceReference := diagramLink.AsCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkSourceURI, trans)
@@ -492,6 +515,67 @@ func (diagramLink *CrlDiagramLink) GetLinkTarget(trans *core.Transaction) *CrlDi
 // GetLinkTargetReference is a convenience function for getting the target reference of a link
 func (diagramLink *CrlDiagramLink) GetLinkTargetReference(trans *core.Transaction) *core.Concept {
 	return diagramLink.AsCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramLinkTargetURI, trans)
+}
+
+// GetLinkSourceMultiplicity returns the AnchoredText representing the link's source multiplicity
+func (diagramLink *CrlDiagramLink) GetLinkSourceMultiplicity(trans *core.Transaction) *CrlDiagramAnchoredText {
+	return (*CrlDiagramAnchoredText)(diagramLink.AsCore().GetFirstOwnedLiteralRefinedFromURI(CrlDiagramLinkSourceMultiplicityURI, trans))
+}
+
+// GetLinkTargetMultiplicity returns the AnchoredText representing the link's target multiplicity
+func (diagramLink *CrlDiagramLink) GetLinkTargetMultiplicity(trans *core.Transaction) *CrlDiagramAnchoredText {
+	return (*CrlDiagramAnchoredText)(diagramLink.AsCore().GetFirstOwnedLiteralRefinedFromURI(CrlDiagramLinkTargetMultiplicityURI, trans))
+}
+
+// AsCore casts CrlDiagramMultiplicityMap to core.Concept
+func (multiplicityMap *CrlDiagramMultiplicityMap) AsCore() *core.Concept {
+	return (*core.Concept)(multiplicityMap)
+}
+
+// GetAnchoredText returns the diagram's AnchoredText (a Literal) for this map
+func (multiplicityMap *CrlDiagramMultiplicityMap) GetAnchoredText(trans *core.Transaction) *CrlDiagramAnchoredText {
+	anchoredTextReference := multiplicityMap.GetAnchoredTextReference(trans)
+	if anchoredTextReference == nil {
+		return nil
+	}
+	return (*CrlDiagramAnchoredText)(anchoredTextReference.GetReferencedConcept(trans))
+}
+
+// GetAnchoredTextReference returns the map's AnchoredText reference
+func (multiplicityMap *CrlDiagramMultiplicityMap) GetAnchoredTextReference(trans *core.Transaction) *core.Concept {
+	return multiplicityMap.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramMultiplicityMapAnchoredTextReferenceURI, trans)
+}
+
+// GetModelMultiplicity returns the model's Multiplicity (a Literal) for this map
+func (multiplicityMap *CrlDiagramMultiplicityMap) GetModelMultiplicity(trans *core.Transaction) *core.Concept {
+	multiplicityReference := multiplicityMap.GetModelMultiplicityReference(trans)
+	if multiplicityReference == nil {
+		return nil
+	}
+	return multiplicityReference.GetReferencedConcept(trans)
+}
+
+// GetModelMultiplicityReference returns the model multiplicity reference for this map
+func (multiplicityMap *CrlDiagramMultiplicityMap) GetModelMultiplicityReference(trans *core.Transaction) *core.Concept {
+	return multiplicityMap.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramMultiplicityMapMultiplicityReferenceURI, trans)
+}
+
+// SetAnchoredText sets the diagram's AnchoredText (a Literal) for this map
+func (multiplicityMap *CrlDiagramMultiplicityMap) SetAnchoredText(anchoredText *CrlDiagramAnchoredText, trans *core.Transaction) {
+	anchoredTextReference := multiplicityMap.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramMultiplicityMapAnchoredTextReferenceURI, trans)
+	if anchoredTextReference == nil {
+		return
+	}
+	anchoredTextReference.SetReferencedConcept(anchoredText.AsCore(), core.NoAttribute, trans)
+}
+
+// SetModelMultiplicity sets the model's Multiplicity (a Literal) for this map
+func (multiplicityMap *CrlDiagramMultiplicityMap) SetModelMultiplicity(multiplicity *core.Concept, trans *core.Transaction) {
+	multiplicityReference := multiplicityMap.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramMultiplicityMapMultiplicityReferenceURI, trans)
+	if multiplicityReference == nil || !multiplicity.IsLiteral() {
+		return
+	}
+	multiplicityReference.SetReferencedConcept(multiplicity, core.NoAttribute, trans)
 }
 
 // AsCore casts CrlDiagramNode to core.Concept
@@ -563,7 +647,6 @@ func (anchoredText *CrlDiagramAnchoredText) AsCore() *core.Concept {
 func (anchoredText *CrlDiagramAnchoredText) GetOffsetX(trans *core.Transaction) float64 {
 	xOffsetLiteral := anchoredText.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramAnchoredTextOffsetXURI, trans)
 	if xOffsetLiteral == nil {
-		log.Printf("GetOffsetX called but no xOffsetLiteral was found")
 		return 0
 	}
 	xOffset, err := strconv.ParseFloat(xOffsetLiteral.GetLiteralValue(trans), 64)
@@ -578,7 +661,6 @@ func (anchoredText *CrlDiagramAnchoredText) GetOffsetX(trans *core.Transaction) 
 func (anchoredText *CrlDiagramAnchoredText) GetOffsetY(trans *core.Transaction) float64 {
 	xOffsetLiteral := anchoredText.AsCore().GetFirstOwnedConceptRefinedFromURI(CrlDiagramAnchoredTextOffsetYURI, trans)
 	if xOffsetLiteral == nil {
-		log.Printf("GetOffsetY called but no xOffsetLiteral was found")
 		return 0
 	}
 	xOffset, err := strconv.ParseFloat(xOffsetLiteral.GetLiteralValue(trans), 64)
@@ -617,6 +699,11 @@ func (anchoredText *CrlDiagramAnchoredText) GetAnchorY(trans *core.Transaction) 
 		return 0
 	}
 	return yAnchor
+}
+
+// GetMultiplicityReference returns the multiplicity reference if one exists
+func (anchoredText *CrlDiagramAnchoredText) GetMultiplicityReference(trans *core.Transaction) *core.Concept {
+	return anchoredText.AsCore().GetFirstOwnedReferenceRefinedFromURI(CrlDiagramMultiplicityMapMultiplicityReferenceURI, trans)
 }
 
 // SetOffsetX sets the x offset value for an anchored text
@@ -896,6 +983,16 @@ func (diagramLink *CrlDiagramLink) AsCrlDiagramElement() *CrlDiagramElement {
 	return (*CrlDiagramElement)(diagramLink)
 }
 
+// NewDiagramAbstractPointer creates a new DiagramAbstractPointer
+func NewDiagramAbstractPointer(trans *core.Transaction) (*CrlDiagramLink, error) {
+	uOfD := trans.GetUniverseOfDiscourse()
+	newObject, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramAbstractPointerURI, "AbstractPointer", trans)
+	newPointer := (*CrlDiagramLink)(newObject)
+	addDiagramElementConcepts(newPointer.AsCrlDiagramElement(), trans)
+	addDiagramLinkConcepts(newPointer, trans)
+	return newPointer, nil
+}
+
 // NewDiagramNode creates a new diagram node
 func NewDiagramNode(trans *core.Transaction) (*CrlDiagramNode, error) {
 	uOfD := trans.GetUniverseOfDiscourse()
@@ -907,28 +1004,6 @@ func NewDiagramNode(trans *core.Transaction) (*CrlDiagramNode, error) {
 	return newNode, nil
 }
 
-// NewDiagramReferenceLink creates a new diagram link to represent a reference
-func NewDiagramReferenceLink(trans *core.Transaction) (*CrlDiagramLink, error) {
-	uOfD := trans.GetUniverseOfDiscourse()
-	newElement, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramReferenceLinkURI, "ReferenceLink", trans)
-	newLink := (*CrlDiagramLink)(newElement)
-	addDiagramElementConcepts(newLink.AsCrlDiagramElement(), trans)
-	addDiagramLinkConcepts(newLink, trans)
-	multiplicity, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkMultiplicityURI, newLink.AsCore(), "Multiplicity", trans)
-	addAnchoredTextConcepts((*CrlDiagramAnchoredText)(multiplicity), trans)
-	return newLink, nil
-}
-
-// NewDiagramRefinementLink creates a new diagram link representing a refinement
-func NewDiagramRefinementLink(trans *core.Transaction) (*CrlDiagramLink, error) {
-	uOfD := trans.GetUniverseOfDiscourse()
-	newObject, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramRefinementLinkURI, "RefinementLink", trans)
-	newLink := (*CrlDiagramLink)(newObject)
-	addDiagramElementConcepts(newLink.AsCrlDiagramElement(), trans)
-	addDiagramLinkConcepts(newLink, trans)
-	return newLink, nil
-}
-
 // NewDiagramOwnerPointer creates a new DiagramOwnerPointer
 func NewDiagramOwnerPointer(trans *core.Transaction) (*CrlDiagramLink, error) {
 	uOfD := trans.GetUniverseOfDiscourse()
@@ -936,8 +1011,8 @@ func NewDiagramOwnerPointer(trans *core.Transaction) (*CrlDiagramLink, error) {
 	newPointer := (*CrlDiagramLink)(newObject)
 	addDiagramElementConcepts(newPointer.AsCrlDiagramElement(), trans)
 	addDiagramLinkConcepts(newPointer, trans)
-	multiplicity, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkMultiplicityURI, newPointer.AsCore(), "Multiplicity", trans)
-	addAnchoredTextConcepts((*CrlDiagramAnchoredText)(multiplicity), trans)
+	sourtceMultiplicity, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkSourceMultiplicityURI, newPointer.AsCore(), "Multiplicity", trans)
+	addAnchoredTextConcepts((*CrlDiagramAnchoredText)(sourtceMultiplicity), trans)
 	return newPointer, nil
 }
 
@@ -951,14 +1026,37 @@ func NewDiagramElementPointer(trans *core.Transaction) (*CrlDiagramLink, error) 
 	return newPointer, nil
 }
 
-// NewDiagramAbstractPointer creates a new DiagramAbstractPointer
-func NewDiagramAbstractPointer(trans *core.Transaction) (*CrlDiagramLink, error) {
+// NewDiagramMultiplicityMap creates a new multiplicity map
+func NewDiagramMultiplicityMap(owner *core.Concept, anchoredText *CrlDiagramAnchoredText, trans *core.Transaction) *CrlDiagramMultiplicityMap {
 	uOfD := trans.GetUniverseOfDiscourse()
-	newObject, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramAbstractPointerURI, "AbstractPointer", trans)
-	newPointer := (*CrlDiagramLink)(newObject)
-	addDiagramElementConcepts(newPointer.AsCrlDiagramElement(), trans)
-	addDiagramLinkConcepts(newPointer, trans)
-	return newPointer, nil
+	newMap, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramMultiplicityMapURI, owner, "MultiplicityMap", trans)
+	uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramMultiplicityMapMultiplicityReferenceURI, newMap, "MultiplicityReference", trans)
+	anchoredTextReference, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramMultiplicityMapAnchoredTextReferenceURI, newMap, "AnchoredTextReference", trans)
+	anchoredTextReference.SetReferencedConcept(anchoredText.AsCore(), core.NoAttribute, trans)
+	return (*CrlDiagramMultiplicityMap)(newMap)
+}
+
+// NewDiagramReferenceLink creates a new diagram link to represent a reference
+func NewDiagramReferenceLink(trans *core.Transaction) (*CrlDiagramLink, error) {
+	uOfD := trans.GetUniverseOfDiscourse()
+	newElement, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramReferenceLinkURI, "ReferenceLink", trans)
+	newLink := (*CrlDiagramLink)(newElement)
+	addDiagramElementConcepts(newLink.AsCrlDiagramElement(), trans)
+	addDiagramLinkConcepts(newLink, trans)
+	targetMultiplicity, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkTargetMultiplicityURI, newLink.AsCore(), "TargetMultiplicity", trans)
+	addAnchoredTextConcepts((*CrlDiagramAnchoredText)(targetMultiplicity), trans)
+	NewDiagramMultiplicityMap(newElement, (*CrlDiagramAnchoredText)(targetMultiplicity), trans)
+	return newLink, nil
+}
+
+// NewDiagramRefinementLink creates a new diagram link representing a refinement
+func NewDiagramRefinementLink(trans *core.Transaction) (*CrlDiagramLink, error) {
+	uOfD := trans.GetUniverseOfDiscourse()
+	newObject, _ := uOfD.CreateRefinementOfConceptURI(CrlDiagramRefinementLinkURI, "RefinementLink", trans)
+	newLink := (*CrlDiagramLink)(newObject)
+	addDiagramElementConcepts(newLink.AsCrlDiagramElement(), trans)
+	addDiagramLinkConcepts(newLink, trans)
+	return newLink, nil
 }
 
 // NewDiagramRefinedPointer creates a new DiagramRefinedPointer
@@ -1180,7 +1278,13 @@ func BuildCrlDiagramDomain(uOfD *core.UniverseOfDiscourse, trans *core.Transacti
 	crldatatypesdomain.NewOwnedBoolean(crlDiagramAnchoredText, "Visible", trans, CrlDiagramAnchoredTextVisibleURI)
 
 	// Multiplicity
-	uOfD.CreateOwnedRefinementOfConcept(crlDiagramAnchoredText, crlDiagramDomain, "Multiplicity", trans, CrlDiagramLinkMultiplicityURI)
+	uOfD.CreateOwnedRefinementOfConcept(crlDiagramAnchoredText, crlDiagramDomain, "SourceMultiplicity", trans, CrlDiagramLinkSourceMultiplicityURI)
+	uOfD.CreateOwnedRefinementOfConcept(crlDiagramAnchoredText, crlDiagramDomain, "TargetMultiplicity", trans, CrlDiagramLinkTargetMultiplicityURI)
+
+	// MultiplicityMap
+	crlMultiplicityMap, _ := uOfD.NewOwnedElement(crlDiagramDomain, "MultiplicityMap", trans, CrlDiagramMultiplicityMapURI)
+	uOfD.NewOwnedReference(crlMultiplicityMap, "MultiplicityReference", trans, CrlDiagramMultiplicityMapMultiplicityReferenceURI)
+	uOfD.NewOwnedReference(crlMultiplicityMap, "AnchoredTextReference", trans, CrlDiagramMultiplicityMapAnchoredTextReferenceURI)
 
 	//
 	// CrlDiagramElement
@@ -1227,9 +1331,43 @@ func BuildCrlDiagramDomain(uOfD *core.UniverseOfDiscourse, trans *core.Transacti
 
 	uOfD.AddFunction(CrlDiagramElementURI, updateDiagramElement)
 	uOfD.AddFunction(CrlDiagramOwnerPointerURI, updateDiagramOwnerPointer)
+	uOfD.AddFunction(CrlDiagramMultiplicityMapURI, updateMultiplicityMap)
 
 	crlDiagramDomain.SetIsCoreRecursively(trans)
 	return crlDiagramDomain
+}
+
+// updateMultiplicityMap updates the anchored text representing multiplicity
+func updateMultiplicityMap(changedElement *core.Concept, notification *core.ChangeNotification, trans *core.Transaction) error {
+	trans.WriteLockElement(changedElement)
+	// core Elements should always be ignored
+	if changedElement.GetIsCore(trans) {
+		return nil
+	}
+	if !changedElement.IsRefinementOfURI(CrlDiagramMultiplicityMapURI, trans) {
+		return nil
+	}
+	multiplicityMap := (*CrlDiagramMultiplicityMap)(changedElement)
+	modelMultiplicityLiteral := multiplicityMap.GetModelMultiplicity(trans)
+	if modelMultiplicityLiteral == nil {
+		return nil
+	}
+	modelMultiplicityValue := modelMultiplicityLiteral.GetLiteralValue(trans)
+	diagramMultiplicityValue := multiplicityMap.GetAnchoredText(trans).AsCore().GetLiteralValue(trans)
+	if modelMultiplicityValue != diagramMultiplicityValue {
+		// We need to determine which changed
+		switch notification.GetNatureOfChange() {
+		case core.OwnedConceptChanged:
+			if notification.GetUnderlyingChange().GetReportingElementID() == multiplicityMap.GetModelMultiplicityReference(trans).ConceptID {
+				// it's the model multiplicity
+				multiplicityMap.GetAnchoredText(trans).AsCore().SetLiteralValue(modelMultiplicityValue, trans)
+			} else if notification.GetUnderlyingChange().GetReportingElementID() == multiplicityMap.GetAnchoredTextReference(trans).ConceptID {
+				// it's the diagram multiplicity
+				multiplicityMap.GetModelMultiplicity(trans).SetLiteralValue(diagramMultiplicityValue, trans)
+			}
+		}
+	}
+	return nil
 }
 
 // updateDiagramElement updates the diagram element

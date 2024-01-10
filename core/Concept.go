@@ -166,6 +166,7 @@ func (cPtr *Concept) cloneAttributes(source *Concept, trans *Transaction) {
 	cPtr.Version.counter = source.Version.counter
 }
 
+// GetAbstractConcept returns the abstract concept, which will be nil unless this is a Refinement
 func (cPtr *Concept) GetAbstractConcept(trans *Transaction) *Concept {
 	trans.ReadLockElement(cPtr)
 	return cPtr.uOfD.GetElement(cPtr.AbstractConceptID)
@@ -175,6 +176,7 @@ func (cPtr *Concept) getAbstractConceptNoLock() *Concept {
 	return cPtr.uOfD.GetElement(cPtr.AbstractConceptID)
 }
 
+// GetAbstractConceptID returns the ID of the abstract concept, which will be the empty string unless this is a Refinement
 func (cPtr *Concept) GetAbstractConceptID(trans *Transaction) string {
 	trans.ReadLockElement(cPtr)
 	return cPtr.AbstractConceptID
@@ -334,7 +336,7 @@ func (cPtr *Concept) GetFirstOwnedRefinementRefinedFromURI(abstractionURI string
 	return nil
 }
 
-// GetFirstOwnedConceptWithURI
+// GetFirstOwnedConceptWithURI returns the first owned concept with the indicated URI
 func (cPtr *Concept) GetFirstOwnedConceptWithURI(uri string, trans *Transaction) *Concept {
 	trans.ReadLockElement(cPtr)
 	it := cPtr.uOfD.ownedIDsMap.GetMappedValues(cPtr.ConceptID).Iterator()
@@ -348,6 +350,7 @@ func (cPtr *Concept) GetFirstOwnedConceptWithURI(uri string, trans *Transaction)
 	return nil
 }
 
+// GetFirstOwnedLiteralRefinedFrom returns the first owned literal that is refined from the supplied abstract concept
 func (cPtr *Concept) GetFirstOwnedLiteralRefinedFrom(abstraction *Concept, trans *Transaction) *Concept {
 	trans.ReadLockElement(cPtr)
 	it := cPtr.uOfD.ownedIDsMap.GetMappedValues(cPtr.ConceptID).Iterator()
@@ -364,6 +367,7 @@ func (cPtr *Concept) GetFirstOwnedLiteralRefinedFrom(abstraction *Concept, trans
 	return nil
 }
 
+// GetFirstOwnedLiteralRefinedFromURI returns the first owned literal that is refined from the given URI
 func (cPtr *Concept) GetFirstOwnedLiteralRefinedFromURI(uri string, trans *Transaction) *Concept {
 	trans.ReadLockElement(cPtr)
 	abstraction := cPtr.uOfD.GetElementWithURI(uri)
@@ -373,6 +377,7 @@ func (cPtr *Concept) GetFirstOwnedLiteralRefinedFromURI(uri string, trans *Trans
 	return nil
 }
 
+// GetFirstOwnedLiteralWithURI returns the first owned literal that has the indicated URI
 func (cPtr *Concept) GetFirstOwnedLiteralWithURI(uri string, trans *Transaction) *Concept {
 	trans.ReadLockElement(cPtr)
 	it := cPtr.uOfD.ownedIDsMap.GetMappedValues(cPtr.ConceptID).Iterator()
@@ -389,6 +394,7 @@ func (cPtr *Concept) GetFirstOwnedLiteralWithURI(uri string, trans *Transaction)
 	return nil
 }
 
+// GetFirstOwnedReferenceWithURI returns the first owned reference with the indicated URI
 func (cPtr *Concept) GetFirstOwnedReferenceWithURI(uri string, trans *Transaction) *Concept {
 	trans.ReadLockElement(cPtr)
 	it := cPtr.uOfD.ownedIDsMap.GetMappedValues(cPtr.ConceptID).Iterator()
@@ -402,6 +408,7 @@ func (cPtr *Concept) GetFirstOwnedReferenceWithURI(uri string, trans *Transactio
 	return nil
 }
 
+// GetFirstOwnedRefinementWithURI returns the first owned refinement with the indicated URI
 func (cPtr *Concept) GetFirstOwnedRefinementWithURI(uri string, trans *Transaction) *Concept {
 	trans.ReadLockElement(cPtr)
 	it := cPtr.uOfD.ownedIDsMap.GetMappedValues(cPtr.ConceptID).Iterator()
@@ -461,7 +468,7 @@ func (cPtr *Concept) GetIsCore(trans *Transaction) bool {
 	return cPtr.IsCore
 }
 
-// GetGetLabel returns the label if one exists
+// GetLabel returns the label if one exists
 func (cPtr *Concept) GetLabel(trans *Transaction) string {
 	trans.ReadLockElement(cPtr)
 	return cPtr.Label
@@ -471,6 +478,7 @@ func (cPtr *Concept) getLabelNoLock() string {
 	return cPtr.Label
 }
 
+// GetLiteralValue returns the literal value
 func (cPtr *Concept) GetLiteralValue(trans *Transaction) string {
 	trans.ReadLockElement(cPtr)
 	return cPtr.LiteralValue
@@ -777,6 +785,7 @@ func (cPtr *Concept) GetReferencedAttributeValue(trans *Transaction) string {
 	return ""
 }
 
+// GetRefinedConcept returns the refined concept which will be nil unless this is a Refinement
 func (cPtr *Concept) GetRefinedConcept(trans *Transaction) *Concept {
 	trans.ReadLockElement(cPtr)
 	return cPtr.uOfD.GetElement(cPtr.RefinedConceptID)
@@ -786,6 +795,7 @@ func (cPtr *Concept) getRefinedConceptNoLock() *Concept {
 	return cPtr.uOfD.GetElement(cPtr.RefinedConceptID)
 }
 
+// GetRefinedConceptID returns the is of the refined concept which will be nil unless this is a Refinement
 func (cPtr *Concept) GetRefinedConceptID(trans *Transaction) string {
 	trans.ReadLockElement(cPtr)
 	return cPtr.RefinedConceptID
@@ -875,6 +885,7 @@ func (cPtr *Concept) IsRefinementOf(abstraction *Concept, trans *Transaction) bo
 	return false
 }
 
+// IsRefinementOfURI returns true if this is a refinement of the indicated URI
 func (cPtr *Concept) IsRefinementOfURI(uri string, trans *Transaction) bool {
 	trans.ReadLockElement(cPtr)
 	if cPtr.uOfD == nil {
@@ -1003,6 +1014,11 @@ func (cPtr *Concept) isEquivalent(hl1 *Transaction, el *Concept, hl2 *Transactio
 	return true
 }
 
+// IsLiteral() returns true if the concept is a literal
+func (cPtr *Concept) IsLiteral() bool {
+	return cPtr.ConceptType == Literal
+}
+
 // IsOwnedConcept returns true if the supplied element is an owned concept. Note that
 // there is an interval of time during editing in which the child's owner will be set but the child
 // has not yet been added to the element's OwnedConcepts list. Similarly, there is an interval of time
@@ -1019,6 +1035,16 @@ func (cPtr *Concept) IsOwnedConcept(el *Concept, trans *Transaction) bool {
 		}
 	}
 	return false
+}
+
+// IsReference() returns true if the concept is a reference
+func (cPtr *Concept) IsReference() bool {
+	return cPtr.ConceptType == Reference
+}
+
+// IsRefinement() returns true if the concept is a refinement
+func (cPtr *Concept) IsRefinement() bool {
+	return cPtr.ConceptType == Refinement
 }
 
 // MarshalJSON produces a byte string JSON representation of the Element
@@ -1150,7 +1176,7 @@ func (cPtr *Concept) notifyOwner(notification *ChangeNotification, trans *Transa
 func (cPtr *Concept) propagateChange(notification *ChangeNotification, trans *Transaction) error {
 	var err error = nil
 	switch notification.natureOfChange {
-	case ConceptChanged, OwningConceptChanged, ReferencedConceptChanged, AbstractConceptChanged, RefinedConceptChanged:
+	case ConceptChanged, OwningConceptChanged, OwnedConceptChanged, ReferencedConceptChanged, AbstractConceptChanged, RefinedConceptChanged:
 		err = notification.uOfD.callAssociatedFunctions(cPtr, notification, trans)
 		if err != nil {
 			return errors.Wrap(err, "element.propagateChange failed")
@@ -1258,6 +1284,7 @@ func (cPtr *Concept) SetAbstractConcept(el *Concept, trans *Transaction) error {
 	return cPtr.SetAbstractConceptID(id, trans)
 }
 
+// SetAbstractConceptID sets the abstract concept ID
 func (cPtr *Concept) SetAbstractConceptID(acID string, trans *Transaction) error {
 	if cPtr.uOfD == nil {
 		return errors.New("refinement.SetAbstractConceptID failed because the element uOfD is nil")
@@ -1447,6 +1474,7 @@ func (cPtr *Concept) SetLabel(label string, trans *Transaction) error {
 	return nil
 }
 
+// SetLiteralValue sets the literal value
 func (cPtr *Concept) SetLiteralValue(value string, trans *Transaction) error {
 	if cPtr.uOfD == nil {
 		return errors.New("literal.SetLiteralValue failed because the element uOfD is nil")
@@ -1611,6 +1639,7 @@ func (cPtr *Concept) SetReadOnly(value bool, trans *Transaction) error {
 	return nil
 }
 
+// SetReadOnlyRecursively makes this concept and all its descendants read-only
 func (cPtr *Concept) SetReadOnlyRecursively(value bool, trans *Transaction) error {
 	if cPtr.uOfD == nil {
 		return errors.New("element.SetReadOnlyRecursively failed because the element uOfD is nil")
@@ -1719,6 +1748,7 @@ func (cPtr *Concept) SetReferencedConceptID(rcID string, attributeName Attribute
 	return nil
 }
 
+// SetRefinedConcept sets the refined concept
 func (cPtr *Concept) SetRefinedConcept(el *Concept, trans *Transaction) error {
 	if cPtr.uOfD == nil {
 		return errors.New("refinement.SetRefinedConcept failed because the element uOfD is nil")
@@ -1731,6 +1761,7 @@ func (cPtr *Concept) SetRefinedConcept(el *Concept, trans *Transaction) error {
 	return cPtr.SetRefinedConceptID(id, trans)
 }
 
+// SetRefinedConceptID sets the refined concept ID
 func (cPtr *Concept) SetRefinedConceptID(rcID string, trans *Transaction) error {
 	if cPtr.uOfD == nil {
 		return errors.New("refinement.SetRefinedConceptID failed because the element uOfD is nil")
@@ -1838,6 +1869,7 @@ func (cPtr *Concept) SetURI(uri string, trans *Transaction) error {
 	return nil
 }
 
+// TraceableReadLock locks the concept in a traceable way
 func (cPtr *Concept) TraceableReadLock(trans *Transaction) {
 	if TraceLocks {
 		log.Printf("HL %p about to read lock Element %p %s\n", trans, cPtr, cPtr.Label)
@@ -1845,6 +1877,7 @@ func (cPtr *Concept) TraceableReadLock(trans *Transaction) {
 	cPtr.RLock()
 }
 
+// TraceableWriteLock locks the concept in a traceable way
 func (cPtr *Concept) TraceableWriteLock(trans *Transaction) {
 	if TraceLocks {
 		log.Printf("HL %p about to write lock Element %p %s\n", trans, cPtr, cPtr.Label)
@@ -1852,6 +1885,7 @@ func (cPtr *Concept) TraceableWriteLock(trans *Transaction) {
 	cPtr.Lock()
 }
 
+// TraceableReadUnlock unlocks the concept in a traceable way
 func (cPtr *Concept) TraceableReadUnlock(trans *Transaction) {
 	if TraceLocks {
 		log.Printf("HL %p about to read unlock Element %p %s\n", trans, cPtr, cPtr.Label)
@@ -1859,6 +1893,7 @@ func (cPtr *Concept) TraceableReadUnlock(trans *Transaction) {
 	cPtr.RUnlock()
 }
 
+// TraceableWriteUnlock unlocks the concept in a traceable way
 func (cPtr *Concept) TraceableWriteUnlock(trans *Transaction) {
 	if TraceLocks {
 		log.Printf("HL %p about to write unlock Element %p %s\n", trans, cPtr, cPtr.Label)
@@ -1866,6 +1901,7 @@ func (cPtr *Concept) TraceableWriteUnlock(trans *Transaction) {
 	cPtr.Unlock()
 }
 
+// UnmarshalJSON unmarshals the JSON into the current concept
 func (cPtr *Concept) UnmarshalJSON(data []byte) error {
 	type AliasConcept Concept
 	aux := &struct {
@@ -1904,111 +1940,6 @@ func (cPtr *Concept) UnmarshalJSON(data []byte) error {
 	}
 	return nil
 }
-
-// // *Concept is the representation of a concept
-// type *Concept interface {
-// 	Subject
-// 	addListener(string, *Transaction)
-// 	addOwnedConcept(string, *Transaction)
-// 	addRecoveredOwnedConcept(string, *Transaction)
-// 	// editableError(*HeldLocks) error
-// 	FindAbstractions(map[string]Concept, *Transaction)
-// 	FindImmediateAbstractions(map[string]Concept, *Transaction)
-// 	GetConceptID(*Transaction) string
-// 	getConceptIDNoLock() string
-// 	GetConceptType() ConceptType
-// 	GetDefinition(*Transaction) string
-// 	GetFirstOwnedConceptRefinedFrom(Concept, *Transaction) *Concept
-// 	GetFirstOwnedConceptRefinedFromURI(string, *Transaction) *Concept
-// 	GetFirstOwnedLiteralRefinementOf(Concept, *Transaction) *Concept
-// 	GetFirstOwnedLiteralRefinementOfURI(string, *Transaction) *Concept
-// 	GetFirstOwnedReferenceRefinedFrom(Concept, *Transaction) *Concept
-// 	GetFirstOwnedReferenceRefinedFromURI(string, *Transaction) *Concept
-// 	GetFirstOwnedRefinementRefinedFrom(Concept, *Transaction) *Concept
-// 	GetFirstOwnedRefinementRefinedFromURI(string, *Transaction) *Concept
-// 	GetFirstOwnedConceptWithURI(string, *Transaction) *Concept
-// 	GetFirstOwnedLiteralRefinedFrom(Concept, *Transaction) *Concept
-// 	GetFirstOwnedLiteralRefinedFromURI(string, *Transaction) *Concept
-// 	GetFirstOwnedLiteralWithURI(string, *Transaction) *Concept
-// 	GetFirstOwnedReferenceWithURI(string, *Transaction) *Concept
-// 	GetFirstOwnedRefinementWithURI(string, *Transaction) *Concept
-// 	GetIsCore(*Transaction) bool
-// 	GetLabel(*Transaction) string
-// 	getLabelNoLock() string
-// 	// getListeners(*HeldLocks) (mapset.Set, error)
-// 	// GetOwnedConcepts(*HeldLocks) mapset.Set
-// 	GetOwnedConcepts(trans *Transaction) map[string]Concept
-// 	GetOwnedConceptIDs(trans *Transaction) mapset.Set
-// 	GetOwnedConceptsRefinedFrom(Concept, *Transaction) map[string]Concept
-// 	GetOwnedConceptsRefinedFromURI(string, *Transaction) map[string]Concept
-// 	GetOwnedDescendantsRefinedFrom(Concept, *Transaction) map[string]Concept
-// 	GetOwnedDescendantsRefinedFromURI(string, *Transaction) map[string]Concept
-// 	GetOwnedLiteralsRefinedFrom(Concept, *Transaction) map[string]Concept
-// 	GetOwnedLiteralsRefinedFromURI(string, *Transaction) map[string]Concept
-// 	GetOwnedReferencesRefinedFrom(Concept, *Transaction) map[string]Concept
-// 	GetOwnedReferencesRefinedFromURI(string, *Transaction) map[string]Concept
-// 	GetOwnedRefinementsRefinedFrom(Concept, *Transaction) map[string]Concept
-// 	GetOwnedRefinementsRefinedFromURI(string, *Transaction) map[string]Concept
-// 	GetOwningConceptID(*Transaction) string
-// 	GetOwningConcept(*Transaction) *Concept
-// 	getOwningConceptNoLock() *Concept
-// 	getOwningConceptIDNoLock() string
-// 	GetUniverseOfDiscourse(*Transaction) *UniverseOfDiscourse
-// 	getUniverseOfDiscourseNoLock() *UniverseOfDiscourse
-// 	GetURI(*Transaction) string
-// 	getURINoLock() string
-// 	GetVersion(*Transaction) int
-// 	isEditable(*Transaction) bool
-// 	IsRefinementOf(Concept, *Transaction) bool
-// 	IsRefinementOfURI(string, *Transaction) bool
-// 	IsOwnedConcept(Concept, *Transaction) bool
-// 	IsReadOnly(*Transaction) bool
-// 	MarshalJSON() ([]byte, error)
-// 	notifyPointerOwners(*ChangeNotification, *Transaction) error
-// 	notifyOwner(*ChangeNotification, *Transaction) error
-// 	propagateChange(*ChangeNotification, *Transaction) error
-// 	removeListener(string, *Transaction)
-// 	removeOwnedConcept(string, *Transaction) error
-// 	SetDefinition(string, *Transaction) error
-// 	SetIsCore(*Transaction) error
-// 	SetIsCoreRecursively(*Transaction) error
-// 	SetLabel(string, *Transaction) error
-// 	SetOwningConcept(Concept, *Transaction) error
-// 	SetOwningConceptID(string, *Transaction) error
-// 	SetReadOnly(bool, *Transaction) error
-// 	SetReadOnlyRecursively(bool, *Transaction) error
-// 	setUniverseOfDiscourse(*UniverseOfDiscourse, *Transaction)
-// 	SetURI(string, *Transaction) error
-// 	tickle(targetElement *Concept, notification *ChangeNotification, trans *Transaction) error
-// 	TraceableReadLock(*Transaction)
-// 	TraceableWriteLock(*Transaction)
-// 	TraceableReadUnlock(*Transaction)
-// 	TraceableWriteUnlock(*Transaction)
-// 	// Literal
-// 	GetLiteralValue(*Transaction) string
-// 	SetLiteralValue(string, *Transaction) error
-// 	// Reference
-// 	GetReferencedConcept(*Transaction) *Concept
-// 	GetReferencedConceptID(*Transaction) string
-// 	GetReferencedAttributeName(*Transaction) AttributeName
-// 	GetReferencedAttributeValue(*Transaction) string
-// 	getReferencedConceptNoLock() *Concept
-// 	SetReferencedConcept(Concept, AttributeName, *Transaction) error
-// 	SetReferencedConceptID(string, AttributeName, *Transaction) error
-// 	// Refinement
-// 	GetAbstractConceptID(*Transaction) string
-// 	getAbstractConceptIDNoLock() string
-// 	GetAbstractConcept(*Transaction) *Concept
-// 	getAbstractConceptNoLock() *Concept
-// 	GetRefinedConceptID(*Transaction) string
-// 	getRefinedConceptIDNoLock() string
-// 	GetRefinedConcept(*Transaction) *Concept
-// 	getRefinedConceptNoLock() *Concept
-// 	SetAbstractConcept(Concept, *Transaction) error
-// 	SetAbstractConceptID(string, *Transaction) error
-// 	SetRefinedConcept(Concept, *Transaction) error
-// 	SetRefinedConceptID(string, *Transaction) error
-// }
 
 // AttributeName indicates the attribute being referenced (if any):
 type AttributeName int
