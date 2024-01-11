@@ -16,6 +16,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pbrown12303/activeCRL/core"
+	"github.com/pbrown12303/activeCRL/crlconstraintdomain"
 	"github.com/pbrown12303/activeCRL/crldiagramdomain"
 	"github.com/pbrown12303/activeCRL/crleditor"
 	"github.com/pbrown12303/activeCRL/crlmapsdomain"
@@ -1018,6 +1019,12 @@ func (dm *FyneDiagramManager) showOwnedConceptsImpl(elementID string, recursive 
 			ownerPointer.AsCrlDiagramElement().SetReferencedModelConcept(child, trans)
 			ownerPointer.SetLinkSource(diagramChildConcept, trans)
 			ownerPointer.SetLinkTarget(ownerDiagramElement, trans)
+			ownedConcept := diagramChildConcept.GetReferencedModelConcept(trans)
+			if crlconstraintdomain.HasMultiplicityConstraint(ownedConcept, trans) {
+				constraint := crlconstraintdomain.GetMultiplicityConstraint(ownedConcept, trans)
+				modelMultiplicityLiteral := constraint.GetMultiplicityLiteral(trans)
+				ownerPointer.GetLinkMultiplicityMap(trans).SetModelMultiplicity(modelMultiplicityLiteral, trans)
+			}
 			ownerPointer.AsCrlDiagramElement().SetDiagram(diagram, trans)
 		}
 		if recursive {
@@ -1072,7 +1079,14 @@ func (dm *FyneDiagramManager) showOwner(diagramElementID string) error {
 		ownerPointer.AsCrlDiagramElement().SetReferencedModelConcept(modelConcept, trans)
 		ownerPointer.SetLinkSource(diagramElement, trans)
 		ownerPointer.SetLinkTarget(diagramConceptOwner, trans)
+		ownedConcept := diagramElement.GetReferencedModelConcept(trans)
+		if crlconstraintdomain.HasMultiplicityConstraint(ownedConcept, trans) {
+			constraint := crlconstraintdomain.GetMultiplicityConstraint(ownedConcept, trans)
+			modelMultiplicityLiteral := constraint.GetMultiplicityLiteral(trans)
+			ownerPointer.GetLinkMultiplicityMap(trans).SetModelMultiplicity(modelMultiplicityLiteral, trans)
+		}
 		ownerPointer.AsCrlDiagramElement().SetDiagram(diagram, trans)
+
 	}
 	return nil
 }

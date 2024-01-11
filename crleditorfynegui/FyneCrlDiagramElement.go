@@ -325,8 +325,8 @@ type FyneCrlDiagramLink struct {
 	modelElement                          *core.Concept
 	labelAnchoredText                     *diagramwidget.AnchoredText
 	labelAnchoredTextBinding              *AnchoredTextBinding
-	targetMultiplicityAnchoredText        *diagramwidget.AnchoredText
-	targetMultiplicityAnchoredTextBinding *AnchoredTextBinding
+	sourceMultiplicityAnchoredText        *diagramwidget.AnchoredText
+	sourceMultiplicityAnchoredTextBinding *AnchoredTextBinding
 	linkType                              ToolbarSelection
 	initialized                           bool
 }
@@ -355,12 +355,12 @@ func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, crlLink *
 		fyneDiagramLink.linkType = ReferenceLinkSelected
 		crlLinkTargetMultiplicity := crlLink.GetLinkTargetMultiplicity(trans)
 		if crlLinkTargetMultiplicity != nil {
-			fyneDiagramLink.targetMultiplicityAnchoredText = fyneDiagramLink.AddTargetAnchoredText("Multiplicity", crlLinkTargetMultiplicity.LiteralValue)
-			fyneDiagramLink.targetMultiplicityAnchoredText.ID = crlLinkTargetMultiplicity.ConceptID
-			fyneDiagramLink.targetMultiplicityAnchoredText.SetOffsetNoCallback(crlLinkTargetMultiplicity.GetOffsetX(trans), crlLinkTargetMultiplicity.GetOffsetY(trans))
-			newTargetMultiplicityBinding, err := NewAnchoredTextBinding(crlLinkTargetMultiplicity.ConceptID, crlLinkTargetMultiplicity, fyneDiagramLink.targetMultiplicityAnchoredText)
+			fyneDiagramLink.sourceMultiplicityAnchoredText = fyneDiagramLink.AddTargetAnchoredText("Multiplicity", crlLinkTargetMultiplicity.LiteralValue)
+			fyneDiagramLink.sourceMultiplicityAnchoredText.ID = crlLinkTargetMultiplicity.ConceptID
+			fyneDiagramLink.sourceMultiplicityAnchoredText.SetOffsetNoCallback(crlLinkTargetMultiplicity.GetOffsetX(trans), crlLinkTargetMultiplicity.GetOffsetY(trans))
+			newTargetMultiplicityBinding, err := NewAnchoredTextBinding(crlLinkTargetMultiplicity.ConceptID, crlLinkTargetMultiplicity, fyneDiagramLink.sourceMultiplicityAnchoredText)
 			if err == nil {
-				fyneDiagramLink.targetMultiplicityAnchoredTextBinding = newTargetMultiplicityBinding
+				fyneDiagramLink.sourceMultiplicityAnchoredTextBinding = newTargetMultiplicityBinding
 			}
 		}
 	} else if crlLink.IsAbstractPointer(trans) {
@@ -372,6 +372,16 @@ func NewFyneCrlDiagramLink(diagramWidget *diagramwidget.DiagramWidget, crlLink *
 	} else if crlLink.IsOwnerPointer(trans) {
 		fyneDiagramLink.AddTargetDecoration(createDiamond())
 		fyneDiagramLink.linkType = OwnerPointerSelected
+		crlLinkSourceMultiplicity := crlLink.GetLinkSourceMultiplicity(trans)
+		if crlLinkSourceMultiplicity != nil {
+			fyneDiagramLink.sourceMultiplicityAnchoredText = fyneDiagramLink.AddSourceAnchoredText("Multiplicity", crlLinkSourceMultiplicity.LiteralValue)
+			fyneDiagramLink.sourceMultiplicityAnchoredText.ID = crlLinkSourceMultiplicity.ConceptID
+			fyneDiagramLink.sourceMultiplicityAnchoredText.SetOffsetNoCallback(crlLinkSourceMultiplicity.GetOffsetX(trans), crlLinkSourceMultiplicity.GetOffsetY(trans))
+			newSourceMultiplicityBinding, err := NewAnchoredTextBinding(crlLinkSourceMultiplicity.ConceptID, crlLinkSourceMultiplicity, fyneDiagramLink.sourceMultiplicityAnchoredText)
+			if err == nil {
+				fyneDiagramLink.sourceMultiplicityAnchoredTextBinding = newSourceMultiplicityBinding
+			}
+		}
 	} else if crlLink.IsRefinedPointer(trans) {
 		fyneDiagramLink.AddSourceDecoration(createMirrorRefinementTriangle())
 		fyneDiagramLink.linkType = RefinedElementPointerSelected

@@ -1011,8 +1011,9 @@ func NewDiagramOwnerPointer(trans *core.Transaction) (*CrlDiagramLink, error) {
 	newPointer := (*CrlDiagramLink)(newObject)
 	addDiagramElementConcepts(newPointer.AsCrlDiagramElement(), trans)
 	addDiagramLinkConcepts(newPointer, trans)
-	sourtceMultiplicity, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkSourceMultiplicityURI, newPointer.AsCore(), "Multiplicity", trans)
-	addAnchoredTextConcepts((*CrlDiagramAnchoredText)(sourtceMultiplicity), trans)
+	sourceMultiplicity, _ := uOfD.CreateOwnedRefinementOfConceptURI(CrlDiagramLinkSourceMultiplicityURI, newPointer.AsCore(), "Multiplicity", trans)
+	addAnchoredTextConcepts((*CrlDiagramAnchoredText)(sourceMultiplicity), trans)
+	NewDiagramMultiplicityMap(newObject, (*CrlDiagramAnchoredText)(sourceMultiplicity), trans)
 	return newPointer, nil
 }
 
